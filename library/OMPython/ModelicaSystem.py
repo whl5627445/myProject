@@ -3,7 +3,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 import numpy as np
-from OMPython import OMCSessionZMQ
+from library.OMPython import OMCSessionZMQ
 import os, sys
 import subprocess
 from builtins import int, range

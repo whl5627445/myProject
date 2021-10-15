@@ -1,10 +1,9 @@
-import time, os
+import time
 from fastapi import File, UploadFile, Request
 from router.upload_file import router
 from app.BaseModel.respose_model import ResponseModel, InitResponseModel
-from app.model.models_package.ModelsInformation import ModelsInformationAll, ModelsInformation
-from app.model.upload_file.UploadFile import UploadFile as UploadFile_Model
-from library.save_class_names import SaveClassNames
+from app.model.models_package.ModelsInformation import ModelsInformation
+from app.service.save_class_names import SaveClassNames
 from library.file_operation import FileOperation
 from config.DB_config import session
 
@@ -17,15 +16,15 @@ async def UploadFile(request: Request, file: UploadFile = File(...)):
     ## return: 会返回文件上传的状态
     """
     res = InitResponseModel()
-    fo = FileOperation()
-    file_name = file.filename.removesuffix(".mo")
     file_data = await file.read()
     file_path = "public/UserFiles/UploadFile/" + request.user["username"] + "/" + str(time.time())
+    file_name = file.filename.removesuffix(".mo")
     UP = session.query(ModelsInformation).filter_by(package_name=file_name).first()
     if UP:
         res.err = "文件已存在！"
         res.status = 2
         return res
+    fo = FileOperation()
     if not file.filename.endswith(".mo"):
         res.err = "文件格式不正确, 请上传以.mo为后缀的模型文件"
         res.status = 2

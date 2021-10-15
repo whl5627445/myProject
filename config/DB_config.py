@@ -16,6 +16,6 @@ engine = create_engine('mysql+pymysql://root:root@localhost:3306/test?charset=ut
 #                        max_overflow=500,
 #                        pool_recycle=3600,
 #                        pool_pre_ping=True,
-#                        echo_pool=True, )
+#                        )
 DBSession = sessionmaker(bind=engine, autoflush=False, autocommit=True)
 session = DBSession()

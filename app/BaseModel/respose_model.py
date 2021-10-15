@@ -13,7 +13,11 @@ class ResponseModel(BaseModel):
 
 
 class InitResponseModel(object):
-    pass
+    data = None
+    err = None
+    msg = None
+    status = None
+
 
 
 

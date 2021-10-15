@@ -13,7 +13,7 @@ def GetComponents(class_name, component_name=None, file_path=None):
 
 
 if __name__ == '__main__':
-    from library.set_component_properties import SetComponentProperties
+    from app.service.set_component_properties import SetComponentProperties
     # setComponentProperties(ENN.Examples.Scenario1_Status,PID,{true,false,false,true}, {""}, {true,true}, {""})
     class_name = "ENN.Examples.Scenario1_Status"
     component_name = "PID"

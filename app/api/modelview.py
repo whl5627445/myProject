@@ -4,14 +4,13 @@ from config.DB_config import session
 from config.redis_config import r
 from app.model.models_package.ModelsInformation import ModelsInformationAll, ModelsInformation
 from app.BaseModel.respose_model import ResponseModel, InitResponseModel
-from library.get_graphics_data import GetGraphicsData
-from library.get_model_code import GetModelCode
-from library.get_model_parameters import GetModelParameters
-from library.set_component_modifier_value import SetComponentModifierValue
-from library.set_component_properties import SetComponentProperties
-from library.get_components import GetComponents
+from app.service.get_graphics_data import GetGraphicsData
+from app.service.get_model_code import GetModelCode
+from app.service.get_model_parameters import GetModelParameters
+from app.service.set_component_modifier_value import SetComponentModifierValue
+from app.service.set_component_properties import SetComponentProperties
+from app.service.get_components import GetComponents
 from app.BaseModel.simulate import SetComponentModifierValueModel, SetComponentPropertiesModel
-import time
 import json
 
 @router.get("/listrootlibrary", response_model=ResponseModel)
@@ -75,7 +74,7 @@ async def GetModelView (modelname: str, request: Request):
 @router.get("/getgraphicsdata", response_model=ResponseModel)
 async def GetGraphicsDataView (modelname: str, sys_user: str, request: Request):
     """
-    # 获取模型的画图数据，一次性返回， 第一次调用时间较久，有缓存机制
+    # 获取模型的画图数据，一次性返回， 第一次调用时间较久，有缓存机制，redis
     ## modelname: 需要查询的模型名称，全称， 例如“ENN.Examples.Scenario1_Status”
     ## sys_user: 模型是系统模型还是用户模型，系统模型固定是“sys”, 用户模型固定是“user”
     ## return: 返回json格式数据
@@ -85,7 +84,7 @@ async def GetGraphicsDataView (modelname: str, sys_user: str, request: Request):
         username = request.user["username"]
         r_data = r.hget("GetGraphicsData_" + username, modelname)
         if r_data:
-            data = r_data.decode()
+            G_data = r_data.decode()
         else:
             model_file_path = None
             if sys_user == "user":
@@ -93,9 +92,9 @@ async def GetGraphicsDataView (modelname: str, sys_user: str, request: Request):
                 package = session.query(ModelsInformation).filter_by(package_name=package_name, sys_or_user=username).first()
                 model_file_path = package.file_path
             data = GetGraphicsData().get_data([modelname], model_file_path)
-            data = json.dumps(data)
-            r.hset("GetGraphicsData_" + username, modelname, data)
-        res.data = json.loads(data)
+            G_data = json.dumps(data)
+            r.hset("GetGraphicsData_" + username, modelname, G_data)
+        res.data = json.loads(G_data)
     except Exception as e:
         print(e)
         res.err = "获取数据失败，请稍后再试"

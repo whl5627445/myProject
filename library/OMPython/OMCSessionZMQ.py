@@ -1,7 +1,7 @@
-from OMPython import OMCSessionHelper, OMCSessionBase, logger
+from library.OMPython import OMCSessionHelper, OMCSessionBase, logger
 import subprocess
 import sys, os, time, zmq
-from OMPython.cdata_to_pydata import CdataToPYdata
+from library.OMPython.cdata_to_pydata import CdataToPYdata
 
 
 class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):

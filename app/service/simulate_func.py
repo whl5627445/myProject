@@ -16,7 +16,6 @@ ip = socket.gethostbyname(hostname)
 
 
 def SimulateDataHandle(SRecord: object, result_file_path, username, model_name, simulate_result_str):
-    SRecord.simulate_status = "仿真已结束"
     SRecord.simulate_result_str = simulate_result_str
     SRecord.simulate_model_result_path = result_file_path + "result.mat",  # omc会为结果文件添加"_res.mat"后缀
     mat_file_data = DyMatFile(result_file_path + "result.mat")
@@ -33,7 +32,8 @@ def SimulateDataHandle(SRecord: object, result_file_path, username, model_name, 
                 model_variable_data_abscissa=model_variable_data_abscissa
         )
         session.add(SResult)
-    session.flush()  # 调用函数之后记得提交和关闭连接
+    SRecord.simulate_status = "仿真已结束"
+    session.flush()  # 提交数据
 
 
 def JModelicaSimulate(SRecord_id, username: str, model_name: str, mo_path: str, simulate_parameters_data = None):

@@ -21,14 +21,13 @@ from distutils import spawn
 import psutil
 import pyparsing
 from future.utils import with_metaclass
-from OMPython.cdata_to_pydata import CdataToPYdata
 
 if sys.platform == 'darwin':
     # On Mac let's assume omc is installed here and there might be a broken omniORB installed in a bad place
     sys.path.append('/opt/local/lib/python2.7/site-packages/')
     sys.path.append('/opt/openmodelica/lib/python2.7/site-packages/')
 
-from OMPython import OMTypedParser, OMParser
+from library.OMPython import OMTypedParser, OMParser
 
 # Logger Defined
 logger = logging.getLogger('OMPython')
