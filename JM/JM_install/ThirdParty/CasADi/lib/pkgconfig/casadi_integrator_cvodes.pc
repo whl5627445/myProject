@@ -1,0 +1,12 @@
+prefix=/home/simtek/JM_install/ThirdParty/CasADi
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: casadi_integrator_cvodes
+Description: CasADi is a symbolic framework for automatic differentation and numeric optimization ( module casadi_integrator_cvodes )
+URL: http://casadi.org
+Version: 2.1.0+
+Requires: casadi_core,casadi_sundials_common
+Libs: -L${libdir} -lcasadi_integrator_cvodes
+Cflags: -I${includedir}
