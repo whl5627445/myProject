@@ -37,3 +37,15 @@ async def UploadFile(request: Request, file: UploadFile = File(...)):
         res.status = 1
         res.err = "模型加载失败，请重新检查后上传"
     return res
+
+
+@router.delete("/delete_package", response_model=ResponseModel)
+async def UploadFile(request: Request, package_name: str):
+    package = session.query(ModelsInformation).filter_by(package_name=package_name, sys_or_user=request.user["username"]).first()
+    res = InitResponseModel()
+    if package:
+        package.delete()
+        session.flush()
+        session.close()
+    res.msg = "删除成功"
+    return res

@@ -13,6 +13,7 @@ from app.service.get_components import GetComponents
 from app.BaseModel.simulate import SetComponentModifierValueModel, SetComponentPropertiesModel
 import json
 
+
 @router.get("/listrootlibrary", response_model=ResponseModel)
 async def GetRootModelView (request: Request):
     """
@@ -272,9 +273,8 @@ async def SetComponentPropertiesView (item: SetComponentPropertiesModel, request
         res.status = 1
     return res
 
-
-@router.get("/test", response_model=ResponseModel)
-async def test (modelname: str, request: Request):
+@router.get("/test")
+async def _test (modelname: str, request: Request):
     username = request.user["username"]
     r.hdel("GetGraphicsData_" + username, modelname)
-    return {"msg": "ok"}
+    return {"msg": "Hello World"}
