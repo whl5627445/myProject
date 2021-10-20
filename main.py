@@ -1,5 +1,4 @@
 from fastapi import FastAPI, Request, Response
-import pydevd_pycharm
 from app.api.simulateview import router as simulate_view_router
 from app.api.modelview import router as model_view_router
 from app.api.upload_file import router as upload_file_router
@@ -10,7 +9,7 @@ from starlette.authentication import (
     AuthenticationBackend, AuthenticationError, SimpleUser,
     AuthCredentials
 )
-
+import pydevd_pycharm
 pydevd_pycharm.settrace('192.168.1.110', port=10086, stdoutToServer=True, stderrToServer=True)
 
 class BasicAuthBackend(AuthenticationBackend):

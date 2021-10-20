@@ -13,10 +13,10 @@ class ResponseModel(BaseModel):
 
 
 class InitResponseModel(object):
-    data = None
-    err = None
-    msg = None
-    status = None
+    data = []
+    err = ""
+    msg = ""
+    status: int = 0
 
 
 

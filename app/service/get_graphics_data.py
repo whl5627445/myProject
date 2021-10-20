@@ -13,6 +13,18 @@ class GetGraphicsData(object):
         self.data = [[], []]
         self.mod = mod
 
+    def getICList(self,name):
+        data_list = name
+        name_list = name
+        while True:
+            InheritedClassesData = self.mod.getInheritedClassesList(name_list)
+            if InheritedClassesData:
+                data_list.extend(InheritedClassesData)
+                name_list = InheritedClassesData
+            else:
+                break
+        return data_list
+
     def data_01(self, c_data):
         data_list = []
         if c_data == ['']:
@@ -77,7 +89,7 @@ class GetGraphicsData(object):
             data_list.append(data)
         return data_list
 
-    def data_02(self, c_data, ca_data, is_icon=False):
+    def data_02(self, c_data, ca_data, is_icon=False, parent=""):
         data_list = []
         c_data_filter = []
         ca_data_filter = []
@@ -92,7 +104,8 @@ class GetGraphicsData(object):
         if ca_data_filter == [] or c_data_filter == [] or not ca_data_filter or not c_data_filter:
             return data_list
         for i in range(len(c_data_filter)):
-            namelist = self.mod.getInheritedClasses(c_data_filter[i][0])
+            namelist = self.getICList([c_data_filter[i][0]])
+            namelist.append(c_data_filter[i][0])
             if ca_data_filter[i][0] == "Placement":
                 Components_data = self.mod.getComponentsList(namelist)
                 ComponentAnnotations_data = self.mod.getComponentAnnotationsList(namelist)
@@ -101,26 +114,27 @@ class GetGraphicsData(object):
                 if rotateAngle == "-":
                     # rotateAngle = int(float(rotateAngle))
                     rotateAngle = "0"
-                data = {"type": "Transformation",}
+                data = {"type": "Transformation"}
                 data["name"] = c_data_filter[i][1]
+                data["parent"] = parent
                 data["classname"] = c_data_filter[i][0]
                 data["visible"] = ca_data_filter[i][1][0]
                 data["rotateAngle"] = rotateAngle
                 data["originDiagram"] = ",".join([ca_data_filter[i][1][1], ca_data_filter[i][1][2]])
                 data["extent1Diagram"] = ",".join([ca_data_filter[i][1][3], ca_data_filter[i][1][4]])
                 data["extent2Diagram"] = ",".join([ca_data_filter[i][1][5], ca_data_filter[i][1][6]])
-                data["inputOutputs"] = self.data_02(Components_data, ComponentAnnotations_data, is_icon=True)
+                data["inputOutputs"] = self.data_02(Components_data, ComponentAnnotations_data, is_icon=True, parent=data["name"])
                 data["subShapes"] = self.data_01(IconAnnotation_data)
                 data_list.append(data)
 
         return data_list
 
     def getNthConnection_data(self, name_list):
-        cc = self.mod.getConnectionCountList(name_list)
+        cc = self.mod.getConnectionCountList(name_list)[0]
         if cc != [0]:
-            for i in range(len(cc)):
-                nc_data = self.mod.getNthConnectionList(name_list, i + 1)
-                nca_data = self.mod.getNthConnectionAnnotationList(name_list, i + 1)
+            for i in range(cc):
+                nc_data = self.mod.getNthConnection(name_list[0], i + 1)
+                nca_data = self.mod.getNthConnectionAnnotation(name_list[0], i + 1)
                 da_data = self.data_01(nca_data)[0]
                 da_data["connectionfrom"] = nc_data[0]
                 da_data["connectionto"] = nc_data[1]

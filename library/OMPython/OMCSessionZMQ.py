@@ -159,7 +159,7 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
         data_list = []
         for i in class_name_list:
             Components_data = self.sendExpression("getComponents(" + i + ", useQuotes = true)")
-            if Components_data != ['']:
+            if Components_data != [''] and Components_data != "Error":
                 data_list.extend(Components_data)
         return data_list
 
@@ -187,17 +187,29 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
             data_list.append(data)
         return data_list
 
-    def getNthConnectionList(self, class_name_list, num):
+    def getNthConnection(self, class_name, num):
+        data_list = []
+        NthConnection_data = self.sendExpression("getNthConnection(" + class_name + "," + str(num) + ")")
+        data_list.extend(NthConnection_data)
+        return data_list
+
+    def getNthConnectionAnnotation(self, class_name, num):
+        data_list = []
+        NthConnectionAnnotation_data = self.sendExpression("getNthConnectionAnnotation(" + class_name + "," + str(num) + ")")
+        data_list.extend(NthConnectionAnnotation_data)
+        return data_list
+
+    def getNthConnectionList(self, class_name, num):
         data_list = []
         for i in range(num):
-            NthConnection_data = self.sendExpression("getNthConnection(" + class_name_list[i] + "," + str(i+1) + ")")
+            NthConnection_data = self.sendExpression("getNthConnection(" + class_name + "," + str(i+1) + ")")
             data_list.extend(NthConnection_data)
         return data_list
 
-    def getNthConnectionAnnotationList(self, class_name_list, num):
+    def getNthConnectionAnnotationList(self, class_name, num):
         data_list = []
         for i in range(num):
-            NthConnectionAnnotation_data = self.sendExpression("getNthConnectionAnnotation(" + class_name_list[i] + "," + str(i + 1) + ")")
+            NthConnectionAnnotation_data = self.sendExpression("getNthConnectionAnnotation(" + class_name + "," + str(i + 1) + ")")
             data_list.extend(NthConnectionAnnotation_data)
         return data_list
 
