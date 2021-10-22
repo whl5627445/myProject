@@ -1,7 +1,9 @@
 from app.model.models_package.ModelsInformation import ModelsInformationAll, ModelsInformation
-from config.DB_config import session
+from config.DB_config import DBSession
 from config.omc import omc
 import os
+session = DBSession()
+
 omc.sendExpression("loadModel(Modelica, {\"3.2.3\"},true,\"\",false)")
 
 

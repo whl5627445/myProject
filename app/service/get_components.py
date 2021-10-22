@@ -7,6 +7,7 @@ def GetComponents(class_name, component_name=None, file_path=None):
     data = omc.getComponents(class_name)
     if component_name:
         for i in data:
+            print(i)
             if i[1] == component_name:
                 data = i
     return data

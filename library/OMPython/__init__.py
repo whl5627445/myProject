@@ -326,7 +326,7 @@ class OMCSessionBase(with_metaclass(abc.ABCMeta, object)):
         return self.ask('loadFile', '"{0}"'.format(filename))
 
     def simulate (self, className, fileNamePrefix, simulate_parameters_data):
-        cmd = className + ', fileNamePrefix = "' + fileNamePrefix + '"'
+        cmd = className + ', fileNamePrefix = "' + fileNamePrefix  + 'result\"'
         if simulate_parameters_data:
             simulate_parameters_list = []
             for k, v in simulate_parameters_data.items():
@@ -334,7 +334,11 @@ class OMCSessionBase(with_metaclass(abc.ABCMeta, object)):
                     simulate_parameters_list.append(str(k) + "=" + str(v))
             cmd = cmd + ", " + ", ".join(simulate_parameters_list)
         self.directoryExists(fileNamePrefix)
-        return self.ask('simulate', '{0}'.format(cmd))
+        simulate_result =  self.ask('simulate', '{0}'.format(cmd))
+        return simulate_result
+
+    def cd (self, newWorkingDirectory):
+        return self.ask('cd', '"{0}"'.format(newWorkingDirectory))
 
     def getSimulationOptions (self, className):
         return self.ask('getSimulationOptions', className)

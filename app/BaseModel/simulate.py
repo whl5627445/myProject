@@ -7,7 +7,7 @@ class ModelSimulateModel(BaseModel):
     s_type: Optional[str] = "OM"
     start_time: Optional[float] = 0.0
     stop_time: Optional[float]
-    number_of_intervals: Optional[int]
+    number_of_intervals: Optional[int] = 500
     # interval: Optional[float]
     tolerance: Optional[float] = 0.000001
     # method: Optional[str]

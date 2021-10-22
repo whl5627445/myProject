@@ -5,7 +5,8 @@ from app.BaseModel.respose_model import ResponseModel, InitResponseModel
 from app.model.models_package.ModelsInformation import ModelsInformation
 from app.service.save_class_names import SaveClassNames
 from library.file_operation import FileOperation
-from config.DB_config import session
+from config.DB_config import DBSession
+session = DBSession()
 
 
 @router.post("/", response_model=ResponseModel)
