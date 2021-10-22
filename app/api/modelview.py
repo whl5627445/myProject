@@ -44,7 +44,7 @@ async def GetRootModelView (request: Request):
 
 
 @router.get("/listlibrary", response_model=ResponseModel)
-async def GetModelView (modelname: str, request: Request):
+async def GetModelView (model_name: str, request: Request):
     """
     # 获取左侧模型列表接口， 此接口获取系统模型和用户上传模型的子节点节点列表(需用传入父节点名称，返回子节点列表)，暂时没有图标信息
     ## modelname: 模型的父节点名称
@@ -56,17 +56,15 @@ async def GetModelView (modelname: str, request: Request):
         mn = session.query(
                 ModelsInformationAll.model_name,
                 ModelsInformationAll.haschild,
-                # ModelsInformationAll.image,
                 ModelsInformationAll.sys_or_user
-        ).filter_by(parent_name=modelname).filter(ModelsInformationAll.sys_or_user.in_(["sys", request.user["username"]])).all()
+        ).filter_by(parent_name=model_name).filter(ModelsInformationAll.sys_or_user.in_(["sys", request.user["username"]])).all()
         for i in mn:
             mn_data = {
                 "model_name": i[0],
                 "haschild": i[1],
-                # "image": i[2],
-                "sys_or_user": i[3]
+                "sys_or_user": i[2]
                 }
-            if i[3] != "sys":
+            if i[2] != "sys":
                 mn_data["sys_or_user"] = "user"
             data.append(mn_data)
         res.data = data
@@ -79,7 +77,7 @@ async def GetModelView (modelname: str, request: Request):
 
 
 @router.get("/getgraphicsdata", response_model=ResponseModel)
-async def GetGraphicsDataView (modelname: str, sys_user: str, request: Request):
+async def GetGraphicsDataView (model_name: str, sys_user: str, request: Request):
     """
     # 获取模型的画图数据，一次性返回， 第一次调用时间较久，有缓存机制，redis
     ## modelname: 需要查询的模型名称，全称， 例如“Modelica.Blocks.Examples.PID_Controller”
@@ -89,18 +87,18 @@ async def GetGraphicsDataView (modelname: str, sys_user: str, request: Request):
     res = InitResponseModel()
     try:
         username = request.user["username"]
-        r_data = r.hget("GetGraphicsData_" + username, modelname)
+        r_data = r.hget("GetGraphicsData_" + username, model_name)
         if r_data:
             G_data = r_data.decode()
         else:
             model_file_path = None
             if sys_user == "user":
-                package_name = modelname.split(".")[0]
+                package_name = model_name.split(".")[0]
                 package = session.query(ModelsInformation).filter_by(package_name=package_name, sys_or_user=username).first()
                 model_file_path = package.file_path
-            data = GetGraphicsData().get_data([modelname], model_file_path)
+            data = GetGraphicsData().get_data([model_name], model_file_path)
             G_data = json.dumps(data)
-            r.hset("GetGraphicsData_" + username, modelname, G_data)
+            r.hset("GetGraphicsData_" + username, model_name, G_data)
         res.data = json.loads(G_data)
     except Exception as e:
         print(e)
@@ -110,7 +108,7 @@ async def GetGraphicsDataView (modelname: str, sys_user: str, request: Request):
 
 
 @router.get("/getmodelcode", response_model=ResponseModel)
-async def GetModelCodeView (modelname: str, sys_user: str, request: Request):
+async def GetModelCodeView (model_name: str, sys_user: str, request: Request):
     """
     # 获取模型的源码数据，一次性返回
     ## modelname: 需要查询的模型名称，全称， 例如“Modelica.Blocks.Examples.PID_Controller”
@@ -122,10 +120,10 @@ async def GetModelCodeView (modelname: str, sys_user: str, request: Request):
         username = request.user["username"]
         path = None
         if sys_user == "user":
-            package_name = modelname.split(".")[0]
+            package_name = model_name.split(".")[0]
             model = session.query(ModelsInformation).filter_by(package_name=package_name, sys_or_user=username).first()
             path = model.file_path
-        data = GetModelCode(modelname, path)
+        data = GetModelCode(model_name, path)
         res.data = [data]
     except Exception as e:
         print(e)
@@ -279,8 +277,9 @@ async def SetComponentPropertiesView (item: SetComponentPropertiesModel, request
         res.status = 1
     return res
 
+
 @router.get("/test")
-async def _test (modelname: str, request: Request):
+async def _test (model_name: str, request: Request):
     username = request.user["username"]
-    r.hdel("GetGraphicsData_" + username, modelname)
+    r.hdel("GetGraphicsData_" + username, model_name)
     return {"msg": "Hello World"}
