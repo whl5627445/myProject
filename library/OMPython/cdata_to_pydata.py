@@ -71,7 +71,7 @@ def CdataToPYdata (data):
             else:
                 c += b[i]
             n += 1
-            py_data = ['']
+            # py_data = ['']
         c = c.replace('[\"\"]', '[\"\"\"\"]')
         c = c.replace('\"\"', '"')
         c = c.replace(',\",', '"",')

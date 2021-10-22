@@ -1,5 +1,5 @@
 from router.simulate import router
-from config.DB_config import session
+from config.DB_config import DBSession
 from app.model.Simulate.SimulateResult import SimulateResult
 from app.model.Simulate.SimulateRecord import SimulateRecord
 from app.model.models_package.ModelsInformation import ModelsInformationAll, ModelsInformation
@@ -9,6 +9,7 @@ from app.BaseModel.simulate import ModelSimulateModel
 from app.BaseModel.respose_model import ResponseModel, InitResponseModel
 from app.service.get_tree_data import GetTreeData
 from app.service.get_simulation_options import GetSimulationOptions
+session = DBSession()
 
 
 @router.get("/getsimulationoptions", response_model=ResponseModel)

@@ -1,6 +1,6 @@
 from fastapi import Request
 from router.simulatemodel import router
-from config.DB_config import session
+from config.DB_config import DBSession
 from config.redis_config import r
 from app.model.models_package.ModelsInformation import ModelsInformationAll, ModelsInformation
 from app.BaseModel.respose_model import ResponseModel, InitResponseModel
@@ -12,6 +12,7 @@ from app.service.set_component_properties import SetComponentProperties
 from app.service.get_components import GetComponents
 from app.BaseModel.simulate import SetComponentModifierValueModel, SetComponentPropertiesModel
 import json
+session = DBSession()
 
 
 @router.get("/listrootlibrary", response_model=ResponseModel)
@@ -27,7 +28,7 @@ async def GetRootModelView (request: Request):
             mn_data = {
                 "package_name": i.package_name,
                 "sys_or_user": i.sys_or_user,
-                "image": i.image,
+                # "image": i.image,
                 "haschild": i.haschild
             }
             if i.sys_or_user != "sys":
@@ -55,11 +56,16 @@ async def GetModelView (modelname: str, request: Request):
         mn = session.query(
                 ModelsInformationAll.model_name,
                 ModelsInformationAll.haschild,
-                ModelsInformationAll.image,
+                # ModelsInformationAll.image,
                 ModelsInformationAll.sys_or_user
         ).filter_by(parent_name=modelname).filter(ModelsInformationAll.sys_or_user.in_(["sys", request.user["username"]])).all()
         for i in mn:
-            mn_data = {"model_name": i[0], "haschild": i[1], "image": i[2], "sys_or_user": i[3]}
+            mn_data = {
+                "model_name": i[0],
+                "haschild": i[1],
+                # "image": i[2],
+                "sys_or_user": i[3]
+                }
             if i[3] != "sys":
                 mn_data["sys_or_user"] = "user"
             data.append(mn_data)
@@ -76,7 +82,7 @@ async def GetModelView (modelname: str, request: Request):
 async def GetGraphicsDataView (modelname: str, sys_user: str, request: Request):
     """
     # 获取模型的画图数据，一次性返回， 第一次调用时间较久，有缓存机制，redis
-    ## modelname: 需要查询的模型名称，全称， 例如“ENN.Examples.Scenario1_Status”
+    ## modelname: 需要查询的模型名称，全称， 例如“Modelica.Blocks.Examples.PID_Controller”
     ## sys_user: 模型是系统模型还是用户模型，系统模型固定是“sys”, 用户模型固定是“user”
     ## return: 返回json格式数据
     """
@@ -107,7 +113,7 @@ async def GetGraphicsDataView (modelname: str, sys_user: str, request: Request):
 async def GetModelCodeView (modelname: str, sys_user: str, request: Request):
     """
     # 获取模型的源码数据，一次性返回
-    ## modelname: 需要查询的模型名称，全称， 例如“ENN.Examples.Scenario1_Status”
+    ## modelname: 需要查询的模型名称，全称， 例如“Modelica.Blocks.Examples.PID_Controller”
     ## sys_user: 模型是系统模型还是用户模型，系统模型固定是“sys”, 用户模型固定是“user”
     ## return: 返回json格式数据
     """
@@ -161,7 +167,7 @@ async def SetModelParametersView (item: SetComponentModifierValueModel, request:
     """
     # 设置模型组件的参数数据，一次性返回
     ## model_name: 需要设置参数的模型名称，全称，例如“ENN.Examples.Scenario1_Status”
-    ## parameter_value: 需要设置的变量和新的值，全称，例如{"PI.k": "200"}， k是模型的组件别名和变量名字的组成， 类似于“别名.变量名”
+    ## parameter_value: 需要设置的变量和新的值，全称，例如{"PID.k": "200"}， k是模型的组件别名和变量名字的组成， 类似于“别名.变量名”
     ## return: 返回json格式数据
     """
     res = InitResponseModel()
@@ -196,33 +202,34 @@ async def GetComponentPropertiesView (model_name: str, component_name: str, sys_
     """
     res = InitResponseModel()
 
-    try:
-        username = request.user["username"]
-        package_name = model_name.split(".")[0]
-        model = None
-        if sys_user == "user":
-            model = session.query(ModelsInformation).filter_by(package_name=package_name, sys_or_user=username).first()
+    # try:
+    username = request.user["username"]
+    package_name = model_name.split(".")[0]
+    file_path = None
+    if sys_user == "user":
+        model = session.query(ModelsInformation).filter_by(package_name=package_name, sys_or_user=username).first()
         if not model:
             res.err = "设置失败"
             res.status = 2
             return res
-        result = GetComponents(model_name, component_name, model.file_path)
-        data = {
-            "model_name": model_name,
-            "component_name": component_name,
-            "path": result[0],
-            "dimension": str(result[-1]).replace("['']", "[]"),
-            "annotation": str(result[2]),
-            "Properties": [result[4], result[3], result[7]],
-            "Variability": result[8],
-            "Inner/Outer": result[9],
-            "Causality": result[10],
-        }
-        res.data = [data]
-    except Exception as e:
-        print(e)
-        res.err = "获取数据失败"
-        res.status = 1
+        file_path = model.file_path
+    result = GetComponents(model_name, component_name, file_path)
+    data = {
+        "model_name": model_name,
+        "component_name": component_name,
+        "path": result[0],
+        "dimension": str(result[-1]).replace("['']", "[]"),
+        "annotation": str(result[2]),
+        "Properties": [result[4], result[3], result[7]],
+        "Variability": result[8],
+        "Inner/Outer": result[9],
+        "Causality": result[10],
+    }
+    res.data = [data]
+    # except Exception as e:
+    #     print(e)
+    #     res.err = "获取数据失败"
+    #     res.status = 1
     return res
 
 
@@ -233,7 +240,7 @@ async def SetComponentPropertiesView (item: SetComponentPropertiesModel, request
         "class_name": 需要设置参数的模型名称，全称，例如“ENN.Examples.Scenario1_Status”
         "component_name": 需要查询的组件别名，全称，“PID”
         "final": "true" or "false",
-        "protected": "public" or "protected",
+        "protected": "true" or "false",
         "replaceable": "true" or "false",
         "variabilty": "unspecified" or  "parameter" or "discrete" or "constant"
         "inner": "true" or "false",
@@ -261,7 +268,6 @@ async def SetComponentPropertiesView (item: SetComponentPropertiesModel, request
             res.status = 2
             return res
         result = SetComponentProperties(model.file_path, **parameters_data)
-        print(result)
         if result == "Ok":
             res.msg = "设置成功"
         else:

@@ -3,12 +3,13 @@ from library.mat import DyMatFile
 from config.omc import omc
 from app.model.Simulate.SimulateRecord import SimulateRecord
 from app.model.Simulate.SimulateResult import SimulateResult
-from config.DB_config import session
+from config.DB_config import DBSession
 import time
 import socket
 from library.file_operation import FileOperation
 import json
-
+import os
+session = DBSession()
 
 # 获取本机ip, 用于访问docker服务
 hostname = socket.gethostname()
@@ -17,8 +18,8 @@ ip = socket.gethostbyname(hostname)
 
 def SimulateDataHandle(SRecord: object, result_file_path, username, model_name, simulate_result_str):
     SRecord.simulate_result_str = simulate_result_str
-    SRecord.simulate_model_result_path = result_file_path + "result.mat",  # omc会为结果文件添加"_res.mat"后缀
-    mat_file_data = DyMatFile(result_file_path + "result.mat")
+    SRecord.simulate_model_result_path = result_file_path + "result_res.mat",  # omc会为结果文件添加"_res.mat"后缀
+    mat_file_data = DyMatFile(result_file_path + "result_res.mat")
     SRecord.simulate_nametree = mat_file_data.nameTree()
     for k, v in mat_file_data.vars.items():
         model_variable_data_abscissa = mat_file_data.abscissa(k, True).tolist()
@@ -46,9 +47,10 @@ def JModelicaSimulate(SRecord_id, username: str, model_name: str, mo_path: str, 
             time.time())[:10] + '/'
     msg = {
         "mo_path": mo_path,
+        "result_name": "result_res.mat",
         "modelname": model_name,
         "ncp": simulate_parameters_data["numberOfIntervals"],  # 结果间隔
-        "result_file_path": result_file_path,  # 结果文件名字
+        "result_file_path": result_file_path ,  # 结果文件名字
         "rtol": simulate_parameters_data["tolerance"],  # 相对公差
     }
     file_operation = FileOperation()
@@ -77,9 +79,11 @@ def OpenModelicaSimulate(SRecord_id, username: str, model_name: str, file_path: 
         Load_result = omc.loadFile(file_path)
     else:
         Load_result = omc.loadModel(model_name)
+    file_operation = FileOperation()
+    file_operation.make_dir(result_file_path)
     if Load_result != 'false\\n':
         SRecord.simulate_end_time = datetime.datetime.now()
-        simulate_result_str = omc.simulate(model_name, result_file_path, simulate_parameters_data)
+        simulate_result_str = omc.simulate(className=model_name, fileNamePrefix=result_file_path, simulate_parameters_data=simulate_parameters_data)
         err = omc.getErrorString()
         if err != " ":
             SimulateDataHandle(SRecord, result_file_path, username, model_name, simulate_result_str)
