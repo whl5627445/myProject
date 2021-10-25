@@ -55,7 +55,8 @@ app.add_middleware(
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
     response = await call_next(request)
-    response.headers["Access-Control-Allow-Origin"] = request.headers["Origin"]
+    if request.headers.get("Origin"):
+        response.headers["Access-Control-Allow-Origin"] = request.headers["Origin"]
     return response
 
 
