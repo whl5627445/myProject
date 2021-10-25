@@ -233,6 +233,13 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
         getDerivedClassModifierValue_data = self.sendExpression("getDerivedClassModifierValue(" + class_name + "," + modifier_name + ")")
         return getDerivedClassModifierValue_data
 
+    def getDerivedClassModifierValueList(self, class_name, modifier_name_list):
+        data_list = []
+        for modifier_name in modifier_name_list:
+            getDerivedClassModifierValue_data = self.sendExpression("getDerivedClassModifierValue(" + class_name + "," + modifier_name + ")")
+            data_list.insert(0, getDerivedClassModifierValue_data)
+        return data_list
+
     def isEnumeration(self, parameter_name):
         isEnumeration_data = self.sendExpression("isEnumeration(" + parameter_name + ")")
         return isEnumeration_data

@@ -41,13 +41,10 @@ app.include_router(model_view_router)
 app.include_router(upload_file_router)
 app.add_middleware(SessionMiddleware, secret_key="simtek")
 app.add_middleware(AuthenticationMiddleware, backend=BasicAuthBackend())
-origins = [
-    ""
-]
+
 
 app.add_middleware(
     CORSMiddleware,
-    # allow_origins=origins,
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
@@ -55,27 +52,11 @@ app.add_middleware(
 )
 
 
-# @app.middleware("http")
-# async def add_process_time_header(request: Request, call_next):
-#     secret = "abcdefghijklmnopqrstuvwxyz"
-#     token = request.cookies.get("Admin-Token")
-#     # try:
-#     #     decoded = jwt.decode(token, secret, algorithms=["HS512"])
-#     # except Exception as e:
-#     #     response = responses.JSONResponse({"msg": "验证错误"})
-#     #     return response
-#     # key = "login_tokens:" + str(decoded["login_user_key"])
-#     key = token
-#     r_data = r.get(key)
-#     if r_data:
-#         data = eval(r.get(key))
-#         print(data)
-#     else:
-#         pass
-#         # response = responses.JSONResponse({"msg": "验证错误"})
-#         # return response
-#     response = await call_next(request)
-#     return response
+@app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["Access-Control-Allow-Origin"] = request.headers["Origin"]
+    return response
 
 
 
