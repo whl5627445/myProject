@@ -2,7 +2,7 @@ import time
 from fastapi import File, UploadFile, Request
 from router.upload_file import router
 from app.BaseModel.respose_model import ResponseModel, InitResponseModel
-from app.model.models_package.ModelsInformation import ModelsInformation
+from app.model.models_package.ModelsInformation import ModelsInformation, ModelsInformationAll
 from app.service.save_class_names import SaveClassNames
 from library.file_operation import FileOperation
 from config.DB_config import DBSession
@@ -42,11 +42,10 @@ async def UploadFile(request: Request, file: UploadFile = File(...)):
 
 @router.delete("/delete_package", response_model=ResponseModel)
 async def UploadFile(request: Request, package_name: str):
-    package = session.query(ModelsInformation).filter_by(package_name=package_name, sys_or_user=request.user["username"]).first()
+    session.query(ModelsInformation).filter_by(package_name=package_name, sys_or_user=request.user["username"]).delete(synchronize_session=False)
+    session.query(ModelsInformationAll).filter_by(package_name=package_name, sys_or_user=request.user["username"]).delete(synchronize_session=False)
     res = InitResponseModel()
-    if package:
-        package.delete()
-        session.flush()
-        session.close()
+    session.flush()
+    session.close()
     res.msg = "删除成功"
     return res
