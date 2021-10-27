@@ -277,9 +277,10 @@ async def SetComponentPropertiesView (item: SetComponentPropertiesModel, request
         res.status = 1
     return res
 
-
+from config.omc import omc
 @router.get("/test")
 async def _test (model_name: str, request: Request):
-    username = request.user["username"]
-    r.hdel("GetGraphicsData_" + username, model_name)
-    return {"msg": "Hello World"}
+    # username = request.user["username"]
+    # r.hdel("GetGraphicsData_" + username, model_name)
+    res = omc.sendExpression(model_name)
+    return {"msg": res}

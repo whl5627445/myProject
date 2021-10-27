@@ -280,3 +280,12 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
         result = self.sendExpression(cmd)
         return result
 
+    def existClass(self, class_name, component_name, dimension):
+        cmd = "setComponentDimensions(" + class_name + "," + component_name + ",{" + dimension + "})"
+        result = self.sendExpression(cmd)
+        return result
+
+    def copyClass(self, class_name, component_name, dimension):
+        cmd = "setComponentDimensions(" + class_name + "," + component_name + ",{" + dimension + "})"
+        result = self.sendExpression(cmd)
+        return result

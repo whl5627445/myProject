@@ -47,6 +47,7 @@ async def GetSimulationOptionsView(request: Request, model_name: str):
 async def ModelSimulateView (item: ModelSimulateModel, background_tasks: BackgroundTasks, request: Request):
     """
     # 仿真接口，用于模型的仿真计算
+    ## simulate_type: 仿真模型时使用的求解器是哪种,
     ## model_name: 仿真模型的名字,
     ## start_time: 仿真参数，仿真的开始时间，单位是整数秒。
     ## stop_time: 仿真参数，仿真的结束时间，单位是整数秒。
@@ -74,11 +75,11 @@ async def ModelSimulateView (item: ModelSimulateModel, background_tasks: Backgro
         SRecord = SimulateRecord(
                 username=request.user["username"],
                 simulate_model_name=item.model_name,
-                simulate_status="仿真记录已创建",
+                simulate_status="仿真进行中",
         )
         session.add(SRecord)
         session.flush()
-        background_tasks.add_task(Simulate, SRecord.id, request.user["username"], item.model_name, item.s_type, model.file_path, simulate_parameters_data)
+        background_tasks.add_task(Simulate, SRecord.id, request.user["username"], item.model_name, item.simulate_type, model.file_path, simulate_parameters_data)
         res.msg = "仿真任务已开始，请等待仿真完成"
         res.data = [SRecord.id]
     except Exception as e:

@@ -1,4 +1,3 @@
-import time
 from fastapi import File, UploadFile, Request
 from router.upload_file import router
 from app.BaseModel.respose_model import ResponseModel, InitResponseModel
@@ -6,6 +5,7 @@ from app.model.models_package.ModelsInformation import ModelsInformation, Models
 from app.service.save_class_names import SaveClassNames
 from library.file_operation import FileOperation
 from config.DB_config import DBSession
+from datetime import datetime
 session = DBSession()
 
 
@@ -18,7 +18,7 @@ async def UploadFile(request: Request, file: UploadFile = File(...)):
     """
     res = InitResponseModel()
     file_data = await file.read()
-    file_path = "public/UserFiles/UploadFile/" + request.user["username"] + "/" + str(time.time())
+    file_path = "public/UserFiles/UploadFile/" + request.user["username"] + "/" + str(datetime.now().strftime('%Y%m%d%H%M%S%f'))
     file_name = file.filename.removesuffix(".mo")
     UP = session.query(ModelsInformation).filter_by(package_name=file_name).first()
     if UP:

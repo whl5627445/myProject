@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 class ModelSimulateModel(BaseModel):
     model_name: str
-    s_type: Optional[str] = "OM"
+    simulate_type: Optional[str] = "OM"
     start_time: Optional[float] = 0.0
     stop_time: Optional[float]
     number_of_intervals: Optional[int] = 500

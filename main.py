@@ -28,7 +28,7 @@ class BasicAuthBackend(AuthenticationBackend):
         #
         # username, _, password = decoded.partition(":")
         username = {
-            "username": "tom"
+            "username": request.headers.get("username", "tom")
         }
         # TODO: You'd want to verify the username and password here.
         # return AuthCredentials(["authenticated"]), SimpleUser(username)
@@ -58,7 +58,3 @@ async def add_process_time_header(request: Request, call_next):
     if request.headers.get("Origin"):
         response.headers["Access-Control-Allow-Origin"] = request.headers["Origin"]
     return response
-
-
-
-
