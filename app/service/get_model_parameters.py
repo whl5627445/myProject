@@ -1,10 +1,9 @@
 from config.omc import omc
-import json
 
 
 def GetModelParameters(class_name, name, component_name, path=None):
-    if path:
-        omc.loadFile(path)
+    # if path:
+    #     omc.loadFile(path)
     data_list = []
     Components = omc.getComponents(component_name)
     ComponentAnnotations = omc.getComponentAnnotations(component_name)
@@ -19,16 +18,16 @@ def GetModelParameters(class_name, name, component_name, path=None):
 
     for i in range(len(ParameterNames)):
         data_default = {
-            "tab": "General", #
-            "type": "Normal", #
-            "group": "Parameters" #
+            "tab": "General",
+            "type": "Normal",
+            "group": "Parameters"
         }
         p = Components_dict[ParameterNames[i]]
         data_default["name"] = p[1]
         data_default["comment"] = p[2]
         Dialog_index = p[-1].index("Dialog") if "Dialog" in p[-1] else None
-        if 'HideResult=true' in p[-1]:
-            continue
+        # if 'HideResult=true' in p[-1]:
+        #     continue
         if Dialog_index is not None:
             tab_index = Dialog_index + 1
             tab = p[-1][tab_index][0]
@@ -37,7 +36,7 @@ def GetModelParameters(class_name, name, component_name, path=None):
             data_default["group"] = group
 
         isEnumeration = omc.isEnumeration(p[0])
-        if isEnumeration == 'True':
+        if isEnumeration:
             Literals = omc.getEnumerationLiterals(p[0])
             data_default["options"] = ['.'.join([p[0].removeprefix("."), i]) for i in Literals]
             data_default["type"] = "Enumeration"
@@ -73,7 +72,13 @@ def GetModelParameters(class_name, name, component_name, path=None):
 
 
 if __name__ == '__main__':
-    name = "PI"
-    m_name = "Modelica.Blocks.Continuous.LimPID"
+    # name = "PI"
+    # name = "kinematicPTP"
+    name = "inertia1"
+    # name = "spring"
+    # m_name = "Modelica.Blocks.Continuous.LimPID"
+    # m_name = "Modelica.Blocks.Sources.KinematicPTP"
+    m_name = "Modelica.Mechanics.Rotational.Components.Inertia"
+    # m_name = "Modelica.Mechanics.Rotational.Components.SpringDamper"
     class_name = "Modelica.Blocks.Examples.PID_Controller"
     print(GetModelParameters(class_name, name, m_name))

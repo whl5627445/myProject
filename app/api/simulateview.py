@@ -27,11 +27,11 @@ async def GetSimulationOptionsView(request: Request, model_name: str):
     res = InitResponseModel()
     try:
         MI_all = session.query(ModelsInformationAll).filter(
-                ModelsInformationAll.sys_or_user.in_([request.user["username"], "sys"]),
+                ModelsInformationAll.sys_or_user.in_([request.user.username, "sys"]),
                 ModelsInformationAll.model_name_all == model_name
         ).first()
         model = session.query(ModelsInformation).filter(
-                ModelsInformation.sys_or_user.in_([request.user["username"], "sys"]),
+                ModelsInformation.sys_or_user.in_([request.user.username, "sys"]),
                 ModelsInformation.package_name == MI_all.package_name
         ).first()
         data = GetSimulationOptions([model_name], model.file_path)
@@ -43,7 +43,7 @@ async def GetSimulationOptionsView(request: Request, model_name: str):
     return res
 
 
-@router.post("/", response_model=ResponseModel)
+@router.post("/simulate", response_model=ResponseModel)
 async def ModelSimulateView (item: ModelSimulateModel, background_tasks: BackgroundTasks, request: Request):
     """
     # 仿真接口，用于模型的仿真计算
@@ -63,23 +63,25 @@ async def ModelSimulateView (item: ModelSimulateModel, background_tasks: Backgro
             "tolerance": item.tolerance,
             # "interval": item.interval,
         }
+        if item.simulate_type not in ["OM", "JM"]:
+            return res
         MI_all = session.query(ModelsInformationAll).filter(
-                ModelsInformationAll.sys_or_user.in_([request.user["username"], "sys"]),
+                ModelsInformationAll.sys_or_user.in_([request.user.username, "sys"]),
                 ModelsInformationAll.model_name_all == item.model_name
         ).first()
         model = session.query(ModelsInformation).filter(
-                ModelsInformation.sys_or_user.in_([request.user["username"], "sys"]),
+                ModelsInformation.sys_or_user.in_([request.user.username, "sys"]),
                 ModelsInformation.package_name == MI_all.package_name
         ).first()
 
         SRecord = SimulateRecord(
-                username=request.user["username"],
+                username=request.user.username,
                 simulate_model_name=item.model_name,
                 simulate_status="仿真进行中",
         )
         session.add(SRecord)
         session.flush()
-        background_tasks.add_task(Simulate, SRecord.id, request.user["username"], item.model_name, item.simulate_type, model.file_path, simulate_parameters_data)
+        background_tasks.add_task(Simulate, SRecord.id, request.user.username, item.model_name, item.simulate_type, model.file_path, simulate_parameters_data)
         res.msg = "仿真任务已开始，请等待仿真完成"
         res.data = [SRecord.id]
     except Exception as e:
@@ -102,7 +104,7 @@ async def SimulateResultView (request: Request, variable: str, model_name: str, 
     res = InitResponseModel()
     result_data = session.query(SimulateResult).filter_by(
             simulate_record_id=id,
-            username=request.user["username"],
+            username=request.user.username,
             simulate_model_name=model_name,
             model_variable_name=variable
     ).first()
@@ -132,7 +134,7 @@ async def SimulateResultTreeView (request: Request):
             SimulateRecord.simulate_status,
             SimulateRecord.simulate_start_time,
             SimulateRecord.simulate_end_time
-    ).filter_by(username=request.user["username"]).order_by(SimulateRecord.simulate_start_time.desc()).all()
+    ).filter_by(username=request.user.username).order_by(SimulateRecord.simulate_start_time.desc()).all()
     if record_list:
         data_list = []
         for i in record_list:
@@ -161,11 +163,14 @@ async def SimulateResultTreeView (id: str, variable_name: str = None):
     """
     res = InitResponseModel()
     tree = session.query(SimulateRecord).filter_by(id=id).first()
-    name_tree = tree.simulate_nametree
-    if name_tree:
-        tree_name_data = GetTreeData(name_tree, variable_name)
-        res.data = tree_name_data
+    if tree:
+        if tree.simulate_nametree:
+            tree_name_data = GetTreeData(tree.simulate_nametree, variable_name)
+            res.data = tree_name_data
     else:
         res.msg = "没有查询到记录"
         res.status = 1
     return res
+
+
+

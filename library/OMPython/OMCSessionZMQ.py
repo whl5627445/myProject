@@ -280,12 +280,24 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
         result = self.sendExpression(cmd)
         return result
 
-    def existClass(self, class_name, component_name, dimension):
-        cmd = "setComponentDimensions(" + class_name + "," + component_name + ",{" + dimension + "})"
+    def existClass(self, class_name):
+        cmd = "existClass(" + class_name + ")"
         result = self.sendExpression(cmd)
         return result
 
-    def copyClass(self, class_name, component_name, dimension):
-        cmd = "setComponentDimensions(" + class_name + "," + component_name + ",{" + dimension + "})"
+    def copyClass(self, copied_class_name, class_name, parent_name, model_file_path):
+        load_res = self.loadFile(model_file_path)
+        cmd = "copyClass(" + copied_class_name + ",\"" + class_name + "\"," + parent_name + ")"
         result = self.sendExpression(cmd)
+        return result
+
+    def deleteClass(self, class_name, model_file_path):
+        load_res = self.loadFile(model_file_path)
+        cmd = "deleteClass(" + class_name + ")"
+        result = self.sendExpression(cmd)
+        return result
+
+    def list(self, class_name):
+        cmd = "list(" + class_name  + ")"
+        result = self.sendExpression(cmd, parsed=False)
         return result

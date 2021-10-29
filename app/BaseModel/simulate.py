@@ -33,3 +33,11 @@ class SetComponentPropertiesModel(BaseModel):
     inner: str
     outer: str
     causality: str
+
+
+class CopyClassModel(BaseModel):
+    parent_name: str
+    package_name: str
+    class_name: str
+    copied_class_name: str
+

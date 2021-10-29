@@ -89,7 +89,7 @@ def OpenModelicaSimulate(SRecord_id, username: str, model_name: str, file_path: 
         simulate_result_str = omc.simulate(className=model_name, fileNamePrefix=result_file_path, simulate_parameters_data=simulate_parameters_data)
         SRecord.simulate_end_time = datetime.now()
         err = omc.getErrorString()
-        if err != " ":
+        if err == '':
             SimulateDataHandle(SRecord, result_file_path, username, model_name, simulate_result_str)
         else:
             SRecord.simulate_status = "仿真失败"

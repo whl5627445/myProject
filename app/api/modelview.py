@@ -2,6 +2,8 @@ from fastapi import Request
 from router.simulatemodel import router
 from config.DB_config import DBSession
 from config.redis_config import r
+from datetime import datetime
+from library.file_operation import FileOperation
 from app.model.models_package.ModelsInformation import ModelsInformationAll, ModelsInformation
 from app.BaseModel.respose_model import ResponseModel, InitResponseModel
 from app.service.get_graphics_data import GetGraphicsData
@@ -10,8 +12,11 @@ from app.service.get_model_parameters import GetModelParameters
 from app.service.set_component_modifier_value import SetComponentModifierValue
 from app.service.set_component_properties import SetComponentProperties
 from app.service.get_components import GetComponents
-from app.BaseModel.simulate import SetComponentModifierValueModel, SetComponentPropertiesModel
+from app.service.copy_class import SaveClass
+from app.BaseModel.simulate import SetComponentModifierValueModel, SetComponentPropertiesModel, CopyClassModel
 import json
+import copy
+from sqlalchemy import or_, and_
 session = DBSession()
 
 
@@ -23,7 +28,7 @@ async def GetRootModelView (request: Request):
     res = InitResponseModel()
     try:
         data = []
-        mn = session.query(ModelsInformation).filter(ModelsInformation.sys_or_user.in_(["sys", request.user["username"]])).all()
+        mn = session.query(ModelsInformation).filter(ModelsInformation.sys_or_user.in_(["sys", request.user.username])).all()
         for i in mn:
             mn_data = {
                 "package_name": i.package_name,
@@ -57,7 +62,7 @@ async def GetModelView (model_name: str, request: Request):
                 ModelsInformationAll.model_name,
                 ModelsInformationAll.haschild,
                 ModelsInformationAll.sys_or_user
-        ).filter_by(parent_name=model_name).filter(ModelsInformationAll.sys_or_user.in_(["sys", request.user["username"]])).all()
+        ).filter_by(parent_name=model_name).filter(ModelsInformationAll.sys_or_user.in_(["sys", request.user.username])).all()
         for i in mn:
             mn_data = {
                 "model_name": i[0],
@@ -86,7 +91,7 @@ async def GetGraphicsDataView (model_name: str, sys_user: str, request: Request)
     """
     res = InitResponseModel()
     try:
-        username = request.user["username"]
+        username = request.user.username
         r_data = r.hget("GetGraphicsData_" + username, model_name)
         if r_data:
             G_data = r_data.decode()
@@ -117,7 +122,7 @@ async def GetModelCodeView (model_name: str, sys_user: str, request: Request):
     """
     res = InitResponseModel()
     try:
-        username = request.user["username"]
+        username = request.user.username
         path = None
         if sys_user == "user":
             package_name = model_name.split(".")[0]
@@ -144,9 +149,8 @@ async def GetModelParametersView (model_name: str, sys_user: str, name: str, com
     """
     res = InitResponseModel()
     try:
-        username = request.user["username"]
+        username = request.user.username
         path = None
-
         if sys_user == "user":
             package_name = model_name.split(".")[0]
             model = session.query(ModelsInformation).filter_by(package_name=package_name, sys_or_user=username).first()
@@ -170,7 +174,7 @@ async def SetModelParametersView (item: SetComponentModifierValueModel, request:
     """
     res = InitResponseModel()
     try:
-        username = request.user["username"]
+        username = request.user.username
         package_name = item.model_name.split(".")[0]
         model = session.query(ModelsInformation).filter_by(package_name=package_name, sys_or_user=username).first()
         if not model:
@@ -200,34 +204,34 @@ async def GetComponentPropertiesView (model_name: str, component_name: str, sys_
     """
     res = InitResponseModel()
 
-    # try:
-    username = request.user["username"]
-    package_name = model_name.split(".")[0]
-    file_path = None
-    if sys_user == "user":
-        model = session.query(ModelsInformation).filter_by(package_name=package_name, sys_or_user=username).first()
-        if not model:
-            res.err = "设置失败"
-            res.status = 2
-            return res
-        file_path = model.file_path
-    result = GetComponents(model_name, component_name, file_path)
-    data = {
-        "model_name": model_name,
-        "component_name": component_name,
-        "path": result[0],
-        "dimension": str(result[-1]).replace("['']", "[]"),
-        "annotation": str(result[2]),
-        "Properties": [result[4], result[3], result[7]],
-        "Variability": result[8],
-        "Inner/Outer": result[9],
-        "Causality": result[10],
-    }
-    res.data = [data]
-    # except Exception as e:
-    #     print(e)
-    #     res.err = "获取数据失败"
-    #     res.status = 1
+    try:
+        username = request.user.username
+        package_name = model_name.split(".")[0]
+        file_path = None
+        if sys_user == "user":
+            model = session.query(ModelsInformation).filter_by(package_name=package_name, sys_or_user=username).first()
+            if not model:
+                res.err = "设置失败"
+                res.status = 2
+                return res
+            file_path = model.file_path
+        result = GetComponents(model_name, component_name, file_path)
+        data = {
+            "model_name": model_name,
+            "component_name": component_name,
+            "path": result[0],
+            "dimension": str(result[-1]).replace("['']", "[]"),
+            "annotation": str(result[2]),
+            "Properties": [result[4], result[3], result[7]],
+            "Variability": result[8],
+            "Inner/Outer": result[9],
+            "Causality": result[10],
+        }
+        res.data = [data]
+    except Exception as e:
+        print(e)
+        res.err = "获取数据失败"
+        res.status = 1
     return res
 
 
@@ -258,7 +262,7 @@ async def SetComponentPropertiesView (item: SetComponentPropertiesModel, request
         "causality": item.causality,
     }
     try:
-        username = request.user["username"]
+        username = request.user.username
         package_name = item.model_name.split(".")[0]
         model = session.query(ModelsInformation).filter_by(package_name=package_name, sys_or_user=username).first()
         if not model:
@@ -277,10 +281,119 @@ async def SetComponentPropertiesView (item: SetComponentPropertiesModel, request
         res.status = 1
     return res
 
+
+@router.post("/copyclass", response_model=ResponseModel)
+async def CopyClassView (item: CopyClassModel, request: Request):
+    """
+    # 复制模型
+    ## parent_name: 需要复制到哪个父节点之下，例如“ENN.Examples”
+    ## package_name: 被复制的模型在哪个包之下，例如“ENN”
+    ## class_name: 复制之后的模型名称，例如“Scenario1_Status_test”
+    ## copied_class_name: 被复制的模型全称，例如“ENN.Examples.Scenario1_Status”
+    ## return: 返回json格式数据,告知是否成功
+    """
+    res = InitResponseModel()
+    try:
+        username = request.user.username
+        package_name = item.package_name
+        package = session.query(ModelsInformation).filter_by(package_name=package_name, sys_or_user=username).first()
+        if package:
+            model_file_path = package.file_path.split("/")
+            model_file_path[-2] = datetime.now().strftime('%Y%m%d%H%M%S%f')
+            model_file_path = "/".join(model_file_path)
+            save_result = SaveClass(item.class_name, item.copied_class_name, item.parent_name, package_name, model_file_path=package.file_path, new_model_file_path=model_file_path)
+            if save_result:
+                package.file_path = model_file_path
+                model = session.query(ModelsInformationAll).filter(
+                                ModelsInformationAll.model_name_all == item.copied_class_name,
+                                ModelsInformationAll.package_name == package_name
+                            ).first()
+                if model:
+                    child_name = model.child_name
+                    haschild = model.haschild
+                else:
+                    child_name = []
+                    haschild = False
+                ModelsInformationAll_new = ModelsInformationAll(
+                        package_name=package_name,
+                        model_name=item.class_name,
+                        parent_name=item.parent_name,
+                        child_name=child_name,
+                        haschild=haschild,
+                        model_name_all=item.parent_name + "." + item.class_name,
+                        sys_or_user=username
+                )
+                session.add(ModelsInformationAll_new)
+                model_parent = session.query(ModelsInformationAll).filter(ModelsInformationAll.model_name_all == item.parent_name, ModelsInformationAll.package_name == package_name, ModelsInformationAll.sys_or_user == username).first()
+                if not model_parent:
+                    model_parent = session.query(ModelsInformation).filter(
+                        ModelsInformation.package_name == package_name,
+                        ModelsInformation.sys_or_user == username).first()
+
+                m_child_name = copy.deepcopy(model_parent.child_name)
+                m_child_name.append(item.class_name)
+                model_parent.child_name = m_child_name
+                model_parent.haschild = True
+                res.msg = "复制成功"
+                session.flush()
+                session.close()
+            else:
+                res.err = "复制失败"
+                res.status = 1
+        else:
+            res.err = "复制失败"
+            res.status = 2
+    except Exception as e:
+        print(e)
+        res.err = "复制失败"
+        res.status = 1
+    return res
+
+
+@router.delete("/delete_package", response_model=ResponseModel)
+async def DeletePackageAndModel(request: Request, parent_name: str, class_name: str, package_name: str):
+    """
+    # 删除模型
+    ## parent_name: 需要删除的模型在哪个父节点之下，例如“ENN.Examples”
+    ## package_name: 被删除的模型在哪个包之下，例如“ENN”，如果删除的是包，则就是包的名字，
+    ## class_name: 被删除的的模型名称，例如“Scenario1_Status_test”
+    ## return: 返回json格式数据,告知是否成功
+    """
+    if parent_name:
+        username = request.user.username
+        model_name_all = parent_name + "." + class_name
+        package = session.query(ModelsInformation).filter_by(package_name=package_name, sys_or_user=username).first()
+        if package:
+            model_file_path = package.file_path.split("/")
+            model_file_path[-2] = datetime.now().strftime('%Y%m%d%H%M%S%f')
+            model_file_path = "/".join(model_file_path)
+            save_result = SaveClass(class_name=model_name_all, package_name=package_name , model_file_path=package.file_path, copy_or_delete="delete", new_model_file_path=model_file_path)
+            if save_result:
+                package.file_path = model_file_path
+                session.query(ModelsInformationAll).filter_by(model_name_all=model_name_all, package_name=package_name).delete(synchronize_session=False)
+                model_parent = session.query(ModelsInformationAll).filter(
+                        ModelsInformationAll.parent_name == parent_name,
+                        ModelsInformationAll.package_name == package_name,
+                        ).first()
+                model_parent.child_name = [i for i in model_parent.child_name if i != class_name]
+    else:
+        session.query(ModelsInformation).filter_by(package_name=package_name, sys_or_user=request.user.username).delete(synchronize_session=False)
+        session.query(ModelsInformationAll).filter_by(package_name=package_name, sys_or_user=request.user.username).delete(synchronize_session=False)
+    res = InitResponseModel()
+    session.flush()
+    session.close()
+    res.msg = "删除成功"
+    return res
+
+
 from config.omc import omc
 @router.get("/test")
 async def _test (model_name: str, request: Request):
-    # username = request.user["username"]
+    # username = request.user.username
     # r.hdel("GetGraphicsData_" + username, model_name)
-    res = omc.sendExpression(model_name)
-    return {"msg": res}
+    # res = omc.sendExpression(model_name)
+    res = request.auth
+    return {"msg": res,
+            # "user": request.user.display_name,
+            "auth": request.user.is_authenticated
+        }

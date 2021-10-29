@@ -61,7 +61,7 @@ def SaveClassNames(mo_path=None, init_name="Modelica", sys_or_user="sys"):
             return False
     ClassNames = GetClassNames(model_root_data, init_name, data_dict)
     for k, v in ClassNames.items():
-        icons_data = GetIconsData(k)
+        # icons_data = GetIconsData(k)
         if v["parent_name"]:
             SM = ModelsInformationAll(
                     package_name=v["package_name"],
@@ -71,7 +71,7 @@ def SaveClassNames(mo_path=None, init_name="Modelica", sys_or_user="sys"):
                     child_name=v["child_name"],
                     haschild=v["has_child"],
                     sys_or_user=sys_or_user,
-                    image=icons_data,
+                    # image=icons_data,
             )
         else:
             SM = ModelsInformation(
@@ -81,7 +81,7 @@ def SaveClassNames(mo_path=None, init_name="Modelica", sys_or_user="sys"):
                     child_name=v["child_name"],
                     sys_or_user=sys_or_user,
                     file_path=mo_path,
-                    image=icons_data,
+                    # image=icons_data,
 
             )
         session.add(SM)
