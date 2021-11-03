@@ -2,18 +2,20 @@
 from app.service.get_model_code import GetModelCode
 from library.file_operation import FileOperation
 from config.omc import omc
+from app.service.load_model_file import LoadModelFile
 
 
-def CopyClass(copied_class_name, class_name, parent_name, model_file_path):
+def CopyClass(copied_class_name, class_name, parent_name):
     exist_class = omc.existClass(parent_name + "." + class_name)
     if exist_class:
         return False
-    copy_result = omc.copyClass(copied_class_name, class_name, parent_name, model_file_path)
+    copy_result = omc.copyClass(copied_class_name, class_name, parent_name)
     return copy_result
 
 def SaveClass(class_name, copied_class_name=None, parent_name=None, package_name=None, model_file_path=None, new_model_file_path=None, copy_or_delete="copy"):
+    LoadModelFile(package_name, model_file_path)
     if copy_or_delete=="copy":
-        result = CopyClass(copied_class_name, class_name, parent_name, model_file_path)
+        result = CopyClass(copied_class_name, class_name, parent_name)
     elif copy_or_delete=="delete":
         result = omc.deleteClass(class_name, model_file_path)
     else:

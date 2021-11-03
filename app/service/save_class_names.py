@@ -48,6 +48,7 @@ def GetIconsData(name):
 
 def SaveClassNames(mo_path=None, init_name="Modelica", sys_or_user="sys"):
     data_dict = {}
+    res = False
     model_root_data = {
         init_name: {
                 "parent_name": "",
@@ -57,14 +58,32 @@ def SaveClassNames(mo_path=None, init_name="Modelica", sys_or_user="sys"):
     if mo_path:
         path = os.getcwd() + "/" + mo_path
         loadFile_result = omc.loadFile(path)
-        if loadFile_result == 'false\\n':
-            return False
+        if not loadFile_result:
+            return res, None
     ClassNames = GetClassNames(model_root_data, init_name, data_dict)
+    M_id = None
+    for k, v in ClassNames.items():
+        # icons_data = GetIconsData(k)
+        if not v["parent_name"]:
+            M = ModelsInformation(
+                    package_name=v["package_name"],
+                    model_name=v["model_name"],
+                    haschild=v["has_child"],
+                    child_name=v["child_name"],
+                    sys_or_user=sys_or_user,
+                    file_path=mo_path,
+                    # image=icons_data,
+            )
+            session.add(M)
+            session.flush()
+            M_id = M.id
+            break
     for k, v in ClassNames.items():
         # icons_data = GetIconsData(k)
         if v["parent_name"]:
-            SM = ModelsInformationAll(
+            MA = ModelsInformationAll(
                     package_name=v["package_name"],
+                    package_id=M_id,
                     model_name=v["model_name"],
                     model_name_all=k,
                     parent_name=v["parent_name"],
@@ -73,21 +92,11 @@ def SaveClassNames(mo_path=None, init_name="Modelica", sys_or_user="sys"):
                     sys_or_user=sys_or_user,
                     # image=icons_data,
             )
-        else:
-            SM = ModelsInformation(
-                    package_name=v["package_name"],
-                    model_name=v["model_name"],
-                    haschild=v["has_child"],
-                    child_name=v["child_name"],
-                    sys_or_user=sys_or_user,
-                    file_path=mo_path,
-                    # image=icons_data,
-
-            )
-        session.add(SM)
+            session.add(MA)
     session.flush()
     session.close()
-    return True
+    res = True
+    return res, M_id
 
 
 if __name__ == '__main__':

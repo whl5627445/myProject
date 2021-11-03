@@ -1,12 +1,10 @@
 from config.omc import omc
+from app.service.load_model_file import LoadModelFile
 
 
-def SetComponentModifierValue(className, parameter_value, path):
-    # omc.loadFile(path)
+def SetComponentModifierValue(className, parameter_value, path, package_name):
+    LoadModelFile(package_name, path)
     result = "Ok"
     for k, v in parameter_value.items():
-        try:
-            result = omc.setComponentModifierValue(className, k, v)
-        except Exception as e:
-            result = "err"
+        result = omc.setComponentModifierValue(className, k, v)
     return result

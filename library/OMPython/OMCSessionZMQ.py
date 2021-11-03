@@ -123,14 +123,38 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
     def getComponents (self, class_name):
         return self.sendExpression("getComponents(" + class_name + ")")
 
+    def getComponentsList(self, class_name_list):
+        data_list = []
+        for i in class_name_list:
+            Components_data = self.sendExpression("getComponents(" + i + ", useQuotes = true)")
+            if Components_data != [''] and Components_data != "Error":
+                data_list.extend(Components_data)
+        return data_list
+
     def getComponentAnnotations (self, class_name):
         return self.sendExpression("getComponentAnnotations(" + class_name + ")")
+
+    def getComponentAnnotationsList(self, class_name_list):
+        data_list = []
+        for i in class_name_list:
+            Components_data = self.sendExpression("getComponentAnnotations(" + i + ", useQuotes = true)")
+            if Components_data != [''] and Components_data != "Error":
+                data_list.extend(Components_data)
+        return data_list
 
     def getParameterNames (self, class_name):
         return self.sendExpression("getParameterNames(" + class_name + ")")
 
     def getComponentModifierNames (self, class_name, component_name):
         return self.sendExpression("getComponentModifierNames(" + class_name + ",\"" + component_name + "\")")
+
+    def getComponentModifierNamesList (self, class_name_list, component_name):
+        data_list = []
+        for class_name in class_name_list:
+            InheritedClasses_data = self.sendExpression("getComponentModifierNames(" + class_name + ",\"" + component_name + "\")")
+            if InheritedClasses_data != ['']:
+                data_list.extend(InheritedClasses_data)
+        return data_list
 
     def getClassComment (self, class_name):
         return self.sendExpression("getClassComment(" + class_name + ")")
@@ -147,28 +171,32 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
                 data_list.extend(InheritedClasses_data)
         return data_list
 
+    def getInheritedClassesListAll(self,class_name):
+        data_list = class_name
+        name_list = class_name
+        while True:
+            InheritedClassesData = self.getInheritedClassesList(name_list)
+            if InheritedClassesData:
+                data_list.extend(InheritedClassesData)
+                name_list = InheritedClassesData
+            else:
+                break
+        return data_list
+
+    def getParameterNamesALL(self, class_name_list):
+        data_list = []
+        for i in class_name_list:
+            getParameterNames_data = self.sendExpression("getParameterNames(" + i + ")")
+            if getParameterNames_data != ['']:
+                data_list.extend(getParameterNames_data)
+        return data_list
+
     def getDiagramAnnotationList(self, class_name_list):
         data_list = []
         for i in class_name_list:
             DiagramAnnotation_data = self.sendExpression("getDiagramAnnotation(" + i + ")")
             if DiagramAnnotation_data != ['']:
                 data_list.extend(DiagramAnnotation_data)
-        return data_list
-
-    def getComponentsList(self, class_name_list):
-        data_list = []
-        for i in class_name_list:
-            Components_data = self.sendExpression("getComponents(" + i + ", useQuotes = true)")
-            if Components_data != [''] and Components_data != "Error":
-                data_list.extend(Components_data)
-        return data_list
-
-    def getComponentAnnotationsList(self, class_name_list):
-        data_list = []
-        for i in class_name_list:
-            ComponentAnnotations_data = self.sendExpression("getComponentAnnotations(" + i + ")")
-            if ComponentAnnotations_data != ['']:
-                data_list.extend(ComponentAnnotations_data)
         return data_list
 
     def getIconAnnotationList(self, class_name_list):
@@ -253,16 +281,19 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
         return getDerivedClassModifierValue_data
 
     def getComponentModifierValue(self, class_name, modifier_name):
-        getDerivedClassModifierValue_data = self.sendExpression("getComponentModifierValue(" + class_name + "," + modifier_name + ")")
+        cmd = "getComponentModifierValue(" + class_name + "," + modifier_name + ")"
+        getDerivedClassModifierValue_data = self.sendExpression(cmd)
         return getDerivedClassModifierValue_data
 
     def setComponentModifierValue(self, class_name, parameter, value):
-        cmd = "setComponentModifierValue(" + class_name + "," + parameter + ",$Code(=" + value + "))"
+        code = "=" + value + ""
+        if not value:
+            code = "()"
+        cmd = "setComponentModifierValue(" + class_name + ", " + parameter + ", $Code(" + code + "))"
         result = self.sendExpression(cmd)
         return result
 
     def setComponentProperties(self, class_name, component_name, final="false", protected="false", replaceable="false", variabilty="", inner="false", outer="false", causality=""):
-        # self.loadFile("/home/simtek/dev/public/UserFiles/UploadFile/tom/1631690039.291318/ENN.mo")
         cmd_parameter_list = [class_name, ",", component_name, ",{", final, ",false,", protected, ",", replaceable, "},{\"", variabilty, "\"}", ",{", inner, ",", outer, "},{\"", causality, "\"}"]
         cmd = "setComponentProperties(" + "".join(cmd_parameter_list) + ")"
         cmd = cmd.replace("False", "false")
@@ -285,14 +316,12 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
         result = self.sendExpression(cmd)
         return result
 
-    def copyClass(self, copied_class_name, class_name, parent_name, model_file_path):
-        load_res = self.loadFile(model_file_path)
+    def copyClass(self, copied_class_name, class_name, parent_name):
         cmd = "copyClass(" + copied_class_name + ",\"" + class_name + "\"," + parent_name + ")"
         result = self.sendExpression(cmd)
         return result
 
-    def deleteClass(self, class_name, model_file_path):
-        load_res = self.loadFile(model_file_path)
+    def deleteClass(self, class_name):
         cmd = "deleteClass(" + class_name + ")"
         result = self.sendExpression(cmd)
         return result

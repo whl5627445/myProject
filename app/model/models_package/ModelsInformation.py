@@ -20,6 +20,7 @@ class ModelsInformationAll(Base):
     __tablename__ = 'models_all'
 
     id = Column(Integer, primary_key=True)
+    package_id = Column(Integer)
     package_name = Column(VARCHAR)
     model_name = Column(VARCHAR)
     model_name_all = Column(VARCHAR)

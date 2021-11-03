@@ -51,6 +51,8 @@ def JModelicaSimulate(SRecord_id, username: str, model_name: str, mo_path: str, 
                            -1] + '/' + str(
             datetime.now().strftime('%Y%m%d%H%M%S%f')) + '/'
     msg = {
+        "start_time": simulate_parameters_data["startTime"],
+        "final_time": simulate_parameters_data["stopTime"],
         "mo_path": mo_path,
         "result_name": "result_res.mat",
         "modelname": model_name,

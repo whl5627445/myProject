@@ -6,6 +6,7 @@ from app.service.save_class_names import SaveClassNames
 from library.file_operation import FileOperation
 from config.DB_config import DBSession
 from datetime import datetime
+from app.BaseModel.uploadfile import UploadSaveFile
 session = DBSession()
 
 
@@ -18,7 +19,6 @@ async def UploadFile(request: Request, file: UploadFile = File(...)):
     """
     res = InitResponseModel()
     file_data = await file.read()
-    file_path = "public/UserFiles/UploadFile/" + request.user.username + "/" + str(datetime.now().strftime('%Y%m%d%H%M%S%f'))
     file_name = file.filename.removesuffix(".mo")
     UP = session.query(ModelsInformation).filter_by(package_name=file_name, sys_or_user=request.user.username).first()
     if UP:
@@ -29,10 +29,50 @@ async def UploadFile(request: Request, file: UploadFile = File(...)):
         res.err = "文件格式不正确, 请上传以.mo为后缀的模型文件"
         res.status = 2
         return res
+    file_path = "public/UserFiles/UploadFile/" + request.user.username + "/" + str(datetime.now().strftime('%Y%m%d%H%M%S%f'))
     FileOperation().write_file(file_path, file.filename, file_data)
     save_result = SaveClassNames(mo_path=file_path + "/" + file.filename, init_name=file_name, sys_or_user=request.user.username)
     if save_result:
         res.msg = "模型上传成功！"
+    else:
+        res.status = 1
+        res.err = "模型加载失败，请重新检查后上传"
+    return res
+
+@router.post("/uploadfile/savefile", response_model=ResponseModel)
+async def SaveFile(request: Request, item: UploadSaveFile):
+    """
+    # 用户创建和保存mo文件接口
+    ## model_str: 文件数据，字符串形式, 如果是新建模型文件则为空字符串
+    ## package_name: 包名字
+    ## package_id: 包的id，如果是新建模型文件则为空字符串
+    ## return: 会返回文件上传的状态
+    """
+    res = InitResponseModel()
+    package_name = item.package_name
+    model_str = item.model_str
+    package_id = item.package_id
+    username = request.user.username
+    package = session.query(ModelsInformation).filter_by(package_name=package_name, sys_or_user=username).first()
+    if package and not package_id:
+        res.err = "名称已存在！"
+        res.status = 2
+        return res
+    file_path = "public/UserFiles/UploadFile/" + username + "/" + str(datetime.now().strftime('%Y%m%d%H%M%S%f'))
+    file_name = package_name + ".mo"
+    if not model_str:
+        model_str = "package " + package_name + "\n" + "end " + package_name + ";"
+    FileOperation().write_file(file_path, file_name, model_str)
+    save_result, M_id = SaveClassNames(mo_path=file_path + "/" + file_name, init_name=package_name, sys_or_user=request.user.username)
+    if save_result:
+        res.msg = "创建文件成功！"
+        res.data = [{"model_str": model_str, "id": M_id}]
+        if package_id:
+            session.query(ModelsInformation).filter_by(id=package_id).delete(synchronize_session=False)
+            session.query(ModelsInformationAll).filter_by(package_id=package_id).delete(synchronize_session=False)
+            session.flush()
+            session.close()
+            res.msg = "保存文件成功！"
     else:
         res.status = 1
         res.err = "模型加载失败，请重新检查后上传"

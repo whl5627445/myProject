@@ -1,6 +1,6 @@
 from config.omc import omc as mod
 import os
-
+from app.service.load_model_file import LoadModelFile
 
 
 class GetGraphicsData(object):
@@ -12,6 +12,7 @@ class GetGraphicsData(object):
         self.ComponentAnnotations_data = []
         self.data = [[], []]
         self.mod = mod
+        self.package_name = None
 
     def getICList(self,name):
         data_list = name
@@ -60,7 +61,11 @@ class GetGraphicsData(object):
                 data["fillPattern"] = drawing_data[6]
                 data["lineThickness"] = drawing_data[7]
                 data["extentsPoints"] = [",".join(x) for x in drawing_data[8]]
-                data["originalTextString"] = drawing_data[9]
+                if type(drawing_data[9]) is list:
+                    originalTextString = drawing_data[9][0]
+                else:
+                    originalTextString = drawing_data[9]
+                data["originalTextString"] = originalTextString
                 data["fontSize"] = drawing_data[10]
                 data["textColor"] = ",".join(drawing_data[11])
                 data["fontName"] = drawing_data[12]
@@ -115,7 +120,20 @@ class GetGraphicsData(object):
                     # rotateAngle = int(float(rotateAngle))
                     rotateAngle = "0"
                 data = {"type": "Transformation"}
-                data["name"] = c_data_filter[i][1]
+                data["id"] = str(i)
+                name = c_data_filter[i][1]
+                data["name"] = name
+                name_num = 1
+                for dl in data_list:  # 区分重名情况，omc默认是在后面加.[序号]
+                    if name == dl["name"]:
+                        dl["name"] = dl["name"] + "[" + str(name_num) + "]"
+                        data["name"] = name + "[" + str(name_num + 1) + "]"
+                        data["original_name"] = c_data_filter[i][1]
+                        name_num += 2
+                    elif  dl.get("original_name", None) == name:
+                        data["name"] = name + "[" + str(name_num + 1) + "]"
+                        data["original_name"] = c_data_filter[i][1]
+                        name_num += 1
                 data["parent"] = parent
                 data["classname"] = c_data_filter[i][0]
                 data["visible"] = ca_data_filter[i][1][0]
@@ -141,10 +159,10 @@ class GetGraphicsData(object):
                 self.data[0].append(da_data)
 
     def get_data (self, name_list, model_file_path=None):
-
+        self.package_name = name_list[0].split(".")[0]
         if model_file_path:
             path = os.getcwd() + "/" + model_file_path
-            result = self.mod.loadFile(path)
+            LoadModelFile(self.package_name, path)
         DiagramAnnotation_data = self.mod.getDiagramAnnotationList(name_list)
         Components_data = self.mod.getComponentsList(name_list)
         ComponentAnnotations_data = self.mod.getComponentAnnotationsList(name_list)

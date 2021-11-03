@@ -41,3 +41,15 @@ class CopyClassModel(BaseModel):
     class_name: str
     copied_class_name: str
 
+
+class DeleteComponentModel(BaseModel):
+    package_name: str
+    data_list: list
+
+
+class ExperimentCreateModel(BaseModel):
+    package_id: int
+    model_name: str
+    model_var_data: list
+    simulate_var_data: list
+    experiment_name: str

@@ -1,9 +1,10 @@
 from config.omc import omc
+from app.service.load_model_file import LoadModelFile
 
 
-def GetComponents(class_name, component_name=None, file_path=None):
-    # if file_path:
-    #     omc.loadFile(file_path)
+def GetComponents(class_name, component_name=None, file_path=None, package_name=None):
+    if file_path:
+        LoadModelFile(package_name, file_path)
     data = omc.getComponents(class_name)
     if component_name:
         for i in data:

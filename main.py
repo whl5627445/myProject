@@ -12,8 +12,8 @@ from starlette.authentication import (
     AuthCredentials
 )
 
-# import pydevd_pycharm
-# pydevd_pycharm.settrace('192.168.1.110', port=10086, stdoutToServer=True, stderrToServer=True)
+import pydevd_pycharm
+pydevd_pycharm.settrace('192.168.1.110', port=10086, stdoutToServer=True, stderrToServer=True)
 
 class BasicAuthBackend(AuthenticationBackend):
     async def authenticate(self, request):
