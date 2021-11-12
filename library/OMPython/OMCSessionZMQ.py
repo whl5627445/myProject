@@ -123,6 +123,9 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
     def getComponents (self, class_name):
         return self.sendExpression("getComponents(" + class_name + ")")
 
+    def getClassInformation (self, class_name):
+        return self.sendExpression("getClassInformation(" + class_name + ")")
+
     def getComponentsList(self, class_name_list):
         data_list = []
         for i in class_name_list:
@@ -326,7 +329,65 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
         result = self.sendExpression(cmd)
         return result
 
-    def list(self, class_name):
+    def list(self, class_name, parsed=False):
         cmd = "list(" + class_name  + ")"
-        result = self.sendExpression(cmd, parsed=False)
+        data = self.sendExpression(cmd, parsed=parsed)
+        return data
+
+    def loadString(self, model_str, path="", merge="false"):
+        cmd = "loadString(\"" + model_str + "\",\"" + path + "\",\"UTF-8\"" + "," + merge + ")"
+        result = self.sendExpression(cmd)
         return result
+
+    def addClassAnnotation(self, model_name_all, annotate_str):
+        cmd = "addClassAnnotation(" + model_name_all + ", annotate=" + annotate_str + ")"
+        result = self.sendExpression(cmd)
+        return result
+
+    def addConnection(self, model_name_all, connect_start, connect_end, line_points, color="0,0,127"):
+        # annotate=Placement(visible=true, transformation=transformation(origin={-72,-64}, extent={{-10,-10},{10,10}}, rotation=0))
+        line_points = ",".join(["{" + i + "}" for i in line_points])
+        annotate = "$annotation(Line(points={" + line_points + "},color={" + color + "}))\""
+        cmd = "addConnection(" + connect_start + ","+ connect_end + "," + model_name_all + "," + annotate + ")"
+        result = self.sendExpression(cmd)
+        return result
+
+    def updateConnectionAnnotation (self, model_name_all, connect_start, connect_end, line_points, color="0,0,127"):
+        # "annotate=$annotation(Line(points={{-213,-38},{-163.25,-38},{-163.25,-4},{-133.5,-4},{-133.5,-70},{-22,-70}},color={0,0,127}))"
+        line_points = ",".join(["{" + i + "}" for i in line_points])
+        annotate = "$annotation(Line(points={" + line_points + "},color={" + color + "}))\""
+        cmd = "updateConnectionAnnotation(" + model_name_all + ", \"" + connect_start + "\", \"" + connect_end +  "\", \"annotate=" + annotate + ")"
+        result = self.sendExpression(cmd)
+        return result
+
+    def deleteConnection(self, model_name_all, connect_start, connect_end):
+        cmd = "deleteConnection(" + connect_start + ","+ connect_end + "," + model_name_all + ")"
+        result = self.sendExpression(cmd)
+        return result
+
+    def addComponent(self, new_component_name, old_component_name, model_name_all, origin, extent, rotation):
+        # annotate=Placement(visible=true, transformation=transformation(origin={-72,-64}, extent={{-10,-10},{10,10}}, rotation=0))
+        annotate = "annotate=Placement(visible=true, transformation=transformation(origin={" + origin + "}, extent={{" + extent[0] + "},{" + extent[1] + "}}, rotation=" + rotation + "))"
+        cmd = "addComponent(" + new_component_name + ","+ old_component_name + "," + model_name_all + "," + annotate + ")"
+        result = self.sendExpression(cmd)
+        return result
+
+    def deleteComponent(self, component_name, model_name_all):
+        cmd = "deleteComponent(" + component_name + ","+ model_name_all + ")"
+        result = self.sendExpression(cmd)
+        return result
+
+    def updateComponent(self, component_name, component_model_name, model_name_all, origin, extent, rotation):
+        # updateComponent(PI,Modelica.Blocks.Continuous.LimPID,ENN.Examples.PID_Controller10086,annotate=Placement(visible=true, transformation=transformation(origin={-46,-10}, extent={{10,10},{-10,-10}}, rotation=180)))
+        annotate = "annotate=Placement(visible=true, transformation=transformation(origin={" + origin + "}, extent={{" + extent[0] + "},{" + extent[1] + "}}, rotation=" + rotation + "))"
+        cmd = "updateComponent(" + component_name + "," + component_model_name + ","+ model_name_all + "," + annotate + ")"
+        result = self.sendExpression(cmd)
+        return result
+
+
+if __name__ == '__main__':
+    def loadString (model_str, path, merge="false"):
+        cmd = "loadString(\"" + model_str + "\",\"" + path + "\",\"UTF-8\"" + ",false)"
+        # result = self.sendExpression(cmd)
+        return cmd
+    loadString("within ENN.Examples.PID_Controller; partial model q123456 extends ENN.Examples.Scenario1_Status;  end q123456;", "/a/b/c")

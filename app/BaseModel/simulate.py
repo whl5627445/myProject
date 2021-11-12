@@ -42,9 +42,51 @@ class CopyClassModel(BaseModel):
     copied_class_name: str
 
 
+class AddComponentModel(BaseModel):
+    package_name: str
+    package_id: str
+    new_component_name: str
+    old_component_name: str
+    model_name_all: str
+    origin: str = "0,0"
+    extent: list = ["-10,-10", "10,10"]
+    rotation: str = "0"
+
+
+class UpdateComponentModel(BaseModel):
+    package_name: str
+    package_id: str
+    new_component_name: str
+    old_component_name: str
+    model_name_all: str
+    origin: str = "0,0"
+    extent: list = ["-10,-10", "10,10"]
+    rotation: str = "0"
+
+
 class DeleteComponentModel(BaseModel):
     package_name: str
-    data_list: list
+    package_id: str
+    component_name: str
+    model_name_all: str
+
+
+class UpdateConnectionAnnotationModel(BaseModel):
+    package_name: str
+    package_id: str
+    model_name_all: str
+    connect_start: str
+    connect_end: str
+    color: str = "0,0,127"
+    line_points: list = []
+
+
+class DeleteConnectionModel(BaseModel):
+    package_name: str
+    package_id: str
+    model_name_all: str
+    connect_start: str
+    connect_end: str
 
 
 class ExperimentCreateModel(BaseModel):

@@ -1,5 +1,5 @@
 from config.omc import omc as mod
-import os
+import os, re
 from app.service.load_model_file import LoadModelFile
 
 
@@ -51,7 +51,7 @@ class GetGraphicsData(object):
                 data["color"] = ",".join(drawing_data[4])
                 data["linePattern"] = drawing_data[5]
                 data["lineThickness"] = drawing_data[6]
-                data["arrow"] = drawing_data[7]
+                data["arrow"] = ",".join(drawing_data[7])
                 data["arrowSize"] = drawing_data[8]
                 data["smooth"] = drawing_data[9]
             elif drawing_data_list[i] == "Text":
@@ -110,30 +110,31 @@ class GetGraphicsData(object):
             return data_list
         for i in range(len(c_data_filter)):
             namelist = self.getICList([c_data_filter[i][0]])
-            namelist.append(c_data_filter[i][0])
+            # namelist.append(c_data_filter[i][0])
             if ca_data_filter[i][0] == "Placement":
                 Components_data = self.mod.getComponentsList(namelist)
                 ComponentAnnotations_data = self.mod.getComponentAnnotationsList(namelist)
                 IconAnnotation_data = self.mod.getIconAnnotationList(namelist)
                 rotateAngle = ca_data_filter[i][1][7]
                 if rotateAngle == "-":
-                    # rotateAngle = int(float(rotateAngle))
                     rotateAngle = "0"
                 data = {"type": "Transformation"}
-                data["id"] = str(i)
+                data["ID"] = str(i)
                 name = c_data_filter[i][1]
+                data["original_name"] = c_data_filter[i][1]
                 data["name"] = name
-                name_num = 1
-                for dl in data_list:  # 区分重名情况，omc默认是在后面加.[序号]
-                    if name == dl["name"]:
-                        dl["name"] = dl["name"] + "[" + str(name_num) + "]"
-                        data["name"] = name + "[" + str(name_num + 1) + "]"
-                        data["original_name"] = c_data_filter[i][1]
-                        name_num += 2
-                    elif  dl.get("original_name", None) == name:
-                        data["name"] = name + "[" + str(name_num + 1) + "]"
-                        data["original_name"] = c_data_filter[i][1]
-                        name_num += 1
+
+                # name_num = 1
+                # for dl in data_list:  # 区分重名情况，omc默认是在后面加.[序号]
+                #     if name == dl["name"]:
+                #         dl["name"] = dl["name"] + "[" + str(name_num) + "]"
+                #         data["name"] = name + "[" + str(name_num + 1) + "]"
+                #         data["original_name"] = c_data_filter[i][1]
+                #         name_num += 2
+                #     elif  dl.get("original_name", None) == name:
+                #         data["name"] = name + "[" + str(name_num + 1) + "]"
+                #         data["original_name"] = c_data_filter[i][1]
+                #         name_num += 1
                 data["parent"] = parent
                 data["classname"] = c_data_filter[i][0]
                 data["visible"] = ca_data_filter[i][1][0]
@@ -141,6 +142,7 @@ class GetGraphicsData(object):
                 data["originDiagram"] = ",".join([ca_data_filter[i][1][1], ca_data_filter[i][1][2]])
                 data["extent1Diagram"] = ",".join([ca_data_filter[i][1][3], ca_data_filter[i][1][4]])
                 data["extent2Diagram"] = ",".join([ca_data_filter[i][1][5], ca_data_filter[i][1][6]])
+                data["rotation"] = rotateAngle
                 data["inputOutputs"] = self.data_02(Components_data, ComponentAnnotations_data, is_icon=True, parent=data["name"])
                 data["subShapes"] = self.data_01(IconAnnotation_data)
                 data_list.append(data)
@@ -154,8 +156,11 @@ class GetGraphicsData(object):
                 nc_data = self.mod.getNthConnection(name_list[0], i + 1)
                 nca_data = self.mod.getNthConnectionAnnotation(name_list[0], i + 1)
                 da_data = self.data_01(nca_data)[0]
-                da_data["connectionfrom"] = nc_data[0]
-                da_data["connectionto"] = nc_data[1]
+                da_data["connectionfrom_original_name"] = nc_data[0]
+                da_data["connectionto_original_name"] = nc_data[1]
+                expression = r"\[\d+\]$"
+                da_data["connectionfrom"] = re.sub(expression,"",nc_data[0])
+                da_data["connectionto"] = re.sub(expression,"",nc_data[1])
                 self.data[0].append(da_data)
 
     def get_data (self, name_list, model_file_path=None):
@@ -163,6 +168,7 @@ class GetGraphicsData(object):
         if model_file_path:
             path = os.getcwd() + "/" + model_file_path
             LoadModelFile(self.package_name, path)
+        name_list = self.getICList(name_list)
         DiagramAnnotation_data = self.mod.getDiagramAnnotationList(name_list)
         Components_data = self.mod.getComponentsList(name_list)
         ComponentAnnotations_data = self.mod.getComponentAnnotationsList(name_list)
@@ -174,10 +180,31 @@ class GetGraphicsData(object):
         self.data[1].extend(data_2)
         return self.data
 
+    def get_one_data (self, name_list, component_name, model_file_path=None):
+        self.package_name = name_list[0].split(".")[0]
+        if model_file_path:
+            LoadModelFile(self.package_name, model_file_path)
+        name_list = self.getICList(name_list)
+        Components = self.mod.getComponentsList(name_list)
+        ComponentAnnotations = self.mod.getComponentAnnotationsList(name_list)
+        Components_data = []
+        ComponentAnnotations_data = []
+        for i in range(len(Components)):
+            if Components[i] != ['']:
+                if Components[i][1] == component_name:
+                    Components_data = [Components[i]]
+                    ComponentAnnotations_data = [ComponentAnnotations[i]]
+        data_2 = self.data_02(Components_data, ComponentAnnotations_data)
+        self.data[1].extend(data_2)
+        return self.data
+
 
 if __name__ == '__main__':
+    import json
     a = GetGraphicsData()
     # print(a.get_data(["Modelica.ComplexBlocks.Examples.TestConversionBlock"]))
     # print(a.get_data(["ENN.Examples.Scenario1_Status"]))
     # print(a.get_data(["Modelica.Blocks.Examples.PID_Controller"]))
-    print(a.get_data(["Modelica.Blocks.Examples.ShowLogicalSources"]))
+    print(json.dumps(a.get_data(["Modelica.Blocks.Math.Sin"])))
+    # print(a.get_data(["Modelica.Blocks.Sources.KinematicPTP"]))
+    # print(a.get_data(["Modelica.Blocks.Examples.ShowLogicalSources"]))

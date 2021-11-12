@@ -6,10 +6,13 @@ def GetComponents(class_name, component_name=None, file_path=None, package_name=
     if file_path:
         LoadModelFile(package_name, file_path)
     data = omc.getComponents(class_name)
-    if component_name:
+    if component_name and data != "Error":
+        component_data = []
         for i in data:
             if i[1] == component_name:
-                data = i
+                component_data = i
+                break
+        return component_data
     return data
 
 

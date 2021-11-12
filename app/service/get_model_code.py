@@ -1,9 +1,9 @@
 from config.omc import omc
+from app.service.load_model_file import LoadModelFile
 
 
-def GetModelCode(model_name, model_file_path=None):
-    if model_file_path:
-        omc.loadFile(model_file_path)
+def GetModelCode(model_name, model_file_path=None, package_name=None):
+    LoadModelFile(package_name, model_file_path)
     data = omc.list(model_name)
     data = data.replace('\\"', '\"')
     data = data.replace('\\"', '\"')

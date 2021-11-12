@@ -6,6 +6,7 @@ from config.DB_config import DBSession
 from datetime import datetime
 import socket
 from library.file_operation import FileOperation
+from app.service.load_model_file import LoadModelFile
 import json
 import os
 session = DBSession()
@@ -82,21 +83,23 @@ def OpenModelicaSimulate(SRecord_id, username: str, model_name: str, file_path: 
                            -1] + '/' + str(
             datetime.now().strftime('%Y%m%d%H%M%S%f')) + '/'
     if file_path:
-        Load_result = omc.loadFile(file_path)
-    else:
-        Load_result = omc.loadModel(model_name)
+        package_name = model_name.split('.')[0]
+        LoadModelFile(package_name, file_path)
+        # Load_result = omc.loadFile(file_path)
+    # else:
+    #     Load_result = omc.loadModel(model_name)
     file_operation = FileOperation()
     file_operation.make_dir(result_file_path)
-    if Load_result != 'false\\n':
-        simulate_result_str = omc.simulate(className=model_name, fileNamePrefix=result_file_path, simulate_parameters_data=simulate_parameters_data)
-        SRecord.simulate_end_time = datetime.now()
-        err = omc.getErrorString()
-        if err == '':
-            SimulateDataHandle(SRecord, result_file_path, username, model_name, simulate_result_str)
-        else:
-            SRecord.simulate_status = "仿真失败"
+    # if Load_result != 'false\\n':
+    simulate_result_str = omc.simulate(className=model_name, fileNamePrefix=result_file_path, simulate_parameters_data=simulate_parameters_data)
+    SRecord.simulate_end_time = datetime.now()
+    err = omc.getErrorString()
+    if err == '':
+        SimulateDataHandle(SRecord, result_file_path, username, model_name, simulate_result_str)
     else:
         SRecord.simulate_status = "仿真失败"
+    # else:
+    #     SRecord.simulate_status = "仿真失败"
     session.flush()
     session.close()
 

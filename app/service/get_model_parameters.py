@@ -146,16 +146,16 @@ class GetModelParameters(object):
 
 
 if __name__ == '__main__':
-    # name = "PI"
+    name = "PI"
     # name = "kinematicPTP"
     # name = "kinematicPTP"
     # name = "inertia1"
-    name = "spring"
-    # m_name = "Modelica.Blocks.Continuous.LimPID"
+    # name = "spring"
+    c_name = "Modelica.Blocks.Continuous.LimPID"
     # m_name = "Modelica.Blocks.Sources.KinematicPTP"
     # c_name = "Modelica.Blocks.Sources.KinematicPTP"
     # c_name = "Modelica.Mechanics.Rotational.Components.Inertia"
-    c_name = "Modelica.Mechanics.Rotational.Components.SpringDamper"
+    # c_name = "Modelica.Mechanics.Rotational.Components.SpringDamper"
     class_name = "Modelica.Blocks.Examples.PID_Controller"
     import json
     print(json.dumps(GetModelParameters(class_name, name, c_name).get_data()))

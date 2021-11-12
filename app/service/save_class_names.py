@@ -2,6 +2,7 @@ from app.model.models_package.ModelsInformation import ModelsInformationAll, Mod
 from config.DB_config import DBSession
 from config.omc import omc
 import os
+from app.service.load_model_file import LoadModelFile
 session = DBSession()
 
 omc.sendExpression("loadModel(Modelica, {\"3.2.3\"},true,\"\",false)")
@@ -58,6 +59,7 @@ def SaveClassNames(mo_path=None, init_name="Modelica", sys_or_user="sys"):
     if mo_path:
         path = os.getcwd() + "/" + mo_path
         loadFile_result = omc.loadFile(path)
+        # LoadModelFile(init_name, path)
         if not loadFile_result:
             return res, None
     ClassNames = GetClassNames(model_root_data, init_name, data_dict)

@@ -12,12 +12,16 @@ def CopyClass(copied_class_name, class_name, parent_name):
     copy_result = omc.copyClass(copied_class_name, class_name, parent_name)
     return copy_result
 
+def DeleteClass(class_name):
+    result = omc.deleteClass(class_name)
+    return result
+
 def SaveClass(class_name, copied_class_name=None, parent_name=None, package_name=None, model_file_path=None, new_model_file_path=None, copy_or_delete="copy"):
     LoadModelFile(package_name, model_file_path)
     if copy_or_delete=="copy":
         result = CopyClass(copied_class_name, class_name, parent_name)
     elif copy_or_delete=="delete":
-        result = omc.deleteClass(class_name, model_file_path)
+        result = DeleteClass(class_name)
     else:
         return False
     if result:
