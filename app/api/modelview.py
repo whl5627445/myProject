@@ -374,7 +374,6 @@ async def DeletePackageAndModelView(request: Request, package_name: str, parent_
 @router.put("/add_component", response_model=ResponseModel)
 async def AddModelComponentView (item: AddComponentModel, request: Request):
     """
-    TODO 新建模型组件
     # 创建模型当中的模型组件
     ## package_name： 需要创建的组件在哪个包之下，例如在"NN.Examples.Scenario1_Status"模型中创建组件，包就是ENN
     ## package_id： 需要创建的组件在哪个包之下
@@ -402,10 +401,9 @@ async def AddModelComponentView (item: AddComponentModel, request: Request):
     return res
 
 
-@router.post("/delete_component", response_model=ResponseModel)
+@router.delete("/delete_component", response_model=ResponseModel)
 async def DeleteModelComponentView(item: DeleteComponentModel, request: Request):
     """
-    TODO 删除模型组件
     # 删除模型当中的模型组件
     ## package_name： 包名称
     ## package_id： 包id
@@ -432,7 +430,6 @@ async def DeleteModelComponentView(item: DeleteComponentModel, request: Request)
 @router.post("/update_component", response_model=ResponseModel)
 async def UpdateModelComponentView(item: UpdateComponentModel, request: Request):
     """
-    TODO 更新模型组件
     # 更新模型当中的模型组件
     ## package_name： 包名称
     ## package_id： 包id
@@ -490,7 +487,7 @@ async def CreateConnectionAnnotationView(item: UpdateConnectionAnnotationModel, 
     return res
 
 
-@router.post("/delete_connection_annotation", response_model=ResponseModel)
+@router.delete("/delete_connection_annotation", response_model=ResponseModel)
 async def DeleteConnectionAnnotationView(item: DeleteConnectionModel, request: Request):
     """
     TODO 删除组件连线

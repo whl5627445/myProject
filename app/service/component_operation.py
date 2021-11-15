@@ -14,7 +14,7 @@ def ComponentsVerification(class_name, component_name):
     data = omc.getComponents(class_name)
     if data != "Error":
         for i in data:
-            if i[1] == component_name:
+            if component_name in i:
                 return False, "组件名称已存在"
     else:
         return False, ""

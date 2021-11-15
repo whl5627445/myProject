@@ -339,6 +339,16 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
         result = self.sendExpression(cmd)
         return result
 
+    def listFile(self, package_name):
+        cmd = "listFile(" + package_name + ",true)"
+        result = self.sendExpression(cmd)
+        return result
+
+    def parseString(self, model_str, path=""):
+        cmd = "parseString(\"" + model_str+ "\",\"" + path + "\")"
+        result = self.sendExpression(cmd)
+        return result
+
     def addClassAnnotation(self, model_name_all, annotate_str):
         cmd = "addClassAnnotation(" + model_name_all + ", annotate=" + annotate_str + ")"
         result = self.sendExpression(cmd)

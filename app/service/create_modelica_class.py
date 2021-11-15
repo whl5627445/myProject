@@ -32,9 +32,8 @@ def CreateModelicaClass(package_name, str_type, var, create_package_name_all, pa
     return res
 
 
-def UpdateModelicaClass(model_str, path):
-    load_string = omc.loadString(model_str, path, merge="true")
-
+def UpdateModelicaClass(model_str, path="", merge="true"):
+    load_string = omc.loadString(model_str, path, merge=merge)
     return load_string
 
 if __name__ == '__main__':

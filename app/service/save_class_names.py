@@ -47,7 +47,7 @@ def GetIconsData(name):
     return icons_data
 
 
-def SaveClassNames(mo_path=None, init_name="Modelica", sys_or_user="sys"):
+def SaveClassNames(mo_path=None, init_name="Modelica", sys_or_user="sys", package_id=None):
     data_dict = {}
     res = False
     model_root_data = {
@@ -66,34 +66,48 @@ def SaveClassNames(mo_path=None, init_name="Modelica", sys_or_user="sys"):
     M_id = None
     for k, v in ClassNames.items():
         # icons_data = GetIconsData(k)
-        if not v["parent_name"]:
-            M = ModelsInformation(
-                    package_name=v["package_name"],
-                    model_name=v["model_name"],
-                    haschild=v["has_child"],
-                    child_name=v["child_name"],
-                    sys_or_user=sys_or_user,
-                    file_path=mo_path,
-                    # image=icons_data,
-            )
-            session.add(M)
-            session.flush()
-            M_id = M.id
-            break
+            if not v["parent_name"]:
+                if package_id:
+                    M = session.query(ModelsInformation).filter_by(id=package_id).first()
+                    M.haschild = v["has_child"]
+                    M.child_name = v["child_name"]
+                    M.file_path = mo_path
+                else:
+                    M = ModelsInformation(
+                            package_name=v["package_name"],
+                            model_name=v["model_name"],
+                            haschild=v["has_child"],
+                            child_name=v["child_name"],
+                            sys_or_user=sys_or_user,
+                            file_path=mo_path,
+                            # image=icons_data,
+                    )
+                    session.add(M)
+                session.flush()
+                M_id = M.id
+                break
     for k, v in ClassNames.items():
         # icons_data = GetIconsData(k)
         if v["parent_name"]:
-            MA = ModelsInformationAll(
-                    package_name=v["package_name"],
-                    package_id=M_id,
-                    model_name=v["model_name"],
-                    model_name_all=k,
-                    parent_name=v["parent_name"],
-                    child_name=v["child_name"],
-                    haschild=v["has_child"],
-                    sys_or_user=sys_or_user,
-                    # image=icons_data,
-            )
+            MA = session.query(ModelsInformationAll).filter_by(package_id=package_id, package_name=v["package_name"], model_name_all=k).first()
+            if MA:
+                MA.haschild = v["has_child"]
+                MA.child_name = v["child_name"]
+                MA.parent_name=v["parent_name"]
+                MA.model_name=v["model_name"]
+            else:
+                MA = ModelsInformationAll(
+                        package_name=v["package_name"],
+                        package_id=M_id,
+                        model_name=v["model_name"],
+                        model_name_all=k,
+                        parent_name=v["parent_name"],
+                        child_name=v["child_name"],
+                        haschild=v["has_child"],
+                        sys_or_user=sys_or_user,
+                        # image=icons_data,
+                        )
+
             session.add(MA)
     session.flush()
     session.close()
