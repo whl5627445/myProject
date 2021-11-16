@@ -1,3 +1,4 @@
+# -- coding: utf-8 --
 from config.omc import omc
 from app.service.load_model_file import LoadModelFile
 from library.file_operation import FileOperation

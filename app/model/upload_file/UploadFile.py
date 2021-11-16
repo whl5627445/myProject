@@ -1,3 +1,4 @@
+# -- coding: utf-8 --
 from sqlalchemy import Column, Integer, DateTime, VARCHAR, TEXT
 from sqlalchemy.orm import declarative_base
 import datetime

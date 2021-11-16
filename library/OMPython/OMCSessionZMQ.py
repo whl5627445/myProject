@@ -1,3 +1,4 @@
+# -- coding: utf-8 --
 from library.OMPython import OMCSessionHelper, OMCSessionBase, logger
 import subprocess
 import sys, os, time, zmq

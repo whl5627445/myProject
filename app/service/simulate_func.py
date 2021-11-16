@@ -1,3 +1,4 @@
+# -- coding: utf-8 --
 from library.mat import DyMatFile
 from config.omc import omc
 from app.model.Simulate.SimulateRecord import SimulateRecord

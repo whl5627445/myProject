@@ -1,3 +1,4 @@
+# -- coding: utf-8 --
 from app.model.models_package.ModelsInformation import ModelsInformationAll, ModelsInformation
 from config.DB_config import DBSession
 from config.omc import omc

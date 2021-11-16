@@ -1,3 +1,4 @@
+# -- coding: utf-8 --
 from sqlalchemy import Column, Integer, VARCHAR, JSON, TEXT, BOOLEAN, String
 from sqlalchemy.orm import declarative_base
 Base = declarative_base()

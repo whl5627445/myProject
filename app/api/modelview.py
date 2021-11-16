@@ -1,3 +1,4 @@
+# -- coding: utf-8 --
 from fastapi import Request
 from router.simulatemodel import router
 from config.DB_config import DBSession
@@ -324,7 +325,7 @@ async def CopyClassView (item: CopyClassModel, request: Request):
     return res
 
 
-@router.delete("/delete_package", response_model=ResponseModel)
+@router.post("/delete_package", response_model=ResponseModel)
 async def DeletePackageAndModelView(request: Request, package_name: str, parent_name: str = None, class_name: str = None, package_id: str = None):
     """
     # 删除模型包或包中的模型
@@ -371,7 +372,7 @@ async def DeletePackageAndModelView(request: Request, package_name: str, parent_
     return res
 
 
-@router.put("/add_component", response_model=ResponseModel)
+@router.post("/add_component", response_model=ResponseModel)
 async def AddModelComponentView (item: AddComponentModel, request: Request):
     """
     # 创建模型当中的模型组件
@@ -401,7 +402,7 @@ async def AddModelComponentView (item: AddComponentModel, request: Request):
     return res
 
 
-@router.delete("/delete_component", response_model=ResponseModel)
+@router.post("/delete_component", response_model=ResponseModel)
 async def DeleteModelComponentView(item: DeleteComponentModel, request: Request):
     """
     # 删除模型当中的模型组件
@@ -457,7 +458,7 @@ async def UpdateModelComponentView(item: UpdateComponentModel, request: Request)
     return res
 
 
-@router.put("/create_connection_annotation", response_model=ResponseModel)
+@router.post("/create_connection_annotation", response_model=ResponseModel)
 async def CreateConnectionAnnotationView(item: UpdateConnectionAnnotationModel, request: Request):
     """
     TODO 创建组件连线
@@ -487,7 +488,7 @@ async def CreateConnectionAnnotationView(item: UpdateConnectionAnnotationModel, 
     return res
 
 
-@router.delete("/delete_connection_annotation", response_model=ResponseModel)
+@router.post("/delete_connection_annotation", response_model=ResponseModel)
 async def DeleteConnectionAnnotationView(item: DeleteConnectionModel, request: Request):
     """
     TODO 删除组件连线

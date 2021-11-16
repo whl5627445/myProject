@@ -1,3 +1,4 @@
+# -- coding: utf-8 --
 
 
 def GetTreeData(data, parent_name=None):

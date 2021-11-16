@@ -1,3 +1,4 @@
+# -- coding: utf-8 --
 from router.simulate import router
 from fastapi import HTTPException
 from config.DB_config import DBSession

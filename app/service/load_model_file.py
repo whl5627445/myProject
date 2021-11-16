@@ -1,3 +1,4 @@
+# -- coding: utf-8 --
 from config.omc import omc
 
 def LoadModelFile(package_name, path, check=True, return_res=False):

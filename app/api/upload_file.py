@@ -1,3 +1,4 @@
+# -- coding: utf-8 --
 from fastapi import File, UploadFile, Request
 from router.upload_file import router
 from app.BaseModel.respose_model import ResponseModel, InitResponseModel

@@ -1,3 +1,4 @@
+# -- coding: utf-8 --
 import redis
 # 本地开发环境redis
 pool = redis.ConnectionPool(host='localhost', port=6379)
