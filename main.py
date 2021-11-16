@@ -1,3 +1,4 @@
+# -- coding: utf-8 --
 from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
 from app.api.simulateview import router as simulate_view_router
@@ -12,8 +13,8 @@ from starlette.authentication import (
     AuthCredentials
 )
 
-import pydevd_pycharm
-pydevd_pycharm.settrace('192.168.1.110', port=10086, stdoutToServer=True, stderrToServer=True)
+# import pydevd_pycharm
+# pydevd_pycharm.settrace('192.168.1.110', port=10086, stdoutToServer=True, stderrToServer=True)
 
 class BasicAuthBackend(AuthenticationBackend):
     async def authenticate(self, request):
