@@ -2,4 +2,5 @@
 from library.OMPython.OMCSessionZMQ import OMCSessionZMQ
 
 omc = OMCSessionZMQ()
-omc.loadModel("Modelica")
+omc.sendExpression("loadModel(Modelica, {\"3.2.3\"},true,\"\",false)")
+

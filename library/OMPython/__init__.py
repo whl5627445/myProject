@@ -334,9 +334,7 @@ class OMCSessionBase(with_metaclass(abc.ABCMeta, object)):
                     simulate_parameters_list.append(str(k) + "=" + str(v))
             cmd = cmd + ", " + ", ".join(simulate_parameters_list)
         self.directoryExists(fileNamePrefix)
-        print(cmd)
         simulate_result =  self.ask('simulate', '{0}'.format(cmd))
-        print(simulate_result)
         return simulate_result
 
     def cd (self, newWorkingDirectory):

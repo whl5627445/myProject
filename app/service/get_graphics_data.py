@@ -36,6 +36,8 @@ class GetGraphicsData(object):
             data = {}
             drawing_data = drawing_data_list[i + 1]
             data["visible"] = drawing_data[0]
+            # if data["visible"] == "useAxisFlange":
+            #     data["visible"] = "true"
             data["originalPoint"] = ",".join(drawing_data[1])
             data["rotation"] = drawing_data[2]
             data["type"] = drawing_data_list[i]
@@ -139,6 +141,8 @@ class GetGraphicsData(object):
                 data["parent"] = parent
                 data["classname"] = c_data_filter[i][0]
                 data["visible"] = ca_data_filter[i][1][0]
+                if data["visible"] == "useAxisFlange":
+                    data["visible"] = "true"
                 data["rotateAngle"] = rotateAngle
                 data["originDiagram"] = ",".join([ca_data_filter[i][1][1], ca_data_filter[i][1][2]])
                 data["extent1Diagram"] = ",".join([ca_data_filter[i][1][3], ca_data_filter[i][1][4]])

@@ -1,5 +1,5 @@
 # -- coding: utf-8 --
-from router.simulate import router
+from router.simulate_router import router
 from fastapi import HTTPException
 from config.DB_config import DBSession
 from app.model.Simulate.SimulateResult import SimulateResult

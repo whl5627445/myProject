@@ -1,6 +1,6 @@
 # -- coding: utf-8 --
 from fastapi import File, UploadFile, Request
-from router.upload_file import router
+from router.upload_file_router import router
 from app.BaseModel.respose_model import ResponseModel, InitResponseModel
 from app.model.models_package.ModelsInformation import ModelsInformation, ModelsInformationAll
 from app.service.save_class_names import SaveClassNames
@@ -67,11 +67,13 @@ async def SaveFile(request: Request, item: UploadSaveFile):
     if parent_name:
         model_str = "within " + parent_name + ";" + model_str
     result = UpdateModelicaClass(model_str, path=package_name)
-    res_model_str = GetModelCode(package_name)
-    FileOperation().write_file(file_path, file_name, res_model_str)
-    save_result, M_id = SaveClassNames(mo_path=mo_path, init_name=package_name, sys_or_user=request.user.username, package_id=package_id)
-    if result and save_result:
-        res.data = [{"model_str": model_str, "id": M_id}]
+    file_model_str = GetModelCode(package_name)
+    FileOperation().write_file(file_path, file_name, file_model_str)
+    if result:
+        save_result, M_id = SaveClassNames(mo_path=mo_path, init_name=package_name, sys_or_user=request.user.username,
+                                           package_id=package_id)
+        res_model_str = GetModelCode(item.package_name)
+        res.data = [{"model_str": res_model_str, "id": M_id}]
         res.msg = "保存文件成功！"
     else:
         res.status = 1
@@ -145,4 +147,5 @@ async def SaveModel(request: Request, item: UploadSaveFile):
         res.status = 1
         res.err = "模型加载失败，请重新检查"
     return res
+
 

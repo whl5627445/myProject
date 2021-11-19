@@ -1,6 +1,6 @@
 # -- coding: utf-8 --
 from fastapi import Request
-from router.simulatemodel import router
+from router.simulatemodel_router import router
 from config.DB_config import DBSession
 from config.redis_config import r
 from datetime import datetime
@@ -17,10 +17,11 @@ from app.service.component_operation import AddComponent, DeleteComponent, Updat
 from app.service.connection_operation import UpdateConnectionAnnotation, DeleteConnection, AddConnection
 from app.BaseModel.simulate import SetComponentModifierValueModel, SetComponentPropertiesModel, CopyClassModel
 from app.BaseModel.simulate import AddComponentModel, UpdateComponentModel, DeleteComponentModel, UpdateConnectionAnnotationModel
-from app.BaseModel.simulate import DeleteConnectionModel
+from app.BaseModel.simulate import DeleteConnectionModel, DeletePackageModel
 import json
 import copy
 from sqlalchemy import or_, and_
+from config.omc import omc
 session = DBSession()
 
 
@@ -326,7 +327,7 @@ async def CopyClassView (item: CopyClassModel, request: Request):
 
 
 @router.post("/delete_package", response_model=ResponseModel)
-async def DeletePackageAndModelView(request: Request, package_name: str, parent_name: str = None, class_name: str = None, package_id: str = None):
+async def DeletePackageAndModelView(request: Request, item: DeletePackageModel):
     """
     # 删除模型包或包中的模型
     ## parent_name: 需要删除的模型在哪个父节点之下，例如“ENN.Examples”
@@ -334,6 +335,10 @@ async def DeletePackageAndModelView(request: Request, package_name: str, parent_
     ## class_name: 被删除的的模型名称，例如“Scenario1_Status_test”
     ## return: 返回json格式数据,告知是否成功
     """
+    package_name = item.package_name
+    package_id = item.package_id
+    parent_name = item.parent_name
+    class_name = item.class_name
     username = request.user.username
     if parent_name:
         model_name_all = parent_name + "." + class_name
@@ -348,7 +353,7 @@ async def DeletePackageAndModelView(request: Request, package_name: str, parent_
                 package.file_path = model_file_path
                 session.query(ModelsInformationAll).filter_by(model_name_all=model_name_all, package_id=package_id, sys_or_user=username).delete(synchronize_session=False)
                 model_parent = session.query(ModelsInformationAll).filter(
-                        ModelsInformationAll.parent_name == parent_name,
+                        ModelsInformationAll.model_name_all == parent_name,
                         ModelsInformationAll.package_id == package_id,
                         ModelsInformationAll.sys_or_user == username,
                         ).first()
@@ -461,8 +466,7 @@ async def UpdateModelComponentView(item: UpdateComponentModel, request: Request)
 @router.post("/create_connection_annotation", response_model=ResponseModel)
 async def CreateConnectionAnnotationView(item: UpdateConnectionAnnotationModel, request: Request):
     """
-    TODO 创建组件连线
-    # 删除模型当中的模型组件
+    # 创建模型当中的组件连线
     ## package_name： 包名称
     ## package_id： 包id
     ## model_name_all：在哪个模型创建，模型全称
@@ -477,10 +481,10 @@ async def CreateConnectionAnnotationView(item: UpdateConnectionAnnotationModel, 
     package = session.query(ModelsInformation).filter_by(id=item.package_id, sys_or_user=username).first()
     if package:
         result = AddConnection(item.model_name_all, item.connect_start, item.connect_end, item.line_points, item.color, package.file_path, package.package_name)
-        if result:
+        if result == "Ok":
             res.msg = "连接成功"
         else:
-            res.err = "连接失败"
+            res.err = "连接失败, err: " + result
             res.status = 1
     else:
         res.err = "连接失败"
@@ -491,8 +495,7 @@ async def CreateConnectionAnnotationView(item: UpdateConnectionAnnotationModel, 
 @router.post("/delete_connection_annotation", response_model=ResponseModel)
 async def DeleteConnectionAnnotationView(item: DeleteConnectionModel, request: Request):
     """
-    TODO 删除组件连线
-    # 删除模型当中的模型组件
+    # 删除模型当中的删除组件连线
     ## package_name： 包名称
     ## package_id： 包id
     ## model_name_all： 在哪个模型当中删除连线
@@ -505,10 +508,10 @@ async def DeleteConnectionAnnotationView(item: DeleteConnectionModel, request: R
     package = session.query(ModelsInformation).filter_by(id=item.package_id, sys_or_user=username).first()
     if package:
         result = DeleteConnection(item.model_name_all, item.connect_start, item.connect_end, package.file_path, package.package_name)
-        if result:
+        if result  == "Ok":
             res.msg = "删除成功"
         else:
-            res.err = "删除失败"
+            res.err = "删除失败: " + result
             res.status = 1
     else:
         res.err = "删除失败"
@@ -520,8 +523,7 @@ async def DeleteConnectionAnnotationView(item: DeleteConnectionModel, request: R
 @router.post("/update_connection_annotation", response_model=ResponseModel)
 async def UpdateConnectionAnnotationView(item: UpdateConnectionAnnotationModel, request: Request):
     """
-    TODO 更新组件连线
-    # 删除模型当中的模型组件
+    # 更新模型当中的组件连线
     ## package_name： 包名称
     ## package_id： 包id
     ## model_name_all：在哪个模型中更新，模型全称
@@ -536,8 +538,11 @@ async def UpdateConnectionAnnotationView(item: UpdateConnectionAnnotationModel, 
     package = session.query(ModelsInformation).filter_by(id=item.package_id, sys_or_user=username).first()
     if package:
         result = UpdateConnectionAnnotation(item.model_name_all, item.connect_start, item.connect_end, item.line_points, item.color, package.file_path, package.package_name)
-        if result:
+        if result is True:
             res.msg = "连接修改成功"
+        else:
+            res.err = "连接修改失败: " + str(result)
+            res.status = 1
     else:
         res.err = "连接修改失败"
         res.status = 2
@@ -546,11 +551,11 @@ async def UpdateConnectionAnnotationView(item: UpdateConnectionAnnotationModel, 
 
 @router.get("/test")
 async def _test (model_name: str, request: Request):
-    # from config.omc import omc
-    username = request.user.username
-    r.hdel("GetGraphicsData_" + username, model_name)
-    # res = omc.sendExpression(model_name)
-    res = request.auth
+
+    # username = request.user.username
+    # r.hdel("GetGraphicsData_" + username, model_name)
+    res = omc.sendExpression(model_name)
+    # res = request.auth
     return {"msg": res,
             # "user": request.user.display_name,
             "auth": request.user.is_authenticated

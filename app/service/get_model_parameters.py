@@ -80,6 +80,9 @@ class GetModelParameters(object):
             showStartAttribute = None
             if Dialog_index is not None:
                 tab_index = Dialog_index + 1
+                # TODO Dialog 有可能返回error数据， 与单机版软件数据不一致，需要排查原因，暂时遇到了调过
+                if len(p[-1][tab_index]) <= 1:
+                    continue
                 tab = p[-1][tab_index][0]
                 group = p[-1][tab_index][1]
                 data_default["tab"] = tab

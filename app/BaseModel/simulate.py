@@ -96,3 +96,10 @@ class ExperimentCreateModel(BaseModel):
     model_var_data: list
     simulate_var_data: list
     experiment_name: str
+
+
+class DeletePackageModel(BaseModel):
+    package_id: int
+    package_name: str
+    parent_name: str
+    class_name: str

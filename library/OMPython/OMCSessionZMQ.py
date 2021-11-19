@@ -8,7 +8,7 @@ from library.OMPython.cdata_to_pydata import CdataToPYdata
 class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
 
     def __init__ (self, readonly=False, timeout=10.00, docker=None, dockerContainer=None, dockerExtraArgs=[],
-                  dockerOpenModelicaPath="omc", dockerNetwork=None, port=None, random_string=None):
+                  dockerOpenModelicaPath="omc", dockerNetwork=None, address="127.0.0.1", port=23456, random_string="simtek"):
         OMCSessionHelper.__init__(self)
         OMCSessionBase.__init__(self, readonly, interactivePort = port, random_string=random_string)
         # Locating and using the IOR
@@ -25,6 +25,7 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
         self._timeout = timeout
         self._port_file = os.path.join("/tmp" if docker else self._temp_dir, self._port_file).replace("\\", "/")
         self._interactivePort = port
+        self._serverIPAddress = address
         # set omc executable path and args
         self._set_omc_command([
             "--interactive=zmq",
@@ -54,13 +55,14 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
                 except:
                     pass
             else:
-                if os.path.isfile(self._port_file):
-                    # Read the port file
-                    with open(self._port_file, 'r') as f_p:
-                        self._port = f_p.readline()
-                    os.remove(self._port_file)
-                    break
-
+                # if os.path.isfile(self._port_file):
+                #     # Read the port file
+                #     with open(self._port_file, 'r') as f_p:
+                #         self._port = f_p.readline()
+                #     os.remove(self._port_file)
+                #     break
+                self._port = "tcp://" + self._serverIPAddress + ":" + str(self._interactivePort)
+                break
             attempts += 1
             if attempts == 80.0:
                 name = self._omc_log_file.name
@@ -92,6 +94,7 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
         ## check for process is running
         p = self._omc_process.poll()
         if (p == None):
+            # self._connect_to_omc(10)
             attempts = 0
             while True:
                 try:
@@ -113,6 +116,7 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
                 return None
             else:
                 result = self._omc.recv_string()
+                # self._omc.close()
                 if parsed is True:
                     answer = CdataToPYdata(result)
                     return answer
@@ -356,18 +360,19 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
         return result
 
     def addConnection(self, model_name_all, connect_start, connect_end, line_points, color="0,0,127"):
-        # annotate=Placement(visible=true, transformation=transformation(origin={-72,-64}, extent={{-10,-10},{10,10}}, rotation=0))
+        # addConnection(integrator.y,PI.u_ff,qq.PID_Controller,annotate=Line(points={{-42,30},{-40,30},{-40,-22}},color={0,0,127}))
         line_points = ",".join(["{" + i + "}" for i in line_points])
-        annotate = "$annotation(Line(points={" + line_points + "},color={" + color + "}))\""
-        cmd = "addConnection(" + connect_start + ","+ connect_end + "," + model_name_all + "," + annotate + ")"
+        annotate = "annotate=Line(points={" + line_points + "},color={" + color + "}))"
+        cmd = "addConnection(" + connect_start + ","+ connect_end + "," + model_name_all + "," + annotate
         result = self.sendExpression(cmd)
         return result
 
     def updateConnectionAnnotation (self, model_name_all, connect_start, connect_end, line_points, color="0,0,127"):
-        # "annotate=$annotation(Line(points={{-213,-38},{-163.25,-38},{-163.25,-4},{-133.5,-4},{-133.5,-70},{-22,-70}},color={0,0,127}))"
+        # updateConnectionAnnotation(qq.Scenario1_Status, "gasGlassFurnance.pro_out", "productSink.port_a","annotate=$annotation(Line(points={{-40,14},{-24,14},{-24,32},{-12,32}},color={255,170,255}))")
         line_points = ",".join(["{" + i + "}" for i in line_points])
         annotate = "$annotation(Line(points={" + line_points + "},color={" + color + "}))\""
         cmd = "updateConnectionAnnotation(" + model_name_all + ", \"" + connect_start + "\", \"" + connect_end +  "\", \"annotate=" + annotate + ")"
+        print(cmd)
         result = self.sendExpression(cmd)
         return result
 

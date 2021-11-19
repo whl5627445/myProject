@@ -48,7 +48,7 @@ def GetIconsData(name):
     return icons_data
 
 
-def SaveClassNames(mo_path=None, init_name="Modelica", sys_or_user="sys", package_id=None):
+def SaveClassNames(mo_path=None, init_name="Modelica", sys_or_user="sys", package_id=""):
     data_dict = {}
     res = False
     model_root_data = {
@@ -87,28 +87,22 @@ def SaveClassNames(mo_path=None, init_name="Modelica", sys_or_user="sys", packag
                 session.flush()
                 M_id = M.id
                 break
+    session.query(ModelsInformationAll).filter_by(package_id=package_id).delete(synchronize_session=False)
+    session.flush()
     for k, v in ClassNames.items():
         # icons_data = GetIconsData(k)
         if v["parent_name"]:
-            MA = session.query(ModelsInformationAll).filter_by(package_id=package_id, package_name=v["package_name"], model_name_all=k).first()
-            if MA:
-                MA.haschild = v["has_child"]
-                MA.child_name = v["child_name"]
-                MA.parent_name=v["parent_name"]
-                MA.model_name=v["model_name"]
-            else:
-                MA = ModelsInformationAll(
-                        package_name=v["package_name"],
-                        package_id=M_id,
-                        model_name=v["model_name"],
-                        model_name_all=k,
-                        parent_name=v["parent_name"],
-                        child_name=v["child_name"],
-                        haschild=v["has_child"],
-                        sys_or_user=sys_or_user,
-                        # image=icons_data,
-                        )
-
+            MA = ModelsInformationAll(
+                    package_name=v["package_name"],
+                    package_id=M_id,
+                    model_name=v["model_name"],
+                    model_name_all=k,
+                    parent_name=v["parent_name"],
+                    child_name=v["child_name"],
+                    haschild=v["has_child"],
+                    sys_or_user=sys_or_user,
+                    # image=icons_data,
+                    )
             session.add(MA)
     session.flush()
     session.close()
@@ -117,4 +111,5 @@ def SaveClassNames(mo_path=None, init_name="Modelica", sys_or_user="sys", packag
 
 
 if __name__ == '__main__':
-    print(SaveClassNames(mo_path="public/UserFiles/ENN.mo", init_name="ENN", sys_or_user="tom"))
+    # print(SaveClassNames(mo_path="public/UserFiles/ENN.mo", init_name="ENN", sys_or_user="tom"))
+    SaveClassNames()
