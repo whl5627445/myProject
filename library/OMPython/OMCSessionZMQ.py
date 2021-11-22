@@ -8,7 +8,7 @@ from library.OMPython.cdata_to_pydata import CdataToPYdata
 class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
 
     def __init__ (self, readonly=False, timeout=10.00, docker=None, dockerContainer=None, dockerExtraArgs=[],
-                  dockerOpenModelicaPath="omc", dockerNetwork=None, address="127.0.0.1", port=23456, random_string="simtek"):
+                  dockerOpenModelicaPath="omc", dockerNetwork=None, address="127.0.0.1", port=23456, random_string="simtek", once=False):
         OMCSessionHelper.__init__(self)
         OMCSessionBase.__init__(self, readonly, interactivePort = port, random_string=random_string)
         # Locating and using the IOR
@@ -26,6 +26,7 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
         self._port_file = os.path.join("/tmp" if docker else self._temp_dir, self._port_file).replace("\\", "/")
         self._interactivePort = port
         self._serverIPAddress = address
+        self._once = once
         # set omc executable path and args
         self._set_omc_command([
             "--interactive=zmq",
@@ -33,8 +34,10 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
             "-z={0}".format(self._random_string)
         ])
         # start up omc executable, which is waiting for the ZMQ connection
-        self._start_omc_process(timeout)
-        # connect to the running omc instance using ZMQ
+        # 如果不是一次性链接，可判断是服务启动，则启动omc，
+        if not self._once:
+            self._start_omc_process(timeout)
+            # connect to the running omc instance using ZMQ
         self._connect_to_omc(timeout)
 
     def __del__ (self):
@@ -73,10 +76,10 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
             time.sleep(timeout / 80.0)
 
         self._port = self._port.replace("0.0.0.0", self._serverIPAddress)
-        logger.info(
-                "OMC Server is up and running at {0} pid={1} cid={2}".format(self._omc_zeromq_uri,
-                                                                             self._omc_process.pid,
-                                                                             self._dockerCid))
+        # logger.info(
+        #         "OMC Server is up and running at {0} pid={1} cid={2}".format(self._omc_zeromq_uri,
+        #                                                                      self._omc_process.pid,
+        #                                                                      self._dockerCid))
 
         # Create the ZeroMQ socket and connect to OMC server
         import zmq
@@ -92,38 +95,39 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
 
     def sendExpression (self, command, parsed=True):
         ## check for process is running
-        p = self._omc_process.poll()
-        if (p == None):
+        # p = self._omc_process.poll()
+        # if (p == None):
             # self._connect_to_omc(10)
-            attempts = 0
-            while True:
-                try:
-                    self._omc.send_string(str(command), flags=zmq.NOBLOCK)
-                    break
-                except zmq.error.Again:
-                    pass
-                attempts += 1
-                if attempts == 50.0:
-                    name = self._omc_log_file.name
-                    self._omc_log_file.close()
-                    raise Exception(
-                            "No connection with OMC (timeout=%f). Log-file says: \n%s" % (
-                                self._timeout, open(name).read()))
-                time.sleep(self._timeout / 50.0)
-            if command == "quit()":
-                self._omc.close()
-                self._omc = None
-                return None
-            else:
-                result = self._omc.recv_string()
-                # self._omc.close()
-                if parsed is True:
-                    answer = CdataToPYdata(result)
-                    return answer
-                else:
-                    return result
+        attempts = 0
+        while True:
+            try:
+                self._omc.send_string(str(command), flags=zmq.NOBLOCK)
+                break
+            except zmq.error.Again:
+                pass
+            attempts += 1
+            if attempts == 50.0:
+                name = self._omc_log_file.name
+                self._omc_log_file.close()
+                raise Exception(
+                        "No connection with OMC (timeout=%f). Log-file says: \n%s" % (
+                            self._timeout, open(name).read()))
+            time.sleep(self._timeout / 50.0)
+        if command == "quit()":
+            self._omc.close()
+            self._omc = None
+            return None
         else:
-            raise Exception("Process Exited, No connection with OMC. Create a new instance of OMCSession")
+            result = self._omc.recv_string()
+            if self._once:
+                self._omc.close()
+            if parsed is True:
+                answer = CdataToPYdata(result)
+                return answer
+            else:
+                return result
+        # else:
+        #     raise Exception("Process Exited, No connection with OMC. Create a new instance of OMCSession")
 
     def getComponents (self, class_name):
         return self.sendExpression("getComponents(" + class_name + ")")

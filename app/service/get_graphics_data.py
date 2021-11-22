@@ -102,6 +102,7 @@ class GetGraphicsData(object):
         c_data_filter = []
         ca_data_filter = []
         if is_icon and c_data != [] and ca_data != []:
+        # if c_data != [] and ca_data != []:
             for i in range(len(c_data)):
                 if "Interfaces" in c_data[i][0].split('.'):
                     c_data_filter.append(c_data[i])

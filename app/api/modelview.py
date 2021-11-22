@@ -75,7 +75,7 @@ async def GetModelView (model_name: str, request: Request):
 
 
 @router.get("/getgraphicsdata", response_model=ResponseModel)
-async def GetGraphicsDataView (model_name: str, sys_user: str, request: Request, component_name: str = None):
+async def GetGraphicsDataView (model_name: str, request: Request, component_name: str = None):
     """
     # 获取模型的画图数据，一次性返回， 第一次调用时间较久，有缓存机制，redis
     ## modelname: 需要查询的模型名称，全称， 例如“Modelica.Blocks.Examples.PID_Controller”
@@ -90,9 +90,10 @@ async def GetGraphicsDataView (model_name: str, sys_user: str, request: Request,
     #     G_data = r_data.decode()
     # else:
     model_file_path = None
-    if sys_user == "user":
-        package_name = model_name.split(".")[0]
-        package = session.query(ModelsInformation).filter_by(package_name=package_name, sys_or_user=username).first()
+    # if sys_user == "user":
+    package_name = model_name.split(".")[0]
+    package = session.query(ModelsInformation).filter_by(package_name=package_name, sys_or_user=username).first()
+    if package:
         model_file_path = package.file_path
     if not component_name:
         data = GetGraphicsData().get_data([model_name], model_file_path)

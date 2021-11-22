@@ -159,6 +159,8 @@ class OMCSessionBase(with_metaclass(abc.ABCMeta, object)):
             for i in psutil.process_iter():
                 if i.name() == "omc":
                     i.kill()
+                    time.sleep(0.5)
+                    break
             # Because we spawned a shell, and we need to be able to kill OMC, create a new process group for this
             self._omc_process = subprocess.Popen(self._omc_command, shell=True, stdout=self._omc_log_file,
                                                  stderr=self._omc_log_file, preexec_fn=os.setsid)
