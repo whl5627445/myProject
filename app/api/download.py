@@ -11,38 +11,19 @@ session = DBSession()
 @router.get("/getfilelist", response_model=ResponseModel)
 async def GetFileListView(request: Request):
     """
-    # 用户下载mo文件接口
-    ## package_name: 包或模型的名字
-
-    ## return: 会返回文件上传的状态
+    # 用户获取mo文件信息接口， 可以根据url进行下载
+    ## return: 包名， 上传时间， 下载路径
     """
     res = InitResponseModel()
     username = request.user.username
     package_list = session.query(ModelsInformation).filter_by(sys_or_user=username).all()
-    for i in package_list:
+    for i in range(len(package_list)):
         data_dict = {
-            "package_id": i.id,
-            "package_name": i.package_name,
-            "create_time": i.create_time,
-            "url": "static/" + i.file_path,
+            "id": i,
+            "package_name": package_list[i].package_name,
+            "create_time": package_list[i].create_time,
+            "url": "static/" + package_list[i].file_path,
             }
         res.data.append(data_dict)
     return res
 
-
-
-@router.get("/downloadfile", response_model=ResponseModel)
-async def DownloadFileView(request: Request, package_id: str):
-    """
-    # 用户下载mo文件接口
-    ## package_name: 包或模型的名字
-
-    ## return: 会返回文件上传的状态
-    """
-    res = InitResponseModel()
-    username = request.user.username
-    package = session.query(ModelsInformation).filter_by(id=package_id, sys_or_user=username).first()
-    path = package.file_path
-    data = [path]
-    res.data = data
-    return res
