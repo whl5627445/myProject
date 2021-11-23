@@ -1,6 +1,6 @@
 # -- coding: utf-8 --
 from library.mat import DyMatFile
-from config.omc import omc
+from config.omc import omc, OmcFactory
 from app.model.Simulate.SimulateRecord import SimulateRecord
 from app.model.Simulate.SimulateResult import SimulateResult
 from config.DB_config import DBSession
@@ -19,8 +19,14 @@ ip = socket.gethostbyname(hostname)
 
 def SimulateDataHandle(SRecord: object, result_file_path, username, model_name, simulate_result_str):
     SRecord.simulate_result_str = simulate_result_str
-    SRecord.simulate_model_result_path = result_file_path + "result_res.mat",  # omc会为结果文件添加"_res.mat"后缀
-    mat_file_data = DyMatFile(result_file_path + "result_res.mat")
+    SRecord.simulate_model_result_path = result_file_path + "result_res.mat"  # omc会为结果文件添加"_res.mat"后缀
+    try:
+        mat_file_data = DyMatFile(result_file_path + "result_res.mat")
+    except Exception as e:
+        print(e)
+        SRecord.simulate_status = "仿真失败"
+        session.flush()
+        return
     SRecord.simulate_nametree = mat_file_data.nameTree()
     for k, v in mat_file_data.vars.items():
         model_variable_data_abscissa = mat_file_data.abscissa(k, True).tolist()
@@ -78,6 +84,7 @@ def JModelicaSimulate(SRecord_id, username: str, model_name: str, mo_path: str, 
     session.close()
 
 def OpenModelicaSimulate(SRecord_id, username: str, model_name: str, file_path: str = None, simulate_parameters_data = None):
+    omc_once = OmcFactory()
     SRecord = session.query(SimulateRecord).filter_by(id=SRecord_id).first()
     result_file_path = "public/UserFiles/ModelResult" + '/' + username + '/' + \
                        model_name.split('.')[
@@ -86,21 +93,15 @@ def OpenModelicaSimulate(SRecord_id, username: str, model_name: str, file_path: 
     if file_path:
         package_name = model_name.split('.')[0]
         LoadModelFile(package_name, file_path)
-        # Load_result = omc.loadFile(file_path)
-    # else:
-    #     Load_result = omc.loadModel(model_name)
     file_operation = FileOperation()
     file_operation.make_dir(result_file_path)
-    # if Load_result != 'false\\n':
-    simulate_result_str = omc.simulate(className=model_name, fileNamePrefix=result_file_path, simulate_parameters_data=simulate_parameters_data)
+    simulate_result_str = omc_once.simulate(className=model_name, fileNamePrefix=result_file_path, simulate_parameters_data=simulate_parameters_data)
     SRecord.simulate_end_time = datetime.now()
-    err = omc.getErrorString()
+    err = OmcFactory().getErrorString()
     if err == '':
         SimulateDataHandle(SRecord, result_file_path, username, model_name, simulate_result_str)
     else:
         SRecord.simulate_status = "仿真失败"
-    # else:
-    #     SRecord.simulate_status = "仿真失败"
     session.flush()
     session.close()
 

@@ -172,8 +172,11 @@ async def SimulateResultTreeView (id: str, variable_name: str = None):
 async def ExperimentCreateView (request: Request, item: ExperimentCreateModel):
     """
     # 仿真实验创建记录接口，
-    ## id: 仿真记录id， 在/simulate/record/list接口获取
-    ## variable_name: 模型变量名称
+        # package_id: 保存的实验是属于哪个包id
+        # model_name: 实验属于哪个模型，全称，例如"Modelica.Blocks.Examples.PID_Controller"
+        # model_var_data: 模型的变量数据，修改过哪个模型变量，保存到当前数组对象
+        # simulate_var_data: 模型仿真选项数据
+        # experiment_name: 实验名称
     ## return: 返回的是对应节点的所有子节点
     """
     res = InitResponseModel()
@@ -212,20 +215,19 @@ async def ExperimentCreateView (request: Request, item: ExperimentCreateModel):
 async def ExperimentGetView (request: Request, package_id: str, model_name: str):
     """
     # 获取仿真实验记录接口，
-    ## id: 仿真记录id， 在/simulate/record/list接口获取
-    ## variable_name: 模型变量名称
+        # package_id: 获取的是哪个包当中的实验列表
+        # model_name： 哪个模型当中的实验列表，全称，例如："Modelica.Blocks.Examples.PID_Controller"
     ## return: 返回的是对应节点的所有子节点
     """
     res = InitResponseModel()
     username = request.user.username
     experiment_all = session.query(ExperimentRecord).filter_by(username=username, package_id=package_id, model_name_all=model_name).all()
-
     for i in experiment_all:
         data = {
-
             "id": i.id,
             "experiment_name": i.experiment_name,
             "model_var_data": i.model_var_data,
             "simulate_var_data": i.simulate_var_data,
             }
+        res.data.append(data)
     return res

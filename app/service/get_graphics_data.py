@@ -36,8 +36,6 @@ class GetGraphicsData(object):
             data = {}
             drawing_data = drawing_data_list[i + 1]
             data["visible"] = drawing_data[0]
-            # if data["visible"] == "useAxisFlange":
-            #     data["visible"] = "true"
             data["originalPoint"] = ",".join(drawing_data[1])
             data["rotation"] = drawing_data[2]
             data["type"] = drawing_data_list[i]
@@ -127,23 +125,9 @@ class GetGraphicsData(object):
                 name = c_data_filter[i][1]
                 data["original_name"] = c_data_filter[i][1]
                 data["name"] = name
-
-                # name_num = 1
-                # for dl in data_list:  # 区分重名情况，omc默认是在后面加.[序号]
-                #     if name == dl["name"]:
-                #         dl["name"] = dl["name"] + "[" + str(name_num) + "]"
-                #         data["name"] = name + "[" + str(name_num + 1) + "]"
-                #         data["original_name"] = c_data_filter[i][1]
-                #         name_num += 2
-                #     elif  dl.get("original_name", None) == name:
-                #         data["name"] = name + "[" + str(name_num + 1) + "]"
-                #         data["original_name"] = c_data_filter[i][1]
-                #         name_num += 1
                 data["parent"] = parent
                 data["classname"] = c_data_filter[i][0]
                 data["visible"] = ca_data_filter[i][1][0]
-                if data["visible"] == "useAxisFlange":
-                    data["visible"] = "true"
                 data["rotateAngle"] = rotateAngle
                 data["originDiagram"] = ",".join([ca_data_filter[i][1][1], ca_data_filter[i][1][2]])
                 data["extent1Diagram"] = ",".join([ca_data_filter[i][1][3], ca_data_filter[i][1][4]])
@@ -156,18 +140,21 @@ class GetGraphicsData(object):
         return data_list
 
     def getNthConnection_data(self, name_list):
-        cc = self.mod.getConnectionCountList(name_list)[0]
-        if cc != [0]:
-            for i in range(cc):
-                nc_data = self.mod.getNthConnection(name_list[0], i + 1)
-                nca_data = self.mod.getNthConnectionAnnotation(name_list[0], i + 1)
-                da_data = self.data_01(nca_data)[0]
-                da_data["connectionfrom_original_name"] = nc_data[0]
-                da_data["connectionto_original_name"] = nc_data[1]
-                expression = r"\[\d+\]$"
-                da_data["connectionfrom"] = re.sub(expression,"",nc_data[0])
-                da_data["connectionto"] = re.sub(expression,"",nc_data[1])
-                self.data[0].append(da_data)
+        # cc = self.mod.getConnectionCountList(name_list)[0]
+        cc = self.mod.getConnectionCountList(name_list)
+        # if cc != [0]:
+        for count in range(len(cc)):
+            if cc[count] != 0:
+                for i in range(cc[count]):
+                    nc_data = self.mod.getNthConnection(name_list[count], i + 1)
+                    nca_data = self.mod.getNthConnectionAnnotation(name_list[count], i + 1)
+                    da_data = self.data_01(nca_data)[0]
+                    da_data["connectionfrom_original_name"] = nc_data[0]
+                    da_data["connectionto_original_name"] = nc_data[1]
+                    expression = r"\[\d+\]$"
+                    da_data["connectionfrom"] = re.sub(expression,"",nc_data[0])
+                    da_data["connectionto"] = re.sub(expression,"",nc_data[1])
+                    self.data[0].append(da_data)
 
     def get_data (self, name_list, model_file_path=None):
         self.package_name = name_list[0].split(".")[0]
