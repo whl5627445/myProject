@@ -82,6 +82,16 @@ class UpdateConnectionAnnotationModel(BaseModel):
     line_points: list = []
 
 
+class UpdateConnectionNamesModel(BaseModel):
+    package_name: str
+    package_id: str
+    model_name_all: str
+    from_name: str
+    to_name: str
+    from_name_new: str
+    to_name_new: str
+
+
 class DeleteConnectionModel(BaseModel):
     package_name: str
     package_id: str

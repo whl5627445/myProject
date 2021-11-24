@@ -3,19 +3,25 @@ from config.omc import omc
 from app.service.load_model_file import LoadModelFile
 
 
-def AddConnection(model_name_all, connect_start, connect_end, line_points, color, file_path, package_name):
+def AddConnection(class_name_all, connect_start, connect_end, line_points, color, file_path, package_name):
     # LoadModelFile(package_name, file_path)
-    result = omc.addConnection(model_name_all, connect_start, connect_end, line_points, color)
+    result = omc.addConnection(class_name_all, connect_start, connect_end, line_points, color)
     return result
 
 
-def UpdateConnectionAnnotation(model_name_all, connect_start, connect_end, line_points, color, file_path, package_name):
+def UpdateConnectionNames(class_name_all, from_name, to_name, from_name_new, to_name_new):
     # LoadModelFile(package_name, file_path)
-    result = omc.updateConnectionAnnotation(model_name_all, connect_start, connect_end, line_points, color)
+    result = omc.updateConnectionNames(class_name_all, from_name, to_name, from_name_new, to_name_new)
     return result
 
 
-def DeleteConnection(model_name_all, connect_start, connect_end, file_path, package_name):
+def UpdateConnectionAnnotation(class_name_all, connect_start, connect_end, line_points, color, file_path, package_name):
     # LoadModelFile(package_name, file_path)
-    result = omc.deleteConnection(model_name_all, connect_start, connect_end)
+    result = omc.updateConnectionAnnotation(class_name_all, connect_start, connect_end, line_points, color)
+    return result
+
+
+def DeleteConnection(class_name_all, connect_start, connect_end, file_path, package_name):
+    # LoadModelFile(package_name, file_path)
+    result = omc.deleteConnection(class_name_all, connect_start, connect_end)
     return result

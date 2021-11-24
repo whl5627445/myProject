@@ -358,48 +358,53 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
         result = self.sendExpression(cmd)
         return result
 
-    def addClassAnnotation(self, model_name_all, annotate_str):
-        cmd = "addClassAnnotation(" + model_name_all + ", annotate=" + annotate_str + ")"
+    def addClassAnnotation(self, class_name_all, annotate_str):
+        cmd = "addClassAnnotation(" + class_name_all + ", annotate=" + annotate_str + ")"
         result = self.sendExpression(cmd)
         return result
 
-    def addConnection(self, model_name_all, connect_start, connect_end, line_points, color="0,0,127"):
+    def addConnection(self, class_name_all, connect_start, connect_end, line_points, color="0,0,127"):
         # addConnection(integrator.y,PI.u_ff,qq.PID_Controller,annotate=Line(points={{-42,30},{-40,30},{-40,-22}},color={0,0,127}))
         line_points = ",".join(["{" + i + "}" for i in line_points])
         annotate = "annotate=Line(points={" + line_points + "},color={" + color + "}))"
-        cmd = "addConnection(" + connect_start + ","+ connect_end + "," + model_name_all + "," + annotate
+        cmd = "addConnection(" + connect_start + ","+ connect_end + "," + class_name_all + "," + annotate
         result = self.sendExpression(cmd)
         return result
 
-    def updateConnectionAnnotation (self, model_name_all, connect_start, connect_end, line_points, color="0,0,127"):
+    def updateConnectionNames(self, class_name_all, from_name, to_name, from_name_new, to_name_new):
+        cmd = "updateConnectionNames(\"" + class_name_all + "\",\""+ from_name + "\",\"" + to_name + "\",\"" + from_name_new + "\",\"" + to_name_new + "\")"
+        result = self.sendExpression(cmd)
+        return result
+
+    def updateConnectionAnnotation (self, class_name_all, connect_start, connect_end, line_points, color="0,0,127"):
         # updateConnectionAnnotation(qq.Scenario1_Status, "gasGlassFurnance.pro_out", "productSink.port_a","annotate=$annotation(Line(points={{-40,14},{-24,14},{-24,32},{-12,32}},color={255,170,255}))")
         line_points = ",".join(["{" + i + "}" for i in line_points])
         annotate = "$annotation(Line(points={" + line_points + "},color={" + color + "}))\""
-        cmd = "updateConnectionAnnotation(" + model_name_all + ", \"" + connect_start + "\", \"" + connect_end +  "\", \"annotate=" + annotate + ")"
+        cmd = "updateConnectionAnnotation(" + class_name_all + ", \"" + connect_start + "\", \"" + connect_end +  "\", \"annotate=" + annotate + ")"
         result = self.sendExpression(cmd)
         return result
 
-    def deleteConnection(self, model_name_all, connect_start, connect_end):
-        cmd = "deleteConnection(" + connect_start + ","+ connect_end + "," + model_name_all + ")"
+    def deleteConnection(self, class_name_all, connect_start, connect_end):
+        cmd = "deleteConnection(" + connect_start + ","+ connect_end + "," + class_name_all + ")"
         result = self.sendExpression(cmd)
         return result
 
-    def addComponent(self, new_component_name, old_component_name, model_name_all, origin, extent, rotation):
+    def addComponent(self, new_component_name, old_component_name, class_name_all, origin, extent, rotation):
         # annotate=Placement(visible=true, transformation=transformation(origin={-72,-64}, extent={{-10,-10},{10,10}}, rotation=0))
         annotate = "annotate=Placement(visible=true, transformation=transformation(origin={" + origin + "}, extent={{" + extent[0] + "},{" + extent[1] + "}}, rotation=" + rotation + "))"
-        cmd = "addComponent(" + new_component_name + ","+ old_component_name + "," + model_name_all + "," + annotate + ")"
+        cmd = "addComponent(" + new_component_name + ","+ old_component_name + "," + class_name_all + "," + annotate + ")"
         result = self.sendExpression(cmd)
         return result
 
-    def deleteComponent(self, component_name, model_name_all):
-        cmd = "deleteComponent(" + component_name + ","+ model_name_all + ")"
+    def deleteComponent(self, component_name, class_name_all):
+        cmd = "deleteComponent(" + component_name + ","+ class_name_all + ")"
         result = self.sendExpression(cmd)
         return result
 
-    def updateComponent(self, component_name, component_model_name, model_name_all, origin, extent, rotation):
+    def updateComponent(self, component_name, component_model_name, class_name_all, origin, extent, rotation):
         # updateComponent(PI,Modelica.Blocks.Continuous.LimPID,ENN.Examples.PID_Controller10086,annotate=Placement(visible=true, transformation=transformation(origin={-46,-10}, extent={{10,10},{-10,-10}}, rotation=180)))
         annotate = "annotate=Placement(visible=true, transformation=transformation(origin={" + origin + "}, extent={{" + extent[0] + "},{" + extent[1] + "}}, rotation=" + rotation + "))"
-        cmd = "updateComponent(" + component_name + "," + component_model_name + ","+ model_name_all + "," + annotate + ")"
+        cmd = "updateComponent(" + component_name + "," + component_model_name + ","+ class_name_all + "," + annotate + ")"
         result = self.sendExpression(cmd)
         return result
 

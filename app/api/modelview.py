@@ -14,10 +14,10 @@ from app.service.set_component_properties import SetComponentProperties
 from app.service.get_components import GetComponents
 from app.service.copy_class import SaveClass
 from app.service.component_operation import AddComponent, DeleteComponent, UpdateComponent
-from app.service.connection_operation import UpdateConnectionAnnotation, DeleteConnection, AddConnection
+from app.service.connection_operation import UpdateConnectionAnnotation, DeleteConnection, AddConnection, UpdateConnectionNames
 from app.BaseModel.simulate import SetComponentModifierValueModel, SetComponentPropertiesModel, CopyClassModel
 from app.BaseModel.simulate import AddComponentModel, UpdateComponentModel, DeleteComponentModel, UpdateConnectionAnnotationModel
-from app.BaseModel.simulate import DeleteConnectionModel, DeletePackageModel
+from app.BaseModel.simulate import DeleteConnectionModel, DeletePackageModel, UpdateConnectionNamesModel
 import json
 import copy
 from sqlalchemy import or_, and_
@@ -493,6 +493,35 @@ async def CreateConnectionAnnotationView(item: UpdateConnectionAnnotationModel, 
     return res
 
 
+@router.post("/update_connection_names", response_model=ResponseModel)
+async def UpdateConnectionNamesView(item: UpdateConnectionNamesModel, request: Request):
+    """
+    # 创建模型当中的组件连线
+    ## package_name： 包名称
+    ## package_id： 包id
+    ## model_name_all：在哪个模型创建，模型全称
+    ## connect_start：连线起点， 输出点， 例如"sum1.y"
+    ## connect_end：连线终点， 输入点， 例如"ChebyshevI.u"
+    ## color：连线颜色， 例如"0,0,127"
+    ## line_points：连线拐点坐标，包含起始点坐标，从起点开始到终点 例如["213,-38","-163.25,-38","-163.25,-4"]
+    ## return: 返回json格式数据,告知是否成功
+    """
+    res = InitResponseModel()
+    username = request.user.username
+    package = session.query(ModelsInformation).filter_by(id=item.package_id, sys_or_user=username).first()
+    if package:
+        result = UpdateConnectionNames(item.model_name_all, item.from_name, item.to_name, item.from_name_new, item.to_name_new)
+        if result == "Ok":
+            res.msg = "连接起止点更新成功"
+        else:
+            res.err = "连接起止点更新失败, err: " + result
+            res.status = 1
+    else:
+        res.err = "连接起止点更新失败"
+        res.status = 2
+    return res
+
+
 @router.post("/delete_connection_annotation", response_model=ResponseModel)
 async def DeleteConnectionAnnotationView(item: DeleteConnectionModel, request: Request):
     """
@@ -540,9 +569,9 @@ async def UpdateConnectionAnnotationView(item: UpdateConnectionAnnotationModel, 
     if package:
         result = UpdateConnectionAnnotation(item.model_name_all, item.connect_start, item.connect_end, item.line_points, item.color, package.file_path, package.package_name)
         if result is True:
-            res.msg = "连接修改成功"
+            res.msg = "连接拐点修改成功"
         else:
-            res.err = "连接修改失败: " + str(result)
+            res.err = "连接拐点修改失败: " + str(result)
             res.status = 1
     else:
         res.err = "连接修改失败"
