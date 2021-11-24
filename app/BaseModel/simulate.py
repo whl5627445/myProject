@@ -103,3 +103,15 @@ class DeletePackageModel(BaseModel):
     package_name: str
     parent_name: str
     class_name: str
+
+
+class SetSimulationOptionsModel(BaseModel):
+    package_id: int
+    package_name: str
+    model_name: str
+    experiment: Optional[dict] = {
+        "StartTime": 0,
+        "StopTime": 4,
+        "Tolerance": 1e-06,
+        "Interval": 0.008
+        }

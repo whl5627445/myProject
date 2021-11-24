@@ -7,7 +7,7 @@ from app.service.save_class_names import SaveClassNames
 from library.file_operation import FileOperation
 from config.DB_config import DBSession
 from datetime import datetime
-from app.BaseModel.uploadfile import UploadSaveFile
+from app.BaseModel.uploadfile import UploadSaveFileModel, UploadSaveModelModel
 from app.service.get_model_code import GetModelCode
 from app.service.create_modelica_class import CreateModelicaClass, UpdateModelicaClass
 session = DBSession()
@@ -44,7 +44,7 @@ async def UploadFile(request: Request, file: UploadFile = File(...)):
 
 
 @router.post("/uploadfile/savefile", response_model=ResponseModel)
-async def SaveFile(request: Request, item: UploadSaveFile):
+async def SaveFile(request: Request, item: UploadSaveFileModel):
     """
     # 用户保存mo文件接口
     ## model_str: 文件数据，字符串形式, 如果是新建模型文件则为空字符串
@@ -82,7 +82,7 @@ async def SaveFile(request: Request, item: UploadSaveFile):
 
 
 @router.post("/uploadfile/savemodel", response_model=ResponseModel)
-async def SaveModel(request: Request, item: UploadSaveFile):
+async def SaveModel(request: Request, item: UploadSaveModelModel):
     """
     # 用户创建和保存mo文件接口
     ## package_name: 包或模型的名字
@@ -135,14 +135,17 @@ async def SaveModel(request: Request, item: UploadSaveFile):
         result = CreateModelicaClass(create_package_name, str_type, var, create_package_name_all, path)
     else:
         result = UpdateModelicaClass(model_str, path)
-    save_result = False
-    res_model_str = GetModelCode(create_package_name_all)
+    res_package_str = GetModelCode(init_name)
+    FileOperation().write_file(file_path, file_name, res_package_str)
     if result:
-        FileOperation().write_file(file_path, file_name, res_model_str)
+        res_model_str = GetModelCode(create_package_name_all)
         save_result, M_id = SaveClassNames(mo_path=file_path + "/" + file_name, init_name=init_name, sys_or_user=request.user.username, package_id=package_id)
-    if save_result:
-        res.data = [{"model_str": res_model_str, "id": M_id}]
-        res.msg = "successful！"
+        if save_result:
+            res.data = [{"model_str": res_model_str, "id": M_id}]
+            res.msg = "successful！"
+        else:
+            res.status = 1
+            res.err = "模型加载失败，请重新检查"
     else:
         res.status = 1
         res.err = "模型加载失败，请重新检查"

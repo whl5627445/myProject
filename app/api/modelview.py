@@ -115,10 +115,10 @@ async def GetModelCodeView (model_name: str, sys_user: str, request: Request):
     """
     res = InitResponseModel()
     username = request.user.username
-    path = None
     package_name = model_name.split(".")[0]
-    if sys_user == "user":
-        model = session.query(ModelsInformation).filter_by(package_name=package_name, sys_or_user=username).first()
+    path = None
+    model = session.query(ModelsInformation).filter_by(package_name=package_name, sys_or_user=username).first()
+    if model:
         path = model.file_path
     data = GetModelCode(model_name, path, package_name)
     res.data = [data]
@@ -177,18 +177,18 @@ async def SetModelParametersView (item: SetComponentModifierValueModel, request:
 async def GetComponentPropertiesView (model_name: str, component_name: str, sys_user: str, request: Request):
     """
     # 获取模型组件的属性数据，一次性返回
-        "class_name": 需要设置参数的模型名称，全称，例如“ENN.Examples.Scenario1_Status”
-        "component_name": 需要查询的组件别名，全称，“PID”
+    ##  class_name: 需要查询属性数据的模型名称，全称，例如“ENN.Examples.Scenario1_Status”
+    ##  component_name: 需要查询的组件别名，全称，“PID”
+    ##  sys_user: 需要查询的模型组件是系统还是用户模型
     """
     res = InitResponseModel()
-
     username = request.user.username
     package_name = model_name.split(".")[0]
     file_path = None
     if sys_user == "user":
         model = session.query(ModelsInformation).filter_by(package_name=package_name, sys_or_user=username).first()
         if not model:
-            res.err = "设置失败"
+            res.err = "查询失败"
             res.status = 2
             return res
         file_path = model.file_path
@@ -212,15 +212,15 @@ async def GetComponentPropertiesView (model_name: str, component_name: str, sys_
 async def SetComponentPropertiesView (item: SetComponentPropertiesModel, request: Request):
     """
     # 设置模型组件的属性数据，一次性返回
-        "class_name": 需要设置参数的模型名称，全称，例如“ENN.Examples.Scenario1_Status”
-        "component_name": 需要查询的组件别名，全称，“PID”
-        "final": "true" or "false",
-        "protected": "true" or "false",
-        "replaceable": "true" or "false",
-        "variabilty": "unspecified" or  "parameter" or "discrete" or "constant"
-        "inner": "true" or "false",
-        "outer": "true" or "false",
-        "causality": "output" or "input"
+    ## class_name: 需要设置参数的模型名称，全称，例如“ENN.Examples.Scenario1_Status”
+    ## component_name: 需要查询的组件别名，全称，“PID”
+    ## final: "true" or "false",
+    ## protected: "true" or "false",
+    ## replaceable: "true" or "false",
+    ## variabilty: "unspecified" or  "parameter" or "discrete" or "constant"
+    ## inner: "true" or "false",
+    ## outer: "true" or "false",
+    ## causality: "output" or "input"
     """
     res = InitResponseModel()
     parameters_data = {

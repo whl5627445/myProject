@@ -5,19 +5,22 @@ from pydantic import BaseModel
 
 class ResponseModel(BaseModel):
     data: List = []
-    err: Optional[str] = ""  # 正常是0，omc错误是1， 用戶错误是2
+    err: Optional[str] = ""
     msg: Optional[str] = ""
-    status: int = 0
+    status: int = 0         # 正常是0，omc错误是1， 用戶错误是2
 
     class Config:
         orm_mode = True
 
 
 class InitResponseModel(object):
-    data = []
-    err = ""
-    msg = ""
-    status: int = 0
+    def __init__(self):
+        self.data = []
+        self.err = ""
+        self.msg = ""
+        self.status: int = 0
+
+
 
 
 

@@ -376,7 +376,6 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
         line_points = ",".join(["{" + i + "}" for i in line_points])
         annotate = "$annotation(Line(points={" + line_points + "},color={" + color + "}))\""
         cmd = "updateConnectionAnnotation(" + model_name_all + ", \"" + connect_start + "\", \"" + connect_end +  "\", \"annotate=" + annotate + ")"
-        print(cmd)
         result = self.sendExpression(cmd)
         return result
 

@@ -6,8 +6,9 @@ from app.model.Simulate.SimulateResult import SimulateResult
 from app.model.Simulate.SimulateRecord import SimulateRecord
 from app.model.models_package.ModelsInformation import ModelsInformationAll, ModelsInformation
 from app.model.Simulate.ExperimentRecord import ExperimentRecord
-from app.BaseModel.simulate import ExperimentCreateModel
+from app.BaseModel.simulate import ExperimentCreateModel, SetSimulationOptionsModel
 from app.service.simulate_func import Simulate
+from app.service.set_simulation_options import SetSimulationOptions
 from fastapi import Request, BackgroundTasks
 from app.BaseModel.simulate import ModelSimulateModel
 from app.BaseModel.respose_model import ResponseModel, InitResponseModel
@@ -28,7 +29,7 @@ async def GetSimulationOptionsView(request: Request, model_name: str):
              tolerance：积分方法使用的容差。<默认> = 1e-6，
              numberOfIntervals：间隔数，
              interval：间隔
-        """
+    """
     res = InitResponseModel()
     MI_all = session.query(ModelsInformationAll).filter(
             ModelsInformationAll.sys_or_user.in_([request.user.username, "sys"]),
@@ -38,10 +39,41 @@ async def GetSimulationOptionsView(request: Request, model_name: str):
             ModelsInformation.sys_or_user.in_([request.user.username, "sys"]),
             ModelsInformation.package_name == MI_all.package_name
     ).first()
-    data = GetSimulationOptions([model_name], model.file_path)
-    res.data = data
+    data = GetSimulationOptions(model_name, model.file_path)
+    res.data.append(data)
     return res
 
+
+@router.post("/setsimulationoptions", response_model=ResponseModel)
+async def SetSimulationOptionsView(request: Request, item: SetSimulationOptionsModel):
+    """
+    # 仿真参数设置接口
+    ## model_name: 模型名称， 全称
+    ## package_id: 模型所在包的id
+    ## package_name: 模型所在包的名称
+    ## experiment: 仿真参数，对象字典类型，包含以下几个变量
+        startTime：仿真开始时间，
+        stopTime：仿真结束时间，
+        tolerance：积分方法使用的容差，
+        numberOfIntervals：间隔数，
+        interval：间隔
+    ## return:
+    """
+    res = InitResponseModel()
+    experiment = item.experiment
+    username = request.user.username
+    package = session.query(ModelsInformation).filter_by(sys_or_user=username).first()
+    if package:
+        result =SetSimulationOptions(model_name=item.model_name, StartTime=experiment["StartTime"], StopTime=experiment["StopTime"], Tolerance=experiment["Tolerance"], Interval=experiment["Interval"])
+        if result is True:
+            res.msg = "设置成功"
+        else:
+            res.err = "设置失败"
+            res.status = 1
+    else:
+        res.err = "设置失败"
+        res.status = 2
+    return res
 
 @router.post("/simulate", response_model=ResponseModel)
 async def ModelSimulateView (item: ModelSimulateModel, background_tasks: BackgroundTasks, request: Request):
@@ -81,7 +113,7 @@ async def ModelSimulateView (item: ModelSimulateModel, background_tasks: Backgro
     session.add(SRecord)
     session.flush()
     background_tasks.add_task(Simulate, SRecord.id, request.user.username, item.model_name, item.simulate_type, model.file_path, simulate_parameters_data)
-    res.msg = "仿真任务已开始，请等待仿真完成"
+    res.msg = "仿真任务正在准备，请等待仿真完成"
     res.data = [SRecord.id]
     return res
 
@@ -172,11 +204,11 @@ async def SimulateResultTreeView (id: str, variable_name: str = None):
 async def ExperimentCreateView (request: Request, item: ExperimentCreateModel):
     """
     # 仿真实验创建记录接口，
-        # package_id: 保存的实验是属于哪个包id
-        # model_name: 实验属于哪个模型，全称，例如"Modelica.Blocks.Examples.PID_Controller"
-        # model_var_data: 模型的变量数据，修改过哪个模型变量，保存到当前数组对象
-        # simulate_var_data: 模型仿真选项数据
-        # experiment_name: 实验名称
+    ## package_id: 保存的实验是属于哪个包id
+    ## model_name: 实验属于哪个模型，全称，例如"Modelica.Blocks.Examples.PID_Controller"
+    ## model_var_data: 模型的变量数据，修改过哪个模型变量，保存到当前数组对象
+    ## simulate_var_data: 模型仿真选项数据
+    ## experiment_name: 实验名称
     ## return: 返回的是对应节点的所有子节点
     """
     res = InitResponseModel()
@@ -215,8 +247,8 @@ async def ExperimentCreateView (request: Request, item: ExperimentCreateModel):
 async def ExperimentGetView (request: Request, package_id: str, model_name: str):
     """
     # 获取仿真实验记录接口，
-        # package_id: 获取的是哪个包当中的实验列表
-        # model_name： 哪个模型当中的实验列表，全称，例如："Modelica.Blocks.Examples.PID_Controller"
+    ## package_id: 获取的是哪个包当中的实验列表
+    ## model_name： 哪个模型当中的实验列表，全称，例如："Modelica.Blocks.Examples.PID_Controller"
     ## return: 返回的是对应节点的所有子节点
     """
     res = InitResponseModel()
@@ -231,3 +263,4 @@ async def ExperimentGetView (request: Request, package_id: str, model_name: str)
             }
         res.data.append(data)
     return res
+
