@@ -57,12 +57,13 @@ class AddComponentModel(BaseModel):
 class UpdateComponentModel(BaseModel):
     package_name: str
     package_id: str
-    new_component_name: str
-    old_component_name: str
+    component_name: str
+    component_model_name: str
     model_name_all: str
     origin: str = "0,0"
-    extent: list = ["-10,-10", "10,10"]
+    extent: list = ["10,10", "10,10"]
     rotation: str = "0"
+
 
 
 class DeleteComponentModel(BaseModel):
@@ -103,9 +104,9 @@ class DeleteConnectionModel(BaseModel):
 class ExperimentCreateModel(BaseModel):
     package_id: int
     model_name: str
-    model_var_data: list
-    simulate_var_data: list
-    experiment_name: str
+    model_var_data: dict = {}
+    simulate_var_data: dict = {}
+    experiment_name: str = "test"
 
 
 class DeletePackageModel(BaseModel):
@@ -120,8 +121,9 @@ class SetSimulationOptionsModel(BaseModel):
     package_name: str
     model_name: str
     experiment: Optional[dict] = {
-        "StartTime": 0,
-        "StopTime": 4,
-        "Tolerance": 1e-06,
-        "Interval": 0.008
+        "startTime": 0,
+        "stopTime": 4,
+        "tolerance": 1e-06,
+        "numberOfIntervals": 500,
+        "interval": 0.008
         }

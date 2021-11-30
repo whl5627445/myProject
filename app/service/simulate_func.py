@@ -8,7 +8,8 @@ from datetime import datetime
 import socket
 from library.file_operation import FileOperation
 from app.service.load_model_file import LoadModelFile
-import json
+import json, requests,time
+from app.service.get_model_code import GetModelCode
 import os
 session = DBSession()
 
@@ -23,7 +24,7 @@ def SimulateDataHandle(SRecord: object, result_file_path, username, model_name, 
     try:
         mat_file_data = DyMatFile(result_file_path + "result_res.mat")
     except Exception as e:
-        print(e)
+        print("打开结果文件失败", e)
         SRecord.simulate_status = "仿真失败"
         session.flush()
         return
@@ -41,14 +42,13 @@ def SimulateDataHandle(SRecord: object, result_file_path, username, model_name, 
                 simulate_model_name=model_name,
                 simulate_record_id=SRecord.id,
                 model_variable_name=k,
-                variable_description=v[0],
+                variable_description=v[0][:128],
                 model_variable_data=v[1][::step_size],
                 model_variable_data_abscissa=model_variable_data_abscissa[::step_size]
         )
         session.add(SResult)
     SRecord.simulate_status = "仿真已结束"
     session.flush()  # 提交数据
-
 
 def JModelicaSimulate(SRecord_id, username: str, model_name: str, mo_path: str, simulate_parameters_data = None):
     if not mo_path:
@@ -105,11 +105,58 @@ def OpenModelicaSimulate(SRecord_id, username: str, model_name: str, file_path: 
     session.flush()
     session.close()
 
+def DymolaSimulate(SRecord_id, username, model_name, file_path=None):
+    package_name = model_name.split('.')[0]
+    url = package_name + "/" + model_name.replace(".", "-") + "/" + str(datetime.now().strftime('%Y%m%d%H%M%S%f')) + ""
+    url_dict = {"url": username + "/" + url}
+    file_name = package_name + ".mo"
+    SRecord = session.query(SimulateRecord).filter_by(id=SRecord_id).first()
+    data = {"code": 200}
+    if file_path:
+        model_str = GetModelCode(package_name, file_path)
+        files = {
+            "file": (file_name, model_str),
+            }
+        r_upload_file = requests.post("http://121.37.183.103:8060/file/upload", data=url_dict, files=files)
+        data = r_upload_file.json()
+
+    if data["code"] == 200 or file_path is None:
+        fileName = ""
+        if file_path:
+            fileName = url + "/" + file_name
+        json_data_dict = {
+            "fileName": fileName,
+            "modelName": model_name,
+            "userName": username
+            }
+        r_simulate = requests.post("http://121.37.183.103:8060/dymola/simulateModel", json=json_data_dict)
+        r_simulate_data = r_simulate.json()
+        SRecord.simulate_end_time = datetime.now()
+        if r_simulate_data.get("code", None) == 200:
+            if file_path:
+                var_fileName = username + "/" + url + "/" + package_name + "/dsres.mat"
+            else:
+                var_fileName = username + "/" + r_simulate_data.get("msg")
+            file_url = "http://121.37.183.103:8060/file/download/?fileName=" + var_fileName
+            download_result_file = requests.get(file_url)
+            file_data = download_result_file.content
+            result_file_path = "public/UserFiles/ModelResult" + '/' + url + '/'
+            FileOperation.write_file(result_file_path, "result_res.mat", file_data, encoding=False)
+            SimulateDataHandle(SRecord, result_file_path, username, model_name, simulate_result_str="")
+        else:
+            SRecord.simulate_status = "仿真失败"
+    else:
+        SRecord.simulate_status = "仿真失败"
+    session.flush()
+    session.close()
+
 
 def Simulate(SRecord_id, username: str, model_name: str, s_type="OM", file_path: str = None, simulate_parameters_data = None):
     if s_type == "OM":
         OpenModelicaSimulate(SRecord_id, username, model_name, file_path, simulate_parameters_data)
     elif s_type == "JM":
         JModelicaSimulate(SRecord_id, username, model_name, file_path, simulate_parameters_data)
+    elif s_type == "DM":
+        DymolaSimulate(SRecord_id, username, model_name, file_path)
     else:
         return "暂不支持此仿真类型"

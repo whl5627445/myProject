@@ -36,7 +36,7 @@ def DeleteComponent(component_name, model_name_all, file_path, package_name):
     return result
 
 
-def UpdateComponent(new_component_name, old_component_name, model_name_all, origin, extent, rotation, file_path, package_name):
+def UpdateComponent(component_name, component_model_name, class_name_all, origin, extent, rotation, file_path, package_name):
     LoadModelFile(package_name, file_path)
-    result = omc.updateComponent(new_component_name, old_component_name, model_name_all, origin, extent, rotation)
+    result = omc.updateComponent(component_name, component_model_name, class_name_all, origin, extent, rotation)
     return result

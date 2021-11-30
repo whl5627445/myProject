@@ -18,10 +18,10 @@ class FileOperation(object):
     def write_file(file_path, filename, file_data):
         FileOperation.touth_file(file_path, filename)
         if type(file_data) is bytes:
-            data = file_data.decode()
-        else:
             data = file_data
-        with open(file_path + "/" + filename, "w") as f:
+        else:
+            data = file_data.encode()
+        with open(file_path + "/" + filename, "wb") as f:
             f.write(data)
 
 if __name__ == '__main__':

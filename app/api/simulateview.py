@@ -61,10 +61,14 @@ async def SetSimulationOptionsView(request: Request, item: SetSimulationOptionsM
     """
     res = InitResponseModel()
     experiment = item.experiment
+    StartTime = experiment["startTime"]
+    stopTime = experiment["stopTime"]
+    tolerance = experiment["tolerance"]
+    interval = experiment['interval']
     username = request.user.username
     package = session.query(ModelsInformation).filter_by(sys_or_user=username).first()
     if package:
-        result =SetSimulationOptions(model_name=item.model_name, StartTime=experiment["StartTime"], StopTime=experiment["StopTime"], Tolerance=experiment["Tolerance"], Interval=experiment["Interval"])
+        result =SetSimulationOptions(model_name=item.model_name, StartTime=StartTime, StopTime=stopTime, Tolerance=tolerance, Interval=interval)
         if result is True:
             res.msg = "设置成功"
         else:
@@ -94,7 +98,7 @@ async def ModelSimulateView (item: ModelSimulateModel, background_tasks: Backgro
         "tolerance": item.tolerance,
         # "interval": item.interval,
     }
-    if item.simulate_type not in ["OM", "JM"]:
+    if item.simulate_type not in ["OM", "JM", "DM"]:
         return res
     MI_all = session.query(ModelsInformationAll).filter(
             ModelsInformationAll.sys_or_user.in_([request.user.username, "sys"]),
@@ -209,7 +213,7 @@ async def ExperimentCreateView (request: Request, item: ExperimentCreateModel):
     ## model_var_data: 模型的变量数据，修改过哪个模型变量，保存到当前数组对象
     ## simulate_var_data: 模型仿真选项数据
     ## experiment_name: 实验名称
-    ## return: 返回的是对应节点的所有子节点
+    ## return: 返回是否成功状态
     """
     res = InitResponseModel()
     package_id = item.package_id
@@ -246,10 +250,10 @@ async def ExperimentCreateView (request: Request, item: ExperimentCreateModel):
 @router.get("/experiment/list",response_model=ResponseModel)
 async def ExperimentGetView (request: Request, package_id: str, model_name: str):
     """
-    # 获取仿真实验记录接口，
+    # 获取仿真实验列表接口，
     ## package_id: 获取的是哪个包当中的实验列表
     ## model_name： 哪个模型当中的实验列表，全称，例如："Modelica.Blocks.Examples.PID_Controller"
-    ## return: 返回的是对应节点的所有子节点
+    ## return: 返回的实验记录列表
     """
     res = InitResponseModel()
     username = request.user.username

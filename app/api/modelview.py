@@ -440,9 +440,9 @@ async def UpdateModelComponentView(item: UpdateComponentModel, request: Request)
     # 更新模型当中的模型组件
     ## package_name： 包名称
     ## package_id： 包id
-    ## model_name_all: 需要更新的组件在哪个模型之下，例如在"NN.Examples.Scenario1_Status"模型中创建组件，
-    ## new_component_name: 需要更新的组件的名称，例如"abs1"， 与创建时相同
-    ## old_component_name: 被更新成组件的模型名称， 例如"Modelica.Blocks.Math.Abs"， 与创建时相同
+    ## component_name: 需要更新的组件名称，例如"limPID"，
+    ## component_model_name: 需要更新的组件原本模型名称，例如"Modelica.Blocks.Continuous.LimPID"
+    ## model_name_all: 需要更新的组件在哪个模型当中， 例如"Modelica.Blocks.Examples.PID_Controller"
     ## origin: 原点， 例如"0,0"
     ## extent: 范围坐标, 例如["-10,-10", "10,10"]
     ## rotation: 旋转角度, 例如"0"，不旋转
@@ -451,12 +451,23 @@ async def UpdateModelComponentView(item: UpdateComponentModel, request: Request)
     res = InitResponseModel()
     username = request.user.username
     package = session.query(ModelsInformation).filter_by(id=item.package_id, sys_or_user=username).first()
+    origin = item.origin
+    extent = item.extent
+    if origin == "-,-":
+        p1 = list(map(float, item.extent[0].split(',')))
+        p2 = list(map(float, item.extent[1].split(',')))
+        left_p = (p1[0] + p2[0]) / 2
+        right_p = (p1[1] + p2[1]) / 2
+        origin = ",".join([str(left_p), str(right_p)])
+        extent_1 = [str(p1[0] - left_p), str(p1[1] - right_p)]
+        extent_2 = [str(p2[0] - left_p), str(p2[1] - right_p)]
+        extent = [",".join(extent_1), ",".join(extent_2)]
     if package:
-        result = UpdateComponent(item.new_component_name, item.old_component_name, item.model_name_all, item.origin, item.extent, item.rotation, package.file_path, package.package_name)
-        if result:
+        result = UpdateComponent(item.component_name, item.component_model_name, item.model_name_all, origin, extent, item.rotation, package.file_path, package.package_name)
+        if result is True:
             res.msg = "更新组件成功"
         else:
-            res.err = "更新组件失败"
+            res.err = "更新组件失败" + str(result)
             res.status = 1
     else:
         res.err = "更新组件失败"
@@ -499,11 +510,11 @@ async def UpdateConnectionNamesView(item: UpdateConnectionNamesModel, request: R
     # 创建模型当中的组件连线
     ## package_name： 包名称
     ## package_id： 包id
-    ## model_name_all：在哪个模型创建，模型全称
-    ## connect_start：连线起点， 输出点， 例如"sum1.y"
-    ## connect_end：连线终点， 输入点， 例如"ChebyshevI.u"
-    ## color：连线颜色， 例如"0,0,127"
-    ## line_points：连线拐点坐标，包含起始点坐标，从起点开始到终点 例如["213,-38","-163.25,-38","-163.25,-4"]
+    ## model_name_all：在哪个模型修改，模型全称
+    ## from_name：连线起点， 输出点， 例如"sum1.y"
+    ## to_name：连线终点， 输入点， 例如"sum2.y"
+    ## from_name_new：连线起点， 输出点， 例如"sum1new.y"
+    ## to_name_new：连线终点， 输入点， 例如"sum2new.y"
     ## return: 返回json格式数据,告知是否成功
     """
     res = InitResponseModel()
