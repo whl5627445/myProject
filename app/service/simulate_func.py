@@ -105,7 +105,7 @@ def OpenModelicaSimulate(SRecord_id, username: str, model_name: str, file_path: 
     session.flush()
     session.close()
 
-def DymolaSimulate(SRecord_id, username, model_name, file_path=None):
+def DymolaSimulate(SRecord_id, username, model_name, file_path=None, simulate_parameters_data=None):
     package_name = model_name.split('.')[0]
     url = package_name + "/" + model_name.replace(".", "-") + "/" + str(datetime.now().strftime('%Y%m%d%H%M%S%f')) + ""
     url_dict = {"url": username + "/" + url}
@@ -125,23 +125,35 @@ def DymolaSimulate(SRecord_id, username, model_name, file_path=None):
         if file_path:
             fileName = url + "/" + file_name
         json_data_dict = {
+            "id": 0,
             "fileName": fileName,
             "modelName": model_name,
-            "userName": username
+            "userName": username,
+            "startTime": simulate_parameters_data["startTime"],
+            "stopTime": simulate_parameters_data["stopTime"],
+            "numberOfIntervals": simulate_parameters_data["numberOfIntervals"],
+            "outputInterval": 0.0,
+            "method": "Dassl",
+            "tolerance": simulate_parameters_data["tolerance"],
+            "fixedStepSize": 0.0,
+            "resultFile": "dsres",
+            "initialNames": "",
+            "initialValues": "",
+            "finalNames": "",
             }
-        r_simulate = requests.post("http://121.37.183.103:8060/dymola/simulateModel", json=json_data_dict)
+        r_simulate = requests.post("http://121.37.183.103:8060/dymola/simulate", json=json_data_dict)
         r_simulate_data = r_simulate.json()
         SRecord.simulate_end_time = datetime.now()
         if r_simulate_data.get("code", None) == 200:
             if file_path:
                 var_fileName = username + "/" + url + "/" + package_name + "/dsres.mat"
             else:
-                var_fileName = username + "/" + r_simulate_data.get("msg")
+                var_fileName = username + "/" + model_name.split('.')[-1] + "/" + r_simulate_data.get("msg")
             file_url = "http://121.37.183.103:8060/file/download/?fileName=" + var_fileName
             download_result_file = requests.get(file_url)
             file_data = download_result_file.content
             result_file_path = "public/UserFiles/ModelResult" + '/' + url + '/'
-            FileOperation.write_file(result_file_path, "result_res.mat", file_data, encoding=False)
+            FileOperation.write_file(result_file_path, "result_res.mat", file_data)
             SimulateDataHandle(SRecord, result_file_path, username, model_name, simulate_result_str="")
         else:
             SRecord.simulate_status = "仿真失败"
@@ -157,6 +169,6 @@ def Simulate(SRecord_id, username: str, model_name: str, s_type="OM", file_path:
     elif s_type == "JM":
         JModelicaSimulate(SRecord_id, username, model_name, file_path, simulate_parameters_data)
     elif s_type == "DM":
-        DymolaSimulate(SRecord_id, username, model_name, file_path)
+        DymolaSimulate(SRecord_id, username, model_name, file_path, simulate_parameters_data)
     else:
         return "暂不支持此仿真类型"

@@ -66,7 +66,7 @@ async def SetSimulationOptionsView(request: Request, item: SetSimulationOptionsM
     tolerance = experiment["tolerance"]
     interval = experiment['interval']
     username = request.user.username
-    package = session.query(ModelsInformation).filter_by(sys_or_user=username).first()
+    package = session.query(ModelsInformation).filter_by(sys_or_user=username, package_name=item.package_name).first()
     if package:
         result =SetSimulationOptions(model_name=item.model_name, StartTime=StartTime, StopTime=stopTime, Tolerance=tolerance, Interval=interval)
         if result is True:
@@ -75,8 +75,7 @@ async def SetSimulationOptionsView(request: Request, item: SetSimulationOptionsM
             res.err = "设置失败"
             res.status = 1
     else:
-        res.err = "设置失败"
-        res.status = 2
+        res.msg = "设置成功" # 系统模型不允许设置到模型当中， 本消息只是提示参数仿真时可用，不会保存
     return res
 
 @router.post("/simulate", response_model=ResponseModel)
@@ -92,13 +91,14 @@ async def ModelSimulateView (item: ModelSimulateModel, background_tasks: Backgro
     """
     res = InitResponseModel()
     simulate_parameters_data = {
-        "startTime": item.start_time,
-        "stopTime": item.stop_time,
-        "numberOfIntervals": item.number_of_intervals,
-        "tolerance": item.tolerance,
+        "startTime": 0.0 if item.start_time == "" else float(item.start_time),
+        "stopTime": 4.0 if item.start_time == "" else float(item.stop_time),
+        "numberOfIntervals": 500 if item.start_time == "" else float(item.number_of_intervals),
+        "tolerance": 0.000001 if item.start_time == "" else float(item.tolerance),
         # "interval": item.interval,
     }
-    if item.simulate_type not in ["OM", "JM", "DM"]:
+    simulate_type = "OM" if item.simulate_type == "" else item.simulate_type
+    if simulate_type not in ["OM", "JM", "DM"]:
         return res
     MI_all = session.query(ModelsInformationAll).filter(
             ModelsInformationAll.sys_or_user.in_([request.user.username, "sys"]),
@@ -116,7 +116,7 @@ async def ModelSimulateView (item: ModelSimulateModel, background_tasks: Backgro
     )
     session.add(SRecord)
     session.flush()
-    background_tasks.add_task(Simulate, SRecord.id, request.user.username, item.model_name, item.simulate_type, model.file_path, simulate_parameters_data)
+    background_tasks.add_task(Simulate, SRecord.id, request.user.username, item.model_name, simulate_type, model.file_path, simulate_parameters_data)
     res.msg = "仿真任务正在准备，请等待仿真完成"
     res.data = [SRecord.id]
     return res

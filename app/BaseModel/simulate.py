@@ -6,11 +6,11 @@ from pydantic import BaseModel
 class ModelSimulateModel(BaseModel):
     model_name: str
     simulate_type: Optional[str] = "OM"
-    start_time: Optional[float] = 0.0
-    stop_time: Optional[float]
-    number_of_intervals: Optional[int] = 500
+    start_time: Optional[str] = "0.0"
+    stop_time: Optional[str] = "4.0"
+    number_of_intervals: Optional[str] = "500"
     # interval: Optional[float]
-    tolerance: Optional[float] = 0.000001
+    tolerance: Optional[str] = "0.000001"
     # method: Optional[str]
     # options: Optional[str]
     # outputFormat: Optional[str]
