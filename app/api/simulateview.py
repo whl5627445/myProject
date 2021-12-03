@@ -31,13 +31,14 @@ async def GetSimulationOptionsView(request: Request, model_name: str):
              interval：间隔
     """
     res = InitResponseModel()
-    MI_all = session.query(ModelsInformationAll).filter(
-            ModelsInformationAll.sys_or_user.in_([request.user.username, "sys"]),
-            ModelsInformationAll.model_name_all == model_name
-    ).first()
+    package_name = model_name.split(".")[0]
+    # MI_all = session.query(ModelsInformationAll).filter(
+    #         ModelsInformationAll.sys_or_user.in_([request.user.username, "sys"]),
+    #         ModelsInformationAll.model_name_all == model_name
+    # ).first()
     model = session.query(ModelsInformation).filter(
             ModelsInformation.sys_or_user.in_([request.user.username, "sys"]),
-            ModelsInformation.package_name == MI_all.package_name
+            ModelsInformation.package_name == package_name
     ).first()
     data = GetSimulationOptions(model_name, model.file_path)
     res.data.append(data)
@@ -100,13 +101,14 @@ async def ModelSimulateView (item: ModelSimulateModel, background_tasks: Backgro
     simulate_type = "OM" if item.simulate_type == "" else item.simulate_type
     if simulate_type not in ["OM", "JM", "DM"]:
         return res
-    MI_all = session.query(ModelsInformationAll).filter(
-            ModelsInformationAll.sys_or_user.in_([request.user.username, "sys"]),
-            ModelsInformationAll.model_name_all == item.model_name
-    ).first()
+    # MI_all = session.query(ModelsInformationAll).filter(
+    #         ModelsInformationAll.sys_or_user.in_([request.user.username, "sys"]),
+    #         ModelsInformationAll.model_name_all == item.model_name
+    # ).first()
+    package_name = item.model_name.split(".")[0]
     model = session.query(ModelsInformation).filter(
             ModelsInformation.sys_or_user.in_([request.user.username, "sys"]),
-            ModelsInformation.package_name == MI_all.package_name
+            ModelsInformation.package_name == package_name
     ).first()
 
     SRecord = SimulateRecord(

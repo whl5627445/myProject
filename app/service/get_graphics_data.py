@@ -29,71 +29,76 @@ class GetGraphicsData(object):
 
     def data_01(self, c_data):
         data_list = []
-        if c_data == ['']:
+        if c_data == [''] or c_data == "-":
             return data_list
         drawing_data_list = c_data
-        for i in range(0, len(drawing_data_list), 2):
-            data = {}
-            drawing_data = drawing_data_list[i + 1]
-            data["visible"] = drawing_data[0]
-            data["originalPoint"] = ",".join(drawing_data[1])
-            data["rotation"] = drawing_data[2]
-            data["type"] = drawing_data_list[i]
-            if drawing_data_list[i] == "Polygon":
-                data["color"] = ",".join(drawing_data[3])
-                data["fillColor"] = ",".join(drawing_data[4])
-                data["linePattern"] = drawing_data[5]
-                data["fillPattern"] = drawing_data[6]
-                data["lineThickness"] = drawing_data[7]
-                data["polygonPoints"] = [",".join(x) for x in drawing_data[8]]
-                data["smooth"] = drawing_data[9]
-            elif drawing_data_list[i] == "Line":
-                data["points"] = [",".join(x) for x in drawing_data[3]]
-                data["color"] = ",".join(drawing_data[4])
-                data["linePattern"] = drawing_data[5]
-                data["lineThickness"] = drawing_data[6]
-                data["arrow"] = ",".join(drawing_data[7])
-                data["arrowSize"] = drawing_data[8]
-                data["smooth"] = drawing_data[9]
-            elif drawing_data_list[i] == "Text":
-                data["color"] = ",".join(drawing_data[3])
-                data["fillColor"] = ",".join(drawing_data[4])
-                data["linePattern"] = drawing_data[5]
-                data["fillPattern"] = drawing_data[6]
-                data["lineThickness"] = drawing_data[7]
-                data["extentsPoints"] = [",".join(x) for x in drawing_data[8]]
-                if type(drawing_data[9]) is list:
-                    originalTextString = drawing_data[9][0]
+        try:
+            for i in range(0, len(drawing_data_list), 2):
+                data = {}
+                drawing_data = drawing_data_list[i + 1]
+                data["visible"] = drawing_data[0]
+                data["originalPoint"] = ",".join(drawing_data[1])
+                data["rotation"] = drawing_data[2]
+                data["type"] = drawing_data_list[i]
+                if drawing_data_list[i] == "Polygon":
+                    data["color"] = ",".join(drawing_data[3])
+                    data["fillColor"] = ",".join(drawing_data[4])
+                    data["linePattern"] = drawing_data[5]
+                    data["fillPattern"] = drawing_data[6]
+                    data["lineThickness"] = drawing_data[7]
+                    data["polygonPoints"] = [",".join(x) for x in drawing_data[8]]
+                    data["smooth"] = drawing_data[9]
+                elif drawing_data_list[i] == "Line":
+                    data["points"] = [",".join(x) for x in drawing_data[3]]
+                    data["color"] = ",".join(drawing_data[4])
+                    data["linePattern"] = drawing_data[5]
+                    data["lineThickness"] = drawing_data[6]
+                    data["arrow"] = ",".join(drawing_data[7])
+                    data["arrowSize"] = drawing_data[8]
+                    data["smooth"] = drawing_data[9]
+                elif drawing_data_list[i] == "Text":
+                    data["color"] = ",".join(drawing_data[3])
+                    data["fillColor"] = ",".join(drawing_data[4])
+                    data["linePattern"] = drawing_data[5]
+                    data["fillPattern"] = drawing_data[6]
+                    data["lineThickness"] = drawing_data[7]
+                    data["extentsPoints"] = [",".join(x) for x in drawing_data[8]]
+                    if type(drawing_data[9]) is list:
+                        originalTextString = drawing_data[9][0]
+                    else:
+                        originalTextString = drawing_data[9]
+                    data["originalTextString"] = originalTextString
+                    data["fontSize"] = drawing_data[10]
+                    data["textColor"] = ",".join(drawing_data[11])
+                    data["fontName"] = drawing_data[12]
+                    data["textStyles"] = drawing_data[13]
+                    data["horizontalAlignment"] = drawing_data[14]
+                elif drawing_data_list[i] == "Rectangle":
+                    data["color"] = ",".join(drawing_data[3])
+                    data["fillColor"] = ",".join(drawing_data[4])
+                    data["linePattern"] = drawing_data[5]
+                    data["fillPattern"] = drawing_data[6]
+                    data["lineThickness"] = drawing_data[7]
+                    data["borderPattern"] = drawing_data[8]
+                    data["extentsPoints"] = [",".join(x) for x in drawing_data[9]]
+                    data["radius"] = drawing_data[10]
+                elif drawing_data_list[i] == "Ellipse":
+                    data["color"] = ",".join(drawing_data[3])
+                    data["fillColor"] = ",".join(drawing_data[4])
+                    data["linePattern"] = drawing_data[5]
+                    data["fillPattern"] = drawing_data[6]
+                    data["lineThickness"] = drawing_data[7]
+                    data["extentsPoints"] = [",".join(x) for x in drawing_data[8]]
+                    data["startAngle"] = drawing_data[9]
+                    data["endAngle"] = drawing_data[10]
                 else:
-                    originalTextString = drawing_data[9]
-                data["originalTextString"] = originalTextString
-                data["fontSize"] = drawing_data[10]
-                data["textColor"] = ",".join(drawing_data[11])
-                data["fontName"] = drawing_data[12]
-                data["textStyles"] = drawing_data[13]
-                data["horizontalAlignment"] = drawing_data[14]
-            elif drawing_data_list[i] == "Rectangle":
-                data["color"] = ",".join(drawing_data[3])
-                data["fillColor"] = ",".join(drawing_data[4])
-                data["linePattern"] = drawing_data[5]
-                data["fillPattern"] = drawing_data[6]
-                data["lineThickness"] = drawing_data[7]
-                data["borderPattern"] = drawing_data[8]
-                data["extentsPoints"] = [",".join(x) for x in drawing_data[9]]
-                data["radius"] = drawing_data[10]
-            elif drawing_data_list[i] == "Ellipse":
-                data["color"] = ",".join(drawing_data[3])
-                data["fillColor"] = ",".join(drawing_data[4])
-                data["linePattern"] = drawing_data[5]
-                data["fillPattern"] = drawing_data[6]
-                data["lineThickness"] = drawing_data[7]
-                data["extentsPoints"] = [",".join(x) for x in drawing_data[8]]
-                data["startAngle"] = drawing_data[9]
-                data["endAngle"] = drawing_data[10]
-            else:
-                pass
-            data_list.append(data)
-        return data_list
+                    pass
+                data_list.append(data)
+            return data_list
+        except Exception as e:
+            print("连线数据有误: ", drawing_data_list)
+            print(e)
+
 
     def data_02(self, c_data, ca_data, is_icon=False, parent=""):
         data_list = []
