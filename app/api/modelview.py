@@ -168,7 +168,7 @@ async def SetModelParametersView (item: SetComponentModifierValueModel, request:
     if data == "Ok":
         res.msg = "设置完成"
     else:
-        res.err = "设置失败"
+        res.err = "设置失败: " + data
         res.status = 1
     return res
 
@@ -397,7 +397,7 @@ async def AddModelComponentView (item: AddComponentModel, request: Request):
     package = session.query(ModelsInformation).filter_by(id=item.package_id, sys_or_user=username).first()
     if package:
         result, err = AddComponent(item.new_component_name, item.old_component_name, item.model_name_all, item.origin, item.extent, item.rotation, package.file_path, package.package_name)
-        if result:
+        if result is True:
             res.msg = "新增组件成功"
         else:
             res.err = err

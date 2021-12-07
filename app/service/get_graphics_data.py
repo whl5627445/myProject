@@ -138,6 +138,7 @@ class GetGraphicsData(object):
                 data["extent1Diagram"] = ",".join([ca_data_filter[i][1][3], ca_data_filter[i][1][4]])
                 data["extent2Diagram"] = ",".join([ca_data_filter[i][1][5], ca_data_filter[i][1][6]])
                 data["rotation"] = rotateAngle
+                data["output_type"] = c_data_filter[i][-1][1:-1]
                 data["inputOutputs"] = self.data_02(Components_data, ComponentAnnotations_data, is_icon=True, parent=data["name"])
                 data["subShapes"] = self.data_01(IconAnnotation_data)
                 data_list.append(data)
@@ -145,20 +146,21 @@ class GetGraphicsData(object):
         return data_list
 
     def getNthConnection_data(self, name_list):
-        # cc = self.mod.getConnectionCountList(name_list)[0]
-        cc = self.mod.getConnectionCountList(name_list)
-        # if cc != [0]:
-        for count in range(len(cc)):
-            if cc[count] != 0:
-                for i in range(cc[count]):
+        ConnectionCount = self.mod.getConnectionCountList(name_list)
+        for count in range(len(ConnectionCount)):
+            if ConnectionCount[count] != 0:
+                for i in range(ConnectionCount[count]):
                     nc_data = self.mod.getNthConnection(name_list[count], i + 1)
                     nca_data = self.mod.getNthConnectionAnnotation(name_list[count], i + 1)
                     da_data = self.data_01(nca_data)[0]
                     da_data["connectionfrom_original_name"] = nc_data[0]
                     da_data["connectionto_original_name"] = nc_data[1]
-                    expression = r"\[\d+\]$"
-                    da_data["connectionfrom"] = re.sub(expression,"",nc_data[0])
-                    da_data["connectionto"] = re.sub(expression,"",nc_data[1])
+                    expression1 = r"\[\d+\]$"
+                    expression2 = r"\[\d+\]\."
+                    connectionfrom =re.sub(expression1,"",nc_data[0])
+                    connectionto = re.sub(expression1,"",nc_data[1])
+                    da_data["connectionfrom"] = re.sub(expression2,".",connectionfrom)
+                    da_data["connectionto"] = re.sub(expression2,".",connectionto)
                     self.data[0].append(da_data)
 
     def get_data (self, name_list, model_file_path=None):

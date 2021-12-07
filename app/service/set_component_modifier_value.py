@@ -8,4 +8,6 @@ def SetComponentModifierValue(className, parameter_value, path, package_name):
     result = "Ok"
     for k, v in parameter_value.items():
         result = omc.setComponentModifierValue(className, k, v)
+        if result != "Ok":
+            break
     return result

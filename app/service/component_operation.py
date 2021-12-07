@@ -7,10 +7,10 @@ def ComponentsVerification(class_name, component_name):
     class_information = omc.getClassInformation(class_name)
     if class_information:
         class_type = class_information[0]
-        if class_type in ["package"]:
-            return False, "包类型无法创建组件"
+        if class_type not in ["model", "class", "connector", "block"]:
+            return False, "不能插入：" + class_name + ", 这是一个" + class_type + "类型。组件视图层只允许有model、class、connector或者block。"
     else:
-        return False
+        return False, ""
     data = omc.getComponents(class_name)
     if data != "Error":
         for i in data:
@@ -23,7 +23,7 @@ def ComponentsVerification(class_name, component_name):
 
 def AddComponent(new_component_name, old_component_name, model_name_all, origin, extent, rotation, file_path, package_name):
     LoadModelFile(package_name, file_path)
-    v, err = ComponentsVerification(model_name_all, new_component_name)
+    v, err = ComponentsVerification(old_component_name, new_component_name)
     if not v:
         return False, err
     result = omc.addComponent(new_component_name, old_component_name, model_name_all, origin, extent, rotation)

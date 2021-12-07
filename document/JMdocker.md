@@ -12,3 +12,4 @@
     56789：内部服务端口
     docker run -itd -p 2204:22 -p 56789:56789 -v /lib/omlibrary/:/omlibrary -v /home/simtek/dev/public/:/public -v /home/simtek/JM_ubuntu:/JM --name jm-v2 --restart always jmimages:v2 /start.sh
 
+    sudo docker run -itd -p 2204:22 -p 56789:56789 -v /home/juzi/py_test_mo/omlibrary/:/omlibrary -v /home/juzi/py_test_mo/public/:/public -v /home/juzi/py_test_mo/JM:/JM --name jm-v2.1 --restart always mihoutao/jm-v2.1 /start.sh

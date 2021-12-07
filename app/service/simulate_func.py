@@ -74,6 +74,7 @@ def JModelicaSimulate(SRecord_id, username: str, model_name: str, mo_path: str, 
     client.connect((ip, 56789))
     client.send(json.dumps(msg).encode())
     data = client.recv(1024).decode()
+    print(data)
     client.close()
     SRecord.simulate_end_time = datetime.now()
     if data == "ok":
@@ -112,8 +113,8 @@ def DymolaSimulate(SRecord_id, username, model_name, file_path=None, simulate_pa
     file_name = package_name + ".mo"
     SRecord = session.query(SimulateRecord).filter_by(id=SRecord_id).first()
     data = {"code": 200}
+    model_str = GetModelCode(package_name, file_path, package_name)
     if file_path:
-        model_str = GetModelCode(package_name, file_path)
         files = {
             "file": (file_name, model_str),
             }
@@ -164,6 +165,11 @@ def DymolaSimulate(SRecord_id, username, model_name, file_path=None, simulate_pa
 
 
 def Simulate(SRecord_id, username: str, model_name: str, s_type="OM", file_path: str = None, simulate_parameters_data = None):
+    package_name = model_name.split(".")[0]
+    if file_path:
+        model_str = GetModelCode(package_name, file_path, package_name)
+        FileOperation().write_file("/".join(file_path.split("/")[:-1]), package_name + ".mo", model_str)
+
     if s_type == "OM":
         OpenModelicaSimulate(SRecord_id, username, model_name, file_path, simulate_parameters_data)
     elif s_type == "JM":
