@@ -96,15 +96,13 @@ async def ModelSimulateView (item: ModelSimulateModel, background_tasks: Backgro
         "stopTime": 4.0 if item.start_time == "" else float(item.stop_time),
         "numberOfIntervals": 500 if item.start_time == "" else float(item.number_of_intervals),
         "tolerance": 0.000001 if item.start_time == "" else float(item.tolerance),
+        "method": "dassl" if item.start_time == "" else item.method,
         # "interval": item.interval,
     }
     simulate_type = "OM" if item.simulate_type == "" else item.simulate_type
     if simulate_type not in ["OM", "JM", "DM"]:
         return res
-    # MI_all = session.query(ModelsInformationAll).filter(
-    #         ModelsInformationAll.sys_or_user.in_([request.user.username, "sys"]),
-    #         ModelsInformationAll.model_name_all == item.model_name
-    # ).first()
+
     package_name = item.model_name.split(".")[0]
     model = session.query(ModelsInformation).filter(
             ModelsInformation.sys_or_user.in_([request.user.username, "sys"]),

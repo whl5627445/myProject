@@ -11,7 +11,7 @@ class ModelSimulateModel(BaseModel):
     number_of_intervals: Optional[str] = "500"
     # interval: Optional[float]
     tolerance: Optional[str] = "0.000001"
-    # method: Optional[str]
+    method: Optional[str] = "dassl"
     # options: Optional[str]
     # outputFormat: Optional[str]
     # variableFilter: Optional[str]
