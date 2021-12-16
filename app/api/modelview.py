@@ -439,7 +439,16 @@ async def DeleteModelComponentView(item: DeleteComponentModel, request: Request)
     username = request.user.username
     package = session.query(ModelsInformation).filter_by(id=item.package_id, sys_or_user=username).first()
     if package:
-        result = DeleteComponent(item.component_name, item.model_name_all, package.file_path, package.package_name)
+        result = True
+        for i in item.delete_list:
+            if i["delete_type"] == "component":
+                result = DeleteComponent(i["component_name"], i["model_name_all"], package.file_path, package.package_name)
+            elif i["delete_type"] == "connector":
+                result = DeleteConnection(i["model_name_all"], i["connect_start"], i["connect_end"], package.file_path,
+                                 package.package_name)
+            else:
+                result = False
+                break
         if result:
             res.msg = "删除组件成功"
         else:
@@ -479,6 +488,7 @@ async def UpdateModelComponentView(item: UpdateComponentModel, request: Request)
         extent_1 = [str(p1[0] - left_p), str(p1[1] - right_p)]
         extent_2 = [str(p2[0] - left_p), str(p2[1] - right_p)]
         extent = [",".join(extent_1), ",".join(extent_2)]
+
     if package:
         result = UpdateComponent(item.component_name, item.component_model_name, item.model_name_all, origin, extent, item.rotation, package.file_path, package.package_name)
         if result is True:

@@ -11,7 +11,7 @@ class ModelSimulateModel(BaseModel):
     number_of_intervals: Optional[str] = "500"
     # interval: Optional[float]
     tolerance: Optional[str] = "0.000001"
-    method: Optional[str] = "dassl"
+    method: Optional[str] = None
     # options: Optional[str]
     # outputFormat: Optional[str]
     # variableFilter: Optional[str]
@@ -77,8 +77,16 @@ class UpdateComponentModel(BaseModel):
 class DeleteComponentModel(BaseModel):
     package_name: str
     package_id: str
-    component_name: str
-    model_name_all: str
+    delete_list: Optional[list] = [
+        {
+            "delete_type": "",  # 可以有两种类型， 一种是组件类型，一种是连线类型， component, connector
+            "component_name": "",
+            "model_name_all": "",
+            "connect_start": "",
+            "connect_end": "",
+            }
+        ]
+
 
 
 class UpdateConnectionAnnotationModel(BaseModel):
