@@ -13,11 +13,12 @@ from app.service.set_component_modifier_value import SetComponentModifierValue
 from app.service.set_component_properties import SetComponentProperties
 from app.service.get_components import GetComponents
 from app.service.copy_class import SaveClass
+from app.service.get_component_name import GetComponentName
 from app.service.component_operation import AddComponent, DeleteComponent, UpdateComponent
 from app.service.connection_operation import UpdateConnectionAnnotation, DeleteConnection, AddConnection, UpdateConnectionNames
 from app.BaseModel.simulate import SetComponentModifierValueModel, SetComponentPropertiesModel, CopyClassModel
 from app.BaseModel.simulate import AddComponentModel, UpdateComponentModel, DeleteComponentModel, UpdateConnectionAnnotationModel
-from app.BaseModel.simulate import DeleteConnectionModel, DeletePackageModel, UpdateConnectionNamesModel
+from app.BaseModel.simulate import DeleteConnectionModel, DeletePackageModel, UpdateConnectionNamesModel, GetComponentNameModel
 import json
 import copy
 from sqlalchemy import or_, and_
@@ -378,12 +379,28 @@ async def DeletePackageAndModelView(request: Request, item: DeletePackageModel):
     return res
 
 
+@router.post("/get_component_name", response_model=ResponseModel)
+async def GetComponentNameView(item: GetComponentNameModel, request: Request):
+    """
+    # 创建模型当中的模型组件
+    ## package_name： 需要创建的组件在哪个包之下，例如在"NN.Examples.Scenario1_Status"模型中创建组件，包就是ENN
+    ## package_id： 包id
+    ## model_name_all: 需要创建的组件在哪个模型之下，例如在"NN.Examples.Scenario1_Status"模型中创建组件
+    ## old_component_name: 被创建成组件的模型名称， 例如"Modelica.Blocks.Math.Abs"
+    ## return: 返回json格式数据,告知是否成功
+    """
+    res = InitResponseModel()
+    name = GetComponentName(item.model_name_all, item.old_component_name)
+    res.data = [name]
+    return res
+
+
 @router.post("/add_component", response_model=ResponseModel)
 async def AddModelComponentView (item: AddComponentModel, request: Request):
     """
     # 创建模型当中的模型组件
     ## package_name： 需要创建的组件在哪个包之下，例如在"NN.Examples.Scenario1_Status"模型中创建组件，包就是ENN
-    ## package_id： 需要创建的组件在哪个包之下
+    ## package_id： 包id
     ## model_name_all: 需要创建的组件在哪个模型之下，例如在"NN.Examples.Scenario1_Status"模型中创建组件
     ## new_component_name: 新创建的组件名称，例如"abs1"
     ## old_component_name: 被创建成组件的模型名称， 例如"Modelica.Blocks.Math.Abs"

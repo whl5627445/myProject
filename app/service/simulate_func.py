@@ -74,7 +74,6 @@ def JModelicaSimulate(SRecord_id, username: str, model_name: str, mo_path: str, 
     client.connect((ip, 56789))
     client.send(json.dumps(msg).encode())
     data = client.recv(1024).decode()
-    print(data)
     client.close()
     SRecord.simulate_end_time = datetime.now()
     if data == "ok":

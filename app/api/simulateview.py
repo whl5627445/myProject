@@ -10,9 +10,11 @@ from app.BaseModel.simulate import ExperimentCreateModel, SetSimulationOptionsMo
 from app.service.simulate_func import Simulate
 from app.service.set_simulation_options import SetSimulationOptions
 from fastapi import Request, BackgroundTasks
-from app.BaseModel.simulate import ModelSimulateModel
+from app.BaseModel.simulate import ModelSimulateModel, ModelCodeSaveModel
 from app.BaseModel.respose_model import ResponseModel, InitResponseModel
 from app.service.get_tree_data import GetTreeData
+from app.service.get_model_code import GetModelCode
+from library.file_operation import FileOperation
 from app.service.get_simulation_options import GetSimulationOptions
 import datetime
 session = DBSession()
@@ -88,6 +90,7 @@ async def ModelSimulateView (item: ModelSimulateModel, background_tasks: Backgro
     ## start_time: 仿真参数，仿真的开始时间，单位是整数秒。
     ## stop_time: 仿真参数，仿真的结束时间，单位是整数秒。
     ## number_of_intervals: 仿真参数， 间隔设置当中的间隔数。 与间隔参数是计算关系，
+    ## method: 仿真参数， 选择求解器，默认参数是dassl(Openmodelica使用，dymola使用Dassl)。 与间隔参数是计算关系，
     ## return: 立即返回是否已经开始计算，仿真结果需用查看记录列表当中的记录状态是否为"仿真完成"
     """
     res = InitResponseModel()
@@ -96,7 +99,7 @@ async def ModelSimulateView (item: ModelSimulateModel, background_tasks: Backgro
         "stopTime": 4.0 if item.start_time == "" else float(item.stop_time),
         "numberOfIntervals": 500 if item.start_time == "" else float(item.number_of_intervals),
         "tolerance": 0.000001 if item.start_time == "" else float(item.tolerance),
-        "method": "dassl" if item.start_time == "" else item.method,
+        # "method": "dassl" if item.start_time == "" else item.method,
         # "interval": item.interval,
     }
     simulate_type = "OM" if item.simulate_type == "" else item.simulate_type
@@ -266,5 +269,27 @@ async def ExperimentGetView (request: Request, package_id: str, model_name: str)
             "simulate_var_data": i.simulate_var_data,
             }
         res.data.append(data)
+    return res
+
+
+@router.post("/simulate/codesave",response_model=ResponseModel)
+async def ModelCodeSaveView (request: Request, item: ModelCodeSaveModel):
+    """
+    # 保存模型所在包的代码到.mo文件
+    ## package_id: 包的id
+    ## package_name： 包的名称
+    ## return: 返回的实验记录列表
+    """
+    res = InitResponseModel()
+    username = request.user.username
+    package = session.query(ModelsInformation).filter_by(id=item.package_id, package_name=item.package_name, sys_or_user=username).first()
+    file_path = package.file_path
+    if file_path:
+        model_str = GetModelCode(item.package_name, file_path, item.package_name)
+        FileOperation().write_file("/".join(file_path.split("/")[:-1]), item.package_name + ".mo", model_str)
+        res.msg = "保存成功"
+    else:
+        res.err = "保存失败"
+        res.status = 2
     return res
 

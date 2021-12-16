@@ -43,6 +43,14 @@ class CopyClassModel(BaseModel):
     copied_class_name: str
 
 
+class GetComponentNameModel(BaseModel):
+    package_name: str
+    package_id: str
+    old_component_name: str
+    model_name_all: str
+
+
+
 class AddComponentModel(BaseModel):
     package_name: str
     package_id: str
@@ -127,3 +135,8 @@ class SetSimulationOptionsModel(BaseModel):
         "numberOfIntervals": 500,
         "interval": 0.008
         }
+
+
+class ModelCodeSaveModel(BaseModel):
+    package_id: int
+    package_name: str
