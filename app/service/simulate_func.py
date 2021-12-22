@@ -154,7 +154,7 @@ def DymolaSimulate(SRecord_id, username, model_name, file_path=None, simulate_pa
             file_data = download_result_file.content
             result_file_path = "public/UserFiles/ModelResult" + '/' + url + '/'
             FileOperation.write_file(result_file_path, "result_res.mat", file_data)
-            SimulateDataHandle(SRecord, result_file_path, username, model_name, simulate_result_str="")
+            SimulateDataHandle(SRecord, result_file_path, username, model_name, simulate_result_str="DM")
         else:
             SRecord.simulate_status = "仿真失败"
     else:

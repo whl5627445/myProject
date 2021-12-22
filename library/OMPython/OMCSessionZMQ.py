@@ -223,6 +223,9 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
         data_list = []
         for i in class_name_list:
             ConnectionCount_num = self.sendExpression("getConnectionCount(" + i + ")")
+            if not ConnectionCount_num:
+                data_list.append(0)
+                continue
             data = int(ConnectionCount_num)
             data_list.append(data)
         return data_list

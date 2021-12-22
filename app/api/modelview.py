@@ -21,6 +21,7 @@ from app.BaseModel.simulate import AddComponentModel, UpdateComponentModel, Dele
 from app.BaseModel.simulate import DeleteConnectionModel, DeletePackageModel, UpdateConnectionNamesModel, GetComponentNameModel
 import json
 import copy
+import re
 from sqlalchemy import or_, and_
 from config.omc import omc
 session = DBSession()
@@ -417,7 +418,7 @@ async def AddModelComponentView (item: AddComponentModel, request: Request):
         if result is True:
             res.msg = "新增组件成功"
         else:
-            res.err = err
+            res.err = "新增组件失败，名称为" + item.new_component_name + " 的组件已经存在或者是 Modelica 关键字。 请选择其他名称。"
             res.status = 1
     else:
         res.err = "新增组件失败"
@@ -449,6 +450,8 @@ async def DeleteModelComponentView(item: DeleteComponentModel, request: Request)
             else:
                 result = False
                 break
+        # result = DeleteComponent(item.component_name, item.model_name_all, package.file_path, package.package_name)
+
         if result:
             res.msg = "删除组件成功"
         else:
@@ -522,6 +525,27 @@ async def CreateConnectionAnnotationView(item: UpdateConnectionAnnotationModel, 
         result = AddConnection(item.model_name_all, item.connect_start, item.connect_end, item.line_points, item.color, package.file_path, package.package_name)
         if result == "Ok":
             res.msg = "连接成功"
+            expression_inout = r"\[\d+\]$"
+            expression_component = r"\[\d+\]\."
+            connect_start_inout = re.sub(expression_inout, "", item.connect_start)
+            connect_end_inout = re.sub(expression_inout, "", item.connect_end)
+            res.data = [{
+                "arrow": "Arrow.None,Arrow.None",
+                "arrowSize": "3",
+                "color": "0,0,127",
+                "connectionfrom": re.sub(expression_component, ".", connect_start_inout),
+                "connectionfrom_original_name": item.connect_start,
+                "connectionto": re.sub(expression_component, ".", connect_end_inout),
+                "connectionto_original_name": item.connect_end,
+                "linePattern": "LinePattern.Solid",
+                "lineThickness": "0.25",
+                "originalPoint": "0.0,0.0",
+                "points": item.line_points,
+                "rotation": "0",
+                "smooth": "Smooth.None",
+                "type": "Line",
+                "visible": "true",
+                        }]
         else:
             res.err = "连接失败, err: " + result
             res.status = 1

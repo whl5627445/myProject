@@ -72,7 +72,7 @@ class GetModelParameters(object):
             p = Components_dict[self.Components[i][1]]
             self.model_name = p[0]
             var_name = p[1]
-            if p[3] == "protected" or p[0] == 'Integer':  # 受保护的变量暂时丢弃
+            if p[3] == "protected" or p[4] == "True":  # 受保护的变量和不显示的暂时丢弃
                 continue
             data_default["name"] = var_name
             data_default["comment"] = p[2]

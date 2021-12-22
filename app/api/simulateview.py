@@ -102,16 +102,15 @@ async def ModelSimulateView (item: ModelSimulateModel, background_tasks: Backgro
         # "method": "dassl" if item.start_time == "" else item.method,
         # "interval": item.interval,
     }
+    print(item)
     simulate_type = "OM" if item.simulate_type == "" else item.simulate_type
     if simulate_type not in ["OM", "JM", "DM"]:
         return res
-
     package_name = item.model_name.split(".")[0]
     model = session.query(ModelsInformation).filter(
             ModelsInformation.sys_or_user.in_([request.user.username, "sys"]),
             ModelsInformation.package_name == package_name
     ).first()
-
     SRecord = SimulateRecord(
             username=request.user.username,
             simulate_model_name=item.model_name,

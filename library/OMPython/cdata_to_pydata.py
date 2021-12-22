@@ -16,9 +16,9 @@ def CdataToPYdata (data):
     if b == "\"\"":
         b = b.replace("\"", "")
         return b
-
+    l_b = len(b)
     try:
-        for i in range(len(b)):
+        for i in range(l_b):
             if i != n:
                 continue
             if b[i] == '"':
@@ -49,7 +49,7 @@ def CdataToPYdata (data):
                 else:
                     c += '["'
             elif b[i] == "}":
-                if i == len(b) - 1 and b[i - 1] in ["}", ")", ","]:
+                if i == l_b - 1 and b[i - 1] in ["}", ")", ","]:
                     c += ']'
                 elif b[i - 1] in ["}", ")", ","]:
                     c += ']'
@@ -61,12 +61,14 @@ def CdataToPYdata (data):
                 else:
                     c += '",["'
             elif b[i] == ")":
-                if i == len(b) -1:
+                if i == l_b -1:
                     c += '"]'
                 elif b[i + 1] in [")", "}"] and b[i - 1] == ",":
                     c += ']'
                 elif b[i + 1] in [',', '}']:
                     c += '"]'
+                elif b[i + 1] == " " and l_b != i + 2 and b[i + 2] == "-":
+                    c += '"],"'
                 else:
                     c += b[i]
             else:
@@ -82,6 +84,7 @@ def CdataToPYdata (data):
         if c != "Error":
             print(e)
     if c.startswith("["):
+        print(data)
         py_data = eval(c)
     else:
         py_data = c.replace("\"", "")
