@@ -4,11 +4,12 @@ from app.service.load_model_file import LoadModelFile
 
 
 def ComponentsVerification(class_name, component_name):
+    # LoadModelFile(package_name, file_path)
     class_information = omc.getClassInformation(class_name)
     if class_information:
         class_type = class_information[0]
         if class_type not in ["model", "class", "connector", "block"]:
-            return False, "不能插入：" + class_name + ", 这是一个" + class_type + "类型。组件视图层只允许有model、class、connector或者block。"
+            return False, "不能插入：" + class_name + ", 这是一个 \"" + class_type + " \"类型。组件视图层只允许有model、class、connector或者block。"
     else:
         return False, ""
     data = omc.getComponents(class_name)

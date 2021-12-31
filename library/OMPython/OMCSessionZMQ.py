@@ -411,6 +411,11 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
         result = self.sendExpression(cmd)
         return result
 
+    def getSourceFile(self, class_name_all):
+        cmd = "getSourceFile(" + class_name_all + ")"
+        result = self.sendExpression(cmd)
+        return result
+
 
 if __name__ == '__main__':
     def loadString (model_str, path, merge="false"):

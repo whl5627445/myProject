@@ -222,7 +222,10 @@ class DyMatFile:
         root = {}
         for v in self._vars.keys():
             branch = root
-            elem = v.split('.')
+            if "der(" in v:
+                elem = [v]
+            else:
+                elem = v.split('.')
             for e in elem[:-1]:
                 if not e in branch:
                     branch[e] = {}

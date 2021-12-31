@@ -445,8 +445,9 @@ async def DeleteModelComponentView(item: DeleteComponentModel, request: Request)
             if i["delete_type"] == "component":
                 result = DeleteComponent(i["component_name"], i["model_name_all"], package.file_path, package.package_name)
             elif i["delete_type"] == "connector":
-                result = DeleteConnection(i["model_name_all"], i["connect_start"], i["connect_end"], package.file_path,
-                                 package.package_name)
+                print(i)
+                result = DeleteConnection(i["model_name_all"], i["connect_start"], i["connect_end"], package.file_path, package.package_name)
+                print(result)
             else:
                 result = False
                 break
@@ -533,9 +534,9 @@ async def CreateConnectionAnnotationView(item: UpdateConnectionAnnotationModel, 
                 "arrow": "Arrow.None,Arrow.None",
                 "arrowSize": "3",
                 "color": "0,0,127",
-                "connectionfrom": re.sub(expression_component, ".", connect_start_inout),
+                "connectionfrom": re.sub(expression_component, "..", connect_start_inout),
                 "connectionfrom_original_name": item.connect_start,
-                "connectionto": re.sub(expression_component, ".", connect_end_inout),
+                "connectionto": re.sub(expression_component, "..", connect_end_inout),
                 "connectionto_original_name": item.connect_end,
                 "linePattern": "LinePattern.Solid",
                 "lineThickness": "0.25",

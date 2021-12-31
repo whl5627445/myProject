@@ -110,6 +110,10 @@ def SaveClassNames(mo_path=None, init_name="Modelica", sys_or_user="sys", packag
     return res, M_id
 
 
+# def SaveClassNamesList():
+#     while True:
+#         res, M_id = SaveClassNames(mo_path=None, init_name="Modelica", sys_or_user="sys", package_id="")
+
 if __name__ == '__main__':
     # print(SaveClassNames(mo_path="public/UserFiles/ENN.mo", init_name="ENN", sys_or_user="tom"))
     SaveClassNames()

@@ -84,7 +84,6 @@ def CdataToPYdata (data):
         if c != "Error":
             print(e)
     if c.startswith("["):
-        print(data)
         py_data = eval(c)
     else:
         py_data = c.replace("\"", "")

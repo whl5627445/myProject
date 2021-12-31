@@ -148,3 +148,15 @@ class SetSimulationOptionsModel(BaseModel):
 class ModelCodeSaveModel(BaseModel):
     package_id: int
     package_name: str
+
+
+class FmuExportModel(BaseModel):
+    package_id: int
+    package_name: str
+    model_name: str
+    fmu_name: str
+    storeResult: bool = False
+    includeSource: bool = False
+    fmiVersion: int = 2
+    includeImage: int = 0
+    fmiType: str = "all"

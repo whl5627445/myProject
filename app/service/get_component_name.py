@@ -11,7 +11,7 @@ def GetComponentName(class_name, component_name_all, file_path=None, package_nam
     component_name = component_name_all.split(".")[-1].lower()
     name_num = 0
     name_dict = {}
-    modelica_keyword = ["der", "and", "or", "not"]
+    modelica_keyword = ["der", "and", "or", "not", "constant"]
     if component_name in modelica_keyword:
         name_num += 1
     for i in data:

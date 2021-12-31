@@ -1,12 +1,11 @@
 # -- coding: utf-8 --
 from library.mat import DyMatFile
-from config.omc import omc, OmcFactory
+from config.omc import omc
 from app.model.Simulate.SimulateRecord import SimulateRecord
 from app.model.Simulate.SimulateResult import SimulateResult
 from config.DB_config import DBSession
 from datetime import datetime
 import socket
-from library.file_operation import FileOperation
 from app.service.load_model_file import LoadModelFile
 import json, requests,time
 from app.service.get_model_code import GetModelCode
@@ -14,6 +13,8 @@ from library.file_operation import FileOperation
 import os
 import xmltodict
 session = DBSession()
+from celery import Celery
+
 
 # 获取本机ip, 用于访问docker服务
 hostname = socket.gethostname()
@@ -96,11 +97,12 @@ def SimulateDataHandle(SRecord: object, result_file_path, username, model_name, 
             session.add(SResult)
         SRecord.simulate_status = "仿真已结束"
         session.flush()  # 提交数据
+        return True
     except Exception as e:
         print(e)
         SRecord.simulate_status = "仿真失败"
         session.flush()
-        return
+        return False
 
 
 def JModelicaSimulate(SRecord_id, username: str, model_name: str, mo_path: str, simulate_parameters_data = None):
@@ -137,18 +139,20 @@ def JModelicaSimulate(SRecord_id, username: str, model_name: str, mo_path: str, 
             file_operation.write(result_file_path + "fmu.zip", fmu_data)
             file_operation.un_zip(result_file_path + "fmu.zip", result_file_path)
             os.rename(result_file_path + "modelDescription.xml", result_file_path + "result_init.xml")
-            SimulateDataHandle(SRecord, result_file_path, username, model_name, "ok")
+            res = SimulateDataHandle(SRecord, result_file_path, username, model_name, "ok")
         except Exception as e:
             SRecord.simulate_status = "仿真失败"
             SRecord.simulate_result_str = e
+            res =  False
     else:
         SRecord.simulate_status = "仿真失败"
         SRecord.simulate_result_str = str(data)
+        res =  False
     session.flush()
     session.close()
+    return res
 
 def OpenModelicaSimulate(SRecord_id, username: str, model_name: str, file_path: str = None, simulate_parameters_data = None):
-    omc_once = OmcFactory()
     SRecord = session.query(SimulateRecord).filter_by(id=SRecord_id).first()
     result_file_path = "public/UserFiles/ModelResult" + '/' + username + '/' + \
                        model_name.split('.')[
@@ -159,15 +163,17 @@ def OpenModelicaSimulate(SRecord_id, username: str, model_name: str, file_path: 
         LoadModelFile(package_name, file_path)
     file_operation = FileOperation()
     file_operation.make_dir(result_file_path)
-    simulate_result_str = omc_once.simulate(className=model_name, fileNamePrefix=result_file_path, simulate_parameters_data=simulate_parameters_data)
+    simulate_result_str = omc.simulate(className=model_name, fileNamePrefix=result_file_path, simulate_parameters_data=simulate_parameters_data)
     SRecord.simulate_end_time = datetime.now()
-    err = OmcFactory().getErrorString()
+    err = omc.getErrorString()
     if err == '':
-        SimulateDataHandle(SRecord, result_file_path, username, model_name, simulate_result_str)
+        res = SimulateDataHandle(SRecord, result_file_path, username, model_name, simulate_result_str)
     else:
         SRecord.simulate_status = "仿真失败"
+        res =  False
     session.flush()
     session.close()
+    return res
 
 def DymolaSimulate(SRecord_id, username, model_name, file_path=None, simulate_parameters_data=None):
     file_operation = FileOperation()
@@ -233,13 +239,16 @@ def DymolaSimulate(SRecord_id, username, model_name, file_path=None, simulate_pa
             file_operation.write(result_file_path + "fmu.zip", fmu_data)
             file_operation.un_zip(result_file_path + "fmu.zip", result_file_path)
             os.rename(result_file_path + "modelDescription.xml", result_file_path + "result_init.xml")
-            SimulateDataHandle(SRecord, result_file_path, username, model_name, simulate_result_str="DM")
+            res = SimulateDataHandle(SRecord, result_file_path, username, model_name, simulate_result_str="DM")
         else:
             SRecord.simulate_status = "仿真失败"
+            res = False
     else:
         SRecord.simulate_status = "仿真失败"
+        res = False
     session.flush()
     session.close()
+    return res
 
 
 def Simulate(SRecord_id, username: str, model_name: str, s_type="OM", file_path: str = None, simulate_parameters_data = None):
@@ -249,10 +258,19 @@ def Simulate(SRecord_id, username: str, model_name: str, s_type="OM", file_path:
         FileOperation().write_file("/".join(file_path.split("/")[:-1]), package_name + ".mo", model_str)
 
     if s_type == "OM":
-        OpenModelicaSimulate(SRecord_id, username, model_name, file_path, simulate_parameters_data)
+        res = OpenModelicaSimulate(SRecord_id, username, model_name, file_path, simulate_parameters_data)
     elif s_type == "JM":
-        JModelicaSimulate(SRecord_id, username, model_name, file_path, simulate_parameters_data)
+        res = JModelicaSimulate(SRecord_id, username, model_name, file_path, simulate_parameters_data)
     elif s_type == "DM":
-        DymolaSimulate(SRecord_id, username, model_name, file_path, simulate_parameters_data)
+        res = DymolaSimulate(SRecord_id, username, model_name, file_path, simulate_parameters_data)
     else:
-        return "暂不支持此仿真类型"
+        res = "暂不支持此仿真类型"
+    return res
+
+
+app = Celery("tasks", broker='redis://127.0.0.1:6379/0', backend='redis://127.0.0.1:6379/0')
+
+@app.task
+def SimulateTask(SRecord_id, username, model_name, s_type = "OM", file_path = None, simulate_parameters_data = None):
+    res = Simulate(SRecord_id, username, model_name, s_type = s_type, file_path = file_path, simulate_parameters_data = simulate_parameters_data)
+    return res

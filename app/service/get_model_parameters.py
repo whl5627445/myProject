@@ -67,13 +67,13 @@ class GetModelParameters(object):
             data_default = {
                 "tab": "General",
                 "type": "Normal",
-                "group": "Parameters"
+                "group": ""
                 }
             p = Components_dict[self.Components[i][1]]
             self.model_name = p[0]
             var_name = p[1]
-            if p[3] == "protected" or p[4] == "True":  # 受保护的变量和不显示的暂时丢弃
-                continue
+            # if p[3] == "protected" or p[4] == "True":  # 受保护的变量和不显示的暂时丢弃
+            #     continue
             data_default["name"] = var_name
             data_default["comment"] = p[2]
             Dialog_index = p[-1].index("Dialog") if "Dialog" in p[-1] else None
@@ -89,8 +89,12 @@ class GetModelParameters(object):
                 data_default["group"] = group
                 showStartAttribute = p[-1][tab_index][3]
             ComponentModifierValue = omc.getComponentModifierValue(self.class_name, '.'.join([self.name, data_default["name"]]))
+
             data_default["value"] = ComponentModifierValue
-            if p[8] == 'parameter':
+            if (p[8] != "parameter" and data_default["group"] != "Parameters" and p[7] != "True") or p[3] == "protected" or p[4] == "True":
+                continue
+            if p[8] == "parameter" or data_default["group"] == "Parameters" or p[7] == "True":
+                data_default["group"]= "Parameters"
                 isEnumeration = omc.isEnumeration(self.model_name)
                 if isEnumeration:
                     Literals = omc.getEnumerationLiterals(self.model_name)
@@ -98,13 +102,17 @@ class GetModelParameters(object):
                     data_default["type"] = "Enumeration"
                 ParameterValue = self.get_Parameter_value(data_default["name"])
                 data_default["defaultvalue"] = ParameterValue
-
                 if ParameterValue in [True, False]:
                     data_default["type"] = "CheckBox"
-                    if ComponentModifierValue:  # 判断CheckBox的值不以ComponentModifierValue为第一优先级，与其他类型不同，如果ComponentModifierValue不为true，就以ParameterValue的值为主
-                        data_default["value"] = "true"
-                        data_default["checked"] = "true"
-                        data_default["defaultvalue"] = "true"
+                    if ComponentModifierValue in [True, False]:
+                        if ComponentModifierValue:
+                            ComponentModifierValue = "true"
+                        else:
+                            ComponentModifierValue = "false"
+                        data_default["value"] = ComponentModifierValue
+                        data_default["checked"] = ComponentModifierValue
+                        data_default["defaultvalue"] = ComponentModifierValue
+
                     else:
                         if ParameterValue:
                             ParameterValue = "true"

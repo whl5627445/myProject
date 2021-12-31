@@ -1,5 +1,5 @@
 # -- coding: utf-8 --
-from fastapi import File, UploadFile, Request
+from fastapi import File, UploadFile, Request, HTTPException
 from router.upload_file_router import router
 from app.BaseModel.respose_model import ResponseModel, InitResponseModel
 from app.model.models_package.ModelsInformation import ModelsInformation, ModelsInformationAll
@@ -8,8 +8,9 @@ from library.file_operation import FileOperation
 from config.DB_config import DBSession
 from datetime import datetime
 from app.BaseModel.uploadfile import UploadSaveFileModel, UploadSaveModelModel
-from app.service.get_model_code import GetModelCode
+from app.service.get_model_code import GetModelCode, GetModelPath
 from app.service.create_modelica_class import CreateModelicaClass, UpdateModelicaClass
+import os
 session = DBSession()
 
 
@@ -22,21 +23,54 @@ async def UploadFile(request: Request, file: UploadFile = File(...)):
     """
     res = InitResponseModel()
     file_data = await file.read()
-    file_name = file.filename.removesuffix(".mo")
-    UP = session.query(ModelsInformation).filter_by(package_name=file_name, sys_or_user=request.user.username).first()
-    if UP:
-        res.err = "文件已存在！"
-        res.status = 2
-        return res
-    if not file.filename.endswith(".mo"):
-        res.err = "文件格式不正确, 请上传以.mo为后缀的模型文件"
-        res.status = 2
-        return res
+    filename = file.filename
     file_path = "public/UserFiles/UploadFile/" + request.user.username + "/" + str(datetime.now().strftime('%Y%m%d%H%M%S%f'))
-    FileOperation().write_file(file_path, file.filename, file_data)
-    save_result = SaveClassNames(mo_path=file_path + "/" + file.filename, init_name=file_name, sys_or_user=request.user.username)
-    if save_result:
+    fo = FileOperation()
+    fo.write_file(file_path, filename, file_data)
+    save_result_list = []
+    if filename.endswith(".mo"):
+        package_name = file.filename.removesuffix(".mo")
+        mo_path = file_path + "/" + package_name + ".mo"
+        UP = session.query(ModelsInformation).filter_by(package_name=package_name,
+                                                        sys_or_user=request.user.username).first()
+        if UP:
+            res.err = "文件已存在！"
+            res.status = 2
+            return res
+        save_result, M_id = SaveClassNames(mo_path=mo_path, init_name=package_name, sys_or_user=request.user.username)
+        save_result_list.append({
+                "filename": filename,
+                "result": save_result,
+            })
+    elif filename.endswith(".rar") or filename.endswith(".zip") or filename.endswith(".7z"):
+        un_file_res, err = fo.un_file(file_path + "/" + filename, file_path)
+        if not un_file_res:
+            res.err = err
+            res.status = 1
+            return res
+        for i in un_file_res:
+            UP = session.query(ModelsInformation).filter_by(package_name=i["package_name"],
+                                                            sys_or_user=request.user.username).first()
+            if UP:
+                os.remove(i["file_path"])
+                res.err = i["package_name"] + "， 已存在相同名字的包！"
+                res.status = 2
+                return res
+            save_result, M_id = SaveClassNames(mo_path=i["file_path"], init_name=i["package_name"],
+                                               sys_or_user=request.user.username)
+            save_result_list.append({
+                "filename": filename,
+                "result": save_result,
+                })
+
+    else:
+        res.err = "文件格式不正确, 请上传以.mo为后缀的模型文件，或者是rar、zip、7z三种格式的压缩文件"
+        res.status = 2
+        return res
+
+    if save_result_list:
         res.msg = "模型上传成功！"
+        res.data = save_result_list
     else:
         res.status = 1
         res.err = "模型加载失败，请重新检查后上传"
@@ -61,15 +95,24 @@ async def SaveFile(request: Request, item: UploadSaveFileModel):
     model_str = item.model_str
     package_id = item.package_id
     username = request.user.username
-    file_path = "public/UserFiles/UploadFile/" + username + "/" + str(datetime.now().strftime('%Y%m%d%H%M%S%f'))
-    file_name = package_name + ".mo"
-    mo_path = file_path + "/" + file_name
+    package = session.query(ModelsInformation).filter_by(sys_or_user=username, id=package_id).first()
+    if not package:
+        raise HTTPException(status_code=404, detail="not found")
+    mo_path = package.file_path
     if parent_name:
         model_str = "within " + parent_name + ";" + model_str
+    model_path = GetModelPath(item.package_name)
     result = UpdateModelicaClass(model_str, path=package_name)
-    file_model_str = GetModelCode(package_name)
-    FileOperation().write_file(file_path, file_name, file_model_str)
-    if result:
+    print("result", result)
+    if package.file_path.endswith("package.mo"):
+        print("item.package_name", package_name)
+        file_model_str = GetModelCode(item.package_name)
+    else:
+        print("package_name",package_name)
+        file_model_str = GetModelCode(package_name)
+    print("model_path", model_path)
+    FileOperation().write(model_path, file_model_str)
+    if result is True:
         save_result, M_id = SaveClassNames(mo_path=mo_path, init_name=package_name, sys_or_user=request.user.username,
                                            package_id=package_id)
         res_model_str = GetModelCode(item.package_name)

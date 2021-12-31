@@ -10,13 +10,15 @@ from app.BaseModel.simulate import ExperimentCreateModel, SetSimulationOptionsMo
 from app.service.simulate_func import Simulate
 from app.service.set_simulation_options import SetSimulationOptions
 from fastapi import Request, BackgroundTasks
-from app.BaseModel.simulate import ModelSimulateModel, ModelCodeSaveModel
+from app.BaseModel.simulate import ModelSimulateModel, ModelCodeSaveModel, FmuExportModel
 from app.BaseModel.respose_model import ResponseModel, InitResponseModel
 from app.service.get_tree_data import GetTreeData
 from app.service.get_model_code import GetModelCode
 from library.file_operation import FileOperation
 from app.service.get_simulation_options import GetSimulationOptions
+from app.service.fmu_export import DymolaFmuExport
 import datetime
+import requests
 session = DBSession()
 
 
@@ -99,10 +101,9 @@ async def ModelSimulateView (item: ModelSimulateModel, background_tasks: Backgro
         "stopTime": 4.0 if item.start_time == "" else float(item.stop_time),
         "numberOfIntervals": 500 if item.start_time == "" else float(item.number_of_intervals),
         "tolerance": 0.000001 if item.start_time == "" else float(item.tolerance),
-        # "method": "dassl" if item.start_time == "" else item.method,
+        "method": "dassl" if item.method == "" else item.method,
         # "interval": item.interval,
     }
-    print(item)
     simulate_type = "OM" if item.simulate_type == "" else item.simulate_type
     if simulate_type not in ["OM", "JM", "DM"]:
         return res
@@ -198,7 +199,13 @@ async def SimulateResultTreeView (id: str, variable_name: str = None):
     tree = session.query(SimulateRecord).filter_by(id=id).first()
     if tree:
         if tree.simulate_nametree:
-            tree_name_data = GetTreeData(tree.simulate_nametree, variable_name)
+            tree_data_dict = {}
+            tree_data = session.query(SimulateResult.model_variable_name, SimulateResult.unit,
+                                      SimulateResult.description, SimulateResult.start).filter_by(simulate_record_id=id,
+                                                                                                  model_variable_parent=variable_name).all()
+            for i in tree_data:
+                tree_data_dict[i[0]] = i
+            tree_name_data = GetTreeData(tree.simulate_nametree, tree_data_dict, variable_name)
             res.data = tree_name_data
     else:
         res.msg = "没有查询到记录"
@@ -226,7 +233,7 @@ async def ExperimentCreateView (request: Request, item: ExperimentCreateModel):
     username = request.user.username
     package_name = model_name.split(".")[0]
     enn = session.query(ModelsInformation).filter_by(id=package_id, sys_or_user=username).first()
-    experimentation = session.query(ExperimentRecord).filter_by(experiment_name=experiment_name, username=username).first()
+    experimentation = session.query(ExperimentRecord).filter_by(experiment_name=experiment_name, username=username, package_id=item.package_id, model_name_all=item.model_name).first()
     if enn and not experimentation:
         ER = ExperimentRecord(
                 package_id=package_id,
@@ -292,3 +299,47 @@ async def ModelCodeSaveView (request: Request, item: ModelCodeSaveModel):
         res.status = 2
     return res
 
+
+@router.post("/simulate/fmuexport",response_model=ResponseModel)
+async def FmuExportModelView (request: Request, item: FmuExportModel):
+    """
+    # 导出模型的fmu文件
+    ## package_id: 包的id
+    ## package_name： 包的名称
+    ## model_name： 模型全名
+    ## storeResult： 暂时不启用
+    ## includeSource： 暂时不启用
+    ## fmiVersion： 暂时不启用
+    ## includeImage： 暂时不启用
+    ## fmiType： 暂时不启用
+    ## return: 返回导出结果
+    """
+    res = InitResponseModel()
+    username = request.user.username
+    token = request.headers["Authorization"]
+    file_name = ""
+    file_path = ""
+    model_str = ""
+    package = session.query(ModelsInformation).filter_by(id=item.package_id, package_name=item.package_name, sys_or_user=username).first()
+    if package:
+        file_name = package.file_path.split("/")[-1]
+        file_path = package.file_path
+        model_str = GetModelCode(item.package_name)
+    res_dy = DymolaFmuExport(token=token,
+                             username=username,
+                             package_name=item.package_name,
+                             model_name=item.model_name,
+                             storeResult=item.storeResult,
+                             includeSource=item.includeSource,
+                             fmiVersion=item.fmiVersion,
+                             includeImage=item.includeImage,
+                             fmiType=item.fmiType,
+                             file_name=file_name,
+                             model_str=model_str,
+                             fmu_name=item.fmu_name,
+                             file_path=file_path)
+    res.data = res_dy["data"]
+    res.err = res_dy["err"]
+    res.status = res_dy["status"]
+    res.msg = res_dy["msg"]
+    return res
