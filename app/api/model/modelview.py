@@ -1,29 +1,33 @@
 # -- coding: utf-8 --
-from fastapi import Request
-from router.simulatemodel_router import router
-from config.DB_config import DBSession
-from config.redis_config import r
+import copy
+import json
+import re
 from datetime import datetime
-from app.model.models_package.ModelsInformation import ModelsInformationAll, ModelsInformation
-from app.BaseModel.respose_model import ResponseModel, InitResponseModel
+
+from fastapi import Request, HTTPException
+from app.BaseModel.respose_model import InitResponseModel, ResponseModel
+from app.BaseModel.simulate import AddComponentModel, DeleteComponentModel, UpdateComponentModel, \
+    UpdateConnectionAnnotationModel
+from app.BaseModel.simulate import CopyClassModel, SetComponentModifierValueModel, SetComponentPropertiesModel
+from app.BaseModel.simulate import DeleteConnectionModel, DeletePackageModel, GetComponentNameModel, \
+    UpdateConnectionNamesModel
+from app.model.ModelsPackage.ModelsInformation import ModelsInformation, ModelsInformationAll
+from app.service.component_operation import AddComponent, DeleteComponent, UpdateComponent
+from app.service.connection_operation import AddConnection, DeleteConnection, UpdateConnectionAnnotation, \
+    UpdateConnectionNames
+from app.service.copy_class import SaveClass
+from app.service.get_component_name import GetComponentName
+from app.service.get_components import GetComponents
 from app.service.get_graphics_data import GetGraphicsData
 from app.service.get_model_code import GetModelCode
 from app.service.get_model_parameters import GetModelParameters
 from app.service.set_component_modifier_value import SetComponentModifierValue
 from app.service.set_component_properties import SetComponentProperties
-from app.service.get_components import GetComponents
-from app.service.copy_class import SaveClass
-from app.service.get_component_name import GetComponentName
-from app.service.component_operation import AddComponent, DeleteComponent, UpdateComponent
-from app.service.connection_operation import UpdateConnectionAnnotation, DeleteConnection, AddConnection, UpdateConnectionNames
-from app.BaseModel.simulate import SetComponentModifierValueModel, SetComponentPropertiesModel, CopyClassModel
-from app.BaseModel.simulate import AddComponentModel, UpdateComponentModel, DeleteComponentModel, UpdateConnectionAnnotationModel
-from app.BaseModel.simulate import DeleteConnectionModel, DeletePackageModel, UpdateConnectionNamesModel, GetComponentNameModel
-import json
-import copy
-import re
-from sqlalchemy import or_, and_
+from config.DB_config import DBSession
 from config.omc import omc
+from config.redis_config import r
+from router.simulatemodel_router import router
+
 session = DBSession()
 
 
@@ -50,7 +54,7 @@ async def GetRootModelView (request: Request):
 
 
 @router.get("/listlibrary", response_model=ResponseModel)
-async def GetModelView (model_name: str, request: Request):
+async def GetListModelView (model_name: str, request: Request):
     """
     # 获取左侧模型列表接口， 此接口获取系统模型和用户上传模型的子节点节点列表(需用传入父节点名称，返回子节点列表)，暂时没有图标信息
     ## modelname: 模型的父节点名称
@@ -87,7 +91,7 @@ async def GetGraphicsDataView (model_name: str, request: Request, component_name
     """
     res = InitResponseModel()
     username = request.user.username
-    r_data = r.hget("GetGraphicsData_" + username, model_name)
+    # r_data = r.hget("GetGraphicsData_" + username, model_name)
     # if r_data:
     #     G_data = r_data.decode()
     # else:
@@ -116,13 +120,13 @@ async def GetModelCodeView (model_name: str, sys_user: str, request: Request):
     ## return: 返回json格式数据
     """
     res = InitResponseModel()
-    username = request.user.username
-    package_name = model_name.split(".")[0]
-    path = None
-    model = session.query(ModelsInformation).filter_by(package_name=package_name, sys_or_user=username).first()
-    if model:
-        path = model.file_path
-    data = GetModelCode(model_name, path, package_name)
+    # username = request.user.username
+    # package_name = model_name.split(".")[0]
+    # if sys_user == "user":
+    #     package = session.query(ModelsInformation).filter_by(package_name=package_name, sys_or_user=username).first()
+    #     if not package:
+    #         raise HTTPException(status_code=400, detail="not found")
+    data = GetModelCode(model_name)
     res.data = [data]
     return res
 

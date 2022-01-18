@@ -2,7 +2,7 @@
 from fastapi import File, UploadFile, Request, HTTPException
 from router.upload_file_router import router
 from app.BaseModel.respose_model import ResponseModel, InitResponseModel
-from app.model.models_package.ModelsInformation import ModelsInformation, ModelsInformationAll
+from app.model.ModelsPackage.ModelsInformation import ModelsInformation, ModelsInformationAll
 from app.service.save_class_names import SaveClassNames
 from library.file_operation import FileOperation
 from config.DB_config import DBSession
@@ -92,6 +92,8 @@ async def SaveFile(request: Request, item: UploadSaveFileModel):
     package_name = package_name_list[0]
     if len(package_name_list) > 1:
         parent_name = ".".join(package_name_list[:-1])
+    # print("id:   ", item.package_id)
+    # print("model_str:   ", item.model_str)
     model_str = item.model_str
     package_id = item.package_id
     username = request.user.username
@@ -101,24 +103,22 @@ async def SaveFile(request: Request, item: UploadSaveFileModel):
     mo_path = package.file_path
     if parent_name:
         model_str = "within " + parent_name + ";" + model_str
-    model_path = GetModelPath(item.package_name)
+
     result = UpdateModelicaClass(model_str, path=package_name)
-    print("result", result)
-    if package.file_path.endswith("package.mo"):
-        print("item.package_name", package_name)
-        file_model_str = GetModelCode(item.package_name)
-    else:
-        print("package_name",package_name)
-        file_model_str = GetModelCode(package_name)
-    print("model_path", model_path)
-    FileOperation().write(model_path, file_model_str)
     if result is True:
+        model_path = GetModelPath(item.package_name)
+        if package.file_path.endswith("package.mo"):
+            file_model_str = GetModelCode(item.package_name)
+        else:
+            file_model_str = GetModelCode(package_name)
+        FileOperation().write(model_path, file_model_str)
         save_result, M_id = SaveClassNames(mo_path=mo_path, init_name=package_name, sys_or_user=request.user.username,
                                            package_id=package_id)
         res_model_str = GetModelCode(item.package_name)
         res.data = [{"model_str": res_model_str, "id": M_id}]
         res.msg = "保存文件成功！"
     else:
+        # print(result)
         res.status = 1
         res.err = "模型加载失败，请重新检查后上传"
     return res

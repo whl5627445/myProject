@@ -6,7 +6,7 @@ Base = declarative_base()
 
 
 class UploadFile(Base):
-    __tablename__ = 'upload_file_record'
+    __tablename__ = 'py_upload_file_record'
 
     id = Column(Integer, primary_key=True)
     username = Column(VARCHAR)

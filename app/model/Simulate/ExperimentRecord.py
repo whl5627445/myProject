@@ -7,7 +7,7 @@ Base = declarative_base()
 
 
 class ExperimentRecord(Base):
-    __tablename__ = 'experiment_record'
+    __tablename__ = 'py_experiment_record'
 
     id = Column(Integer, primary_key=True)
     username = Column(VARCHAR)

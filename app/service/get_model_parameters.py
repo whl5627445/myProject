@@ -32,10 +32,29 @@ class GetModelParameters(object):
             return data
         for i in self.class_all:
             data = omc.getComponentModifierValue(i, name)
-            if data:
+            if data != "":
                 return data
         return data
 
+    def get_extends_modifier_names_and_value(self):
+        data_name_list = []
+        data_value_list = []
+        data_final_list = []
+        n = 0
+        m = n + 1
+        while n < len(self.class_all) - 1:
+            name_data = omc.getExtendsModifierNames(self.class_all[n], self.class_all[m])
+            if name_data and name_data != 'Error' and name_data != ['']:
+                data_name_list.extend(name_data)
+                value_data = omc.getExtendsModifierValue(self.class_all[n], self.class_all[m], name_data[0])
+                data_value_list.append(value_data)
+                final_data = omc.isExtendsModifierFinal(self.class_all[n], self.class_all[m], name_data[0].split(".")[0])
+                data_final_list.append(final_data)
+            m += 1
+            if m == len(self.class_all):
+                n += 1
+                m = n + 1
+        return data_name_list, data_value_list, data_final_list
 
     def get_component_modifier_fixed_value(self, name):
         data = omc.getComponentModifierValue(self.class_name, name)
@@ -45,7 +64,7 @@ class GetModelParameters(object):
         data = ""
         for i in self.class_all:
             data = omc.getParameterValue(i, name)
-            if data:
+            if data != "":
                 return data
         return data
 
@@ -72,15 +91,13 @@ class GetModelParameters(object):
             p = Components_dict[self.Components[i][1]]
             self.model_name = p[0]
             var_name = p[1]
-            # if p[3] == "protected" or p[4] == "True":  # 受保护的变量和不显示的暂时丢弃
-            #     continue
             data_default["name"] = var_name
             data_default["comment"] = p[2]
             Dialog_index = p[-1].index("Dialog") if "Dialog" in p[-1] else None
             showStartAttribute = None
             if Dialog_index is not None:
                 tab_index = Dialog_index + 1
-                # TODO Dialog 有可能返回error数据， 与单机版软件数据不一致，需要排查原因，暂时遇到了调过
+                # TODO Dialog 有可能返回error数据， 与单机版软件数据不一致，需要排查原因，暂时遇到了跳过
                 if len(p[-1][tab_index]) <= 1:
                     continue
                 tab = p[-1][tab_index][0]
@@ -102,7 +119,7 @@ class GetModelParameters(object):
                     data_default["type"] = "Enumeration"
                 ParameterValue = self.get_Parameter_value(data_default["name"])
                 data_default["defaultvalue"] = ParameterValue
-                if ParameterValue in [True, False]:
+                if p[0] == 'Boolean':
                     data_default["type"] = "CheckBox"
                     if ComponentModifierValue in [True, False]:
                         if ComponentModifierValue:
@@ -153,6 +170,30 @@ class GetModelParameters(object):
             if unit:
                 data_default["unit"] = unit
             data_list.append(data_default)
+        extend_modifier_name, extend_modifier_value, extend_modifier_final = self.get_extends_modifier_names_and_value()
+        if extend_modifier_name and extend_modifier_value:
+            for i in range(len(extend_modifier_name)):
+                var_name = extend_modifier_name[i].removesuffix(".start")
+                self.model_name = Components_dict[var_name][1]
+                data_default = {
+                    "tab": "General", "type": "Normal", "group": "Initialization", "name": var_name + ".start",
+                    "unit": self.get_derived_class_modifier_value(),
+                    'comment': Components_dict[var_name][2],
+                    'defaultvalue': extend_modifier_value[i],
+                    'value': "",
+                    }
+                fixed = {
+                    'tab': data_default["tab"],
+                    'type': "fixed",
+                    'group': "Initialization",
+                    'name': var_name + ".fixed",
+                    'comment': Components_dict[var_name][2],
+                    'defaultvalue': extend_modifier_final[i],
+                    'value': extend_modifier_final[i],
+                    "unit": self.get_derived_class_modifier_value(),
+                    }
+                data_list.append(fixed)
+                data_list.append(data_default)
         data = data_list
         return data
 

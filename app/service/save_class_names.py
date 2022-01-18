@@ -1,12 +1,11 @@
 # -- coding: utf-8 --
-from app.model.models_package.ModelsInformation import ModelsInformationAll, ModelsInformation
+from app.model.ModelsPackage.ModelsInformation import ModelsInformationAll, ModelsInformation
 from config.DB_config import DBSession
 from config.omc import omc
 import os
 from app.service.load_model_file import LoadModelFile
 session = DBSession()
 
-omc.sendExpression("loadModel(Modelica, {\"3.2.3\"},true,\"\",false)")
 
 
 def GetClassNames(name_dict, package_name, data_dict):

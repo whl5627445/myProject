@@ -6,7 +6,7 @@ Base = declarative_base()
 
 
 class SimulateResult(Base):
-    __tablename__ = 'simulate_result'
+    __tablename__ = 'py_simulate_result'
 
     id = Column(Integer, primary_key=True)
     username = Column(VARCHAR)

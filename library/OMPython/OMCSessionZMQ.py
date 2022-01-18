@@ -3,14 +3,16 @@ from library.OMPython import OMCSessionHelper, OMCSessionBase, logger
 import subprocess
 import sys, os, time, zmq
 from library.OMPython.cdata_to_pydata import CdataToPYdata
+import random
 
 
 class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
 
     def __init__ (self, readonly=False, timeout=10.00, docker=None, dockerContainer=None, dockerExtraArgs=[],
-                  dockerOpenModelicaPath="omc", dockerNetwork=None, address="127.0.0.1", port=23456, random_string="simtek", once=False):
+                  dockerOpenModelicaPath="omc", dockerNetwork=None, address="127.0.0.1", port=23456, random_string="simtek",
+                  sys_start=True):
         OMCSessionHelper.__init__(self)
-        OMCSessionBase.__init__(self, readonly, interactivePort = port, random_string=random_string)
+        OMCSessionBase.__init__(self, readonly, interactivePort = port, random_string=None)
         # Locating and using the IOR
         if sys.platform != 'win32' or docker or dockerContainer:
             self._port_file = "openmodelica." + self._currentUser + ".port." + self._random_string
@@ -26,7 +28,6 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
         self._port_file = os.path.join("/tmp" if docker else self._temp_dir, self._port_file).replace("\\", "/")
         self._interactivePort = port
         self._serverIPAddress = address
-        self._once = once
         # set omc executable path and args
         self._set_omc_command([
             "--interactive=zmq",
@@ -34,10 +35,8 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
             "-z={0}".format(self._random_string)
         ])
         # start up omc executable, which is waiting for the ZMQ connection
-        # 如果不是一次性链接，可判断是服务启动，则启动omc，
-        if not self._once:
-            self._start_omc_process(timeout)
-            # connect to the running omc instance using ZMQ
+        self._start_omc_process(timeout, sys_start=sys_start)
+        # connect to the running omc instance using ZMQ
         self._connect_to_omc(timeout)
 
     def __del__ (self):
@@ -51,7 +50,7 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
         while True:
             if self._dockerCid:
                 try:
-                    self._port = subprocess.check_output(["docker", "exec", self._dockerCid, "cat", self._port_file],
+                    self._port = subprocess.check_output(["sudo", "docker", "exec", self._dockerCid, "cat", self._port_file],
                                                          stderr=subprocess.DEVNULL if (sys.version_info > (
                                                              3, 0)) else subprocess.STDOUT).decode().strip()
                     break
@@ -89,6 +88,7 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
         self._omc.setsockopt(zmq.IMMEDIATE, True)  # Queue messages only to completed connections
         self._omc.connect(self._port)
 
+
     def execute (self, command):
         ## check for process is running
         return self.sendExpression(command, parsed=False)
@@ -119,8 +119,6 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
             return None
         else:
             result = self._omc.recv_string()
-            if self._once:
-                self._omc.close()
             if parsed is True:
                 answer = CdataToPYdata(result)
                 return answer
@@ -292,7 +290,8 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
         return getEnumerationLiterals_data
 
     def getParameterValue(self, component_name, modifier_name):
-        getDerivedClassModifierValue_data = self.sendExpression("getParameterValue(" + component_name + ",\"" + modifier_name + "\")")
+        cmd = "getParameterValue(" + component_name + ",\"" + modifier_name + "\")"
+        getDerivedClassModifierValue_data = self.sendExpression(cmd)
         return getDerivedClassModifierValue_data
 
     def getComponentModifierValue(self, class_name, modifier_name):
@@ -416,6 +415,20 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
         result = self.sendExpression(cmd)
         return result
 
+    def getExtendsModifierNames(self, class_name_one, class_name_two):
+        cmd = "getExtendsModifierNames(" + class_name_one + ","+ class_name_two + ", useQuotes = true)"
+        result = self.sendExpression(cmd)
+        return result
+
+    def getExtendsModifierValue(self, class_name_one, class_name_two, name):
+        cmd = "getExtendsModifierValue(" + class_name_one + "," + class_name_two + "," + name + ")"
+        result = self.sendExpression(cmd)
+        return result
+
+    def isExtendsModifierFinal(self, class_name_one, class_name_two, name):
+        cmd = "isExtendsModifierFinal(" + class_name_one + "," + class_name_two + "," + name + ")"
+        result = self.sendExpression(cmd)
+        return result
 
 if __name__ == '__main__':
     def loadString (model_str, path, merge="false"):

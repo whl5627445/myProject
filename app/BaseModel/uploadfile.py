@@ -4,15 +4,15 @@ from pydantic import BaseModel
 
 
 class UploadSaveFileModel(BaseModel):
-    package_name: str
-    model_str: str = None
+    package_name: Optional[str]
+    model_str: Optional[str] = None
     package_id: Optional[str] = None
 
 
 class UploadSaveModelModel(BaseModel):
-    package_name: str
-    str_type: str = None
-    model_str: str = None
+    package_name: Optional[str]
+    str_type: Optional[str] = None
+    model_str: Optional[str] = None
     package_id: Optional[str] = None
     vars: dict = {
         "expand": "",

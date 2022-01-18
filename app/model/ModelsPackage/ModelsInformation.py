@@ -6,7 +6,7 @@ Base = declarative_base()
 
 
 class ModelsInformation(Base):
-    __tablename__ = 'models'
+    __tablename__ = 'py_models'
 
     id = Column(Integer, primary_key=True)
     package_name = Column(VARCHAR)
@@ -20,7 +20,7 @@ class ModelsInformation(Base):
 
 
 class ModelsInformationAll(Base):
-    __tablename__ = 'models_all'
+    __tablename__ = 'py_models_all'
 
     id = Column(Integer, primary_key=True)
     package_id = Column(Integer)

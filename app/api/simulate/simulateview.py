@@ -4,12 +4,12 @@ from fastapi import HTTPException
 from config.DB_config import DBSession
 from app.model.Simulate.SimulateResult import SimulateResult
 from app.model.Simulate.SimulateRecord import SimulateRecord
-from app.model.models_package.ModelsInformation import ModelsInformationAll, ModelsInformation
+from app.model.ModelsPackage.ModelsInformation import ModelsInformation
 from app.model.Simulate.ExperimentRecord import ExperimentRecord
 from app.BaseModel.simulate import ExperimentCreateModel, SetSimulationOptionsModel
-from app.service.simulate_func import Simulate
 from app.service.set_simulation_options import SetSimulationOptions
 from fastapi import Request, BackgroundTasks
+from app.service.simulate_func import Simulate
 from app.BaseModel.simulate import ModelSimulateModel, ModelCodeSaveModel, FmuExportModel
 from app.BaseModel.respose_model import ResponseModel, InitResponseModel
 from app.service.get_tree_data import GetTreeData
@@ -17,8 +17,8 @@ from app.service.get_model_code import GetModelCode
 from library.file_operation import FileOperation
 from app.service.get_simulation_options import GetSimulationOptions
 from app.service.fmu_export import DymolaFmuExport
-import datetime
-import requests
+
+
 session = DBSession()
 
 
@@ -120,6 +120,8 @@ async def ModelSimulateView (item: ModelSimulateModel, background_tasks: Backgro
     session.add(SRecord)
     session.flush()
     background_tasks.add_task(Simulate, SRecord.id, request.user.username, item.model_name, simulate_type, model.file_path, simulate_parameters_data)
+    # SimulateTask.delay(SRecord.id, request.user.username, item.model_name, simulate_type, model.file_path, simulate_parameters_data)
+
     res.msg = "仿真任务正在准备，请等待仿真完成"
     res.data = [SRecord.id]
     return res
@@ -193,7 +195,7 @@ async def SimulateResultTreeView (id: str, variable_name: str = None):
     # 仿真结果树接口， root节点只需要id， 其他子节点需要传变量名字
     ## id: 仿真记录id， 在/simulate/record/list接口获取
     ## variable_name: 模型变量名称
-    ## return: 返回的是对应节点的所有子节点
+    ## return: 返回的是对应节点的所有子节点与其需要的数据。 description：描述， start：值， unit：显示单位， Variables：变量名， haschild：是否有子节点
     """
     res = InitResponseModel()
     tree = session.query(SimulateRecord).filter_by(id=id).first()
@@ -201,7 +203,7 @@ async def SimulateResultTreeView (id: str, variable_name: str = None):
         if tree.simulate_nametree:
             tree_data_dict = {}
             tree_data = session.query(SimulateResult.model_variable_name, SimulateResult.unit,
-                                      SimulateResult.description, SimulateResult.start).filter_by(simulate_record_id=id,
+                                      SimulateResult.description, SimulateResult.start,  SimulateResult.id).filter_by(simulate_record_id=id,
                                                                                                   model_variable_parent=variable_name).all()
             for i in tree_data:
                 tree_data_dict[i[0]] = i

@@ -1,5 +1,5 @@
 # -- coding: utf-8 --
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel
 
 
@@ -160,3 +160,9 @@ class FmuExportModel(BaseModel):
     fmiVersion: int = 2
     includeImage: int = 0
     fmiType: str = "all"
+
+
+class SimulateResultExportModel(BaseModel):
+    record_id: int
+    export_type: str
+    var_list: List = []

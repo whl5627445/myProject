@@ -3,15 +3,15 @@
 
 def GetTreeData(data, tree_data_dict, parent_name=None):
     data_list = []
-    if parent_name and "der(" not in parent_name:
+    if parent_name:
         for i in parent_name.split("."):
             data = data.get(i, {})
-    elif parent_name and "der(" in parent_name:
-        data = data.get(parent_name, {})
 
+    data_id = 0
     for k, v in data.items():
-        init_tree_data_dict = ["", "", "", ""]
+        init_tree_data_dict = ["", "", "", "", ""]
         data_dict = {
+            "id":data_id,
             "haschild": True,
             "Variables": k,
             "unit": tree_data_dict.get(k, init_tree_data_dict)[1],
@@ -21,4 +21,5 @@ def GetTreeData(data, tree_data_dict, parent_name=None):
         if type(v) is not dict:
             data_dict["haschild"] = False
         data_list.append(data_dict)
+        data_id += 1
     return data_list

@@ -84,7 +84,7 @@ class OMCSessionHelper():
 
 
 class OMCSessionBase(with_metaclass(abc.ABCMeta, object)):
-    def __init__ (self, readonly=False, interactivePort = None, random_string=None):
+    def __init__ (self, readonly=False, interactivePort = None, random_string=None, name="simtek"):
         self.readonly = readonly
         self.omc_cache = {}
         self._omc_process = None
@@ -93,6 +93,7 @@ class OMCSessionBase(with_metaclass(abc.ABCMeta, object)):
         self._dockerCid = None
         self._serverIPAddress = "127.0.0.1"
         self._interactivePort = interactivePort
+        self._name = name
         # FIXME: this code is not well written... need to be refactored
         self._temp_dir = tempfile.gettempdir()
         # generate a random string for this session
@@ -148,7 +149,7 @@ class OMCSessionBase(with_metaclass(abc.ABCMeta, object)):
                                                    "openmodelica.{0}.{1}.{2}.log".format(self._currentUser, suffix,
                                                                                          self._random_string)), 'w')
 
-    def _start_omc_process (self, timeout):
+    def _start_omc_process (self, timeout, sys_start=True):
         if sys.platform == 'win32':
             omhome_bin = os.path.join(self.omhome, 'bin').replace("\\", "/")
             my_env = os.environ.copy()
@@ -156,11 +157,12 @@ class OMCSessionBase(with_metaclass(abc.ABCMeta, object)):
             self._omc_process = subprocess.Popen(self._omc_command, stdout=self._omc_log_file,
                                                  stderr=self._omc_log_file, env=my_env)
         else:
-            for i in psutil.process_iter():
-                if i.name() == "omc":
-                    i.kill()
-                    time.sleep(0.5)
-                    break
+            if sys_start:
+                for i in psutil.process_iter():
+                    if i.name() == "omc":
+                        i.kill()
+                        time.sleep(0.5)
+                        break
             # Because we spawned a shell, and we need to be able to kill OMC, create a new process group for this
             self._omc_process = subprocess.Popen(self._omc_command, shell=True, stdout=self._omc_log_file,
                                                  stderr=self._omc_log_file, preexec_fn=os.setsid)
@@ -190,7 +192,7 @@ class OMCSessionBase(with_metaclass(abc.ABCMeta, object)):
             for i in range(0, 40):
                 if sys.platform == 'win32':
                     break
-                dockerTop = subprocess.check_output(["docker", "top", self._dockerCid]).decode().strip()
+                dockerTop = subprocess.check_output(["sudo", "docker", "top", self._dockerCid]).decode().strip()
                 self._omc_process = None
                 for line in dockerTop.split("\n"):
                     columns = line.split()
@@ -244,12 +246,12 @@ class OMCSessionBase(with_metaclass(abc.ABCMeta, object)):
             else:
                 raise Exception('dockerNetwork was set to %s, but only \"host\" or \"separate\" is allowed')
             self._dockerCidFile = self._omc_log_file.name + ".docker.cid"
-            omcCommand = ["docker", "run", "--cidfile", self._dockerCidFile, "--rm", "--env",
+            omcCommand = ["sudo", "docker", "run", "--cidfile", self._dockerCidFile, "--rm", "--env",
                           "USER=%s" % self._currentUser, "--user",
                           str(self._getuid())] + self._dockerExtraArgs + dockerNetworkStr + [self._docker,
                                                                                              self._dockerOpenModelicaPath]
         elif self._dockerContainer:
-            omcCommand = ["docker", "exec", "--env", "USER=%s" % self._currentUser, "--user",
+            omcCommand = ["sudo", "docker", "exec", "--env", "USER=%s" % self._currentUser, "--user",
                           str(self._getuid())] + self._dockerExtraArgs + [self._dockerContainer,
                                                                           self._dockerOpenModelicaPath]
             self._dockerCid = self._dockerContainer

@@ -117,14 +117,13 @@ class GetGraphicsData(object):
             return data_list
         for i in range(len(c_data_filter)):
             namelist = self.getICList([c_data_filter[i][0]])
-            # namelist.append(c_data_filter[i][0])
-            if ca_data_filter[i][0] == "Placement":
+            Placement_index = ca_data_filter[i].index("Placement") if "Placement" in ca_data_filter[i] else None
+            if Placement_index is not None:
                 Components_data = self.mod.getComponentsList(namelist)
                 ComponentAnnotations_data = self.mod.getComponentAnnotationsList(namelist)
                 IconAnnotation_data = self.mod.getIconAnnotationList(namelist)
-                rotateAngle = ca_data_filter[i][1][7]
-                if rotateAngle == "-":
-                    rotateAngle = "0"
+                caf = ca_data_filter[i][Placement_index + 1]
+                rotateAngle = "0" if caf[7] == "-" else caf[7]
                 data = {"type": "Transformation"}
                 data["ID"] = str(i)
                 name = c_data_filter[i][1]
@@ -132,11 +131,11 @@ class GetGraphicsData(object):
                 data["name"] = name
                 data["parent"] = parent
                 data["classname"] = c_data_filter[i][0]
-                data["visible"] = ca_data_filter[i][1][0]
+                data["visible"] = caf[0]
                 data["rotateAngle"] = rotateAngle
-                data["originDiagram"] = ",".join([ca_data_filter[i][1][1], ca_data_filter[i][1][2]])
-                data["extent1Diagram"] = ",".join([ca_data_filter[i][1][3], ca_data_filter[i][1][4]])
-                data["extent2Diagram"] = ",".join([ca_data_filter[i][1][5], ca_data_filter[i][1][6]])
+                data["originDiagram"] = ",".join([caf[1], caf[2]])
+                data["extent1Diagram"] = ",".join([caf[3], caf[4]])
+                data["extent2Diagram"] = ",".join([caf[5], caf[6]])
                 data["rotation"] = rotateAngle
                 data["output_type"] = c_data_filter[i][-1][1:-1]
                 data["inputOutputs"] = self.data_02(Components_data, ComponentAnnotations_data, is_icon=True, parent=data["name"])

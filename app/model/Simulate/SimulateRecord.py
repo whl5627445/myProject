@@ -7,7 +7,7 @@ Base = declarative_base()
 
 
 class SimulateRecord(Base):
-    __tablename__ = 'simulate_record'
+    __tablename__ = 'py_simulate_record'
 
     id = Column(Integer, primary_key=True)
     username = Column(VARCHAR)

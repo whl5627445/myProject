@@ -8,14 +8,14 @@ from app.api.file.download import router as download_file_router
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.authentication import AuthenticationMiddleware
 from fastapi.staticfiles import StaticFiles
-
 from starlette.authentication import (
     AuthenticationBackend, SimpleUser,
     AuthCredentials
 )
 
-import pydevd_pycharm
-pydevd_pycharm.settrace('192.168.1.110', port=10086, stdoutToServer=True, stderrToServer=True)
+# import pydevd_pycharm
+# pydevd_pycharm.settrace('192.168.1.110', port=10086, stdoutToServer=True, stderrToServer=True)
+
 
 class BasicAuthBackend(AuthenticationBackend):
     async def authenticate(self, request):
@@ -32,7 +32,7 @@ app.include_router(download_file_router)
 app.add_middleware(AuthenticationMiddleware, backend=BasicAuthBackend())
 app.add_middleware(SessionMiddleware, secret_key="simtek")
 
-app.mount("/static", StaticFiles(directory="./"), name="static")
+app.mount("/static", StaticFiles(directory="./static"), name="static")
 
 
 # app.add_middleware(
@@ -43,11 +43,16 @@ app.mount("/static", StaticFiles(directory="./"), name="static")
 #     allow_headers=["*"],
 # )
 
+
+
 @app.middleware("http")
 async def LoginAuth(request: Request, call_next):
+    # req = request.scope
+    # headers = dict(req["headers"])
+    # username = headers["username".encode()].decode()
+    # if not username:
+    #     return JSONResponse({"msg:": "please login"},status_code=404)
     response = await call_next(request)
-    if not request.user.is_authenticated:
-        return JSONResponse({"msg:": "please login"},status_code=400)
     return response
 
 # @app.middleware("http")
