@@ -1,0 +1,40 @@
+WARNING:root:The environment variable SEPARATE_PROCESS_JVM is not set. Trying JAVA_HOME instead.
+Warning at line 1879, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.c0 does not have a binding expression
+Warning at line 1880, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.c1 does not have a binding expression
+Warning at line 1884, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.a does not have a binding expression
+Warning at line 1885, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.b does not have a binding expression
+Warning at line 1886, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.ku does not have a binding expression
+Warning at line 1887, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter Bessel.k1 does not have a binding expression
+Warning at line 1887, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter Butterworth.k1 does not have a binding expression
+Warning at line 1887, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter ChebyshevI.k1 does not have a binding expression
+Warning at line 1887, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.k1 does not have a binding expression
+Warning at line 1889, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter Bessel.k2 does not have a binding expression
+Warning at line 1889, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter Butterworth.k2 does not have a binding expression
+Warning at line 1889, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter ChebyshevI.k2 does not have a binding expression
+Warning at line 1889, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.k2 does not have a binding expression
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "Bessel.uu[2]" is missing start value!
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "Butterworth.uu[2]" is missing start value!
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "ChebyshevI.uu[2]" is missing start value!
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "CriticalDamping.uu[2]" is missing start value!
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "CriticalDamping.uu[3]" is missing start value!
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "CriticalDamping.uu[4]" is missing start value!
+

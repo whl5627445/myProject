@@ -48,7 +48,7 @@ def service():
         if data:
             try:
                 result_file_path = "/" + data["result_file_path"]
-                fmu = compile_fmu(class_name=data["modelname"], file_name=data["mo_path"], compile_to=result_file_path, target="me+cs",compiler="modelica")
+                fmu = compile_fmu(class_name=data["modelname"], file_name=data["mo_path"], compile_to=result_file_path)
                 vdp = load_fmu(fmu)
                 opts = vdp.simulate_options()
                 opts["ncp"] = data["ncp"]

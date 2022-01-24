@@ -20,8 +20,8 @@ import xmltodict
 session = DBSession()
 
 # 获取本机ip, 用于访问docker服务
-hostname = socket.gethostname()
-ip = socket.gethostbyname(hostname)
+# hostname = socket.gethostname()
+# ip = socket.gethostbyname(hostname)
 
 
 def SimulateDataHandle(SRecord: object, result_file_path, username, model_name, simulate_result_str):
@@ -127,27 +127,29 @@ def JModelicaSimulate(SRecord_id, username: str, model_name: str, mo_path: str, 
     }
     file_operation = FileOperation()
     file_operation.make_dir(result_file_path)
-    client = socket.socket()
-    client.connect((ip, 56789))
-    client.send(json.dumps(msg).encode())
-    data = client.recv(1024).decode()
-    client.close()
-    SRecord.simulate_end_time = datetime.now()
-    if data == "ok":
-        try:
-            model_name_ = model_name.replace(".", "_")
-            with open(result_file_path + model_name_ + ".fmu", "rb") as f:
-                fmu_data = f.read()
-            file_operation.write(result_file_path + "fmu.zip", fmu_data)
-            file_operation.un_zip(result_file_path + "fmu.zip", result_file_path)
-            os.rename(result_file_path + "modelDescription.xml", result_file_path + "result_init.xml")
-            SimulateDataHandle(SRecord, result_file_path, username, model_name, "ok")
-        except Exception as e:
+    try:
+        client = socket.socket()
+        client.connect(("jm-v1.0", 56789))
+        client.send(json.dumps(msg).encode())
+        data = client.recv(1024).decode()
+        client.close()
+        SRecord.simulate_end_time = datetime.now()
+        if data == "ok":
+
+                model_name_ = model_name.replace(".", "_")
+                with open(result_file_path + model_name_ + ".fmu", "rb") as f:
+                    fmu_data = f.read()
+                file_operation.write(result_file_path + "fmu.zip", fmu_data)
+                file_operation.un_zip(result_file_path + "fmu.zip", result_file_path)
+                os.rename(result_file_path + "modelDescription.xml", result_file_path + "result_init.xml")
+                SimulateDataHandle(SRecord, result_file_path, username, model_name, "ok")
+
+        else:
             SRecord.simulate_status = "仿真失败"
-            SRecord.simulate_result_str = e
-    else:
+            SRecord.simulate_result_str = str(data)
+    except Exception as e:
         SRecord.simulate_status = "仿真失败"
-        SRecord.simulate_result_str = str(data)
+        SRecord.simulate_result_str = e
     session.flush()
     session.close()
 
@@ -160,8 +162,7 @@ def OpenModelicaSimulate(SRecord_id, username: str, model_name: str, file_path: 
     if file_path:
         package_name = model_name.split('.')[0]
         LoadModelFile(package_name, file_path)
-    file_operation = FileOperation()
-    file_operation.make_dir(result_file_path)
+    FileOperation().make_dir(result_file_path)
     simulate_result_str = omc.simulate(className=model_name, fileNamePrefix=result_file_path, simulate_parameters_data=simulate_parameters_data)
     SRecord.simulate_end_time = datetime.now()
     err = omc.getErrorString()
@@ -245,27 +246,27 @@ def DymolaSimulate(SRecord_id, username, model_name, file_path=None, simulate_pa
     session.close()
 
 
-# def Simulate(SRecord_id, username: str, model_name: str, s_type="OM", file_path: str = None, simulate_parameters_data = None):
-#     package_name = model_name.split(".")[0]
-#     if file_path:
-#         model_str = GetModelCode(package_name, file_path, package_name)
-#         FileOperation().write_file("/".join(file_path.split("/")[:-1]), package_name + ".mo", model_str)
-#     if s_type == "OM":
-#         OpenModelicaSimulate(SRecord_id, username, model_name, file_path, simulate_parameters_data)
-#     elif s_type == "JM":
-#         JModelicaSimulate(SRecord_id, username, model_name, file_path, simulate_parameters_data)
-#     elif s_type == "DM":
-#         DymolaSimulate(SRecord_id, username, model_name, file_path, simulate_parameters_data)
-#     else:
-#         return "暂不支持此仿真类型"
-
 def Simulate(SRecord_id, username: str, model_name: str, s_type="OM", file_path: str = None, simulate_parameters_data = None):
-    data = [json.dumps({
-            "SRecord_id": SRecord_id,
-            "username": username,
-            "model_name": model_name,
-            "s_type": s_type,
-            "file_path": file_path,
-            "simulate_parameters_data": simulate_parameters_data,
-        })]
-    response = SimulateServiceRpc.simulate(SimulateRequest(data=data))
+    package_name = model_name.split(".")[0]
+    if file_path:
+        model_str = GetModelCode(package_name, file_path, package_name)
+        FileOperation().write_file("/".join(file_path.split("/")[:-1]), package_name + ".mo", model_str)
+    if s_type == "OM":
+        OpenModelicaSimulate(SRecord_id, username, model_name, file_path, simulate_parameters_data)
+    elif s_type == "JM":
+        JModelicaSimulate(SRecord_id, username, model_name, file_path, simulate_parameters_data)
+    elif s_type == "DM":
+        DymolaSimulate(SRecord_id, username, model_name, file_path, simulate_parameters_data)
+    else:
+        return "暂不支持此仿真类型"
+
+# def Simulate(SRecord_id, username: str, model_name: str, s_type="OM", file_path: str = None, simulate_parameters_data = None):
+#     data = [json.dumps({
+#             "SRecord_id": SRecord_id,
+#             "username": username,
+#             "model_name": model_name,
+#             "s_type": s_type,
+#             "file_path": file_path,
+#             "simulate_parameters_data": simulate_parameters_data,
+#         })]
+#     response = SimulateServiceRpc.simulate(SimulateRequest(data=data))

@@ -35,7 +35,8 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
             "-z={0}".format(self._random_string)
         ])
         # start up omc executable, which is waiting for the ZMQ connection
-        self._start_omc_process(timeout, sys_start=sys_start)
+        # self._start_omc_process(timeout, sys_start=sys_start)
+
         # connect to the running omc instance using ZMQ
         self._connect_to_omc(timeout)
 

@@ -25,7 +25,6 @@ from app.service.set_component_modifier_value import SetComponentModifierValue
 from app.service.set_component_properties import SetComponentProperties
 from config.DB_config import DBSession
 from config.omc import omc
-from config.redis_config import r
 from router.simulatemodel_router import router
 
 session = DBSession()
@@ -62,11 +61,18 @@ async def GetListModelView (model_name: str, request: Request):
     """
     res = InitResponseModel()
     data = []
+    username = request.user.username
     ma = session.query(
             ModelsInformationAll.model_name,
             ModelsInformationAll.haschild,
             ModelsInformationAll.sys_or_user
-    ).filter_by(parent_name=model_name).filter(ModelsInformationAll.sys_or_user.in_(["sys", request.user.username])).all()
+    ).filter_by(parent_name=model_name).filter(ModelsInformationAll.sys_or_user == username).all()
+    if not ma:
+        ma = session.query(
+            ModelsInformationAll.model_name,
+            ModelsInformationAll.haschild,
+            ModelsInformationAll.sys_or_user
+    ).filter_by(parent_name=model_name).filter(ModelsInformationAll.sys_or_user == "sys").all()
     for i in ma:
         mn_data = {
             "model_name": i[0],
@@ -105,9 +111,10 @@ async def GetGraphicsDataView (model_name: str, request: Request, component_name
         data = GetGraphicsData().get_data([model_name], model_file_path)
     else:
         data = GetGraphicsData().get_one_data([model_name], component_name, model_file_path)
-    G_data = json.dumps(data)
-    r.hset("GetGraphicsData_" + username, model_name, G_data)
-    res.data = json.loads(G_data)
+    # G_data = json.dumps(data)
+    # r.hset("GetGraphicsData_" + username, model_name, G_data)
+    # res.data = json.loads(G_data)
+    res.data = data
     return res
 
 
@@ -449,9 +456,7 @@ async def DeleteModelComponentView(item: DeleteComponentModel, request: Request)
             if i["delete_type"] == "component":
                 result = DeleteComponent(i["component_name"], i["model_name_all"], package.file_path, package.package_name)
             elif i["delete_type"] == "connector":
-                print(i)
                 result = DeleteConnection(i["model_name_all"], i["connect_start"], i["connect_end"], package.file_path, package.package_name)
-                print(result)
             else:
                 result = False
                 break

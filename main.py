@@ -49,7 +49,7 @@ app.mount("/static", StaticFiles(directory="./static"), name="static")
 async def LoginAuth(request: Request, call_next):
     # req = request.scope
     # headers = dict(req["headers"])
-    # username = headers["username".encode()].decode()
+    # username = headers.get("username".encode(), "")
     # if not username:
     #     return JSONResponse({"msg:": "please login"},status_code=404)
     response = await call_next(request)

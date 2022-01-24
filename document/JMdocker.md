@@ -11,7 +11,7 @@
     2204：ssh登录端口
     56789：内部服务端口
 
-    sudo docker run -itd -p 2204:22 -p 56789:56789 -v /home/juzi/py_test_mo/omlibrary/:/omlibrary -v /home/juzi/py_test_mo/public/:/public -v /home/juzi/py_test_mo/JM:/JM --name jm-v2.1 --restart always mihoutao/jm-v2.1 /start.sh
+    sudo docker run -itd  -p 56789:56789 -v /home/simtek/dev/omlibrary/:/omlibrary -v /home/simtek/dev/public/:/public -v /home/simtek/dev/JM:/JM --name jm-v2.2 --restart always mihoutao/jmodelica:v2.2 /start.sh
 
 
 
@@ -19,4 +19,4 @@
 # openmodelica镜像使用
     sudo docker build -t omc-v1 .
 ## docker文件夹路径下的dockerfile可直接构建， 下面命令直接执行运行容器即可，--name是容器名称， -p是python服务对外端口
-    sudo docker run -itd  --restart always -v /home/simtek/dev:/home/simtek/code -v /home/simtek/dev/omlibrary/:/usr/bin/../lib/omlibrary --name omc-c -p 8093:8084 omc-v1 /home/simtek/docker/start.sh
+    sudo docker run -itd  --restart always -v /home/simtek/dev:/home/simtek/code -v /home/simtek/dev/omlibrary/:/usr/bin/../lib/omlibrary --name wanghailong --network yssim-net -p 4327:8084 omc-v1 /home/simtek/docker/start.sh

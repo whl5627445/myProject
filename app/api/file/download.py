@@ -36,7 +36,7 @@ async def GetFileListView(request: Request):
     return res
 
 
-@router.post("/getsimulateresultfile", response_model=ResponseModel)
+@router.post("/getsimulateresultfile")
 async def GetSimulateResultFileView(request: Request, items: SimulateResultExportModel):
     """
     # 用户获取仿真结果文件接口，返回对应仿真记录的仿真结果
@@ -57,28 +57,29 @@ async def GetSimulateResultFileView(request: Request, items: SimulateResultExpor
             "model_variable_data_abscissa": i[1],
             "model_variable_data": i[2],
             }
-    pd_data = None
-    for k, v in name_dict.items():
-        columns = ["time", k]
-        var_data = pd.DataFrame(columns=columns)
-        var_data["time"] = v["model_variable_data_abscissa"]
-        var_data[k] = v["model_variable_data"]
-        if pd_data is None:
-            pd_data = var_data
-        else:
-            pd_data = pd.merge(pd_data, var_data, on="time", how="outer")
-        pd_data = pd_data.drop_duplicates()
-    file_path = "static/" + username + "/"
+    pd_data = pd.DataFrame(columns=["time"])
+    try:
+        for k, v in name_dict.items():
+            columns = ["time", k]
+            var_data = pd.DataFrame(columns=columns)
+            var_data["time"] = v["model_variable_data_abscissa"]
+            var_data[k] = v["model_variable_data"]
+            if pd_data is None:
+                pd_data = var_data
+            else:
+                pd_data = pd.merge(pd_data, var_data, on="time", how="outer")
+            pd_data = pd_data.drop_duplicates()
+    except Exception as e:
+        print(e)
+        return {"msg": "参数有误","status": 2}
+    file_path = username +"/static/" + username + "/"
     file_name = "".join(random.sample('zyxwvutsrqponmlkjihgfedcba0123456789',20)) + "." + export_type
     data_file = file_path + file_name
     FileOperation.touth_file(file_path, file_name)
     if export_type == "csv":
         pd_data.to_csv(data_file, index=False)
-    # elif export_type == "txt":
-    #     pd_data.to_string(data_file, index=False)
     elif export_type == "xlsx":
         pd_data.to_excel(data_file, index=False)
     else:
         raise HTTPException(status_code=400, detail="not found")
-    res.data = [data_file]
-    return res
+    return FileResponse(data_file, filename=file_name)

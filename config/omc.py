@@ -3,7 +3,7 @@ from library.OMPython.OMCSessionZMQ import OMCSessionZMQ
 # from config.DB_config import DBSession
 # from app.model.User.User import User
 # import os
-omc = OMCSessionZMQ(sys_start=False)
+omc = OMCSessionZMQ()
 
 omc.sendExpression("loadModel(Modelica, {\"3.2.3\"},true,\"\",false)")
 

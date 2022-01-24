@@ -190,7 +190,7 @@ async def SimulateResultTreeView (request: Request):
 
 
 @router.get("/result/tree", response_model=ResponseModel)
-async def SimulateResultTreeView (id: str, variable_name: str = None):
+async def SimulateResultTreeView (id: str, variable_name: str = ""):
     """
     # 仿真结果树接口， root节点只需要id， 其他子节点需要传变量名字
     ## id: 仿真记录id， 在/simulate/record/list接口获取
@@ -202,11 +202,9 @@ async def SimulateResultTreeView (id: str, variable_name: str = None):
     if tree:
         if tree.simulate_nametree:
             tree_data_dict = {}
-            tree_data = session.query(SimulateResult.model_variable_name, SimulateResult.unit,
-                                      SimulateResult.description, SimulateResult.start,  SimulateResult.id).filter_by(simulate_record_id=id,
-                                                                                                  model_variable_parent=variable_name).all()
+            tree_data = session.query(SimulateResult).filter_by(simulate_record_id=id, model_variable_parent=variable_name).all()
             for i in tree_data:
-                tree_data_dict[i[0]] = i
+                tree_data_dict[i.model_variable_name] = i
             tree_name_data = GetTreeData(tree.simulate_nametree, tree_data_dict, variable_name)
             res.data = tree_name_data
     else:

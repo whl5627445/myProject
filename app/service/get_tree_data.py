@@ -1,22 +1,25 @@
 # -- coding: utf-8 --
 
 
-def GetTreeData(data, tree_data_dict, parent_name=None):
+def GetTreeData(data, tree_data_dict, parent_name=""):
     data_list = []
+    name_list = []
     if parent_name:
+        name_list.append(parent_name)
         for i in parent_name.split("."):
             data = data.get(i, {})
-
     data_id = 0
+
     for k, v in data.items():
-        init_tree_data_dict = ["", "", "", "", ""]
+        name_list.append(k)
+        var_name = tree_data_dict.get(".".join(name_list), None)
         data_dict = {
             "id":data_id,
             "haschild": True,
             "Variables": k,
-            "unit": tree_data_dict.get(k, init_tree_data_dict)[1],
-            "description": tree_data_dict.get(k, init_tree_data_dict)[2],
-            "start": tree_data_dict.get(k, init_tree_data_dict)[3],
+            "unit": var_name.unit if var_name else "",
+            "description":var_name.description  if var_name else "",
+            "start": var_name.start  if var_name else "",
         }
         if type(v) is not dict:
             data_dict["haschild"] = False
