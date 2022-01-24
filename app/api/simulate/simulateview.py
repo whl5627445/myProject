@@ -190,7 +190,7 @@ async def SimulateResultTreeView (request: Request):
 
 
 @router.get("/result/tree", response_model=ResponseModel)
-async def SimulateResultTreeView (id: str, variable_name: str = ""):
+async def SimulateResultTreeView (id: str, variable_name: str = None):
     """
     # 仿真结果树接口， root节点只需要id， 其他子节点需要传变量名字
     ## id: 仿真记录id， 在/simulate/record/list接口获取

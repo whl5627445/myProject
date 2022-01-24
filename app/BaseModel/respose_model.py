@@ -7,7 +7,7 @@ class ResponseModel(BaseModel):
     data: List = []
     err: Optional[str] = ""
     msg: Optional[str] = ""
-    status: int = 0         # 正常是0，omc错误是1， 用戶错误是2
+    status: int = 0         # 正常是0，系统级错误是1， 用戶错误是2
 
     class Config:
         orm_mode = True

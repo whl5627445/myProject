@@ -1,12 +1,13 @@
 # -- coding: utf-8 --
-from router.download_router import router
 from fastapi import HTTPException
+from fastapi.responses import FileResponse
+from fastapi import File, UploadFile, Request
+from router.download_router import router
+from config.DB_config import DBSession
+from app.service.HW_OBS_operation import OBSClient
 from app.BaseModel.respose_model import ResponseModel, InitResponseModel
 from app.model.ModelsPackage.ModelsInformation import ModelsInformation
-from fastapi import File, UploadFile, Request
-from config.DB_config import DBSession
 from app.model.Simulate.SimulateResult import SimulateResult
-from fastapi.responses import FileResponse
 from app.BaseModel.simulate import SimulateResultExportModel
 from library.file_operation import FileOperation
 import pandas as pd
@@ -82,4 +83,15 @@ async def GetSimulateResultFileView(request: Request, items: SimulateResultExpor
         pd_data.to_excel(data_file, index=False)
     else:
         raise HTTPException(status_code=400, detail="not found")
-    return FileResponse(data_file, filename=file_name)
+    obs = OBSClient()
+    HW_res = obs.putFile(file_name, data_file)
+    try:
+        if HW_res["status"] == 200:
+            res.data = [HW_res["body"]["objectUrl"]]
+        else:
+            res.err = "下载失败，请稍后再试"
+            res.status = 1
+    except Exception as e:
+        print(HW_res)
+        print(e)
+    return res

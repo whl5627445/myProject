@@ -1,16 +1,18 @@
 # -- coding: utf-8 --
 
 
-def GetTreeData(data, tree_data_dict, parent_name=""):
+def GetTreeData(data, tree_data_dict, parent_name=None):
     data_list = []
-    name_list = []
     if parent_name:
-        name_list.append(parent_name)
         for i in parent_name.split("."):
             data = data.get(i, {})
     data_id = 0
-
     for k, v in data.items():
+        if k.startswith("_"):
+            continue
+        name_list = []
+        if parent_name:
+            name_list.append(parent_name)
         name_list.append(k)
         var_name = tree_data_dict.get(".".join(name_list), None)
         data_dict = {
