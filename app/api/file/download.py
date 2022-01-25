@@ -73,7 +73,7 @@ async def GetSimulateResultFileView(request: Request, items: SimulateResultExpor
     except Exception as e:
         print(e)
         return {"msg": "参数有误","status": 2}
-    file_path = username +"/static/" + username + "/"
+    file_path = "static/" + username + "/"
     file_name = "".join(random.sample('zyxwvutsrqponmlkjihgfedcba0123456789',20)) + "." + export_type
     data_file = file_path + file_name
     FileOperation.touth_file(file_path, file_name)
@@ -83,9 +83,9 @@ async def GetSimulateResultFileView(request: Request, items: SimulateResultExpor
         pd_data.to_excel(data_file, index=False)
     else:
         raise HTTPException(status_code=400, detail="not found")
-    obs = OBSClient()
-    HW_res = obs.putFile(file_name, data_file)
     try:
+        obs = OBSClient()
+        HW_res = obs.putFile(file_name, data_file)
         if HW_res["status"] == 200:
             res.data = [HW_res["body"]["objectUrl"]]
         else:
