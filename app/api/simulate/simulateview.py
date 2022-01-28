@@ -1,5 +1,6 @@
 # -- coding: utf-8 --
 from router.simulate_router import router
+from sqlalchemy import or_
 from fastapi import HTTPException
 from config.DB_config import DBSession
 from app.model.Simulate.SimulateResult import SimulateResult
@@ -17,6 +18,7 @@ from app.service.get_model_code import GetModelCode
 from library.file_operation import FileOperation
 from app.service.get_simulation_options import GetSimulationOptions
 from app.service.fmu_export import DymolaFmuExport
+import time
 
 
 session = DBSession()
@@ -157,7 +159,7 @@ async def SimulateResultView (request: Request, variable: str, model_name: str, 
 
 
 @router.get("/record/list", response_model=ResponseModel)
-async def SimulateResultTreeView (request: Request):
+async def SimulateResultListView (request: Request):
     """
     # 仿真记录获取接口
     ## username: 用户名(已弃用，当前版本无须传入用户名当做参数)
@@ -198,18 +200,15 @@ async def SimulateResultTreeView (id: str, variable_name: str = None):
     ## return: 返回的是对应节点的所有子节点与其需要的数据。 description：描述， start：值， unit：显示单位， Variables：变量名， haschild：是否有子节点
     """
     res = InitResponseModel()
-    tree = session.query(SimulateRecord).filter_by(id=id).first()
-    if tree:
-        if tree.simulate_nametree:
-            tree_data_dict = {}
-            tree_data = session.query(SimulateResult).filter_by(simulate_record_id=id, model_variable_parent=variable_name).all()
-            for i in tree_data:
-                tree_data_dict[i.model_variable_name] = i
-            tree_name_data = GetTreeData(tree.simulate_nametree, tree_data_dict, variable_name)
-            res.data = tree_name_data
+    if not variable_name:
+        data = session.query(SimulateResult.model_variable_parent, SimulateResult.model_variable_name, SimulateResult.unit, SimulateResult.description,
+                             SimulateResult.start).filter_by(simulate_record_id=id, level=1).all()
     else:
-        res.msg = "没有查询到记录"
-        res.status = 1
+        data = session.query(SimulateResult.model_variable_parent, SimulateResult.model_variable_name, SimulateResult.unit, SimulateResult.description, SimulateResult.start).\
+            filter_by(simulate_record_id=id).\
+            filter(or_(SimulateResult.model_variable_parent.like(variable_name), SimulateResult.model_variable_parent.like(variable_name + "." + "%"))).all()
+    tree_name_data = GetTreeData(data, variable_name)
+    res.data = tree_name_data
     return res
 
 

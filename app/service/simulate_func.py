@@ -35,7 +35,6 @@ def SimulateDataHandle(SRecord: object, result_file_path, username, model_name, 
         xml_scalar_variable_data = {}
         for i in xml_file_data.get("fmiModelDescription", {}).get("ModelVariables", {}).get("ScalarVariable", {}):
             xml_scalar_variable_data[i.get("@name", "")] = i
-        SRecord.simulate_nametree = mat_file_data.nameTree()
         DefaultExperiment = xml_file_data["fmiModelDescription"].get("DefaultExperiment", {})
         SRecord.fmi_version = xml_file_data["fmiModelDescription"].get("@fmiVersion", "")
         SRecord.description = xml_file_data["fmiModelDescription"].get("@description", "")
@@ -46,6 +45,7 @@ def SimulateDataHandle(SRecord: object, result_file_path, username, model_name, 
         SRecord.solver = DefaultExperiment.get("@solver", "")
         SRecord.output_format = DefaultExperiment.get("@outputFormat", "")
         SRecord.variable_filter = DefaultExperiment.get("@variableFilter", "")
+
         for k, v in mat_file_data.vars.items():
             model_variable_data_abscissa = mat_file_data.abscissa(k, True).tolist()
             data_len = len(v[1])
@@ -62,15 +62,19 @@ def SimulateDataHandle(SRecord: object, result_file_path, username, model_name, 
             var_type_data = variable_data.get(var_type, {})
             if var_type_data is None:
                 var_type_data = {}
-            model_variable_parent = None
-            if len(k.split(".")) > 1 and "der(" not in k:
-                model_variable_parent = ".".join(k.split(".")[:-1])
+            model_variable_parent = k
+            k_list = k.split(".")
+            if len(k_list) > 1 and "der(" not in k:
+                model_variable_parent_list = k.split(".")[:-1]
+                model_variable_parent = ".".join(model_variable_parent_list)
+                level = len(model_variable_parent_list)
             SResult = SimulateResult(
                     username=username,
                     simulate_model_name=model_name,
                     simulate_record_id=SRecord.id,
                     model_variable_name=k,
                     model_variable_parent=model_variable_parent,
+                    level=level,
                     variable_description=v[0][:128],
                     model_variable_data=v[1][::step_size],
                     model_variable_data_abscissa=model_variable_data_abscissa[::step_size],

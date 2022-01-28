@@ -14,7 +14,6 @@ class SimulateRecord(Base):
     simulate_model_name = Column(VARCHAR)
     simulate_model_result_path = Column(VARCHAR)
     simulate_status = Column(VARCHAR)
-    simulate_nametree = Column(JSON)
     simulate_start_time = Column(DateTime, default=datetime.datetime.now)
     simulate_end_time = Column(DateTime)
     simulate_result_str = Column(VARCHAR)
