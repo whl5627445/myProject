@@ -58,10 +58,11 @@ async def UploadFile(request: Request, file: UploadFile = File(...)):
                 return res
             save_result, M_id = SaveClassNames(mo_path=i["file_path"], init_name=i["package_name"],
                                                sys_or_user=request.user.username)
-            save_result_list.append({
-                "filename": filename,
-                "result": save_result,
-                })
+            if save_result:
+                save_result_list.append({
+                    "filename": filename,
+                    "result": save_result,
+                    })
 
     else:
         res.err = "文件格式不正确, 请上传以.mo为后缀的模型文件，或者是rar、zip、7z三种格式的压缩文件"
@@ -92,8 +93,6 @@ async def SaveFile(request: Request, item: UploadSaveFileModel):
     package_name = package_name_list[0]
     if len(package_name_list) > 1:
         parent_name = ".".join(package_name_list[:-1])
-    # print("id:   ", item.package_id)
-    # print("model_str:   ", item.model_str)
     model_str = item.model_str
     package_id = item.package_id
     username = request.user.username

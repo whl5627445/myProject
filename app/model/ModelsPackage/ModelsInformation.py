@@ -11,6 +11,7 @@ class ModelsInformation(Base):
     id = Column(Integer, primary_key=True)
     package_name = Column(VARCHAR)
     create_time = Column(DateTime, default=datetime.datetime.now)
+    update_time = Column(DateTime)
     model_name = Column(VARCHAR)
     child_name = Column(JSON)
     haschild = Column(BOOLEAN)

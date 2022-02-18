@@ -28,7 +28,7 @@ def SaveClass(class_name, copied_class_name=None, parent_name=None, package_name
         data = GetModelCode(package_name)
         file_name = model_file_path.split("/")[-1]
         path = "/".join(new_model_file_path.split("/")[:-1])
-        FileOperation().write_file(path, file_name, data)
+        FileOperation.write_file(path, file_name, data)
     else:
         return False
     return True

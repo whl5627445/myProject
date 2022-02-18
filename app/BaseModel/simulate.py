@@ -166,3 +166,7 @@ class SimulateResultExportModel(BaseModel):
     record_id: int
     export_type: str
     var_list: List = []
+
+
+class SimulateALLResultModel(BaseModel):
+    record_id: int

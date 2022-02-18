@@ -41,6 +41,16 @@ class FileOperation(object):
         zip_file.extractall(un_zip_path)
         zip_file.close()
 
+    def make_zip (self, source_dir, output_filename):
+        zipf = zipfile.ZipFile(output_filename, 'w',zipfile.ZIP_DEFLATED)
+        pre_len = len(os.path.dirname(source_dir))
+        for parent, dirnames, filenames in os.walk(source_dir):
+            for filename in filenames:
+                pathfile = os.path.join(parent, filename)
+                arcname = pathfile[pre_len:].strip(os.path.sep)  # 相对路径
+                zipf.write(pathfile, arcname)
+        zipf.close()
+
     def un_rar(self, file_name, un_rar_path):
         rar = rarfile.RarFile(file_name)
         rar.extractall(un_rar_path)

@@ -3,6 +3,7 @@ from app.model.ModelsPackage.ModelsInformation import ModelsInformationAll, Mode
 from config.DB_config import DBSession
 from config.omc import omc
 import os
+import datetime
 from app.service.load_model_file import LoadModelFile
 session = DBSession()
 
@@ -57,8 +58,7 @@ def SaveClassNames(mo_path=None, init_name="Modelica", sys_or_user="sys", packag
                 }
             }
     if mo_path:
-        path = os.getcwd() + "/" + mo_path
-        loadFile_result = omc.loadFile(path)
+        loadFile_result = omc.loadFile(mo_path)
         # LoadModelFile(init_name, path)
         if not loadFile_result:
             return res, None
@@ -72,6 +72,7 @@ def SaveClassNames(mo_path=None, init_name="Modelica", sys_or_user="sys", packag
                     M.haschild = v["has_child"]
                     M.child_name = v["child_name"]
                     M.file_path = mo_path
+                    M.update_time = datetime.datetime.now()
                 else:
                     M = ModelsInformation(
                             package_name=v["package_name"],
@@ -108,10 +109,6 @@ def SaveClassNames(mo_path=None, init_name="Modelica", sys_or_user="sys", packag
     res = True
     return res, M_id
 
-
-# def SaveClassNamesList():
-#     while True:
-#         res, M_id = SaveClassNames(mo_path=None, init_name="Modelica", sys_or_user="sys", package_id="")
 
 if __name__ == '__main__':
     # print(SaveClassNames(mo_path="public/UserFiles/ENN.mo", init_name="ENN", sys_or_user="tom"))

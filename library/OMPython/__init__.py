@@ -27,7 +27,6 @@ if sys.platform == 'darwin':
     sys.path.append('/opt/local/lib/python2.7/site-packages/')
     sys.path.append('/opt/openmodelica/lib/python2.7/site-packages/')
 
-from library.OMPython import OMTypedParser, OMParser
 
 # Logger Defined
 logger = logging.getLogger('OMPython')
