@@ -90,7 +90,7 @@ async def SaveFile(request: Request, item: UploadSaveFileModel):
     res = InitResponseModel()
     package_name_list = item.package_name.split(".")
     parent_name = None
-    package_name = package_name_list[0]
+    package_name = package_name_list[0]  # 更新模型的话，是模型包的名字 item里的是模型全名
     if len(package_name_list) > 1:
         parent_name = ".".join(package_name_list[:-1])
     model_str = item.model_str
@@ -100,12 +100,12 @@ async def SaveFile(request: Request, item: UploadSaveFileModel):
     if not package:
         raise HTTPException(status_code=404, detail="not found")
     mo_path = package.file_path
+    model_path = GetModelPath(item.package_name)
     if parent_name:
         model_str = "within " + parent_name + ";" + model_str
-
     result = UpdateModelicaClass(model_str, path=package_name)
     if result is True:
-        model_path = GetModelPath(item.package_name)
+        # model_path = GetModelPath(item.package_name)
         if package.file_path.endswith("package.mo"):
             file_model_str = GetModelCode(item.package_name)
         else:
@@ -117,7 +117,6 @@ async def SaveFile(request: Request, item: UploadSaveFileModel):
         res.data = [{"model_str": res_model_str, "id": M_id}]
         res.msg = "保存文件成功！"
     else:
-        # print(result)
         res.status = 1
         res.err = "模型加载失败，请重新检查后上传"
     return res

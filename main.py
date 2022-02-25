@@ -19,7 +19,8 @@ from starlette.authentication import (
 
 class BasicAuthBackend(AuthenticationBackend):
     async def authenticate(self, request):
-        username = request.headers.get("username", "wanghailong")
+        # username = request.headers.get("username", "wanghailong")
+        username = request.headers.get("username", "")
         if not username:
             return
         return AuthCredentials(["simtek"]), SimpleUser(username)

@@ -65,7 +65,9 @@ async def GetModelFileView(request: Request, package_id: str):
             HW_res = obs.putFile(file_path + "/" + file_name, data_file)
             if HW_res["status"] == 200:
                 res.data = [HW_res["body"]["objectUrl"]]
+                # res.data = [data_file]
             else:
+                print(HW_res)
                 res.err = "下载失败，请稍后再试"
                 res.status = 1
         except Exception as e:

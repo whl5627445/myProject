@@ -6,6 +6,7 @@ from config.DB_config import DBSession
 from app.model.Simulate.SimulateResult import SimulateResult
 from app.model.Simulate.SimulateRecord import SimulateRecord
 from app.model.ModelsPackage.ModelsInformation import ModelsInformation
+from app.model.ModelsPackage.Fmu import FmuAttachment
 from app.model.Simulate.ExperimentRecord import ExperimentRecord
 from app.BaseModel.simulate import ExperimentCreateModel, SetSimulationOptionsModel
 from app.service.set_simulation_options import SetSimulationOptions
@@ -18,7 +19,11 @@ from app.service.get_model_code import GetModelCode
 from library.file_operation import FileOperation
 from app.service.get_simulation_options import GetSimulationOptions
 from app.service.fmu_export import DymolaFmuExport
+from app.service.HW_OBS_operation import OBSClient
+
 import time
+import datetime
+import requests
 
 
 session = DBSession()
@@ -306,12 +311,14 @@ async def FmuExportModelView (request: Request, item: FmuExportModel):
     ## package_id: 包的id
     ## package_name： 包的名称
     ## model_name： 模型全名
+    ## fmu_name： fmu文件的名字
+    ## download_local： 是否下载到本地
     ## storeResult： 暂时不启用
     ## includeSource： 暂时不启用
     ## fmiVersion： 暂时不启用
     ## includeImage： 暂时不启用
     ## fmiType： 暂时不启用
-    ## return: 返回导出结果
+    ## return: 返回导出结果、如果下载到本地，则返回下载地址
     """
     res = InitResponseModel()
     username = request.user.username
@@ -321,24 +328,35 @@ async def FmuExportModelView (request: Request, item: FmuExportModel):
     model_str = ""
     package = session.query(ModelsInformation).filter_by(id=item.package_id, package_name=item.package_name, sys_or_user=username).first()
     if package:
-        file_name = package.file_path.split("/")[-1]
+        file_name = item.package_name
         file_path = package.file_path
         model_str = GetModelCode(item.package_name)
-    res_dy = DymolaFmuExport(token=token,
+    res_dy = DymolaFmuExport(fmu_par=item,
+                             token=token,
                              username=username,
-                             package_name=item.package_name,
-                             model_name=item.model_name,
-                             storeResult=item.storeResult,
-                             includeSource=item.includeSource,
-                             fmiVersion=item.fmiVersion,
-                             includeImage=item.includeImage,
-                             fmiType=item.fmiType,
                              file_name=file_name,
                              model_str=model_str,
-                             fmu_name=item.fmu_name,
-                             file_path=file_path)
-    res.data = res_dy["data"]
-    res.err = res_dy["err"]
-    res.status = res_dy["status"]
-    res.msg = res_dy["msg"]
+                             file_path=file_path,
+                             )
+    if item.download_local:
+        result = res_dy.get("result", None)
+        if result:
+            fmu_data = session.query(FmuAttachment).filter_by(create_user=username, file_name=item.fmu_name + ".fmu").first()
+            try:
+                obs = OBSClient()
+                HW_res = obs.createSignedUrl("fzpt-fmu", fmu_data.obs_name)
+                if HW_res.get("signedUrl", None):
+                    res.data = [HW_res["signedUrl"]]
+                else:
+                    res.err = "下载失败，请稍后再试"
+                    res.status = 1
+            except Exception as e:
+                print(e)
+        if not res.data:
+            res.status = 2
+            res.msg = "导出失败"
+    else:
+        if not res_dy["result"]:
+            res.status = 2
+            res.err = "导出失败"
     return res

@@ -155,6 +155,7 @@ class FmuExportModel(BaseModel):
     package_name: str
     model_name: str
     fmu_name: str
+    download_local: bool = False
     storeResult: bool = False
     includeSource: bool = False
     fmiVersion: int = 2

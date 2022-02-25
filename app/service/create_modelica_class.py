@@ -34,8 +34,11 @@ def CreateModelicaClass(package_name, str_type, var, create_package_name_all, pa
 
 
 def UpdateModelicaClass(model_str, path="", merge="false"):
-    m_str = json.dumps(model_str)
-    m_str = m_str.replace("\\n","")[1:-1]
+    m_str = json.dumps(model_str, ensure_ascii=False)
+    m_str = m_str[1:-1]
+    m_str = m_str.replace("&lt;", "<")
+    m_str = m_str.replace("&gt;", ">")
+    m_str = m_str.replace("&amp;", "&")
     load_string = omc.loadString(m_str, path, merge=merge)
     return load_string
 

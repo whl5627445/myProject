@@ -348,6 +348,7 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
 
     def loadString(self, model_str, path="", merge="false"):
         cmd = "loadString(\"" + model_str + "\",\"" + path + "\",\"UTF-8\"" + "," + merge + ")"
+        print(cmd)
         result = self.sendExpression(cmd)
         return result
 
