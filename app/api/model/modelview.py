@@ -206,6 +206,7 @@ async def GetComponentPropertiesView (model_name: str, component_name: str, sys_
             return res
         file_path = model.file_path
     result = GetComponents(model_name, component_name, file_path, package_name)
+    print(result)
     data = {
         "model_name": model_name,
         "component_name": component_name,

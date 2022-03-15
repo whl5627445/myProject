@@ -5,6 +5,8 @@ from app.api.simulate.simulateview import router as simulate_view_router
 from app.api.model.modelview import router as model_view_router
 from app.api.file.upload_file import router as upload_file_router
 from app.api.file.download import router as download_file_router
+from app.api.notice.notification import router as notification_router
+
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.authentication import AuthenticationMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -19,8 +21,8 @@ from starlette.authentication import (
 
 class BasicAuthBackend(AuthenticationBackend):
     async def authenticate(self, request):
-        # username = request.headers.get("username", "wanghailong")
-        username = request.headers.get("username", "")
+        username = request.headers.get("username", "wanghailong")
+        # username = request.headers.get("username", "")
         if not username:
             return
         return AuthCredentials(["simtek"]), SimpleUser(username)
@@ -30,6 +32,7 @@ app.include_router(simulate_view_router)
 app.include_router(model_view_router)
 app.include_router(upload_file_router)
 app.include_router(download_file_router)
+app.include_router(notification_router)
 app.add_middleware(AuthenticationMiddleware, backend=BasicAuthBackend())
 app.add_middleware(SessionMiddleware, secret_key="simtek")
 

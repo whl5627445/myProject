@@ -73,14 +73,16 @@ class GetModelParameters(object):
             LoadModelFile(self.package_name, self.path)
         data_list = []
         self.class_all = omc.getInheritedClassesListAll([self.component_name])
-        self.Components = omc.getComponentsList(self.class_all)
-        self.ComponentAnnotations = omc.getComponentAnnotationsList(self.class_all)
+        self.Components = omc.getElementsList(self.class_all)
+        print("Components: ", self.Components)
+        self.ComponentAnnotations = omc.getElementAnnotationsList(self.class_all)
+        print("ComponentAnnotations: ", self.ComponentAnnotations)
         Components_dict = self.Components_dict
         if type(self.Components) is not list:
             return data_list
         for i in range(len(self.Components)):
             self.Components[i].append(self.ComponentAnnotations[i])
-            Components_dict[self.Components[i][1]] = self.Components[i]
+            Components_dict[self.Components[i][3]] = self.Components[i]
 
         for i in range(len(self.Components)):
             data_default = {
@@ -88,11 +90,11 @@ class GetModelParameters(object):
                 "type": "Normal",
                 "group": ""
                 }
-            p = Components_dict[self.Components[i][1]]
-            self.model_name = p[0]
-            var_name = p[1]
+            p = Components_dict[self.Components[i][3]]
+            self.model_name = p[2]
+            var_name = p[3]
             data_default["name"] = var_name
-            data_default["comment"] = p[2]
+            data_default["comment"] = p[4]
             Dialog_index = p[-1].index("Dialog") if "Dialog" in p[-1] else None
             showStartAttribute = None
             if Dialog_index is not None:
@@ -105,21 +107,28 @@ class GetModelParameters(object):
                 data_default["tab"] = tab
                 data_default["group"] = group
                 showStartAttribute = p[-1][tab_index][3]
+
             ComponentModifierValue = omc.getComponentModifierValue(self.class_name, '.'.join([self.name, data_default["name"]]))
 
             data_default["value"] = ComponentModifierValue
-            if (p[8] != "parameter" and data_default["group"] != "Parameters" and p[7] != "True") or p[3] == "protected" or p[4] == "True":
+            if (p[10] != "parameter" and data_default["group"] != "Parameters" and p[9] != "True") or p[5] == "protected" or p[6] == "True":
                 continue
-            if p[8] == "parameter" or data_default["group"] == "Parameters" or p[7] == "True":
+            if p[10] == "parameter" or data_default["group"] == "Parameters" or p[9] == "True":
                 data_default["group"]= "Parameters"
                 isEnumeration = omc.isEnumeration(self.model_name)
+
                 if isEnumeration:
                     Literals = omc.getEnumerationLiterals(self.model_name)
                     data_default["options"] = ['.'.join([self.model_name.removeprefix("."), i]) for i in Literals]
                     data_default["type"] = "Enumeration"
                 ParameterValue = self.get_Parameter_value(data_default["name"])
                 data_default["defaultvalue"] = ParameterValue
-                if p[0] == 'Boolean':
+                # if p[13] != "$Any" or  p[9] == "True":
+                #     all_subtype = omc.getAllSubtypeOf(p[13], self.component_name)
+                #     data_default["options"] = ["redeclare " + i + " " + p[3] for i in all_subtype] if all_subtype else []
+                #     data_default["type"] = "Enumeration"
+                #     data_default["defaultvalue"] = "replaceable " + p[2] +  " " + p[3]
+                if p[2] == 'Boolean':
                     data_default["type"] = "CheckBox"
                     if ComponentModifierValue in [True, False]:
                         if ComponentModifierValue:

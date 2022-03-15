@@ -8,6 +8,8 @@ class UploadSaveFileModel(BaseModel):
     model_str: Optional[str] = None
     package_id: Optional[str] = None
 
+    # class Config:
+    #     orm_mode = True
 
 class UploadSaveModelModel(BaseModel):
     package_name: Optional[str]

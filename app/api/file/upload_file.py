@@ -11,11 +11,12 @@ from app.BaseModel.uploadfile import UploadSaveFileModel, UploadSaveModelModel
 from app.service.get_model_code import GetModelCode, GetModelPath
 from app.service.create_modelica_class import CreateModelicaClass, UpdateModelicaClass
 import os
+import urllib.parse
 session = DBSession()
 
 
 @router.post("/uploadfile", response_model=ResponseModel)
-async def UploadFile(request: Request, file: UploadFile = File(...)):
+async def UploadFileView(request: Request, file: UploadFile = File(...)):
     """
     # 用户上传mo文件接口
     ## file: 文件数据，bytes形式的文件流
@@ -79,7 +80,7 @@ async def UploadFile(request: Request, file: UploadFile = File(...)):
 
 
 @router.post("/uploadfile/savefile", response_model=ResponseModel)
-async def SaveFile(request: Request, item: UploadSaveFileModel):
+async def SaveFileView(request: Request):
     """
     # 用户保存mo文件接口
     ## model_str: 文件数据，字符串形式, 如果是新建模型文件则为空字符串
@@ -88,32 +89,34 @@ async def SaveFile(request: Request, item: UploadSaveFileModel):
     ## return: 会返回文件上传的状态
     """
     res = InitResponseModel()
-    package_name_list = item.package_name.split(".")
+    item = await request.json()
+    package_name_list = item.get("package_name", "").split(".")
     parent_name = None
     package_name = package_name_list[0]  # 更新模型的话，是模型包的名字 item里的是模型全名
     if len(package_name_list) > 1:
         parent_name = ".".join(package_name_list[:-1])
-    model_str = item.model_str
-    package_id = item.package_id
+    model_str = urllib.parse.unquote(item.get("model_str", ""))  # html和JavaScript标签被过滤，无奈选择转码后解码
+    package_id = item.get("package_id", None)
     username = request.user.username
     package = session.query(ModelsInformation).filter_by(sys_or_user=username, id=package_id).first()
     if not package:
         raise HTTPException(status_code=404, detail="not found")
     mo_path = package.file_path
-    model_path = GetModelPath(item.package_name)
+    item_package_name = item.get("package_name", "")
+    model_path = GetModelPath(item_package_name)
     if parent_name:
         model_str = "within " + parent_name + ";" + model_str
     result = UpdateModelicaClass(model_str, path=package_name)
     if result is True:
         # model_path = GetModelPath(item.package_name)
         if package.file_path.endswith("package.mo"):
-            file_model_str = GetModelCode(item.package_name)
+            file_model_str = GetModelCode(item_package_name)
         else:
             file_model_str = GetModelCode(package_name)
         FileOperation().write(model_path, file_model_str)
         save_result, M_id = SaveClassNames(mo_path=mo_path, init_name=package_name, sys_or_user=request.user.username,
                                            package_id=package_id)
-        res_model_str = GetModelCode(item.package_name)
+        res_model_str = GetModelCode(item_package_name)
         res.data = [{"model_str": res_model_str, "id": M_id}]
         res.msg = "保存文件成功！"
     else:
@@ -123,7 +126,7 @@ async def SaveFile(request: Request, item: UploadSaveFileModel):
 
 
 @router.post("/uploadfile/savemodel", response_model=ResponseModel)
-async def SaveModel(request: Request, item: UploadSaveModelModel):
+async def SaveModelView(request: Request, item: UploadSaveModelModel):
     """
     # 用户创建和保存mo文件接口
     ## package_name: 包或模型的名字

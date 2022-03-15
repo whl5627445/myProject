@@ -131,9 +131,6 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
     def getComponents (self, class_name):
         return self.sendExpression("getComponents(" + class_name + ")")
 
-    def getClassInformation (self, class_name):
-        return self.sendExpression("getClassInformation(" + class_name + ")")
-
     def getComponentsList(self, class_name_list):
         data_list = []
         for i in class_name_list:
@@ -141,6 +138,32 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
             if Components_data != [''] and Components_data != "Error":
                 data_list.extend(Components_data)
         return data_list
+
+    def getElements (self, class_name):
+        return self.sendExpression("getElements(" + class_name + ", useQuotes = true)")
+
+    def getElementsList(self, class_name_list):
+        data_list = []
+        for i in class_name_list:
+            cmd = "getElements(" + i + ", useQuotes = true)"
+            Components_data = self.sendExpression(cmd)
+            if Components_data != [''] and Components_data != "Error":
+                data_list.extend(Components_data)
+        return data_list
+
+    def getElementAnnotations (self, class_name):
+        return self.sendExpression("getElementAnnotations(" + class_name + ")")
+
+    def getElementAnnotationsList(self, class_name_list):
+        data_list = []
+        for i in class_name_list:
+            Components_data = self.sendExpression("getElementAnnotations(" + i + ", useQuotes = true)")
+            if Components_data != [''] and Components_data != "Error":
+                data_list.extend(Components_data)
+        return data_list
+
+    def getClassInformation (self, class_name):
+        return self.sendExpression("getClassInformation(" + class_name + ")")
 
     def getComponentAnnotations (self, class_name):
         return self.sendExpression("getComponentAnnotations(" + class_name + ")")
@@ -348,7 +371,6 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
 
     def loadString(self, model_str, path="", merge="false"):
         cmd = "loadString(\"" + model_str + "\",\"" + path + "\",\"UTF-8\"" + "," + merge + ")"
-        print(cmd)
         result = self.sendExpression(cmd)
         return result
 
@@ -430,6 +452,16 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
     def isExtendsModifierFinal(self, class_name_one, class_name_two, name):
         cmd = "isExtendsModifierFinal(" + class_name_one + "," + class_name_two + "," + name + ")"
         result = self.sendExpression(cmd)
+        return result
+
+    def getAllSubtypeOf(self, class_name, component_name):
+        # getAllSubtypeOf(Modelica.Blocks.Interfaces.SO, Applications.Environment, false, false, false)
+        cmd = "getAllSubtypeOf(" + class_name + "," + component_name + ",false,false,false)"
+        result = self.sendExpression(cmd)
+        # if class_name == 'Modelica.Blocks.Interfaces.SO':
+        #     result = CdataToPYdata("{Modelica.Thermal.FluidHeatFlow.Examples.Utilities.DoubleRamp,Modelica.Electrical.QuasiStationary.MultiPhase.Blocks.QuasiRMS,Modelica.Electrical.MultiPhase.Blocks.QuasiRMS,Modelica.ComplexBlocks.Sources.LogFrequencySweep,Modelica.Blocks.Sources.TimeTable,Modelica.Blocks.Sources.Trapezoid,Modelica.Blocks.Sources.SawTooth,Modelica.Blocks.Sources.Pulse,Modelica.Blocks.Sources.Exponentials,Modelica.Blocks.Sources.ExpSine,Modelica.Blocks.Sources.Cosine,Modelica.Blocks.Sources.Sine,Modelica.Blocks.Sources.Ramp,Modelica.Blocks.Sources.Step,Modelica.Blocks.Sources.Constant,Modelica.Blocks.Sources.Clock,Modelica.Blocks.Noise.BandLimitedWhiteNoise,Modelica.Blocks.Noise.TruncatedNormalNoise,Modelica.Blocks.Noise.NormalNoise,Modelica.Blocks.Noise.UniformNoise,Modelica.Blocks.Examples.NoiseExamples.Utilities.ImpureRandom}")
+        # else:
+        #     result = ""
         return result
 
 if __name__ == '__main__':
