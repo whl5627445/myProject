@@ -12,6 +12,7 @@ from app.BaseModel.simulate import CopyClassModel, SetComponentModifierValueMode
 from app.BaseModel.simulate import DeleteConnectionModel, DeletePackageModel, GetComponentNameModel, \
     UpdateConnectionNamesModel
 from app.model.ModelsPackage.ModelsInformation import ModelsInformation, ModelsInformationAll
+from app.model.Simulate.SimulateRecord import SimulateRecord
 from app.service.component_operation import AddComponent, DeleteComponent, UpdateComponent
 from app.service.connection_operation import AddConnection, DeleteConnection, UpdateConnectionAnnotation, \
     UpdateConnectionNames

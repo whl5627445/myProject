@@ -340,6 +340,18 @@ class OMCSessionBase(with_metaclass(abc.ABCMeta, object)):
         simulate_result =  self.ask('simulate', '{0}'.format(cmd))
         return simulate_result
 
+    def buildModel (self, className, fileNamePrefix, simulate_parameters_data):
+        cmd = className + ', fileNamePrefix = "' + fileNamePrefix  + 'result\"'
+        if simulate_parameters_data:
+            simulate_parameters_list = []
+            for k, v in simulate_parameters_data.items():
+                if v:
+                    simulate_parameters_list.append(str(k) + "=" + str(v))
+            cmd = cmd + ", " + ", ".join(simulate_parameters_list)
+        self.directoryExists(fileNamePrefix)
+        simulate_result =  self.ask('buildModel', '{0}'.format(cmd))
+        return simulate_result
+
     def cd (self, newWorkingDirectory):
         return self.ask('cd', '"{0}"'.format(newWorkingDirectory))
 
@@ -435,9 +447,7 @@ class OMCSessionBase(with_metaclass(abc.ABCMeta, object)):
             result = self.ask('getExtendsModifierValue', '{0}, {1}, {2}'.format(className, extendsName, modifierName),
                               parsed=False)
             try:
-                answer = OMParser.check_for_values(result)
-                OMParser.result = {}
-                return answer[2:]
+                return result[2:]
             except (TypeError, UnboundLocalError) as ex:
                 logger.warning('OMParser error: {0}'.format(ex))
                 return result

@@ -1,29 +1,47 @@
 # -- coding: utf-8 --
-from typing import List
+import logging
+from typing import List, Dict
 from fastapi import  WebSocket, WebSocketDisconnect
 
 
-class WebsocketConnectionManager:
+class WebsocketConnectionManager(object):
     def __init__(self):
-        self.active_connections: List[WebSocket] = []
-
+        self.active_connections: dict[dict[str: WebSocket]] = {}
     # 连接
-    async def connect(self, websocket: WebSocket):
-        await websocket.accept()
-        self.active_connections.append(websocket)
+    async def connect(self, ws, username):
+        await ws.accept()
+        if self.active_connections.get(username, None):
+            self.active_connections[username][ws.num] = ws
+        else:
+            self.active_connections[username] = {}
+            self.active_connections[username][ws.num] = ws
 
-    # 关闭连接
-    def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
+    # # 关闭连接
+    def disconnect(self, websocket, username):
+        self.active_connections[username].pop(websocket.num, None)
 
     # 发送单独消息
-    async def send_personal_message(self, message: str, websocket: WebSocket):
-        await websocket.send_text(message)
+    async def send_personal_message(self, message: str, websocket, username):
+        for name, connection_dict in self.active_connections.items():
+            if name == username:
+                for num, connection in connection_dict.items():
+                    try:
+                        if connection.client_state != 2:
+                            await connection.send_text(message)
+                        else:
+                            self.disconnect(websocket, username)
+                    except WebSocketDisconnect:
+                        self.disconnect(websocket, username)
 
     # 所有连接发送消息
-    async def broadcast(self, message: str):
-        for connection in self.active_connections:
-            await connection.send_text(message)
-
-
+    async def broadcast(self, message: str, websocket, username):
+        for name, connection_dict in self.active_connections.items():
+            for num, connection in connection_dict.items():
+                try:
+                    if connection.client_state != 2:
+                        await connection.send_text(message)
+                    else:
+                        self.disconnect(websocket, username)
+                except WebSocketDisconnect:
+                    self.disconnect(websocket, username)
 manager = WebsocketConnectionManager()

@@ -90,6 +90,19 @@ async def SetSimulationOptionsView(request: Request, item: SetSimulationOptionsM
         res.msg = "设置成功" # 系统模型不允许设置到模型当中， 本消息只是提示参数仿真时可用，不会保存
     return res
 
+
+@router.get("/getmodelstate", response_model=ResponseModel)
+async def GetModelStateView (request: Request, package_id: str, model_name: str):
+    res = InitResponseModel()
+    model_record = session.query(SimulateRecord).filter_by(username=request.user.username, simulate_model_name=model_name).\
+        filter(SimulateRecord.simulate_status.notin_(["仿真失败","仿真已结束"])).first()
+    if model_record:
+        res.data.append(4)
+    else:
+        res.data.append(1)
+    return res
+
+
 @router.post("/simulate", response_model=ResponseModel)
 async def ModelSimulateView (item: ModelSimulateModel, background_tasks: BackgroundTasks, request: Request):
     """

@@ -28,35 +28,54 @@
     这可能是：SEPARATE_PROCESS_JVM = C:\Program Files\Java\jdk1.6.0_37 默认值：True
     jvm_args - 在单独的进程中编译时传递给 JVM 的参数字符串。默认值：空 stringReturns :: 编译结果，表示已创建的 FMU 的名称以及引发的警告列表。
     """
+import logging
 
 from pymodelica import compile_fmu
 from pyfmi import load_fmu
 import json
 import socket
-
+logging.basicConfig(level=logging.DEBUG,#控制台打印的日志级别
+                    format='%(asctime)s - %(pathname)s[line:%(lineno)d] - %(levelname)s: %(message)s'
+                    #日志格式
+                    )
 
 def service():
     s = socket.socket()
-    host = socket.gethostname()
+    # host = socket.gethostname()
+    host = "0.0.0.0"
     port = 56789
+    logging.debug(host)
     s.bind((host, port))
     s.listen(5)
     while True:
-        soc, addr = s.accept()
         print "start ok"
+        soc, addr = s.accept()
         data = json.loads(soc.recv(4096))
+        logging.debug(data)
         if data:
             try:
                 result_file_path = "/" + data["result_file_path"]
-                fmu = compile_fmu(class_name=data["modelname"], file_name=data["mo_path"], compile_to=result_file_path)
-                vdp = load_fmu(fmu)
-                opts = vdp.simulate_options()
-                opts["ncp"] = data["ncp"]
-                opts["result_file_name"] = result_file_path + "/" + data["result_name"]
-                start_time = data.get("start_time", 0.0)
-                final_time = data.get("final_time", 10.0)
-                res = vdp.simulate(start_time=start_time, final_time=final_time, options=opts)
-                soc.send('ok')
+                print result_file_path
+                if data["type"] == "compile":
+                    try:
+                        fmu = compile_fmu(class_name=data["modelname"], file_name=data["mo_path"], compile_to=result_file_path)
+                        soc.send('ok')
+                    except Exception as e:
+                        print e
+                        soc.send(str(e))
+                elif data["type"] == "simulate":
+                    try:
+                        vdp = load_fmu(result_file_path + data["modelname"] + ".fmu")
+                        opts = vdp.simulate_options()
+                        opts["ncp"] = data["ncp"]
+                        opts["result_file_name"] = result_file_path + "/" + data["result_name"]
+                        start_time = data.get("start_time", 0.0)
+                        final_time = data.get("final_time", 10.0)
+                        res = vdp.simulate(start_time=start_time, final_time=final_time, options=opts)
+                    except Exception as e:
+                        print e
+                        soc.send(str(e))
+                    soc.send('ok')
             except Exception as e:
                 print e
                 soc.send(str(e))

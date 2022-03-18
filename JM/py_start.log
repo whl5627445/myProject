@@ -38,3 +38,681 @@ Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Contin
 Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
   Iteration variable "CriticalDamping.uu[4]" is missing start value!
 
+WARNING:root:The environment variable SEPARATE_PROCESS_JVM is not set. Trying JAVA_HOME instead.
+Warning at line 1879, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.c0 does not have a binding expression
+Warning at line 1880, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.c1 does not have a binding expression
+Warning at line 1884, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.a does not have a binding expression
+Warning at line 1885, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.b does not have a binding expression
+Warning at line 1886, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.ku does not have a binding expression
+Warning at line 1887, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter Bessel.k1 does not have a binding expression
+Warning at line 1887, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter Butterworth.k1 does not have a binding expression
+Warning at line 1887, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter ChebyshevI.k1 does not have a binding expression
+Warning at line 1887, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.k1 does not have a binding expression
+Warning at line 1889, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter Bessel.k2 does not have a binding expression
+Warning at line 1889, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter Butterworth.k2 does not have a binding expression
+Warning at line 1889, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter ChebyshevI.k2 does not have a binding expression
+Warning at line 1889, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.k2 does not have a binding expression
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "Bessel.uu[2]" is missing start value!
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "Butterworth.uu[2]" is missing start value!
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "ChebyshevI.uu[2]" is missing start value!
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "CriticalDamping.uu[2]" is missing start value!
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "CriticalDamping.uu[3]" is missing start value!
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "CriticalDamping.uu[4]" is missing start value!
+
+WARNING:root:The environment variable SEPARATE_PROCESS_JVM is not set. Trying JAVA_HOME instead.
+Warning at line 1879, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.c0 does not have a binding expression
+Warning at line 1880, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.c1 does not have a binding expression
+Warning at line 1884, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.a does not have a binding expression
+Warning at line 1885, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.b does not have a binding expression
+Warning at line 1886, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.ku does not have a binding expression
+Warning at line 1887, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter Bessel.k1 does not have a binding expression
+Warning at line 1887, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter Butterworth.k1 does not have a binding expression
+Warning at line 1887, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter ChebyshevI.k1 does not have a binding expression
+Warning at line 1887, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.k1 does not have a binding expression
+Warning at line 1889, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter Bessel.k2 does not have a binding expression
+Warning at line 1889, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter Butterworth.k2 does not have a binding expression
+Warning at line 1889, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter ChebyshevI.k2 does not have a binding expression
+Warning at line 1889, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.k2 does not have a binding expression
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "Bessel.uu[2]" is missing start value!
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "Butterworth.uu[2]" is missing start value!
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "ChebyshevI.uu[2]" is missing start value!
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "CriticalDamping.uu[2]" is missing start value!
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "CriticalDamping.uu[3]" is missing start value!
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "CriticalDamping.uu[4]" is missing start value!
+
+WARNING:root:The environment variable SEPARATE_PROCESS_JVM is not set. Trying JAVA_HOME instead.
+Warning at line 1879, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.c0 does not have a binding expression
+Warning at line 1880, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.c1 does not have a binding expression
+Warning at line 1884, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.a does not have a binding expression
+Warning at line 1885, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.b does not have a binding expression
+Warning at line 1886, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.ku does not have a binding expression
+Warning at line 1887, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter Bessel.k1 does not have a binding expression
+Warning at line 1887, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter Butterworth.k1 does not have a binding expression
+Warning at line 1887, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter ChebyshevI.k1 does not have a binding expression
+Warning at line 1887, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.k1 does not have a binding expression
+Warning at line 1889, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter Bessel.k2 does not have a binding expression
+Warning at line 1889, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter Butterworth.k2 does not have a binding expression
+Warning at line 1889, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter ChebyshevI.k2 does not have a binding expression
+Warning at line 1889, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.k2 does not have a binding expression
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "Bessel.uu[2]" is missing start value!
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "Butterworth.uu[2]" is missing start value!
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "ChebyshevI.uu[2]" is missing start value!
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "CriticalDamping.uu[2]" is missing start value!
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "CriticalDamping.uu[3]" is missing start value!
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "CriticalDamping.uu[4]" is missing start value!
+
+WARNING:root:The environment variable SEPARATE_PROCESS_JVM is not set. Trying JAVA_HOME instead.
+Warning at line 1879, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.c0 does not have a binding expression
+Warning at line 1880, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.c1 does not have a binding expression
+Warning at line 1884, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.a does not have a binding expression
+Warning at line 1885, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.b does not have a binding expression
+Warning at line 1886, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.ku does not have a binding expression
+Warning at line 1887, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter Bessel.k1 does not have a binding expression
+Warning at line 1887, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter Butterworth.k1 does not have a binding expression
+Warning at line 1887, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter ChebyshevI.k1 does not have a binding expression
+Warning at line 1887, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.k1 does not have a binding expression
+Warning at line 1889, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter Bessel.k2 does not have a binding expression
+Warning at line 1889, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter Butterworth.k2 does not have a binding expression
+Warning at line 1889, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter ChebyshevI.k2 does not have a binding expression
+Warning at line 1889, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.k2 does not have a binding expression
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "Bessel.uu[2]" is missing start value!
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "Butterworth.uu[2]" is missing start value!
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "ChebyshevI.uu[2]" is missing start value!
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "CriticalDamping.uu[2]" is missing start value!
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "CriticalDamping.uu[3]" is missing start value!
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "CriticalDamping.uu[4]" is missing start value!
+
+WARNING:root:The environment variable SEPARATE_PROCESS_JVM is not set. Trying JAVA_HOME instead.
+Warning at line 1879, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.c0 does not have a binding expression
+Warning at line 1880, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.c1 does not have a binding expression
+Warning at line 1884, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.a does not have a binding expression
+Warning at line 1885, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.b does not have a binding expression
+Warning at line 1886, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.ku does not have a binding expression
+Warning at line 1887, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter Bessel.k1 does not have a binding expression
+Warning at line 1887, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter Butterworth.k1 does not have a binding expression
+Warning at line 1887, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter ChebyshevI.k1 does not have a binding expression
+Warning at line 1887, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.k1 does not have a binding expression
+Warning at line 1889, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter Bessel.k2 does not have a binding expression
+Warning at line 1889, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter Butterworth.k2 does not have a binding expression
+Warning at line 1889, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter ChebyshevI.k2 does not have a binding expression
+Warning at line 1889, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.k2 does not have a binding expression
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "Bessel.uu[2]" is missing start value!
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "Butterworth.uu[2]" is missing start value!
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "ChebyshevI.uu[2]" is missing start value!
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "CriticalDamping.uu[2]" is missing start value!
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "CriticalDamping.uu[3]" is missing start value!
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "CriticalDamping.uu[4]" is missing start value!
+
+WARNING:root:The environment variable SEPARATE_PROCESS_JVM is not set. Trying JAVA_HOME instead.
+Warning at line 1879, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.c0 does not have a binding expression
+Warning at line 1880, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.c1 does not have a binding expression
+Warning at line 1884, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.a does not have a binding expression
+Warning at line 1885, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.b does not have a binding expression
+Warning at line 1886, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.ku does not have a binding expression
+Warning at line 1887, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter Bessel.k1 does not have a binding expression
+Warning at line 1887, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter Butterworth.k1 does not have a binding expression
+Warning at line 1887, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter ChebyshevI.k1 does not have a binding expression
+Warning at line 1887, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.k1 does not have a binding expression
+Warning at line 1889, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter Bessel.k2 does not have a binding expression
+Warning at line 1889, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter Butterworth.k2 does not have a binding expression
+Warning at line 1889, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter ChebyshevI.k2 does not have a binding expression
+Warning at line 1889, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.k2 does not have a binding expression
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "Bessel.uu[2]" is missing start value!
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "Butterworth.uu[2]" is missing start value!
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "ChebyshevI.uu[2]" is missing start value!
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "CriticalDamping.uu[2]" is missing start value!
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "CriticalDamping.uu[3]" is missing start value!
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "CriticalDamping.uu[4]" is missing start value!
+
+WARNING:root:The environment variable SEPARATE_PROCESS_JVM is not set. Trying JAVA_HOME instead.
+Warning at line 1879, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.c0 does not have a binding expression
+Warning at line 1880, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.c1 does not have a binding expression
+Warning at line 1884, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.a does not have a binding expression
+Warning at line 1885, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.b does not have a binding expression
+Warning at line 1886, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.ku does not have a binding expression
+Warning at line 1887, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter Bessel.k1 does not have a binding expression
+Warning at line 1887, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter Butterworth.k1 does not have a binding expression
+Warning at line 1887, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter ChebyshevI.k1 does not have a binding expression
+Warning at line 1887, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.k1 does not have a binding expression
+Warning at line 1889, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter Bessel.k2 does not have a binding expression
+Warning at line 1889, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter Butterworth.k2 does not have a binding expression
+Warning at line 1889, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter ChebyshevI.k2 does not have a binding expression
+Warning at line 1889, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  The parameter CriticalDamping.k2 does not have a binding expression
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "Bessel.uu[2]" is missing start value!
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "Butterworth.uu[2]" is missing start value!
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "ChebyshevI.uu[2]" is missing start value!
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "CriticalDamping.uu[2]" is missing start value!
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "CriticalDamping.uu[3]" is missing start value!
+Warning at line 1893, column 5, in file '/omlibrary/Modelica 3.2.3/Blocks/Continuous.mo':
+  Iteration variable "CriticalDamping.uu[4]" is missing start value!
+
+WARNING:root:The environment variable SEPARATE_PROCESS_JVM is not set. Trying JAVA_HOME instead.
+
+WARNING:root:The environment variable SEPARATE_PROCESS_JVM is not set. Trying JAVA_HOME instead.
+
+start ok
+Final Run Statistics: --- 
+
+ Number of steps                                 : 66
+ Number of function evaluations                  : 89
+ Number of Jacobian evaluations                  : 3
+ Number of function eval. due to Jacobian eval.  : 36
+ Number of error test failures                   : 2
+ Number of nonlinear iterations                  : 81
+ Number of nonlinear convergence failures        : 0
+ Number of time events                           : 1
+
+Solver options:
+
+ Solver                   : CVode
+ Linear multistep method  : BDF
+ Nonlinear solver         : Newton
+ Linear solver type       : DENSE
+ Maximal order            : 5
+ Tolerances (absolute)    : 1e-06
+ Tolerances (relative)    : 0.0001
+
+Simulation interval    : 0.0 - 0.9 seconds.
+Elapsed simulation time: 0.0157630443573 seconds.
+start ok
+Final Run Statistics: --- 
+
+ Number of steps                                 : 66
+ Number of function evaluations                  : 89
+ Number of Jacobian evaluations                  : 3
+ Number of function eval. due to Jacobian eval.  : 36
+ Number of error test failures                   : 2
+ Number of nonlinear iterations                  : 81
+ Number of nonlinear convergence failures        : 0
+ Number of time events                           : 1
+
+Solver options:
+
+ Solver                   : CVode
+ Linear multistep method  : BDF
+ Nonlinear solver         : Newton
+ Linear solver type       : DENSE
+ Maximal order            : 5
+ Tolerances (absolute)    : 1e-06
+ Tolerances (relative)    : 0.0001
+
+Simulation interval    : 0.0 - 0.9 seconds.
+Elapsed simulation time: 0.0143480300903 seconds.
+start ok
+Final Run Statistics: --- 
+
+ Number of steps                                 : 66
+ Number of function evaluations                  : 89
+ Number of Jacobian evaluations                  : 3
+ Number of function eval. due to Jacobian eval.  : 36
+ Number of error test failures                   : 2
+ Number of nonlinear iterations                  : 81
+ Number of nonlinear convergence failures        : 0
+ Number of time events                           : 1
+
+Solver options:
+
+ Solver                   : CVode
+ Linear multistep method  : BDF
+ Nonlinear solver         : Newton
+ Linear solver type       : DENSE
+ Maximal order            : 5
+ Tolerances (absolute)    : 1e-06
+ Tolerances (relative)    : 0.0001
+
+Simulation interval    : 0.0 - 0.9 seconds.
+Elapsed simulation time: 0.014258146286 seconds.
+start ok
+Final Run Statistics: --- 
+
+ Number of steps                                 : 288
+ Number of function evaluations                  : 384
+ Number of Jacobian evaluations                  : 9
+ Number of function eval. due to Jacobian eval.  : 54
+ Number of error test failures                   : 5
+ Number of nonlinear iterations                  : 356
+ Number of nonlinear convergence failures        : 0
+ Number of state function evaluations            : 306
+ Number of state events                          : 2
+ Number of time events                           : 4
+
+Solver options:
+
+ Solver                   : CVode
+ Linear multistep method  : BDF
+ Nonlinear solver         : Newton
+ Linear solver type       : DENSE
+ Maximal order            : 5
+ Tolerances (absolute)    : [  1.00000000e-06   1.00000000e-06   1.00000000e-06   1.00000000e-10
+   1.00000000e-06   1.00000000e-06]
+ Tolerances (relative)    : 0.0001
+
+Simulation interval    : 0.0 - 4.0 seconds.
+Elapsed simulation time: 0.0218751430511 seconds.
+start ok
+Final Run Statistics: --- 
+
+ Number of steps                                 : 288
+ Number of function evaluations                  : 384
+ Number of Jacobian evaluations                  : 9
+ Number of function eval. due to Jacobian eval.  : 54
+ Number of error test failures                   : 5
+ Number of nonlinear iterations                  : 356
+ Number of nonlinear convergence failures        : 0
+ Number of state function evaluations            : 306
+ Number of state events                          : 2
+ Number of time events                           : 4
+
+Solver options:
+
+ Solver                   : CVode
+ Linear mulWARNING:root:The environment variable SEPARATE_PROCESS_JVM is not set. Trying JAVA_HOME instead.
+
+WARNING:root:The environment variable SEPARATE_PROCESS_JVM is not set. Trying JAVA_HOME instead.
+
+WARNING:root:The environment variable SEPARATE_PROCESS_JVM is not set. Trying JAVA_HOME instead.
+
+WARNING:root:The environment variable SEPARATE_PROCESS_JVM is not set. Trying JAVA_HOME instead.
+Warning at line 1520, column 13, in file '/public/UserFiles/UploadFile/lixiang/20220124082345179510/Applications.mo',
+In component cCHP:
+  The parameter cCHP.pump.constantVolumeFlow does not have a binding expression
+Warning at line 2482, column 15, in file '/public/UserFiles/UploadFile/lixiang/20220124082345179510/Applications.mo',
+In component cCHP.pump:
+  The parameter cCHP.pump.m does not have a binding expression
+Warning at line 2483, column 15, in file '/public/UserFiles/UploadFile/lixiang/20220124082345179510/Applications.mo',
+In component cCHP.pump:
+  The parameter cCHP.pump.T0 does not have a binding expression
+Warning at line 414, column 5, in file '/JM/JM_install/bin/../ThirdParty/MSL/Modelica/Blocks/Interfaces.mo':
+  Iteration variable "cCHP.wasteSteamBoiler.Enthalpy_water.u[1]" is missing start value!
+Warning at line 1029, column 11, in file '/public/UserFiles/UploadFile/lixiang/20220124082345179510/Applications.mo',
+In component cCHP.wasteSteamBoiler:
+  Ignored connection from connector to itself
+Warning at line 1061, column 11, in file '/public/UserFiles/UploadFile/lixiang/20220124082345179510/Applications.mo',
+In component cCHP.wasteSteamBoiler:
+  Ignored connection from connector to itself
+Warning at line 2280, column 13, in file '/public/UserFiles/UploadFile/lixiang/20220124082345179510/Applications.mo':
+  Iteration variable "cCHP.coldWaterPipe.port_a.m_flow" is missing start value!
+/JM/JM_install/bin/../lib/RuntimeLibrary/libModelicaMatIO.a(ModelicaMatIO.c.o): In function `Mat_VarDelete':
+/JM/JModelica.org-2.14/ThirdParty/MSL/Modelica/Resources/C-Sources/ModelicaMatIO.c:8521: warning: the use of `mktemp' is dangerous, better use `mkstemp' or `mkdtemp'
+
+tistep method  : BDF
+ Nonlinear solver         : Newton
+ Linear solver type       : DENSE
+ Maximal order            : 5
+ Tolerances (absolute)    : [  1.00000000e-06   1.00000000e-06   1.00000000e-06   1.00000000e-10
+   1.00000000e-06   1.00000000e-06]
+ Tolerances (relative)    : 0.0001
+
+Simulation interval    : 0.0 - 4.0 seconds.
+Elapsed simulation time: 0.0223410129547 seconds.
+start ok
+Final Run Statistics: --- 
+
+ Number of steps                                 : 288
+ Number of function evaluations                  : 384
+ Number of Jacobian evaluations                  : 9
+ Number of function eval. due to Jacobian eval.  : 54
+ Number of error test failures                   : 5
+ Number of nonlinear iterations                  : 356
+ Number of nonlinear convergence failures        : 0
+ Number of state function evaluations            : 306
+ Number of state events                          : 2
+ Number of time events                           : 4
+
+Solver options:
+
+ Solver                   : CVode
+ Linear multistep method  : BDF
+ Nonlinear solver         : Newton
+ Linear solver type       : DENSE
+ Maximal order            : 5
+ Tolerances (absolute)    : [  1.00000000e-06   1.00000000e-06   1.00000000e-06   1.00000000e-10
+   1.00000000e-06   1.00000000e-06]
+ Tolerances (relative)    : 0.0001
+
+Simulation interval    : 0.0 - 4.0 seconds.
+Elapsed simulation time: 0.0220680236816 seconds.
+start ok
+Final Run Statistics: --- 
+
+ Number of steps                                 : 288
+ Number of function evaluations                  : 384
+ Number of Jacobian evaluations                  : 9
+ Number of function eval. due to Jacobian eval.  : 54
+ Number of error test failures                   : 5
+ Number of nonlinear iterations                  : 356
+ Number of nonlinear convergence failures        : 0
+ Number of state function evaluations            : 306
+ Number of state events                          : 2
+ Number of time events                           : 4
+
+Solver options:
+
+ Solver                   : CVode
+ Linear multistep method  : BDF
+ Nonlinear solver         : Newton
+ Linear solver type       : DENSE
+ Maximal order            : 5
+ Tolerances (absolute)    : [  1.00000000e-06   1.00000000e-06   1.00000000e-06   1.00000000e-10
+   1.00000000e-06   1.00000000e-06]
+ Tolerances (relative)    : 0.0001
+
+Simulation interval    : 0.0 - 4.0 seconds.
+Elapsed simulation time: 0.0219528675079 seconds.
+start ok
+Final Run Statistics: --- 
+
+ Number of steps                                 : 288
+ Number of function evaluations                  : 384
+ Number of Jacobian evaluations                  : 9
+ Number of function eval. due to Jacobian eval.  : 54
+ Number of error test failures                   : 5
+ Number of nonlinear iterations                  : 356
+ Number of nonlinear convergence failures        : 0
+ Number of state function evaluations            : 306
+ Number of state events                          : 2
+ Number of time events                           : 4
+
+Solver options:
+
+ Solver                   : CVode
+ Linear multistep method  : BDF
+ Nonlinear solver         : Newton
+ Linear solver type       : DENSE
+ Maximal order            : 5
+ Tolerances (absolute)    : [  1.00000000e-06   1.00000000e-06   1.00000000e-06   1.00000000e-10
+   1.00000000e-06   1.00000000e-06]
+ Tolerances (relative)    : 0.0001
+
+Simulation interval    : 0.0 - 4.0 seconds.
+Elapsed simulation time: 0.0217118263245 seconds.
+start ok
+Final Run Statistics: --- 
+
+ Number of steps                                 : 748
+ Number of function evaluations                  : 1293
+ Number of Jacobian evaluations                  : 50
+ Number of function eval. due to Jacobian eval.  : 1350
+ Number of error test failures                   : 89
+ Number of nonlinear iterations                  : 1098
+ Number of nonlinear convergence failures        : 0
+ Number of state function evaluations            : 1090
+ Number of state events                          : 24
+ Number of time events                           : 25
+
+Solver options:
+
+ Solver                   : CVode
+ Linear muWARNING:root:The environment variable SEPARATE_PROCESS_JVM is not set. Trying JAVA_HOME instead.
+Warning at line 1520, column 13, in file '/public/UserFiles/UploadFile/lixiang/20220124082345179510/Applications.mo',
+In component cCHP:
+  The parameter cCHP.pump.constantVolumeFlow does not have a binding expression
+Warning at line 2482, column 15, in file '/public/UserFiles/UploadFile/lixiang/20220124082345179510/Applications.mo',
+In component cCHP.pump:
+  The parameter cCHP.pump.m does not have a binding expression
+Warning at line 2483, column 15, in file '/public/UserFiles/UploadFile/lixiang/20220124082345179510/Applications.mo',
+In component cCHP.pump:
+  The parameter cCHP.pump.T0 does not have a binding expression
+Warning at line 414, column 5, in file '/JM/JM_install/bin/../ThirdParty/MSL/Modelica/Blocks/Interfaces.mo':
+  Iteration variable "cCHP.wasteSteamBoiler.Enthalpy_water.u[1]" is missing start value!
+Warning at line 1029, column 11, in file '/public/UserFiles/UploadFile/lixiang/20220124082345179510/Applications.mo',
+In component cCHP.wasteSteamBoiler:
+  Ignored connection from connector to itself
+Warning at line 1061, column 11, in file '/public/UserFiles/UploadFile/lixiang/20220124082345179510/Applications.mo',
+In component cCHP.wasteSteamBoiler:
+  Ignored connection from connector to itself
+Warning at line 2280, column 13, in file '/public/UserFiles/UploadFile/lixiang/20220124082345179510/Applications.mo':
+  Iteration variable "cCHP.coldWaterPipe.port_a.m_flow" is missing start value!
+/JM/JM_install/bin/../lib/RuntimeLibrary/libModelicaMatIO.a(ModelicaMatIO.c.o): In function `Mat_VarDelete':
+/JM/JModelica.org-2.14/ThirdParty/MSL/Modelica/Resources/C-Sources/ModelicaMatIO.c:8521: warning: the use of `mktemp' is dangerous, better use `mkstemp' or `mkdtemp'
+
+WARNING:root:The environment variable SEPARATE_PROCESS_JVM is not set. Trying JAVA_HOME instead.
+Warning at line 1520, column 13, in file '/public/UserFiles/UploadFile/lixiang/20220124082345179510/Applications.mo',
+In component cCHP:
+  The parameter cCHP.pump.constantVolumeFlow does not have a binding expression
+Warning at line 2482, column 15, in file '/public/UserFiles/UploadFile/lixiang/20220124082345179510/Applications.mo',
+In component cCHP.pump:
+  The parameter cCHP.pump.m does not have a binding expression
+Warning at line 2483, column 15, in file '/public/UserFiles/UploadFile/lixiang/20220124082345179510/Applications.mo',
+In component cCHP.pump:
+  The parameter cCHP.pump.T0 does not have a binding expression
+Warning at line 414, column 5, in file '/JM/JM_install/bin/../ThirdParty/MSL/Modelica/Blocks/Interfaces.mo':
+  Iteration variable "cCHP.wasteSteamBoiler.Enthalpy_water.u[1]" is missing start value!
+Warning at line 1029, column 11, in file '/public/UserFiles/UploadFile/lixiang/20220124082345179510/Applications.mo',
+In component cCHP.wasteSteamBoiler:
+  Ignored connection from connector to itself
+Warning at line 1061, column 11, in file '/public/UserFiles/UploadFile/lixiang/20220124082345179510/Applications.mo',
+In component cCHP.wasteSteamBoiler:
+  Ignored connection from connector to itself
+Warning at line 2280, column 13, in file '/public/UserFiles/UploadFile/lixiang/20220124082345179510/Applications.mo':
+  Iteration variable "cCHP.coldWaterPipe.port_a.m_flow" is missing start value!
+/JM/JM_install/bin/../lib/RuntimeLibrary/libModelicaMatIO.a(ModelicaMatIO.c.o): In function `Mat_VarDelete':
+/JM/JModelica.org-2.14/ThirdParty/MSL/Modelica/Resources/C-Sources/ModelicaMatIO.c:8521: warning: the use of `mktemp' is dangerous, better use `mkstemp' or `mkdtemp'
+
+WARNING:root:The environment variable SEPARATE_PROCESS_JVM is not set. Trying JAVA_HOME instead.
+
+ltistep method  : BDF
+ Nonlinear solver         : Newton
+ Linear solver type       : DENSE
+ Maximal order            : 5
+ Tolerances (absolute)    : [  1.00000000e-08   1.00000000e-08   1.00000000e-08   1.00000000e-08
+   1.00000000e-08   1.00000000e-08   1.00000000e-08   1.00000000e-08
+   1.00000000e-08   1.00000000e-08   1.00000000e-08   1.00000000e-08
+   1.00000000e-08   1.00000000e-08   1.00000000e-08   1.00000000e-08
+   1.00000000e-08   3.00000000e-06   1.00000000e-08   3.00000000e-06
+   1.00000000e-08   1.00000000e-08   1.00000000e-08   1.00000000e-08
+   1.00000000e-08   1.00000000e-08   1.00000000e-08]
+ Tolerances (relative)    : 1e-06
+
+Simulation interval    : 0.0 - 86400.0 seconds.
+Elapsed simulation time: 0.139250040054 seconds.
+start ok
+Final Run Statistics: --- 
+
+ Number of steps                                 : 748
+ Number of function evaluations                  : 1293
+ Number of Jacobian evaluations                  : 50
+ Number of function eval. due to Jacobian eval.  : 1350
+ Number of error test failures                   : 89
+ Number of nonlinear iterations                  : 1098
+ Number of nonlinear convergence failures        : 0
+ Number of state function evaluations            : 1090
+ Number of state events                          : 24
+ Number of time events                           : 25
+
+Solver options:
+
+ Solver                   : CVode
+ Linear multistep method  : BDF
+ Nonlinear solver         : Newton
+ Linear solver type       : DENSE
+ Maximal order            : 5
+ Tolerances (absolute)    : [  1.00000000e-08   1.00000000e-08   1.00000000e-08   1.00000000e-08
+   1.00000000e-08   1.00000000e-08   1.00000000e-08   1.00000000e-08
+   1.00000000e-08   1.00000000e-08   1.00000000e-08   1.00000000e-08
+   1.00000000e-08   1.00000000e-08   1.00000000e-08   1.00000000e-08
+   1.00000000e-08   3.00000000e-06   1.00000000e-08   3.00000000e-06
+   1.00000000e-08   1.00000000e-08   1.00000000e-08   1.00000000e-08
+   1.00000000e-08   1.00000000e-08   1.00000000e-08]
+ Tolerances (relative)    : 1e-06
+
+Simulation interval    : 0.0 - 86400.0 seconds.
+Elapsed simulation time: 0.137334108353 seconds.
+start ok
+Final Run Statistics: --- 
+
+ Number of steps                                 : 748
+ Number of function evaluations                  : 1293
+ Number of Jacobian evaluations                  : 50
+ Number of function eval. due to Jacobian eval.  : 1350
+ Number of error test failures                   : 89
+ Number of nonlinear iterations                  : 1098
+ Number of nonlinear convergence failures        : 0
+ Number of state function evaluations            : 1090
+ Number of state events                          : 24
+ Number of time events                           : 25
+
+Solver options:
+
+ Solver                   : CVode
+ Linear multistep method  : BDF
+ Nonlinear solver         : Newton
+ Linear solver type       : DENSE
+ Maximal order            : 5
+ Tolerances (absolute)    : [  1.00000000e-08   1.00000000e-08   1.00000000e-08   1.00000000e-08
+   1.00000000e-08   1.00000000e-08   1.00000000e-08   1.00000000e-08
+   1.00000000e-08   1.00000000e-08   1.00000000e-08   1.00000000e-08
+   1.00000000e-08   1.00000000e-08   1.00000000e-08   1.00000000e-08
+   1.00000000e-08   3.00000000e-06   1.00000000e-08   3.00000000e-06
+   1.00000000e-08   1.00000000e-08   1.00000000e-08   1.00000000e-08
+   1.00000000e-08   1.00000000e-08   1.00000000e-08]
+ Tolerances (relative)    : 1e-06
+
+Simulation interval    : 0.0 - 86400.0 seconds.
+Elapsed simulation time: 0.137773990631 seconds.
+start ok
+Final Run Statistics: --- 
+
+ Number of steps                                 : 304
+ Number of function evaluations                  : 403
+ Number of Jacobian evaluations                  : 10
+ Number of function eval. due to Jacobian eval.  : 60
+ Number of error test failures                   : 5
+ Number of nonlinear iterations                  : 375
+ Number of nonlinear convergence failures        : 0
+ Number of state function evaluations            : 322
+ Number of state events                          : 2
+ Number of time events            WARNING:root:The environment variable SEPARATE_PROCESS_JVM is not set. Trying JAVA_HOME instead.
+

@@ -1,4 +1,6 @@
 # -- coding: utf-8 --
+import logging
+
 from library.mat import DyMatFile
 from config.omc import omc
 from config.redis_config import r
@@ -15,14 +17,9 @@ from library.file_operation import FileOperation
 import os
 import xmltodict
 
-# from config.grpc import SimulateServiceRpc
-# from Grpc.message.message_pb2 import SimulateRequest
-
 session = DBSession()
 
-# 获取本机ip, 用于访问docker服务
-# hostname = socket.gethostname()
-# ip = socket.gethostbyname(hostname)
+
 
 
 def SimulateDataHandle(SRecord: object, result_file_path, username, model_name, simulate_result_str):
@@ -112,7 +109,7 @@ def SimulateDataHandle(SRecord: object, result_file_path, username, model_name, 
         return
 
 
-def JModelicaSimulate(SRecord:object, result_file_path: str, model_name: str, mo_path: str, simulate_parameters_data = None):
+def JModelicaSimulate(SRecord:object, result_file_path: str, model_name: str, mo_path: str, simulate_parameters_data = None, username=None):
     res = False
     res_str = ""
     if not mo_path:
@@ -126,19 +123,28 @@ def JModelicaSimulate(SRecord:object, result_file_path: str, model_name: str, mo
         "ncp": simulate_parameters_data["numberOfIntervals"],  # 结果间隔
         "result_file_path": "/" + result_file_path ,  # 结果文件名字
         "rtol": simulate_parameters_data["tolerance"],  # 相对公差
+        "type": "compile",  # 是编译还是计算， 默认是编译
     }
     file_operation = FileOperation()
     file_operation.make_dir(result_file_path)
+    client = socket.socket()
+    logging.debug(msg)
+    logging.debug("开始连接")
+    client.connect(("119.3.155.11", 56789))
+    logging.debug("连接成功")
     try:
-        client = socket.socket()
-        client.connect(("jm-v1.0", 56789))
         client.send(json.dumps(msg).encode())
-        data = client.recv(1024).decode()
-        client.close()
-        SRecord.simulate_end_time = datetime.now()
-        if data == "ok":
-                model_name_ = model_name.replace(".", "_")
-                with open(result_file_path + model_name_ + ".fmu", "rb") as f:
+        compile_data = client.recv(1024).decode()
+        logging.debug(compile_data)
+        if compile_data == "ok":
+            msg["type"] = "simulate"
+            client.send(json.dumps(msg).encode())
+            simulate_data = client.recv(1024).decode()
+            logging.debug(simulate_data)
+            if simulate_data == "ok":
+                SRecord.simulate_end_time = datetime.now()
+                model_name = model_name.replace(".", "_")
+                with open(result_file_path + model_name + ".fmu", "rb") as f:
                     fmu_data = f.read()
                 file_operation.write(result_file_path + "fmu.zip", fmu_data)
                 file_operation.un_zip(result_file_path + "fmu.zip", result_file_path)
@@ -147,30 +153,35 @@ def JModelicaSimulate(SRecord:object, result_file_path: str, model_name: str, mo
                 res_str = "ok"
         else:
             SRecord.simulate_status = "仿真失败"
-            SRecord.simulate_result_str = str(data)
+            SRecord.simulate_result_str = str(res_str)
+
     except Exception as e:
         SRecord.simulate_status = "仿真失败"
         SRecord.simulate_result_str = e
+    client.close()
     session.flush()
-    session.close()
     return res, res_str
 
-def OpenModelicaSimulate(SRecord:object, result_file_path: str, model_name: str, file_path: str = None, simulate_parameters_data = None):
-
+def OpenModelicaSimulate(SRecord:object, result_file_path: str, model_name: str, file_path: str = None, simulate_parameters_data = None, username=None):
     res = False
     if file_path:
         package_name = model_name.split('.')[0]
         LoadModelFile(package_name, file_path)
     FileOperation().make_dir(result_file_path)
-    simulate_result_str = omc.simulate(className=model_name, fileNamePrefix=result_file_path, simulate_parameters_data=simulate_parameters_data)
-    SRecord.simulate_end_time = datetime.now()
-    err = omc.getErrorString()
-    if err == '':
-        res = True
+    # simulate_result_str = omc.simulate(className=model_name, fileNamePrefix=result_file_path, simulate_parameters_data=simulate_parameters_data)
+    buildModel_res = omc.buildModel(className=model_name, fileNamePrefix=result_file_path, simulate_parameters_data=simulate_parameters_data)
+    if buildModel_res:
+        r.lpush(username + "_" + "notification", str(datetime.now().strftime('%Y-%m-%d %H:%M:%S; ')) + model_name + " 编译成功，开始仿真")
+        simulate_result_str = os.popen(result_file_path + "result").read()
+        if "successfully" in simulate_result_str:
+            res = True
+        else:
+            SRecord.simulate_status = "仿真失败"
     else:
         SRecord.simulate_status = "仿真失败"
+        simulate_result_str = "编译失败"
+    SRecord.simulate_end_time = datetime.now()
     session.flush()
-    session.close()
     return res, simulate_result_str
 
 def DymolaSimulate(SRecord: object, username, model_name, file_path=None, simulate_parameters_data=None, result_file_path = None):
@@ -244,38 +255,35 @@ def DymolaSimulate(SRecord: object, username, model_name, file_path=None, simula
 
         SRecord.simulate_status = "仿真失败"
     session.flush()
-    session.close()
     return res, res_str
 
 
 def Simulate(SRecord_id, username: str, model_name: str, s_type="OM", file_path: str = None, simulate_parameters_data = None):
-
+    logging.debug(s_type)
     package_name = model_name.split(".")[0]
     result_file_path = "public/UserFiles/ModelResult" + '/' + username + '/' + \
                        model_name.split('.')[
-                           -1] + '/' + str(
-            datetime.now().strftime('%Y%m%d%H%M%S%f')) + '/'
+                           -1] + '/' + str(datetime.now().strftime('%Y%m%d%H%M%S%f')) + '/'
     SRecord = session.query(SimulateRecord).filter_by(id=SRecord_id).first()
     if file_path:
         model_str = GetModelCode(package_name, file_path, package_name)
         FileOperation().write_file("/".join(file_path.split("/")[:-1]), package_name + ".mo", model_str)
-    r.lpush(username + "_" + "notification", "模型开始编译")
+    r.lpush(username + "_" + "notification", str(datetime.now().strftime('%Y-%m-%d %H:%M:%S; ')) + model_name + " 模型开始编译")
     if s_type == "OM":
-        s_result, s_str = OpenModelicaSimulate(SRecord, result_file_path, model_name, file_path, simulate_parameters_data)
+        s_result, s_str = OpenModelicaSimulate(SRecord, result_file_path, model_name, file_path, simulate_parameters_data, username)
     elif s_type == "JM":
-        s_result, s_str = JModelicaSimulate(SRecord, result_file_path, model_name, file_path, simulate_parameters_data)
+        s_result, s_str = JModelicaSimulate(SRecord, result_file_path, model_name, file_path, simulate_parameters_data, username)
     elif s_type == "DM":
-        s_result, s_str = DymolaSimulate(SRecord, username, model_name, file_path, simulate_parameters_data, result_file_path)
+        s_result, s_str = DymolaSimulate(SRecord, username, model_name, file_path, simulate_parameters_data)
     else:
         return "暂不支持此仿真类型"
     if s_result:
-        r.lpush(username + "_" + "notification", "编译成功")
+        time.sleep(8)
         SimulateDataHandle(SRecord, result_file_path, username, model_name, simulate_result_str=s_str)
-        SimulateDataHandle(SRecord, result_file_path, username, model_name, simulate_result_str=s_str)
-        SimulateDataHandle(SRecord, result_file_path, username, model_name, simulate_result_str=s_str)
-        r.lpush(username + "_" + "notification", "模型计算完成")
+        r.lpush(username + "_" + "notification", str(datetime.now().strftime('%Y-%m-%d %H:%M:%S; ')) + model_name + " 模型仿真完成")
     else:
-        r.lpush(username + "_" + "notification", "编译失败")
+        r.lpush(username + "_" + "notification", str(datetime.now().strftime('%Y-%m-%d %H:%M:%S; ')) + model_name + " 编译失败")
+    session.close()
 
 
 
