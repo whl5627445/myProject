@@ -5,22 +5,27 @@ from config.omc import omc
 from app.service.load_model_file import LoadModelFile
 
 
-def CopyClass(copied_class_name, class_name, parent_name):
+def CopyClass (copied_class_name, class_name, parent_name):
     exist_class = omc.existClass(parent_name + "." + class_name)
     if exist_class:
         return False
+    if not parent_name:
+        parent_name = "root"
     copy_result = omc.copyClass(copied_class_name, class_name, parent_name)
     return copy_result
 
-def DeleteClass(class_name):
+
+def DeleteClass (class_name):
     result = omc.deleteClass(class_name)
     return result
 
-def SaveClass(class_name, copied_class_name=None, parent_name=None, package_name=None, model_file_path=None, new_model_file_path=None, copy_or_delete="copy"):
+
+def SaveClass (class_name, copied_class_name=None, parent_name=None, package_name=None, model_file_path=None,
+               new_model_file_path=None, copy_or_delete="copy"):
     LoadModelFile(package_name, model_file_path)
-    if copy_or_delete=="copy":
+    if copy_or_delete == "copy":
         result = CopyClass(copied_class_name, class_name, parent_name)
-    elif copy_or_delete=="delete":
+    elif copy_or_delete == "delete":
         result = DeleteClass(class_name)
     else:
         return False
@@ -32,4 +37,3 @@ def SaveClass(class_name, copied_class_name=None, parent_name=None, package_name
     else:
         return False
     return True
-

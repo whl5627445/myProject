@@ -44,4 +44,6 @@ class WebsocketConnectionManager(object):
                         self.disconnect(websocket, username)
                 except WebSocketDisconnect:
                     self.disconnect(websocket, username)
+
+
 manager = WebsocketConnectionManager()

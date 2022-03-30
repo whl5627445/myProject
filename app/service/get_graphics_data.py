@@ -1,4 +1,6 @@
 # -- coding: utf-8 --
+import logging
+
 from config.omc import omc as mod
 import os, re
 from app.service.load_model_file import LoadModelFile
@@ -6,7 +8,7 @@ from app.service.load_model_file import LoadModelFile
 
 class GetGraphicsData(object):
 
-    def __init__(self):
+    def __init__ (self):
         self.InheritedClasses_data = []
         self.DiagramAnnotation_data = []
         self.Components_data = []
@@ -15,7 +17,7 @@ class GetGraphicsData(object):
         self.mod = mod
         self.package_name = None
 
-    def getICList(self,name):
+    def getICList (self, name):
         data_list = name
         name_list = name
         while True:
@@ -27,7 +29,7 @@ class GetGraphicsData(object):
                 break
         return data_list
 
-    def data_01(self, c_data):
+    def data_01 (self, c_data):
         data_list = []
         if c_data == [''] or c_data == "-":
             return data_list
@@ -99,13 +101,12 @@ class GetGraphicsData(object):
             print("连线数据有误: ", drawing_data_list)
             print(e)
 
-
-    def data_02(self, c_data, ca_data, is_icon=False, parent=""):
+    def data_02 (self, c_data, ca_data, is_icon=False, parent=""):
         data_list = []
         c_data_filter = []
         ca_data_filter = []
         if is_icon and c_data != [] and ca_data != []:
-        # if c_data != [] and ca_data != []:
+            # if c_data != [] and ca_data != []:
             for i in range(len(c_data)):
                 if "Interfaces" in c_data[i][0].split('.'):
                     c_data_filter.append(c_data[i])
@@ -124,27 +125,32 @@ class GetGraphicsData(object):
                 IconAnnotation_data = self.mod.getIconAnnotationList(namelist)
                 caf = ca_data_filter[i][Placement_index + 1]
                 rotateAngle = "0" if caf[7] == "-" else caf[7]
-                data = {"type": "Transformation"}
+                data = {"type": "Transformation" , "graphType": "connecter" if "Interfaces" in c_data_filter[i][0] else "",}
                 data["ID"] = str(i)
                 name = c_data_filter[i][1]
                 data["original_name"] = c_data_filter[i][1]
                 data["name"] = name
                 data["parent"] = parent
                 data["classname"] = c_data_filter[i][0]
+                data["visible"] = ca_data_filter[i][1][0]
                 data["visible"] = caf[0]
                 data["rotateAngle"] = rotateAngle
+                data["originDiagram"] = ",".join([ca_data_filter[i][1][1], ca_data_filter[i][1][2]])
+                data["extent1Diagram"] = ",".join([ca_data_filter[i][1][3], ca_data_filter[i][1][4]])
+                data["extent2Diagram"] = ",".join([ca_data_filter[i][1][5], ca_data_filter[i][1][6]])
                 data["originDiagram"] = ",".join([caf[1], caf[2]])
                 data["extent1Diagram"] = ",".join([caf[3], caf[4]])
                 data["extent2Diagram"] = ",".join([caf[5], caf[6]])
                 data["rotation"] = rotateAngle
                 data["output_type"] = c_data_filter[i][-1][1:-1]
-                data["inputOutputs"] = self.data_02(Components_data, ComponentAnnotations_data, is_icon=True, parent=data["name"])
+                data["inputOutputs"] = self.data_02(Components_data, ComponentAnnotations_data, is_icon=True,
+                                                    parent=data["name"])
                 data["subShapes"] = self.data_01(IconAnnotation_data)
                 data_list.append(data)
 
         return data_list
 
-    def getNthConnection_data(self, name_list):
+    def getNthConnection_data (self, name_list):
         ConnectionCount = self.mod.getConnectionCountList(name_list)
         for count in range(len(ConnectionCount)):
             if ConnectionCount[count] != 0:
@@ -156,10 +162,10 @@ class GetGraphicsData(object):
                     da_data["connectionto_original_name"] = nc_data[1]
                     expression1 = r"\[\d+\]$"
                     expression2 = r"\[\d+\]\."
-                    connectionfrom =re.sub(expression1,"",nc_data[0])
-                    connectionto = re.sub(expression1,"",nc_data[1])
-                    da_data["connectionfrom"] = re.sub(expression2,".",connectionfrom)
-                    da_data["connectionto"] = re.sub(expression2,".",connectionto)
+                    connectionfrom = re.sub(expression1, "", nc_data[0])
+                    connectionto = re.sub(expression1, "", nc_data[1])
+                    da_data["connectionfrom"] = re.sub(expression2, ".", connectionfrom)
+                    da_data["connectionto"] = re.sub(expression2, ".", connectionto)
                     self.data[0].append(da_data)
 
     def get_data (self, name_list, model_file_path=None):
@@ -200,6 +206,7 @@ class GetGraphicsData(object):
 
 if __name__ == '__main__':
     import json
+
     a = GetGraphicsData()
     # print(a.get_data(["Modelica.ComplexBlocks.Examples.TestConversionBlock"]))
     # print(a.get_data(["ENN.Examples.Scenario1_Status"]))

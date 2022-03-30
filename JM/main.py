@@ -47,23 +47,25 @@ def service():
     logging.debug(host)
     s.bind((host, port))
     s.listen(5)
+    logging.debug("service start")
     while True:
-        print "start ok"
+        logging.debug("ready to receive!")
         soc, addr = s.accept()
         data = json.loads(soc.recv(4096))
-        logging.debug(data)
+        logging.debug("data: " + str(data))
         if data:
             try:
                 result_file_path = "/" + data["result_file_path"]
-                print result_file_path
                 if data["type"] == "compile":
                     try:
                         fmu = compile_fmu(class_name=data["modelname"], file_name=data["mo_path"], compile_to=result_file_path)
+                        logging.debug("compile ok!")
                         soc.send('ok')
                     except Exception as e:
                         print e
-                        soc.send(str(e))
+                        soc.send(str("compile fail"))
                 elif data["type"] == "simulate":
+                    logging.debug("simulate start!")
                     try:
                         vdp = load_fmu(result_file_path + data["modelname"] + ".fmu")
                         opts = vdp.simulate_options()
@@ -72,15 +74,15 @@ def service():
                         start_time = data.get("start_time", 0.0)
                         final_time = data.get("final_time", 10.0)
                         res = vdp.simulate(start_time=start_time, final_time=final_time, options=opts)
+                        logging.debug("simulate ok!")
+                        soc.send('ok')
                     except Exception as e:
                         print e
-                        soc.send(str(e))
-                    soc.send('ok')
+                        soc.send(str("simulate fail"))
             except Exception as e:
                 print e
                 soc.send(str(e))
-        soc.close()
-
+            soc.close()
 
 if __name__ == '__main__':
     service()

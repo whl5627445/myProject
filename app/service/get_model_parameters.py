@@ -1,11 +1,13 @@
 # -- coding: utf-8 --
+import logging
+
 from config.omc import omc
 from app.service.load_model_file import LoadModelFile
 
 
 class GetModelParameters(object):
     def __init__(self, class_name, name, component_name, path=None, package_name=None):
-        self.model_name = None
+        self.model_name = ""
         self.name = name
         self.class_name = class_name
         self.path = path
@@ -18,7 +20,10 @@ class GetModelParameters(object):
 
     def get_derived_class_modifier_value(self):
         DerivedClassModifierNames = omc.getDerivedClassModifierNames(self.model_name)
-        if DerivedClassModifierNames != ['']:
+
+        if DerivedClassModifierNames and DerivedClassModifierNames != ['']:
+            logging.debug("model_name: " + str(self.model_name))
+            logging.debug("DerivedClassModifierNames: " + str(DerivedClassModifierNames))
             DerivedClassModifierValue = []
             for n in range(1, len(DerivedClassModifierNames)):
                 data = omc.getDerivedClassModifierValue(self.model_name, DerivedClassModifierNames[n])
@@ -74,9 +79,7 @@ class GetModelParameters(object):
         data_list = []
         self.class_all = omc.getInheritedClassesListAll([self.component_name])
         self.Components = omc.getElementsList(self.class_all)
-        print("Components: ", self.Components)
         self.ComponentAnnotations = omc.getElementAnnotationsList(self.class_all)
-        print("ComponentAnnotations: ", self.ComponentAnnotations)
         Components_dict = self.Components_dict
         if type(self.Components) is not list:
             return data_list
@@ -91,7 +94,10 @@ class GetModelParameters(object):
                 "group": ""
                 }
             p = Components_dict[self.Components[i][3]]
-            self.model_name = p[2]
+            if p[2] != "-":
+                self.model_name = p[2]
+            else:
+                self.model_name = ""
             var_name = p[3]
             data_default["name"] = var_name
             data_default["comment"] = p[4]
@@ -183,11 +189,11 @@ class GetModelParameters(object):
         if extend_modifier_name and extend_modifier_value:
             for i in range(len(extend_modifier_name)):
                 var_name = extend_modifier_name[i].removesuffix(".start")
-                self.model_name = Components_dict[var_name][1]
+                self.model_name = Components_dict[var_name][2]
                 data_default = {
                     "tab": "General", "type": "Normal", "group": "Initialization", "name": var_name + ".start",
                     "unit": self.get_derived_class_modifier_value(),
-                    'comment': Components_dict[var_name][2],
+                    'comment': Components_dict[var_name][3],
                     'defaultvalue': extend_modifier_value[i],
                     'value': "",
                     }
@@ -196,7 +202,7 @@ class GetModelParameters(object):
                     'type': "fixed",
                     'group': "Initialization",
                     'name': var_name + ".fixed",
-                    'comment': Components_dict[var_name][2],
+                    'comment': Components_dict[var_name][3],
                     'defaultvalue': extend_modifier_final[i],
                     'value': extend_modifier_final[i],
                     "unit": self.get_derived_class_modifier_value(),

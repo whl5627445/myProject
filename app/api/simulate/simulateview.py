@@ -249,7 +249,10 @@ async def ExperimentCreateView (request: Request, item: ExperimentCreateModel):
     experiment_name = item.experiment_name
     username = request.user.username
     package_name = model_name.split(".")[0]
-    enn = session.query(ModelsInformation).filter_by(id=package_id, sys_or_user=username).first()
+    if package_id != 1:
+        enn = session.query(ModelsInformation).filter_by(id=package_id, sys_or_user=username).first()
+    else:
+        enn = session.query(ModelsInformation).filter_by(id=package_id).first()
     experimentation = session.query(ExperimentRecord).filter_by(experiment_name=experiment_name, username=username, package_id=item.package_id, model_name_all=item.model_name).first()
     if enn and not experimentation:
         ER = ExperimentRecord(

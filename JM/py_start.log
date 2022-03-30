@@ -716,3 +716,8 @@ Final Run Statistics: ---
  Number of state events                          : 2
  Number of time events            WARNING:root:The environment variable SEPARATE_PROCESS_JVM is not set. Trying JAVA_HOME instead.
 
+2022-03-17 10:28:15,151 - main.py[line:46] - DEBUG: 69a5c86f9a46
+2022-03-25 04:34:59,041 - main.py[line:47] - DEBUG: 0.0.0.0
+2022-03-25 04:53:15,658 - main.py[line:54] - DEBUG: {u'modelname': u'Modelica.Blocks.Examples.Filter', u'final_time': 0.9, u'ncp': 500.0, u'start_time': 0.0, u'rtol': 1e-06, u'mo_path': u'/omlibrary/Modelica 3.2.3', u'result_name': u'result_res.mat', u'type': u'compile', u'result_file_path': u'/public/UserFiles/ModelResult/wanghailong/Filter/20220325125315639673/'}
+2022-03-25 04:53:15,663 - /JM/JM_install/Python/pymodelica/compiler.py[line:415] - WARNING: The environment variable SEPARATE_PROCESS_JVM is not set. Trying JAVA_HOME instead.
+Could not find file: /omlibrary/Modelica 3.2.3 (No such file or directory)

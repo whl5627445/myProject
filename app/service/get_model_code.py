@@ -11,6 +11,7 @@ def GetModelCode(model_name, model_file_path=None, package_name=None):
     data = data[1:-2]
     return data
 
+
 def GetModelPath(model_name):
     data = omc.getSourceFile(model_name)
     return data

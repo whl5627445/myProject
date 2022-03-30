@@ -11,7 +11,7 @@
     2204：ssh登录端口
     56789：内部服务端口
 
-    sudo docker run -itd  -p 56789:56789 -v /home/simtek/dev/omlibrary/:/omlibrary -v /home/simtek/dev/public/:/public -v /home/simtek/dev/JM:/JM --name jm-v2.2 --network jm-v1.0 --restart always mihoutao/jmodelica:v2.2 /start.sh
+    sudo docker run -itd  -p 56789:56789 -v /home/simtek/code/omlibrary/:/omlibrary -v /home/simtek/code/public/:/public -v /home/simtek/code/JM:/JM --name jm-v2.2 --restart always mihoutao/jmodelica:v2.2 /start.sh
 
 
 

@@ -1,6 +1,7 @@
 # -- coding: utf-8 --
 import copy
 import json
+import logging
 import re
 from datetime import datetime
 
@@ -284,6 +285,7 @@ async def CopyClassView (item: CopyClassModel, request: Request):
                 ModelsInformationAll.package_name == package_name,
                 ModelsInformationAll.package_id == package.id,
                 ModelsInformationAll.model_name == item.class_name,
+                ModelsInformationAll.parent_name == item.parent_name,
                 ModelsInformationAll.sys_or_user == username,
                 ).first()
         if model:
@@ -612,7 +614,7 @@ async def DeleteConnectionAnnotationView(item: DeleteConnectionModel, request: R
     package = session.query(ModelsInformation).filter_by(id=item.package_id, sys_or_user=username).first()
     if package:
         result = DeleteConnection(item.model_name_all, item.connect_start, item.connect_end, package.file_path, package.package_name)
-        if result  == "Ok":
+        if result == "Ok":
             res.msg = "删除成功"
         else:
             res.err = "删除失败: " + result
@@ -650,6 +652,28 @@ async def UpdateConnectionAnnotationView(item: UpdateConnectionAnnotationModel, 
     else:
         res.err = "连接修改失败"
         res.status = 2
+    return res
+
+
+@router.get("/exists", response_model=ResponseModel)
+async def existsView(package_id: str, model_name: str, request: Request):
+    """
+    # 检查模型是否存在
+    ## package_id： 包id
+    ## model_name：模型全称
+    ## return: 返回true or false
+    """
+    res = InitResponseModel()
+    username = request.user.username
+    package = session.query(ModelsInformation).filter_by(id=package_id).filter(ModelsInformation.sys_or_user.in_(["sys", username])).first()
+    model = session.query(ModelsInformationAll).filter(
+            ModelsInformationAll.package_id == package_id,
+            ModelsInformationAll.model_name_all == model_name,
+            ).filter(ModelsInformationAll.sys_or_user.in_(["sys", username])).first()
+    if package or model:
+        res.data.append(True)
+    else:
+        res.data.append(False)
     return res
 
 
