@@ -1,9 +1,11 @@
 # -- coding: utf-8 --
+import logging
+
 from config.omc import omc
 from app.service.load_model_file import LoadModelFile
 
 
-def ComponentsVerification(class_name, component_name):
+def ComponentsVerification(class_name, component_name, model_name_all):
     # LoadModelFile(package_name, file_path)
     class_information = omc.getClassInformation(class_name)
     if class_information:
@@ -12,7 +14,7 @@ def ComponentsVerification(class_name, component_name):
             return False, "不能插入：" + class_name + ", 这是一个 \"" + class_type + " \"类型。组件视图层只允许有model、class、connector或者block。"
     else:
         return False, ""
-    data = omc.getComponents(class_name)
+    data = omc.getElements(model_name_all)
     if data != "Error":
         for i in data:
             if component_name in i:
@@ -24,7 +26,7 @@ def ComponentsVerification(class_name, component_name):
 
 def AddComponent(new_component_name, old_component_name, model_name_all, origin, extent, rotation, file_path, package_name):
     LoadModelFile(package_name, file_path)
-    v, err = ComponentsVerification(old_component_name, new_component_name)
+    v, err = ComponentsVerification(old_component_name, new_component_name, model_name_all)
     if not v:
         return False, err
     result = omc.addComponent(new_component_name, old_component_name, model_name_all, origin, extent, rotation)
