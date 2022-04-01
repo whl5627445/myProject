@@ -14,6 +14,7 @@ from app.BaseModel.simulate import DeleteConnectionModel, DeletePackageModel, Ge
     UpdateConnectionNamesModel
 from app.model.ModelsPackage.ModelsInformation import ModelsInformation, ModelsInformationAll
 from app.model.Simulate.SimulateRecord import SimulateRecord
+from app.service.save_class_names import SaveClassNames
 from app.service.component_operation import AddComponent, DeleteComponent, UpdateComponent
 from app.service.connection_operation import AddConnection, DeleteConnection, UpdateConnectionAnnotation, \
     UpdateConnectionNames
@@ -27,6 +28,7 @@ from app.service.set_component_modifier_value import SetComponentModifierValue
 from app.service.set_component_properties import SetComponentProperties
 from config.DB_config import DBSession
 from config.omc import omc
+from library.file_operation import FileOperation
 from router.simulatemodel_router import router
 
 session = DBSession()
@@ -91,7 +93,7 @@ async def GetListModelView (model_name: str, request: Request):
 @router.get("/getgraphicsdata", response_model=ResponseModel)
 async def GetGraphicsDataView (model_name: str, request: Request, component_name: str = None):
     """
-    # 获取模型的画图数据，一次性返回， 第一次调用时间较久，有缓存机制，redis
+    # 获取模型的画图数据，一次性返回
     ## modelname: 需要查询的模型名称，全称， 例如“Modelica.Blocks.Examples.PID_Controller”
     ## component_name: 模型的组件名称，用于获取单个组件时传入
     ## sys_user: 模型是系统模型还是用户模型，系统模型固定是“sys”, 用户模型固定是“user”
@@ -99,23 +101,16 @@ async def GetGraphicsDataView (model_name: str, request: Request, component_name
     """
     res = InitResponseModel()
     username = request.user.username
-    # r_data = r.hget("GetGraphicsData_" + username, model_name)
-    # if r_data:
-    #     G_data = r_data.decode()
-    # else:
     model_file_path = None
-    # if sys_user == "user":
     package_name = model_name.split(".")[0]
     package = session.query(ModelsInformation).filter_by(package_name=package_name, sys_or_user=username).first()
     if package:
         model_file_path = package.file_path
+    GraphicsData = GetGraphicsData(username)
     if not component_name:
-        data = GetGraphicsData().get_data([model_name], model_file_path)
+        data = GraphicsData.get_data([model_name], model_file_path)
     else:
-        data = GetGraphicsData().get_one_data([model_name], component_name, model_file_path)
-    # G_data = json.dumps(data)
-    # r.hset("GetGraphicsData_" + username, model_name, G_data)
-    # res.data = json.loads(G_data)
+        data = GraphicsData.get_one_data([model_name], component_name, model_file_path)
     res.data = data
     return res
 
@@ -295,13 +290,38 @@ async def CopyClassView (item: CopyClassModel, request: Request):
         model_file_path = package.file_path.split("/")
         model_file_path[-2] = datetime.now().strftime('%Y%m%d%H%M%S%f')
         model_file_path = "/".join(model_file_path)
-        save_result = SaveClass(item.class_name, item.copied_class_name, item.parent_name, package_name, model_file_path=package.file_path, new_model_file_path=model_file_path)
-        if save_result:
-            package.file_path = model_file_path
+        package.file_path = model_file_path
+        file_path = model_file_path
+        filename = None
+    elif not item.parent_name:
+        model_file_path = "public/UserFiles/UploadFile/" + request.user.username + "/" + str(
+            datetime.now().strftime('%Y%m%d%H%M%S%f'))
+        file_path = model_file_path + "/" + item.class_name + ".mo"
+        filename = item.class_name + ".mo"
+    else:
+        res.err = "复制失败"
+        res.status = 1
+        return res
+    save_result, msg = SaveClass(item.class_name, item.copied_class_name, item.parent_name, package_name,
+                                 new_model_file_path=file_path, file_name=filename)
+    logging.debug(save_result)
+    logging.debug(msg)
+    if save_result:
+        if not item.parent_name:
+            model = ModelsInformation(
+                    package_name=item.class_name,
+                    model_name=item.class_name,
+                    haschild=False,
+                    child_name=[],
+                    sys_or_user=username,
+                    file_path=file_path,
+                    )
+            session.add(model)
+        else:
             model = session.query(ModelsInformationAll).filter(
-                            ModelsInformationAll.model_name_all == item.copied_class_name,
-                            ModelsInformationAll.package_name == package_name
-                        ).first()
+                    ModelsInformationAll.model_name_all == item.copied_class_name,
+                    ModelsInformationAll.package_name == package_name
+                    ).first()
             if model:
                 child_name = model.child_name
                 haschild = model.haschild
@@ -332,15 +352,12 @@ async def CopyClassView (item: CopyClassModel, request: Request):
             m_child_name.append(item.class_name)
             model_parent.child_name = m_child_name
             model_parent.haschild = True
-            res.msg = "复制成功"
-            session.flush()
-            session.close()
-        else:
-            res.err = "复制失败"
-            res.status = 1
+        res.msg = msg
+        session.flush()
+        session.close()
     else:
-        res.err = "复制失败"
-        res.status = 2
+        res.err = msg
+        res.status = 1
     return res
 
 
@@ -353,6 +370,7 @@ async def DeletePackageAndModelView(request: Request, item: DeletePackageModel):
     ## class_name: 被删除的的模型名称，例如“Scenario1_Status_test”
     ## return: 返回json格式数据,告知是否成功
     """
+    res = InitResponseModel()
     package_name = item.package_name
     package_id = item.package_id
     parent_name = item.parent_name
@@ -366,7 +384,7 @@ async def DeletePackageAndModelView(request: Request, item: DeletePackageModel):
             model_file_path = package.file_path.split("/")
             model_file_path[-2] = datetime.now().strftime('%Y%m%d%H%M%S%f')
             model_file_path = "/".join(model_file_path)
-            save_result = SaveClass(class_name=model_name_all, package_name=package_name , model_file_path=package.file_path, copy_or_delete="delete", new_model_file_path=model_file_path)
+            save_result, msg = SaveClass(class_name=model_name_all, package_name=package_name, copy_or_delete="delete", new_model_file_path=model_file_path)
             if save_result:
                 package.file_path = model_file_path
                 session.query(ModelsInformationAll).filter_by(model_name_all=model_name_all, package_id=package_id, sys_or_user=username).delete(synchronize_session=False)
@@ -385,10 +403,13 @@ async def DeletePackageAndModelView(request: Request, item: DeletePackageModel):
                     package.child_name = [i for i in child_name if i != class_name]
                     if not package.child_name:
                         package.haschild = False
+            else:
+                res.err = msg
+                res.status = 1
+                return res
     else:
         session.query(ModelsInformation).filter_by(id=package_id, sys_or_user=username).delete(synchronize_session=False)
         session.query(ModelsInformationAll).filter_by(package_id=package_id, sys_or_user=username).delete(synchronize_session=False)
-    res = InitResponseModel()
     session.flush()
     session.close()
     res.msg = "删除成功"

@@ -14,7 +14,6 @@ from starlette.authentication import (
     AuthenticationBackend, SimpleUser,
     AuthCredentials
     )
-from config.WebsocketManager import manager
 from config.redis_config import r
 import json
 import random
@@ -70,74 +69,4 @@ async def LoginAuth (request: Request, call_next):
 #     if request.headers.get("Origin"):
 #         response.headers["Access-Control-Allow-Origin"] = request.headers["Origin"]
 #     return response
-MANAGER = manager
 
-
-@app.websocket("/notice/")
-async def NotificationView (ws: WebSocket, username: str):
-    """
-    # 消息通知，目前是仿真日志
-    :return: 暂时只被动接受消息， 服务器不接受数据
-    """
-    # logging.debug(ws.__dict__)
-    try:
-        ws.num = random.randint(5000, 9999)
-        await MANAGER.connect(ws, username)
-        while True:
-            res = {"status": False, "msg": ""}
-            req_data = await ws.receive_text()
-            req_data = json.loads(req_data)
-            # if type(req_data) is not dict:
-            #     res_data = "ok".encode()
-            # else:
-            res_data = r.rpop(req_data.get("user", "") + "_" + "notification")
-            if res_data:
-                res["msg"] = res_data.decode()
-                res["status"] = True
-            data = json.dumps(res, ensure_ascii=False)
-            await manager.send_personal_message(data, ws, username)
-    except WebSocketDisconnect:
-        manager.disconnect(ws, username)
-        # await manager.send_personal_message(res, websocket)
-
-
-html = """
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>Chat</title>
-    </head>
-    <body>
-        <h1>WebSocket Chat</h1>
-        <form action="" onsubmit="sendMessage(event)">
-            <input type="text" id="messageText" autocomplete="off"/>
-            <button>Send</button>
-        </form>
-        <ul id='messages'>
-        </ul>
-        <script>
-            var ws = new WebSocket("ws://119.3.155.11:4327/notice/");
-
-            ws.onmessage = function(event) {
-                console.log(event.data)
-                var messages = document.getElementById('messages')
-                var message = document.createElement('li')
-                var content = document.createTextNode(event.data)
-                message.appendChild(content)
-                messages.appendChild(message)
-            };
-            function sendMessage(event) {
-                var input = document.getElementById("messageText")
-                ws.send(input.value)
-                input.value = ''
-                event.preventDefault()
-            }
-        </script>
-    </body>
-</html>
-"""
-
-
-@app.get("/ws")
-async def get ():
-    return HTMLResponse(html)

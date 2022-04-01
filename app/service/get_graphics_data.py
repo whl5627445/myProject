@@ -8,7 +8,7 @@ from app.service.load_model_file import LoadModelFile
 
 class GetGraphicsData(object):
 
-    def __init__ (self):
+    def __init__ (self, username):
         self.InheritedClasses_data = []
         self.DiagramAnnotation_data = []
         self.Components_data = []
@@ -16,6 +16,7 @@ class GetGraphicsData(object):
         self.data = [[], []]
         self.mod = mod
         self.package_name = None
+        self.username = username
 
     def getICList (self, name):
         data_list = name
@@ -172,7 +173,7 @@ class GetGraphicsData(object):
         self.package_name = name_list[0].split(".")[0]
         if model_file_path:
             path = os.getcwd() + "/" + model_file_path
-            LoadModelFile(self.package_name, path)
+            LoadModelFile(self.package_name, path, username=self.username)
         name_list = self.getICList(name_list)
         DiagramAnnotation_data = self.mod.getDiagramAnnotationList(name_list)
         Components_data = self.mod.getComponentsList(name_list)

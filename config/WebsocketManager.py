@@ -29,9 +29,9 @@ class WebsocketConnectionManager(object):
                         if connection.client_state != 2:
                             await connection.send_text(message)
                         else:
-                            self.disconnect(websocket, username)
+                            self.disconnect(connection, username)
                     except WebSocketDisconnect:
-                        self.disconnect(websocket, username)
+                        self.disconnect(connection, username)
 
     # 所有连接发送消息
     async def broadcast(self, message: str, websocket, username):
