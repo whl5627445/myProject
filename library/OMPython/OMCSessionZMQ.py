@@ -340,9 +340,9 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
         result = self.sendExpression(cmd)
         return result
 
-    def setComponentProperties (self, class_name, component_name, final="false", protected="false", replaceable="false",
+    def setComponentProperties (self, class_name, new_component_name, final="false", protected="false", replaceable="false",
                                 variabilty="", inner="false", outer="false", causality=""):
-        cmd_parameter_list = [class_name, ",", component_name, ",{", final, ",false,", protected, ",", replaceable,
+        cmd_parameter_list = [class_name, ",", new_component_name, ",{", final, ",false,", protected, ",", replaceable,
                               "},{\"", variabilty, "\"}", ",{", inner, ",", outer, "},{\"", causality, "\"}"]
         cmd = "setComponentProperties(" + "".join(cmd_parameter_list) + ")"
         cmd = cmd.replace("False", "false")
@@ -477,6 +477,29 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
         #     result = ""
         return result
 
+    def renameComponentInClass (self, class_name, old_component_name, new_component_name):
+        # renameComponentInClass(qwe123,sine1,sine1222)
+        cmd = "renameComponentInClass(" + class_name + "," + old_component_name + ", " + new_component_name + ")"
+        result = self.sendExpression(cmd)
+        return result
+
+    def checkModel (self, class_name):
+        # checkModel(Applications.Examples.ElectricGrid_noSCOP)
+        cmd = "checkModel(" + class_name + ")"
+        result = self.sendExpression(cmd)
+        return result
+
+    def getMessagesStringInternal (self):
+        # getMessagesStringInternal()
+        cmd = "getMessagesStringInternal()"
+        result = self.sendExpression(cmd,False)
+        return result
+
+    def getUses (self, package_name):
+        # getUses(Guideline36)
+        cmd = "getUses(" + package_name + ")"
+        result = self.sendExpression(cmd)
+        return result
 
 if __name__ == '__main__':
     def loadString (model_str, path, merge="false"):

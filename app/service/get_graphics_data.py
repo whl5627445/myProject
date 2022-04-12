@@ -171,9 +171,7 @@ class GetGraphicsData(object):
 
     def get_data (self, name_list, model_file_path=None):
         self.package_name = name_list[0].split(".")[0]
-        if model_file_path:
-            path = os.getcwd() + "/" + model_file_path
-            LoadModelFile(self.package_name, path, username=self.username)
+        LoadModelFile(self.package_name, model_file_path, username=self.username)
         name_list = self.getICList(name_list)
         DiagramAnnotation_data = self.mod.getDiagramAnnotationList(name_list)
         Components_data = self.mod.getComponentsList(name_list)

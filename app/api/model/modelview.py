@@ -26,6 +26,7 @@ from app.service.get_model_code import GetModelCode
 from app.service.get_model_parameters import GetModelParameters
 from app.service.set_component_modifier_value import SetComponentModifierValue
 from app.service.set_component_properties import SetComponentProperties
+from app.service.check_model import CheckModel
 from config.DB_config import DBSession
 from config.omc import omc
 from library.file_operation import FileOperation
@@ -203,7 +204,6 @@ async def GetComponentPropertiesView (model_name: str, component_name: str, sys_
             return res
         file_path = model.file_path
     result = GetComponents(model_name, component_name, file_path, package_name)
-    print(result)
     data = {
         "model_name": model_name,
         "component_name": component_name,
@@ -224,7 +224,8 @@ async def SetComponentPropertiesView (item: SetComponentPropertiesModel, request
     """
     # 设置模型组件的属性数据，一次性返回
     ## class_name: 需要设置参数的模型名称，全称，例如“ENN.Examples.Scenario1_Status”
-    ## component_name: 需要查询的组件别名，全称，“PID”
+    ## old_component_name: 需要设置的组件名，全称，“PID”
+    ## new_component_name: 需要设置的组件新名称，全称，“PID”
     ## final: "true" or "false",
     ## protected: "true" or "false",
     ## replaceable: "true" or "false",
@@ -236,7 +237,8 @@ async def SetComponentPropertiesView (item: SetComponentPropertiesModel, request
     res = InitResponseModel()
     parameters_data = {
         "class_name": item.model_name,
-        "component_name": item.component_name,
+        "old_component_name": item.old_component_name,
+        "new_component_name": item.new_component_name,
         "final": item.final,
         "protected": item.protected,
         "replaceable": item.replaceable,
@@ -252,8 +254,8 @@ async def SetComponentPropertiesView (item: SetComponentPropertiesModel, request
         res.err = "设置失败"
         res.status = 2
         return res
-    result = SetComponentProperties(model.file_path, package_name, **parameters_data)
-    if result == "Ok":
+    result = SetComponentProperties(model.file_path, package_name, parameters_data)
+    if result:
         res.msg = "设置成功"
     else:
         res.err = "设置失败"
@@ -695,6 +697,24 @@ async def existsView(package_id: str, model_name: str, request: Request):
         res.data.append(True)
     else:
         res.data.append(False)
+    return res
+
+
+@router.get("/checkmodel", response_model=ResponseModel)
+async def CheckModelView(package_id: str, model_name: str, request: Request):
+    """
+    # 检查模型是否合规
+    ## package_id： 包id
+    ## model_name：模型全称
+    ## return: 返回对象数组，包含多种type，不同type表示信息的类型， message表示内容
+    """
+    res = InitResponseModel()
+    username = request.user.username
+    package = session.query(ModelsInformation).filter_by(id=package_id).filter(ModelsInformation.sys_or_user.in_(["sys", username])).first()
+
+    if package:
+        result, data_list = CheckModel(model_name)
+        res.data = data_list
     return res
 
 

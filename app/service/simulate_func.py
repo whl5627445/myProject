@@ -137,8 +137,8 @@ def JModelicaSimulate (SRecord: object, result_file_path: str, model_name: str, 
             msg["type"] = "simulate"
             msg["modelname"] = model_name_
             logging.debug("msg: " + str(msg))
-            r.lpush(username + "_" + "notification",
-                    str(datetime.now().strftime('%Y-%m-%d %H:%M:%S; ')) + model_name + " 编译成功，开始仿真")
+            r_data = {"message": model_name + " 编译成功，开始仿真"}
+            r.lpush(username + "_" + "notification", json.dumps(r_data))
             client = socket.socket()
             client.connect(("119.3.155.11", 56789))
             client.send(json.dumps(msg).encode())
@@ -173,8 +173,8 @@ def OpenModelicaSimulate (SRecord: object, result_file_path: str, model_name: st
     buildModel_res = omc.buildModel(className=model_name, fileNamePrefix=result_file_path,
                                     simulate_parameters_data=simulate_parameters_data)
     if buildModel_res:
-        r.lpush(username + "_" + "notification",
-                str(datetime.now().strftime('%Y-%m-%d %H:%M:%S; ')) + model_name + " 编译成功，开始仿真")
+        r_data = {"message": model_name + " 编译成功，开始仿真"}
+        r.lpush(username + "_" + "notification", json.dumps(r_data))
         simulate_result_str = os.popen(result_file_path + "result").read()
         if "successfully" in simulate_result_str:
             res = True
@@ -198,7 +198,6 @@ def DymolaSimulate (SRecord: object, username, model_name, file_path=None, simul
     url = package_name + "/" + model_name.replace(".", "-") + "/" + str(datetime.now().strftime('%Y%m%d%H%M%S%f')) + ""
     url_dict = {"url":  username + "/" + url}
     file_name = package_name + ".mo"
-
     data = {"code": 200}
     try:
         model_str = GetModelCode(package_name, file_path, package_name)
@@ -222,8 +221,8 @@ def DymolaSimulate (SRecord: object, username, model_name, file_path=None, simul
             compile_data = compile_res.json()
             logging.debug("compile_data: " + str(compile_data))
             if compile_data["code"] == 200:
-                r.lpush(username + "_" + "notification",
-                        str(datetime.now().strftime('%Y-%m-%d %H:%M:%S; ')) + model_name + " 编译成功，开始仿真")
+                r_data = {"message": model_name + " 编译成功，开始仿真"}
+                r.lpush(username + "_" + "notification", json.dumps(r_data))
                 json_data_dict = {
                     "id": 0,
                     "fileName": fileName,
@@ -287,8 +286,8 @@ def Simulate (SRecord_id, username: str, model_name: str, s_type="OM", file_path
     if file_path:
         model_str = GetModelCode(package_name, file_path, package_name)
         FileOperation().write_file("/".join(file_path.split("/")[:-1]), package_name + ".mo", model_str)
-    r.lpush(username + "_" + "notification",
-            str(datetime.now().strftime('%Y-%m-%d %H:%M:%S; ')) + model_name + " 模型开始编译")
+    r_data = {"message": model_name + " 模型开始编译"}
+    r.lpush(username + "_" + "notification", json.dumps(r_data))
     if s_type == "OM":
         s_result, s_str = OpenModelicaSimulate(SRecord, result_file_path, model_name, file_path,
                                                simulate_parameters_data, username)
@@ -301,13 +300,13 @@ def Simulate (SRecord_id, username: str, model_name: str, s_type="OM", file_path
         return "暂不支持此仿真类型"
     if s_result:
         SimulateDataHandle(SRecord, result_file_path, username, model_name, simulate_result_str=s_str)
-        r.lpush(username + "_" + "notification",
-                str(datetime.now().strftime('%Y-%m-%d %H:%M:%S; ')) + model_name + " 模型仿真完成")
+        r_data = {"message": model_name + " 模型仿真完成"}
+        r.lpush(username + "_" + "notification", json.dumps(r_data))
     else:
         SRecord.simulate_result_str = s_str
         session.flush()
-        r.lpush(username + "_" + "notification",
-                str(datetime.now().strftime('%Y-%m-%d %H:%M:%S; ')) + model_name + " 仿真失败")
+        r_data = {"message": model_name + " 仿真失败"}
+        r.lpush(username + "_" + "notification", json.dumps(r_data))
     session.close()
 
 # def Simulate(SRecord_id, username: str, model_name: str, s_type="OM", file_path: str = None, simulate_parameters_data = None):

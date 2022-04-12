@@ -1,0 +1,47 @@
+# -- coding: utf-8 --
+import logging
+
+from config.omc import omc
+
+
+def CheckModel(model_name):
+    result = omc.checkModel(model_name)
+    if not result:
+        data_list = GetMessagesStringInternal()
+        return False, data_list
+    else:
+        return True, [{"type": "message","message":result}]
+
+
+def GetMessagesStringInternal():
+    res = omc.getMessagesStringInternal()
+    res = res[1:-1]
+    res = res.split(';,')
+    message = []
+    level = []
+    data_list = []
+    for i in res:
+        data = i.strip().split(',\n')
+        for j in data:
+            j_data = j.strip()
+            if j_data.startswith('message'):
+                message.append(j_data.replace('message = ', '')[1:-1])
+            if j_data.startswith('level'):
+                level.append(j_data.split('.')[-1])
+    for i in range(len(message)):
+        data_list.append({
+            "type": level[i],
+            "message": message[i],
+            })
+    return data_list
+
+
+def CheckUsesPackage(package_name):
+    result = omc.getUses(package_name)
+    logging.debug(result)
+    classnames = omc.getClassNames()
+    missing_library = []
+    for i in result:
+        if i[0] not in classnames:
+            missing_library.append(i)
+    return missing_library

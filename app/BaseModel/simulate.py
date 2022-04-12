@@ -26,7 +26,8 @@ class SetComponentModifierValueModel(BaseModel):
 
 class SetComponentPropertiesModel(BaseModel):
     model_name: str
-    component_name: str
+    old_component_name: str
+    new_component_name: str
     final: str
     protected: str
     replaceable: str

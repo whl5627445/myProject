@@ -1,7 +1,10 @@
 # -- coding: utf-8 --
+import logging
+
 from app.model.ModelsPackage.ModelsInformation import ModelsInformationAll, ModelsInformation
 from config.DB_config import DBSession
 from config.omc import omc
+from app.service.check_model import GetMessagesStringInternal, CheckUsesPackage
 import os
 import datetime
 from app.service.load_model_file import LoadModelFile
@@ -51,6 +54,7 @@ def GetIconsData(name):
 def SaveClassNames(mo_path=None, init_name="Modelica", sys_or_user="sys", package_id=""):
     data_dict = {}
     res = False
+    data_list = []
     model_root_data = {
         init_name: {
                 "parent_name": "",
@@ -58,10 +62,18 @@ def SaveClassNames(mo_path=None, init_name="Modelica", sys_or_user="sys", packag
                 }
             }
     if mo_path:
+        LoadModelFile(package_name=init_name, username=sys_or_user)
+        LoadModelFile(path=mo_path, check=False)
+        use_package = CheckUsesPackage(init_name)
+        logging.debug(use_package)
+        if use_package:
+            data_list.append({"type": "error", "message": "Minssing " + ",".join(
+                        [i[0] + "(" + i[1] + ")" for i in use_package]) + " and other libraries"})
+            return res, None, data_list
         loadFile_result = omc.loadFile(mo_path)
-        # LoadModelFile(init_name, path)
+        data_list = GetMessagesStringInternal()
         if not loadFile_result:
-            return res, None
+            return res, None, data_list
     ClassNames = GetClassNames(model_root_data, init_name, data_dict)
     M_id = None
     for k, v in ClassNames.items():
@@ -107,7 +119,7 @@ def SaveClassNames(mo_path=None, init_name="Modelica", sys_or_user="sys", packag
     session.flush()
     session.close()
     res = True
-    return res, M_id
+    return res, M_id, data_list
 
 
 if __name__ == '__main__':

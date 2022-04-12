@@ -2,6 +2,7 @@
 from config.omc import omc
 from app.service.load_model_file import LoadModelFile
 from app.service.get_model_code import GetModelCode
+from app.service.check_model import GetMessagesStringInternal
 import json
 
 
@@ -40,7 +41,10 @@ def UpdateModelicaClass(model_str, path="", merge="false"):
     m_str = m_str.replace("&gt;", ">")
     m_str = m_str.replace("&amp;", "&")
     load_string = omc.loadString(m_str, path, merge=merge)
-    return load_string
+    if not load_string:
+        err_data = GetMessagesStringInternal()
+        return False, err_data
+    return load_string, ""
 
 if __name__ == '__main__':
     CreateModelicaClass("q123456", "model", {

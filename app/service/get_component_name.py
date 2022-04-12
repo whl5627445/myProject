@@ -2,17 +2,15 @@
 from config.omc import omc
 from app.service.load_model_file import LoadModelFile
 import re
-
+from config.modelica_config import modelica_keywords
 
 def GetComponentName(class_name, component_name_all, file_path=None, package_name=None):
-    # if file_path:
-    #     LoadModelFile(package_name, file_path)
     data = omc.getComponents(class_name)
     component_name = component_name_all.split(".")[-1].lower()
     name_num = 0
     name_dict = {}
-    modelica_keyword = ["der", "and", "or", "not", "constant"]
-    if component_name in modelica_keyword:
+
+    if component_name in modelica_keywords:
         name_num += 1
     for i in data:
         expression = "^" + component_name + "\d*$"
