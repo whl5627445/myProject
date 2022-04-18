@@ -19,5 +19,5 @@
 # openmodelica镜像使用
     sudo docker build -t omc-v1 .
 ## docker文件夹路径下的dockerfile可直接构建， 下面命令直接执行运行容器即可，--name是容器名称， -p是python服务对外端口
-        sudo docker run -itd  --restart always -v /home/simtek/code:/home/simtek/code -v /home/simtek/code/omlibrary/:/usr/bin/../lib/omlibrary --name wanghailong --network yssim-net -p 4327:8084 omc-v1 /home/simtek/docker/start.sh
+        sudo docker run -itd -e USERNAME=wanghailong  --restart always -v /home/simtek/code:/home/simtek/code -v /home/simtek/code/omlibrary/:/usr/bin/../lib/omlibrary --name wanghailong --network yssim-net -p 4327:8084 omc-v1 /home/simtek/docker/start.sh
 

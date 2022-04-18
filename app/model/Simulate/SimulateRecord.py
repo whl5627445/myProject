@@ -10,6 +10,8 @@ class SimulateRecord(Base):
     __tablename__ = 'py_simulate_record'
 
     id = Column(Integer, primary_key=True)
+    package_id = Column(VARCHAR)
+    userspace_id = Column(VARCHAR)
     username = Column(VARCHAR)
     simulate_model_name = Column(VARCHAR)
     simulate_model_result_path = Column(VARCHAR)

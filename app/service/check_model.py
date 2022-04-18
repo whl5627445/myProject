@@ -38,10 +38,11 @@ def GetMessagesStringInternal():
 
 def CheckUsesPackage(package_name):
     result = omc.getUses(package_name)
-    logging.debug(result)
     classnames = omc.getClassNames()
+
     missing_library = []
     for i in result:
-        if i[0] not in classnames:
-            missing_library.append(i)
+        if type(i) is list:
+            if i[0] not in classnames:
+                missing_library.append(i)
     return missing_library

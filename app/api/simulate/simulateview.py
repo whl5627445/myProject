@@ -30,7 +30,7 @@ session = DBSession()
 
 
 @router.get("/getsimulationoptions", response_model=ResponseModel)
-async def GetSimulationOptionsView(request: Request, model_name: str):
+async def GetSimulationOptionsView(request: Request, package_id: str, model_name: str):
     """
         # 仿真参数获取接口
         ## model_name: 模型名称，
@@ -42,16 +42,11 @@ async def GetSimulationOptionsView(request: Request, model_name: str):
              interval：间隔
     """
     res = InitResponseModel()
-    package_name = model_name.split(".")[0]
-    # MI_all = session.query(ModelsInformationAll).filter(
-    #         ModelsInformationAll.sys_or_user.in_([request.user.username, "sys"]),
-    #         ModelsInformationAll.model_name_all == model_name
-    # ).first()
-    model = session.query(ModelsInformation).filter(
-            ModelsInformation.sys_or_user.in_([request.user.username, "sys"]),
-            ModelsInformation.package_name == package_name
-    ).first()
-    data = GetSimulationOptions(model_name, model.file_path)
+    username = request.user.username
+    package = session.query(ModelsInformation).filter(ModelsInformation.sys_or_user.in_(["sys", username]), ModelsInformation.id==package_id).first()
+    if not package:
+        raise HTTPException(status_code=401, detail="not found")
+    data = GetSimulationOptions(model_name)
     res.data.append(data)
     return res
 
@@ -71,6 +66,7 @@ async def SetSimulationOptionsView(request: Request, item: SetSimulationOptionsM
         interval：间隔
     ## return:
     """
+    # TODO: 系统模型仿真参数设置疑似无效，待确认
     res = InitResponseModel()
     experiment = item.experiment
     StartTime = experiment["startTime"]
@@ -78,7 +74,7 @@ async def SetSimulationOptionsView(request: Request, item: SetSimulationOptionsM
     tolerance = experiment["tolerance"]
     interval = experiment['interval']
     username = request.user.username
-    package = session.query(ModelsInformation).filter_by(sys_or_user=username, package_name=item.package_name).first()
+    package = session.query(ModelsInformation).filter(ModelsInformation.sys_or_user.in_(["sys", username]), ModelsInformation.id==item.package_id).first()
     if package:
         result =SetSimulationOptions(model_name=item.model_name, StartTime=StartTime, StopTime=stopTime, Tolerance=tolerance, Interval=interval)
         if result is True:
@@ -93,6 +89,14 @@ async def SetSimulationOptionsView(request: Request, item: SetSimulationOptionsM
 
 @router.get("/getmodelstate", response_model=ResponseModel)
 async def GetModelStateView (request: Request, package_id: str, model_name: str):
+    """
+    ## 1、初始状态, 仿真完成也是此状态
+    ## 2、开始编译
+    ## 3、编译完成
+    ## 4、正在仿真
+    ## model_name: 模型名称， 全称
+    ## package_id: 模型所在包的id
+    """
     res = InitResponseModel()
     model_record = session.query(SimulateRecord).filter_by(username=request.user.username, simulate_model_name=model_name).\
         filter(SimulateRecord.simulate_status.notin_(["仿真失败","仿真已结束"])).first()
@@ -103,10 +107,11 @@ async def GetModelStateView (request: Request, package_id: str, model_name: str)
     return res
 
 
-@router.post("/simulate", response_model=ResponseModel)
+@router.post("/", response_model=ResponseModel)
 async def ModelSimulateView (item: ModelSimulateModel, background_tasks: BackgroundTasks, request: Request):
     """
     # 仿真接口，用于模型的仿真计算
+    ## package_id: 模型所在包的id,
     ## simulate_type: 仿真模型时使用的求解器是哪种,
     ## model_name: 仿真模型的名字,
     ## start_time: 仿真参数，仿真的开始时间，单位是整数秒。
@@ -116,6 +121,7 @@ async def ModelSimulateView (item: ModelSimulateModel, background_tasks: Backgro
     ## return: 立即返回是否已经开始计算，仿真结果需用查看记录列表当中的记录状态是否为"仿真完成"
     """
     res = InitResponseModel()
+    space_id = request.user.user_space
     simulate_parameters_data = {
         "startTime": 0.0 if item.start_time == "" else float(item.start_time),
         "stopTime": 4.0 if item.start_time == "" else float(item.stop_time),
@@ -127,19 +133,19 @@ async def ModelSimulateView (item: ModelSimulateModel, background_tasks: Backgro
     simulate_type = "OM" if item.simulate_type == "" else item.simulate_type
     if simulate_type not in ["OM", "JM", "DM"]:
         return res
-    package_name = item.model_name.split(".")[0]
     model = session.query(ModelsInformation).filter(
             ModelsInformation.sys_or_user.in_([request.user.username, "sys"]),
-            ModelsInformation.package_name == package_name
+            ModelsInformation.id == item.package_id
     ).first()
     SRecord = SimulateRecord(
             username=request.user.username,
+            package_id=item.package_id,
             simulate_model_name=item.model_name,
             simulate_status="仿真进行中",
     )
     session.add(SRecord)
     session.flush()
-    background_tasks.add_task(Simulate, SRecord.id, request.user.username, item.model_name, simulate_type, model.file_path, simulate_parameters_data)
+    background_tasks.add_task(Simulate, space_id, SRecord.id, request.user.username, item.model_name, simulate_type, model.file_path, simulate_parameters_data)
     # SimulateTask.delay(SRecord.id, request.user.username, item.model_name, simulate_type, model.file_path, simulate_parameters_data)
 
     res.msg = "仿真任务正在准备，请等待仿真完成"
@@ -158,11 +164,13 @@ async def SimulateResultView (request: Request, variable: str, model_name: str, 
     ## return: 仿真结束后获取对于记录的仿真结果
     """
     res = InitResponseModel()
+    space_id = request.user.user_space
     result_data = session.query(SimulateResult).filter_by(
             simulate_record_id=id,
             username=request.user.username,
             simulate_model_name=model_name,
-            model_variable_name=variable
+            model_variable_name=variable,
+            userspace_id=space_id
     ).first()
     if result_data:
         variable_data = {
@@ -184,13 +192,16 @@ async def SimulateResultListView (request: Request):
     ## return: 返回对应用户的所有仿真记录
     """
     res = InitResponseModel()
+    space_id = request.user.user_space
     record_list = session.query(
             SimulateRecord.id,
             SimulateRecord.simulate_model_name,
             SimulateRecord.simulate_status,
             SimulateRecord.simulate_start_time,
             SimulateRecord.simulate_end_time
-    ).filter_by(username=request.user.username).order_by(SimulateRecord.simulate_start_time.desc()).all()
+    ).filter_by(username=request.user.username,
+                # userspace_id=space_id
+                ).order_by(SimulateRecord.simulate_start_time.desc()).all()
     if record_list:
         data_list = []
         for i in record_list:
@@ -217,6 +228,7 @@ async def SimulateResultTreeView (id: str, variable_name: str = None):
     ## variable_name: 模型变量名称
     ## return: 返回的是对应节点的所有子节点与其需要的数据。 description：描述， start：值， unit：显示单位， Variables：变量名， haschild：是否有子节点
     """
+    # TODO: 需要重写， 此部分在结果文件中读取后处理
     res = InitResponseModel()
     if not variable_name:
         data = session.query(SimulateResult.model_variable_parent, SimulateResult.model_variable_name, SimulateResult.unit, SimulateResult.description,
@@ -308,10 +320,10 @@ async def ModelCodeSaveView (request: Request, item: ModelCodeSaveModel):
     """
     res = InitResponseModel()
     username = request.user.username
-    package = session.query(ModelsInformation).filter_by(id=item.package_id, package_name=item.package_name, sys_or_user=username).first()
+    package = session.query(ModelsInformation).filter_by(id=item.package_id, sys_or_user=username).first()
     file_path = package.file_path
     if file_path:
-        model_str = GetModelCode(item.package_name, file_path, item.package_name)
+        model_str = GetModelCode(item.package_name)
         FileOperation().write_file("/".join(file_path.split("/")[:-1]), item.package_name + ".mo", model_str)
         res.msg = "保存成功"
     else:

@@ -14,7 +14,6 @@ from app.BaseModel.simulate import DeleteConnectionModel, DeletePackageModel, Ge
     UpdateConnectionNamesModel
 from app.model.ModelsPackage.ModelsInformation import ModelsInformation, ModelsInformationAll
 from app.model.Simulate.SimulateRecord import SimulateRecord
-from app.service.save_class_names import SaveClassNames
 from app.service.component_operation import AddComponent, DeleteComponent, UpdateComponent
 from app.service.connection_operation import AddConnection, DeleteConnection, UpdateConnectionAnnotation, \
     UpdateConnectionNames
@@ -29,6 +28,8 @@ from app.service.set_component_properties import SetComponentProperties
 from app.service.check_model import CheckModel
 from config.DB_config import DBSession
 from config.omc import omc
+from sqlalchemy import or_,and_
+
 from library.file_operation import FileOperation
 from router.simulatemodel_router import router
 
@@ -40,15 +41,21 @@ async def GetRootModelView (request: Request):
     """
     # 获取左侧模型列表接口， 此接口获取系统模型和用户上传模型的根节点列表，暂时没有图标信息
     """
+    # TODO: 需要重写，结果树一次返回
     res = InitResponseModel()
     data = []
-    mn = session.query(ModelsInformation).filter(ModelsInformation.sys_or_user.in_(["sys", request.user.username])).all()
-    for i in mn:
+    space_id = request.user.user_space
+    username = request.user.username
+    logging.debug(space_id)
+    models_obj_list = session.query(ModelsInformation).filter(or_(ModelsInformation.sys_or_user == "sys", and_(ModelsInformation.userspace_id ==space_id, ModelsInformation.sys_or_user == username))).all()
+    logging.debug(models_obj_list)
+    for i in models_obj_list:
         mn_data = {
             "package_id": i.id,
             "package_name": i.package_name,
             "sys_or_user": i.sys_or_user,
-            "haschild": i.haschild
+            "haschild": i.haschild,
+            "image": i.image if i.image else "",
         }
         if i.sys_or_user != "sys":
             mn_data["sys_or_user"] = "user"
@@ -58,7 +65,7 @@ async def GetRootModelView (request: Request):
 
 
 @router.get("/listlibrary", response_model=ResponseModel)
-async def GetListModelView (model_name: str, request: Request):
+async def GetListModelView (package_id: str, model_name: str, request: Request):
     """
     # 获取左侧模型列表接口， 此接口获取系统模型和用户上传模型的子节点节点列表(需用传入父节点名称，返回子节点列表)，暂时没有图标信息
     ## modelname: 模型的父节点名称
@@ -70,19 +77,16 @@ async def GetListModelView (model_name: str, request: Request):
     ma = session.query(
             ModelsInformationAll.model_name,
             ModelsInformationAll.haschild,
-            ModelsInformationAll.sys_or_user
-    ).filter_by(parent_name=model_name).filter(ModelsInformationAll.sys_or_user == username).all()
-    if not ma:
-        ma = session.query(
-            ModelsInformationAll.model_name,
-            ModelsInformationAll.haschild,
-            ModelsInformationAll.sys_or_user
-    ).filter_by(parent_name=model_name).filter(ModelsInformationAll.sys_or_user == "sys").all()
+            ModelsInformationAll.sys_or_user,
+            ModelsInformationAll.image
+    ).filter_by(parent_name=model_name, package_id=package_id).filter(ModelsInformationAll.sys_or_user.in_(["sys", username])).all()
+    logging.debug(ma)
     for i in ma:
         mn_data = {
             "model_name": i[0],
             "haschild": i[1],
-            "sys_or_user": i[2]
+            "sys_or_user": i[2],
+            "image": i[3] if i[3] else "",
             }
         if i[2] != "sys":
             mn_data["sys_or_user"] = "user"
@@ -92,7 +96,7 @@ async def GetListModelView (model_name: str, request: Request):
 
 
 @router.get("/getgraphicsdata", response_model=ResponseModel)
-async def GetGraphicsDataView (model_name: str, request: Request, component_name: str = None):
+async def GetGraphicsDataView (package_id: str, model_name: str, request: Request, component_name: str = None):
     """
     # 获取模型的画图数据，一次性返回
     ## modelname: 需要查询的模型名称，全称， 例如“Modelica.Blocks.Examples.PID_Controller”
@@ -102,22 +106,20 @@ async def GetGraphicsDataView (model_name: str, request: Request, component_name
     """
     res = InitResponseModel()
     username = request.user.username
-    model_file_path = None
-    package_name = model_name.split(".")[0]
-    package = session.query(ModelsInformation).filter_by(package_name=package_name, sys_or_user=username).first()
-    if package:
-        model_file_path = package.file_path
-    GraphicsData = GetGraphicsData(username)
+    package = session.query(ModelsInformation).filter(ModelsInformation.sys_or_user.in_(["sys", username]), ModelsInformation.id==package_id).first()
+    if not package:
+        raise HTTPException(status_code=401, detail="not found")
+    GraphicsData = GetGraphicsData()
     if not component_name:
-        data = GraphicsData.get_data([model_name], model_file_path)
+        data = GraphicsData.get_data([model_name])
     else:
-        data = GraphicsData.get_one_data([model_name], component_name, model_file_path)
+        data = GraphicsData.get_one_data([model_name], component_name)
     res.data = data
     return res
 
 
 @router.get("/getmodelcode", response_model=ResponseModel)
-async def GetModelCodeView (model_name: str, sys_user: str, request: Request):
+async def GetModelCodeView (package_id: str, model_name: str, request: Request):
     """
     # 获取模型的源码数据，一次性返回
     ## modelname: 需要查询的模型名称，全称， 例如“Modelica.Blocks.Examples.PID_Controller”
@@ -125,19 +127,18 @@ async def GetModelCodeView (model_name: str, sys_user: str, request: Request):
     ## return: 返回json格式数据
     """
     res = InitResponseModel()
-    # username = request.user.username
-    # package_name = model_name.split(".")[0]
-    # if sys_user == "user":
-    #     package = session.query(ModelsInformation).filter_by(package_name=package_name, sys_or_user=username).first()
-    #     if not package:
-    #         raise HTTPException(status_code=400, detail="not found")
+    username = request.user.username
+    package = session.query(ModelsInformation).filter(ModelsInformation.sys_or_user.in_(["sys", username]),
+                                                      ModelsInformation.id == package_id).first()
+    if not package:
+        raise HTTPException(status_code=401, detail="not found")
     data = GetModelCode(model_name)
     res.data = [data]
     return res
 
 
 @router.get("/getmodelparameters", response_model=ResponseModel)
-async def GetModelParametersView (model_name: str, sys_user: str, name: str, components_name: str, request: Request):
+async def GetModelParametersView (package_id: str, model_name: str, name: str, components_name: str, request: Request):
     """
     # 获取模型组件的参数数据，一次性返回
     ## model_name: 需要查询的模型名称，全称，例如“ENN.Examples.Scenario1_Status”
@@ -148,12 +149,11 @@ async def GetModelParametersView (model_name: str, sys_user: str, name: str, com
     """
     res = InitResponseModel()
     username = request.user.username
-    path = None
-    package_name = model_name.split(".")[0]
-    if sys_user == "user":
-        model = session.query(ModelsInformation).filter_by(package_name=package_name, sys_or_user=username).first()
-        path = model.file_path
-    data = GetModelParameters(model_name, name, components_name, path, package_name).get_data()
+    package = session.query(ModelsInformation).filter(ModelsInformation.sys_or_user.in_(["sys", username]),
+                                                      ModelsInformation.id == package_id).first()
+    if not package:
+        raise HTTPException(status_code=401, detail="not found")
+    data = GetModelParameters(model_name, name, components_name, package.package_name).get_data()
     res.data = data
     return res
 
@@ -168,14 +168,13 @@ async def SetModelParametersView (item: SetComponentModifierValueModel, request:
     """
     res = InitResponseModel()
     username = request.user.username
-    package_name = item.model_name.split(".")[0]
-    model = session.query(ModelsInformation).filter_by(package_name=package_name, sys_or_user=username).first()
+    package_id = item.package_id
+    model = session.query(ModelsInformation).filter_by(id=package_id, sys_or_user=username).first()
     if not model:
         res.err = "设置失败"
         res.status = 2
         return res
-    path = model.file_path
-    data = SetComponentModifierValue(item.model_name, item.parameter_value, path, package_name)
+    data = SetComponentModifierValue(item.model_name, item.parameter_value)
     if data == "Ok":
         res.msg = "设置完成"
     else:
@@ -185,7 +184,7 @@ async def SetModelParametersView (item: SetComponentModifierValueModel, request:
 
 
 @router.get("/getcomponentproperties", response_model=ResponseModel)
-async def GetComponentPropertiesView (model_name: str, component_name: str, sys_user: str, request: Request):
+async def GetComponentPropertiesView (package_id: str, model_name: str, component_name: str, request: Request):
     """
     # 获取模型组件的属性数据，一次性返回
     ##  class_name: 需要查询属性数据的模型名称，全称，例如“ENN.Examples.Scenario1_Status”
@@ -194,16 +193,13 @@ async def GetComponentPropertiesView (model_name: str, component_name: str, sys_
     """
     res = InitResponseModel()
     username = request.user.username
-    package_name = model_name.split(".")[0]
-    file_path = None
-    if sys_user == "user":
-        model = session.query(ModelsInformation).filter_by(package_name=package_name, sys_or_user=username).first()
-        if not model:
-            res.err = "查询失败"
-            res.status = 2
-            return res
-        file_path = model.file_path
-    result = GetComponents(model_name, component_name, file_path, package_name)
+    model = session.query(ModelsInformation).filter(ModelsInformation.sys_or_user.in_(["sys", username]),
+                                                      ModelsInformation.id == package_id).first()
+    if not model:
+        res.err = "查询失败"
+        res.status = 2
+        return res
+    result = GetComponents(model_name, component_name)
     data = {
         "model_name": model_name,
         "component_name": component_name,
@@ -248,13 +244,12 @@ async def SetComponentPropertiesView (item: SetComponentPropertiesModel, request
         "causality": item.causality,
     }
     username = request.user.username
-    package_name = item.model_name.split(".")[0]
-    model = session.query(ModelsInformation).filter_by(package_name=package_name, sys_or_user=username).first()
+    model = session.query(ModelsInformation).filter_by(id=item.package_id, sys_or_user=username).first()
     if not model:
         res.err = "设置失败"
         res.status = 2
         return res
-    result = SetComponentProperties(model.file_path, package_name, parameters_data)
+    result = SetComponentProperties(parameters_data)
     if result:
         res.msg = "设置成功"
     else:
@@ -274,9 +269,10 @@ async def CopyClassView (item: CopyClassModel, request: Request):
     ## return: 返回json格式数据,告知是否成功
     """
     res = InitResponseModel()
+    space_id = request.user.user_space
     username = request.user.username
     package_name = item.package_name
-    package = session.query(ModelsInformation).filter_by(package_name=package_name, sys_or_user=username).first()
+    package = session.query(ModelsInformation).filter_by(id=item.package_id, sys_or_user=username).first()
     if package:
         model = session.query(ModelsInformationAll).filter(
                 ModelsInformationAll.package_name == package_name,
@@ -312,6 +308,7 @@ async def CopyClassView (item: CopyClassModel, request: Request):
         if not item.parent_name:
             model = ModelsInformation(
                     package_name=item.class_name,
+                    userspace_id=space_id,
                     model_name=item.class_name,
                     haschild=False,
                     child_name=[],
@@ -378,15 +375,17 @@ async def DeletePackageAndModelView(request: Request, item: DeletePackageModel):
     parent_name = item.parent_name
     class_name = item.class_name
     username = request.user.username
+
     if parent_name:
+        package = session.query(ModelsInformation).filter_by(id=package_id, sys_or_user=username).first()
         model_name_all = parent_name + "." + class_name
-        package = session.query(ModelsInformation).filter_by(package_name=package_name, sys_or_user=username).first()
-        package_id = package.id
         if package:
             model_file_path = package.file_path.split("/")
             model_file_path[-2] = datetime.now().strftime('%Y%m%d%H%M%S%f')
             model_file_path = "/".join(model_file_path)
             save_result, msg = SaveClass(class_name=model_name_all, package_name=package_name, copy_or_delete="delete", new_model_file_path=model_file_path)
+            logging.debug(save_result)
+            logging.debug(msg)
             if save_result:
                 package.file_path = model_file_path
                 session.query(ModelsInformationAll).filter_by(model_name_all=model_name_all, package_id=package_id, sys_or_user=username).delete(synchronize_session=False)
@@ -405,30 +404,42 @@ async def DeletePackageAndModelView(request: Request, item: DeletePackageModel):
                     package.child_name = [i for i in child_name if i != class_name]
                     if not package.child_name:
                         package.haschild = False
+                res.msg = "删除成功"
             else:
                 res.err = msg
                 res.status = 1
                 return res
     else:
+        save_result, msg = SaveClass(class_name=class_name, copy_or_delete="delete")
+        if save_result:
+            res.msg = "删除成功"
+        else:
+            res.err = msg
+            res.status = 1
+            return res
         session.query(ModelsInformation).filter_by(id=package_id, sys_or_user=username).delete(synchronize_session=False)
         session.query(ModelsInformationAll).filter_by(package_id=package_id, sys_or_user=username).delete(synchronize_session=False)
     session.flush()
     session.close()
-    res.msg = "删除成功"
     return res
 
 
 @router.post("/get_component_name", response_model=ResponseModel)
 async def GetComponentNameView(item: GetComponentNameModel, request: Request):
     """
-    # 创建模型当中的模型组件
+    # 获取模型当中的模型组件的名字
     ## package_name： 需要创建的组件在哪个包之下，例如在"NN.Examples.Scenario1_Status"模型中创建组件，包就是ENN
     ## package_id： 包id
     ## model_name_all: 需要创建的组件在哪个模型之下，例如在"NN.Examples.Scenario1_Status"模型中创建组件
     ## old_component_name: 被创建成组件的模型名称， 例如"Modelica.Blocks.Math.Abs"
-    ## return: 返回json格式数据,告知是否成功
+    ## return: 返回json格式数据
     """
     res = InitResponseModel()
+    username = request.user.username
+    package = session.query(ModelsInformation).filter(ModelsInformation.sys_or_user.in_(["sys", username]),
+                                                      ModelsInformation.id == item.package_id).first()
+    if not package:
+        raise HTTPException(status_code=401, detail="not found")
     name = GetComponentName(item.model_name_all, item.old_component_name)
     res.data = [name]
     return res
@@ -451,16 +462,14 @@ async def AddModelComponentView (item: AddComponentModel, request: Request):
     res = InitResponseModel()
     username = request.user.username
     package = session.query(ModelsInformation).filter_by(id=item.package_id, sys_or_user=username).first()
-    if package:
-        result, err = AddComponent(item.new_component_name, item.old_component_name, item.model_name_all, item.origin, item.extent, item.rotation, package.file_path, package.package_name)
-        if result is True:
-            res.msg = "新增组件成功"
-        else:
-            res.err = "新增组件失败，名称为" + item.new_component_name + " 的组件已经存在或者是 Modelica 关键字。 请选择其他名称。"
-            res.status = 1
+    if not package:
+        raise HTTPException(status_code=401, detail="not found")
+    result, err = AddComponent(item.new_component_name, item.old_component_name, item.model_name_all, item.origin, item.extent, item.rotation)
+    if result is True:
+        res.msg = "新增组件成功"
     else:
-        res.err = "新增组件失败"
-        res.status = 2
+        res.err = "新增组件失败，名称为" + item.new_component_name + " 的组件已经存在或者是 Modelica 关键字。 请选择其他名称。"
+        res.status = 1
     return res
 
 
@@ -481,14 +490,12 @@ async def DeleteModelComponentView(item: DeleteComponentModel, request: Request)
         result = True
         for i in item.delete_list:
             if i["delete_type"] == "component":
-                result = DeleteComponent(i["component_name"], i["model_name_all"], package.file_path, package.package_name)
+                result = DeleteComponent(i["component_name"], i["model_name_all"])
             elif i["delete_type"] == "connector":
-                result = DeleteConnection(i["model_name_all"], i["connect_start"], i["connect_end"], package.file_path, package.package_name)
+                result = DeleteConnection(i["model_name_all"], i["connect_start"], i["connect_end"])
             else:
                 result = False
                 break
-        # result = DeleteComponent(item.component_name, item.model_name_all, package.file_path, package.package_name)
-
         if result:
             res.msg = "删除组件成功"
         else:
@@ -530,7 +537,7 @@ async def UpdateModelComponentView(item: UpdateComponentModel, request: Request)
         extent = [",".join(extent_1), ",".join(extent_2)]
 
     if package:
-        result = UpdateComponent(item.component_name, item.component_model_name, item.model_name_all, origin, extent, item.rotation, package.file_path, package.package_name)
+        result = UpdateComponent(item.component_name, item.component_model_name, item.model_name_all, origin, extent, item.rotation)
         if result is True:
             res.msg = "更新组件成功"
         else:
@@ -559,7 +566,7 @@ async def CreateConnectionAnnotationView(item: UpdateConnectionAnnotationModel, 
     username = request.user.username
     package = session.query(ModelsInformation).filter_by(id=item.package_id, sys_or_user=username).first()
     if package:
-        result = AddConnection(item.model_name_all, item.connect_start, item.connect_end, item.line_points, item.color, package.file_path, package.package_name)
+        result = AddConnection(item.model_name_all, item.connect_start, item.connect_end, item.line_points, item.color)
         if result == "Ok":
             res.msg = "连接成功"
             expression_inout = r"\[\d+\]$"
@@ -636,7 +643,7 @@ async def DeleteConnectionAnnotationView(item: DeleteConnectionModel, request: R
     username = request.user.username
     package = session.query(ModelsInformation).filter_by(id=item.package_id, sys_or_user=username).first()
     if package:
-        result = DeleteConnection(item.model_name_all, item.connect_start, item.connect_end, package.file_path, package.package_name)
+        result = DeleteConnection(item.model_name_all, item.connect_start, item.connect_end)
         if result == "Ok":
             res.msg = "删除成功"
         else:
@@ -666,7 +673,7 @@ async def UpdateConnectionAnnotationView(item: UpdateConnectionAnnotationModel, 
     username = request.user.username
     package = session.query(ModelsInformation).filter_by(id=item.package_id, sys_or_user=username).first()
     if package:
-        result = UpdateConnectionAnnotation(item.model_name_all, item.connect_start, item.connect_end, item.line_points, item.color, package.file_path, package.package_name)
+        result = UpdateConnectionAnnotation(item.model_name_all, item.connect_start, item.connect_end, item.line_points, item.color)
         if result is True:
             res.msg = "连接拐点修改成功"
         else:
@@ -711,10 +718,10 @@ async def CheckModelView(package_id: str, model_name: str, request: Request):
     res = InitResponseModel()
     username = request.user.username
     package = session.query(ModelsInformation).filter_by(id=package_id).filter(ModelsInformation.sys_or_user.in_(["sys", username])).first()
-
-    if package:
-        result, data_list = CheckModel(model_name)
-        res.data = data_list
+    if not package:
+        raise HTTPException(status_code=401, detail="not found")
+    result, data_list = CheckModel(model_name)
+    res.data = data_list
     return res
 
 

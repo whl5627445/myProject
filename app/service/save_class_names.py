@@ -51,7 +51,7 @@ def GetIconsData(name):
     return icons_data
 
 
-def SaveClassNames(mo_path=None, init_name="Modelica", sys_or_user="sys", package_id=""):
+def SaveClassNames(space_id, mo_path=None, init_name="Modelica", sys_or_user="sys", package_id=""):
     data_dict = {}
     res = False
     data_list = []
@@ -65,7 +65,6 @@ def SaveClassNames(mo_path=None, init_name="Modelica", sys_or_user="sys", packag
         LoadModelFile(package_name=init_name, username=sys_or_user)
         LoadModelFile(path=mo_path, check=False)
         use_package = CheckUsesPackage(init_name)
-        logging.debug(use_package)
         if use_package:
             data_list.append({"type": "error", "message": "Minssing " + ",".join(
                         [i[0] + "(" + i[1] + ")" for i in use_package]) + " and other libraries"})
@@ -93,6 +92,7 @@ def SaveClassNames(mo_path=None, init_name="Modelica", sys_or_user="sys", packag
                             child_name=v["child_name"],
                             sys_or_user=sys_or_user,
                             file_path=mo_path,
+                            userspace_id=space_id,
                             # image=icons_data,
                     )
                     session.add(M)
@@ -113,6 +113,7 @@ def SaveClassNames(mo_path=None, init_name="Modelica", sys_or_user="sys", packag
                     child_name=v["child_name"],
                     haschild=v["has_child"],
                     sys_or_user=sys_or_user,
+                    userspace_id=space_id,
                     # image=icons_data,
                     )
             session.add(MA)

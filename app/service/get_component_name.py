@@ -1,10 +1,10 @@
 # -- coding: utf-8 --
 from config.omc import omc
-from app.service.load_model_file import LoadModelFile
+# from app.service.load_model_file import LoadModelFile
 import re
 from config.modelica_config import modelica_keywords
 
-def GetComponentName(class_name, component_name_all, file_path=None, package_name=None):
+def GetComponentName(class_name, component_name_all):
     data = omc.getComponents(class_name)
     component_name = component_name_all.split(".")[-1].lower()
     name_num = 0

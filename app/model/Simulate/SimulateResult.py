@@ -10,6 +10,7 @@ class SimulateResult(Base):
 
     id = Column(Integer, primary_key=True)
     username = Column(VARCHAR)
+    userspace_id = Column(VARCHAR)
     simulate_model_name = Column(VARCHAR)
     simulate_record_id = Column(VARCHAR)
     model_variable_name = Column(VARCHAR)

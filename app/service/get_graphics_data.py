@@ -3,12 +3,12 @@ import logging
 
 from config.omc import omc as mod
 import os, re
-from app.service.load_model_file import LoadModelFile
+# from app.service.load_model_file import LoadModelFile
 
 
 class GetGraphicsData(object):
 
-    def __init__ (self, username):
+    def __init__ (self):
         self.InheritedClasses_data = []
         self.DiagramAnnotation_data = []
         self.Components_data = []
@@ -16,7 +16,7 @@ class GetGraphicsData(object):
         self.data = [[], []]
         self.mod = mod
         self.package_name = None
-        self.username = username
+
 
     def getICList (self, name):
         data_list = name
@@ -169,9 +169,8 @@ class GetGraphicsData(object):
                     da_data["connectionto"] = re.sub(expression2, ".", connectionto)
                     self.data[0].append(da_data)
 
-    def get_data (self, name_list, model_file_path=None):
+    def get_data (self, name_list):
         self.package_name = name_list[0].split(".")[0]
-        LoadModelFile(self.package_name, model_file_path, username=self.username)
         name_list = self.getICList(name_list)
         DiagramAnnotation_data = self.mod.getDiagramAnnotationList(name_list)
         Components_data = self.mod.getComponentsList(name_list)
@@ -184,10 +183,8 @@ class GetGraphicsData(object):
         self.data[1].extend(data_2)
         return self.data
 
-    def get_one_data (self, name_list, component_name, model_file_path=None):
+    def get_one_data (self, name_list, component_name):
         self.package_name = name_list[0].split(".")[0]
-        # if model_file_path:
-        #     LoadModelFile(self.package_name, model_file_path)
         name_list = self.getICList(name_list)
         Components = self.mod.getComponentsList(name_list)
         ComponentAnnotations = self.mod.getComponentAnnotationsList(name_list)

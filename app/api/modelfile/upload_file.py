@@ -1,7 +1,7 @@
 # -- coding: utf-8 --
 import logging
 
-from fastapi import File, UploadFile, Request, HTTPException
+from fastapi import File, UploadFile, Request, HTTPException, Form
 from router.upload_file_router import router
 from app.BaseModel.respose_model import ResponseModel, InitResponseModel
 from app.model.ModelsPackage.ModelsInformation import ModelsInformation, ModelsInformationAll
@@ -13,20 +13,22 @@ from datetime import datetime
 from app.BaseModel.uploadfile import UploadSaveFileModel, UploadSaveModelModel
 from app.service.get_model_code import GetModelCode, GetModelPath
 from app.service.create_modelica_class import CreateModelicaClass, UpdateModelicaClass
+from app.service.HW_OBS_operation import OBSClient
 import os
 import urllib.parse
 import re, json
 session = DBSession()
 
 
-@router.post("/uploadfile", response_model=ResponseModel)
-async def UploadFileView(request: Request, file: UploadFile = File(...)):
+@router.post("/", response_model=ResponseModel)
+async def UploadFileView(request: Request, file: UploadFile = File(...), package_id : str = Form(...),):
     """
     # 用户上传mo文件接口
     ## file: 文件数据，bytes形式的文件流
     ## return: 会返回文件上传的状态
     """
     res = InitResponseModel()
+    space_id = request.user.user_space
     file_data = await file.read()
     filename = file.filename
     username = request.user.username
@@ -38,13 +40,12 @@ async def UploadFileView(request: Request, file: UploadFile = File(...)):
     if filename.endswith(".mo"):
         package_name = file.filename.removesuffix(".mo")
         mo_path = file_path + "/" + package_name + ".mo"
-        UP = session.query(ModelsInformation).filter_by(package_name=package_name,
-                                                        sys_or_user=request.user.username).first()
+        UP = session.query(ModelsInformation).filter_by(id=package_id, sys_or_user=request.user.username).first()
         if UP:
             res.err = "文件已存在！"
             res.status = 2
             return res
-        save_result, M_id, notice_data = SaveClassNames(mo_path=mo_path, init_name=package_name, sys_or_user=request.user.username)
+        save_result, M_id, notice_data = SaveClassNames(space_id=space_id, mo_path=mo_path, init_name=package_name, sys_or_user=request.user.username)
         if save_result:
             save_result_list.append({
                 "filename": filename,
@@ -64,7 +65,7 @@ async def UploadFileView(request: Request, file: UploadFile = File(...)):
                 res.err = i["package_name"] + "， 已存在相同名字的包！"
                 res.status = 2
                 return res
-            save_result, M_id, notice_data = SaveClassNames(mo_path=i["file_path"], init_name=i["package_name"],
+            save_result, M_id, notice_data = SaveClassNames(space_id=space_id, mo_path=i["file_path"], init_name=i["package_name"],
                                                sys_or_user=request.user.username)
             if save_result:
                 save_result_list.append({
@@ -81,7 +82,6 @@ async def UploadFileView(request: Request, file: UploadFile = File(...)):
     else:
         res.status = 1
         res.err = "模型上传失败！"
-    logging.debug(notice_data)
     for i in notice_data:
         r_data = {
             "message": i["message"],
@@ -101,6 +101,7 @@ async def SaveFileView(request: Request):
     ## return: 会返回文件上传的状态
     """
     res = InitResponseModel()
+    space_id = request.user.user_space
     item = await request.json()
     package_name_list = item.get("package_name", "").split(".")
     parent_name = None
@@ -126,7 +127,7 @@ async def SaveFileView(request: Request):
         else:
             file_model_str = GetModelCode(package_name)
         FileOperation().write(model_path, file_model_str)
-        save_result, M_id, notice_data = SaveClassNames(mo_path=mo_path, init_name=package_name, sys_or_user=request.user.username,
+        save_result, M_id, notice_data = SaveClassNames(space_id=space_id, mo_path=mo_path, init_name=package_name, sys_or_user=request.user.username,
                                            package_id=package_id)
         if save_result:
             res_model_str = GetModelCode(item_package_name)
@@ -155,8 +156,9 @@ async def SaveModelView(request: Request, item: UploadSaveModelModel):
     ## type: 要创建的类型
     ## model_str: str = 模型源码字符串
     ## package_id: 包的id
-    ## var: {
+    ## vars: {
     ##     "expand": "", 扩展
+    ##     "comment": "", 注释
     ##     "insert_to": "", 父节点， 要插入哪个节点下
     ##     "partial": False,  部分的
     ##     "encapsulated": False, 封装
@@ -166,6 +168,7 @@ async def SaveModelView(request: Request, item: UploadSaveModelModel):
     """
     res = InitResponseModel()
     notice_data = []
+    space_id = request.user.user_space
     create_package_name = item.package_name
     if not re.match("^[a-zA-Z_]", create_package_name):
         res.err = "名称请以子母和下划线开头"
@@ -203,14 +206,14 @@ async def SaveModelView(request: Request, item: UploadSaveModelModel):
         return res
     file_path = "public/UserFiles/UploadFile/" + username + "/" + str(datetime.now().strftime('%Y%m%d%H%M%S%f'))
     if not model_str:
-        result = CreateModelicaClass(create_package_name, str_type, var, create_package_name_all, path)
+        result, notice_data = CreateModelicaClass(create_package_name, str_type, var, create_package_name_all, path)
     else:
         result, notice_data = UpdateModelicaClass(model_str, path)
     res_package_str = GetModelCode(init_name)
     FileOperation().write_file(file_path, file_name, res_package_str)
     if result:
         res_model_str = GetModelCode(create_package_name_all)
-        save_result, M_id, notice_data = SaveClassNames(mo_path=file_path + "/" + file_name, init_name=init_name, sys_or_user=request.user.username, package_id=package_id)
+        save_result, M_id, notice_data = SaveClassNames(space_id=space_id, mo_path=file_path + "/" + file_name, init_name=init_name, sys_or_user=request.user.username, package_id=package_id)
         if save_result:
             res.data = [{"model_str": res_model_str, "id": M_id}]
             res.msg = "successful！"
@@ -228,4 +231,54 @@ async def SaveModelView(request: Request, item: UploadSaveModelModel):
         r.lpush(username + "_" + "notification", json.dumps(r_data))
     return res
 
-
+@router.post("/uploadicon", response_model=ResponseModel)
+async def UploadIconView(request: Request, model_name: str = Form(...), package_id: str = Form(...), file: UploadFile = File(...)):
+    """
+    # 用户上传模型图标接口
+    ## file: 文件数据，bytes形式的文件流
+    ## package_name: 包名称
+    ## model_name: 模型名称
+    ## package_id: 包id
+    ## return: 会返回文件上传的状态
+    """
+    res = InitResponseModel()
+    suffix_list = ["jpg", "png", "jpeg", "svg"]
+    file_suffix = file.filename.split(".")[-1]
+    if file_suffix not in suffix_list:
+        res.err = "暂只支持jpg,png,jpeg,svg格式的图片"
+        res.status = 1
+        return res
+    file_data = await file.read()
+    filename = str(datetime.now().strftime('%Y%m%d%H%M%S%f')) + "." +file_suffix
+    username = request.user.username
+    file_path = "public/icon/" + username + "/" + model_name
+    image_url = file_path + "/" + filename
+    try:
+        fo = FileOperation()
+        fo.write_file(file_path, filename, file_data)
+        obs = OBSClient()
+        HW_res = obs.putFile(new_filename=image_url, local_file=image_url)
+        if HW_res.get("status") == 200:
+            image_url = HW_res.get("body").get("objectUrl")
+            res.data = [{"image_url": image_url}]
+            res.msg = "successful！"
+            if len(model_name.split(".")) > 1:
+                model = session.query(ModelsInformationAll).filter_by(package_id=package_id, sys_or_user=username,
+                                                                      model_name_all=model_name).first()
+                model.image = image_url
+            else:
+                model = session.query(ModelsInformation).filter_by(id=package_id, sys_or_user=username).first()
+                model.image = image_url
+            logging.debug(HW_res)
+            session.flush()
+            session.close()
+            res.msg = "图标上传成功"
+            res.data = [{"url": image_url}]
+        else:
+            res.err = "上传失败，请重新上传"
+            res.status = 2
+    except Exception as e:
+        res.err = "上传失败，请重新上传"
+        res.status = 2
+        return res
+    return res

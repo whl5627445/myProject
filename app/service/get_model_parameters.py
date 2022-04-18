@@ -2,15 +2,14 @@
 import logging
 
 from config.omc import omc
-from app.service.load_model_file import LoadModelFile
+# from app.service.load_model_file import LoadModelFile
 
 
 class GetModelParameters(object):
-    def __init__(self, class_name, name, component_name, path=None, package_name=None):
+    def __init__(self, class_name, name, component_name, package_name=None):
         self.model_name = ""
         self.name = name
         self.class_name = class_name
-        self.path = path
         self.component_name = component_name
         self.package_name = package_name
         self.class_all = None
@@ -74,8 +73,6 @@ class GetModelParameters(object):
         return data
 
     def get_data(self):
-        if self.path:
-            LoadModelFile(self.package_name, self.path)
         data_list = []
         self.class_all = omc.getInheritedClassesListAll([self.component_name])
         self.Components = omc.getElementsList(self.class_all)

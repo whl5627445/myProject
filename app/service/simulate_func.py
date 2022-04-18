@@ -10,7 +10,7 @@ from config.DB_config import DBSession
 from datetime import datetime
 import socket
 from library.file_operation import FileOperation
-from app.service.load_model_file import LoadModelFile
+# from app.service.load_model_file import LoadModelFile
 import json, requests, time
 from app.service.get_model_code import GetModelCode
 from library.file_operation import FileOperation
@@ -20,7 +20,7 @@ import xmltodict
 session = DBSession()
 
 
-def SimulateDataHandle (SRecord: object, result_file_path, username, model_name, simulate_result_str):
+def SimulateDataHandle (space_id, SRecord: object, result_file_path, username, model_name, simulate_result_str):
     SRecord.simulate_result_str = simulate_result_str
     SRecord.simulate_model_result_path = result_file_path + "result_res.mat"  # omc会为结果文件添加"_res.mat"后缀
     try:
@@ -67,6 +67,7 @@ def SimulateDataHandle (SRecord: object, result_file_path, username, model_name,
                 level = len(model_variable_parent_list)
             SResult = SimulateResult(
                     username=username,
+                    userspace_id=space_id,
                     simulate_model_name=model_name,
                     simulate_record_id=SRecord.id,
                     model_variable_name=k,
@@ -163,12 +164,9 @@ def JModelicaSimulate (SRecord: object, result_file_path: str, model_name: str, 
     return res, res_str
 
 
-def OpenModelicaSimulate (SRecord: object, result_file_path: str, model_name: str, file_path: str = None,
+def OpenModelicaSimulate (SRecord: object, result_file_path: str, model_name: str,
                           simulate_parameters_data=None, username=None):
     res = False
-    if file_path:
-        package_name = model_name.split('.')[0]
-        LoadModelFile(package_name, file_path)
     FileOperation().make_dir(result_file_path)
     buildModel_res = omc.buildModel(className=model_name, fileNamePrefix=result_file_path,
                                     simulate_parameters_data=simulate_parameters_data)
@@ -276,7 +274,7 @@ def DymolaSimulate (SRecord: object, username, model_name, file_path=None, simul
     return res, res_str
 
 
-def Simulate (SRecord_id, username: str, model_name: str, s_type="OM", file_path: str = None,
+def Simulate (space_id, SRecord_id, username: str, model_name: str, s_type="OM", file_path: str = None,
               simulate_parameters_data=None):
     package_name = model_name.split(".")[0]
     result_file_path = "public/UserFiles/ModelResult" + '/' + username + '/' + \
@@ -299,7 +297,7 @@ def Simulate (SRecord_id, username: str, model_name: str, s_type="OM", file_path
     else:
         return "暂不支持此仿真类型"
     if s_result:
-        SimulateDataHandle(SRecord, result_file_path, username, model_name, simulate_result_str=s_str)
+        SimulateDataHandle(space_id, SRecord, result_file_path, username, model_name, simulate_result_str=s_str)
         r_data = {"message": model_name + " 模型仿真完成"}
         r.lpush(username + "_" + "notification", json.dumps(r_data))
     else:
@@ -309,13 +307,4 @@ def Simulate (SRecord_id, username: str, model_name: str, s_type="OM", file_path
         r.lpush(username + "_" + "notification", json.dumps(r_data))
     session.close()
 
-# def Simulate(SRecord_id, username: str, model_name: str, s_type="OM", file_path: str = None, simulate_parameters_data = None):
-#     data = [json.dumps({
-#             "SRecord_id": SRecord_id,
-#             "username": username,
-#             "model_name": model_name,
-#             "s_type": s_type,
-#             "file_path": file_path,
-#             "simulate_parameters_data": simulate_parameters_data,
-#         })]
-#     response = SimulateServiceRpc.simulate(SimulateRequest(data=data))
+

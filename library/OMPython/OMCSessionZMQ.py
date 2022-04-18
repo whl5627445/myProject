@@ -367,6 +367,7 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
 
     def copyClass (self, copied_class_name, class_name, parent_name):
         cmd = "copyClass(" + copied_class_name + ",\"" + class_name + "\"," + parent_name + ")"
+        logging.debug(cmd)
         result = self.sendExpression(cmd)
         return result
 

@@ -5,8 +5,8 @@ from pydantic import BaseModel
 
 class UploadSaveFileModel(BaseModel):
     package_name: Optional[str]
-    model_str: Optional[str] = None
-    package_id: Optional[str] = None
+    model_str: Optional[str]
+    package_id: Optional[str]
 
     # class Config:
     #     orm_mode = True
@@ -18,8 +18,16 @@ class UploadSaveModelModel(BaseModel):
     package_id: Optional[str] = None
     vars: dict = {
         "expand": "",
+        "comment": "",
         "insert_to": "",
         "partial": False,
         "encapsulated": False,
         "state": False
         }
+
+
+class UploadIconModel(BaseModel):
+    package_name: Optional[str]
+    model_name: Optional[str]
+    package_id: Optional[str]
+

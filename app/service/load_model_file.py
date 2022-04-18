@@ -4,7 +4,7 @@ import logging
 from config.omc import omc
 from config.DB_config import session
 from app.model.ModelsPackage.ModelsInformation import ModelsInformation
-
+from sqlalchemy import or_
 
 def LoadModelFile(package_name="", path="", username="", check=True):
     if check:
@@ -17,3 +17,11 @@ def LoadModelFile(package_name="", path="", username="", check=True):
 
     else:
         omc.loadFile(path)
+
+
+def LoadModel(models):
+    load_res = False
+    for model in models:
+        logging.debug(model.package_name)
+        load_res = omc.loadFile(model.file_path)
+    return load_res

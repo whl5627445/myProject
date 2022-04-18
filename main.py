@@ -3,9 +3,10 @@ from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse
 from app.api.simulate.simulateview import router as simulate_view_router
 from app.api.model.modelview import router as model_view_router
-from app.api.file.upload_file import router as upload_file_router
-from app.api.file.download import router as download_file_router
-# from app.api.notice.notification import router as notification_router
+from app.api.modelfile.upload_file import router as upload_file_router
+from app.api.modelfile.download import router as download_file_router
+from app.api.user.user_space import router as user_space_router
+from config.modelica_config import USERNAME
 from fastapi.responses import HTMLResponse
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.authentication import AuthenticationMiddleware
@@ -33,10 +34,12 @@ logging.basicConfig(level=logging.DEBUG,  # 控制台打印的日志级别
 class BasicAuthBackend(AuthenticationBackend):
     async def authenticate (self, request):
         username = request.headers.get("username", "wanghailong")
-        # username = request.headers.get("username", "")
+        user_space = request.headers.get("space_id", 0)
+        user = SimpleUser(username)
+        user.user_space = user_space
         if not username:
             return
-        return AuthCredentials(["simtek"]), SimpleUser(username)
+        return AuthCredentials(["simtek"]), user
 
 
 app = FastAPI()
@@ -44,6 +47,7 @@ app.include_router(simulate_view_router)
 app.include_router(model_view_router)
 app.include_router(upload_file_router)
 app.include_router(download_file_router)
+app.include_router(user_space_router)
 app.add_middleware(AuthenticationMiddleware, backend=BasicAuthBackend())
 app.add_middleware(SessionMiddleware, secret_key="simtek")
 
@@ -62,6 +66,7 @@ app.mount("/static", StaticFiles(directory="./static"), name="static")
 async def LoginAuth (request: Request, call_next):
     response = await call_next(request)
     return response
+
 
 # @app.middleware("http")
 # async def add_process_time_header(request: Request, call_next):

@@ -1,11 +1,9 @@
 # -- coding: utf-8 --
 from config.omc import omc
-from app.service.load_model_file import LoadModelFile
+# from app.service.load_model_file import LoadModelFile
 
 
-def GetComponents(class_name, component_name=None, file_path=None, package_name=None):
-    if file_path:
-        LoadModelFile(package_name, file_path)
+def GetComponents(class_name, component_name=None):
     data = omc.getComponents(class_name)
     if component_name and data != "Error":
         component_data = []

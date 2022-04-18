@@ -4,6 +4,7 @@ from pydantic import BaseModel
 
 
 class ModelSimulateModel(BaseModel):
+    package_id: str
     model_name: str
     simulate_type: Optional[str] = "OM"
     start_time: Optional[str] = "0.0"
@@ -20,11 +21,13 @@ class ModelSimulateModel(BaseModel):
 
 
 class SetComponentModifierValueModel(BaseModel):
+    package_id: str
     model_name: str
     parameter_value: dict
 
 
 class SetComponentPropertiesModel(BaseModel):
+    package_id: str
     model_name: str
     old_component_name: str
     new_component_name: str
@@ -38,6 +41,7 @@ class SetComponentPropertiesModel(BaseModel):
 
 
 class CopyClassModel(BaseModel):
+    package_id: str
     parent_name: str
     package_name: str
     class_name: str
@@ -45,7 +49,7 @@ class CopyClassModel(BaseModel):
 
 
 class GetComponentNameModel(BaseModel):
-    package_name: str
+    # package_name: str
     package_id: str
     old_component_name: str
     model_name_all: str

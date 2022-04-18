@@ -1,6 +1,8 @@
 # -- coding: utf-8 --
+import logging
+
 from config.omc import omc
-from app.service.load_model_file import LoadModelFile
+# from app.service.load_model_file import LoadModelFile
 from app.service.get_model_code import GetModelCode
 from app.service.check_model import GetMessagesStringInternal
 import json
@@ -9,17 +11,18 @@ import json
 def CreateModelicaClass(package_name, str_type, var, create_package_name_all, path=""):
     insert_to = var.get("insert_to", "")
     expand = var.get("expand", "")
+    comment = var.get("comment", "")
     partial = var.get("partial", False)
     encapsulated = var.get("encapsulated", False)
     state = var.get("state", False)
-    insert_package_name = ""
     if expand:
         expand = " extends " + expand + ";"
-    model_str_base = str_type + " " + package_name + expand + " end " + package_name + ";"
+    if comment:
+        comment = " \\\"" + comment + "\\\""
+    model_str_base = str_type + " " + package_name + comment + expand + " end " + package_name + ";"
     model_str = ""
     if insert_to:
         insert_package_name = insert_to.split(".")[0]
-        LoadModelFile(insert_package_name, path)
         model_str = "within " + insert_to + "; "
     if encapsulated:
         model_str = model_str + "encapsulated "
@@ -27,11 +30,17 @@ def CreateModelicaClass(package_name, str_type, var, create_package_name_all, pa
         model_str = model_str + "partial "
     model_str = model_str + model_str_base
     res = omc.loadString(model_str, path)
+    logging.debug("CreateModelicaClass: " + model_str)
+    logging.debug(res)
     if state:
         res = omc.addClassAnnotation(create_package_name_all, annotate_str="Icon(graphics={Text(extent={{-100,100},{100,-100}},textString=\"%name\")})")
         res = omc.addClassAnnotation(create_package_name_all, annotate_str="annotate=__Dymola_state(true)")
         res = omc.addClassAnnotation(create_package_name_all, annotate_str="singleInstance(true)")
-    return res
+    if res is True:
+        return True, ""
+    else:
+        err_data = GetMessagesStringInternal()
+        return False, err_data
 
 
 def UpdateModelicaClass(model_str, path="", merge="false"):

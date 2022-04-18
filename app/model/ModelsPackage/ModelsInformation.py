@@ -16,8 +16,9 @@ class ModelsInformation(Base):
     child_name = Column(JSON)
     haschild = Column(BOOLEAN)
     sys_or_user = Column(String)
-    image = Column(TEXT)
+    image = Column(VARCHAR)
     file_path = Column(VARCHAR)
+    userspace_id = Column(Integer, default=0)
 
 
 class ModelsInformationAll(Base):
@@ -32,4 +33,15 @@ class ModelsInformationAll(Base):
     sys_or_user = Column(VARCHAR)
     haschild = Column(BOOLEAN)
     child_name = Column(JSON)
-    image = Column(TEXT)
+    image = Column(VARCHAR)
+    userspace_id = Column(Integer, default=0)
+
+
+class UserSpace(Base):
+    __tablename__ = 'py_user_space'
+
+    id = Column(Integer, primary_key=True)
+    username = Column(VARCHAR)
+    spacename = Column(VARCHAR)
+    update_time = Column(VARCHAR)
+    create_time = Column(VARCHAR)

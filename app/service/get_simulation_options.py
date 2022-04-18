@@ -1,12 +1,9 @@
 # -- coding: utf-8 --
 from config.omc import omc
-from app.service.load_model_file import LoadModelFile
+# from app.service.load_model_file import LoadModelFile
 
 
-def GetSimulationOptions(model_name, model_file_path=None):
-    if model_file_path:
-        package_name = model_name.split('.')[0]
-        LoadModelFile(package_name, model_file_path)
+def GetSimulationOptions(model_name):
     data = omc.sendExpression("getSimulationOptions(" + model_name + ")")
     data_dict = {
         "startTime": data[0],
