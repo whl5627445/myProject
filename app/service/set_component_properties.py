@@ -3,7 +3,7 @@ import logging
 
 from config.omc import omc
 # from app.service.load_model_file import LoadModelFile
-from config.modelica_config import modelica_keywords
+from config.settings import modelica_keywords
 
 
 def RenameComponentInClass(class_name, old_component_name, new_component_name):
@@ -27,11 +27,8 @@ def SetComponentProperties(parameters_data):
     inner = parameters_data.get('inner')
     outer = parameters_data.get('outer')
     causality = parameters_data.get('causality')
-    logging.debug("Set_class_name: %s" % class_name)
     rename_result = RenameComponentInClass(class_name, old_component_name, new_component_name)
-    logging.debug("rename_result: %s" % rename_result)
     SCP_result = omc.setComponentProperties(class_name, new_component_name, final, protected, replaceable, variabilty, inner, outer, causality) #设置组件属性
-    logging.debug("SetComponentProperties: %s" % SCP_result)
     if SCP_result == "Ok" and rename_result:
         return True
     else:

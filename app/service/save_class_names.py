@@ -6,8 +6,8 @@ from config.DB_config import DBSession
 from config.omc import omc
 from app.service.check_model import GetMessagesStringInternal, CheckUsesPackage
 import os
+from app.service.load_model_file import LoadModel
 import datetime
-from app.service.load_model_file import LoadModelFile
 session = DBSession()
 
 
@@ -62,8 +62,7 @@ def SaveClassNames(space_id, mo_path=None, init_name="Modelica", sys_or_user="sy
                 }
             }
     if mo_path:
-        LoadModelFile(package_name=init_name, username=sys_or_user)
-        LoadModelFile(path=mo_path, check=False)
+        LoadModel(path=mo_path, check=False)
         use_package = CheckUsesPackage(init_name)
         if use_package:
             data_list.append({"type": "error", "message": "Minssing " + ",".join(
@@ -125,4 +124,4 @@ def SaveClassNames(space_id, mo_path=None, init_name="Modelica", sys_or_user="sy
 
 if __name__ == '__main__':
     # print(SaveClassNames(mo_path="public/UserFiles/ENN.mo", init_name="ENN", sys_or_user="tom"))
-    SaveClassNames()
+    print(SaveClassNames(space_id=None))

@@ -2,16 +2,14 @@
 import logging
 
 from config.omc import omc
-# from app.service.load_model_file import LoadModelFile
 from app.service.get_model_code import GetModelCode
 from app.service.check_model import GetMessagesStringInternal
 import json
 
 
-def CreateModelicaClass(package_name, str_type, var, create_package_name_all, path=""):
+def CreateModelicaClass(package_name, str_type, var, create_package_name_all, path="", comment=""):
     insert_to = var.get("insert_to", "")
     expand = var.get("expand", "")
-    comment = var.get("comment", "")
     partial = var.get("partial", False)
     encapsulated = var.get("encapsulated", False)
     state = var.get("state", False)
@@ -29,9 +27,8 @@ def CreateModelicaClass(package_name, str_type, var, create_package_name_all, pa
     if partial :
         model_str = model_str + "partial "
     model_str = model_str + model_str_base
+    logging.info("创建模型源码: {0}".format(model_str))
     res = omc.loadString(model_str, path)
-    logging.debug("CreateModelicaClass: " + model_str)
-    logging.debug(res)
     if state:
         res = omc.addClassAnnotation(create_package_name_all, annotate_str="Icon(graphics={Text(extent={{-100,100},{100,-100}},textString=\"%name\")})")
         res = omc.addClassAnnotation(create_package_name_all, annotate_str="annotate=__Dymola_state(true)")

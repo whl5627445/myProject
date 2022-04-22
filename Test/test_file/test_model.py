@@ -1,5 +1,5 @@
 from fastapi.testclient import TestClient
-from main import app
+from YSSIM import app
 from ..result_data.model_result import *
 
 

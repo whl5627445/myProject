@@ -1,9 +1,8 @@
 # -- coding: utf-8 --
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 import logging
-from fastapi.responses import HTMLResponse
 from datetime import datetime
-from config.WebsocketManager import manager
+from library.WebsocketManager import manager
 from config.redis_config import r
 import json
 import random
@@ -30,7 +29,7 @@ class BasicAuthBackend(AuthenticationBackend):
 app = FastAPI()
 app.add_middleware(AuthenticationMiddleware, backend=BasicAuthBackend())
 app.add_middleware(SessionMiddleware, secret_key="simtek")
-logging.basicConfig(level=logging.DEBUG,  # 控制台打印的日志级别
+logging.basicConfig(level=logging.INFO,  # 控制台打印的日志级别
                     filename='/home/simtek/code/Log/notice.log',
                     filemode='a',  ##模式，有w和a，w就是写模式，每次都会重新写日志，覆盖之前的日志
                     # a是追加模式，默认如果不写的话，就是追加模式
@@ -45,7 +44,6 @@ async def NotificationView (ws: WebSocket, username: str = None):
     # 消息通知
     :return: 暂时只被动接受消息， 服务器不接受数据
     """
-    # logging.debug(ws.__dict__)
     try:
         ws.num = random.randint(5000, 9999)
         await MANAGER.connect(ws, username)
@@ -67,10 +65,8 @@ async def NotificationView (ws: WebSocket, username: str = None):
             await manager.send_personal_message(data, ws, username)
     except WebSocketDisconnect:
         manager.disconnect(ws, username)
-        # await manager.send_personal_message(res, websocket)
 
-# r.lpush(username + "_" + "notification",
-#                 str(datetime.now().strftime('%Y-%m-%d %H:%M:%S; ')) + model_name + " 编译成功，开始仿真")
+
 html = """
 <!DOCTYPE html>
 <html>

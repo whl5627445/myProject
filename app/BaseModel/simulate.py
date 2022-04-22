@@ -160,12 +160,13 @@ class FmuExportModel(BaseModel):
     package_name: str
     model_name: str
     fmu_name: str
-    download_local: bool = False
-    storeResult: bool = False
-    includeSource: bool = False
-    fmiVersion: int = 2
-    includeImage: int = 0
-    fmiType: str = "all"
+    fmuPar: dict = {}
+    download_local: bool = True
+    # storeResult: bool = False
+    # includeSource: bool = False
+    # fmiVersion: int = 2
+    # includeImage: int = 0
+    # fmiType: str = "all"
 
 
 class SimulateResultExportModel(BaseModel):

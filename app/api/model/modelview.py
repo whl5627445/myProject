@@ -29,7 +29,7 @@ from app.service.check_model import CheckModel
 from config.DB_config import DBSession
 from config.omc import omc
 from sqlalchemy import or_,and_
-
+from app.service.save_class_names import SaveClassNames
 from library.file_operation import FileOperation
 from router.simulatemodel_router import router
 
@@ -46,9 +46,7 @@ async def GetRootModelView (request: Request):
     data = []
     space_id = request.user.user_space
     username = request.user.username
-    logging.debug(space_id)
     models_obj_list = session.query(ModelsInformation).filter(or_(ModelsInformation.sys_or_user == "sys", and_(ModelsInformation.userspace_id ==space_id, ModelsInformation.sys_or_user == username))).all()
-    logging.debug(models_obj_list)
     for i in models_obj_list:
         mn_data = {
             "package_id": i.id,
@@ -80,7 +78,6 @@ async def GetListModelView (package_id: str, model_name: str, request: Request):
             ModelsInformationAll.sys_or_user,
             ModelsInformationAll.image
     ).filter_by(parent_name=model_name, package_id=package_id).filter(ModelsInformationAll.sys_or_user.in_(["sys", username])).all()
-    logging.debug(ma)
     for i in ma:
         mn_data = {
             "model_name": i[0],
@@ -302,8 +299,7 @@ async def CopyClassView (item: CopyClassModel, request: Request):
         return res
     save_result, msg = SaveClass(item.class_name, item.copied_class_name, item.parent_name, package_name,
                                  new_model_file_path=file_path, file_name=filename)
-    logging.debug(save_result)
-    logging.debug(msg)
+
     if save_result:
         if not item.parent_name:
             model = ModelsInformation(
@@ -384,8 +380,6 @@ async def DeletePackageAndModelView(request: Request, item: DeletePackageModel):
             model_file_path[-2] = datetime.now().strftime('%Y%m%d%H%M%S%f')
             model_file_path = "/".join(model_file_path)
             save_result, msg = SaveClass(class_name=model_name_all, package_name=package_name, copy_or_delete="delete", new_model_file_path=model_file_path)
-            logging.debug(save_result)
-            logging.debug(msg)
             if save_result:
                 package.file_path = model_file_path
                 session.query(ModelsInformationAll).filter_by(model_name_all=model_name_all, package_id=package_id, sys_or_user=username).delete(synchronize_session=False)
@@ -731,6 +725,7 @@ async def _test (model_name: str, request: Request):
     # username = request.user.username
     # r.hdel("GetGraphicsData_" + username, model_name)
     res = omc.sendExpression(model_name)
+
     # res = request.auth
     return {"msg": res,
             # "user": request.user.display_name,

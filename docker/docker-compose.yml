@@ -1,0 +1,84 @@
+version: "2"
+
+
+networks:
+  yssim-net:
+    external: true
+
+
+services:
+  zookeeper:
+    image: docker.io/bitnami/zookeeper:3.8
+    ports:
+      - "2181:2181"
+    volumes:
+      - "zookeeper_data:/bitnami"
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    networks:
+      - yssim-net
+    container_name: "yssim-zookeeper"
+    restart: always
+  kafka:
+    image: docker.io/bitnami/kafka:3.1
+    ports:
+      - "9092:9092"
+    volumes:
+      - "kafka_data:/bitnami"
+    environment:
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    depends_on:
+      - zookeeper
+    networks:
+      - yssim-net
+    container_name: "yssim-kafka"
+    restart: always
+
+  redis:
+    image: docker.io/redis:latest
+    ports:
+      - "56799:6379"
+    networks:
+      - yssim-net
+    container_name: "yssim-redis"
+    restart: always
+
+  Jmodelica:
+    image: docker.io/mihoutao/jmodelica:v2.3
+    ports:
+      - "56789:56789"
+    volumes:
+      - "../omlibrary/:/omlibrary"
+      - "../public/:/public"
+      - "../JM:/JM"
+      - "../:/code"
+#    depends_on:
+#      - kafka
+    command: "/usr/bin/supervisord -n -c /code/docker/Jmodelica/supervisor_JModelica.ini"
+    networks:
+      - yssim-net
+    container_name: "yssim-Jmodelica"
+    restart: always
+
+  NOTICE:
+    build:
+      context: "./notice"
+      dockerfile: "Dockerfile"
+    image: docker.io/mihoutao/notice:v1.0
+    ports:
+      - "5555:5555"
+    volumes:
+      - "/home/simtek/code/:/home/simtek/code"
+    command: "/home/simtek/code/miniconda3/bin/supervisord -n -c /home/simtek/code/docker/notice/notice.ini"
+    networks:
+      - yssim-net
+    container_name: "yssim-notice"
+    restart: always
+
+
+volumes:
+  zookeeper_data:
+    driver: local
+  kafka_data:
+    driver: local

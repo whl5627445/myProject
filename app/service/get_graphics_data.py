@@ -3,7 +3,6 @@ import logging
 
 from config.omc import omc as mod
 import os, re
-# from app.service.load_model_file import LoadModelFile
 
 
 class GetGraphicsData(object):

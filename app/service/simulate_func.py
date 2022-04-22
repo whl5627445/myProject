@@ -8,14 +8,12 @@ from app.model.Simulate.SimulateRecord import SimulateRecord
 from app.model.Simulate.SimulateResult import SimulateResult
 from config.DB_config import DBSession
 from datetime import datetime
-import socket
+from config.settings import JMODELICA_CONNECT
 from library.file_operation import FileOperation
 # from app.service.load_model_file import LoadModelFile
-import json, requests, time
 from app.service.get_model_code import GetModelCode
 from library.file_operation import FileOperation
-import os
-import xmltodict
+import xmltodict, socket,json, requests, time, os
 
 session = DBSession()
 
@@ -41,7 +39,6 @@ def SimulateDataHandle (space_id, SRecord: object, result_file_path, username, m
         SRecord.solver = DefaultExperiment.get("@solver", "")
         SRecord.output_format = DefaultExperiment.get("@outputFormat", "")
         SRecord.variable_filter = DefaultExperiment.get("@variableFilter", "")
-
         for k, v in mat_file_data.vars.items():
             model_variable_data_abscissa = mat_file_data.abscissa(k, True).tolist()
             data_len = len(v[1])
@@ -61,7 +58,7 @@ def SimulateDataHandle (space_id, SRecord: object, result_file_path, username, m
             model_variable_parent = k
             k_list = k.split(".")
             level = 1
-            if len(k_list) > 1 and "der(" not in k:
+            if len(k_list) > 1 and not k.startswith("der("):
                 model_variable_parent_list = k.split(".")[:-1]
                 model_variable_parent = ".".join(model_variable_parent_list)
                 level = len(model_variable_parent_list)
@@ -98,10 +95,11 @@ def SimulateDataHandle (space_id, SRecord: object, result_file_path, username, m
                     start=var_type_data.get("@start", ""),
                     use_nominal=var_type_data.get("@useNominal", ""),
                     unit=var_type_data.get("@unit", ""),
+                    display_unit=var_type_data.get("@displayUnit", ""),
                     )
             session.add(SResult)
         SRecord.simulate_status = "仿真已结束"
-        session.flush()  # 提交数据
+
     except Exception as e:
         print(e)
         SRecord.simulate_status = "仿真失败"
@@ -128,8 +126,14 @@ def JModelicaSimulate (SRecord: object, result_file_path: str, model_name: str, 
         }
     file_operation = FileOperation()
     file_operation.make_dir(result_file_path)
-    client = socket.socket()
-    client.connect(("119.3.155.11", 56789))
+    try:
+        client = socket.socket()
+        logging.info(JMODELICA_CONNECT)
+        client.connect(JMODELICA_CONNECT)
+    except Exception as e:
+        logging.error(e)
+        res_str = "连接失败"
+        return res, res_str
     try:
         client.send(json.dumps(msg).encode())
         compile_data = client.recv(1024).decode()
@@ -137,14 +141,12 @@ def JModelicaSimulate (SRecord: object, result_file_path: str, model_name: str, 
             model_name_ = model_name.replace(".", "_")
             msg["type"] = "simulate"
             msg["modelname"] = model_name_
-            logging.debug("msg: " + str(msg))
             r_data = {"message": model_name + " 编译成功，开始仿真"}
             r.lpush(username + "_" + "notification", json.dumps(r_data))
             client = socket.socket()
             client.connect(("119.3.155.11", 56789))
             client.send(json.dumps(msg).encode())
             simulate_data = client.recv(1024).decode()
-            logging.debug("simulate_data: " + str(simulate_data))
             if str(simulate_data) == "ok":
                 with open(result_file_path + model_name_ + ".fmu", "rb") as f:
                     fmu_data = f.read()
@@ -178,12 +180,12 @@ def OpenModelicaSimulate (SRecord: object, result_file_path: str, model_name: st
             res = True
         else:
             SRecord.simulate_status = "仿真失败"
-            simulate_result_str = "编译失败"
+            simulate_result_str = "仿真失败"
     else:
-        SRecord.simulate_status = "仿真失败"
+        SRecord.simulate_status = "编译失败"
         simulate_result_str = "编译失败"
     SRecord.simulate_end_time = datetime.now()
-    session.flush()
+    # session.flush()
     return res, simulate_result_str
 
 
@@ -198,14 +200,13 @@ def DymolaSimulate (SRecord: object, username, model_name, file_path=None, simul
     file_name = package_name + ".mo"
     data = {"code": 200}
     try:
-        model_str = GetModelCode(package_name, file_path, package_name)
+        model_str = GetModelCode(package_name)
         if file_path:
             files = {
                 "file": (file_name, model_str),
                 }
             r_upload_file = requests.post("http://121.37.183.103:8060/file/upload", data=url_dict, files=files)
             data = r_upload_file.json()
-        logging.debug("data: " + str(data))
         if data["code"] == 200 or file_path is None:
             fileName = ""
             if file_path:
@@ -217,7 +218,6 @@ def DymolaSimulate (SRecord: object, username, model_name, file_path=None, simul
                         }
             compile_res = requests.post("http://121.37.183.103:8060/dymola/translate", json=compile_req)
             compile_data = compile_res.json()
-            logging.debug("compile_data: " + str(compile_data))
             if compile_data["code"] == 200:
                 r_data = {"message": model_name + " 编译成功，开始仿真"}
                 r.lpush(username + "_" + "notification", json.dumps(r_data))
@@ -240,7 +240,7 @@ def DymolaSimulate (SRecord: object, username, model_name, file_path=None, simul
                     }
                 r_simulate = requests.post("http://121.37.183.103:8060/dymola/simulate", json=json_data_dict)
                 r_simulate_data = r_simulate.json()
-                logging.debug(r_simulate_data)
+                logging.info(r_simulate_data)
                 SRecord.simulate_end_time = datetime.now()
                 if r_simulate_data.get("code", None) == 200:
                     var_fileName = r_simulate_data.get("msg", "")
@@ -248,6 +248,7 @@ def DymolaSimulate (SRecord: object, username, model_name, file_path=None, simul
                     res_file_url = "http://121.37.183.103:8061/" + var_fileName
                     fmu_file_url = "http://121.37.183.103:8061/" + fmu_fileName
                     download_result_file = requests.get(res_file_url)
+                    logging.info("fmu_file_url: {}".format(fmu_file_url))
                     download_fmu_file = requests.get(fmu_file_url)
                     result_file_data = download_result_file.content
                     fmu_file_data = download_fmu_file.content
@@ -266,7 +267,7 @@ def DymolaSimulate (SRecord: object, username, model_name, file_path=None, simul
                 SRecord.simulate_status = "编译失败"
         else:
 
-            SRecord.simulate_status = "仿真失败"
+            SRecord.simulate_status = "仿真服务未开启，请稍后再试"
     except Exception as e:
         res_str = e
         SRecord.simulate_status = "仿真失败"
@@ -274,20 +275,26 @@ def DymolaSimulate (SRecord: object, username, model_name, file_path=None, simul
     return res, res_str
 
 
-def Simulate (space_id, SRecord_id, username: str, model_name: str, s_type="OM", file_path: str = None,
+def SimulateTask (space_id, SRecord_id, username: str, model_name: str, s_type="OM", file_path: str = None,
               simulate_parameters_data=None):
     package_name = model_name.split(".")[0]
     result_file_path = "public/UserFiles/ModelResult" + '/' + username + '/' + \
                        model_name.split('.')[
                            -1] + '/' + str(datetime.now().strftime('%Y%m%d%H%M%S%f')) + '/'
-    SRecord = session.query(SimulateRecord).filter_by(id=SRecord_id).first()
+    SRecord = session.query(SimulateRecord).filter(SimulateRecord.id == SRecord_id, SimulateRecord.username == username).first()
+    if not SRecord:
+        return False, "仿真记录不存在"
+    SRecord.simulate_start_time = datetime.now()
+    SRecord.simulate_status = "仿真进行中"
+    SRecord.simulate_start = True
+    session.flush()
     if file_path:
-        model_str = GetModelCode(package_name, file_path, package_name)
+        model_str = GetModelCode(package_name)
         FileOperation().write_file("/".join(file_path.split("/")[:-1]), package_name + ".mo", model_str)
     r_data = {"message": model_name + " 模型开始编译"}
     r.lpush(username + "_" + "notification", json.dumps(r_data))
     if s_type == "OM":
-        s_result, s_str = OpenModelicaSimulate(SRecord, result_file_path, model_name, file_path,
+        s_result, s_str = OpenModelicaSimulate(SRecord, result_file_path, model_name,
                                                simulate_parameters_data, username)
     elif s_type == "JM":
         s_result, s_str = JModelicaSimulate(SRecord, result_file_path, model_name, file_path, simulate_parameters_data,
@@ -295,7 +302,7 @@ def Simulate (space_id, SRecord_id, username: str, model_name: str, s_type="OM",
     elif s_type == "DM":
         s_result, s_str = DymolaSimulate(SRecord, username, model_name, file_path, simulate_parameters_data, result_file_path)
     else:
-        return "暂不支持此仿真类型"
+        return False, "仿真类型错误"
     if s_result:
         SimulateDataHandle(space_id, SRecord, result_file_path, username, model_name, simulate_result_str=s_str)
         r_data = {"message": model_name + " 模型仿真完成"}
@@ -305,6 +312,8 @@ def Simulate (space_id, SRecord_id, username: str, model_name: str, s_type="OM",
         session.flush()
         r_data = {"message": model_name + " 仿真失败"}
         r.lpush(username + "_" + "notification", json.dumps(r_data))
+    SRecord.simulate_start = False
+    session.flush()  # 提交数据
     session.close()
-
+    return s_result, s_str
 

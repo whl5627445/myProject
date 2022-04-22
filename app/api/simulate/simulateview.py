@@ -1,4 +1,6 @@
 # -- coding: utf-8 --
+import json
+
 from router.simulate_router import router
 from sqlalchemy import or_
 from fastapi import HTTPException
@@ -11,7 +13,7 @@ from app.model.Simulate.ExperimentRecord import ExperimentRecord
 from app.BaseModel.simulate import ExperimentCreateModel, SetSimulationOptionsModel
 from app.service.set_simulation_options import SetSimulationOptions
 from fastapi import Request, BackgroundTasks
-from app.service.simulate_func import Simulate
+from app.service.simulate_func import SimulateTask
 from app.BaseModel.simulate import ModelSimulateModel, ModelCodeSaveModel, FmuExportModel
 from app.BaseModel.respose_model import ResponseModel, InitResponseModel
 from app.service.get_tree_data import GetTreeData
@@ -20,8 +22,9 @@ from library.file_operation import FileOperation
 from app.service.get_simulation_options import GetSimulationOptions
 from app.service.fmu_export import DymolaFmuExport
 from app.service.HW_OBS_operation import OBSClient
+from config.kafka_config import producer
 
-import time
+import time,logging
 import datetime
 import requests
 
@@ -122,6 +125,7 @@ async def ModelSimulateView (item: ModelSimulateModel, background_tasks: Backgro
     """
     res = InitResponseModel()
     space_id = request.user.user_space
+    username = request.user.username
     simulate_parameters_data = {
         "startTime": 0.0 if item.start_time == "" else float(item.start_time),
         "stopTime": 4.0 if item.start_time == "" else float(item.stop_time),
@@ -140,16 +144,31 @@ async def ModelSimulateView (item: ModelSimulateModel, background_tasks: Backgro
     SRecord = SimulateRecord(
             username=request.user.username,
             package_id=item.package_id,
+            userspace_id=space_id,
             simulate_model_name=item.model_name,
-            simulate_status="仿真进行中",
+            simulate_status="正在排队等待",
+            simulate_parameters_data=simulate_parameters_data,
     )
     session.add(SRecord)
     session.flush()
-    background_tasks.add_task(Simulate, space_id, SRecord.id, request.user.username, item.model_name, simulate_type, model.file_path, simulate_parameters_data)
-    # SimulateTask.delay(SRecord.id, request.user.username, item.model_name, simulate_type, model.file_path, simulate_parameters_data)
-
-    res.msg = "仿真任务正在准备，请等待仿真完成"
-    res.data = [SRecord.id]
+    MQ_data = {
+            "space_id": space_id,
+            "SRecord_id": SRecord.id,
+            "model_name": item.model_name,
+            "s_type": simulate_type,
+            "file_path": model.file_path,
+            "simulate_parameters_data": simulate_parameters_data,
+        }
+    future = producer.send(username + "_SIMULATE", key='SIMULATE'.encode(), value=json.dumps(MQ_data).encode(), partition=0)
+    future.get(timeout=10)
+    result = future.succeeded()
+    if result:
+    # background_tasks.add_task(SimulateTask, space_id, SRecord.id, request.user.username, item.model_name, simulate_type, model.file_path, simulate_parameters_data)
+        res.msg = "仿真任务正在准备，请等待仿真完成"
+        res.data = [SRecord.id]
+    else:
+        res.err = "仿真服务尚未开启，请稍后再试"
+        res.status = 1
     return res
 
 
@@ -197,11 +216,13 @@ async def SimulateResultListView (request: Request):
             SimulateRecord.id,
             SimulateRecord.simulate_model_name,
             SimulateRecord.simulate_status,
+            SimulateRecord.create_time,
             SimulateRecord.simulate_start_time,
             SimulateRecord.simulate_end_time
     ).filter_by(username=request.user.username,
-                # userspace_id=space_id
+                userspace_id=space_id
                 ).order_by(SimulateRecord.simulate_start_time.desc()).all()
+
     if record_list:
         data_list = []
         for i in record_list:
@@ -209,8 +230,9 @@ async def SimulateResultListView (request: Request):
                 "id": i[0],
                 "simulate_model_name": i[1],
                 "simulate_status": i[2],
-                "simulate_start_time": i[3],
-                "simulate_end_time": i[4],
+                "create_time": i[3],
+                "simulate_start_time": i[4],
+                "simulate_end_time": i[5],
             }
             data_list.append(data_dict)
         res.data = data_list
@@ -340,12 +362,8 @@ async def FmuExportModelView (request: Request, item: FmuExportModel):
     ## package_name： 包的名称
     ## model_name： 模型全名
     ## fmu_name： fmu文件的名字
+    ## fmu_par： fmu导出的参数
     ## download_local： 是否下载到本地
-    ## storeResult： 暂时不启用
-    ## includeSource： 暂时不启用
-    ## fmiVersion： 暂时不启用
-    ## includeImage： 暂时不启用
-    ## fmiType： 暂时不启用
     ## return: 返回导出结果、如果下载到本地，则返回下载地址
     """
     res = InitResponseModel()
@@ -368,23 +386,23 @@ async def FmuExportModelView (request: Request, item: FmuExportModel):
                              )
     if item.download_local:
         result = res_dy.get("result", None)
+        logging.info("fmu导出：{}".format(res_dy))
         if result:
-            fmu_data = session.query(FmuAttachment).filter_by(create_user=username, file_name=item.fmu_name + ".fmu").first()
-            try:
-                obs = OBSClient()
-                HW_res = obs.createSignedUrl("fzpt-fmu", fmu_data.obs_name)
-                if HW_res.get("signedUrl", None):
-                    res.data = [HW_res["signedUrl"]]
-                else:
-                    res.err = "下载失败，请稍后再试"
-                    res.status = 1
-            except Exception as e:
-                print(e)
-        if not res.data:
+            # fmu_data = session.query(FmuAttachment).filter_by(create_user=username, file_name=item.fmu_name + ".fmu").first()
+            file_path = res_dy.get("file_path", None)
+            obs = OBSClient()
+            HW_res = obs.putFile(file_path, file_path)
+            logging.info("obs上传结果：{}".format(HW_res))
+            if HW_res.get("status", None) == 200:
+                res.data = [HW_res["body"]["objectUrl"]]
+            else:
+                res.err = "导出失败，请稍后再试"
+                res.status = 1
+        else:
             res.status = 2
             res.msg = "导出失败"
     else:
-        if not res_dy["result"]:
-            res.status = 2
-            res.err = "导出失败"
+        # if not res_dy["result"]:
+        res.status = 2
+        res.err = "导出失败"
     return res

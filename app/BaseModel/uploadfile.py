@@ -16,9 +16,9 @@ class UploadSaveModelModel(BaseModel):
     str_type: Optional[str] = None
     model_str: Optional[str] = None
     package_id: Optional[str] = None
+    comment: Optional[str] = None
     vars: dict = {
         "expand": "",
-        "comment": "",
         "insert_to": "",
         "partial": False,
         "encapsulated": False,

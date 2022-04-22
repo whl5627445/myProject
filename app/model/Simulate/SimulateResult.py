@@ -41,3 +41,4 @@ class SimulateResult(Base):
     fixed = Column(VARCHAR)
     use_nominal = Column(VARCHAR)
     unit = Column(VARCHAR)
+    display_unit = Column(VARCHAR)

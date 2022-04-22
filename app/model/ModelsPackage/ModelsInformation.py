@@ -43,5 +43,5 @@ class UserSpace(Base):
     id = Column(Integer, primary_key=True)
     username = Column(VARCHAR)
     spacename = Column(VARCHAR)
-    update_time = Column(VARCHAR)
-    create_time = Column(VARCHAR)
+    update_time = Column(DateTime)
+    create_time = Column(DateTime, default=datetime.datetime.now)

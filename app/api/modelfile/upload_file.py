@@ -40,7 +40,7 @@ async def UploadFileView(request: Request, file: UploadFile = File(...), package
     if filename.endswith(".mo"):
         package_name = file.filename.removesuffix(".mo")
         mo_path = file_path + "/" + package_name + ".mo"
-        UP = session.query(ModelsInformation).filter_by(id=package_id, sys_or_user=request.user.username).first()
+        UP = session.query(ModelsInformation).filter_by(userspace_id=space_id, sys_or_user=request.user.username, package_name=package_name).first()
         if UP:
             res.err = "文件已存在！"
             res.status = 2
@@ -111,7 +111,7 @@ async def SaveFileView(request: Request):
     model_str = urllib.parse.unquote(item.get("model_str", ""))  # html和JavaScript标签被过滤，无奈选择转码后解码
     package_id = item.get("package_id", None)
     username = request.user.username
-    package = session.query(ModelsInformation).filter_by(sys_or_user=username, id=package_id).first()
+    package = session.query(ModelsInformation).filter_by(userspace_id=space_id, sys_or_user=request.user.username, id=package_id).first()
     if not package:
         raise HTTPException(status_code=404, detail="not found")
     mo_path = package.file_path
@@ -134,10 +134,10 @@ async def SaveFileView(request: Request):
             res.data = [{"model_str": res_model_str, "id": M_id}]
             res.msg = "保存文件成功！"
         else:
-            res.err = "模型加载失败，请重新检查后上传"
+            res.err = "语法错误，请重新检查后上传"
             res.status = 1
     else:
-        res.err = "模型加载失败，请重新检查后上传"
+        res.err = "语法错误，请重新检查后上传"
         res.status = 1
     for i in notice_data:
         r_data = {
@@ -206,7 +206,7 @@ async def SaveModelView(request: Request, item: UploadSaveModelModel):
         return res
     file_path = "public/UserFiles/UploadFile/" + username + "/" + str(datetime.now().strftime('%Y%m%d%H%M%S%f'))
     if not model_str:
-        result, notice_data = CreateModelicaClass(create_package_name, str_type, var, create_package_name_all, path)
+        result, notice_data = CreateModelicaClass(create_package_name, str_type, var, create_package_name_all, path, item.comment)
     else:
         result, notice_data = UpdateModelicaClass(model_str, path)
     res_package_str = GetModelCode(init_name)
@@ -219,10 +219,10 @@ async def SaveModelView(request: Request, item: UploadSaveModelModel):
             res.msg = "successful！"
         else:
             res.status = 1
-            res.err = "模型加载失败，请重新检查"
+            res.err = "语法错误，请重新检查"
     else:
         res.status = 1
-        res.err = "模型加载失败，请重新检查"
+        res.err = "语法错误，请重新检查"
     for i in notice_data:
         r_data = {
             "message": i["message"],
@@ -269,7 +269,6 @@ async def UploadIconView(request: Request, model_name: str = Form(...), package_
             else:
                 model = session.query(ModelsInformation).filter_by(id=package_id, sys_or_user=username).first()
                 model.image = image_url
-            logging.debug(HW_res)
             session.flush()
             session.close()
             res.msg = "图标上传成功"

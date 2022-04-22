@@ -4,7 +4,6 @@ import logging
 from app.service.get_model_code import GetModelCode
 from library.file_operation import FileOperation
 from config.omc import omc
-# from app.service.load_model_file import LoadModelFile
 
 
 def CopyClass (copied_class_name, class_name, parent_name):
@@ -13,13 +12,10 @@ def CopyClass (copied_class_name, class_name, parent_name):
         parent_name = "TopLevel"
     else:
         parent_information = omc.getClassInformation(parent_name)
-        logging.debug(parent_information)
         if parent_information and parent_information[0] != "package":
             return False, "Parent node is not a package or root"
     if exist_class:
         return False, "Model already exists"
-    logging.debug(exist_class)
-    logging.debug(parent_name)
     copy_result = omc.copyClass(copied_class_name, class_name, parent_name)
     if copy_result:
         return True, "Copy model successfully"
@@ -58,6 +54,4 @@ def SaveClass (class_name, copied_class_name=None, parent_name=None, package_nam
                 file_name = new_model_file_path.split("/")[-1]
             path = "/".join(new_model_file_path.split("/")[:-1])
             FileOperation.write_file(path, file_name, data)
-    logging.debug(result)
-    logging.debug(msg)
     return result, msg

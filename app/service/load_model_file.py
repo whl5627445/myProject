@@ -2,26 +2,14 @@
 import logging
 
 from config.omc import omc
-from config.DB_config import session
-from app.model.ModelsPackage.ModelsInformation import ModelsInformation
-from sqlalchemy import or_
 
-def LoadModelFile(package_name="", path="", username="", check=True):
+
+def LoadModel(package_name="", path="", check=True):
+    load_res = True
+    package_name_list = omc.getClassNames()
     if check:
-        package_name_list = omc.getClassNames()
         if package_name not in package_name_list:
-            models = session.query(ModelsInformation).filter(ModelsInformation.sys_or_user.in_(["sys", username])).all()
-            for model in models:
-                if model.file_path:
-                    load_res = omc.loadFile(model.file_path)
-
+            load_res = omc.loadFile(path)
     else:
-        omc.loadFile(path)
-
-
-def LoadModel(models):
-    load_res = False
-    for model in models:
-        logging.debug(model.package_name)
-        load_res = omc.loadFile(model.file_path)
+        load_res = omc.loadFile(path)
     return load_res

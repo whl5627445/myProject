@@ -1,5 +1,5 @@
 # -- coding: utf-8 --
-from sqlalchemy import Column, Integer, String, DateTime, VARCHAR, JSON, TEXT
+from sqlalchemy import Column, Integer, String, DateTime, VARCHAR, JSON, TEXT, BOOLEAN
 from sqlalchemy.orm import declarative_base
 import datetime
 
@@ -16,7 +16,8 @@ class SimulateRecord(Base):
     simulate_model_name = Column(VARCHAR)
     simulate_model_result_path = Column(VARCHAR)
     simulate_status = Column(VARCHAR)
-    simulate_start_time = Column(DateTime, default=datetime.datetime.now)
+    create_time = Column(DateTime, default=datetime.datetime.now)
+    simulate_start_time = Column(DateTime)
     simulate_end_time = Column(DateTime)
     simulate_result_str = Column(VARCHAR)
     fmi_version = Column(VARCHAR)
@@ -28,3 +29,5 @@ class SimulateRecord(Base):
     solver = Column(VARCHAR)
     output_format = Column(VARCHAR)
     variable_filter = Column(VARCHAR)
+    simulate_start = Column(BOOLEAN, default=False)
+    simulate_parameters_data = Column(JSON)

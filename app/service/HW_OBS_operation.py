@@ -16,3 +16,9 @@ class OBSClient(object):
     def createSignedUrl(bucketName, objectKey, method="GET"):
         res = obsClient.createSignedUrl(method, bucketName, objectKey)
         return res
+
+
+if __name__ == '__main__':
+    obs = OBSClient()
+    res = obs.putFile("example/thumbnail/Filter.jpg", "/home/simtek/code/public/UserFiles/Filter.jpg")
+    print(res)

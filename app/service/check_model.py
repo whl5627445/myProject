@@ -24,6 +24,8 @@ def GetMessagesStringInternal():
         data = i.strip().split(',\n')
         for j in data:
             j_data = j.strip()
+            if "MODELICAPATH" in j_data  or "installPackage" in j_data:
+                continue
             if j_data.startswith('message'):
                 message.append(j_data.replace('message = ', '')[1:-1])
             if j_data.startswith('level'):

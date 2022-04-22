@@ -1,8 +1,7 @@
 # -- coding: utf-8 --
 from config.omc import omc
-# from app.service.load_model_file import LoadModelFile
 import re
-from config.modelica_config import modelica_keywords
+from config.settings import modelica_keywords
 
 def GetComponentName(class_name, component_name_all):
     data = omc.getComponents(class_name)

@@ -1,19 +1,15 @@
 # -- coding: utf-8 --
 import requests
 from datetime import datetime
-import json
+import json, logging
+from library.file_operation import FileOperation
+
 
 def DymolaFmuExport(fmu_par, token, username: str, file_name: str = "", model_str: str = None, file_path: str = None):
-    modelName = fmu_par.model_name.replace(".", "-")
     data = {
         "username": username,
-        "storeResult": fmu_par.storeResult,
-        "includeSource": fmu_par.includeSource,
-        "fmiVersion": str(fmu_par.fmiVersion),
-        "includeImage": fmu_par.includeImage,
-        "fmiType": fmu_par.fmiType,
+        "fmuPar": fmu_par.fmuPar,
         "modelName": fmu_par.fmu_name,
-        # "modelName": modelName,
         "fileName": "",
         "modelToOpen": fmu_par.model_name,
         "token": token,
@@ -28,20 +24,36 @@ def DymolaFmuExport(fmu_par, token, username: str, file_name: str = "", model_st
         file_data = {"url":username + "/" + url}
         res_upload_file = requests.post("http://121.37.183.103:8060/file/upload", data=file_data, files=files)
         upload_file_data = res_upload_file.json()
-        if upload_file_data["code"] == 200:
+        if upload_file_data.get("code", None) == 200:
             data["fileName"] = url + "/" + file_name + ".mo"
             res_export_fmu = requests.post("http://121.37.183.103:8060/dymola/translateModelFMU", json=data)
+            logging.info(data)
             export_fmu_data = res_export_fmu.json()
-            if not export_fmu_data["code"] == 200:
-                res["result"] = False
+            logging.info(export_fmu_data)
+
         else:
+            export_fmu_data = {}
             res["result"] = False
     else:
         res_export_fmu = requests.post("http://121.37.183.103:8060/dymola/translateModelFMU", json=data)
         export_fmu_data = res_export_fmu.json()
-        if export_fmu_data["code"] == 200:
+        logging.info(data)
+        logging.info(export_fmu_data)
+        if export_fmu_data.get("code", None) != 200:
             if not fmu_par.download_local:
                 res["result"] = False
-        else:
-            res["result"] = False
+
+    if res.get("result", None):
+        fmu_fileName = export_fmu_data.get("msg", "")
+        fmu_file_url = "http://121.37.183.103:8061/" + fmu_fileName
+        download_fmu_file = requests.get(fmu_file_url)
+        fmu_file_data = download_fmu_file.content
+        file_operation = FileOperation()
+        result_file_path = "public/UserFiles/FmuExport" + '/' + username + '/' + \
+                           fmu_par.fmu_name.split('.')[
+                               -1] + '/' + str(datetime.now().strftime('%Y%m%d%H%M%S%f')) + '/'
+        file_operation.write_file(result_file_path, "dymola_model.fmu", fmu_file_data)
+        res["file_path"] = result_file_path + "dymola_model.fmu"
+    else:
+        res["result"] = False
     return res

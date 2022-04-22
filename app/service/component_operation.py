@@ -2,7 +2,6 @@
 import logging
 
 from config.omc import omc
-# from app.service.load_model_file import LoadModelFile
 
 
 def ComponentsVerification(class_name, component_name, model_name_all):

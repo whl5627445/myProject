@@ -1,6 +1,5 @@
 # -- coding: utf-8 --
 from config.omc import omc
-# from app.service.load_model_file import LoadModelFile
 
 
 def GetModelCode(model_name):

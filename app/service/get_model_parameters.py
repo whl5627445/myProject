@@ -2,7 +2,6 @@
 import logging
 
 from config.omc import omc
-# from app.service.load_model_file import LoadModelFile
 
 
 class GetModelParameters(object):
@@ -21,8 +20,6 @@ class GetModelParameters(object):
         DerivedClassModifierNames = omc.getDerivedClassModifierNames(self.model_name)
 
         if DerivedClassModifierNames and DerivedClassModifierNames != ['']:
-            logging.debug("model_name: " + str(self.model_name))
-            logging.debug("DerivedClassModifierNames: " + str(DerivedClassModifierNames))
             DerivedClassModifierValue = []
             for n in range(1, len(DerivedClassModifierNames)):
                 data = omc.getDerivedClassModifierValue(self.model_name, DerivedClassModifierNames[n])

@@ -326,7 +326,8 @@ class OMCSessionBase(with_metaclass(abc.ABCMeta, object)):
         return res
 
     def loadFile (self, filename):
-        return self.ask('loadFile', '"{0}"'.format(filename))
+        cmd = 'loadFile(\"{0}\", \"UTF-8\",true,true,false)'.format(filename)
+        return self.ask(cmd)
 
     def simulate (self, className, fileNamePrefix, simulate_parameters_data):
         cmd = className + ', fileNamePrefix = "' + fileNamePrefix  + 'result\"'

@@ -302,7 +302,6 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
 
     def getDerivedClassModifierValue (self, class_name, modifier_name):
         cmd = "getDerivedClassModifierValue(" + class_name + "," + modifier_name + ")"
-        logging.debug(cmd)
         getDerivedClassModifierValue_data = self.sendExpression(cmd)
         return getDerivedClassModifierValue_data
 
@@ -367,7 +366,6 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
 
     def copyClass (self, copied_class_name, class_name, parent_name):
         cmd = "copyClass(" + copied_class_name + ",\"" + class_name + "\"," + parent_name + ")"
-        logging.debug(cmd)
         result = self.sendExpression(cmd)
         return result
 
