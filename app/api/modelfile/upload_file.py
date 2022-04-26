@@ -180,7 +180,7 @@ async def SaveModelView(request: Request, item: UploadSaveModelModel):
     var = item.vars
     username = request.user.username
     package = session.query(ModelsInformation).filter(
-            ModelsInformation.package_name == create_package_name).filter_by(
+            ModelsInformation.package_name == create_package_name, ModelsInformation.userspace_id==space_id).filter_by(
         sys_or_user=username).first()
     if var["insert_to"]:
         insert_package_name = var["insert_to"].split(".")[0]

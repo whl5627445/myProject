@@ -20,7 +20,6 @@ def CreateModelicaClass(package_name, str_type, var, create_package_name_all, pa
     model_str_base = str_type + " " + package_name + comment + expand + " end " + package_name + ";"
     model_str = ""
     if insert_to:
-        insert_package_name = insert_to.split(".")[0]
         model_str = "within " + insert_to + "; "
     if encapsulated:
         model_str = model_str + "encapsulated "

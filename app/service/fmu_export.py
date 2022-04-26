@@ -27,9 +27,7 @@ def DymolaFmuExport(fmu_par, token, username: str, file_name: str = "", model_st
         if upload_file_data.get("code", None) == 200:
             data["fileName"] = url + "/" + file_name + ".mo"
             res_export_fmu = requests.post("http://121.37.183.103:8060/dymola/translateModelFMU", json=data)
-            logging.info(data)
             export_fmu_data = res_export_fmu.json()
-            logging.info(export_fmu_data)
 
         else:
             export_fmu_data = {}
@@ -37,8 +35,7 @@ def DymolaFmuExport(fmu_par, token, username: str, file_name: str = "", model_st
     else:
         res_export_fmu = requests.post("http://121.37.183.103:8060/dymola/translateModelFMU", json=data)
         export_fmu_data = res_export_fmu.json()
-        logging.info(data)
-        logging.info(export_fmu_data)
+
         if export_fmu_data.get("code", None) != 200:
             if not fmu_par.download_local:
                 res["result"] = False
@@ -52,8 +49,8 @@ def DymolaFmuExport(fmu_par, token, username: str, file_name: str = "", model_st
         result_file_path = "public/UserFiles/FmuExport" + '/' + username + '/' + \
                            fmu_par.fmu_name.split('.')[
                                -1] + '/' + str(datetime.now().strftime('%Y%m%d%H%M%S%f')) + '/'
-        file_operation.write_file(result_file_path, "dymola_model.fmu", fmu_file_data)
-        res["file_path"] = result_file_path + "dymola_model.fmu"
+        file_operation.write_file(result_file_path, fmu_par.fmu_name + ".fmu", fmu_file_data)
+        res["file_path"] = result_file_path + fmu_par.fmu_name + ".fmu"
     else:
         res["result"] = False
     return res

@@ -315,7 +315,8 @@ async def CopyClassView (item: CopyClassModel, request: Request):
         else:
             model = session.query(ModelsInformationAll).filter(
                     ModelsInformationAll.model_name_all == item.copied_class_name,
-                    ModelsInformationAll.package_name == package_name
+                    ModelsInformationAll.package_name == package_name,
+                    ModelsInformationAll.userspace_id == space_id
                     ).first()
             if model:
                 child_name = model.child_name
@@ -326,6 +327,7 @@ async def CopyClassView (item: CopyClassModel, request: Request):
             ModelsInformationAll_new = ModelsInformationAll(
                     package_name=package_name,
                     package_id=package.id,
+                    userspace_id=space_id,
                     model_name=item.class_name,
                     parent_name=item.parent_name,
                     child_name=child_name,
@@ -337,11 +339,13 @@ async def CopyClassView (item: CopyClassModel, request: Request):
             model_parent = session.query(ModelsInformationAll).filter(
                     ModelsInformationAll.model_name_all == item.parent_name,
                     ModelsInformationAll.package_name == package_name,
+                    ModelsInformationAll.userspace_id == space_id,
                     ModelsInformationAll.sys_or_user == username
                     ).first()
             if not model_parent:
                 model_parent = session.query(ModelsInformation).filter(
                     ModelsInformation.package_name == package_name,
+                    ModelsInformation.userspace_id == space_id,
                     ModelsInformation.sys_or_user == username).first()
             m_child_name = copy.deepcopy(model_parent.child_name)
             m_child_name.append(item.class_name)
