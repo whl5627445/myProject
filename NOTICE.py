@@ -45,16 +45,16 @@ async def NotificationView (ws: WebSocket, username: str = None):
     :return: 暂时只被动接受消息， 服务器不接受数据
     """
     try:
-        ws.num = random.randint(5000, 9999)
+
         await MANAGER.connect(ws, username)
         while True:
             res = {"status": False, "msg": "", "type": "message"}
             req_data = await ws.receive_text()
             req_data = json.loads(req_data)
-            if type(req_data) is not dict:
-                res_data = str(req_data).encode()
-            else:
-                res_data = r.rpop(req_data.get("user", "") + "_" + "notification")
+            # res_data = r.rpop("wanghailong_" + "notification")
+            username = req_data.get("user", "")
+            res_data = r.rpop(req_data.get("user", "") + "_" + "notification")
+
             if res_data:
                 r_data = json.loads(res_data.decode())
                 message = r_data.get("message", "An error occurred")
@@ -62,9 +62,11 @@ async def NotificationView (ws: WebSocket, username: str = None):
                 res["status"] = True
                 res["type"] = r_data.get("type", "message")
             data = json.dumps(res, ensure_ascii=False)
-            await manager.send_personal_message(data, ws, username)
+            if res["status"]:
+                logging.info(username + ": " + data)
+            await manager.send_personal_message(data, username)
     except WebSocketDisconnect:
-        manager.disconnect(ws, username)
+        manager.disconnect(username)
 
 
 html = """

@@ -4,7 +4,7 @@ from config.HW_OBS import obsClient
 # 使用访问OBS
 
 
-class OBSClient(object):
+class HWOBS(object):
     def __init__(self):
         self.bucketName = "yssim-static"
 
@@ -19,6 +19,6 @@ class OBSClient(object):
 
 
 if __name__ == '__main__':
-    obs = OBSClient()
+    obs = HWOBS()
     res = obs.putFile("example/thumbnail/Filter.jpg", "/home/simtek/code/public/UserFiles/Filter.jpg")
     print(res)

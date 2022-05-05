@@ -177,3 +177,9 @@ class SimulateResultExportModel(BaseModel):
 
 class SimulateALLResultModel(BaseModel):
     record_id: int
+
+
+class SetModelDocumentModel(BaseModel):
+    package_id: str
+    model_name: str
+    document: str

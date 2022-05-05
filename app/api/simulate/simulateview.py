@@ -8,12 +8,10 @@ from config.DB_config import DBSession
 from app.model.Simulate.SimulateResult import SimulateResult
 from app.model.Simulate.SimulateRecord import SimulateRecord
 from app.model.ModelsPackage.ModelsInformation import ModelsInformation
-from app.model.ModelsPackage.Fmu import FmuAttachment
 from app.model.Simulate.ExperimentRecord import ExperimentRecord
 from app.BaseModel.simulate import ExperimentCreateModel, SetSimulationOptionsModel
 from app.service.set_simulation_options import SetSimulationOptions
 from fastapi import Request, BackgroundTasks
-from app.service.simulate_func import SimulateTask
 from app.BaseModel.simulate import ModelSimulateModel, ModelCodeSaveModel, FmuExportModel
 from app.BaseModel.respose_model import ResponseModel, InitResponseModel
 from app.service.get_tree_data import GetTreeData
@@ -21,13 +19,10 @@ from app.service.get_model_code import GetModelCode
 from library.file_operation import FileOperation
 from app.service.get_simulation_options import GetSimulationOptions
 from app.service.fmu_export import DymolaFmuExport
-from app.service.HW_OBS_operation import OBSClient
+from library.HW_OBS_operation import HWOBS
 from config.kafka_config import producer
 
-import time,logging
-import datetime
-import requests
-
+import logging
 
 session = DBSession()
 
@@ -390,7 +385,7 @@ async def FmuExportModelView (request: Request, item: FmuExportModel):
         if result:
             # fmu_data = session.query(FmuAttachment).filter_by(create_user=username, file_name=item.fmu_name + ".fmu").first()
             file_path = res_dy.get("file_path", None)
-            obs = OBSClient()
+            obs = HWOBS()
             HW_res = obs.putFile(file_path, file_path)
             logging.info("obs上传结果：{}".format(HW_res))
             if HW_res.get("status", None) == 200:

@@ -237,6 +237,10 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
                 data_list.extend(DiagramAnnotation_data)
         return data_list
 
+    def getIconAnnotation (self, class_name):
+        IconAnnotation_data = self.sendExpression("getIconAnnotation(" + class_name + ")")
+        return IconAnnotation_data
+
     def getIconAnnotationList (self, class_name_list):
         data_list = []
         for i in class_name_list:
@@ -396,6 +400,17 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
 
     def addClassAnnotation (self, class_name_all, annotate_str):
         cmd = "addClassAnnotation(" + class_name_all + ", annotate=" + annotate_str + ")"
+        logging.info(cmd)
+        result = self.sendExpression(cmd)
+        return result
+
+    def getAnnotationNamedModifiers (self, class_name_all, vendor_annotation):
+        cmd = "getAnnotationNamedModifiers(" + class_name_all + ",\"" + vendor_annotation + "\")"
+        result = self.sendExpression(cmd)
+        return result
+
+    def getAnnotationModifierValue (self, class_name_all, vendor_annotation, modifier_name):
+        cmd = "getAnnotationModifierValue(" + class_name_all + ",\"" + vendor_annotation + "\",\"" + modifier_name + "\")"
         result = self.sendExpression(cmd)
         return result
 
@@ -497,6 +512,22 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
     def getUses (self, package_name):
         # getUses(Guideline36)
         cmd = "getUses(" + package_name + ")"
+        result = self.sendExpression(cmd)
+        return result
+
+    def setDocumentationAnnotation (self, class_name, info="", revisions=""):
+        cmd = "setDocumentationAnnotation(" + class_name + ",\"" + info + "\",\"" + revisions + "\")"
+        result = self.sendExpression(cmd)
+        return result
+
+    def getDocumentationAnnotation (self, class_name):
+        cmd = "getDocumentationAnnotation(" + class_name + ")"
+        result = self.sendExpression(cmd)
+        return result
+
+    def uriToFilename (self, uri):
+        # uriToFilename("modelica://Modelica/Resources/Images/Blocks/Filter1.png")
+        cmd = "uriToFilename(\"" + uri + "\")"
         result = self.sendExpression(cmd)
         return result
 

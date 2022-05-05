@@ -11,9 +11,8 @@ from app.BaseModel.simulate import AddComponentModel, DeleteComponentModel, Upda
     UpdateConnectionAnnotationModel
 from app.BaseModel.simulate import CopyClassModel, SetComponentModifierValueModel, SetComponentPropertiesModel
 from app.BaseModel.simulate import DeleteConnectionModel, DeletePackageModel, GetComponentNameModel, \
-    UpdateConnectionNamesModel
+    UpdateConnectionNamesModel, SetModelDocumentModel
 from app.model.ModelsPackage.ModelsInformation import ModelsInformation, ModelsInformationAll
-from app.model.Simulate.SimulateRecord import SimulateRecord
 from app.service.component_operation import AddComponent, DeleteComponent, UpdateComponent
 from app.service.connection_operation import AddConnection, DeleteConnection, UpdateConnectionAnnotation, \
     UpdateConnectionNames
@@ -26,10 +25,10 @@ from app.service.get_model_parameters import GetModelParameters
 from app.service.set_component_modifier_value import SetComponentModifierValue
 from app.service.set_component_properties import SetComponentProperties
 from app.service.check_model import CheckModel
+from app.service.model_document_operation import GetModelDocument, SetModelDocument
 from config.DB_config import DBSession
 from config.omc import omc
 from sqlalchemy import or_,and_
-from app.service.save_class_names import SaveClassNames
 from library.file_operation import FileOperation
 from router.simulatemodel_router import router
 
@@ -135,9 +134,9 @@ async def GetModelCodeView (package_id: str, model_name: str, request: Request):
 
 
 @router.get("/getmodelparameters", response_model=ResponseModel)
-async def GetModelParametersView (package_id: str, model_name: str, name: str, components_name: str, request: Request):
+async def GetModelParametersView (request: Request, package_id: str, model_name: str, name: str="", components_name: str=""):
     """
-    # 获取模型组件的参数数据，一次性返回
+    # 获取模型组件的参数数据，一次性返回, 注意，如果是获取整个模型的顶层参数， 只传入模型名称即可， 组件别名和组件名称都不需要传入
     ## model_name: 需要查询的模型名称，全称，例如“ENN.Examples.Scenario1_Status”
     ## components_name: 需要查询模型的组件名称，全称， 例如“Modelica.Blocks.Continuous.LimPID“
     ## name: 需要查询的组件别名，全称，“PID”
@@ -375,9 +374,10 @@ async def DeletePackageAndModelView(request: Request, item: DeletePackageModel):
     parent_name = item.parent_name
     class_name = item.class_name
     username = request.user.username
-
+    package = session.query(ModelsInformation).filter_by(id=package_id, sys_or_user=username).first()
+    if not package:
+        raise HTTPException(status_code=404, detail="not found")
     if parent_name:
-        package = session.query(ModelsInformation).filter_by(id=package_id, sys_or_user=username).first()
         model_name_all = parent_name + "." + class_name
         if package:
             model_file_path = package.file_path.split("/")
@@ -415,8 +415,11 @@ async def DeletePackageAndModelView(request: Request, item: DeletePackageModel):
             res.err = msg
             res.status = 1
             return res
-        session.query(ModelsInformation).filter_by(id=package_id, sys_or_user=username).delete(synchronize_session=False)
-        session.query(ModelsInformationAll).filter_by(package_id=package_id, sys_or_user=username).delete(synchronize_session=False)
+        logging.info("删除")
+        logging.info("package_id:%s", package_id)
+        logging.info("username:%s", username)
+        # session.query(ModelsInformation).filter_by(id=package_id, sys_or_user=username).delete(synchronize_session=False)
+        # session.query(ModelsInformationAll).filter_by(package_id=package_id, sys_or_user=username).delete(synchronize_session=False)
     session.flush()
     session.close()
     return res
@@ -723,14 +726,84 @@ async def CheckModelView(package_id: str, model_name: str, request: Request):
     return res
 
 
+@router.get("/getcomponents", response_model=ResponseModel)
+async def GetComponentsView (request: Request, package_id: str, model_name: str):
+    """
+    # 获取模型的全部组件数据，一次性返回
+    ##  model_name: 需要查询属性数据的模型名称，全称，例如“Modelica.Blocks.Examples.PID_Controller”
+    ##  package_id: 所属package的id值，例如“1”
+    """
+    res = InitResponseModel()
+    username = request.user.username
+    package_name = session.query(ModelsInformation).filter(ModelsInformation.sys_or_user.in_(["sys", username]),
+                                                      ModelsInformation.id == package_id).first()
+    if not package_name:
+        return HTTPException(status_code=401, detail="not found")
+    result = GetComponents(model_name)
+    if result:
+        for i in result:
+            components_data = {
+                "component_model_name": i[0],
+                "component_name": i[1],
+                "component_description": i[2],
+                }
+            res.data.append(components_data)
+    logging.info(result)
+    return res
+
+
+@router.get("/getmodeldocument", response_model=ResponseModel)
+async def GetModelDocumentView (request: Request, package_id: str, model_name: str):
+    """
+    # 获取模型的文档数据
+    ##  model_name: 需要查询文档的模型名称，全称，例如“Modelica.Blocks.Examples.PID_Controller”
+    ##  package_id: 所属package的id值，例如“1”
+    """
+    res = InitResponseModel()
+    username = request.user.username
+    package_name = session.query(ModelsInformation).filter(ModelsInformation.sys_or_user.in_(["sys", username]),
+                                                      ModelsInformation.id == package_id).first()
+    if not package_name:
+        return HTTPException(status_code=401, detail="not found")
+    result = GetModelDocument(model_name)
+    res.data.append({
+        "document": result,
+        "model_name": model_name
+        })
+    return res
+
+
+@router.post("/setmodeldocument", response_model=ResponseModel)
+async def SetModelDocumentView (request: Request, item: SetModelDocumentModel):
+    """
+    # 设置模型的文档数据
+    ##  model_name: 需要查询文档的模型名称，全称，例如“Modelica.Blocks.Examples.PID_Controller”
+    ##  document: 文档内容
+    ##  package_id: 所属package的id值，例如“1”
+    """
+    res = InitResponseModel()
+    username = request.user.username
+    package_name = session.query(ModelsInformation).filter(ModelsInformation.sys_or_user==username,
+                                                      ModelsInformation.id == item.package_id).first()
+    if not package_name:
+        return HTTPException(status_code=401, detail="not found")
+    result = SetModelDocument(item.model_name, item.document)
+    if result:
+        res.msg = "文档更新成功"
+    else:
+        res.err = "文档更新失败, 请检查模型名称是否正确"
+        res.status = 2
+    return res
+
+
 @router.get("/test")
 async def _test (model_name: str, request: Request):
-
+    # from app.service.icon_operation import GetIcon
+    from app.service.get_package_node_tree import GetPackageNodeTree
+    import time
     # username = request.user.username
     # r.hdel("GetGraphicsData_" + username, model_name)
-    res = omc.sendExpression(model_name)
-
-    # res = request.auth
+    res = GetPackageNodeTree(model_name)
     return {"msg": res,
             # "user": request.user.display_name,
             "auth": request.user.is_authenticated

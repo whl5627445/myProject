@@ -1,19 +1,17 @@
 # -- coding: utf-8 --
 from fastapi import HTTPException
-from fastapi.responses import FileResponse
-from fastapi import File, UploadFile, Request
+from fastapi import Request
 from router.download_router import router
 from config.DB_config import DBSession
-from app.service.HW_OBS_operation import OBSClient
+from library.HW_OBS_operation import HWOBS
 from app.BaseModel.respose_model import ResponseModel, InitResponseModel
 from app.model.ModelsPackage.ModelsInformation import ModelsInformation
 from app.model.Simulate.SimulateResult import SimulateResult
 from app.model.Simulate.SimulateRecord import SimulateRecord
-from app.BaseModel.simulate import SimulateResultExportModel, SimulateALLResultModel
+from app.BaseModel.simulate import SimulateResultExportModel
 from library.file_operation import FileOperation
 import pandas as pd
 import random
-import zipfile
 import datetime
 
 
@@ -61,7 +59,7 @@ async def GetModelFileView(request: Request, package_id: str):
         fo = FileOperation()
         fo.make_zip(package_path, data_file)
         try:
-            obs = OBSClient()
+            obs = OBS()
             HW_res = obs.putFile(file_path + "/" + file_name, data_file)
             if HW_res["status"] == 200:
                 res.data = [HW_res["body"]["objectUrl"]]
@@ -123,7 +121,7 @@ async def GetSimulateResultFileView(request: Request, items: SimulateResultExpor
     else:
         raise HTTPException(status_code=400, detail="not found")
     try:
-        obs = OBSClient()
+        obs = HWOBS()
         HW_res = obs.putFile(file_name, data_file)
         if HW_res["status"] == 200:
             res.data = [HW_res["body"]["objectUrl"]]
@@ -152,7 +150,7 @@ async def GetSimulateAllResultView(request: Request, res_id: str):
         file_name = "".join(random.sample('zyxwvutsrqponmlkjihgfedcba0123456789', 20)) + ".mat"
         data_file = file_path + file_name
         try:
-            obs = OBSClient()
+            obs = HWOBS()
             HW_res = obs.putFile(data_file, data_file_path)
             if HW_res["status"] == 200:
                 res.data = [HW_res["body"]["objectUrl"]]

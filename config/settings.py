@@ -27,3 +27,6 @@ EXAMPLES = [
 ]
 
 MQ_CONNECT = ["119.3.155.11:9092"]
+
+
+IMAGE_FORMAT = ["bmp","jpg","jpeg","png","tif","gif","pcx","tga","exif","fpx","svg","cdr","pcd","dxf","ufo","eps","ai","raw","WMF","webp","avif","apng"]

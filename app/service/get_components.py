@@ -3,33 +3,17 @@ from config.omc import omc
 
 
 def GetComponents(class_name, component_name=None):
-    data = omc.getComponents(class_name)
-    if component_name and data != "Error":
+    Components_data = omc.getComponents(class_name)
+    if component_name and Components_data != "Error":
         component_data = []
-        for i in data:
+        for i in Components_data:
             if i[1] == component_name:
                 component_data = i
                 break
         return component_data
-    return data
+    else:
+        if Components_data != "Error":
+            return Components_data
 
 
-if __name__ == '__main__':
-    from app.service.set_component_properties import SetComponentProperties
-    # setComponentProperties(ENN.Examples.Scenario1_Status,PID,{true,false,false,true}, {""}, {true,true}, {""})
-    class_name = "ENN.Examples.Scenario1_Status"
-    component_name = "PID"
-    file_path = "/home/simtek/dev/public/UserFiles/UploadFile/tom/1631690039.291318/ENN.mo"
-    data = {
-        "class_name": class_name,
-        "component_name": component_name,
-        "final": "true",
-        "protected": "true",
-        "replaceable": "true",
-        "variabilty": "parameter",
-        "inner": "true",
-        "outer": "true",
-        "causality": "input",
-    }
-    print(SetComponentProperties(file_path, **data))
-    print(GetComponents(class_name, component_name, file_path))
+

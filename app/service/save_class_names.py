@@ -12,10 +12,10 @@ session = DBSession()
 
 
 
-def GetClassNames(name_dict, package_name, data_dict):
+def GetClassName(name_dict, package_name, data_dict):
     data_d = {}
     for name, name_data in name_dict.items():
-        cmd = "getClassNames(" + name + ")"
+        cmd = "GetClassName(" + name + ")"
         data = omc.sendExpression(cmd)
         parent_name = name_data["parent_name"]
         if data == ['']:
@@ -38,7 +38,7 @@ def GetClassNames(name_dict, package_name, data_dict):
                 }
     if not data_d:
         return data_dict
-    return GetClassNames(data_d, package_name, data_dict)
+    return GetClassName(data_d, package_name, data_dict)
 
 
 def GetIconsData(name):
@@ -72,7 +72,7 @@ def SaveClassNames(space_id, mo_path=None, init_name="Modelica", sys_or_user="sy
         data_list = GetMessagesStringInternal()
         if not loadFile_result:
             return res, None, data_list
-    ClassNames = GetClassNames(model_root_data, init_name, data_dict)
+    ClassNames = GetClassName(model_root_data, init_name, data_dict)
     M_id = None
     for k, v in ClassNames.items():
         # icons_data = GetIconsData(k)

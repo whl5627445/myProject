@@ -1,6 +1,6 @@
 # -- coding: utf-8 --
-from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, HTTPException
+from fastapi.responses import JSONResponse, Response
 from app.api.simulate.simulateview import router as simulate_view_router
 from app.api.model.modelview import router as model_view_router
 from app.api.modelfile.upload_file import router as upload_file_router
@@ -30,16 +30,28 @@ logging.basicConfig(level=logging.INFO,  # 控制台打印的日志级别
 
 class BasicAuthBackend(AuthenticationBackend):
     async def authenticate (self, request):
-        username = request.headers.get("username", "wanghailong")
-        user_space = request.headers.get("space_id", 0)
+        username = request.headers.get("username", None)
+        user_space = request.headers.get("space_id", None)
+        if not username or username == "sys":
+            username = ""
         user = SimpleUser(username)
         user.user_space = user_space
-        if not username:
-            return
         return AuthCredentials(["simtek"]), user
 
 
 app = FastAPI()
+
+
+@app.middleware("http")
+async def LoginAuth (request: Request, call_next):
+    username = request.headers.get("username", None)
+    # if not username or username == "sys":
+    #     return Response(content="not found", status_code=401)
+    response = await call_next(request)
+    return response
+
+
+
 app.include_router(simulate_view_router)
 app.include_router(model_view_router)
 app.include_router(upload_file_router)
@@ -59,10 +71,7 @@ app.mount("/static", StaticFiles(directory="./static"), name="static")
 # )
 
 
-@app.middleware("http")
-async def LoginAuth (request: Request, call_next):
-    response = await call_next(request)
-    return response
+
 
 
 # @app.middleware("http")

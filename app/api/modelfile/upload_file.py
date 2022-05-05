@@ -10,13 +10,12 @@ from library.file_operation import FileOperation
 from config.DB_config import DBSession
 from config.redis_config import r
 from datetime import datetime
-from app.BaseModel.uploadfile import UploadSaveFileModel, UploadSaveModelModel
+from app.BaseModel.uploadfile import UploadSaveModelModel
 from app.service.get_model_code import GetModelCode, GetModelPath
 from app.service.create_modelica_class import CreateModelicaClass, UpdateModelicaClass
-from app.service.HW_OBS_operation import OBSClient
-import os
-import urllib.parse
-import re, json
+from app.service.icon_operation import UploadIcon
+from library.HW_OBS_operation import HWOBS
+import os, re, json, urllib.parse, base64
 session = DBSession()
 
 
@@ -182,6 +181,8 @@ async def SaveModelView(request: Request, item: UploadSaveModelModel):
     package = session.query(ModelsInformation).filter(
             ModelsInformation.package_name == create_package_name, ModelsInformation.userspace_id==space_id).filter_by(
         sys_or_user=username).first()
+    if not package:
+        raise HTTPException(status_code=401, detail="")
     if var["insert_to"]:
         insert_package_name = var["insert_to"].split(".")[0]
         package = session.query(ModelsInformation).filter(
@@ -231,6 +232,57 @@ async def SaveModelView(request: Request, item: UploadSaveModelModel):
         r.lpush(username + "_" + "notification", json.dumps(r_data))
     return res
 
+# @router.post("/uploadicon", response_model=ResponseModel)
+# async def UploadIconView(request: Request, model_name: str = Form(...), package_id: str = Form(...), file: UploadFile = File(...)):
+#     """
+#     # 用户上传模型图标接口
+#     ## file: 文件数据，bytes形式的文件流
+#     ## package_name: 包名称
+#     ## model_name: 模型名称
+#     ## package_id: 包id
+#     ## return: 会返回文件上传的状态
+#     """
+#     res = InitResponseModel()
+#     suffix_list = ["jpg", "png", "jpeg", "svg"]
+#     file_suffix = file.filename.split(".")[-1]
+#     if file_suffix not in suffix_list:
+#         res.err = "暂只支持jpg,png,jpeg,svg格式的图片"
+#         res.status = 1
+#         return res
+#     file_data = await file.read()
+#     filename = str(datetime.now().strftime('%Y%m%d%H%M%S%f')) + "." +file_suffix
+#     username = request.user.username
+#     file_path = "public/icon/" + username + "/" + model_name
+#     image_url = file_path + "/" + filename
+#     try:
+#         fo = FileOperation()
+#         fo.write_file(file_path, filename, file_data)
+#         obs = HWOBS()
+#         HW_res = obs.putFile(new_filename=image_url, local_file=image_url)
+#         if HW_res.get("status") == 200:
+#             image_url = HW_res.get("body").get("objectUrl")
+#             res.data = [{"image_url": image_url}]
+#             res.msg = "successful！"
+#             if len(model_name.split(".")) > 1:
+#                 model = session.query(ModelsInformationAll).filter_by(package_id=package_id, sys_or_user=username,
+#                                                                       model_name_all=model_name).first()
+#                 model.image = image_url
+#             else:
+#                 model = session.query(ModelsInformation).filter_by(id=package_id, sys_or_user=username).first()
+#                 model.image = image_url
+#             session.flush()
+#             session.close()
+#             res.msg = "图标上传成功"
+#             res.data = [{"url": image_url}]
+#         else:
+#             res.err = "上传失败，请重新上传"
+#             res.status = 2
+#     except Exception as e:
+#         res.err = "上传失败，请重新上传"
+#         res.status = 1
+#         return res
+#     return res
+
 @router.post("/uploadicon", response_model=ResponseModel)
 async def UploadIconView(request: Request, model_name: str = Form(...), package_id: str = Form(...), file: UploadFile = File(...)):
     """
@@ -242,42 +294,24 @@ async def UploadIconView(request: Request, model_name: str = Form(...), package_
     ## return: 会返回文件上传的状态
     """
     res = InitResponseModel()
+    username = request.user.username
     suffix_list = ["jpg", "png", "jpeg", "svg"]
     file_suffix = file.filename.split(".")[-1]
     if file_suffix not in suffix_list:
         res.err = "暂只支持jpg,png,jpeg,svg格式的图片"
         res.status = 1
         return res
+    # package = session.query(ModelsInformation).filter(
+    #         ModelsInformation.id == package_id).filter_by(sys_or_user=username).first()
+    # if not package:
+    #     raise HTTPException(status_code=401, detail="")
     file_data = await file.read()
-    filename = str(datetime.now().strftime('%Y%m%d%H%M%S%f')) + "." +file_suffix
-    username = request.user.username
-    file_path = "public/icon/" + username + "/" + model_name
-    image_url = file_path + "/" + filename
-    try:
-        fo = FileOperation()
-        fo.write_file(file_path, filename, file_data)
-        obs = OBSClient()
-        HW_res = obs.putFile(new_filename=image_url, local_file=image_url)
-        if HW_res.get("status") == 200:
-            image_url = HW_res.get("body").get("objectUrl")
-            res.data = [{"image_url": image_url}]
-            res.msg = "successful！"
-            if len(model_name.split(".")) > 1:
-                model = session.query(ModelsInformationAll).filter_by(package_id=package_id, sys_or_user=username,
-                                                                      model_name_all=model_name).first()
-                model.image = image_url
-            else:
-                model = session.query(ModelsInformation).filter_by(id=package_id, sys_or_user=username).first()
-                model.image = image_url
-            session.flush()
-            session.close()
-            res.msg = "图标上传成功"
-            res.data = [{"url": image_url}]
-        else:
-            res.err = "上传失败，请重新上传"
-            res.status = 2
-    except Exception as e:
+    encoded_string = base64.b64encode(file_data)
+    # logging.info(encoded_string.decode())
+    result = UploadIcon(model_name, encoded_string.decode())
+    if result:
+        res.msg = "图标上传成功"
+    else:
         res.err = "上传失败，请重新上传"
         res.status = 2
-        return res
     return res

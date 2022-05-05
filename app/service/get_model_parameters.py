@@ -5,31 +5,34 @@ from config.omc import omc
 
 
 class GetModelParameters(object):
-    def __init__(self, class_name, name, component_name, package_name=None):
-        self.model_name = ""
+    def __init__(self, model_name, name="", component_name="", package_name=""):
+        self.class_name = ""
         self.name = name
-        self.class_name = class_name
         self.component_name = component_name
+        self.model_name = model_name
+        if not name or not component_name:
+            self.name = model_name
+            self.component_name = model_name
         self.package_name = package_name
-        self.class_all = None
-        self.Components = None
-        self.ComponentAnnotations = None
+        self.class_all = []
+        self.Components = []
+        self.ComponentAnnotations = []
         self.Components_dict = {}
 
     def get_derived_class_modifier_value(self):
-        DerivedClassModifierNames = omc.getDerivedClassModifierNames(self.model_name)
+        DerivedClassModifierNames = omc.getDerivedClassModifierNames(self.class_name)
 
         if DerivedClassModifierNames and DerivedClassModifierNames != ['']:
             DerivedClassModifierValue = []
             for n in range(1, len(DerivedClassModifierNames)):
-                data = omc.getDerivedClassModifierValue(self.model_name, DerivedClassModifierNames[n])
+                data = omc.getDerivedClassModifierValue(self.class_name, DerivedClassModifierNames[n])
                 DerivedClassModifierValue.append(data)
             return DerivedClassModifierValue
 
     def get_component_modifier_start_value(self, name, show_start_attribute = False):
         data = ""
         if show_start_attribute:
-            data = omc.getComponentModifierValue(self.class_name, name)
+            data = omc.getComponentModifierValue(self.model_name, name)
             return data
         for i in self.class_all:
             data = omc.getComponentModifierValue(i, name)
@@ -58,7 +61,7 @@ class GetModelParameters(object):
         return data_name_list, data_value_list, data_final_list
 
     def get_component_modifier_fixed_value(self, name):
-        data = omc.getComponentModifierValue(self.class_name, name)
+        data = omc.getComponentModifierValue(self.model_name, name)
         return data
 
     def get_Parameter_value(self, name):
@@ -89,9 +92,9 @@ class GetModelParameters(object):
                 }
             p = Components_dict[self.Components[i][3]]
             if p[2] != "-":
-                self.model_name = p[2]
+                self.class_name = p[2]
             else:
-                self.model_name = ""
+                self.class_name = ""
             var_name = p[3]
             data_default["name"] = var_name
             data_default["comment"] = p[4]
@@ -108,18 +111,18 @@ class GetModelParameters(object):
                 data_default["group"] = group
                 showStartAttribute = p[-1][tab_index][3]
 
-            ComponentModifierValue = omc.getComponentModifierValue(self.class_name, '.'.join([self.name, data_default["name"]]))
+            ComponentModifierValue = omc.getComponentModifierValue(self.model_name, '.'.join([self.name, data_default["name"]]))
 
             data_default["value"] = ComponentModifierValue
             if (p[10] != "parameter" and data_default["group"] != "Parameters" and p[9] != "True") or p[5] == "protected" or p[6] == "True":
                 continue
             if p[10] == "parameter" or data_default["group"] == "Parameters" or p[9] == "True":
                 data_default["group"]= "Parameters"
-                isEnumeration = omc.isEnumeration(self.model_name)
+                isEnumeration = omc.isEnumeration(self.class_name)
 
                 if isEnumeration:
-                    Literals = omc.getEnumerationLiterals(self.model_name)
-                    data_default["options"] = ['.'.join([self.model_name.removeprefix("."), i]) for i in Literals]
+                    Literals = omc.getEnumerationLiterals(self.class_name)
+                    data_default["options"] = ['.'.join([self.class_name.removeprefix("."), i]) for i in Literals]
                     data_default["type"] = "Enumeration"
                 ParameterValue = self.get_Parameter_value(data_default["name"])
                 data_default["defaultvalue"] = ParameterValue
@@ -183,7 +186,7 @@ class GetModelParameters(object):
         if extend_modifier_name and extend_modifier_value:
             for i in range(len(extend_modifier_name)):
                 var_name = extend_modifier_name[i].removesuffix(".start")
-                self.model_name = Components_dict[var_name][2]
+                self.class_name = Components_dict[var_name][2]
                 data_default = {
                     "tab": "General", "type": "Normal", "group": "Initialization", "name": var_name + ".start",
                     "unit": self.get_derived_class_modifier_value(),
@@ -218,6 +221,6 @@ if __name__ == '__main__':
     # c_name = "Modelica.Blocks.Sources.KinematicPTP"
     # c_name = "Modelica.Mechanics.Rotational.Components.Inertia"
     # c_name = "Modelica.Mechanics.Rotational.Components.SpringDamper"
-    class_name = "Modelica.Blocks.Examples.PID_Controller"
+    model_name = "Modelica.Blocks.Examples.PID_Controller"
     import json
-    print(json.dumps(GetModelParameters(class_name, name, c_name).get_data()))
+    print(json.dumps(GetModelParameters(model_name).get_data()))
