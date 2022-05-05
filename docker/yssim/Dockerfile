@@ -24,7 +24,7 @@ RUN sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list \
 RUN mkdir /home/simtek/docker
 COPY start.sh /home/simtek/docker
 WORKDIR /home/simtek/docker
-#RUN ./Miniconda3.sh -p ./miniconda3 -f -b
+#RUN ./Miniconda3.sh -p ../../miniconda3 -f -b
 #RUN ln -f ./miniconda3/bin/python3.9 /usr/bin/python3 \
 #    && ln -f ./miniconda3/bin/pip /usr/bin/pip
 #RUN  ./miniconda3/bin/pip install -r pipList.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
