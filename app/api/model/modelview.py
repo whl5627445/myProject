@@ -11,11 +11,12 @@ from app.BaseModel.simulate import AddComponentModel, DeleteComponentModel, Upda
     UpdateConnectionAnnotationModel
 from app.BaseModel.simulate import CopyClassModel, SetComponentModifierValueModel, SetComponentPropertiesModel
 from app.BaseModel.simulate import DeleteConnectionModel, DeletePackageModel, GetComponentNameModel, \
-    UpdateConnectionNamesModel, SetModelDocumentModel
+    UpdateConnectionNamesModel, SetModelDocumentModel, ConvertUnitsModel
 from app.model.ModelsPackage.ModelsInformation import ModelsInformation, ModelsInformationAll
 from app.service.component_operation import AddComponent, DeleteComponent, UpdateComponent
 from app.service.connection_operation import AddConnection, DeleteConnection, UpdateConnectionAnnotation, \
     UpdateConnectionNames
+from app.service.unit_operation import ConvertUnits
 from app.service.copy_class import SaveClass
 from app.service.get_component_name import GetComponentName
 from app.service.get_components import GetComponents
@@ -748,7 +749,6 @@ async def GetComponentsView (request: Request, package_id: str, model_name: str)
                 "component_description": i[2],
                 }
             res.data.append(components_data)
-    logging.info(result)
     return res
 
 
@@ -793,6 +793,22 @@ async def SetModelDocumentView (request: Request, item: SetModelDocumentModel):
     else:
         res.err = "文档更新失败, 请检查模型名称是否正确"
         res.status = 2
+    return res
+
+@router.post("/convertunits", response_model=ResponseModel)
+async def ConvertUnitsView (request: Request, item: ConvertUnitsModel):
+    """
+    # 转换单位
+    ##  s1: 需要转换的单位
+    ##  s2: 转换后的单位
+    ##  return 单位转换后的比值,与原结果数值相乘即可
+    """
+    res = InitResponseModel()
+    result = ConvertUnits(item.s1, item.s2)
+    if result[0]:
+        res.data.append(float(result[1]))
+    else:
+        res.data.append(1)
     return res
 
 

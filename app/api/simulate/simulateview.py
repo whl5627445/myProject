@@ -189,7 +189,9 @@ async def SimulateResultView (request: Request, variable: str, model_name: str, 
     if result_data:
         variable_data = {
             "abscissa": result_data.model_variable_data_abscissa,
-            "ordinate": result_data.model_variable_data
+            "ordinate": result_data.model_variable_data,
+            "unit": result_data.unit if result_data.unit else "",
+            "displayUnit": result_data.display_unit if result_data.display_unit else "",
         }
         res.data = [variable_data]
     else:
@@ -249,9 +251,9 @@ async def SimulateResultTreeView (id: str, variable_name: str = None):
     res = InitResponseModel()
     if not variable_name:
         data = session.query(SimulateResult.model_variable_parent, SimulateResult.model_variable_name, SimulateResult.unit, SimulateResult.description,
-                             SimulateResult.start).filter_by(simulate_record_id=id, level=1).all()
+                             SimulateResult.start, SimulateResult.display_unit).filter_by(simulate_record_id=id, level=1).all()
     else:
-        data = session.query(SimulateResult.model_variable_parent, SimulateResult.model_variable_name, SimulateResult.unit, SimulateResult.description, SimulateResult.start).\
+        data = session.query(SimulateResult.model_variable_parent, SimulateResult.model_variable_name, SimulateResult.unit, SimulateResult.description, SimulateResult.start, SimulateResult.display_unit).\
             filter_by(simulate_record_id=id).\
             filter(or_(SimulateResult.model_variable_parent.like(variable_name), SimulateResult.model_variable_parent.like(variable_name + "." + "%"))).all()
     tree_name_data = GetTreeData(data, variable_name)

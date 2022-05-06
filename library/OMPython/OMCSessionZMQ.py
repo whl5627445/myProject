@@ -531,6 +531,13 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
         result = self.sendExpression(cmd)
         return result
 
+    def convertUnits (self, s1, s2):
+        # convertUnits("rad","deg")
+        cmd = "convertUnits(\"" + s1 + "\",\"" + s2 + "\")"
+        result = self.sendExpression(cmd)
+        return result
+
+
 if __name__ == '__main__':
     def loadString (model_str, path, merge="false"):
         cmd = "loadString(\"" + model_str + "\",\"" + path + "\",\"UTF-8\"" + ",false)"

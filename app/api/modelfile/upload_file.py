@@ -181,8 +181,6 @@ async def SaveModelView(request: Request, item: UploadSaveModelModel):
     package = session.query(ModelsInformation).filter(
             ModelsInformation.package_name == create_package_name, ModelsInformation.userspace_id==space_id).filter_by(
         sys_or_user=username).first()
-    if not package:
-        raise HTTPException(status_code=401, detail="")
     if var["insert_to"]:
         insert_package_name = var["insert_to"].split(".")[0]
         package = session.query(ModelsInformation).filter(

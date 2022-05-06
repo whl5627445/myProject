@@ -183,3 +183,8 @@ class SetModelDocumentModel(BaseModel):
     package_id: str
     model_name: str
     document: str
+
+
+class ConvertUnitsModel(BaseModel):
+    s1: str
+    s2: str
