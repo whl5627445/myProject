@@ -25,6 +25,7 @@ def GetTreeData(data, variable_name):
                 "unit": i[2],
                 "description": i[3],
                 "start": i[4],
+                "display_unit": i[5],
                 }
         else:
             Variables = i[0] if i[0].startswith('der(') else i[0].removeprefix(var_prefix + ".").split('.')[0]
@@ -37,6 +38,7 @@ def GetTreeData(data, variable_name):
                 "unit": "",
                 "description": "",
                 "start": "",
+                "display_unit": "",
                 }
         data_id += 1
     for i in data_dict_all.values():

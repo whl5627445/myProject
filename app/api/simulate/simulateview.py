@@ -9,7 +9,7 @@ from app.model.Simulate.SimulateResult import SimulateResult
 from app.model.Simulate.SimulateRecord import SimulateRecord
 from app.model.ModelsPackage.ModelsInformation import ModelsInformation
 from app.model.Simulate.ExperimentRecord import ExperimentRecord
-from app.BaseModel.simulate import ExperimentCreateModel, SetSimulationOptionsModel
+from app.BaseModel.simulate import ExperimentCreateModel, SetSimulationOptionsModel, ExperimentEditModel
 from app.service.set_simulation_options import SetSimulationOptions
 from fastapi import Request, BackgroundTasks
 from app.BaseModel.simulate import ModelSimulateModel, ModelCodeSaveModel, FmuExportModel
@@ -151,7 +151,7 @@ async def ModelSimulateView (item: ModelSimulateModel, background_tasks: Backgro
             "SRecord_id": SRecord.id,
             "model_name": item.model_name,
             "s_type": simulate_type,
-            "file_path": model.file_path,
+            "file_path": str(model.file_path),
             "simulate_parameters_data": simulate_parameters_data,
         }
     future = producer.send(username + "_SIMULATE", key='SIMULATE'.encode(), value=json.dumps(MQ_data).encode(), partition=0)
@@ -189,7 +189,9 @@ async def SimulateResultView (request: Request, variable: str, model_name: str, 
     if result_data:
         variable_data = {
             "abscissa": result_data.model_variable_data_abscissa,
-            "ordinate": result_data.model_variable_data
+            "ordinate": result_data.model_variable_data,
+            "unit": result_data.unit if result_data.unit else "",
+            "displayUnit": result_data.display_unit if result_data.display_unit else "",
         }
         res.data = [variable_data]
     else:
@@ -249,9 +251,9 @@ async def SimulateResultTreeView (id: str, variable_name: str = None):
     res = InitResponseModel()
     if not variable_name:
         data = session.query(SimulateResult.model_variable_parent, SimulateResult.model_variable_name, SimulateResult.unit, SimulateResult.description,
-                             SimulateResult.start).filter_by(simulate_record_id=id, level=1).all()
+                             SimulateResult.start, SimulateResult.display_unit).filter_by(simulate_record_id=id, level=1).all()
     else:
-        data = session.query(SimulateResult.model_variable_parent, SimulateResult.model_variable_name, SimulateResult.unit, SimulateResult.description, SimulateResult.start).\
+        data = session.query(SimulateResult.model_variable_parent, SimulateResult.model_variable_name, SimulateResult.unit, SimulateResult.description, SimulateResult.start, SimulateResult.display_unit).\
             filter_by(simulate_record_id=id).\
             filter(or_(SimulateResult.model_variable_parent.like(variable_name), SimulateResult.model_variable_parent.like(variable_name + "." + "%"))).all()
     tree_name_data = GetTreeData(data, variable_name)
@@ -303,6 +305,50 @@ async def ExperimentCreateView (request: Request, item: ExperimentCreateModel):
         res.err = "实验名称已存在！"
         res.status = 2
     return res
+
+
+@router.post("/experiment/delete", response_model=ResponseModel)
+async def ExperimentDeleteView (request: Request, item: ExperimentEditModel):
+    """
+    # 仿真实验记录删除接口，
+    ## experiment_id: 实验id，此接口其他值无须传入
+    ## return: 返回是否成功状态
+    """
+    res = InitResponseModel()
+    username = request.user.username
+    experiment = session.query(ExperimentRecord).filter_by(id=item.experiment_id, username=username).first()
+    if experiment:
+        session.delete(experiment)
+        session.flush()
+        res.msg = "实验已删除"
+    else:
+        raise HTTPException(status_code=401, detail="")
+    return res
+
+
+@router.post("/experiment/edit", response_model=ResponseModel)
+async def ExperimentEditView (request: Request, item: ExperimentEditModel):
+    """
+    # 仿真实验记录编辑接口，
+    ## experiment_id: 实验id
+    ## model_var_data: 模型的变量数据，修改过哪个模型变量，保存到当前数组对象
+    ## simulate_var_data: 模型仿真选项数据
+    ## experiment_name: 实验名称
+    ## return: 返回是否成功状态
+    """
+    res = InitResponseModel()
+    username = request.user.username
+    experiment = session.query(ExperimentRecord).filter_by(id=item.experiment_id, username=username).first()
+    if experiment:
+        experiment.model_var_data = item.model_var_data
+        experiment.simulate_var_data = item.simulate_var_data
+        experiment.experiment_name = item.experiment_name
+        session.flush()
+        res.msg = "修改成功"
+    else:
+        raise HTTPException(status_code=401, detail="")
+    return res
+
 
 
 @router.get("/experiment/list",response_model=ResponseModel)
@@ -381,13 +427,11 @@ async def FmuExportModelView (request: Request, item: FmuExportModel):
                              )
     if item.download_local:
         result = res_dy.get("result", None)
-        logging.info("fmu导出：{}".format(res_dy))
         if result:
             # fmu_data = session.query(FmuAttachment).filter_by(create_user=username, file_name=item.fmu_name + ".fmu").first()
             file_path = res_dy.get("file_path", None)
             obs = HWOBS()
             HW_res = obs.putFile(file_path, file_path)
-            logging.info("obs上传结果：{}".format(HW_res))
             if HW_res.get("status", None) == 200:
                 res.data = [HW_res["body"]["objectUrl"]]
             else:

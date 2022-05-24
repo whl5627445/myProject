@@ -11,11 +11,12 @@ from app.BaseModel.simulate import AddComponentModel, DeleteComponentModel, Upda
     UpdateConnectionAnnotationModel
 from app.BaseModel.simulate import CopyClassModel, SetComponentModifierValueModel, SetComponentPropertiesModel
 from app.BaseModel.simulate import DeleteConnectionModel, DeletePackageModel, GetComponentNameModel, \
-    UpdateConnectionNamesModel, SetModelDocumentModel
+    UpdateConnectionNamesModel, SetModelDocumentModel, ConvertUnitsModel
 from app.model.ModelsPackage.ModelsInformation import ModelsInformation, ModelsInformationAll
 from app.service.component_operation import AddComponent, DeleteComponent, UpdateComponent
 from app.service.connection_operation import AddConnection, DeleteConnection, UpdateConnectionAnnotation, \
     UpdateConnectionNames
+from app.service.unit_operation import ConvertUnits
 from app.service.copy_class import SaveClass
 from app.service.get_component_name import GetComponentName
 from app.service.get_components import GetComponents
@@ -54,6 +55,7 @@ async def GetRootModelView (request: Request):
             "haschild": i.haschild,
             "image": i.image if i.image else "",
         }
+        print(mn_data)
         if i.sys_or_user != "sys":
             mn_data["sys_or_user"] = "user"
         data.append(mn_data)
@@ -174,7 +176,7 @@ async def SetModelParametersView (item: SetComponentModifierValueModel, request:
     if data == "Ok":
         res.msg = "设置完成"
     else:
-        res.err = "设置失败: " + data
+        res.err = "设置失败: 请检查参数是否正确"
         res.status = 1
     return res
 
@@ -415,11 +417,8 @@ async def DeletePackageAndModelView(request: Request, item: DeletePackageModel):
             res.err = msg
             res.status = 1
             return res
-        logging.info("删除")
-        logging.info("package_id:%s", package_id)
-        logging.info("username:%s", username)
-        # session.query(ModelsInformation).filter_by(id=package_id, sys_or_user=username).delete(synchronize_session=False)
-        # session.query(ModelsInformationAll).filter_by(package_id=package_id, sys_or_user=username).delete(synchronize_session=False)
+        session.query(ModelsInformation).filter_by(id=package_id, sys_or_user=username).delete(synchronize_session=False)
+        session.query(ModelsInformationAll).filter_by(package_id=package_id, sys_or_user=username).delete(synchronize_session=False)
     session.flush()
     session.close()
     return res
@@ -727,18 +726,13 @@ async def CheckModelView(package_id: str, model_name: str, request: Request):
 
 
 @router.get("/getcomponents", response_model=ResponseModel)
-async def GetComponentsView (request: Request, package_id: str, model_name: str):
+async def GetComponentsView (request: Request, model_name: str):
     """
     # 获取模型的全部组件数据，一次性返回
     ##  model_name: 需要查询属性数据的模型名称，全称，例如“Modelica.Blocks.Examples.PID_Controller”
     ##  package_id: 所属package的id值，例如“1”
     """
     res = InitResponseModel()
-    username = request.user.username
-    package_name = session.query(ModelsInformation).filter(ModelsInformation.sys_or_user.in_(["sys", username]),
-                                                      ModelsInformation.id == package_id).first()
-    if not package_name:
-        return HTTPException(status_code=401, detail="not found")
     result = GetComponents(model_name)
     if result:
         for i in result:
@@ -748,23 +742,22 @@ async def GetComponentsView (request: Request, package_id: str, model_name: str)
                 "component_description": i[2],
                 }
             res.data.append(components_data)
-    logging.info(result)
     return res
 
 
 @router.get("/getmodeldocument", response_model=ResponseModel)
-async def GetModelDocumentView (request: Request, package_id: str, model_name: str):
+async def GetModelDocumentView (request: Request, model_name: str):
     """
     # 获取模型的文档数据
     ##  model_name: 需要查询文档的模型名称，全称，例如“Modelica.Blocks.Examples.PID_Controller”
     ##  package_id: 所属package的id值，例如“1”
     """
     res = InitResponseModel()
-    username = request.user.username
-    package_name = session.query(ModelsInformation).filter(ModelsInformation.sys_or_user.in_(["sys", username]),
-                                                      ModelsInformation.id == package_id).first()
-    if not package_name:
-        return HTTPException(status_code=401, detail="not found")
+    # username = request.user.username
+    # package_name = session.query(ModelsInformation).filter(ModelsInformation.sys_or_user.in_(["sys", username]),
+    #                                                   ModelsInformation.id == package_id).first()
+    # if not package_name:
+    #     return HTTPException(status_code=401, detail="not found")
     result = GetModelDocument(model_name)
     res.data.append({
         "document": result,
@@ -795,16 +788,30 @@ async def SetModelDocumentView (request: Request, item: SetModelDocumentModel):
         res.status = 2
     return res
 
+@router.post("/convertunits", response_model=ResponseModel)
+async def ConvertUnitsView (item: ConvertUnitsModel):
+    """
+    # 转换单位
+    ##  s1: 转换后的单位, new单位
+    ##  s2: 需要转换的单位， old单位
+    ##  return 单位转换后的比值,与原结果数值相乘即可
+    """
+    res = InitResponseModel()
+    result = ConvertUnits(item.s1, item.s2)
+    if result[0]:
+        res.data.append(float(result[1]))
+    else:
+        res.data.append(1)
+    return res
+
 
 @router.get("/test")
 async def _test (model_name: str, request: Request):
-    # from app.service.icon_operation import GetIcon
-    from app.service.get_package_node_tree import GetPackageNodeTree
     import time
-    # username = request.user.username
-    # r.hdel("GetGraphicsData_" + username, model_name)
-    res = GetPackageNodeTree(model_name)
-    return {"msg": res,
-            # "user": request.user.display_name,
+    start = time.time()
+    res1 = omc.sendExpression(model_name, parsed=False)
+    res2 = omc.sendExpression("getClassNames()")
+    return {"msg": [res1,res2],
+            "user": request.user.display_name,
             "auth": request.user.is_authenticated
         }

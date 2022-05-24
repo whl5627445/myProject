@@ -59,7 +59,7 @@ async def GetModelFileView(request: Request, package_id: str):
         fo = FileOperation()
         fo.make_zip(package_path, data_file)
         try:
-            obs = OBS()
+            obs = HWOBS()
             HW_res = obs.putFile(file_path + "/" + file_name, data_file)
             if HW_res["status"] == 200:
                 res.data = [HW_res["body"]["objectUrl"]]

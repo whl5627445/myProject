@@ -26,7 +26,6 @@ def CreateModelicaClass(package_name, str_type, var, create_package_name_all, pa
     if partial :
         model_str = model_str + "partial "
     model_str = model_str + model_str_base
-    logging.info("创建模型源码: {0}".format(model_str))
     res = omc.loadString(model_str, path)
     if state:
         res = omc.addClassAnnotation(create_package_name_all, annotate_str="Icon(graphics={Text(extent={{-100,100},{100,-100}},textString=\"%name\")})")

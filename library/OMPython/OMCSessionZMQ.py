@@ -1,17 +1,16 @@
 # -- coding: utf-8 --
 import logging
 
-from library.OMPython import OMCSessionHelper, OMCSessionBase, logger
+from library.OMPython import OMCSessionHelper, OMCSessionBase
 import subprocess
 import sys, os, time, zmq
 from library.OMPython.cdata_to_pydata import CdataToPYdata
 import random
 
-
 class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
 
     def __init__ (self, readonly=False, timeout=10.00, docker=None, dockerContainer=None, dockerExtraArgs=[],
-                  dockerOpenModelicaPath="omc", dockerNetwork=None, address="127.0.0.1", port=23456,
+                  dockerOpenModelicaPath="omc", dockerNetwork=None, address="127.0.0.1", port=23455,
                   random_string="simtek",
                   sys_start=True):
         OMCSessionHelper.__init__(self)
@@ -62,19 +61,12 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
                 except:
                     pass
             else:
-                # if os.path.isfile(self._port_file):
-                #     # Read the port file
-                #     with open(self._port_file, 'r') as f_p:
-                #         self._port = f_p.readline()
-                #     os.remove(self._port_file)
-                #     break
                 self._port = "tcp://" + self._serverIPAddress + ":" + str(self._interactivePort)
                 break
             attempts += 1
             if attempts == 80.0:
                 name = self._omc_log_file.name
                 self._omc_log_file.close()
-                logger.error("OMC Server did not start. Please start it! Log-file says:\n%s" % open(name).read())
                 raise Exception(
                         "OMC Server did not start (timeout=%f). Could not open file %s" % (timeout, self._port_file))
             time.sleep(timeout / 80.0)
@@ -99,9 +91,6 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
 
     def sendExpression (self, command, parsed=True):
         ## check for process is running
-        # p = self._omc_process.poll()
-        # if (p == None):
-        # self._connect_to_omc(10)
         attempts = 0
         while True:
             try:
@@ -174,9 +163,10 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
     def getComponentAnnotationsList (self, class_name_list):
         data_list = []
         for i in class_name_list:
-            Components_data = self.sendExpression("getComponentAnnotations(" + i + ", useQuotes = true)")
-            if Components_data != [''] and Components_data != "Error":
-                data_list.extend(Components_data)
+            cmd = "getComponentAnnotations(" + i + ", useQuotes = true)"
+            ComponentAnnotations_data = self.sendExpression(cmd)
+            if ComponentAnnotations_data != [''] and ComponentAnnotations_data != "Error":
+                data_list.extend(ComponentAnnotations_data)
         return data_list
 
     def getParameterNames (self, class_name):
@@ -485,10 +475,6 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
         # getAllSubtypeOf(Modelica.Blocks.Interfaces.SO, Applications.Environment, false, false, false)
         cmd = "getAllSubtypeOf(" + class_name + "," + component_name + ",false,false,false)"
         result = self.sendExpression(cmd)
-        # if class_name == 'Modelica.Blocks.Interfaces.SO':
-        #     result = CdataToPYdata("{Modelica.Thermal.FluidHeatFlow.Examples.Utilities.DoubleRamp,Modelica.Electrical.QuasiStationary.MultiPhase.Blocks.QuasiRMS,Modelica.Electrical.MultiPhase.Blocks.QuasiRMS,Modelica.ComplexBlocks.Sources.LogFrequencySweep,Modelica.Blocks.Sources.TimeTable,Modelica.Blocks.Sources.Trapezoid,Modelica.Blocks.Sources.SawTooth,Modelica.Blocks.Sources.Pulse,Modelica.Blocks.Sources.Exponentials,Modelica.Blocks.Sources.ExpSine,Modelica.Blocks.Sources.Cosine,Modelica.Blocks.Sources.Sine,Modelica.Blocks.Sources.Ramp,Modelica.Blocks.Sources.Step,Modelica.Blocks.Sources.Constant,Modelica.Blocks.Sources.Clock,Modelica.Blocks.Noise.BandLimitedWhiteNoise,Modelica.Blocks.Noise.TruncatedNormalNoise,Modelica.Blocks.Noise.NormalNoise,Modelica.Blocks.Noise.UniformNoise,Modelica.Blocks.Examples.NoiseExamples.Utilities.ImpureRandom}")
-        # else:
-        #     result = ""
         return result
 
     def renameComponentInClass (self, class_name, old_component_name, new_component_name):
@@ -530,6 +516,13 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
         cmd = "uriToFilename(\"" + uri + "\")"
         result = self.sendExpression(cmd)
         return result
+
+    def convertUnits (self, s1, s2):
+        # convertUnits("rad","deg")
+        cmd = "convertUnits(\"" + s1 + "\",\"" + s2 + "\")"
+        result = self.sendExpression(cmd)
+        return result
+
 
 if __name__ == '__main__':
     def loadString (model_str, path, merge="false"):

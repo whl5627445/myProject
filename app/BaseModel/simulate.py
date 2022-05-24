@@ -130,6 +130,13 @@ class ExperimentCreateModel(BaseModel):
     experiment_name: str = "test"
 
 
+class ExperimentEditModel(BaseModel):
+    experiment_id: str
+    model_var_data: dict = {}
+    simulate_var_data: dict = {}
+    experiment_name: str = "test"
+
+
 class DeletePackageModel(BaseModel):
     package_id: int
     package_name: str
@@ -183,3 +190,8 @@ class SetModelDocumentModel(BaseModel):
     package_id: str
     model_name: str
     document: str
+
+
+class ConvertUnitsModel(BaseModel):
+    s1: str
+    s2: str

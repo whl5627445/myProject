@@ -1,4 +1,5 @@
 # -- coding: utf-8 --
+import time
 
 
 def CdataToPYdata (data):
@@ -93,5 +94,9 @@ def CdataToPYdata (data):
 
 
 if __name__ == '__main__':
-    print(CdataToPYdata('{Modelica.Icons.Record}'))
-
+    s = time.time()
+    a = CdataToPYdata('{{},{Evaluate=true, HideResult=true, choices(true,false)},{Dialog("General","Parameters",false,false,false,-,-,-,-,"",false), Evaluate=true, HideResult=true, choices(true,false)},{Evaluate=true, Dialog("General","Initialization",true,false,false,-,-,-,-,"",false)},{Dialog("General","Initialization",true,false,false,-,-,-,-,"",false)},{Placement(true,60.0,-120.0,-20.0,-20.0,20.0,20.0,90.0,-,-,-,-,-,-,)},{Placement(true,60.0,120.0,-20.0,-20.0,20.0,20.0,270.0,-,-,-,-,-,-,)},{HideResult=true},{HideResult=true}}')
+    print(a)
+    # for i in range(1000):
+        # CdataToPYdata('{Modelica.Icons.Record}')
+    # print(time.time() - s)

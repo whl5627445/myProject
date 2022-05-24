@@ -9,6 +9,7 @@ from app.service.load_model_file import LoadModel
 import logging
 from config.DB_config import DBSession
 from config.settings import EXAMPLES
+from app.service.clear_program import ClearProgram
 session = DBSession()
 
 
@@ -91,6 +92,7 @@ async def LoginUserSpaceView (item: UserSpaceModel, request: Request):
     models_obj_list = session.query(ModelsInformation).filter(ModelsInformation.userspace_id ==item.space_id, ModelsInformation.sys_or_user == username).all()
     models_list = []
     load_res = True
+    ClearProgram()
     for i in models_obj_list:
         logging.info("加载模型库：{0}".format(i.package_name))
         path = i.file_path

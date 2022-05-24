@@ -8,7 +8,7 @@ def GetModelDocument(model_name):
     doc_data = omc.getDocumentationAnnotation(model_name)
     if doc_data[0]:
         html = doc_data[0]
-        soup = BeautifulSoup(html)
+        soup = BeautifulSoup(html, features="html.parser")
         image_all = soup.find_all('img')
         a_href_all = soup.find_all('a')
         for image in image_all:

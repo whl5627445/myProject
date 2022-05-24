@@ -4,10 +4,12 @@ RUN useradd --create-home --no-log-init --shell /bin/bash simtek \
     && echo 'simtek:simtek' | chpasswd
 RUN apt-get update -y \
     && apt-get upgrade -y \
-    && apt-get install sudo -y
-#    && apt-get install pip -y \
-#    && apt-get install python3  -y \
-#    && apt-get install supervisor -y
+    && apt-get install sudo -y \
+    && apt-get install libzmq3-dev -y \
+    && apt-get install rar -y\
+    && apt-get install unrar -y
+
+
 ENV TZ=Asia/Shanghai
 RUN sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list \
           && apt-get update \
@@ -16,19 +18,20 @@ RUN sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list \
           && apt-get clean \
           && apt-get autoclean \
           && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-#RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
-#RUN echo 'Asia/Shanghai' >/etc/timezone
 
 
 
-RUN mkdir /home/simtek/docker
-COPY start.sh /home/simtek/docker
-WORKDIR /home/simtek/docker
-#RUN ./Miniconda3.sh -p ../../miniconda3 -f -b
-#RUN ln -f ./miniconda3/bin/python3.9 /usr/bin/python3 \
-#    && ln -f ./miniconda3/bin/pip /usr/bin/pip
-#RUN  ./miniconda3/bin/pip install -r pipList.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
+WORKDIR /home/simtek/code/docker/yssim
+COPY Miniconda3.sh ./
+COPY pipList.txt ./
+COPY start.sh/ /home/simtek/docker/start.sh
+
+RUN ./Miniconda3.sh -p ../../miniconda3 -f -b
+RUN ln -f ../../miniconda3/bin/python3.9 /usr/bin/python \
+    && ln -f ../../miniconda3/bin/pip /usr/bin/pip
+RUN  pip install -r pipList.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+RUN ln -f ../../miniconda3/bin/uvicorn /usr/bin/uvicorn
 
 USER simtek
-#CMD ["/usr/bin/omc", "--interactive=zmq", "--locale=C", "-z=simtek_omc", "--interactivePort=23456"]
+#CMD ["/home/simtek/code/miniconda3/bin/supervisord", "-n", "-c", "/home/simtek/code/docker/yssim/supervisor_OpenModelica.ini"]

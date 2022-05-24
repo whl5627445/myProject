@@ -15,8 +15,8 @@ session = DBSession()
 def GetClassName(name_dict, package_name, data_dict):
     data_d = {}
     for name, name_data in name_dict.items():
-        cmd = "GetClassName(" + name + ")"
-        data = omc.sendExpression(cmd)
+
+        data = omc.getClassNames(name)
         parent_name = name_data["parent_name"]
         if data == ['']:
             data = []

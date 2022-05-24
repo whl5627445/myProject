@@ -128,10 +128,8 @@ def JModelicaSimulate (SRecord: object, result_file_path: str, model_name: str, 
     file_operation.make_dir(result_file_path)
     try:
         client = socket.socket()
-        logging.info(JMODELICA_CONNECT)
         client.connect(JMODELICA_CONNECT)
     except Exception as e:
-        logging.error(e)
         res_str = "连接失败"
         return res, res_str
     try:
@@ -240,7 +238,6 @@ def DymolaSimulate (SRecord: object, username, model_name, file_path=None, simul
                     }
                 r_simulate = requests.post("http://121.37.183.103:8060/dymola/simulate", json=json_data_dict)
                 r_simulate_data = r_simulate.json()
-                logging.info(r_simulate_data)
                 SRecord.simulate_end_time = datetime.now()
                 if r_simulate_data.get("code", None) == 200:
                     var_fileName = r_simulate_data.get("msg", "")
@@ -248,7 +245,6 @@ def DymolaSimulate (SRecord: object, username, model_name, file_path=None, simul
                     res_file_url = "http://121.37.183.103:8061/" + var_fileName
                     fmu_file_url = "http://121.37.183.103:8061/" + fmu_fileName
                     download_result_file = requests.get(res_file_url)
-                    logging.info("fmu_file_url: {}".format(fmu_file_url))
                     download_fmu_file = requests.get(fmu_file_url)
                     result_file_data = download_result_file.content
                     fmu_file_data = download_fmu_file.content
@@ -288,9 +284,13 @@ def SimulateTask (space_id, SRecord_id, username: str, model_name: str, s_type="
     SRecord.simulate_status = "仿真进行中"
     SRecord.simulate_start = True
     session.flush()
+    path = "public/tem/" + username + "/" + "Simulate/"
     if file_path:
         model_str = GetModelCode(package_name)
-        FileOperation().write_file("/".join(file_path.split("/")[:-1]), package_name + ".mo", model_str)
+        print(package_name)
+        print(model_str)
+        file_path = path + package_name + ".mo"
+        FileOperation().write_file(path, package_name + ".mo", model_str)
     r_data = {"message": model_name + " 模型开始编译"}
     r.lpush(username + "_" + "notification", json.dumps(r_data))
     if s_type == "OM":

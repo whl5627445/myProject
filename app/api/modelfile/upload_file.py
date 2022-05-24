@@ -57,7 +57,7 @@ async def UploadFileView(request: Request, file: UploadFile = File(...), package
             res.status = 1
             return res
         for i in un_file_res:
-            UP = session.query(ModelsInformation).filter_by(package_name=i["package_name"],
+            UP = session.query(ModelsInformation).filter_by(userspace_id=space_id, package_name=i["package_name"],
                                                             sys_or_user=request.user.username).first()
             if UP:
                 os.remove(i["file_path"])
@@ -107,26 +107,24 @@ async def SaveFileView(request: Request):
     package_name = package_name_list[0]  # 更新模型的话，是模型包的名字 item里的是模型全名
     if len(package_name_list) > 1:
         parent_name = ".".join(package_name_list[:-1])
-    model_str = urllib.parse.unquote(item.get("model_str", ""))  # html和JavaScript标签被过滤，无奈选择转码后解码
+    model_str = urllib.parse.unquote(item.get("model_str", ""))  # html和JavaScript标签被过滤，选择转码后解码
     package_id = item.get("package_id", None)
     username = request.user.username
     package = session.query(ModelsInformation).filter_by(userspace_id=space_id, sys_or_user=request.user.username, id=package_id).first()
     if not package:
         raise HTTPException(status_code=404, detail="not found")
-    mo_path = package.file_path
     item_package_name = item.get("package_name", "")
     model_path = GetModelPath(item_package_name)
     if parent_name:
         model_str = "within " + parent_name + ";" + model_str
     result, notice_data = UpdateModelicaClass(model_str, path=package_name)
     if result is True:
-        # model_path = GetModelPath(item.package_name)
         if package.file_path.endswith("package.mo"):
             file_model_str = GetModelCode(item_package_name)
         else:
             file_model_str = GetModelCode(package_name)
         FileOperation().write(model_path, file_model_str)
-        save_result, M_id, notice_data = SaveClassNames(space_id=space_id, mo_path=mo_path, init_name=package_name, sys_or_user=request.user.username,
+        save_result, M_id, notice_data = SaveClassNames(space_id=space_id, mo_path=model_path, init_name=package_name, sys_or_user=request.user.username,
                                            package_id=package_id)
         if save_result:
             res_model_str = GetModelCode(item_package_name)
@@ -181,8 +179,6 @@ async def SaveModelView(request: Request, item: UploadSaveModelModel):
     package = session.query(ModelsInformation).filter(
             ModelsInformation.package_name == create_package_name, ModelsInformation.userspace_id==space_id).filter_by(
         sys_or_user=username).first()
-    if not package:
-        raise HTTPException(status_code=401, detail="")
     if var["insert_to"]:
         insert_package_name = var["insert_to"].split(".")[0]
         package = session.query(ModelsInformation).filter(
@@ -294,20 +290,14 @@ async def UploadIconView(request: Request, model_name: str = Form(...), package_
     ## return: 会返回文件上传的状态
     """
     res = InitResponseModel()
-    username = request.user.username
     suffix_list = ["jpg", "png", "jpeg", "svg"]
     file_suffix = file.filename.split(".")[-1]
     if file_suffix not in suffix_list:
         res.err = "暂只支持jpg,png,jpeg,svg格式的图片"
         res.status = 1
         return res
-    # package = session.query(ModelsInformation).filter(
-    #         ModelsInformation.id == package_id).filter_by(sys_or_user=username).first()
-    # if not package:
-    #     raise HTTPException(status_code=401, detail="")
     file_data = await file.read()
     encoded_string = base64.b64encode(file_data)
-    # logging.info(encoded_string.decode())
     result = UploadIcon(model_name, encoded_string.decode())
     if result:
         res.msg = "图标上传成功"

@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM python:3.9.12
 RUN useradd --create-home --no-log-init --shell /bin/bash simtek \
     && adduser simtek sudo \
     && echo 'simtek:simtek' | chpasswd
@@ -16,9 +16,12 @@ RUN sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list \
 
 
 
-WORKDIR /code
-#RUN  ./miniconda3/bin/pip install -r pipList.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
-
+WORKDIR /home/simtek/code/docker/notice
+COPY ./ /home/simtek/code/docker/notice
+USER simtek
+RUN pip install -r pipList.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+USER root
+RUN ln -f /home/simtek/.local/bin/uvicorn /usr/bin/uvicorn
 
 USER simtek
-#CMD ["/usr/bin/omc", "--interactive=zmq", "--locale=C", "-z=simtek_omc", "--interactivePort=23456"]
+

@@ -7,7 +7,6 @@ from __future__ import print_function
 import abc
 import getpass
 import json
-import logging
 import os
 import shlex
 import signal
@@ -15,6 +14,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import logging
 import uuid
 from builtins import int, range
 from distutils import spawn
@@ -28,20 +28,7 @@ if sys.platform == 'darwin':
     sys.path.append('/opt/openmodelica/lib/python2.7/site-packages/')
 
 
-# Logger Defined
-logger = logging.getLogger('OMPython')
-logger.setLevel(logging.DEBUG)
-# create console handler with a higher log level
-logger_console_handler = logging.StreamHandler()
-logger_console_handler.setLevel(logging.INFO)
 
-# create formatter and add it to the handlers
-logger_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger_console_handler.setFormatter(logger_formatter)
-
-# add the handlers to the logger
-logger.addHandler(logger_console_handler)
-logger.setLevel(logging.WARNING)
 
 
 class DummyPopen():
@@ -76,7 +63,7 @@ class OMCSessionHelper():
         try:
             return os.path.join(self.omhome, 'bin', 'omc')
         except BaseException:
-            logger.error(
+            logging.error(
                     "The OpenModelica compiler is missing in the System path (%s), please install it" % os.path.join(
                             self.omhome, 'bin', 'omc'))
             raise
@@ -180,7 +167,7 @@ class OMCSessionBase(with_metaclass(abc.ABCMeta, object)):
             except:
                 pass
             if self._dockerCid is None:
-                logger.error("Docker did not start. Log-file says:\n%s" % (open(self._omc_log_file.name).read()))
+                logging.error("Docker did not start. Log-file says:\n%s" % (open(self._omc_log_file.name).read()))
                 raise Exception(
                         "Docker did not start (timeout=%f might be too short especially if you did not docker pull the image before this command)." % timeout)
         if self._docker or self._dockerContainer:
@@ -308,7 +295,7 @@ class OMCSessionBase(with_metaclass(abc.ABCMeta, object)):
         else:
             expression = question
 
-        logger.debug('OMC ask: {0}  - parsed: {1}'.format(expression, parsed))
+        logging.debug('OMC ask: {0}  - parsed: {1}'.format(expression, parsed))
 
         try:
             if not parsed:
@@ -317,7 +304,7 @@ class OMCSessionBase(with_metaclass(abc.ABCMeta, object)):
                 res = self.sendExpression(expression)
 
         except Exception as e:
-            logger.error("OMC failed: {0}, {1}, parsed={2}".format(question, opt, parsed))
+            logging.error("OMC failed: {0}, {1}, parsed={2}".format(question, opt, parsed))
             raise e
 
         # save response
@@ -444,13 +431,13 @@ class OMCSessionBase(with_metaclass(abc.ABCMeta, object)):
         try:
             return self.ask('getExtendsModifierValue', '{0}, {1}, {2}'.format(className, extendsName, modifierName))
         except pyparsing.ParseException as ex:
-            logger.warning('OMTypedParser error: {0}'.format(ex.message))
+            logging.warning('OMTypedParser error: {0}'.format(ex.message))
             result = self.ask('getExtendsModifierValue', '{0}, {1}, {2}'.format(className, extendsName, modifierName),
                               parsed=False)
             try:
                 return result[2:]
             except (TypeError, UnboundLocalError) as ex:
-                logger.warning('OMParser error: {0}'.format(ex))
+                logging.warning('OMParser error: {0}'.format(ex))
                 return result
 
     def getNthComponentModification (self, className, comp_id):
