@@ -390,7 +390,6 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
 
     def addClassAnnotation (self, class_name_all, annotate_str):
         cmd = "addClassAnnotation(" + class_name_all + ", annotate=" + annotate_str + ")"
-        logging.info(cmd)
         result = self.sendExpression(cmd)
         return result
 
@@ -523,6 +522,10 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
         result = self.sendExpression(cmd)
         return result
 
+    def val (self, variable_name, time_point, file_name):
+        cmd = "val(" + variable_name + "," + time_point + ",\"" + file_name + "\")"
+        result = self.sendExpression(cmd)
+        return result
 
 if __name__ == '__main__':
     def loadString (model_str, path, merge="false"):

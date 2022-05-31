@@ -38,7 +38,6 @@ class SimulateService(object):
             if message:
                 log.info('message: {}'.format(message))
                 result, result_str = self.run(space_id, SRecord_id, model_name, s_type, file_path,simulate_parameters_data)
-                log.info('result: {}'.format(result))
                 log.info('result_str: {}'.format(result_str))
 
     def run(self, space_id, SRecord_id, model_name, s_type, file_path = None, simulate_parameters_data=None):

@@ -123,5 +123,5 @@ def SaveClassNames(space_id, mo_path=None, init_name="Modelica", sys_or_user="sy
 
 
 if __name__ == '__main__':
-    # print(SaveClassNames(mo_path="public/UserFiles/ENN.mo", init_name="ENN", sys_or_user="tom"))
-    print(SaveClassNames(space_id=None))
+    print(SaveClassNames(mo_path="/home/simtek/code/omlibrary/Buildings 8.0.0/package.mo", init_name="Buildings", sys_or_user="sys"))
+    # print(SaveClassNames(space_id=None))

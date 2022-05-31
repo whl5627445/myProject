@@ -21,6 +21,8 @@ from app.service.get_simulation_options import GetSimulationOptions
 from app.service.fmu_export import DymolaFmuExport
 from library.HW_OBS_operation import HWOBS
 from config.kafka_config import producer
+from app.service.get_val import GetVal
+from app.service.unit_operation import ConvertUnits
 
 import logging
 
@@ -96,7 +98,7 @@ async def GetModelStateView (request: Request, package_id: str, model_name: str)
     ## package_id: 模型所在包的id
     """
     res = InitResponseModel()
-    model_record = session.query(SimulateRecord).filter_by(username=request.user.username, simulate_model_name=model_name).\
+    model_record = session.query(SimulateRecord).filter_by(package_id=package_id, username=request.user.username, simulate_model_name=model_name).\
         filter(SimulateRecord.simulate_status.notin_(["仿真失败","仿真已结束"])).first()
     if model_record:
         res.data.append(4)
@@ -106,7 +108,7 @@ async def GetModelStateView (request: Request, package_id: str, model_name: str)
 
 
 @router.post("/", response_model=ResponseModel)
-async def ModelSimulateView (item: ModelSimulateModel, background_tasks: BackgroundTasks, request: Request):
+async def ModelSimulateView (item: ModelSimulateModel, request: Request):
     """
     # 仿真接口，用于模型的仿真计算
     ## package_id: 模型所在包的id,
@@ -158,7 +160,6 @@ async def ModelSimulateView (item: ModelSimulateModel, background_tasks: Backgro
     future.get(timeout=10)
     result = future.succeeded()
     if result:
-    # background_tasks.add_task(SimulateTask, space_id, SRecord.id, request.user.username, item.model_name, simulate_type, model.file_path, simulate_parameters_data)
         res.msg = "仿真任务正在准备，请等待仿真完成"
         res.data = [SRecord.id]
     else:
@@ -168,43 +169,56 @@ async def ModelSimulateView (item: ModelSimulateModel, background_tasks: Backgro
 
 
 @router.get("/result", response_model=ResponseModel)
-async def SimulateResultView (request: Request, variable: str, model_name: str, id: str):
+async def SimulateResultView (request: Request, variable: str, model_name: str, id: str, s1: str, s2:str, time_point = None):
     """
     # 仿真结果获取接口
-    ## username: 用户名(已弃用，当前版本无须将用户名当做参数传入)
     ## variable: 模型变量名字，
     ## model_name: 模型名称，
     ## id: 仿真记录id值，在/simulate/record/list接口获取，
+    ## s1: 单位转换使用，固定为初始单位
+    ## s2: 位单位转换使用，需要转换为什么单位
+    ## time_point: 时间点，如果传值就获取某一时间点的单个数据
     ## return: 仿真结束后获取对于记录的仿真结果
     """
     res = InitResponseModel()
     space_id = request.user.user_space
-    result_data = session.query(SimulateResult).filter_by(
-            simulate_record_id=id,
-            username=request.user.username,
-            simulate_model_name=model_name,
-            model_variable_name=variable,
-            userspace_id=space_id
-    ).first()
-    if result_data:
-        variable_data = {
-            "abscissa": result_data.model_variable_data_abscissa,
-            "ordinate": result_data.model_variable_data,
-            "unit": result_data.unit if result_data.unit else "",
-            "displayUnit": result_data.display_unit if result_data.display_unit else "",
-        }
-        res.data = [variable_data]
-    else:
-        res.msg = "没有查询到记录"
-        res.status = 1
+    username = request.user.username
+    record = session.query(SimulateRecord).filter(SimulateRecord.id == id, SimulateRecord.username == username).first()
+    if record:
+        record_result = session.query(SimulateResult).filter_by(
+                simulate_record_id=id,
+                username=username,
+                simulate_model_name=model_name,
+                model_variable_name=variable,
+                userspace_id=space_id
+        ).first()
+        ordinate = record_result.model_variable_data
+        abscissa = record_result.model_variable_data_abscissa,
+        units = [record_result.unit, record_result.display_unit]
+        if s1 and s2 and (s1 in units and s2 in units):
+            result, cu = ConvertUnits(s2, s1)
+            if result:
+                ordinate = [x * float(cu) for x in ordinate]
+        if len(abscissa) <500:
+            data_base = ordinate[-1]
+            ordinate.extend([data_base for i in range(500-len(ordinate))])
+
+            time_base = float(record.stop_time) / 500
+            abscissa = [time_base*i for i in range(1, 501)]
+        data = {
+            "abscissa": abscissa[:500],
+            "ordinate": ordinate[:500],
+            "startTime": record.start_time,
+            "stopTime": record.stop_time,
+            }
+        res.data = [data]
     return res
 
 
 @router.get("/record/list", response_model=ResponseModel)
-async def SimulateResultListView (request: Request):
+async def SimulateResultListView (request: Request, model_name :str = None):
     """
     # 仿真记录获取接口
-    ## username: 用户名(已弃用，当前版本无须传入用户名当做参数)
     ## return: 返回对应用户的所有仿真记录
     """
     res = InitResponseModel()
@@ -216,26 +230,26 @@ async def SimulateResultListView (request: Request):
             SimulateRecord.create_time,
             SimulateRecord.simulate_start_time,
             SimulateRecord.simulate_end_time
-    ).filter_by(username=request.user.username,
-                userspace_id=space_id
-                ).order_by(SimulateRecord.simulate_start_time.desc()).all()
-
-    if record_list:
-        data_list = []
-        for i in record_list:
-            data_dict = {
-                "id": i[0],
-                "simulate_model_name": i[1],
-                "simulate_status": i[2],
-                "create_time": i[3],
-                "simulate_start_time": i[4],
-                "simulate_end_time": i[5],
-            }
-            data_list.append(data_dict)
-        res.data = data_list
+            ).filter_by(username=request.user.username,
+                        userspace_id=space_id
+                        ).order_by(SimulateRecord.simulate_start_time.desc())
+    if not model_name:
+        record_list = record_list.all()
     else:
-        res.msg = "没有查询到记录"
-        res.status = 1
+        record_list = record_list.filter_by(simulate_model_name=model_name, simulate_status="仿真已结束").all()
+    data_list = []
+    for i in range(len(record_list)):
+        data_dict = {
+            "num":i,
+            "id": record_list[i][0],
+            "simulate_model_name": record_list[i][1],
+            "simulate_status": record_list[i][2],
+            "create_time": record_list[i][3],
+            "simulate_start_time": record_list[i][4],
+            "simulate_end_time": record_list[i][5],
+        }
+        data_list.append(data_dict)
+    res.data = data_list
     return res
 
 
@@ -247,7 +261,6 @@ async def SimulateResultTreeView (id: str, variable_name: str = None):
     ## variable_name: 模型变量名称
     ## return: 返回的是对应节点的所有子节点与其需要的数据。 description：描述， start：值， unit：显示单位， Variables：变量名， haschild：是否有子节点
     """
-    # TODO: 需要重写， 此部分在结果文件中读取后处理
     res = InitResponseModel()
     if not variable_name:
         data = session.query(SimulateResult.model_variable_parent, SimulateResult.model_variable_name, SimulateResult.unit, SimulateResult.description,
@@ -279,13 +292,13 @@ async def ExperimentCreateView (request: Request, item: ExperimentCreateModel):
     simulate_var_data = item.simulate_var_data
     experiment_name = item.experiment_name
     username = request.user.username
-    package_name = model_name.split(".")[0]
     if package_id != 1:
         enn = session.query(ModelsInformation).filter_by(id=package_id, sys_or_user=username).first()
     else:
         enn = session.query(ModelsInformation).filter_by(id=package_id).first()
     experimentation = session.query(ExperimentRecord).filter_by(experiment_name=experiment_name, username=username, package_id=item.package_id, model_name_all=item.model_name).first()
     if enn and not experimentation:
+        package_name = enn.package_name
         ER = ExperimentRecord(
                 package_id=package_id,
                 model_name_all = model_name,

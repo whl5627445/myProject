@@ -5,12 +5,9 @@ from config.omc import omc
 
 
 def CheckModel(model_name):
-    result = omc.checkModel(model_name)
-    if not result:
-        data_list = GetMessagesStringInternal()
-        return False, data_list
-    else:
-        return True, [{"type": "message","message":result}]
+    omc.checkModel(model_name)
+    data_list = GetMessagesStringInternal()
+    return True, data_list
 
 
 def GetMessagesStringInternal():

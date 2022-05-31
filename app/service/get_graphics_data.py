@@ -125,8 +125,11 @@ class GetGraphicsData(object):
                     IconAnnotation_data = self.mod.getIconAnnotationList(namelist)
                     caf = ca_data_filter[i][Placement_index + 1]
                     rotateAngle = "0" if caf[7] == "-" else caf[7]
-                    data = {"type": "Transformation" , "graphType": "connecter" if "Interfaces" in c_data_filter[i][0] else "",}
-                    data["ID"] = str(i)
+                    data = {
+                        "type": "Transformation",
+                        "graphType": "connecter" if "Interfaces" in c_data_filter[i][0] else "",
+                        "ID": str(i)
+                        }
                     name = c_data_filter[i][1]
                     data["original_name"] = c_data_filter[i][1]
                     data["name"] = name
@@ -159,16 +162,18 @@ class GetGraphicsData(object):
                 for i in range(ConnectionCount[count]):
                     nc_data = self.mod.getNthConnection(name_list[count], i + 1)
                     nca_data = self.mod.getNthConnectionAnnotation(name_list[count], i + 1)
-                    da_data = self.data_01(nca_data)[0]
-                    da_data["connectionfrom_original_name"] = nc_data[0]
-                    da_data["connectionto_original_name"] = nc_data[1]
-                    expression1 = r"\[\d+\]$"
-                    expression2 = r"\[\d+\]\."
-                    connectionfrom = re.sub(expression1, "", nc_data[0])
-                    connectionto = re.sub(expression1, "", nc_data[1])
-                    da_data["connectionfrom"] = re.sub(expression2, ".", connectionfrom)
-                    da_data["connectionto"] = re.sub(expression2, ".", connectionto)
-                    self.data[0].append(da_data)
+                    da_data = self.data_01(nca_data)
+                    if nc_data and nca_data and da_data:
+                        da_data = da_data[0]
+                        da_data["connectionfrom_original_name"] = nc_data[0]
+                        da_data["connectionto_original_name"] = nc_data[1]
+                        expression1 = r"\[\d+\]$"
+                        expression2 = r"\[\d+\]\."
+                        connectionfrom = re.sub(expression1, "", nc_data[0])
+                        connectionto = re.sub(expression1, "", nc_data[1])
+                        da_data["connectionfrom"] = re.sub(expression2, ".", connectionfrom)
+                        da_data["connectionto"] = re.sub(expression2, ".", connectionto)
+                        self.data[0].append(da_data)
 
     def get_data (self, name_list):
         self.package_name = name_list[0].split(".")[0]

@@ -5,7 +5,7 @@ from router.download_router import router
 from config.DB_config import DBSession
 from library.HW_OBS_operation import HWOBS
 from app.BaseModel.respose_model import ResponseModel, InitResponseModel
-from app.model.ModelsPackage.ModelsInformation import ModelsInformation
+from app.model.ModelsPackage.ModelsInformation import ModelsInformation, UserSpace
 from app.model.Simulate.SimulateResult import SimulateResult
 from app.model.Simulate.SimulateRecord import SimulateRecord
 from app.BaseModel.simulate import SimulateResultExportModel
@@ -26,14 +26,15 @@ async def GetModelFileListView(request: Request):
     """
     res = InitResponseModel()
     username = request.user.username
-    package_list = session.query(ModelsInformation).filter_by(sys_or_user=username).all()
+    package_list = session.query(ModelsInformation, UserSpace.spacename).filter(ModelsInformation.sys_or_user==username, ModelsInformation.userspace_id==UserSpace.id).all()
     for i in range(len(package_list)):
         data_dict = {
             "id": i,
-            "package_id": package_list[i].id,
-            "package_name": package_list[i].package_name,
-            "create_time": package_list[i].create_time,
-            "update_time": package_list[i].update_time,
+            "package_id": package_list[i][0].id,
+            "space_name": package_list[i][1],
+            "package_name": package_list[i][0].package_name,
+            "create_time": package_list[i][0].create_time,
+            "update_time": package_list[i][0].update_time,
             # "url": "static/" + package_list[i].file_path,
             }
         res.data.append(data_dict)
@@ -63,9 +64,7 @@ async def GetModelFileView(request: Request, package_id: str):
             HW_res = obs.putFile(file_path + "/" + file_name, data_file)
             if HW_res["status"] == 200:
                 res.data = [HW_res["body"]["objectUrl"]]
-                # res.data = [data_file]
             else:
-                print(HW_res)
                 res.err = "下载失败，请稍后再试"
                 res.status = 1
         except Exception as e:
@@ -129,7 +128,6 @@ async def GetSimulateResultFileView(request: Request, items: SimulateResultExpor
             res.err = "下载失败，请稍后再试"
             res.status = 1
     except Exception as e:
-        print(HW_res)
         print(e)
     return res
 

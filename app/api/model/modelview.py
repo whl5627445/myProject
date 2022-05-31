@@ -29,6 +29,7 @@ from app.service.check_model import CheckModel
 from app.service.model_document_operation import GetModelDocument, SetModelDocument
 from config.DB_config import DBSession
 from config.omc import omc
+from config.redis_config import r
 from sqlalchemy import or_,and_
 from library.file_operation import FileOperation
 from router.simulatemodel_router import router
@@ -55,7 +56,6 @@ async def GetRootModelView (request: Request):
             "haschild": i.haschild,
             "image": i.image if i.image else "",
         }
-        print(mn_data)
         if i.sys_or_user != "sys":
             mn_data["sys_or_user"] = "user"
         data.append(mn_data)
@@ -198,18 +198,19 @@ async def GetComponentPropertiesView (package_id: str, model_name: str, componen
         res.status = 2
         return res
     result = GetComponents(model_name, component_name)
-    data = {
-        "model_name": model_name,
-        "component_name": component_name,
-        "path": result[0],
-        "dimension": str(result[-1]).replace("['']", "[]"),
-        "annotation": str(result[2]),
-        "Properties": [result[4], result[3], result[7]],
-        "Variability": result[8],
-        "Inner/Outer": result[9],
-        "Causality": result[10],
-    }
-    res.data = [data]
+    if result:
+        data = {
+            "model_name": model_name,
+            "component_name": component_name,
+            "path": result[0],
+            "dimension": str(result[-1]).replace("['']", "[]"),
+            "annotation": str(result[2]),
+            "Properties": [result[4], result[3], result[7]],
+            "Variability": result[8],
+            "Inner/Outer": result[9],
+            "Causality": result[10],
+        }
+        res.data = [data]
     return res
 
 
@@ -300,7 +301,6 @@ async def CopyClassView (item: CopyClassModel, request: Request):
         return res
     save_result, msg = SaveClass(item.class_name, item.copied_class_name, item.parent_name, package_name,
                                  new_model_file_path=file_path, file_name=filename)
-
     if save_result:
         if not item.parent_name:
             model = ModelsInformation(
@@ -468,7 +468,7 @@ async def AddModelComponentView (item: AddComponentModel, request: Request):
     if result is True:
         res.msg = "新增组件成功"
     else:
-        res.err = "新增组件失败，名称为" + item.new_component_name + " 的组件已经存在或者是 Modelica 关键字。 请选择其他名称。"
+        res.err = err
         res.status = 1
     return res
 
@@ -721,7 +721,11 @@ async def CheckModelView(package_id: str, model_name: str, request: Request):
     if not package:
         raise HTTPException(status_code=401, detail="not found")
     result, data_list = CheckModel(model_name)
-    res.data = data_list
+
+    if result:
+        for i in data_list:
+            r.lpush(username + "_" + "notification", json.dumps(i))
+    res.data = [{"message": "模型检查完成"}]
     return res
 
 
@@ -809,9 +813,16 @@ async def ConvertUnitsView (item: ConvertUnitsModel):
 async def _test (model_name: str, request: Request):
     import time
     start = time.time()
-    res1 = omc.sendExpression(model_name, parsed=False)
-    res2 = omc.sendExpression("getClassNames()")
-    return {"msg": [res1,res2],
+    # res1 = omc.sendExpression(model_name, parsed=False)
+    # res2 = omc.sendExpression("getClassNames()")
+    from app.service.save_class_names import SaveClassNames
+    a = SaveClassNames(space_id=0, mo_path="/home/simtek/code/omlibrary/WindPowerSystem/package.mo", init_name="WindPowerSystem",sys_or_user="sys")
+    # a = SaveClassNames(space_id=0, mo_path="/home/simtek/code/omlibrary/SolarPower/package.mo", init_name="SolarPower",sys_or_user="sys")
+    # a = SaveClassNames(space_id=0, mo_path="/home/simtek/code/omlibrary/Buildings 8.0.0/package.mo", init_name="Buildings",sys_or_user="sys")
+    # a = SaveClassNames(space_id=0, mo_path="/home/simtek/code/omlibrary/Modelica 3.2.3/package.mo", init_name="Modelica",sys_or_user="sys")
+    return {
+            # "msg": [res1,res2],
+            "msg": [a],
             "user": request.user.display_name,
             "auth": request.user.is_authenticated
         }

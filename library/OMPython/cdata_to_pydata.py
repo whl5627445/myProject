@@ -4,14 +4,15 @@ import time
 
 def CdataToPYdata (data):
     b = data.replace(", ", ",")
+
     b = b.replace("\\\"", "")
     b = b.replace('\"true\"', 'True')
     b = b.replace('\"false\"', 'False')
     b = b.replace('true\n', 'True')
     b = b.replace('false\n', 'False')
-    b = b.replace("\n", "")
+    b = b.replace("\n", "\\n")
     b = b.replace("\r", "\\r")
-
+    b = b.removesuffix("\\n")
     c = ""
     n = 0
     if b == "\"\"":

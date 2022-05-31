@@ -287,8 +287,6 @@ def SimulateTask (space_id, SRecord_id, username: str, model_name: str, s_type="
     path = "public/tem/" + username + "/" + "Simulate/"
     if file_path:
         model_str = GetModelCode(package_name)
-        print(package_name)
-        print(model_str)
         file_path = path + package_name + ".mo"
         FileOperation().write_file(path, package_name + ".mo", model_str)
     r_data = {"message": model_name + " 模型开始编译"}

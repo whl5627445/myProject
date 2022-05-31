@@ -16,9 +16,9 @@ def ComponentsVerification(class_name, component_name, model_name_all):
     if data != "Error":
         for i in data:
             if component_name in i:
-                return False, "组件名称已存在"
+                return False, "新增组件失败，名称为" + component_name + " 的组件已经存在或者是 Modelica 关键字。 请选择其他名称。"
     else:
-        return False, ""
+        return False, "新增组件失败"
     return True, ""
 
 
