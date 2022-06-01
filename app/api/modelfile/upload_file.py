@@ -4,7 +4,7 @@ import logging
 from fastapi import File, UploadFile, Request, HTTPException, Form
 from router.upload_file_router import router
 from app.BaseModel.respose_model import ResponseModel, InitResponseModel
-from app.model.ModelsPackage.ModelsInformation import ModelsInformation, ModelsInformationAll
+from app.model.ModelsPackage.ModelsInformation import ModelsInformation
 from app.service.save_class_names import SaveClassNames
 from library.file_operation import FileOperation
 from config.DB_config import DBSession
@@ -187,17 +187,13 @@ async def SaveModelView(request: Request, item: UploadSaveModelModel):
         create_package_name_all = var["insert_to"] + "." + create_package_name
         init_name = insert_package_name
         file_name = insert_package_name + ".mo"
-        model_obj = session.query(ModelsInformationAll).filter_by(model_name=create_package_name, package_id=package_id,
-                                                                  sys_or_user=username,
-                                                                  parent_name=var["insert_to"]).first()
         path = package.file_path
     else:
         path = create_package_name
         create_package_name_all = create_package_name
         init_name = create_package_name_all
         file_name = create_package_name_all + ".mo"
-        model_obj = None
-    if (not var["insert_to"] and package and str_type) or (var["insert_to"] and model_obj):
+    if not var["insert_to"] and package and str_type:
         res.err = "名称已存在！"
         res.status = 2
         return res
@@ -228,56 +224,6 @@ async def SaveModelView(request: Request, item: UploadSaveModelModel):
         r.lpush(username + "_" + "notification", json.dumps(r_data))
     return res
 
-# @router.post("/uploadicon", response_model=ResponseModel)
-# async def UploadIconView(request: Request, model_name: str = Form(...), package_id: str = Form(...), file: UploadFile = File(...)):
-#     """
-#     # 用户上传模型图标接口
-#     ## file: 文件数据，bytes形式的文件流
-#     ## package_name: 包名称
-#     ## model_name: 模型名称
-#     ## package_id: 包id
-#     ## return: 会返回文件上传的状态
-#     """
-#     res = InitResponseModel()
-#     suffix_list = ["jpg", "png", "jpeg", "svg"]
-#     file_suffix = file.filename.split(".")[-1]
-#     if file_suffix not in suffix_list:
-#         res.err = "暂只支持jpg,png,jpeg,svg格式的图片"
-#         res.status = 1
-#         return res
-#     file_data = await file.read()
-#     filename = str(datetime.now().strftime('%Y%m%d%H%M%S%f')) + "." +file_suffix
-#     username = request.user.username
-#     file_path = "public/icon/" + username + "/" + model_name
-#     image_url = file_path + "/" + filename
-#     try:
-#         fo = FileOperation()
-#         fo.write_file(file_path, filename, file_data)
-#         obs = HWOBS()
-#         HW_res = obs.putFile(new_filename=image_url, local_file=image_url)
-#         if HW_res.get("status") == 200:
-#             image_url = HW_res.get("body").get("objectUrl")
-#             res.data = [{"image_url": image_url}]
-#             res.msg = "successful！"
-#             if len(model_name.split(".")) > 1:
-#                 model = session.query(ModelsInformationAll).filter_by(package_id=package_id, sys_or_user=username,
-#                                                                       model_name_all=model_name).first()
-#                 model.image = image_url
-#             else:
-#                 model = session.query(ModelsInformation).filter_by(id=package_id, sys_or_user=username).first()
-#                 model.image = image_url
-#             session.flush()
-#             session.close()
-#             res.msg = "图标上传成功"
-#             res.data = [{"url": image_url}]
-#         else:
-#             res.err = "上传失败，请重新上传"
-#             res.status = 2
-#     except Exception as e:
-#         res.err = "上传失败，请重新上传"
-#         res.status = 1
-#         return res
-#     return res
 
 @router.post("/uploadicon", response_model=ResponseModel)
 async def UploadIconView(request: Request, model_name: str = Form(...), package_id: str = Form(...), file: UploadFile = File(...)):
@@ -290,6 +236,10 @@ async def UploadIconView(request: Request, model_name: str = Form(...), package_
     ## return: 会返回文件上传的状态
     """
     res = InitResponseModel()
+    username = request.user.username
+    model = session.query(ModelsInformation).filter(ModelsInformation.id == package_id, ModelsInformation.sys_or_user==username).first()
+    if not model:
+        res.err = "暂时只能更换用户区域模型图标"
     suffix_list = ["jpg", "png", "jpeg", "svg"]
     file_suffix = file.filename.split(".")[-1]
     if file_suffix not in suffix_list:

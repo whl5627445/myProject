@@ -12,7 +12,7 @@ from app.BaseModel.simulate import AddComponentModel, DeleteComponentModel, Upda
 from app.BaseModel.simulate import CopyClassModel, SetComponentModifierValueModel, SetComponentPropertiesModel
 from app.BaseModel.simulate import DeleteConnectionModel, DeletePackageModel, GetComponentNameModel, \
     UpdateConnectionNamesModel, SetModelDocumentModel, ConvertUnitsModel
-from app.model.ModelsPackage.ModelsInformation import ModelsInformation, ModelsInformationAll
+from app.model.ModelsPackage.ModelsInformation import ModelsInformation
 from app.service.component_operation import AddComponent, DeleteComponent, UpdateComponent
 from app.service.connection_operation import AddConnection, DeleteConnection, UpdateConnectionAnnotation, \
     UpdateConnectionNames
@@ -26,12 +26,12 @@ from app.service.get_model_parameters import GetModelParameters
 from app.service.set_component_modifier_value import SetComponentModifierValue
 from app.service.set_component_properties import SetComponentProperties
 from app.service.check_model import CheckModel
+from app.service.get_model_child import GetModelChild, GetModelHasChild
+from app.service.icon_operation import GetIcon
 from app.service.model_document_operation import GetModelDocument, SetModelDocument
 from config.DB_config import DBSession
-from config.omc import omc
 from config.redis_config import r
 from sqlalchemy import or_,and_
-from library.file_operation import FileOperation
 from router.simulatemodel_router import router
 
 session = DBSession()
@@ -42,7 +42,6 @@ async def GetRootModelView (request: Request):
     """
     # 获取左侧模型列表接口， 此接口获取系统模型和用户上传模型的根节点列表，暂时没有图标信息
     """
-    # TODO: 需要重写，结果树一次返回
     res = InitResponseModel()
     data = []
     space_id = request.user.user_space
@@ -53,8 +52,8 @@ async def GetRootModelView (request: Request):
             "package_id": i.id,
             "package_name": i.package_name,
             "sys_or_user": i.sys_or_user,
-            "haschild": i.haschild,
-            "image": i.image if i.image else "",
+            "haschild": GetModelHasChild(i.package_name),
+            "image": GetIcon(i.package_name),
         }
         if i.sys_or_user != "sys":
             mn_data["sys_or_user"] = "user"
@@ -71,25 +70,14 @@ async def GetListModelView (package_id: str, model_name: str, request: Request):
     ## return：返回此父节点下的子节点列表
     """
     res = InitResponseModel()
-    data = []
+    space_id = request.user.user_space
     username = request.user.username
-    ma = session.query(
-            ModelsInformationAll.model_name,
-            ModelsInformationAll.haschild,
-            ModelsInformationAll.sys_or_user,
-            ModelsInformationAll.image
-    ).filter_by(parent_name=model_name, package_id=package_id).filter(ModelsInformationAll.sys_or_user.in_(["sys", username])).all()
-    for i in ma:
-        mn_data = {
-            "model_name": i[0],
-            "haschild": i[1],
-            "sys_or_user": i[2],
-            "image": i[3] if i[3] else "",
-            }
-        if i[2] != "sys":
-            mn_data["sys_or_user"] = "user"
-        data.append(mn_data)
-    res.data = data
+    models_obj = session.query(ModelsInformation).filter(ModelsInformation.id == package_id , ModelsInformation.userspace_id.in_([0, space_id]), ModelsInformation.sys_or_user.in_(["sys", username])).first()
+    if models_obj and model_name:
+        model_child_list = GetModelChild(model_name)
+        for i in model_child_list:
+            i["image"] = GetIcon(i["model_name"])
+        res.data = model_child_list
     return res
 
 
@@ -273,17 +261,6 @@ async def CopyClassView (item: CopyClassModel, request: Request):
     package_name = item.package_name
     package = session.query(ModelsInformation).filter_by(id=item.package_id, sys_or_user=username).first()
     if package:
-        model = session.query(ModelsInformationAll).filter(
-                ModelsInformationAll.package_name == package_name,
-                ModelsInformationAll.package_id == package.id,
-                ModelsInformationAll.model_name == item.class_name,
-                ModelsInformationAll.parent_name == item.parent_name,
-                ModelsInformationAll.sys_or_user == username,
-                ).first()
-        if model:
-            res.err = "模型名称已存在"
-            res.status = 1
-            return res
         model_file_path = package.file_path.split("/")
         model_file_path[-2] = datetime.now().strftime('%Y%m%d%H%M%S%f')
         model_file_path = "/".join(model_file_path)
@@ -307,54 +284,12 @@ async def CopyClassView (item: CopyClassModel, request: Request):
                     package_name=item.class_name,
                     userspace_id=space_id,
                     model_name=item.class_name,
-                    haschild=False,
-                    child_name=[],
                     sys_or_user=username,
                     file_path=file_path,
                     )
             session.add(model)
-        else:
-            model = session.query(ModelsInformationAll).filter(
-                    ModelsInformationAll.model_name_all == item.copied_class_name,
-                    ModelsInformationAll.package_name == package_name,
-                    ModelsInformationAll.userspace_id == space_id
-                    ).first()
-            if model:
-                child_name = model.child_name
-                haschild = model.haschild
-            else:
-                child_name = []
-                haschild = False
-            ModelsInformationAll_new = ModelsInformationAll(
-                    package_name=package_name,
-                    package_id=package.id,
-                    userspace_id=space_id,
-                    model_name=item.class_name,
-                    parent_name=item.parent_name,
-                    child_name=child_name,
-                    haschild=haschild,
-                    model_name_all=item.parent_name + "." + item.class_name,
-                    sys_or_user=username
-            )
-            session.add(ModelsInformationAll_new)
-            model_parent = session.query(ModelsInformationAll).filter(
-                    ModelsInformationAll.model_name_all == item.parent_name,
-                    ModelsInformationAll.package_name == package_name,
-                    ModelsInformationAll.userspace_id == space_id,
-                    ModelsInformationAll.sys_or_user == username
-                    ).first()
-            if not model_parent:
-                model_parent = session.query(ModelsInformation).filter(
-                    ModelsInformation.package_name == package_name,
-                    ModelsInformation.userspace_id == space_id,
-                    ModelsInformation.sys_or_user == username).first()
-            m_child_name = copy.deepcopy(model_parent.child_name)
-            m_child_name.append(item.class_name)
-            model_parent.child_name = m_child_name
-            model_parent.haschild = True
-        res.msg = msg
-        session.flush()
-        session.close()
+            session.flush()
+            session.close()
     else:
         res.err = msg
         res.status = 1
@@ -388,22 +323,6 @@ async def DeletePackageAndModelView(request: Request, item: DeletePackageModel):
             save_result, msg = SaveClass(class_name=model_name_all, package_name=package_name, copy_or_delete="delete", new_model_file_path=model_file_path)
             if save_result:
                 package.file_path = model_file_path
-                session.query(ModelsInformationAll).filter_by(model_name_all=model_name_all, package_id=package_id, sys_or_user=username).delete(synchronize_session=False)
-                model_parent = session.query(ModelsInformationAll).filter(
-                        ModelsInformationAll.model_name_all == parent_name,
-                        ModelsInformationAll.package_id == package_id,
-                        ModelsInformationAll.sys_or_user == username,
-                        ).first()
-                if model_parent:
-                    child_name = copy.deepcopy(model_parent.child_name)
-                    model_parent.child_name = [i for i in child_name if i != class_name]
-                    if not model_parent.child_name:
-                        model_parent.haschild = False
-                else:
-                    child_name = copy.deepcopy(package.child_name)
-                    package.child_name = [i for i in child_name if i != class_name]
-                    if not package.child_name:
-                        package.haschild = False
                 res.msg = "删除成功"
             else:
                 res.err = msg
@@ -418,7 +337,6 @@ async def DeletePackageAndModelView(request: Request, item: DeletePackageModel):
             res.status = 1
             return res
         session.query(ModelsInformation).filter_by(id=package_id, sys_or_user=username).delete(synchronize_session=False)
-        session.query(ModelsInformationAll).filter_by(package_id=package_id, sys_or_user=username).delete(synchronize_session=False)
     session.flush()
     session.close()
     return res
@@ -696,11 +614,8 @@ async def existsView(package_id: str, model_name: str, request: Request):
     res = InitResponseModel()
     username = request.user.username
     package = session.query(ModelsInformation).filter_by(id=package_id).filter(ModelsInformation.sys_or_user.in_(["sys", username])).first()
-    model = session.query(ModelsInformationAll).filter(
-            ModelsInformationAll.package_id == package_id,
-            ModelsInformationAll.model_name_all == model_name,
-            ).filter(ModelsInformationAll.sys_or_user.in_(["sys", username])).first()
-    if package or model:
+
+    if package:
         res.data.append(True)
     else:
         res.data.append(False)
@@ -720,11 +635,9 @@ async def CheckModelView(package_id: str, model_name: str, request: Request):
     package = session.query(ModelsInformation).filter_by(id=package_id).filter(ModelsInformation.sys_or_user.in_(["sys", username])).first()
     if not package:
         raise HTTPException(status_code=401, detail="not found")
-    result, data_list = CheckModel(model_name)
-
-    if result:
-        for i in data_list:
-            r.lpush(username + "_" + "notification", json.dumps(i))
+    data_list = CheckModel(model_name)
+    for i in data_list:
+        r.lpush(username + "_" + "notification", json.dumps(i))
     res.data = [{"message": "模型检查完成"}]
     return res
 

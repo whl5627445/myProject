@@ -13,27 +13,8 @@ class ModelsInformation(Base):
     create_time = Column(DateTime, default=datetime.datetime.now)
     update_time = Column(DateTime)
     model_name = Column(VARCHAR)
-    child_name = Column(JSON)
-    haschild = Column(BOOLEAN)
     sys_or_user = Column(String)
-    image = Column(VARCHAR)
     file_path = Column(VARCHAR)
-    userspace_id = Column(Integer, default=0)
-
-
-class ModelsInformationAll(Base):
-    __tablename__ = 'py_models_all'
-
-    id = Column(Integer, primary_key=True)
-    package_id = Column(Integer)
-    package_name = Column(VARCHAR)
-    model_name = Column(VARCHAR)
-    model_name_all = Column(VARCHAR)
-    parent_name = Column(VARCHAR)
-    sys_or_user = Column(VARCHAR)
-    haschild = Column(BOOLEAN)
-    child_name = Column(JSON)
-    image = Column(VARCHAR)
     userspace_id = Column(Integer, default=0)
 
 

@@ -2,7 +2,7 @@
 from fastapi import Request, HTTPException
 from router.user_router import router
 from app.BaseModel.respose_model import ResponseModel, InitResponseModel
-from app.model.ModelsPackage.ModelsInformation import UserSpace, ModelsInformation, ModelsInformationAll
+from app.model.ModelsPackage.ModelsInformation import UserSpace, ModelsInformation
 from app.BaseModel.user import UserSpaceModel
 from sqlalchemy import or_, and_
 from app.service.load_model_file import LoadModel
@@ -70,7 +70,6 @@ async def DeleteUserSpaceView (item: UserSpaceModel, request: Request):
         raise HTTPException(status_code=401, detail="not found")
     session.query(UserSpace).filter(UserSpace.id == space_id).delete(synchronize_session=False)
     session.query(ModelsInformation).filter(ModelsInformation.userspace_id == space_id).delete(synchronize_session=False)
-    session.query(ModelsInformationAll).filter(ModelsInformationAll.userspace_id == space_id).delete(synchronize_session=False)
     session.flush()
     res.msg = "删除成功"
     session.close()

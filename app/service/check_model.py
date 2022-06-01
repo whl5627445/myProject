@@ -5,9 +5,13 @@ from config.omc import omc
 
 
 def CheckModel(model_name):
-    omc.checkModel(model_name)
+    result = omc.checkModel(model_name)
     data_list = GetMessagesStringInternal()
-    return True, data_list
+    data_list.append({
+        "type": "check_result",
+        "message": result,
+        })
+    return data_list
 
 
 def GetMessagesStringInternal():
@@ -38,7 +42,6 @@ def GetMessagesStringInternal():
 def CheckUsesPackage(package_name):
     result = omc.getUses(package_name)
     classnames = omc.getClassNames()
-
     missing_library = []
     for i in result:
         if type(i) is list:
