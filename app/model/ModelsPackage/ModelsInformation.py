@@ -18,11 +18,4 @@ class ModelsInformation(Base):
     userspace_id = Column(Integer, default=0)
 
 
-class UserSpace(Base):
-    __tablename__ = 'py_user_space'
 
-    id = Column(Integer, primary_key=True)
-    username = Column(VARCHAR)
-    spacename = Column(VARCHAR)
-    update_time = Column(DateTime)
-    create_time = Column(DateTime, default=datetime.datetime.now)

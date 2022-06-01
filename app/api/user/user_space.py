@@ -1,8 +1,11 @@
 # -- coding: utf-8 --
+import datetime
+
 from fastapi import Request, HTTPException
 from router.user_router import router
 from app.BaseModel.respose_model import ResponseModel, InitResponseModel
-from app.model.ModelsPackage.ModelsInformation import UserSpace, ModelsInformation
+from app.model.ModelsPackage.ModelsInformation import ModelsInformation
+from app.model.User.User import UserSpace
 from app.BaseModel.user import UserSpaceModel
 from sqlalchemy import or_, and_
 from app.service.load_model_file import LoadModel
@@ -97,6 +100,9 @@ async def LoginUserSpaceView (item: UserSpaceModel, request: Request):
         path = i.file_path
         load_res = LoadModel(path=path, check=False)
     if load_res:
+        space_obj.last_login_time = datetime.datetime.now()
+        session.flush()
+        session.close()
         res.data.append({"models": models_list, "examples": EXAMPLES})
         res.msg = "初始化完成"
     else:

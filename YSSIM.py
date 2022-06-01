@@ -1,12 +1,12 @@
 # -- coding: utf-8 --
-from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, HTTPException
-from fastapi.responses import JSONResponse, Response
+# from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, HTTPException
+from fastapi import FastAPI, Request
+# from fastapi.responses import JSONResponse, Response
 from app.api.simulate.simulateview import router as simulate_view_router
 from app.api.model.modelview import router as model_view_router
 from app.api.modelfile.upload_file import router as upload_file_router
 from app.api.modelfile.download import router as download_file_router
 from app.api.user.user_space import router as user_space_router
-from fastapi.responses import HTMLResponse
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.authentication import AuthenticationMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -14,9 +14,8 @@ from starlette.authentication import (
     AuthenticationBackend, SimpleUser,
     AuthCredentials
     )
-from config.settings import logging
+from config.InIt import InIt
 
-logging.info('YSSIM is running')
 
 class BasicAuthBackend(AuthenticationBackend):
     async def authenticate (self, request):
@@ -51,6 +50,7 @@ app.add_middleware(AuthenticationMiddleware, backend=BasicAuthBackend())
 app.add_middleware(SessionMiddleware, secret_key="simtek")
 
 app.mount("/static", StaticFiles(directory="./static"), name="static")
+InIt()
 
 # app.add_middleware(
 #     CORSMiddleware,

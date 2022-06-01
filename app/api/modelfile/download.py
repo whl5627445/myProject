@@ -5,7 +5,8 @@ from router.download_router import router
 from config.DB_config import DBSession
 from library.HW_OBS_operation import HWOBS
 from app.BaseModel.respose_model import ResponseModel, InitResponseModel
-from app.model.ModelsPackage.ModelsInformation import ModelsInformation, UserSpace
+from app.model.ModelsPackage.ModelsInformation import ModelsInformation
+from app.model.User.User import UserSpace
 from app.model.Simulate.SimulateResult import SimulateResult
 from app.model.Simulate.SimulateRecord import SimulateRecord
 from app.BaseModel.simulate import SimulateResultExportModel
