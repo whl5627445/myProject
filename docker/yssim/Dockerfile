@@ -22,16 +22,16 @@ RUN sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list \
 
 
 
-WORKDIR /home/simtek/code/docker/yssim
+WORKDIR /home/simtek/code
 COPY Miniconda3.sh ./
 COPY pipList.txt ./
-COPY start.sh/ /home/simtek/docker/start.sh
+COPY start.sh /home/simtek/docker/start.sh
 
-RUN ./Miniconda3.sh -p ../../miniconda3 -f -b
-RUN ln -f ../../miniconda3/bin/python3.9 /usr/bin/python \
-    && ln -f ../../miniconda3/bin/pip /usr/bin/pip
+RUN ./Miniconda3.sh -p miniconda3 -f -b
+RUN ln -f miniconda3/bin/python3.9 /usr/bin/python \
+    && ln -f miniconda3/bin/pip /usr/bin/pip
 RUN  pip install -r pipList.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
-RUN ln -f ../../miniconda3/bin/uvicorn /usr/bin/uvicorn
+RUN ln -f miniconda3/bin/uvicorn /usr/bin/uvicorn
 
 USER simtek
 #CMD ["/home/simtek/code/miniconda3/bin/supervisord", "-n", "-c", "/home/simtek/code/docker/yssim/supervisor_OpenModelica.ini"]

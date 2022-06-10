@@ -14,7 +14,11 @@ modelica_keywords = ["der", "and", "or", "not", "constant"]
 
 USERNAME = os.getenv("USERNAME", "")
 
-JMODELICA_CONNECT = ("119.3.155.11", 56789)
+JMODELICA_CONNECT = ("yssim-Jmodelica", 56789)
+MQ_CONNECT = ["yssim-kafka:9092"]
+REDIS_CONNECT = {"host":'yssim-redis', "port": 6379}
+
+DymolaFmu_CONNECT = "http://121.37.183.103:8060"
 
 EXAMPLES = [
     {
@@ -33,8 +37,6 @@ EXAMPLES = [
         "image": "https://yssim-static.obs.cn-east-3.myhuaweicloud.com/example/thumbnail/Densities.jpg",
     },
 ]
-
-MQ_CONNECT = ["119.3.155.11:9092"]
 
 
 IMAGE_FORMAT = ["bmp","jpg","jpeg","png","tif","gif","pcx","tga","exif","fpx","svg","cdr","pcd","dxf","ufo","eps","ai","raw","WMF","webp","avif","apng"]

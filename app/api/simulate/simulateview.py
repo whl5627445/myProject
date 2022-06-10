@@ -1,6 +1,7 @@
 # -- coding: utf-8 --
 import json
 
+from fastapi.responses import FileResponse
 from router.simulate_router import router
 from sqlalchemy import or_
 from fastapi import HTTPException
@@ -19,7 +20,6 @@ from app.service.get_model_code import GetModelCode
 from library.file_operation import FileOperation
 from app.service.get_simulation_options import GetSimulationOptions
 from app.service.fmu_export import DymolaFmuExport
-from library.HW_OBS_operation import HWOBS
 from config.kafka_config import producer
 from app.service.get_val import GetVal
 from app.service.unit_operation import ConvertUnits
@@ -196,7 +196,7 @@ async def SimulateResultView (request: Request, variable: str, model_name: str, 
         abscissa = record_result.model_variable_data_abscissa,
         units = [record_result.unit, record_result.display_unit]
         if s1 and s2 and (s1 in units and s2 in units):
-            result, cu = ConvertUnits(s2, s1)
+            result, cu = ConvertUnits(s2, s1)[:2]
             if result:
                 ordinate = [x * float(cu) for x in ordinate]
         if len(abscissa) <500:
@@ -408,7 +408,7 @@ async def ModelCodeSaveView (request: Request, item: ModelCodeSaveModel):
     return res
 
 
-@router.post("/simulate/fmuexport",response_model=ResponseModel)
+@router.post("/simulate/fmuexport")
 async def FmuExportModelView (request: Request, item: FmuExportModel):
     """
     # 导出模型的fmu文件
@@ -420,7 +420,6 @@ async def FmuExportModelView (request: Request, item: FmuExportModel):
     ## download_local： 是否下载到本地
     ## return: 返回导出结果、如果下载到本地，则返回下载地址
     """
-    res = InitResponseModel()
     username = request.user.username
     token = request.headers["Authorization"]
     file_name = ""
@@ -434,28 +433,17 @@ async def FmuExportModelView (request: Request, item: FmuExportModel):
     res_dy = DymolaFmuExport(fmu_par=item,
                              token=token,
                              username=username,
-                             file_name=file_name,
+                             file_name=file_name, # 弃用
                              model_str=model_str,
                              file_path=file_path,
                              )
-    if item.download_local:
-        result = res_dy.get("result", None)
-        if result:
-            # fmu_data = session.query(FmuAttachment).filter_by(create_user=username, file_name=item.fmu_name + ".fmu").first()
-            file_path = res_dy.get("file_path", None)
-            obs = HWOBS()
-            HW_res = obs.putFile(file_path, file_path)
-            if HW_res.get("status", None) == 200:
-                res.data = [HW_res["body"]["objectUrl"]]
-            else:
-                res.err = "导出失败，请稍后再试"
-                res.status = 1
-        else:
-            res.status = 2
-            res.msg = "导出失败"
+    # if item.download_local:
+    result = res_dy.get("result", None)
+    if result:
+        file_path = res_dy.get("file_path", None)
+        return FileResponse(path=file_path, filename=item.fmu_name + ".fmu", media_type="application/octet-stream")
     else:
-        # if not res_dy["result"]:
-        res.status = 2
+        res = InitResponseModel()
+        res.status= 1
         res.err = "导出失败"
-    return res
-
+        return res

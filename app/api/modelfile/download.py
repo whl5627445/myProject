@@ -1,9 +1,9 @@
 # -- coding: utf-8 --
 from fastapi import HTTPException
 from fastapi import Request
+from fastapi.responses import FileResponse
 from router.download_router import router
 from config.DB_config import DBSession
-from library.HW_OBS_operation import HWOBS
 from app.BaseModel.respose_model import ResponseModel, InitResponseModel
 from app.model.ModelsPackage.ModelsInformation import ModelsInformation
 from app.model.User.User import UserSpace
@@ -42,37 +42,31 @@ async def GetModelFileListView(request: Request):
     return res
 
 
-@router.get("/getmodelfile", response_model=ResponseModel)
+@router.get("/getmodelfile")
 async def GetModelFileView(request: Request, package_id: str):
     """
     # 用户获取mo文件信息接口， 可以根据url进行下载
     ## return: url下载地址
     """
-    res = InitResponseModel()
     username = request.user.username
     package = session.query(ModelsInformation).filter_by(sys_or_user=username, id=package_id).first()
     if package:
         data_file_path = package.file_path
         path_list = data_file_path.split("/")
         package_path = "/".join(path_list[:-1])
-        file_path = "static/" + username + "/"
+        file_path = "static/" + username
         file_name = str(datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')) + ".zip"
-        data_file = "/".join(path_list[:-2]) + "/" + file_name
+        data_file = file_path + "/" + file_name
         fo = FileOperation()
+        fo.touth_file(file_path, file_name)
         fo.make_zip(package_path, data_file)
         try:
-            obs = HWOBS()
-            HW_res = obs.putFile(file_path + "/" + file_name, data_file)
-            if HW_res["status"] == 200:
-                res.data = [HW_res["body"]["objectUrl"]]
-            else:
-                res.err = "下载失败，请稍后再试"
-                res.status = 1
+            return FileResponse(path=data_file,filename=file_name, media_type="application/zip")
         except Exception as e:
             print(e)
     else:
         raise HTTPException(status_code=400, detail="not found")
-    return res
+
 
 @router.post("/getsimulateresultfile")
 async def GetSimulateResultFileView(request: Request, items: SimulateResultExportModel):
@@ -83,7 +77,6 @@ async def GetSimulateResultFileView(request: Request, items: SimulateResultExpor
     ## var_list：需要导出的变量数组， 变量名称需是全名
     ## return: 返回对应记录的文件地址
     """
-    res = InitResponseModel()
     username = request.user.username
     export_type = items.export_type
     data = session.query(SimulateResult.model_variable_name, SimulateResult.model_variable_data_abscissa,
@@ -114,23 +107,13 @@ async def GetSimulateResultFileView(request: Request, items: SimulateResultExpor
     file_name = str(datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')) + "." + export_type
     data_file = file_path + file_name
     FileOperation.touth_file(file_path, file_name)
-    if export_type == "csv":
-        pd_data.to_csv(data_file, index=False)
-    elif export_type == "xlsx":
-        pd_data.to_excel(data_file, index=False)
-    else:
-        raise HTTPException(status_code=400, detail="not found")
-    try:
-        obs = HWOBS()
-        HW_res = obs.putFile(file_name, data_file)
-        if HW_res["status"] == 200:
-            res.data = [HW_res["body"]["objectUrl"]]
-        else:
-            res.err = "下载失败，请稍后再试"
-            res.status = 1
-    except Exception as e:
-        print(e)
-    return res
+    # if export_type == "csv":
+    #     pd_data.to_csv(data_file, index=False)
+    # elif export_type == "xlsx":
+    pd_data.to_excel(data_file, index=False)
+    # else:
+    #     raise HTTPException(status_code=400, detail="not found")
+    return FileResponse(path=data_file, filename=file_name, media_type="application/octet-stream")
 
 
 @router.get("/getsimulateallresult")
@@ -140,24 +123,12 @@ async def GetSimulateAllResultView(request: Request, res_id: str):
     ## record_id：仿真记录接口获取的id
     ## return: 返回对应记录的文件地址
     """
-    res = InitResponseModel()
     username = request.user.username
     record = session.query(SimulateRecord).filter_by(id=res_id, username=username).first()
     if record:
         data_file_path = record.simulate_model_result_path
-        file_path = "static/" + username + "/"
         file_name = "".join(random.sample('zyxwvutsrqponmlkjihgfedcba0123456789', 20)) + ".mat"
-        data_file = file_path + file_name
-        try:
-            obs = HWOBS()
-            HW_res = obs.putFile(data_file, data_file_path)
-            if HW_res["status"] == 200:
-                res.data = [HW_res["body"]["objectUrl"]]
-            else:
-                res.err = "下载失败，请稍后再试"
-                res.status = 1
-        except Exception as e:
-            print(e)
+        return FileResponse(path=data_file_path, filename=file_name, media_type="application/octet-stream")
     else:
         raise HTTPException(status_code=400, detail="not found")
-    return res
+

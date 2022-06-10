@@ -3,7 +3,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 import logging
 from datetime import datetime
 from library.WebsocketManager import manager
-from config.redis_config import r
+# from config.redis_config import r
 import json
 import random
 from fastapi.responses import HTMLResponse
@@ -13,9 +13,15 @@ from starlette.authentication import (
     AuthenticationBackend, SimpleUser,
     AuthCredentials
     )
+import redis
+from config.settings import REDIS_CONNECT
+
+pool = redis.ConnectionPool(host='yssim-redis', port=6379)
+# pool = redis.ConnectionPool(**REDIS_CONNECT)
+
+r = redis.Redis(connection_pool=pool, charset='UTF-8')
 
 MANAGER = manager
-
 
 class BasicAuthBackend(AuthenticationBackend):
     async def authenticate (self, request):

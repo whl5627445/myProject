@@ -11,10 +11,11 @@ session = DBSession()
 
 def InIt():
     space_obj = session.query(UserSpace).filter(UserSpace.username==USERNAME).order_by(UserSpace.last_login_time.desc()).first()
-    models_obj_list = session.query(ModelsInformation).filter(ModelsInformation.userspace_id == space_obj.id,
-                                                              ModelsInformation.sys_or_user == USERNAME).all()
-    ClearProgram()
-    for i in models_obj_list:
-        path = i.file_path
-        LoadModel(path=path, check=False)
+    if space_obj:
+        models_obj_list = session.query(ModelsInformation).filter(ModelsInformation.userspace_id == space_obj.id,
+                                                                  ModelsInformation.sys_or_user == USERNAME).all()
+        ClearProgram()
+        for i in models_obj_list:
+            path = i.file_path
+            LoadModel(path=path, check=False)
 

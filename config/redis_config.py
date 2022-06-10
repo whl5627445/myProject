@@ -1,9 +1,9 @@
 # -- coding: utf-8 --
 import redis
-# 本地开发环境redis
-# pool = redis.ConnectionPool(host='localhost', port=6379)
-# 测试环境redis
-pool = redis.ConnectionPool(host='119.3.155.11', port=56799)
+from config.settings import REDIS_CONNECT
+
+pool = redis.ConnectionPool(host='yssim-redis', port=6379)
+# pool = redis.ConnectionPool(**REDIS_CONNECT)
 
 r = redis.Redis(connection_pool=pool, charset='UTF-8')
 # Openmodelica2022

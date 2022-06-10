@@ -3,6 +3,7 @@ import requests
 from datetime import datetime
 import json, logging
 from library.file_operation import FileOperation
+from config.settings import DymolaFmu_CONNECT
 
 
 def DymolaFmuExport(fmu_par, token, username: str, file_name: str = "", model_str: str = None, file_path: str = None):
@@ -22,18 +23,18 @@ def DymolaFmuExport(fmu_par, token, username: str, file_name: str = "", model_st
             "file": (file_name + ".mo", model_str),
             }
         file_data = {"url":username + "/" + url}
-        res_upload_file = requests.post("http://121.37.183.103:8060/file/upload", data=file_data, files=files)
+        res_upload_file = requests.post(DymolaFmu_CONNECT+"/file/upload", data=file_data, files=files)
         upload_file_data = res_upload_file.json()
         if upload_file_data.get("code", None) == 200:
             data["fileName"] = url + "/" + file_name + ".mo"
-            res_export_fmu = requests.post("http://121.37.183.103:8060/dymola/translateModelFMU", json=data)
+            res_export_fmu = requests.post(DymolaFmu_CONNECT+"/dymola/translateModelFMU", json=data)
             export_fmu_data = res_export_fmu.json()
 
         else:
             export_fmu_data = {}
             res["result"] = False
     else:
-        res_export_fmu = requests.post("http://121.37.183.103:8060/dymola/translateModelFMU", json=data)
+        res_export_fmu = requests.post(DymolaFmu_CONNECT+"/dymola/translateModelFMU", json=data)
         export_fmu_data = res_export_fmu.json()
 
         if export_fmu_data.get("code", None) != 200:
@@ -42,7 +43,8 @@ def DymolaFmuExport(fmu_par, token, username: str, file_name: str = "", model_st
 
     if res.get("result", None):
         fmu_fileName = export_fmu_data.get("msg", "")
-        fmu_file_url = "http://121.37.183.103:8061/" + fmu_fileName
+        fmu_file_url = DymolaFmu_CONNECT + "/file/download?fileName=" + fmu_fileName
+        # fmu_file_url = "http://121.37.183.103:8061/" + fmu_fileName
         download_fmu_file = requests.get(fmu_file_url)
         fmu_file_data = download_fmu_file.content
         file_operation = FileOperation()

@@ -53,9 +53,9 @@ services:
       - "../public/:/public"
       - "../JM:/JM"
       - "../:/code"
-#    depends_on:
-#      - kafka
-    command: "/usr/bin/supervisord -n -c /code/docker/Jmodelica/supervisor_JModelica.ini"
+    depends_on:
+      - kafka
+    command: "/usr/bin/supervisord -n -c /JM/supervisor_JModelica.ini"
     networks:
       - yssim-net
     container_name: "yssim-Jmodelica"
@@ -63,15 +63,11 @@ services:
 
   NOTICE:
     build:
-      context: "./notice"
+      context: "./notice/dockerfileDir/"
       dockerfile: "Dockerfile"
-    image: docker.io/mihoutao/notice:v2.0
+    image: notice:v1.0
     ports:
       - "5555:5555"
-    volumes:
-      - "../:/home/simtek/code"
-#      - "/home/simtek/code/:/home/simtek/code"
-    command: "/home/simtek/code/miniconda3/bin/supervisord -n -c /home/simtek/code/docker/notice/notice.ini"
     networks:
       - yssim-net
     container_name: "yssim-notice"

@@ -14,7 +14,6 @@ from app.BaseModel.uploadfile import UploadSaveModelModel
 from app.service.get_model_code import GetModelCode, GetModelPath
 from app.service.create_modelica_class import CreateModelicaClass, UpdateModelicaClass
 from app.service.icon_operation import UploadIcon
-from library.HW_OBS_operation import HWOBS
 import os, re, json, urllib.parse, base64
 session = DBSession()
 

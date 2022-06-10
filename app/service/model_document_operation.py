@@ -2,7 +2,7 @@
 from bs4 import BeautifulSoup
 from config.settings import IMAGE_FORMAT
 from config.omc import omc
-from library.HW_OBS_operation import HWOBS
+import base64
 
 def GetModelDocument(model_name):
     doc_data = omc.getDocumentationAnnotation(model_name)
@@ -13,17 +13,12 @@ def GetModelDocument(model_name):
         a_href_all = soup.find_all('a')
         for image in image_all:
             src = image['src']
-            file_name = src.split('/')[-1]
             image_suffix = src.split(".")[-1]
             if image_suffix in IMAGE_FORMAT:
-                image_path = omc.uriToFilename(image['src'])
-                obs = HWOBS()
-                new_path = "document/images/" + file_name
-                HW_res = obs.putFile(new_path, image_path)
-                if HW_res["status"] == 200:
-                    image['src'] = [HW_res["body"]["objectUrl"]]
-                else:
-                    return "No document, please check the model name"
+                image_file = omc.uriToFilename(image['src'])
+                with open(image_file, "rb") as f:
+                    image_base64 = base64.b64encode(f.read())
+                    image['src'] = "data:image/jpeg;base64," + image_base64.decode()
             else:
                 del src
         for a in a_href_all:

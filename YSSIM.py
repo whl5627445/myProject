@@ -29,15 +29,12 @@ class BasicAuthBackend(AuthenticationBackend):
 
 
 app = FastAPI()
+# import os
+# script_dir = os.path.dirname(__file__)
+# st_abs_file_path = os.path.join(script_dir, "static/")
+# app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
-@app.middleware("http")
-async def LoginAuth (request: Request, call_next):
-    username = request.headers.get("username", None)
-    # if not username or username == "sys":
-    #     return Response(content="not found", status_code=401)
-    response = await call_next(request)
-    return response
 
 
 
@@ -49,7 +46,7 @@ app.include_router(user_space_router)
 app.add_middleware(AuthenticationMiddleware, backend=BasicAuthBackend())
 app.add_middleware(SessionMiddleware, secret_key="simtek")
 
-app.mount("/static", StaticFiles(directory="./static"), name="static")
+
 InIt()
 
 # app.add_middleware(
@@ -62,7 +59,13 @@ InIt()
 
 
 
-
+# @app.middleware("http")
+# async def LoginAuth (request: Request, call_next):
+#     username = request.headers.get("username", None)
+#     # if not username or username == "sys":
+#     #     return Response(content="not found", status_code=401)
+#     response = await call_next(request)
+#     return response
 
 # @app.middleware("http")
 # async def add_process_time_header(request: Request, call_next):
