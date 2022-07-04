@@ -76,7 +76,7 @@ async def GetListModelView (package_id: str, model_name: str, request: Request):
     if models_obj and model_name:
         model_child_list = GetModelChild(model_name)
         for i in model_child_list:
-            i["image"] = GetIcon(i["model_name"])
+            i["image"] = GetIcon(model_name + "." + i["model_name"])
         res.data = model_child_list
     return res
 
@@ -206,7 +206,7 @@ async def GetComponentPropertiesView (package_id: str, model_name: str, componen
 async def SetComponentPropertiesView (item: SetComponentPropertiesModel, request: Request):
     """
     # 设置模型组件的属性数据，一次性返回
-    ## class_name: 需要设置参数的模型名称，全称，例如“ENN.Examples.Scenario1_Status”
+    ## model_name: 需要设置参数的模型名称，全称，例如“ENN.Examples.Scenario1_Status”
     ## old_component_name: 需要设置的组件名，全称，“PID”
     ## new_component_name: 需要设置的组件新名称，全称，“PID”
     ## final: "true" or "false",
@@ -406,11 +406,13 @@ async def DeleteModelComponentView(item: DeleteComponentModel, request: Request)
     package = session.query(ModelsInformation).filter_by(id=item.package_id, sys_or_user=username).first()
     if package:
         result = True
-        for i in item.delete_list:
-            if i["delete_type"] == "component":
-                result = DeleteComponent(i["component_name"], i["model_name_all"])
-            elif i["delete_type"] == "connector":
-                result = DeleteConnection(i["model_name_all"], i["connect_start"], i["connect_end"])
+        model_name_all = item.delete_list[0]["model_name_all"]
+        for i in range(len(item.delete_list)):
+            data = item.delete_list[i]
+            if data["delete_type"] == "component":
+                result = DeleteComponent(data["component_name"], data["model_name_all"])
+            elif data["delete_type"] == "connector":
+                result = DeleteConnection(data["model_name_all"], data["connect_start"], data["connect_end"])
             else:
                 result = False
                 break

@@ -29,6 +29,8 @@ class FileOperation(object):
 
     @staticmethod
     def write(filename, file_data):
+        file_path = "/".join(filename.split("/")[:-1])
+        FileOperation.make_dir(file_path)
         if type(file_data) is bytes:
             data = file_data
         else:

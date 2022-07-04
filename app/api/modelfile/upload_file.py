@@ -10,7 +10,7 @@ from library.file_operation import FileOperation
 from config.DB_config import DBSession
 from config.redis_config import r
 from datetime import datetime
-from app.BaseModel.uploadfile import UploadSaveModelModel
+from app.BaseModel.uploadfile import UploadSaveModelModel, SaveModel
 from app.service.get_model_code import GetModelCode, GetModelPath
 from app.service.create_modelica_class import CreateModelicaClass, UpdateModelicaClass
 from app.service.icon_operation import UploadIcon
@@ -19,7 +19,7 @@ session = DBSession()
 
 
 @router.post("/", response_model=ResponseModel)
-async def UploadFileView(request: Request, file: UploadFile = File(...), package_id : str = Form(...),):
+async def UploadFileView(request: Request, file: UploadFile = File(...)):
     """
     # 用户上传mo文件接口
     ## file: 文件数据，bytes形式的文件流
@@ -90,7 +90,7 @@ async def UploadFileView(request: Request, file: UploadFile = File(...), package
 
 
 @router.post("/uploadfile/savefile", response_model=ResponseModel)
-async def SaveFileView(request: Request):
+async def SaveFileView(request: Request, item: SaveModel):
     """
     # 用户保存mo文件接口
     ## model_str: 文件数据，字符串形式, 如果是新建模型文件则为空字符串
@@ -100,19 +100,18 @@ async def SaveFileView(request: Request):
     """
     res = InitResponseModel()
     space_id = request.user.user_space
-    item = await request.json()
-    package_name_list = item.get("package_name", "").split(".")
+    package_name_list = item.package_name.split(".")
     parent_name = None
     package_name = package_name_list[0]  # 更新模型的话，是模型包的名字 item里的是模型全名
     if len(package_name_list) > 1:
         parent_name = ".".join(package_name_list[:-1])
-    model_str = urllib.parse.unquote(item.get("model_str", ""))  # html和JavaScript标签被过滤，选择转码后解码
-    package_id = item.get("package_id", None)
+    model_str = urllib.parse.unquote(item.model_str)  # html和JavaScript标签被过滤，选择转码后解码
+    package_id = item.package_id
     username = request.user.username
     package = session.query(ModelsInformation).filter_by(userspace_id=space_id, sys_or_user=request.user.username, id=package_id).first()
     if not package:
         raise HTTPException(status_code=404, detail="not found")
-    item_package_name = item.get("package_name", "")
+    item_package_name = item.package_name
     model_path = GetModelPath(item_package_name)
     if parent_name:
         model_str = "within " + parent_name + ";" + model_str
@@ -128,12 +127,12 @@ async def SaveFileView(request: Request):
         if save_result:
             res_model_str = GetModelCode(item_package_name)
             res.data = [{"model_str": res_model_str, "id": M_id}]
-            res.msg = "保存文件成功！"
+            res.msg = "保存成功！"
         else:
-            res.err = "语法错误，请重新检查后上传"
+            res.err = "语法错误，请重新检查"
             res.status = 1
     else:
-        res.err = "语法错误，请重新检查后上传"
+        res.err = "语法错误，请重新检查"
         res.status = 1
     for i in notice_data:
         r_data = {

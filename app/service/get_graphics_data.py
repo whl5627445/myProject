@@ -49,6 +49,8 @@ class GetGraphicsData(object):
                     data["fillPattern"] = drawing_data[6]
                     data["lineThickness"] = drawing_data[7]
                     data["polygonPoints"] = [",".join(x) for x in drawing_data[8]]
+                    if len(data["polygonPoints"]) < 4:
+                        data["polygonPoints"].append(data["polygonPoints"][0])
                     data["smooth"] = drawing_data[9]
                 elif drawing_data_list[i] == "Line":
                     data["points"] = [",".join(x) for x in drawing_data[3]]
@@ -138,10 +140,9 @@ class GetGraphicsData(object):
                     data["visible"] = ca_data_filter[i][1][0]
                     data["visible"] = caf[0]
                     data["rotateAngle"] = rotateAngle
-                    data["originDiagram"] = ",".join([ca_data_filter[i][1][1], ca_data_filter[i][1][2]])
-                    data["extent1Diagram"] = ",".join([ca_data_filter[i][1][3], ca_data_filter[i][1][4]])
-                    data["extent2Diagram"] = ",".join([ca_data_filter[i][1][5], ca_data_filter[i][1][6]])
                     data["originDiagram"] = ",".join([caf[1], caf[2]])
+                    data["extent1Diagram"] = ",".join([caf[3], caf[4]])
+                    data["extent2Diagram"] = ",".join([caf[5], caf[6]])
                     data["extent1Diagram"] = ",".join([caf[3], caf[4]])
                     data["extent2Diagram"] = ",".join([caf[5], caf[6]])
                     data["rotation"] = rotateAngle

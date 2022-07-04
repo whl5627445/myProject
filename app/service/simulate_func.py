@@ -1,6 +1,6 @@
 # -- coding: utf-8 --
 import logging
-
+import logging as log
 from library.mat import DyMatFile
 from config.omc import omc
 from config.redis_config import r
@@ -10,11 +10,9 @@ from config.DB_config import DBSession
 from datetime import datetime
 from config.settings import JMODELICA_CONNECT
 from library.file_operation import FileOperation
-# from app.service.load_model_file import LoadModelFile
 from app.service.get_model_code import GetModelCode
 from library.file_operation import FileOperation
-import xmltodict, socket,json, requests, time, os
-
+import xmltodict, socket,json, requests, os
 session = DBSession()
 
 
@@ -135,16 +133,19 @@ def JModelicaSimulate (SRecord: object, result_file_path: str, model_name: str, 
     try:
         client.send(json.dumps(msg).encode())
         compile_data = client.recv(1024).decode()
+        client.close()
         if compile_data == "ok":
             model_name_ = model_name.replace(".", "_")
             msg["type"] = "simulate"
             msg["modelname"] = model_name_
             r_data = {"message": model_name + " 编译成功，开始仿真"}
             r.lpush(username + "_" + "notification", json.dumps(r_data))
+            log.info('msg: {}'.format(msg))
             client = socket.socket()
-            client.connect(("119.3.155.11", 56789))
+            client.connect(JMODELICA_CONNECT)
             client.send(json.dumps(msg).encode())
             simulate_data = client.recv(1024).decode()
+            log.info('simulate_data: {}'.format(simulate_data))
             if str(simulate_data) == "ok":
                 with open(result_file_path + model_name_ + ".fmu", "rb") as f:
                     fmu_data = f.read()
@@ -160,6 +161,7 @@ def JModelicaSimulate (SRecord: object, result_file_path: str, model_name: str, 
         SRecord.simulate_status = "仿真失败"
         SRecord.simulate_result_str = e
     SRecord.simulate_end_time = datetime.now()
+    client.close()
     session.flush()
     return res, res_str
 

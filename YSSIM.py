@@ -1,5 +1,8 @@
 # -- coding: utf-8 --
-# from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, HTTPException
+import logging
+import os
+
+import uvicorn
 from fastapi import FastAPI, Request
 # from fastapi.responses import JSONResponse, Response
 from app.api.simulate.simulateview import router as simulate_view_router
@@ -9,18 +12,20 @@ from app.api.modelfile.download import router as download_file_router
 from app.api.user.user_space import router as user_space_router
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.authentication import AuthenticationMiddleware
-from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from starlette.authentication import (
     AuthenticationBackend, SimpleUser,
     AuthCredentials
     )
 from config.InIt import InIt
+from config.nacos_config import ServiceDiscovery
 
 
 class BasicAuthBackend(AuthenticationBackend):
     async def authenticate (self, request):
         username = request.headers.get("username", None)
         user_space = request.headers.get("space_id", None)
+        # print(request.headers)
         if not username or username == "sys":
             username = ""
         user = SimpleUser(username)
@@ -29,13 +34,6 @@ class BasicAuthBackend(AuthenticationBackend):
 
 
 app = FastAPI()
-# import os
-# script_dir = os.path.dirname(__file__)
-# st_abs_file_path = os.path.join(script_dir, "static/")
-# app.mount("/static", StaticFiles(directory="static"), name="static")
-
-
-
 
 
 app.include_router(simulate_view_router)
@@ -47,30 +45,21 @@ app.add_middleware(AuthenticationMiddleware, backend=BasicAuthBackend())
 app.add_middleware(SessionMiddleware, secret_key="simtek")
 
 
-InIt()
-
 # app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=["*"],
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
+    # CORSMiddleware,
+    # allow_origins=["*"],
+    # allow_credentials=True,
+    # allow_methods=["*"],
+    # allow_headers=["*"],
+    # expose_headers=["Content-Disposition"],
 # )
 
-
-
-# @app.middleware("http")
-# async def LoginAuth (request: Request, call_next):
-#     username = request.headers.get("username", None)
-#     # if not username or username == "sys":
-#     #     return Response(content="not found", status_code=401)
-#     response = await call_next(request)
-#     return response
-
-# @app.middleware("http")
-# async def add_process_time_header(request: Request, call_next):
-#     response = await call_next(request)
-#     if request.headers.get("Origin"):
-#         response.headers["Access-Control-Allow-Origin"] = request.headers["Origin"]
-#     return response
-
+if __name__ == '__main__':
+    InIt()
+    ServiceDiscovery()
+    uvicorn.run("YSSIM:app",
+                host="0.0.0.0",
+                port=int(os.getenv("PORT")),
+                workers=4,
+                debug=False,
+                )

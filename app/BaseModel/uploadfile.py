@@ -25,6 +25,19 @@ class UploadSaveModelModel(BaseModel):
         "state": False
         }
 
+class SaveModel(BaseModel):
+    package_name: Optional[str]
+    str_type: Optional[str] = None
+    model_str: Optional[str] = None
+    package_id: Optional[str] = None
+    comment: Optional[str] = None
+    vars: dict = {
+        "expand": "",
+        "insert_to": "",
+        "partial": False,
+        "encapsulated": False,
+        "state": False
+        }
 
 class UploadIconModel(BaseModel):
     package_name: Optional[str]

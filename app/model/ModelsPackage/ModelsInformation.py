@@ -8,7 +8,7 @@ Base = declarative_base()
 class ModelsInformation(Base):
     __tablename__ = 'py_models'
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, )
     package_name = Column(VARCHAR)
     create_time = Column(DateTime, default=datetime.datetime.now)
     update_time = Column(DateTime)

@@ -28,16 +28,17 @@
     这可能是：SEPARATE_PROCESS_JVM = C:\Program Files\Java\jdk1.6.0_37 默认值：True
     jvm_args - 在单独的进程中编译时传递给 JVM 的参数字符串。默认值：空 stringReturns :: 编译结果，表示已创建的 FMU 的名称以及引发的警告列表。
     """
-import logging
+import logging as log
 
 from pymodelica import compile_fmu
 from pyfmi import load_fmu
 import json
 import socket
-logging.basicConfig(level=logging.DEBUG,#控制台打印的日志级别
-                    format='%(asctime)s - %(pathname)s[line:%(lineno)d] - %(levelname)s: %(message)s'
-                    #日志格式
-                    )
+log.basicConfig(level=log.INFO,#控制台打印的日志级别
+                format='%(asctime)s - %(pathname)s[line:%(lineno)d] - %(levelname)s: %(message)s',
+                filename="/code/Log/Jmodelica.log",
+                filemode='a',
+                )
 
 def service():
     s = socket.socket()
@@ -49,6 +50,7 @@ def service():
     while True:
         soc, addr = s.accept()
         data = json.loads(soc.recv(4096))
+        log.info("data: {0}".format(data))
         if data:
             try:
                 result_file_path = "/" + data["result_file_path"]

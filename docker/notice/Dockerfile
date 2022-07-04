@@ -16,4 +16,4 @@ RUN sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list \
 WORKDIR /home/simtek/code
 COPY ./ /home/simtek/code
 
-CMD ["./main"]
+CMD ["/home/simtek/code/main"]

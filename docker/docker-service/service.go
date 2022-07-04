@@ -29,21 +29,23 @@ type ContainerData struct {
 // }
 
 func (c *ContainerData) service(ctx context.Context, cli *client.Client) (string, error) {
-	dir, _ := os.Getwd()
-	dirList := strings.Split(dir, "/")
-	dir = strings.Join(dirList[0:len(dirList)-2], "/")
+	port := nat.Port(c.Port + "/tcp")
+	dir := os.Getenv("sysPath")
 	cConfig := container.Config{
-		ExposedPorts: nat.PortSet{"8084/tcp": {}},
-		Env:          []string{"USERNAME=" + c.Username},
+		ExposedPorts: nat.PortSet{port: {}},
+		Env:          []string{"USERNAME=" + c.Username, "PORT=" + c.Port},
 		Cmd:          strslice.StrSlice{"/home/simtek/docker/start.sh"},
 		Image:        c.ImageName,
 	}
+	Binds := []string{dir + ":/home/simtek/code", dir + "/omlibrary/:/usr/bin/../lib/omlibrary"}
+
 	hostConfig := container.HostConfig{
-		Binds:         []string{dir + ":/home/simtek/code", dir + "/omlibrary/:/usr/bin/../lib/omlibrary"},
+		Binds:         Binds,
 		NetworkMode:   container.NetworkMode(c.NetWorkMode),
-		PortBindings:  nat.PortMap{"8084/tcp": []nat.PortBinding{{HostIP: "", HostPort: c.Port}}},
+		PortBindings:  nat.PortMap{port: []nat.PortBinding{{HostIP: "", HostPort: c.Port}}},
 		RestartPolicy: container.RestartPolicy{Name: "always", MaximumRetryCount: 0},
 	}
+	fmt.Printf("dir：%s", dir)
 	fmt.Println("配置初始化完成，准备创建容器")
 	create, err := cli.ContainerCreate(ctx, &cConfig, &hostConfig, nil, nil, c.Name)
 	if err != nil {

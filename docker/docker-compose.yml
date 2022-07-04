@@ -1,4 +1,4 @@
-version: "2"
+version: "3"
 
 
 networks:
@@ -11,6 +11,8 @@ services:
     image: docker.io/bitnami/zookeeper:3.8
     ports:
       - "2181:2181"
+    expose:
+      - "2181"
     volumes:
       - "zookeeper_data:/bitnami"
     environment:
@@ -23,11 +25,15 @@ services:
     image: docker.io/bitnami/kafka:3.1
     ports:
       - "9092:9092"
+    expose:
+      - "9092"
     volumes:
       - "kafka_data:/bitnami"
     environment:
       - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
       - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://119.3.155.11:9092
+      - KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092
     depends_on:
       - zookeeper
     networks:
@@ -35,19 +41,12 @@ services:
     container_name: "yssim-kafka"
     restart: always
 
-  redis:
-    image: docker.io/redis:latest
-    ports:
-      - "56799:6379"
-    networks:
-      - yssim-net
-    container_name: "yssim-redis"
-    restart: always
-
   Jmodelica:
     image: docker.io/mihoutao/jmodelica:v2.3
-    ports:
-      - "56789:56789"
+#    ports:
+#      - "56789:56789"
+    expose:
+      - "56789"
     volumes:
       - "../omlibrary/:/omlibrary"
       - "../public/:/public"
@@ -55,7 +54,9 @@ services:
       - "../:/code"
     depends_on:
       - kafka
-    command: "/usr/bin/supervisord -n -c /JM/supervisor_JModelica.ini"
+    working_dir: "/JM/JM_install/bin/"
+#    command: "/usr/bin/supervisord -n -c /JM/supervisor_JModelica.ini"
+    command: "./start.sh"
     networks:
       - yssim-net
     container_name: "yssim-Jmodelica"
@@ -63,7 +64,7 @@ services:
 
   NOTICE:
     build:
-      context: "./notice/dockerfileDir/"
+      context: "./notice/"
       dockerfile: "Dockerfile"
     image: notice:v1.0
     ports:
@@ -73,22 +74,19 @@ services:
     container_name: "yssim-notice"
     restart: always
 
-  YSSIM-Admin:
-    build:
-      context: "./yssim"
-      dockerfile: "Dockerfile"
-    image: omc-v1
-    ports:
-      - "4321:8084"
+  DOCKER-SERVICE:
+#    build:
+#      context: "./docker-service"
+#      dockerfile: "Dockerfile"
+    image: docker-service:v1.0
     volumes:
-      - "../:/home/simtek/code"
-      - "../omlibrary/:/usr/bin/../lib/omlibrary"
-    command: "/home/simtek/docker/start.sh"
+      - "/var/run:/var/run"
     networks:
       - yssim-net
-    container_name: "admin"
+    container_name: "docker-service"
     restart: always
-
+    env_file:
+      - docker.env
 
 volumes:
   zookeeper_data:

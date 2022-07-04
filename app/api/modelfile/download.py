@@ -11,6 +11,7 @@ from app.model.Simulate.SimulateResult import SimulateResult
 from app.model.Simulate.SimulateRecord import SimulateRecord
 from app.BaseModel.simulate import SimulateResultExportModel
 from library.file_operation import FileOperation
+from app.service.get_model_code import GetModelCode
 import pandas as pd
 import random
 import datetime
@@ -51,17 +52,19 @@ async def GetModelFileView(request: Request, package_id: str):
     username = request.user.username
     package = session.query(ModelsInformation).filter_by(sys_or_user=username, id=package_id).first()
     if package:
-        data_file_path = package.file_path
-        path_list = data_file_path.split("/")
-        package_path = "/".join(path_list[:-1])
-        file_path = "static/" + username
-        file_name = str(datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')) + ".zip"
-        data_file = file_path + "/" + file_name
+        new_file_base = "static/" + username + "/" + str(datetime.datetime.now().strftime('%Y%m%d%H%M%S%f'))
+        new_file_path = new_file_base + "/" + package.package_name
+        new_file_name = package.package_name + ".zip"
+        data_file = new_file_base + "/" + new_file_name
+        code = GetModelCode(package.package_name)
+        pname = package.package_name + ".mo"
         fo = FileOperation()
-        fo.touth_file(file_path, file_name)
-        fo.make_zip(package_path, data_file)
+        fo.touth_file(new_file_base, new_file_name)
+        fo.touth_file(new_file_path, pname)
+        fo.write_file(new_file_path, pname, code)
+        fo.make_zip(new_file_path, data_file)
         try:
-            return FileResponse(path=data_file,filename=file_name, media_type="application/zip")
+            return FileResponse(path=data_file,filename=new_file_name, media_type="application/json; application/octet-stream")
         except Exception as e:
             print(e)
     else:

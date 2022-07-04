@@ -17,6 +17,8 @@ def GetComponents(class_name, component_name=None):
                     component_data.append(i)
         except Exception as e:
             logging.error(e)
+            logging.info(class_name)
+            logging.info(Components_data)
     return component_data
 
 

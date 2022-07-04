@@ -14,6 +14,8 @@ def UploadIcon(model_name, icon_data):
 
 def GetIcon(model_name):
     icon_data = omc.getIconAnnotation(model_name)
+    print(model_name)
+    print(icon_data)
     if len(icon_data)>7:
         image_data = icon_data[7]
         if image_data[0] == "Bitmap":
