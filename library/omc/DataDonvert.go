@@ -1,37 +1,47 @@
 package omc
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"strings"
 )
 
-func DataToGo(data string) ([]interface{}, error) {
+func DataToGo(data []byte) ([]interface{}, error) {
 	var resData []interface{}
-	resStr := ""
-	data = strings.ReplaceAll(data, "\n", "\\n")
-	data = strings.ReplaceAll(data, "\r", "")
-	data = strings.ReplaceAll(data, "\\\\\\\\", "\\")
-	data = strings.ReplaceAll(data, "\\\\\\", "\\")
-	data = strings.ReplaceAll(data, ", ", ",")
-	data = strings.TrimSuffix(data, ",")
-	data = strings.TrimSuffix(data, "\\n")
+	Str := strings.Builder{}
+	data = bytes.ReplaceAll(data, []byte("\n"), []byte("\\n"))
+	data = bytes.ReplaceAll(data, []byte("\r"), []byte(""))
+	data = bytes.ReplaceAll(data, []byte("\\\\\\\\"), []byte("\\"))
+	data = bytes.ReplaceAll(data, []byte("\\\\\\"), []byte("\\"))
+	data = bytes.ReplaceAll(data, []byte(", "), []byte(","))
+	data = bytes.ReplaceAll(data, []byte("{}"), []byte("[]"))
+	data = bytes.TrimSuffix(data, []byte(","))
+	data = bytes.TrimSuffix(data, []byte("\\n"))
 
-	if data == "\"\"" || data == "Error" || data == "{}" {
-		return resData, nil
+	if len(data) <= 5 {
+		d := string(data)
+		if d == "\"\"" || d == "Error" || d == "{}" {
+			return resData, nil
+		}
 	}
+	if bytes.HasPrefix(data, []byte("{")) == false {
+		data = append([]byte{'['}, data...)
+		data = append(data, []byte{']'}...)
+	}
+
 	mark := false
 	lData := len(data)
 	for i := 0; i < lData; i++ {
 
 		if data[i] == '"' {
-			strIndex := strings.Index(data[i+1:], "\"")
+			strIndex := bytes.Index(data[i+1:], []byte("\""))
 			dataEndIndex := i + strIndex + 1
 			str := data[i : dataEndIndex+1]
 			if mark == true {
-				str = strings.ReplaceAll(str, "\"", "\\\"")
+				str = bytes.ReplaceAll(str, []byte("\""), []byte("\\\""))
 			}
-			resStr += str
+			Str.Write(str)
 			i += strIndex + 1
 			continue
 		}
@@ -40,84 +50,71 @@ func DataToGo(data string) ([]interface{}, error) {
 			switch {
 			case (i == 0 && data[i+1] == '"') || data[i+1] == '"' || data[i+1] == '{':
 				mark = false
-				resStr += "["
+				Str.WriteString("[")
 			default:
 				mark = true
-				resStr += "[\""
+				Str.WriteString("[\"")
 			}
 		case data[i] == '}':
 			switch {
 			case i == lData-1 && data[i-1] == '"' || (data[i-1] == '"' && mark == false) || data[i-1] == ')' || data[i-1] == '}':
 				mark = true
-				resStr += "]"
+				Str.WriteString("]")
 			default:
 				mark = false
-				resStr += "\"]"
+				Str.WriteString("\"]")
 			}
 
 		case data[i] == '(':
 			switch {
 			case i == 0 || data[i+1] == '(' || data[i+1] == '{' || data[i-1] == ',':
-				resStr += "["
+				Str.WriteString("[")
 			case data[i+1] == '"' && data[i-1] != '"':
-				resStr += "\",["
+				Str.WriteString("\",[")
 			default:
-				resStr += "\",[\""
+				Str.WriteString("\",[\"")
 			}
 			mark = false
 		case data[i] == ')':
 			switch {
 			case i == lData-1 && (data[i-1] == '}' || data[i-1] == '"'):
 				mark = true
-				resStr += "]"
+				Str.WriteString("]")
 			case data[i-1] != '}' && data[i-1] != '"':
 				mark = false
-				resStr += "\"]"
+				Str.WriteString("\"]")
 			case data[i+1] == '}' || data[i+1] == ')':
 				mark = true
-				resStr += "]"
+				Str.WriteString("]")
 			default:
 				mark = true
-				resStr += "]"
+				Str.WriteString("]")
 			}
-
 		case data[i] == ',':
 			switch {
 			case data[i-1] != '}' && data[i-1] != ')' && string(data[i+1]) != "\\" && data[i+1] != '{' && data[i+1] != '(' && data[i-1] != '"' && data[i+1] != '"':
-				resStr += "\",\""
+				Str.WriteString("\",\"")
 			case (data[i-1] == '}' || data[i-1] == ')' || data[i-1] == '"') && data[i+1] != '(' && data[i+1] != '{' && data[i+1] != '"' && string(data[i+1]) != "\\":
-				resStr += ",\""
+				Str.WriteString(",\"")
 			case (data[i+1] == '(' || data[i+1] == '{' || data[i+1] == '"') && data[i-1] != ')' && data[i-1] != '}' && data[i-1] != '"' && string(data[i+1]) != "\\":
-				resStr += "\","
+				Str.WriteString("\",")
 			default:
-				resStr += ","
+				Str.WriteString(",")
 			}
 			mark = false
 		default:
-			if string(data[i]) == "," {
-				mark = false
-			} else {
-				mark = true
-			}
-			resStr += string(data[i])
+			mark = true
+			Str.WriteString(string(data[i]))
 		}
 	}
-	resStr = strings.ReplaceAll(resStr, "\"true\"", "true")
-	resStr = strings.ReplaceAll(resStr, "\"false\"", "false")
-	if strings.HasPrefix(resStr, "[") == false {
-		resStr = "[" + resStr + "]"
-	}
-	// fmt.Println("resStr:   " + string(resStr))
-	if resStr == "[]" || resStr == "[\"\"]" {
-		return nil, nil
-	}
-	b := []byte(resStr)
-	err := json.Unmarshal(b, &resData)
+	resStr := Str.String()
+
+	err := json.Unmarshal([]byte(resStr), &resData)
 	if err != nil {
 		fmt.Println("数据转换失败: ", err)
 		fmt.Println("data:  ", data)
-		fmt.Println("resStr:  ", resStr)
-		return resData, err
+		fmt.Println("Str:  ", Str.String())
+		return nil, err
 	}
 	return resData, err
 

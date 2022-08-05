@@ -5,37 +5,54 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-
-	"yssim-go/config"
+	"yssim-go/library/omc"
 )
-
-var omc = config.OMC
 
 type GraphicsData struct {
 	data [][]map[string]interface{}
 }
 
-func GetGraphicsData(nameList []string) [][]map[string]interface{} {
+func GetGraphicsData(modelName string) [][]map[string]interface{} {
 	var g = GraphicsData{}
-
 	g.data = [][]map[string]interface{}{{}, {}}
-	nameList = g.getICList(nameList)
-	diagramAnnotationData := omc.GetDiagramAnnotationList(nameList)
+
+	nameList := g.getICList(modelName)
+	diagramAnnotationData := omc.OMC.GetDiagramAnnotationList(nameList)
 	if len(diagramAnnotationData) >= 8 {
 		dData := diagramAnnotationData[len(diagramAnnotationData)-1]
 		data1 := g.data01(dData.([]interface{}))
 		g.data[0] = append(g.data[0], data1...)
 	}
 	g.getnthconnectionData(nameList)
-	componentsData := omc.GetComponentsList(nameList)
-	componentannotationsData := omc.GetComponentAnnotationsList(nameList)
+	componentsData := omc.OMC.GetComponentsList(nameList)
+	componentannotationsData := omc.OMC.GetComponentAnnotationsList(nameList)
 	data2 := g.data02(componentsData, componentannotationsData, false, "")
 	g.data[1] = append(g.data[1], data2...)
 	return g.data
 }
 
-func oneDimensionalProcessing(drawingData []interface{}) string {
+func GetComponentGraphicsData(modelName string, componentName string) [][]map[string]interface{} {
+	var g = GraphicsData{}
+	g.data = [][]map[string]interface{}{{}, {}}
+	nameList := g.getICList(modelName)
+	components := omc.OMC.GetComponentsList(nameList)
+	componentAnnotations := omc.OMC.GetComponentAnnotationsList(nameList)
+	var componentsData [][]interface{}
+	var componentAnnotationsData [][]interface{}
+	for i := 0; i < len(components); i++ {
+		if components[i] != nil {
+			if components[i][1] == componentName {
+				componentsData = append(componentsData, components[i])
+				componentAnnotationsData = append(componentAnnotationsData, componentAnnotations[i])
+			}
+		}
+	}
+	data2 := g.data02(componentsData, componentAnnotationsData, false, "")
+	g.data[1] = append(g.data[1], data2...)
+	return g.data
+}
 
+func oneDimensionalProcessing(drawingData []interface{}) string {
 	var data []string
 	defer func() {
 		if err := recover(); err != nil {
@@ -69,12 +86,12 @@ func twoDimensionalProcessing(drawingData []interface{}) []string {
 	return data
 }
 
-func (g *GraphicsData) getICList(name []string) []string {
-	dataList := name
-	nameList := name
+func (g *GraphicsData) getICList(name string) []string {
+	dataList := []string{name}
+	nameList := []string{name}
 	for {
-		InheritedClassesData, ok := omc.GetInheritedClassesList(nameList)
-		if ok {
+		InheritedClassesData := omc.OMC.GetInheritedClassesList(nameList)
+		if len(InheritedClassesData) > 0 {
 			dataList = append(dataList, InheritedClassesData...)
 			nameList = InheritedClassesData
 		} else {
@@ -94,7 +111,7 @@ func (g *GraphicsData) data01(cData []interface{}) []map[string]interface{} {
 		}
 		dataType := cData[i]
 		data["type"] = dataType
-		data["visible"] = strconv.FormatBool(drawingDataList[0].(bool))
+		data["visible"] = drawingDataList[0]
 		data["originalPoint"] = oneDimensionalProcessing(drawingDataList[1].([]interface{}))
 		data["rotation"] = drawingDataList[2]
 		data["color"] = oneDimensionalProcessing(drawingDataList[3].([]interface{}))
@@ -105,6 +122,10 @@ func (g *GraphicsData) data01(cData []interface{}) []map[string]interface{} {
 		switch dataType {
 		case "Polygon":
 			data["polygonPoints"] = twoDimensionalProcessing(drawingDataList[8].([]interface{}))
+			ppData := data["polygonPoints"].([]string)
+			if len(ppData) < 4 {
+				data["polygonPoints"] = append(ppData, ppData[0])
+			}
 			data["smooth"] = drawingDataList[9]
 		case "Line":
 			delete(data, "fillColor")
@@ -146,17 +167,9 @@ func (g *GraphicsData) data01(cData []interface{}) []map[string]interface{} {
 }
 
 func (g *GraphicsData) data02(cData [][]interface{}, caData [][]interface{}, isIcon bool, parent string) []map[string]interface{} {
-
 	dataList := make([]map[string]interface{}, 0, 1)
 	var cDataFilter [][]interface{}
 	var caDataFilter [][]interface{}
-	// defer func() {
-	// 	if err := recover(); err != nil {
-	// 		fmt.Println("出错了: ", err)
-	// 		fmt.Printf("cDataFilter: %s \n", cDataFilter)
-	// 		fmt.Printf("caDataFilter: %s \n", caDataFilter)
-	// 	}
-	// }()
 	if isIcon == true && cData != nil && caData != nil {
 		for i := 0; i < len(cData); i++ {
 			cDataSplit := strings.Split(cData[i][0].(string), ".")
@@ -171,25 +184,35 @@ func (g *GraphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 		cDataFilter = cData
 		caDataFilter = caData
 	}
-
 	if cDataFilter == nil || caDataFilter == nil {
 		return dataList
 	}
 	for i := 0; i < len(cDataFilter); i++ {
 		name := cDataFilter[i][0].(string)
-		nameList := g.getICList([]string{name})
+		nameList := g.getICList(name)
 		placementIndex := func() int {
-			for pi := 0; pi < len(caDataFilter[i]); pi++ {
-				if caDataFilter[i][pi].(string) == "Placement" {
-					return pi
+			for i2, i3 := range caDataFilter[i] {
+				if i3 == "Placement" {
+					return i2
 				}
 			}
+			//for pi := 0; pi < len(caDataFilter[i]); pi++ {
+			//	fmt.Printf("caDataFilter[i]: %#v \n", caDataFilter[i])
+			//	fmt.Printf("caDataFilter[i][pi]: %#v \n", caDataFilter[i][pi])
+			//	fmt.Printf("[pi]: %#v \n", pi)
+			//	if caDataFilter[i][pi].(string) == "Placement" {
+			//		//fmt.Printf("dataList: %#v \n", dataList)
+			//		//fmt.Printf("caDataFilter: %#v \n", caDataFilter)
+			//
+			//		return pi
+			//	}
+			//}
 			return -1
 		}()
 		if placementIndex != -1 {
-			componentsData := omc.GetComponentsList(nameList)
-			componentannotationsData := omc.GetComponentAnnotationsList(nameList)
-			IconAnnotationData := omc.GetIconAnnotationList(nameList)
+			componentsData := omc.OMC.GetComponentsList(nameList)
+			componentannotationsData := omc.OMC.GetComponentAnnotationsList(nameList)
+			IconAnnotationData := omc.OMC.GetIconAnnotationList(nameList)
 			caf := caDataFilter[i][placementIndex+1].([]interface{})
 			rotateAngle := func() string {
 				if caf[7] == "-" {
@@ -215,7 +238,7 @@ func (g *GraphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 			data["name"] = cDataFilter[i][1]
 			data["original_name"] = cDataFilter[i][1]
 			data["parent"] = parent
-			data["visible"] = strconv.FormatBool(caf[0].(bool))
+			data["visible"] = caf[0]
 			data["rotateAngle"] = rotateAngle
 			data["originDiagram"] = strings.Join([]string{caDataFilter[i][1].([]interface{})[1].(string), caDataFilter[i][1].([]interface{})[2].(string)}, ",")
 			data["extent1Diagram"] = strings.Join([]string{caDataFilter[i][1].([]interface{})[3].(string), caDataFilter[i][1].([]interface{})[4].(string)}, ",")
@@ -234,21 +257,24 @@ func (g *GraphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 }
 
 func (g *GraphicsData) getnthconnectionData(nameList []string) {
-	ConnectionCount := omc.GetConnectionCountList(nameList)
+	ConnectionCount := omc.OMC.GetConnectionCountList(nameList)
 	for i := 0; i < len(ConnectionCount); i++ {
 		for c := 0; c < ConnectionCount[i]; c++ {
-			ncData := omc.GetNthConnection(nameList[i], c+1)
-			ncaData := omc.GetNthConnectionAnnotation(nameList[i], c+1)
-			daData := g.data01(ncaData)[0]
-			daData["connectionfrom_original_name"] = ncData[0]
-			daData["connectionto_original_name"] = ncData[1]
-			re1, _ := regexp.Compile("[[0-9]+]$")
-			re2, _ := regexp.Compile("[[0-9]+].")
-			connectionfrom := re1.ReplaceAll([]byte(ncData[0]), []byte(""))
-			connectionto := re1.ReplaceAll([]byte(ncData[1]), []byte(""))
-			daData["connectionfrom"] = string(re2.ReplaceAll(connectionfrom, []byte(".")))
-			daData["connectionto"] = string(re2.ReplaceAll(connectionto, []byte(".")))
-			g.data[0] = append(g.data[0], daData)
+			ncData := omc.OMC.GetNthConnection(nameList[i], c+1)
+			ncaData := omc.OMC.GetNthConnectionAnnotation(nameList[i], c+1)
+			d1Data := g.data01(ncaData)
+			if len(ncData) != 0 && len(ncaData) != 0 && len(d1Data) != 0 {
+				daData := d1Data[0]
+				daData["connectionfrom_original_name"] = ncData[0]
+				daData["connectionto_original_name"] = ncData[1]
+				re1, _ := regexp.Compile("[[0-9]+]$")
+				re2, _ := regexp.Compile("[[0-9]+].")
+				connectionfrom := re1.ReplaceAll([]byte(ncData[0]), []byte(""))
+				connectionto := re1.ReplaceAll([]byte(ncData[1]), []byte(""))
+				daData["connectionfrom"] = string(re2.ReplaceAll(connectionfrom, []byte(".")))
+				daData["connectionto"] = string(re2.ReplaceAll(connectionto, []byte(".")))
+				g.data[0] = append(g.data[0], daData)
+			}
 		}
 	}
 }
