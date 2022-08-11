@@ -18,9 +18,15 @@ func RenameComponentInClass(className string, oldComponentName string, newCompon
 }
 
 func SetComponentProperties(className string, newComponentName string, oldComponentName string, final string, protected string, replaceable string, variability string, inner string, outer string, causality string) bool {
-	renameResult := RenameComponentInClass(className, oldComponentName, newComponentName)
-	ScpResult := omc.OMC.SetComponentProperties(className, newComponentName, final, protected, replaceable, variability, inner, outer, causality)
+	renameResult := true
+	ScpResult := true
+	if oldComponentName != newComponentName {
+		renameResult = RenameComponentInClass(className, oldComponentName, newComponentName)
+
+	}
+	ScpResult = omc.OMC.SetComponentProperties(className, newComponentName, final, protected, replaceable, variability, inner, outer, causality)
 	if ScpResult && renameResult {
+
 		return true
 	}
 	return false

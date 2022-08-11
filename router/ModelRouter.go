@@ -8,14 +8,17 @@ import (
 func ModelRouter(e *gin.Engine) {
 	var Models = e.Group("/simulate_model")
 	{
-		Models.POST("/get_graphics_data", API.GetGraphicsDataView)
-		Models.GET("/list_root_library", API.GetRootModelView)
+		Models.POST("/graphics_data", API.GetGraphicsDataView)
+		Models.GET("/root_library", API.GetRootModelView)
 		Models.GET("/list_library", API.GetListModelView)
-		Models.GET("/get_model_code", API.GetModelCodeView)
-		Models.GET("/get_model_parameters", API.GetModelParametersView)
-		Models.POST("/set_model_parameters", API.SetModelParametersView)
-		Models.GET("/get_component_properties", API.GetComponentPropertiesView)
-		Models.POST("/set_component_properties", API.SetComponentPropertiesView)
-		Models.POST("/copy_class", API.CopyClassView)
+		Models.GET("/model_code", API.GetModelCodeView)
+		Models.GET("/model_parameters/get", API.GetModelParametersView)
+		Models.POST("/model_parameters/set", API.SetModelParametersView)
+		Models.GET("/component_properties/get", API.GetComponentPropertiesView)
+		Models.POST("/component_properties/set", API.SetComponentPropertiesView)
+		Models.POST("/class/copy", API.CopyClassView)
+		Models.POST("/package/delete", API.DeletePackageAndModelView)
+		Models.GET("/component_name/get", API.GetComponentNameView)
 	}
+	e.POST("/test", API.Test)
 }

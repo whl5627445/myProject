@@ -117,11 +117,11 @@ func (o *omcZMQ) GetConnectionCountList(classNameList []string) []int {
 	var dataList []int
 	for i := 0; i < len(classNameList); i++ {
 		cmd := "getConnectionCount(" + classNameList[i] + ")"
-		ConnectionCountNum, ok := o.SendExpression(cmd)
+		ConnectionCountNum, ok := o.SendExpressionNoParsed(cmd)
+		ConnectionCountNum = bytes.ReplaceAll(ConnectionCountNum, []byte("\n"), []byte(""))
 		if ok {
-			for p := 0; p < len(ConnectionCountNum); p++ {
-				dataList = append(dataList, int(ConnectionCountNum[p].(float64)))
-			}
+			num, _ := strconv.Atoi(string(ConnectionCountNum))
+			dataList = append(dataList, num)
 		}
 	}
 	return dataList
@@ -428,6 +428,7 @@ func (o *omcZMQ) SetComponentModifierValue(className string, parameter string, v
 	}
 	cmd := "setComponentModifierValue(" + className + ", " + parameter + ", $Code(" + code + "))"
 	Data, _ := o.SendExpressionNoParsed(cmd)
+	Data = bytes.ReplaceAll(Data, []byte("\n"), []byte(""))
 	return string(Data)
 }
 
@@ -441,12 +442,51 @@ func (o *omcZMQ) RenameComponentInClass(className string, oldComponentName strin
 }
 
 func (o *omcZMQ) SetComponentProperties(className string, newComponentName string, final string, protected string, replaceable string, variability string, inner string, outer string, causality string) bool {
+	// setComponentProperties(PID_Controller,PI,{true,false,true,false}, {""}, {false,false}, {""})
 	cmdParameterList := []string{className, ",", newComponentName, ",{", final, ",false,", protected, ",", replaceable,
 		"},{\"", variability, "\"}", ",{", inner, ",", outer, "},{\"", causality, "\"}"}
 	cmd := "setComponentProperties(" + strings.Join(cmdParameterList, "") + ")"
 	data, ok := o.SendExpressionNoParsed(cmd)
+	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
 	if ok && string(data) == "Ok" {
 		return true
 	}
 	return false
+}
+
+func (o *omcZMQ) ExistClass(className string) bool {
+	cmd := "existClass(" + className + ")"
+	result, _ := o.SendExpressionNoParsed(cmd)
+	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
+	if string(result) == "false" {
+		return false
+	}
+	return true
+}
+
+func (o *omcZMQ) GetClassInformation(className string) []interface{} {
+	cmd := "getClassInformation(" + className + ")"
+	result, ok := o.SendExpression(cmd)
+	if ok {
+		return result
+	}
+	return nil
+}
+
+func (o *omcZMQ) CopyClass(className string, copiedClassName string, parentName string) bool {
+	cmd := "copyClass(" + className + ",\"" + copiedClassName + "\"," + parentName + ")"
+	result, ok := o.SendExpressionNoParsed(cmd)
+	if ok && string(result) == "false" {
+		return false
+	}
+	return true
+}
+
+func (o *omcZMQ) DeleteClass(className string) bool {
+	cmd := "deleteClass(" + className + ")"
+	result, ok := o.SendExpressionNoParsed(cmd)
+	if ok && string(result) == "false" {
+		return false
+	}
+	return true
 }

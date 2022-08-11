@@ -2,6 +2,7 @@ package service
 
 import (
 	"strings"
+	"yssim-go/library/fileOperation"
 	"yssim-go/library/omc"
 )
 
@@ -13,4 +14,13 @@ func GetModelCode(modelName string) string {
 		codeData = codeData[1 : len(codeData)-2]
 	}
 	return codeData
+}
+
+func SaveModelCode(modelName string, path string) bool {
+	codeData := GetModelCode(modelName)
+	ok := fileOperation.WriteFile(path, codeData)
+	if !ok {
+		return false
+	}
+	return true
 }

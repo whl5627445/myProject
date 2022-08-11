@@ -15,20 +15,20 @@ func DataToGo(data []byte) ([]interface{}, error) {
 	data = bytes.ReplaceAll(data, []byte("\\\\\\\\"), []byte("\\"))
 	data = bytes.ReplaceAll(data, []byte("\\\\\\"), []byte("\\"))
 	data = bytes.ReplaceAll(data, []byte(", "), []byte(","))
-	data = bytes.ReplaceAll(data, []byte("{}"), []byte("[]"))
+	//data = bytes.ReplaceAll(data, []byte("{}"), []byte("[]"))
 	data = bytes.TrimSuffix(data, []byte(","))
 	data = bytes.TrimSuffix(data, []byte("\\n"))
 
 	if len(data) <= 5 {
 		d := string(data)
-		if d == "\"\"" || d == "Error" || d == "{}" {
+		if d == "\"\"" || d == "Error" || d == "{}" || d == "[]" || d == "" {
 			return resData, nil
 		}
 	}
-	if bytes.HasPrefix(data, []byte("{")) == false {
-		data = append([]byte{'['}, data...)
-		data = append(data, []byte{']'}...)
-	}
+	//if bytes.HasPrefix(data, []byte("{")) == false || bytes.HasPrefix(data, []byte("{")) == false {
+	//	data = append([]byte{'['}, data...)
+	//	data = append(data, []byte{']'}...)
+	//}
 
 	mark := false
 	lData := len(data)
@@ -107,8 +107,9 @@ func DataToGo(data []byte) ([]interface{}, error) {
 			Str.WriteString(string(data[i]))
 		}
 	}
-	resStr := Str.String()
 
+	resStr := Str.String()
+	resStr = strings.ReplaceAll(resStr, "[\"\"]", "[]")
 	err := json.Unmarshal([]byte(resStr), &resData)
 	if err != nil {
 		fmt.Println("数据转换失败: ", err)

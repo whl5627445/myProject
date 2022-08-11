@@ -15,7 +15,6 @@ type GraphicsData struct {
 func GetGraphicsData(modelName string) [][]map[string]interface{} {
 	var g = GraphicsData{}
 	g.data = [][]map[string]interface{}{{}, {}}
-
 	nameList := g.getICList(modelName)
 	diagramAnnotationData := omc.OMC.GetDiagramAnnotationList(nameList)
 	if len(diagramAnnotationData) >= 8 {
@@ -23,7 +22,7 @@ func GetGraphicsData(modelName string) [][]map[string]interface{} {
 		data1 := g.data01(dData.([]interface{}))
 		g.data[0] = append(g.data[0], data1...)
 	}
-	g.getnthconnectionData(nameList)
+	g.getnthconnectionData(nameList) //
 	componentsData := omc.OMC.GetComponentsList(nameList)
 	componentannotationsData := omc.OMC.GetComponentAnnotationsList(nameList)
 	data2 := g.data02(componentsData, componentannotationsData, false, "")
@@ -247,7 +246,13 @@ func (g *GraphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 			data["extent1Diagram"] = strings.Join([]string{caf[3].(string), caf[4].(string)}, ",")
 			data["extent2Diagram"] = strings.Join([]string{caf[5].(string), caf[6].(string)}, ",")
 			data["rotation"] = rotateAngle
-			data["output_type"] = cDataFilter[i][len(cDataFilter[i])-1].([]interface{})[0]
+			data["output_type"] = func() string {
+				t := cDataFilter[i][len(cDataFilter[i])-1].([]interface{})
+				if len(t) > 0 {
+					return t[0].(string)
+				}
+				return ""
+			}()
 			data["inputOutputs"] = g.data02(componentsData, componentannotationsData, true, data["name"].(string))
 			data["subShapes"] = g.data01(IconAnnotationData)
 			dataList = append(dataList, data)
@@ -261,7 +266,7 @@ func (g *GraphicsData) getnthconnectionData(nameList []string) {
 	for i := 0; i < len(ConnectionCount); i++ {
 		for c := 0; c < ConnectionCount[i]; c++ {
 			ncData := omc.OMC.GetNthConnection(nameList[i], c+1)
-			ncaData := omc.OMC.GetNthConnectionAnnotation(nameList[i], c+1)
+			ncaData := omc.OMC.GetNthConnectionAnnotation(nameList[i], c+1) //
 			d1Data := g.data01(ncaData)
 			if len(ncData) != 0 && len(ncaData) != 0 && len(d1Data) != 0 {
 				daData := d1Data[0]
