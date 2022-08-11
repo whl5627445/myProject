@@ -4,7 +4,7 @@ import (
 	"yssim-go/library/omc"
 )
 
-func copyModel(copiedClassName string, className string, parentName string) (bool, string) {
+func copyModel(copiedClassName, className, parentName string) (bool, string) {
 
 	if parentName == "" {
 		parentName = "TopLevel"
@@ -38,7 +38,7 @@ func deleteModel(className string) (bool, string) {
 		return true, "模型删除成功"
 	}
 }
-func SaveModel(className string, copiedClassName string, parentName string, packageName string, copeOrDelete string, fileName string) (bool, string) {
+func SaveModel(className, copiedClassName, parentName, packageName, copeOrDelete, fileName string) (bool, string) {
 	result, msg := true, ""
 	switch {
 	case copeOrDelete == "copy":

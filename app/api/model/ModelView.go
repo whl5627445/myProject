@@ -359,13 +359,78 @@ func AddModelComponentView(c *gin.Context) {
 	var item AddComponentModel
 	err := c.BindJSON(&item)
 	if err != nil {
-		res.Status = 2
-		res.Err = "创建失败"
-		fmt.Println(err)
-		c.JSON(http.StatusBadRequest, res)
+		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
 
+	result, msg := service.AddComponent(item.OldComponentName, item.NewComponentName, item.ClassName, item.Origin, item.Rotation, item.Extent)
+	if !result {
+		res.Err = msg
+		res.Status = 2
+	} else {
+		res.Msg = "新增组件成功"
+	}
+	c.JSON(http.StatusOK, res)
+}
+
+func DeleteModelComponentView(c *gin.Context) {
+	/*
+		# 删除模型当中的模型组件
+		## package_id： 包id
+		## component_list：需要删除的数据数组(delete_type：删除类型，component_name：删除的组件名字，model_name：模型名称，connect_start：连线类型起点，connect_end：终点)
+	*/
+	var res ResponseData
+	var item DeleteComponentModel
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+	result := true
+	for _, component := range item.ComponentList {
+		switch component.DeleteType {
+		case "component":
+			result = service.DeleteComponent(component.ComponentName, component.ModelName)
+		case "connector":
+			result = service.DeleteConnection(component.ComponentName, component.ConnectStart, component.ConnectEnd)
+		}
+		if !result {
+			res.Err = "删除组件失败"
+			res.Status = 2
+			c.JSON(http.StatusOK, res)
+			return
+		}
+	}
+	res.Msg = "删除成功"
+	c.JSON(http.StatusOK, res)
+}
+
+func UpdateModelComponentView(c *gin.Context) {
+	/*
+		# 更新模型当中的模型组件
+		## package_id： 包id
+		## component_name: 需要更新的组件名称，例如"limPID"，
+		## component_model_name: 需要更新的组件原本模型名称，例如"Modelica.Blocks.Continuous.LimPID"
+		## model_name_all: 需要更新的组件在哪个模型当中， 例如"Modelica.Blocks.Examples.PID_Controller"
+		## origin: 原点， 例如"0,0"
+		## extent: 范围坐标, 例如["-10,-10", "10,10"]
+		## rotation: 旋转角度, 例如"0"，不旋转
+	*/
+	var res ResponseData
+	var item UpdateComponentModel
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+	result := service.UpdateComponent(item.ComponentName, item.ComponentClassName, item.ModelName, item.Origin, item.Rotation, item.Extent)
+	if !result {
+		res.Err = "更新组件失败"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	res.Msg = "更新组件成功"
 	c.JSON(http.StatusOK, res)
 }
 

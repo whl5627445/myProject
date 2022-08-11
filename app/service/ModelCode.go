@@ -16,7 +16,7 @@ func GetModelCode(modelName string) string {
 	return codeData
 }
 
-func SaveModelCode(modelName string, path string) bool {
+func SaveModelCode(modelName, path string) bool {
 	codeData := GetModelCode(modelName)
 	ok := fileOperation.WriteFile(path, codeData)
 	if !ok {

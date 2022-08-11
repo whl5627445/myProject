@@ -5,7 +5,7 @@ import (
 	"yssim-go/library/omc"
 )
 
-func RenameComponentInClass(className string, oldComponentName string, newComponentName string) bool {
+func RenameComponentInClass(className, oldComponentName, newComponentName string) bool {
 	data := omc.OMC.GetElements(className)
 	for i := 0; i < len(data); i++ {
 		_, ok := config.ModelicaKeywords[newComponentName]
@@ -17,7 +17,7 @@ func RenameComponentInClass(className string, oldComponentName string, newCompon
 	return renameResult
 }
 
-func SetComponentProperties(className string, newComponentName string, oldComponentName string, final string, protected string, replaceable string, variability string, inner string, outer string, causality string) bool {
+func SetComponentProperties(className, newComponentName, oldComponentName, final, protected, replaceable, variability, inner, outer, causality string) bool {
 	renameResult := true
 	ScpResult := true
 	if oldComponentName != newComponentName {

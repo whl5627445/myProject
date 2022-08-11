@@ -490,3 +490,41 @@ func (o *omcZMQ) DeleteClass(className string) bool {
 	}
 	return true
 }
+
+func (o *omcZMQ) AddComponent(className, newComponentName, oldComponentName, origin, rotation string, extent []string) bool {
+	annotate := "annotate=Placement(visible=true, transformation=transformation(origin={" + origin + "}, extent={{" + extent[0] + "},{" + extent[1] + "}}, rotation=" + rotation + "))"
+	cmd := "addComponent(" + newComponentName + "," + oldComponentName + "," + className + "," + annotate + ")"
+	result, ok := o.SendExpressionNoParsed(cmd)
+	if ok && string(result) == "false" {
+		return false
+	}
+	return true
+}
+
+func (o *omcZMQ) DeleteComponent(componentName, className string) bool {
+	cmd := "deleteComponent(" + componentName + "," + className + ")"
+	result, ok := o.SendExpressionNoParsed(cmd)
+	if ok && string(result) == "false" {
+		return false
+	}
+	return true
+}
+
+func (o *omcZMQ) UpdateComponent(componentName, ComponentClassName, modelNameAll, origin, rotation string, extent []string) bool {
+	annotate := "annotate=Placement(visible=true, transformation=transformation(origin={" + origin + "}, extent={{" + extent[0] + "},{" + extent[1] + "}}, rotation=" + rotation + "))"
+	cmd := "updateComponent(" + componentName + "," + ComponentClassName + "," + modelNameAll + "," + annotate + ")"
+	result, ok := o.SendExpressionNoParsed(cmd)
+	if ok && string(result) == "false" {
+		return false
+	}
+	return true
+}
+
+func (o *omcZMQ) DeleteConnection(classNameAll, connectStart, connectEnd string) bool {
+	cmd := "deleteConnection(" + connectStart + "," + connectEnd + "," + classNameAll + ")"
+	result, ok := o.SendExpressionNoParsed(cmd)
+	if ok && string(result) == "Ok" {
+		return true
+	}
+	return false
+}

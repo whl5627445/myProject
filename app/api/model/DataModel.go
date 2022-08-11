@@ -55,3 +55,28 @@ type AddComponentModel struct {
 	Extent           []string `json:"extent" binding:"required"`
 	Rotation         string   `json:"rotation" binding:"required"`
 }
+
+type DeleteComponentMap struct {
+	DeleteType    string `json:"delete_type" binding:"required"`
+	ComponentName string `json:"component_name" binding:"required"`
+	ModelName     string `json:"model_name" binding:"required"`
+	ConnectStart  string `json:"connect_start" binding:"required"`
+	ConnectEnd    string `json:"connect_end" binding:"required"`
+}
+
+type DeleteComponentModel struct {
+	PackageId     string               `json:"package_id" binding:"required"`
+	ComponentList []DeleteComponentMap `json:"component_list" binding:"required"`
+	ComponentName string               `json:"component_name" binding:"required"`
+	ModelName     string               `json:"model_name" binding:"required"`
+}
+
+type UpdateComponentModel struct {
+	PackageId          string   `json:"package_id" binding:"required"`
+	ComponentName      string   `json:"component_name" binding:"required"`
+	ComponentClassName string   `json:"component_class_name" binding:"required"`
+	ModelName          string   `json:"model_name" binding:"required"`
+	Origin             string   `json:"origin" binding:"required"`
+	Extent             []string `json:"extent" binding:"required"`
+	Rotation           string   `json:"rotation" binding:"required"`
+}

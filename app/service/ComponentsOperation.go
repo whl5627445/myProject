@@ -7,7 +7,7 @@ import (
 	"yssim-go/library/omc"
 )
 
-func GetComponents(className string, componentName string) []interface{} {
+func GetComponents(className, componentName string) []interface{} {
 	componentsData := omc.OMC.GetComponents(className)
 	var componentData []interface{}
 	for i := 0; i < len(componentsData); i++ {
@@ -23,7 +23,7 @@ func GetComponents(className string, componentName string) []interface{} {
 	return componentData
 }
 
-func GetComponentName(className string, componentName string) string {
+func GetComponentName(className, componentName string) string {
 	componentData := omc.OMC.GetComponents(className)
 	nameList := strings.Split(componentName, ".")
 	name := strings.ToLower(nameList[len(nameList)-1])
@@ -49,18 +49,43 @@ func GetComponentName(className string, componentName string) string {
 	return name
 }
 
-func AddComponentVerification(oldComponentName string, newComponentName string, modelNameAll string) (bool, string) {
+func AddComponentVerification(oldComponentName, newComponentName, modelNameAll string) (bool, string) {
+	classInformation := omc.OMC.GetClassInformation(oldComponentName)
+	classTypeAll := map[string]bool{"model": true, "class": true, "connector": true, "block": true}
+	if classInformation != nil {
+		classType := classInformation[0].(string)
+		noType := classTypeAll[classType]
+		if noType {
+			return false, "不能插入：" + oldComponentName + ", 这是一个 \"" + classType + " \"类型。组件视图层只允许有model、class、connector或者block。"
+		}
+	}
+	elementsData := omc.OMC.GetElements(modelNameAll)
+	for _, e := range elementsData {
+		if e.([]interface{})[3] == newComponentName {
+			return false, "新增组件失败，名称 \"" + newComponentName + "\" 已经存在或是 Modelica 关键字。 请选择其他名称。"
+		}
+	}
 	return true, ""
 }
 
-func AddComponent(oldComponentName string, newComponentName string, modelNameAll string) (bool, string) {
-	return true, ""
+func AddComponent(oldComponentName, newComponentName, modelNameAll, origin, rotation string, extent []string) (bool, string) {
+	v, msg := AddComponentVerification(oldComponentName, newComponentName, modelNameAll)
+	if !v {
+		return false, msg
+	}
+	result := omc.OMC.AddComponent(modelNameAll, newComponentName, oldComponentName, origin, rotation, extent)
+	if !result {
+		msg = "新增组件失败"
+	}
+	return result, msg
 }
 
-func DeleteComponent(oldComponentName string, newComponentName string, modelNameAll string) bool {
-	return true
+func DeleteComponent(componentName, modelNameAll string) bool {
+	result := omc.OMC.DeleteComponent(componentName, modelNameAll)
+	return result
 }
 
-func UpdateComponent(oldComponentName string, newComponentName string, modelNameAll string) bool {
-	return true
+func UpdateComponent(componentName, ComponentClassName, modelNameAll, origin, rotation string, extent []string) bool {
+	result := omc.OMC.UpdateComponent(componentName, ComponentClassName, modelNameAll, origin, rotation, extent)
+	return result
 }

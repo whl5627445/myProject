@@ -18,7 +18,11 @@ func ModelRouter(e *gin.Engine) {
 		Models.POST("/component_properties/set", API.SetComponentPropertiesView)
 		Models.POST("/class/copy", API.CopyClassView)
 		Models.POST("/package/delete", API.DeletePackageAndModelView)
-		Models.GET("/component_name/get", API.GetComponentNameView)
+		Models.GET("/component/name", API.GetComponentNameView)
+		Models.POST("/component/add", API.AddModelComponentView)
+		Models.POST("/component/delete", API.DeleteModelComponentView)
+		Models.POST("/component/update", API.UpdateModelComponentView)
+
 	}
 	e.POST("/test", API.Test)
 }

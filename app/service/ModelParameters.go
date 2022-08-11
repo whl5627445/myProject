@@ -87,7 +87,7 @@ func (m modelParameters) getExtendsModifierNameAndValue() ([]string, []string, [
 	return dataNameList, dataValueList, dataFinalList
 }
 
-func GetModelParameters(modelName string, name string, componentName string) []interface{} {
+func GetModelParameters(modelName, name, componentName string) []interface{} {
 	var m modelParameters
 	var dataList []interface{}
 	if name == "" || componentName == "" {
