@@ -3,8 +3,11 @@ package service
 import (
 	"strconv"
 	"strings"
+	"yssim-go/config"
 	"yssim-go/library/omc"
 )
+
+var parameterTranslation = config.ParameterTranslation
 
 type modelParameters struct {
 	name                 string
@@ -31,8 +34,8 @@ func (m modelParameters) getParameterValue(name string) string {
 	return data
 }
 
-func (m modelParameters) getComponentModifierFixedValue(name string) string {
-	data := omc.OMC.GetComponentModifierValue(m.modelName, name)
+func (m modelParameters) getElementModifierFixedValue(name string) string {
+	data := omc.OMC.GetElementModifierValue(m.modelName, name)
 	return data
 }
 
@@ -46,13 +49,13 @@ func (m modelParameters) getDerivedClassModifierValue() []string {
 	return DerivedClassModifierValue
 }
 
-func (m modelParameters) getComponentModifierStartValue(name string, showStartAttribute bool) string {
+func (m modelParameters) getElementModifierStartValue(name string, showStartAttribute bool) string {
 	data := ""
 	if showStartAttribute {
-		data = omc.OMC.GetComponentModifierValue(m.modelName, name)
+		data = omc.OMC.GetElementModifierValue(m.modelName, name)
 	} else {
 		for i := 0; i < len(m.classAll); i++ {
-			data = omc.OMC.GetComponentModifierValue(m.classAll[i], name)
+			data = omc.OMC.GetElementModifierValue(m.classAll[i], name)
 			if data != "" {
 				break
 			}
@@ -107,7 +110,7 @@ func GetModelParameters(modelName, name, componentName string) []interface{} {
 		m.componentsDict[m.components[i][3].(string)] = m.components[i]
 	}
 	for i := 0; i < len(m.components); i++ {
-		dataDefault := map[string]interface{}{"tab": "General", "type": "Normal", "group": ""}
+		dataDefault := map[string]interface{}{"tab": "通用设置", "type": "Normal", "group": ""}
 		p := m.componentsDict[m.components[i][3].(string)].([]interface{})
 		if p[2] != "-" {
 			m.className = p[2].(string)
@@ -134,20 +137,20 @@ func GetModelParameters(modelName, name, componentName string) []interface{} {
 			}
 			tab := dList[tabIndex].([]interface{})[0]
 			group := dList[tabIndex].([]interface{})[1]
-			dataDefault["tab"] = tab.(string)
-			dataDefault["group"] = group.(string)
+			dataDefault["tab"] = parameterTranslation[tab.(string)]
+			dataDefault["group"] = parameterTranslation[group.(string)]
 			showStartAttribute = dList[tabIndex].([]interface{})[3].(string)
 		}
-		ComponentModifierValue := omc.OMC.GetComponentModifierValue(modelName, name+"."+dataDefault["name"].(string))
+		ComponentModifierValue := omc.OMC.GetElementModifierValue(modelName, name+"."+dataDefault["name"].(string))
 
 		dataDefault["value"] = ComponentModifierValue
 		if (p[10] != "parameter" && dataDefault["group"] != "Parameters" && p[9] != "True") || p[5] == "protected" || p[6] == "True" {
 			continue
 		}
 		if p[10] == "parameter" || dataDefault["group"] != "Parameters" || p[9] != "True" {
-			dataDefault["group"] = "Parameters"
+			dataDefault["group"] = "参数"
 			isEnumeration := omc.OMC.IsEnumeration(m.className)
-			if isEnumeration == "true" {
+			if isEnumeration {
 				Literals := omc.OMC.GetEnumerationLiterals(m.className)
 				dataDefault["options"] = func() []string {
 					var oData []string
@@ -177,16 +180,16 @@ func GetModelParameters(modelName, name, componentName string) []interface{} {
 				}
 			}
 		} else {
-			componentModifierNames := omc.OMC.GetComponentModifierNamesList(m.classAll, varName)
-			fixedValueString := m.getComponentModifierFixedValue(m.name + "." + varName + ".fixed")
+			componentModifierNames := omc.OMC.GetElementModifierNamesList(m.classAll, varName)
+			fixedValueString := m.getElementModifierFixedValue(m.name + "." + varName + ".fixed")
 			fixedValueBool, _ := strconv.ParseBool(fixedValueString)
 			dataDefault["name"] = varName + ".start"
 			dataDefault["unit"] = m.getDerivedClassModifierValue()
-			dataDefault["group"] = "Initialization"
+			dataDefault["group"] = "初始化"
 			fixed := map[string]interface{}{
 				"tab":          dataDefault["tab"],
 				"type":         "fixed",
-				"group":        "Initialization",
+				"group":        "初始化",
 				"name":         varName + ".fixed",
 				"comment":      dataDefault["comment"],
 				"defaultvalue": fixedValueBool,
@@ -203,11 +206,11 @@ func GetModelParameters(modelName, name, componentName string) []interface{} {
 			}()
 			switch {
 			case showStartAttribute == "true":
-				startValue := m.getComponentModifierStartValue(m.name+"."+varName+".start", true)
+				startValue := m.getElementModifierStartValue(m.name+"."+varName+".start", true)
 				dataDefault["defaultvalue"] = startValue
 				dataList = append(dataList, fixed)
 			case cmnStart == true:
-				startValue := m.getComponentModifierStartValue(varName+".start", false)
+				startValue := m.getElementModifierStartValue(varName+".start", false)
 				dataDefault["defaultvalue"] = startValue
 				dataList = append(dataList, fixed)
 			default:
@@ -227,9 +230,10 @@ func GetModelParameters(modelName, name, componentName string) []interface{} {
 			varName := strings.TrimSuffix(extendModifierName[i], ".start")
 			m.className = m.componentsDict[varName].([]interface{})[2].(string)
 			dataDefault := map[string]interface{}{
-				"tab":          "General",
+				"tab":          "通用设置",
+				"tab1":         "",
 				"type":         "Normal",
-				"group":        "Initialization",
+				"group":        "初始化",
 				"name":         varName + ".start",
 				"unit":         m.getDerivedClassModifierValue(),
 				"comment":      m.componentsDict[varName].([]interface{})[3].(string),
@@ -240,7 +244,7 @@ func GetModelParameters(modelName, name, componentName string) []interface{} {
 			fixed := map[string]interface{}{
 				"tab":          dataDefault["tab"],
 				"type":         "fixed",
-				"group":        "Initialization",
+				"group":        "初始化",
 				"name":         varName + ".fixed",
 				"comment":      m.componentsDict[varName].([]interface{})[3].(string),
 				"defaultvalue": fixedValueBool,

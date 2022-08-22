@@ -4,7 +4,7 @@ import "time"
 
 type YssimUserSpace struct {
 	ID            string     `gorm:"primaryKey"`
-	SpaceName     string     `gorm:"column:spacename"`
+	SpaceName     string     `gorm:"column:space_name"`
 	UserName      string     `gorm:"column:username"`
 	CreatedAt     *time.Time `gorm:"column:create_time;autoCreateTime"`
 	UpdatedAt     *time.Time `gorm:"column:update_time"`

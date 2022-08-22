@@ -7,16 +7,16 @@ import (
 	"yssim-go/library/omc"
 )
 
-func GetComponents(className, componentName string) []interface{} {
-	componentsData := omc.OMC.GetComponents(className)
+func GetElements(className, componentName string) []interface{} {
+	componentsData := omc.OMC.GetElements(className)
 	var componentData []interface{}
 	for i := 0; i < len(componentsData); i++ {
 		cData := componentsData[i].([]interface{})
 		switch {
-		case componentName != "" && cData[1] == componentName:
+		case componentName != "" && cData[3] == componentName:
 			componentData = cData
 			break
-		case (cData[3] != "protected" || cData[4] != "True" || cData[8] != "parameter") && componentName == "":
+		case !(cData[5] == "protected" || cData[6] == "true" || cData[10] == "parameter") && componentName == "":
 			componentData = append(componentData, cData)
 		}
 	}
@@ -24,7 +24,7 @@ func GetComponents(className, componentName string) []interface{} {
 }
 
 func GetComponentName(className, componentName string) string {
-	componentData := omc.OMC.GetComponents(className)
+	componentData := omc.OMC.GetElements(className)
 	nameList := strings.Split(componentName, ".")
 	name := strings.ToLower(nameList[len(nameList)-1])
 	nameNum := 0
@@ -34,7 +34,7 @@ func GetComponentName(className, componentName string) string {
 	}
 	for _, c := range componentData {
 		cList := c.([]interface{})
-		n := cList[1].(string)
+		n := cList[3].(string)
 		if len(cList) >= 2 && strings.HasPrefix(n, name) {
 			nameMap[n] = true
 			nameNum += 1

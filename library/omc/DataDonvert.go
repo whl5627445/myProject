@@ -15,25 +15,17 @@ func DataToGo(data []byte) ([]interface{}, error) {
 	data = bytes.ReplaceAll(data, []byte("\\\\\\\\"), []byte("\\"))
 	data = bytes.ReplaceAll(data, []byte("\\\\\\"), []byte("\\"))
 	data = bytes.ReplaceAll(data, []byte(", "), []byte(","))
-	//data = bytes.ReplaceAll(data, []byte("{}"), []byte("[]"))
 	data = bytes.TrimSuffix(data, []byte(","))
 	data = bytes.TrimSuffix(data, []byte("\\n"))
-
 	if len(data) <= 5 {
 		d := string(data)
 		if d == "\"\"" || d == "Error" || d == "{}" || d == "[]" || d == "" {
 			return resData, nil
 		}
 	}
-	//if bytes.HasPrefix(data, []byte("{")) == false || bytes.HasPrefix(data, []byte("{")) == false {
-	//	data = append([]byte{'['}, data...)
-	//	data = append(data, []byte{']'}...)
-	//}
-
 	mark := false
 	lData := len(data)
 	for i := 0; i < lData; i++ {
-
 		if data[i] == '"' {
 			strIndex := bytes.Index(data[i+1:], []byte("\""))
 			dataEndIndex := i + strIndex + 1
@@ -45,6 +37,23 @@ func DataToGo(data []byte) ([]interface{}, error) {
 			i += strIndex + 1
 			continue
 		}
+		//if data[i] == '"' {
+		//	for {
+		//		strIndex := bytes.Index(data[i+1:], []byte("\""))
+		//		dataEndIndex := i + strIndex + 1
+		//		str := data[i:dataEndIndex]
+		//		Str.Write(str)
+		//		i += strIndex + 1
+		//		if data[dataEndIndex-1] != byte('\\') && (data[dataEndIndex+1] == byte(',') || (data[dataEndIndex+1] == byte('}'))) || strIndex == -1 {
+		//			//if mark == true {
+		//			//	str = bytes.ReplaceAll(str, []byte("\""), []byte("\\\""))
+		//			//}
+		//			Str.Write([]byte("\""))
+		//			break
+		//		}
+		//	}
+		//	continue
+		//}
 		switch {
 		case data[i] == '{':
 			switch {
@@ -67,7 +76,9 @@ func DataToGo(data []byte) ([]interface{}, error) {
 
 		case data[i] == '(':
 			switch {
-			case i == 0 || data[i+1] == '(' || data[i+1] == '{' || data[i-1] == ',':
+			case i == 0 && data[i+1] != '(' && data[i+1] != '{':
+				Str.WriteString("[\"")
+			case data[i+1] == '(' || data[i+1] == '{' || data[i-1] == ',':
 				Str.WriteString("[")
 			case data[i+1] == '"' && data[i-1] != '"':
 				Str.WriteString("\",[")
@@ -107,16 +118,14 @@ func DataToGo(data []byte) ([]interface{}, error) {
 			Str.WriteString(string(data[i]))
 		}
 	}
-
 	resStr := Str.String()
 	resStr = strings.ReplaceAll(resStr, "[\"\"]", "[]")
 	err := json.Unmarshal([]byte(resStr), &resData)
 	if err != nil {
 		fmt.Println("数据转换失败: ", err)
-		fmt.Println("data:  ", data)
+		fmt.Println("data:  ", string(data))
 		fmt.Println("Str:  ", Str.String())
 		return nil, err
 	}
 	return resData, err
-
 }

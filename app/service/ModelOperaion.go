@@ -14,7 +14,7 @@ func copyModel(copiedClassName, className, parentName string) (bool, string) {
 			return false, "模型父节点不是包类型或根节点"
 		}
 	}
-	existClass := omc.OMC.ExistClass(parentName + "." + className)
+	existClass := ExistClass(parentName + "." + className)
 	if existClass {
 		return false, "模型名称已存在"
 	}
@@ -25,8 +25,9 @@ func copyModel(copiedClassName, className, parentName string) (bool, string) {
 		return false, "模型复制失败"
 	}
 }
+
 func deleteModel(className string) (bool, string) {
-	existClass := omc.OMC.ExistClass(className)
+	existClass := ExistClass(className)
 	if existClass {
 		result := omc.OMC.DeleteClass(className)
 		if result {
@@ -38,6 +39,7 @@ func deleteModel(className string) (bool, string) {
 		return true, "模型删除成功"
 	}
 }
+
 func SaveModel(className, copiedClassName, parentName, packageName, copeOrDelete, fileName string) (bool, string) {
 	result, msg := true, ""
 	switch {
@@ -50,16 +52,15 @@ func SaveModel(className, copiedClassName, parentName, packageName, copeOrDelete
 		msg = "未知操作"
 	}
 	if result {
-		ok := true
 		if parentName != "" {
-			ok = SaveModelCode(packageName, fileName)
+			go SaveModelCode(packageName, fileName)
 		} else {
-			ok = SaveModelCode(className, fileName)
-		}
-		if !ok {
-			result = false
-			msg = "未知操作"
+			go SaveModelCode(className, fileName)
 		}
 	}
 	return result, msg
+}
+
+func ExistClass(className string) bool {
+	return omc.OMC.ExistClass(className)
 }

@@ -21,9 +21,9 @@ func GetModelChild(modelName string) []map[string]interface{} {
 				modelNameAll := strings.Join(modelNameList[:modelLen+1], ".")
 				modelName := modelNameList[len(modelNameList)-1]
 				data := map[string]interface{}{
-					"model_name":     modelName,
-					"model_name_all": modelNameAll,
-					"haschild":       false,
+					"name":       modelName,
+					"model_name": modelNameAll,
+					"haschild":   false,
 				}
 				_, ok := childMap[modelNameAll]
 				if ok && modelChildLen > modelLen+1 {

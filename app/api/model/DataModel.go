@@ -36,14 +36,14 @@ type SetComponentPropertiesModel struct {
 type CopyClassModel struct {
 	PackageId       string `json:"package_id" binding:"required"`
 	ParentName      string `json:"parent_name" binding:""`
-	ClassName       string `json:"class_name" binding:"required"`
+	ModelName       string `json:"model_name" binding:"required"`
 	CopiedClassName string `json:"copied_class_name" binding:"required"`
 }
 
 type DeleteClassModel struct {
 	PackageId  string `json:"package_id" binding:"required"`
 	ParentName string `json:"parent_name" binding:""`
-	ClassName  string `json:"class_name" binding:"required"`
+	ModelName  string `json:"model_name" binding:"required"`
 }
 
 type AddComponentModel struct {
@@ -79,4 +79,41 @@ type UpdateComponentModel struct {
 	Origin             string   `json:"origin" binding:"required"`
 	Extent             []string `json:"extent" binding:"required"`
 	Rotation           string   `json:"rotation" binding:"required"`
+}
+
+type UpdateConnectionAnnotationModel struct {
+	PackageId    string   `json:"package_id" binding:"required"`
+	ModelName    string   `json:"model_name" binding:"required"`
+	ConnectStart string   `json:"connect_start" binding:"required"`
+	ConnectEnd   string   `json:"connect_end" binding:"required"`
+	Color        string   `json:"color" binding:"required"`
+	LinePoints   []string `json:"line_points" binding:"required"`
+}
+
+type UpdateConnectionNamesModel struct {
+	PackageId   string `json:"package_id" binding:"required"`
+	ModelName   string `json:"model_name" binding:"required"`
+	FromName    string `json:"from_name" binding:"required"`
+	ToName      string `json:"to_name" binding:"required"`
+	FromNameNew string `json:"from_name_new" binding:"required"`
+	ToNameNew   string `json:"to_name_new" binding:"required"`
+}
+
+type DeleteConnectionModel struct {
+	PackageId    string `json:"package_id" binding:"required"`
+	ModelName    string `json:"model_name" binding:"required"`
+	ConnectStart string `json:"connect_start" binding:"required"`
+	ConnectEnd   string `json:"connect_end" binding:"required"`
+}
+
+type SetModelDocumentModel struct {
+	PackageId string `json:"package_id" binding:"required"`
+	ModelName string `json:"model_name" binding:"required"`
+	Document  string `json:"document" binding:"required"`
+	Revisions string `json:"revisions" binding:"required"`
+}
+
+type ConvertUnitsModel struct {
+	S1 string `json:"s1" binding:"required"`
+	S2 string `json:"s2" binding:"required"`
 }

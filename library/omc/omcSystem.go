@@ -2,6 +2,8 @@ package omc
 
 import (
 	"bytes"
+	"encoding/json"
+	"fmt"
 	"github.com/go-zeromq/zmq4"
 	"strconv"
 	"strings"
@@ -22,9 +24,15 @@ func (o *omcZMQ) SendExpression(cmd string) ([]interface{}, bool) {
 	//	msg, _ = o.Recv()
 	//	AllModelCache[cmd] = msg
 	//}
+	//s := time.Now().UnixNano() / 1e6
 	_ = o.Send(zmq4.NewMsgString(cmd))
 	msg, _ := o.Recv()
+	//if time.Now().UnixNano()/1e6-s > 5 {
+	//	fmt.Println("用时：", time.Now().UnixNano()/1e6-s)
+	//	fmt.Println("cmd：", cmd)
+	//}
 	data, _ := DataToGo(msg.Bytes())
+
 	if len(data) == 0 {
 		return nil, false
 	}
@@ -45,6 +53,17 @@ func (o *omcZMQ) SendExpressionNoParsed(cmd string) ([]byte, bool) {
 	return data, true
 }
 
+// 清空加载的模型库
+func (o *omcZMQ) Clear() {
+	o.SendExpressionNoParsed("clearCommandLineOptions()")
+	o.SendExpressionNoParsed("clear()")
+	o.SendExpressionNoParsed("clearVariables()")
+	o.SendExpressionNoParsed("clearProgram()")
+	//omc.OMC.SendExpressionNoParsed("setCommandLineOptions(\"+ignoreSimulationFlagsAnnotation=false\")")
+	//omc.OMC.SendExpressionNoParsed("setCommandLineOptions(\"-d=nfAPI\")")
+	o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nogen,noevalfunc,newInst,nfAPI\")")
+}
+
 // 改变缓存策略
 func (o *omcZMQ) CacheRefreshSet(cache bool) {
 	CacheRefresh = cache
@@ -60,7 +79,6 @@ func (o *omcZMQ) GetInheritedClassesList(classNameList []string) []string {
 			for p := 0; p < len(InheritedclassesData); p++ {
 				dataList = append(dataList, InheritedclassesData[p].(string))
 			}
-
 		}
 		//cmd := "getInheritedClasses(" + classNameList[i] + ")"
 		//InheritedclassesData, ok := AllModelCache[cmd].([]interface{})
@@ -326,22 +344,24 @@ func (o *omcZMQ) List(className string) string {
 	return code
 }
 
-func (o *omcZMQ) GetComponentModifierValue(className string, modifierName string) string {
-	var data []byte
-	cmd := "getComponentModifierValue(" + className + "," + modifierName + ")"
-	data, _ = o.SendExpressionNoParsed(cmd)
+//
+func (o *omcZMQ) GetElementModifierValue(className string, modifierName string) string {
+	cmd := "getElementModifierValue(" + className + "," + modifierName + ")"
+	data, _ := o.SendExpressionNoParsed(cmd)
 	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
 	data = bytes.ReplaceAll(data, []byte("\""), []byte(""))
 	return string(data)
 }
 
-func (o *omcZMQ) IsEnumeration(className string) string {
-	var data []byte
+func (o *omcZMQ) IsEnumeration(className string) bool {
 	cmd := "isEnumeration(" + className + ")"
-	data, _ = o.SendExpressionNoParsed(cmd)
-	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
-	data = bytes.ReplaceAll(data, []byte("\""), []byte(""))
-	return string(data)
+	result, ok := o.SendExpressionNoParsed(cmd)
+	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
+	result = bytes.ReplaceAll(result, []byte("\""), []byte(""))
+	if ok && string(result) == "true" {
+		return true
+	}
+	return false
 }
 
 func (o *omcZMQ) GetEnumerationLiterals(parameterName string) []string {
@@ -355,23 +375,22 @@ func (o *omcZMQ) GetEnumerationLiterals(parameterName string) []string {
 }
 
 func (o *omcZMQ) GetParameterValue(className string, modifierName string) string {
-	var data []byte
 	cmd := "getParameterValue(" + className + ",\"" + modifierName + "\")"
-	data, _ = o.SendExpressionNoParsed(cmd)
+	data, _ := o.SendExpressionNoParsed(cmd)
 	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
 	data = bytes.ReplaceAll(data, []byte("\""), []byte(""))
 	data = bytes.ReplaceAll(data, []byte("\\"), []byte(""))
 	return string(data)
 }
 
-func (o *omcZMQ) GetComponentModifierNamesList(classNameList []string, componentName string) []string {
+func (o *omcZMQ) GetElementModifierNamesList(classNameList []string, componentName string) []string {
 	var dataList []string
 	for i := 0; i < len(classNameList); i++ {
-		cmd := "getComponentModifierNames(" + classNameList[i] + ",\"" + componentName + "\")"
-		Data, ok := o.SendExpression(cmd)
+		cmd := "getElementModifierNames(" + classNameList[i] + ",\"" + componentName + "\")"
+		data, ok := o.SendExpression(cmd)
 		if ok {
-			for p := 0; p < len(Data); p++ {
-				dataList = append(dataList, Data[p].(string))
+			for p := 0; p < len(data); p++ {
+				dataList = append(dataList, data[p].(string))
 			}
 		}
 	}
@@ -380,26 +399,26 @@ func (o *omcZMQ) GetComponentModifierNamesList(classNameList []string, component
 
 func (o *omcZMQ) GetDerivedClassModifierNames(className string) []interface{} {
 	cmd := "getDerivedClassModifierNames(" + className + ")"
-	Data, _ := o.SendExpression(cmd)
-	return Data
+	data, _ := o.SendExpression(cmd)
+	return data
 }
 
 func (o *omcZMQ) GetDerivedClassModifierValue(className string, modifierName string) string {
 	cmd := "getDerivedClassModifierValue(" + className + "," + modifierName + ")"
-	Data, _ := o.SendExpressionNoParsed(cmd)
-	Data = bytes.ReplaceAll(Data, []byte("\n"), []byte(""))
-	Data = bytes.ReplaceAll(Data, []byte("\""), []byte(""))
-	Data = bytes.ReplaceAll(Data, []byte("\\"), []byte(""))
-	return string(Data)
+	data, _ := o.SendExpressionNoParsed(cmd)
+	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
+	data = bytes.ReplaceAll(data, []byte("\""), []byte(""))
+	data = bytes.ReplaceAll(data, []byte("\\"), []byte(""))
+	return string(data)
 }
 
 func (o *omcZMQ) GetExtendsModifierNames(classNameOne string, classNameTwo string) []string {
 	var dataList []string
 	cmd := "getExtendsModifierNames(" + classNameOne + "," + classNameTwo + ", useQuotes = true)"
-	Data, ok := o.SendExpression(cmd)
+	data, ok := o.SendExpression(cmd)
 	if ok {
-		for p := 0; p < len(Data); p++ {
-			dataList = append(dataList, Data[p].(string))
+		for p := 0; p < len(data); p++ {
+			dataList = append(dataList, data[p].(string))
 		}
 	}
 	return dataList
@@ -407,18 +426,18 @@ func (o *omcZMQ) GetExtendsModifierNames(classNameOne string, classNameTwo strin
 
 func (o *omcZMQ) GetExtendsModifierValue(classNameOne string, classNameTwo string, name string) string {
 	cmd := "getExtendsModifierValue(" + classNameOne + "," + classNameTwo + "," + name + ")"
-	Data, _ := o.SendExpressionNoParsed(cmd)
-	Data = bytes.ReplaceAll(Data, []byte("\n"), []byte(""))
-	Data = bytes.ReplaceAll(Data, []byte("\""), []byte(""))
-	return string(Data)
+	data, _ := o.SendExpressionNoParsed(cmd)
+	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
+	data = bytes.ReplaceAll(data, []byte("\""), []byte(""))
+	return string(data)
 }
 
 func (o *omcZMQ) IsExtendsModifierFinal(classNameOne string, classNameTwo string, name string) string {
 	cmd := "isExtendsModifierFinal(" + classNameOne + "," + classNameTwo + "," + name + ")"
-	Data, _ := o.SendExpressionNoParsed(cmd)
-	Data = bytes.ReplaceAll(Data, []byte("\n"), []byte(""))
-	Data = bytes.ReplaceAll(Data, []byte("\""), []byte(""))
-	return string(Data)
+	data, _ := o.SendExpressionNoParsed(cmd)
+	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
+	data = bytes.ReplaceAll(data, []byte("\""), []byte(""))
+	return string(data)
 }
 
 func (o *omcZMQ) SetComponentModifierValue(className string, parameter string, value string) string {
@@ -427,9 +446,9 @@ func (o *omcZMQ) SetComponentModifierValue(className string, parameter string, v
 		code = "()"
 	}
 	cmd := "setComponentModifierValue(" + className + ", " + parameter + ", $Code(" + code + "))"
-	Data, _ := o.SendExpressionNoParsed(cmd)
-	Data = bytes.ReplaceAll(Data, []byte("\n"), []byte(""))
-	return string(Data)
+	data, _ := o.SendExpressionNoParsed(cmd)
+	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
+	return string(data)
 }
 
 func (o *omcZMQ) RenameComponentInClass(className string, oldComponentName string, newComponentName string) bool {
@@ -446,9 +465,9 @@ func (o *omcZMQ) SetComponentProperties(className string, newComponentName strin
 	cmdParameterList := []string{className, ",", newComponentName, ",{", final, ",false,", protected, ",", replaceable,
 		"},{\"", variability, "\"}", ",{", inner, ",", outer, "},{\"", causality, "\"}"}
 	cmd := "setComponentProperties(" + strings.Join(cmdParameterList, "") + ")"
-	data, ok := o.SendExpressionNoParsed(cmd)
-	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
-	if ok && string(data) == "Ok" {
+	result, ok := o.SendExpressionNoParsed(cmd)
+	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
+	if ok && string(result) == "Ok" {
 		return true
 	}
 	return false
@@ -466,9 +485,9 @@ func (o *omcZMQ) ExistClass(className string) bool {
 
 func (o *omcZMQ) GetClassInformation(className string) []interface{} {
 	cmd := "getClassInformation(" + className + ")"
-	result, ok := o.SendExpression(cmd)
+	data, ok := o.SendExpression(cmd)
 	if ok {
-		return result
+		return data
 	}
 	return nil
 }
@@ -520,6 +539,21 @@ func (o *omcZMQ) UpdateComponent(componentName, ComponentClassName, modelNameAll
 	return true
 }
 
+func (o *omcZMQ) AddConnection(classNameAll, connectStart, connectEnd, color string, linePoints []string) bool {
+	var linePointsList []string
+	for _, point := range linePoints {
+		linePointsList = append(linePointsList, "{"+point+"}")
+	}
+	points := strings.Join(linePointsList, ",")
+	annotate := "annotate=Line(points={" + points + "},color={" + color + "}))"
+	cmd := "addConnection(" + connectStart + "," + connectEnd + "," + classNameAll + "," + annotate
+	result, ok := o.SendExpressionNoParsed(cmd)
+	if ok && string(result) == "Ok" {
+		return true
+	}
+	return false
+}
+
 func (o *omcZMQ) DeleteConnection(classNameAll, connectStart, connectEnd string) bool {
 	cmd := "deleteConnection(" + connectStart + "," + connectEnd + "," + classNameAll + ")"
 	result, ok := o.SendExpressionNoParsed(cmd)
@@ -527,4 +561,106 @@ func (o *omcZMQ) DeleteConnection(classNameAll, connectStart, connectEnd string)
 		return true
 	}
 	return false
+}
+
+func (o *omcZMQ) UpdateConnectionNames(classNameAll, fromName, toName, fromNameNew, toNameNew string) bool {
+	cmd := "updateConnectionNames(\"" + classNameAll + "\",\"" + fromName + "\",\"" + toName + "\",\"" + fromNameNew + "\",\"" + toNameNew + "\")"
+	result, ok := o.SendExpressionNoParsed(cmd)
+	if ok && string(result) == "Ok" {
+		return true
+	}
+	return false
+}
+
+func (o *omcZMQ) UpdateConnectionAnnotation(classNameAll, connectStart, connectEnd, color string, linePoints []string) bool {
+	var linePointsList []string
+	for _, point := range linePoints {
+		linePointsList = append(linePointsList, "{"+point+"}")
+	}
+	points := strings.Join(linePointsList, ",")
+	annotate := "annotate=Line(points={" + points + "},color={" + color + "}))"
+	cmd := "updateConnectionAnnotation(" + connectStart + "," + connectEnd + "," + classNameAll + "," + annotate
+	result, ok := o.SendExpressionNoParsed(cmd)
+	if ok && string(result) == "Ok" {
+		return true
+	}
+	return false
+}
+
+func (o *omcZMQ) CheckModel(className string) string {
+	cmd := "checkModel(" + className + ")"
+	data, ok := o.SendExpressionNoParsed(cmd)
+	//data = bytes.TrimSuffix(data, []byte("\n"))
+	if ok {
+		return string(data[1 : len(data)-1])
+	}
+	return ""
+}
+
+func (o *omcZMQ) GetMessagesStringInternal() string {
+	cmd := "getMessagesStringInternal()"
+	data, ok := o.SendExpressionNoParsed(cmd)
+	if ok && len(data) > 3 {
+		return string(data[1 : len(data)-1])
+	}
+	return ""
+}
+
+func (o *omcZMQ) GetDocumentationAnnotation(className string) []string {
+	var docList []string
+	cmd := "getDocumentationAnnotation(" + className + ")"
+	data, ok := o.SendExpressionNoParsed(cmd)
+	if ok {
+		data = bytes.TrimSuffix(data, []byte("\n"))
+		data = bytes.ReplaceAll(data, []byte("\n"), []byte("\\n"))
+		data = data[1 : len(data)-1]
+		data = append([]byte{'['}, data...)
+		data = append(data, ']')
+		var docData []interface{}
+		err := json.Unmarshal(data, &docData)
+		fmt.Println(err)
+		for _, d := range docData {
+			docList = append(docList, d.(string))
+		}
+		return docList
+	}
+	return []string{"", "", ""}
+}
+
+func (o *omcZMQ) SetDocumentationAnnotation(className, info, revisions string) bool {
+	info = strings.ReplaceAll(info, "\"", "\\\"")
+	cmd := "setDocumentationAnnotation(" + className + ",\"" + info + "\",\"" + revisions + "\")"
+	result, ok := o.SendExpressionNoParsed(cmd)
+	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
+	if ok && string(result) == "true" {
+		return true
+	}
+	return false
+}
+
+func (o *omcZMQ) UriToFilename(uri string) string {
+	cmd := "uriToFilename(\"" + uri + "\")"
+	data, ok := o.SendExpressionNoParsed(cmd)
+	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
+	data = bytes.ReplaceAll(data, []byte("\""), []byte(""))
+	if ok {
+		return string(data)
+	}
+	return ""
+}
+
+func (o *omcZMQ) ConvertUnits(s1, s2 string) []interface{} {
+	cmd := "convertUnits(\"" + s1 + "\",\"" + s2 + "\")"
+	data, _ := o.SendExpression(cmd)
+	return data
+}
+
+func (o *omcZMQ) GetSimulationOptions(className string) []string {
+	var dataList []string
+	cmd := "getSimulationOptions(" + className + ")"
+	data, _ := o.SendExpression(cmd)
+	for _, d := range data {
+		dataList = append(dataList, d.(string))
+	}
+	return dataList
 }

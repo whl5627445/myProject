@@ -23,8 +23,8 @@ func GetGraphicsData(modelName string) [][]map[string]interface{} {
 		g.data[0] = append(g.data[0], data1...)
 	}
 	g.getnthconnectionData(nameList) //
-	componentsData := omc.OMC.GetComponentsList(nameList)
-	componentannotationsData := omc.OMC.GetComponentAnnotationsList(nameList)
+	componentsData := omc.OMC.GetElementsList(nameList)
+	componentannotationsData := omc.OMC.GetElementAnnotationsList(nameList)
 	data2 := g.data02(componentsData, componentannotationsData, false, "")
 	g.data[1] = append(g.data[1], data2...)
 	return g.data
@@ -34,13 +34,13 @@ func GetComponentGraphicsData(modelName string, componentName string) [][]map[st
 	var g = GraphicsData{}
 	g.data = [][]map[string]interface{}{{}, {}}
 	nameList := g.getICList(modelName)
-	components := omc.OMC.GetComponentsList(nameList)
+	components := omc.OMC.GetElementsList(nameList)
 	componentAnnotations := omc.OMC.GetComponentAnnotationsList(nameList)
 	var componentsData [][]interface{}
 	var componentAnnotationsData [][]interface{}
 	for i := 0; i < len(components); i++ {
 		if components[i] != nil {
-			if components[i][1] == componentName {
+			if components[i][3] == componentName {
 				componentsData = append(componentsData, components[i])
 				componentAnnotationsData = append(componentAnnotationsData, componentAnnotations[i])
 			}
@@ -171,7 +171,7 @@ func (g *GraphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 	var caDataFilter [][]interface{}
 	if isIcon == true && cData != nil && caData != nil {
 		for i := 0; i < len(cData); i++ {
-			cDataSplit := strings.Split(cData[i][0].(string), ".")
+			cDataSplit := strings.Split(cData[i][2].(string), ".")
 			for ii := 0; ii < len(cDataSplit); ii++ {
 				if "Interfaces" == cDataSplit[ii] {
 					cDataFilter = append(cDataFilter, cData[i])
@@ -187,7 +187,7 @@ func (g *GraphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 		return dataList
 	}
 	for i := 0; i < len(cDataFilter); i++ {
-		name := cDataFilter[i][0].(string)
+		name := cDataFilter[i][2].(string)
 		nameList := g.getICList(name)
 		placementIndex := func() int {
 			for i2, i3 := range caDataFilter[i] {
@@ -209,8 +209,8 @@ func (g *GraphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 			return -1
 		}()
 		if placementIndex != -1 {
-			componentsData := omc.OMC.GetComponentsList(nameList)
-			componentannotationsData := omc.OMC.GetComponentAnnotationsList(nameList)
+			componentsData := omc.OMC.GetElementsList(nameList)
+			componentannotationsData := omc.OMC.GetElementAnnotationsList(nameList)
 			IconAnnotationData := omc.OMC.GetIconAnnotationList(nameList)
 			caf := caDataFilter[i][placementIndex+1].([]interface{})
 			rotateAngle := func() string {
@@ -223,7 +223,7 @@ func (g *GraphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 			data := map[string]interface{}{"type": "Transformation"}
 			data["graphType"] = func() string {
 				for di := 0; di < len(cDataFilter); di++ {
-					dList := strings.Split(cDataFilter[di][0].(string), ".")
+					dList := strings.Split(cDataFilter[di][2].(string), ".")
 					for dii := 0; dii < len(dList); dii++ {
 						if dList[dii] == "Interfaces" {
 							return "connecter"
@@ -233,9 +233,9 @@ func (g *GraphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 				return ""
 			}()
 			data["ID"] = strconv.Itoa(i)
-			data["classname"] = cDataFilter[i][0]
-			data["name"] = cDataFilter[i][1]
-			data["original_name"] = cDataFilter[i][1]
+			data["classname"] = cDataFilter[i][2]
+			data["name"] = cDataFilter[i][3]
+			data["original_name"] = cDataFilter[i][3]
 			data["parent"] = parent
 			data["visible"] = caf[0]
 			data["rotateAngle"] = rotateAngle
@@ -247,11 +247,8 @@ func (g *GraphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 			data["extent2Diagram"] = strings.Join([]string{caf[5].(string), caf[6].(string)}, ",")
 			data["rotation"] = rotateAngle
 			data["output_type"] = func() string {
-				t := cDataFilter[i][len(cDataFilter[i])-1].([]interface{})
-				if len(t) > 0 {
-					return t[0].(string)
-				}
-				return ""
+				t := cDataFilter[i][len(cDataFilter[i])-1].(string)
+				return "[" + t[1:len(t)-1] + "]"
 			}()
 			data["inputOutputs"] = g.data02(componentsData, componentannotationsData, true, data["name"].(string))
 			data["subShapes"] = g.data01(IconAnnotationData)
