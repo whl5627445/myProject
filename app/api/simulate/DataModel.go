@@ -7,8 +7,53 @@ type ResponseData struct {
 	Err    string      `json:"err"`
 }
 
-type ModelGraphicsData struct {
-	PackageId     string `json:"package_id" binding:"required"`
-	ModelName     string `json:"model_name" binding:"required"`
-	ComponentName string `json:"component_name,omitempty" binding:""`
+type SetSimulationOptionsData struct {
+	PackageId         string `json:"package_id" binding:"required"`
+	ModelName         string `json:"model_name" binding:"required"`
+	StartTime         string `json:"startTime" binding:"required"`
+	StopTime          string `json:"stopTime" binding:"required"`
+	Tolerance         string `json:"tolerance" binding:"required"`
+	NumberOfIntervals string `json:"numberOfIntervals" binding:"required"`
+	Interval          string `json:"interval" binding:"required"`
+}
+
+type ModelSimulateData struct {
+	PackageId         string `json:"package_id" binding:"required"`
+	ModelName         string `json:"model_name" binding:"required"`
+	SimulateType      string `json:"simulate_type" binding:"required"`
+	StartTime         string `json:"startTime" binding:"required"`
+	StopTime          string `json:"stopTime" binding:"required"`
+	Tolerance         string `json:"tolerance" binding:"required"`
+	NumberOfIntervals string `json:"numberOfIntervals" binding:"required"`
+	//Interval          string `json:"interval" binding:"required"`
+	Method string `json:"method" binding:"required"`
+}
+
+type ModelSimulateResultData struct {
+	RecordId string `json:"id" binding:"required"`
+	Variable string `json:"variable" binding:"required"`
+	S1       string `json:"s1" binding:""`
+	S2       string `json:"s2" binding:""`
+}
+
+type ExperimentCreateData struct {
+	PackageId       string            `json:"package_id" binding:"required"`
+	ModelName       string            `json:"model_name" binding:"required"`
+	ExperimentName  string            `json:"experiment_name" binding:"required"`
+	SimulateVarData map[string]string `json:"simulate_var_data" binding:"required"`
+}
+
+type ExperimentDeleteData struct {
+	ExperimentId string `json:"experiment_id" binding:"required"`
+}
+
+type ExperimentEditData struct {
+	ExperimentId    string            `json:"experiment_id" binding:"required"`
+	ExperimentName  string            `json:"experiment_name" binding:""`
+	SimulateVarData map[string]string `json:"simulate_var_data" binding:"required"`
+}
+
+type ModelCodeSaveData struct {
+	PackageId   string `json:"package_id" binding:"required"`
+	PackageName string `json:"package_name" binding:"required"`
 }

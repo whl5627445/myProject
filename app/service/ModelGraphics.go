@@ -22,7 +22,7 @@ func GetGraphicsData(modelName string) [][]map[string]interface{} {
 		data1 := g.data01(dData.([]interface{}))
 		g.data[0] = append(g.data[0], data1...)
 	}
-	g.getnthconnectionData(nameList) //
+	g.getnthconnectionData(nameList)
 	componentsData := omc.OMC.GetElementsList(nameList)
 	componentannotationsData := omc.OMC.GetElementAnnotationsList(nameList)
 	data2 := g.data02(componentsData, componentannotationsData, false, "")
@@ -100,14 +100,26 @@ func (g *GraphicsData) getICList(name string) []string {
 	return dataList
 }
 
+func find(data []interface{}, str string) bool {
+	for i := 0; i < len(data); i++ {
+		if reflect.TypeOf(data[i]).String() == "string" && data[i].(string) == str {
+			return true
+		}
+	}
+	return false
+}
+
 func (g *GraphicsData) data01(cData []interface{}) []map[string]interface{} {
 	dataList := make([]map[string]interface{}, 0, 1)
 	for i := 0; i < len(cData); i += 2 {
 		data := map[string]interface{}{}
 		drawingDataList := cData[i+1].([]interface{})
-		if len(drawingDataList) < 9 {
+
+		DynamicSelect := find(drawingDataList, "DynamicSelect")
+		if len(drawingDataList) < 9 || DynamicSelect {
 			continue
 		}
+
 		dataType := cData[i]
 		data["type"] = dataType
 		data["visible"] = drawingDataList[0]
@@ -169,8 +181,14 @@ func (g *GraphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 	dataList := make([]map[string]interface{}, 0, 1)
 	var cDataFilter [][]interface{}
 	var caDataFilter [][]interface{}
+	dataLen := func() int {
+		if len(cData) > len(caData) {
+			return len(cDataFilter)
+		}
+		return len(caData)
+	}()
 	if isIcon == true && cData != nil && caData != nil {
-		for i := 0; i < len(cData); i++ {
+		for i := 0; i < dataLen; i++ {
 			cDataSplit := strings.Split(cData[i][2].(string), ".")
 			for ii := 0; ii < len(cDataSplit); ii++ {
 				if "Interfaces" == cDataSplit[ii] {
@@ -186,29 +204,35 @@ func (g *GraphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 	if cDataFilter == nil || caDataFilter == nil {
 		return dataList
 	}
-	for i := 0; i < len(cDataFilter); i++ {
+	dataLen2 := func() int {
+		if len(caDataFilter) > len(cDataFilter) {
+			return len(cDataFilter)
+		}
+		return len(caDataFilter)
+	}()
+	for i := 0; i < dataLen2; i++ {
+		//fmt.Println("dataLen", dataLen2)
+		//fmt.Println("len(caDataFilter)", len(caDataFilter))
+		//fmt.Println("len(cDataFilter)", len(cDataFilter))
+		if len(caDataFilter[i]) > 2 {
+			caDataFilter[i] = caDataFilter[i][len(caDataFilter[i])-2:]
+		}
 		name := cDataFilter[i][2].(string)
 		nameList := g.getICList(name)
+		DynamicSelect := find(caDataFilter[i], "DynamicSelect")
+		if DynamicSelect {
+			continue
+		}
 		placementIndex := func() int {
 			for i2, i3 := range caDataFilter[i] {
 				if i3 == "Placement" {
 					return i2
 				}
 			}
-			//for pi := 0; pi < len(caDataFilter[i]); pi++ {
-			//	fmt.Printf("caDataFilter[i]: %#v \n", caDataFilter[i])
-			//	fmt.Printf("caDataFilter[i][pi]: %#v \n", caDataFilter[i][pi])
-			//	fmt.Printf("[pi]: %#v \n", pi)
-			//	if caDataFilter[i][pi].(string) == "Placement" {
-			//		//fmt.Printf("dataList: %#v \n", dataList)
-			//		//fmt.Printf("caDataFilter: %#v \n", caDataFilter)
-			//
-			//		return pi
-			//	}
-			//}
 			return -1
 		}()
 		if placementIndex != -1 {
+
 			componentsData := omc.OMC.GetElementsList(nameList)
 			componentannotationsData := omc.OMC.GetElementAnnotationsList(nameList)
 			IconAnnotationData := omc.OMC.GetIconAnnotationList(nameList)

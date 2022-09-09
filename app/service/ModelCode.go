@@ -1,6 +1,9 @@
 package service
 
 import (
+	"io"
+	"io/ioutil"
+	"os"
 	"strings"
 	"yssim-go/library/fileOperation"
 	"yssim-go/library/omc"
@@ -17,10 +20,69 @@ func GetModelCode(modelName string) string {
 }
 
 func SaveModelCode(modelName, path string) bool {
+	os.Rename(path, path+".old")
 	codeData := GetModelCode(modelName)
 	ok := fileOperation.WriteFile(path, codeData)
 	if !ok {
+		os.Rename(path+".old", path)
 		return false
 	}
 	return true
+}
+
+func PackageFileParse(fileName, saveFilePath, zipPackagePath string, file io.Reader) (string, bool) {
+	fileOperation.CreateFilePath(saveFilePath)
+	fileData, _ := ioutil.ReadAll(file)
+	fileOperation.WriteFile(zipPackagePath, string(fileData))
+
+	packagePath := ""
+	if strings.HasSuffix(fileName, ".mo") {
+		packagePath = zipPackagePath
+	} else {
+		fileOperation.UnZip(zipPackagePath, saveFilePath)
+		saveFilePath, _ = fileOperation.FindFile("package.mo", saveFilePath)
+		packagePath = saveFilePath + "/package.mo"
+	}
+	packageName, ok := omc.OMC.ParseFile(packagePath)
+	omc.OMC.LoadFile(packagePath)
+	return packageName, ok
+}
+
+func ParseCodeString(code, path string) (string, bool) {
+	return omc.OMC.ParseString(code, path)
+}
+
+func LoadCodeString(code, path string) bool {
+	return omc.OMC.LoadString(code, path)
+}
+
+func CreateModelAndPackage(createPackageName, insertTo, expand, strType, createPackageNameAll, comment string, partial, encapsulated, state bool) bool {
+	if expand != "" {
+		expand = " extends " + expand + ";"
+	}
+	if comment != "" {
+		comment = " \\\"" + comment + "\\\""
+	}
+	modelStrBase := strType + " " + createPackageName + comment + expand + " end " + createPackageName + ";"
+	modelStr := ""
+	if insertTo != "" {
+		modelStr = "within " + insertTo + "; "
+	}
+	if encapsulated {
+		modelStr = modelStr + "encapsulated "
+	}
+	if partial {
+		modelStr = modelStr + "partial "
+	}
+	modelStr = modelStr + modelStrBase
+	res := omc.OMC.LoadString(modelStr, createPackageName)
+	if state {
+		omc.OMC.AddClassAnnotation(createPackageNameAll, "Icon(graphics={Text(extent={{-100,100},{100,-100}},textString=\"%name\")})")
+		omc.OMC.AddClassAnnotation(createPackageNameAll, "annotate=__Dymola_state(true)")
+		omc.OMC.AddClassAnnotation(createPackageNameAll, "singleInstance(true)")
+	}
+	if res {
+		return true
+	}
+	return false
 }

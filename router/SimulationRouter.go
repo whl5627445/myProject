@@ -10,16 +10,15 @@ func SimulateRouter(e *gin.Engine) {
 	{
 		Models.GET("/options/get", SimulationAPI.GetSimulationOptionsView)
 		Models.POST("/options/set", SimulationAPI.SetSimulationOptionsView)
-		Models.POST("/state/get", SimulationAPI.GetModelStateView)
+		Models.GET("/state/get", SimulationAPI.GetModelStateView)
 		Models.POST("/simulate", SimulationAPI.ModelSimulateView)
 		Models.POST("/result", SimulationAPI.SimulateResultView)
-		Models.POST("/record/list", SimulationAPI.SimulateResultListView)
-		Models.POST("/record/tree", SimulationAPI.SimulateResultTreeView)
+		Models.GET("/record/list", SimulationAPI.SimulateResultListView)
+		Models.GET("/record/tree", SimulationAPI.SimulateResultTreeView)
 		Models.POST("/experiment/create", SimulationAPI.ExperimentCreateView)
 		Models.POST("/experiment/delete", SimulationAPI.ExperimentDeleteView)
 		Models.POST("/experiment/edit", SimulationAPI.ExperimentEditView)
-		Models.POST("/experiment/list", SimulationAPI.ExperimentGetView)
-		Models.POST("/fmu/export", SimulationAPI.FmuExportModelView)
+		Models.GET("/experiment/list", SimulationAPI.ExperimentGetView)
 		Models.POST("/code/save", SimulationAPI.ModelCodeSaveView)
 	}
 }

@@ -2,17 +2,31 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
+	"os"
 	_ "yssim-go/Init"
+	"yssim-go/middleware"
 	"yssim-go/router"
 )
 
 func main() {
+	//omcPross := Init.StartOMC()
+	//defer omcPross.Process.Signal(syscall.SIGQUIT)
+
 	g := gin.Default()
+
+	g.Use(middleware.Cors())
 	{
 		router.ModelRouter(g)
 		router.SimulateRouter(g)
 		router.UserRouter(g)
-
+		router.FileRouter(g)
 	}
-	g.Run(":8912")
+
+	port, ok := os.LookupEnv("PORT")
+	if !ok {
+		port = "8912"
+	}
+	//port := "8913"
+	addr := "0.0.0.0:"
+	g.Run(addr + port)
 }

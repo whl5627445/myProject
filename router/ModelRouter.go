@@ -26,7 +26,7 @@ func ModelRouter(e *gin.Engine) {
 		Models.POST("/connection/delete", ModelAPI.DeleteConnectionAnnotationView)
 		Models.POST("/connection/update", ModelAPI.UpdateConnectionAnnotationView)
 		Models.POST("/connection/name", ModelAPI.UpdateConnectionNamesView)
-		Models.POST("/exists", ModelAPI.ExistsView)
+		Models.GET("/exists", ModelAPI.ExistsView)
 		Models.GET("/check", ModelAPI.CheckView)
 		Models.GET("/components/get", ModelAPI.GetComponentsView)
 		Models.GET("/document/get", ModelAPI.GetModelDocumentView)

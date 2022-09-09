@@ -4,79 +4,133 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"sync"
+
+	//"github.com/go-zeromq/zmq4"
+
 	"github.com/go-zeromq/zmq4"
+	"os"
 	"strconv"
 	"strings"
 )
 
-type omcZMQ struct {
+type ZmqObject struct {
 	zmq4.Socket
+	sync.Mutex
 }
 
-var CacheRefresh = false
-var AllModelCache = map[string]any{}
+var cacheRefresh = false
+var AllModelCache = map[string][]byte{}
 
 // SendExpression 发送指令，获取数据
-func (o *omcZMQ) SendExpression(cmd string) ([]interface{}, bool) {
-	//msg, ok := AllModelCache[cmd].(zmq4.Msg)
-	//if !ok || CacheRefresh == true {
-	//	_ = o.Send(zmq4.NewMsgString(cmd))
-	//	msg, _ = o.Recv()
-	//	AllModelCache[cmd] = msg
-	//}
-	//s := time.Now().UnixNano() / 1e6
-	_ = o.Send(zmq4.NewMsgString(cmd))
-	msg, _ := o.Recv()
-	//if time.Now().UnixNano()/1e6-s > 5 {
-	//	fmt.Println("用时：", time.Now().UnixNano()/1e6-s)
-	//	fmt.Println("cmd：", cmd)
-	//}
-	data, _ := DataToGo(msg.Bytes())
+func (o *ZmqObject) SendExpression(cmd string) ([]interface{}, bool) {
+	o.Lock()
+	defer o.Unlock()
+	var msg []byte
+	msg, ok := AllModelCache[cmd]
+	if !ok {
+		_ = o.Send(zmq4.NewMsgString(cmd))
 
-	if len(data) == 0 {
+		data, _ := o.Recv()
+		msg = data.Bytes()
+		if cacheRefresh && len(msg) > 0 {
+			AllModelCache[cmd] = msg
+		}
+	}
+	//if !ok {
+	//	o.SendChan <- [][]byte{[]byte(cmd)}
+	//	//_ = o.SendMulti(zmq4.NewMsgString(cmd))
+	//	data := <-o.RecvChan
+	//	msg = data[0]
+	//	if cacheRefresh {
+	//		AllModelCache[cmd] = msg
+	//	}
+	//}
+
+	parseData, _ := DataToGo(msg)
+	if len(parseData) == 0 {
 		return nil, false
 	}
-	return data, true
+	return parseData, true
 }
 
 // SendExpressionNoParsed 发送指令，获取数据，但是不进行数据转换
-func (o *omcZMQ) SendExpressionNoParsed(cmd string) ([]byte, bool) {
-	_ = o.Send(zmq4.NewMsgString(cmd))
-	msg, _ := o.Recv()
-	data := msg.Bytes()
-	data = bytes.ReplaceAll(data, []byte("\"\"\n"), []byte(""))
-	data = bytes.ReplaceAll(data, []byte("\"false\""), []byte("false"))
-	data = bytes.ReplaceAll(data, []byte("\"true\""), []byte("true"))
-	if len(data) == 0 {
+func (o *ZmqObject) SendExpressionNoParsed(cmd string) ([]byte, bool) {
+	o.Lock()
+	defer o.Unlock()
+	var msg []byte
+	msg, ok := AllModelCache[cmd]
+	if !ok {
+		_ = o.Send(zmq4.NewMsgString(cmd))
+		data, _ := o.Recv()
+		msg = data.Bytes()
+		if cacheRefresh && len(msg) > 0 {
+			AllModelCache[cmd] = msg
+		}
+	}
+	//if !ok {
+	//	o.SendChan <- [][]byte{[]byte(cmd)}
+	//	//_ = o.SendMulti(zmq4.NewMsgString(cmd))
+	//	data := <-o.RecvChan
+	//	msg = data[0]
+	//	if cacheRefresh {
+	//		AllModelCache[cmd] = msg
+	//	}
+	//}
+	msg = bytes.ReplaceAll(msg, []byte("\"\"\n"), []byte(""))
+	msg = bytes.ReplaceAll(msg, []byte("\"false\""), []byte("false"))
+	msg = bytes.ReplaceAll(msg, []byte("\"true\""), []byte("true"))
+	if len(msg) == 0 {
 		return nil, false
 	}
-	return data, true
+	return msg, true
+}
+
+func (o *ZmqObject) BuildModel(className, fileNamePrefix string, simulateParametersData map[string]string) bool {
+	cmd := className + ", fileNamePrefix = \"" + fileNamePrefix + "result\""
+	for k, v := range simulateParametersData {
+		if k != "" {
+			cmd = cmd + "," + k + "=" + v
+		}
+	}
+	cmd = "buildModel(" + cmd + ")"
+	buildModelData, ok := o.SendExpressionNoParsed(cmd)
+	buildModelData = bytes.TrimSuffix(buildModelData, []byte("\n"))
+	buildModelData = bytes.ReplaceAll(buildModelData, []byte("\"false\""), []byte("false"))
+	buildModelData = bytes.ReplaceAll(buildModelData, []byte("\"true\""), []byte("true"))
+	if ok && string(buildModelData) != "{\"\",\"\"}" {
+		return true
+	}
+	return false
 }
 
 // 清空加载的模型库
-func (o *omcZMQ) Clear() {
+func (o *ZmqObject) Clear() {
 	o.SendExpressionNoParsed("clearCommandLineOptions()")
 	o.SendExpressionNoParsed("clear()")
 	o.SendExpressionNoParsed("clearVariables()")
 	o.SendExpressionNoParsed("clearProgram()")
-	//omc.OMC.SendExpressionNoParsed("setCommandLineOptions(\"+ignoreSimulationFlagsAnnotation=false\")")
-	//omc.OMC.SendExpressionNoParsed("setCommandLineOptions(\"-d=nfAPI\")")
-	o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nogen,noevalfunc,newInst,nfAPI\")")
+	o.SendExpressionNoParsed("setCommandLineOptions(\"+ignoreSimulationFlagsAnnotation=false\")")
+	o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nfAPI\")")
+	//o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nogen,noevalfunc,newInst,nfAPI\")")
 }
 
-// 改变缓存策略
-func (o *omcZMQ) CacheRefreshSet(cache bool) {
-	CacheRefresh = cache
+//改变缓存策略
+func (o *ZmqObject) CacheRefreshSet(cache bool) {
+	cacheRefresh = cache
 }
 
 // 获取给定切片当中所有模型的继承项，包含原始数据
-func (o *omcZMQ) GetInheritedClassesList(classNameList []string) []string {
+func (o *ZmqObject) GetInheritedClassesList(classNameList []string) []string {
 	var dataList []string
 	for i := 0; i < len(classNameList); i++ {
 		cmd := "getInheritedClasses(" + classNameList[i] + ")"
 		InheritedclassesData, ok := o.SendExpression(cmd)
 		if ok {
 			for p := 0; p < len(InheritedclassesData); p++ {
+				if InheritedclassesData[p].(string) == classNameList[i] {
+					continue
+				}
 				dataList = append(dataList, InheritedclassesData[p].(string))
 			}
 		}
@@ -96,7 +150,7 @@ func (o *omcZMQ) GetInheritedClassesList(classNameList []string) []string {
 	return dataList
 }
 
-func (o *omcZMQ) GetInheritedClassesListAll(classNameList []string) []string {
+func (o *ZmqObject) GetInheritedClassesListAll(classNameList []string) []string {
 	var dataList = classNameList
 	var nameList = classNameList
 	for {
@@ -112,18 +166,19 @@ func (o *omcZMQ) GetInheritedClassesListAll(classNameList []string) []string {
 }
 
 // 获取给定切片当中模型的本身视图数据
-func (o *omcZMQ) GetDiagramAnnotationList(classNameList []string) []interface{} {
+func (o *ZmqObject) GetDiagramAnnotationList(classNameList []string) []interface{} {
 	var dataList []interface{}
 	for i := 0; i < len(classNameList); i++ {
 		cmd := "getDiagramAnnotation(" + classNameList[i] + ")"
-		diagramannotationData, ok := AllModelCache[cmd].([]interface{})
-		if !ok {
-			diagramannotationData, ok = o.SendExpression(cmd)
-		}
+		//diagramannotationData, ok := AllModelCache[cmd].([]interface{})
+		diagramannotationData, ok := o.SendExpression(cmd)
+		//if !ok {
+		//	diagramannotationData, ok = o.SendExpression(cmd)
+		//}
 		if ok && len(diagramannotationData) > 8 {
 			for di := 0; di < len(diagramannotationData); di++ {
 				dataList = append(dataList, diagramannotationData[di])
-				AllModelCache[cmd] = diagramannotationData
+				//AllModelCache[cmd] = diagramannotationData
 			}
 		}
 	}
@@ -131,7 +186,7 @@ func (o *omcZMQ) GetDiagramAnnotationList(classNameList []string) []interface{} 
 }
 
 // 获取切片给定模型当中有多少个连接线，一个数字
-func (o *omcZMQ) GetConnectionCountList(classNameList []string) []int {
+func (o *ZmqObject) GetConnectionCountList(classNameList []string) []int {
 	var dataList []int
 	for i := 0; i < len(classNameList); i++ {
 		cmd := "getConnectionCount(" + classNameList[i] + ")"
@@ -146,7 +201,7 @@ func (o *omcZMQ) GetConnectionCountList(classNameList []string) []int {
 }
 
 // 获取给定模型与指定数字的连接线段其实位置与终点位置，返回接口的名称
-func (o *omcZMQ) GetNthConnection(className string, num int) []string {
+func (o *ZmqObject) GetNthConnection(className string, num int) []string {
 	var dataList []string
 	cmd := "getNthConnection(" + className + "," + strconv.Itoa(num) + ")"
 	ConnectionCountNum, ok := o.SendExpression(cmd)
@@ -159,7 +214,7 @@ func (o *omcZMQ) GetNthConnection(className string, num int) []string {
 }
 
 // 获取模型与数字对应连接线的画图数据
-func (o *omcZMQ) GetNthConnectionAnnotation(className string, num int) []interface{} {
+func (o *ZmqObject) GetNthConnectionAnnotation(className string, num int) []interface{} {
 	var data []interface{}
 	cmd := "getNthConnectionAnnotation(" + className + "," + strconv.Itoa(num) + ")"
 	NthConnectionAnnotationData, _ := o.SendExpression(cmd)
@@ -168,14 +223,14 @@ func (o *omcZMQ) GetNthConnectionAnnotation(className string, num int) []interfa
 }
 
 // 获取给定模型的组成部分，包含组件信息
-func (o *omcZMQ) GetComponents(className string) []interface{} {
+func (o *ZmqObject) GetComponents(className string) []interface{} {
 	cmd := "getComponents(" + className + ")"
 	components, _ := o.SendExpression(cmd)
 	return components
 }
 
 // 获取切片给定模型的组成部分，包含组件信息
-func (o *omcZMQ) GetComponentsList(classNameList []string) [][]interface{} {
+func (o *ZmqObject) GetComponentsList(classNameList []string) [][]interface{} {
 	var dataList [][]interface{}
 	for i := 0; i < len(classNameList); i++ {
 		cmd := "getComponents(" + classNameList[i] + ")"
@@ -203,14 +258,14 @@ func (o *omcZMQ) GetComponentsList(classNameList []string) [][]interface{} {
 }
 
 // 获取给定模型的组成部分，包含组件信息,新API
-func (o *omcZMQ) GetElements(className string) []interface{} {
+func (o *ZmqObject) GetElements(className string) []interface{} {
 	cmd := "getElements(" + className + ", useQuotes = true)"
 	components, _ := o.SendExpression(cmd)
 	return components
 }
 
 // 获取切片给定模型的组成部分，包含组件信息,新API
-func (o *omcZMQ) GetElementsList(classNameList []string) [][]interface{} {
+func (o *ZmqObject) GetElementsList(classNameList []string) [][]interface{} {
 	var dataList [][]interface{}
 	for i := 0; i < len(classNameList); i++ {
 		cmd := "getElements(" + classNameList[i] + ", useQuotes = true)"
@@ -225,7 +280,7 @@ func (o *omcZMQ) GetElementsList(classNameList []string) [][]interface{} {
 }
 
 // 获取切片给定模型的组件注释信息
-func (o *omcZMQ) GetComponentAnnotationsList(classNameList []string) [][]interface{} {
+func (o *ZmqObject) GetComponentAnnotationsList(classNameList []string) [][]interface{} {
 	var dataList [][]interface{}
 	for i := 0; i < len(classNameList); i++ {
 		cmd := "getComponentAnnotations(" + classNameList[i] + ")"
@@ -254,7 +309,7 @@ func (o *omcZMQ) GetComponentAnnotationsList(classNameList []string) [][]interfa
 }
 
 // 获取切片给定模型的组件注释信息,新API
-func (o *omcZMQ) GetElementAnnotationsList(classNameList []string) [][]interface{} {
+func (o *ZmqObject) GetElementAnnotationsList(classNameList []string) [][]interface{} {
 	var dataList [][]interface{}
 	for i := 0; i < len(classNameList); i++ {
 		cmd := "getElementAnnotations(" + classNameList[i] + ", useQuotes = true)"
@@ -269,7 +324,7 @@ func (o *omcZMQ) GetElementAnnotationsList(classNameList []string) [][]interface
 }
 
 // 获取给定模型的图标数据
-func (o *omcZMQ) GetIconAnnotation(className string) []interface{} {
+func (o *ZmqObject) GetIconAnnotation(className string) []interface{} {
 	var dataList []interface{}
 	cmd := "getIconAnnotation(" + className + ")"
 	iconAnnotationData, ok := o.SendExpression(cmd)
@@ -291,7 +346,7 @@ func (o *omcZMQ) GetIconAnnotation(className string) []interface{} {
 }
 
 // 获取给定切片模型的图标注释信息
-func (o *omcZMQ) GetIconAnnotationList(classNameList []string) []interface{} {
+func (o *ZmqObject) GetIconAnnotationList(classNameList []string) []interface{} {
 	var dataList []interface{}
 	for i := 0; i < len(classNameList); i++ {
 		cmd := "getIconAnnotation(" + classNameList[i] + ")"
@@ -316,8 +371,19 @@ func (o *omcZMQ) GetIconAnnotationList(classNameList []string) []interface{} {
 	return dataList
 }
 
+func (o *ZmqObject) GetPackages() []string {
+	var dataList []string
+	cmd := "getClassNames()"
+
+	classNamesData, _ := o.SendExpression(cmd)
+	for i := 0; i < len(classNamesData); i++ {
+		dataList = append(dataList, classNamesData[i].(string))
+	}
+	return dataList
+}
+
 // 获取给定模型包含的子节点， all参数为true时，递归查询所有子节点，返回切片形式
-func (o *omcZMQ) GetClassNames(className string, all bool) []string {
+func (o *ZmqObject) GetClassNames(className string, all bool) []string {
 	var dataList []string
 	var cmd string
 	if all == true {
@@ -334,7 +400,7 @@ func (o *omcZMQ) GetClassNames(className string, all bool) []string {
 }
 
 // 返回给定模型的源码
-func (o *omcZMQ) List(className string) string {
+func (o *ZmqObject) List(className string) string {
 	code := ""
 	cmd := "list(" + className + ")"
 	codeData, ok := o.SendExpressionNoParsed(cmd)
@@ -345,7 +411,7 @@ func (o *omcZMQ) List(className string) string {
 }
 
 //
-func (o *omcZMQ) GetElementModifierValue(className string, modifierName string) string {
+func (o *ZmqObject) GetElementModifierValue(className string, modifierName string) string {
 	cmd := "getElementModifierValue(" + className + "," + modifierName + ")"
 	data, _ := o.SendExpressionNoParsed(cmd)
 	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
@@ -353,7 +419,7 @@ func (o *omcZMQ) GetElementModifierValue(className string, modifierName string) 
 	return string(data)
 }
 
-func (o *omcZMQ) IsEnumeration(className string) bool {
+func (o *ZmqObject) IsEnumeration(className string) bool {
 	cmd := "isEnumeration(" + className + ")"
 	result, ok := o.SendExpressionNoParsed(cmd)
 	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
@@ -364,7 +430,7 @@ func (o *omcZMQ) IsEnumeration(className string) bool {
 	return false
 }
 
-func (o *omcZMQ) GetEnumerationLiterals(parameterName string) []string {
+func (o *ZmqObject) GetEnumerationLiterals(parameterName string) []string {
 	var dataList []string
 	cmd := "getEnumerationLiterals(" + parameterName + ")"
 	data, _ := o.SendExpression(cmd)
@@ -374,7 +440,7 @@ func (o *omcZMQ) GetEnumerationLiterals(parameterName string) []string {
 	return dataList
 }
 
-func (o *omcZMQ) GetParameterValue(className string, modifierName string) string {
+func (o *ZmqObject) GetParameterValue(className string, modifierName string) string {
 	cmd := "getParameterValue(" + className + ",\"" + modifierName + "\")"
 	data, _ := o.SendExpressionNoParsed(cmd)
 	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
@@ -383,7 +449,7 @@ func (o *omcZMQ) GetParameterValue(className string, modifierName string) string
 	return string(data)
 }
 
-func (o *omcZMQ) GetElementModifierNamesList(classNameList []string, componentName string) []string {
+func (o *ZmqObject) GetElementModifierNamesList(classNameList []string, componentName string) []string {
 	var dataList []string
 	for i := 0; i < len(classNameList); i++ {
 		cmd := "getElementModifierNames(" + classNameList[i] + ",\"" + componentName + "\")"
@@ -397,13 +463,13 @@ func (o *omcZMQ) GetElementModifierNamesList(classNameList []string, componentNa
 	return dataList
 }
 
-func (o *omcZMQ) GetDerivedClassModifierNames(className string) []interface{} {
+func (o *ZmqObject) GetDerivedClassModifierNames(className string) []interface{} {
 	cmd := "getDerivedClassModifierNames(" + className + ")"
 	data, _ := o.SendExpression(cmd)
 	return data
 }
 
-func (o *omcZMQ) GetDerivedClassModifierValue(className string, modifierName string) string {
+func (o *ZmqObject) GetDerivedClassModifierValue(className string, modifierName string) string {
 	cmd := "getDerivedClassModifierValue(" + className + "," + modifierName + ")"
 	data, _ := o.SendExpressionNoParsed(cmd)
 	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
@@ -412,7 +478,7 @@ func (o *omcZMQ) GetDerivedClassModifierValue(className string, modifierName str
 	return string(data)
 }
 
-func (o *omcZMQ) GetExtendsModifierNames(classNameOne string, classNameTwo string) []string {
+func (o *ZmqObject) GetExtendsModifierNames(classNameOne string, classNameTwo string) []string {
 	var dataList []string
 	cmd := "getExtendsModifierNames(" + classNameOne + "," + classNameTwo + ", useQuotes = true)"
 	data, ok := o.SendExpression(cmd)
@@ -424,7 +490,7 @@ func (o *omcZMQ) GetExtendsModifierNames(classNameOne string, classNameTwo strin
 	return dataList
 }
 
-func (o *omcZMQ) GetExtendsModifierValue(classNameOne string, classNameTwo string, name string) string {
+func (o *ZmqObject) GetExtendsModifierValue(classNameOne string, classNameTwo string, name string) string {
 	cmd := "getExtendsModifierValue(" + classNameOne + "," + classNameTwo + "," + name + ")"
 	data, _ := o.SendExpressionNoParsed(cmd)
 	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
@@ -432,7 +498,7 @@ func (o *omcZMQ) GetExtendsModifierValue(classNameOne string, classNameTwo strin
 	return string(data)
 }
 
-func (o *omcZMQ) IsExtendsModifierFinal(classNameOne string, classNameTwo string, name string) string {
+func (o *ZmqObject) IsExtendsModifierFinal(classNameOne string, classNameTwo string, name string) string {
 	cmd := "isExtendsModifierFinal(" + classNameOne + "," + classNameTwo + "," + name + ")"
 	data, _ := o.SendExpressionNoParsed(cmd)
 	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
@@ -440,7 +506,7 @@ func (o *omcZMQ) IsExtendsModifierFinal(classNameOne string, classNameTwo string
 	return string(data)
 }
 
-func (o *omcZMQ) SetComponentModifierValue(className string, parameter string, value string) string {
+func (o *ZmqObject) SetComponentModifierValue(className string, parameter string, value string) string {
 	code := "=" + value + ""
 	if value == "" {
 		code = "()"
@@ -451,7 +517,7 @@ func (o *omcZMQ) SetComponentModifierValue(className string, parameter string, v
 	return string(data)
 }
 
-func (o *omcZMQ) RenameComponentInClass(className string, oldComponentName string, newComponentName string) bool {
+func (o *ZmqObject) RenameComponentInClass(className string, oldComponentName string, newComponentName string) bool {
 	cmd := "renameComponentInClass(" + className + "," + oldComponentName + ", " + newComponentName + ")"
 	_, ok := o.SendExpression(cmd)
 	if ok {
@@ -460,7 +526,7 @@ func (o *omcZMQ) RenameComponentInClass(className string, oldComponentName strin
 	return false
 }
 
-func (o *omcZMQ) SetComponentProperties(className string, newComponentName string, final string, protected string, replaceable string, variability string, inner string, outer string, causality string) bool {
+func (o *ZmqObject) SetComponentProperties(className string, newComponentName string, final string, protected string, replaceable string, variability string, inner string, outer string, causality string) bool {
 	// setComponentProperties(PID_Controller,PI,{true,false,true,false}, {""}, {false,false}, {""})
 	cmdParameterList := []string{className, ",", newComponentName, ",{", final, ",false,", protected, ",", replaceable,
 		"},{\"", variability, "\"}", ",{", inner, ",", outer, "},{\"", causality, "\"}"}
@@ -473,7 +539,7 @@ func (o *omcZMQ) SetComponentProperties(className string, newComponentName strin
 	return false
 }
 
-func (o *omcZMQ) ExistClass(className string) bool {
+func (o *ZmqObject) ExistClass(className string) bool {
 	cmd := "existClass(" + className + ")"
 	result, _ := o.SendExpressionNoParsed(cmd)
 	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
@@ -483,7 +549,7 @@ func (o *omcZMQ) ExistClass(className string) bool {
 	return true
 }
 
-func (o *omcZMQ) GetClassInformation(className string) []interface{} {
+func (o *ZmqObject) GetClassInformation(className string) []interface{} {
 	cmd := "getClassInformation(" + className + ")"
 	data, ok := o.SendExpression(cmd)
 	if ok {
@@ -492,7 +558,7 @@ func (o *omcZMQ) GetClassInformation(className string) []interface{} {
 	return nil
 }
 
-func (o *omcZMQ) CopyClass(className string, copiedClassName string, parentName string) bool {
+func (o *ZmqObject) CopyClass(className string, copiedClassName string, parentName string) bool {
 	cmd := "copyClass(" + className + ",\"" + copiedClassName + "\"," + parentName + ")"
 	result, ok := o.SendExpressionNoParsed(cmd)
 	if ok && string(result) == "false" {
@@ -501,7 +567,7 @@ func (o *omcZMQ) CopyClass(className string, copiedClassName string, parentName 
 	return true
 }
 
-func (o *omcZMQ) DeleteClass(className string) bool {
+func (o *ZmqObject) DeleteClass(className string) bool {
 	cmd := "deleteClass(" + className + ")"
 	result, ok := o.SendExpressionNoParsed(cmd)
 	if ok && string(result) == "false" {
@@ -510,7 +576,7 @@ func (o *omcZMQ) DeleteClass(className string) bool {
 	return true
 }
 
-func (o *omcZMQ) AddComponent(className, newComponentName, oldComponentName, origin, rotation string, extent []string) bool {
+func (o *ZmqObject) AddComponent(className, newComponentName, oldComponentName, origin, rotation string, extent []string) bool {
 	annotate := "annotate=Placement(visible=true, transformation=transformation(origin={" + origin + "}, extent={{" + extent[0] + "},{" + extent[1] + "}}, rotation=" + rotation + "))"
 	cmd := "addComponent(" + newComponentName + "," + oldComponentName + "," + className + "," + annotate + ")"
 	result, ok := o.SendExpressionNoParsed(cmd)
@@ -520,7 +586,7 @@ func (o *omcZMQ) AddComponent(className, newComponentName, oldComponentName, ori
 	return true
 }
 
-func (o *omcZMQ) DeleteComponent(componentName, className string) bool {
+func (o *ZmqObject) DeleteComponent(componentName, className string) bool {
 	cmd := "deleteComponent(" + componentName + "," + className + ")"
 	result, ok := o.SendExpressionNoParsed(cmd)
 	if ok && string(result) == "false" {
@@ -529,17 +595,22 @@ func (o *omcZMQ) DeleteComponent(componentName, className string) bool {
 	return true
 }
 
-func (o *omcZMQ) UpdateComponent(componentName, ComponentClassName, modelNameAll, origin, rotation string, extent []string) bool {
+func (o *ZmqObject) UpdateComponent(componentName, ComponentClassName, modelNameAll, origin, rotation string, extent []string) bool {
+	// updateComponent(add3,Modelica.Blocks.Math.Add3,test,annotate=Placement(visible=true, transformation=transformation(origin={-68,24}, extent={{-10,-10},{10,10}}, rotation=0)))
+	//updateComponent(tan1,Modelica.Blocks.Math.Tan,test,annotate=Placement(visible=true, transformation=transformation(origin={-,-}, extent={{120,-52},{140,-72}}, rotation=0.0)))
 	annotate := "annotate=Placement(visible=true, transformation=transformation(origin={" + origin + "}, extent={{" + extent[0] + "},{" + extent[1] + "}}, rotation=" + rotation + "))"
 	cmd := "updateComponent(" + componentName + "," + ComponentClassName + "," + modelNameAll + "," + annotate + ")"
+	// updateComponent(cos,Modelica.Blocks.Math.Cos,test,annotate=Placement(visible=true, transformation=transformation(origin={4,-16}, extent={{-10,-10},{10,10}}, rotation=0)))
+	// updateComponent(CriticalDamping,Modelica.Blocks.Continuous.Filter,test.Filter,annotate=Placement(visible=true, transformation=transformation(origin={34,0}, extent={{-20.0,40.0},{0.0,60.0}}, rotation=0)))
 	result, ok := o.SendExpressionNoParsed(cmd)
-	if ok && string(result) == "false" {
-		return false
+	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
+	if ok && string(result) == "true" {
+		return true
 	}
-	return true
+	return false
 }
 
-func (o *omcZMQ) AddConnection(classNameAll, connectStart, connectEnd, color string, linePoints []string) bool {
+func (o *ZmqObject) AddConnection(classNameAll, connectStart, connectEnd, color string, linePoints []string) bool {
 	var linePointsList []string
 	for _, point := range linePoints {
 		linePointsList = append(linePointsList, "{"+point+"}")
@@ -548,46 +619,50 @@ func (o *omcZMQ) AddConnection(classNameAll, connectStart, connectEnd, color str
 	annotate := "annotate=Line(points={" + points + "},color={" + color + "}))"
 	cmd := "addConnection(" + connectStart + "," + connectEnd + "," + classNameAll + "," + annotate
 	result, ok := o.SendExpressionNoParsed(cmd)
+	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
 	if ok && string(result) == "Ok" {
 		return true
 	}
 	return false
 }
 
-func (o *omcZMQ) DeleteConnection(classNameAll, connectStart, connectEnd string) bool {
+func (o *ZmqObject) DeleteConnection(classNameAll, connectStart, connectEnd string) bool {
 	cmd := "deleteConnection(" + connectStart + "," + connectEnd + "," + classNameAll + ")"
 	result, ok := o.SendExpressionNoParsed(cmd)
+	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
 	if ok && string(result) == "Ok" {
 		return true
 	}
 	return false
 }
 
-func (o *omcZMQ) UpdateConnectionNames(classNameAll, fromName, toName, fromNameNew, toNameNew string) bool {
+func (o *ZmqObject) UpdateConnectionNames(classNameAll, fromName, toName, fromNameNew, toNameNew string) bool {
 	cmd := "updateConnectionNames(\"" + classNameAll + "\",\"" + fromName + "\",\"" + toName + "\",\"" + fromNameNew + "\",\"" + toNameNew + "\")"
 	result, ok := o.SendExpressionNoParsed(cmd)
+	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
 	if ok && string(result) == "Ok" {
 		return true
 	}
 	return false
 }
 
-func (o *omcZMQ) UpdateConnectionAnnotation(classNameAll, connectStart, connectEnd, color string, linePoints []string) bool {
+func (o *ZmqObject) UpdateConnectionAnnotation(classNameAll, connectStart, connectEnd, color string, linePoints []string) bool {
 	var linePointsList []string
 	for _, point := range linePoints {
 		linePointsList = append(linePointsList, "{"+point+"}")
 	}
 	points := strings.Join(linePointsList, ",")
-	annotate := "annotate=Line(points={" + points + "},color={" + color + "}))"
-	cmd := "updateConnectionAnnotation(" + connectStart + "," + connectEnd + "," + classNameAll + "," + annotate
+	annotate := "annotate=$annotation(Line(points={" + points + "},color={" + color + "}))"
+	cmd := "updateConnectionAnnotation(" + classNameAll + ",\"" + connectStart + "\",\"" + connectEnd + "\",\"" + annotate + "\")"
 	result, ok := o.SendExpressionNoParsed(cmd)
-	if ok && string(result) == "Ok" {
+	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
+	if ok && string(result) == "true" {
 		return true
 	}
 	return false
 }
 
-func (o *omcZMQ) CheckModel(className string) string {
+func (o *ZmqObject) CheckModel(className string) string {
 	cmd := "checkModel(" + className + ")"
 	data, ok := o.SendExpressionNoParsed(cmd)
 	//data = bytes.TrimSuffix(data, []byte("\n"))
@@ -597,7 +672,7 @@ func (o *omcZMQ) CheckModel(className string) string {
 	return ""
 }
 
-func (o *omcZMQ) GetMessagesStringInternal() string {
+func (o *ZmqObject) GetMessagesStringInternal() string {
 	cmd := "getMessagesStringInternal()"
 	data, ok := o.SendExpressionNoParsed(cmd)
 	if ok && len(data) > 3 {
@@ -606,7 +681,7 @@ func (o *omcZMQ) GetMessagesStringInternal() string {
 	return ""
 }
 
-func (o *omcZMQ) GetDocumentationAnnotation(className string) []string {
+func (o *ZmqObject) GetDocumentationAnnotation(className string) []string {
 	var docList []string
 	cmd := "getDocumentationAnnotation(" + className + ")"
 	data, ok := o.SendExpressionNoParsed(cmd)
@@ -617,8 +692,7 @@ func (o *omcZMQ) GetDocumentationAnnotation(className string) []string {
 		data = append([]byte{'['}, data...)
 		data = append(data, ']')
 		var docData []interface{}
-		err := json.Unmarshal(data, &docData)
-		fmt.Println(err)
+		_ = json.Unmarshal(data, &docData)
 		for _, d := range docData {
 			docList = append(docList, d.(string))
 		}
@@ -627,7 +701,7 @@ func (o *omcZMQ) GetDocumentationAnnotation(className string) []string {
 	return []string{"", "", ""}
 }
 
-func (o *omcZMQ) SetDocumentationAnnotation(className, info, revisions string) bool {
+func (o *ZmqObject) SetDocumentationAnnotation(className, info, revisions string) bool {
 	info = strings.ReplaceAll(info, "\"", "\\\"")
 	cmd := "setDocumentationAnnotation(" + className + ",\"" + info + "\",\"" + revisions + "\")"
 	result, ok := o.SendExpressionNoParsed(cmd)
@@ -638,7 +712,7 @@ func (o *omcZMQ) SetDocumentationAnnotation(className, info, revisions string) b
 	return false
 }
 
-func (o *omcZMQ) UriToFilename(uri string) string {
+func (o *ZmqObject) UriToFilename(uri string) string {
 	cmd := "uriToFilename(\"" + uri + "\")"
 	data, ok := o.SendExpressionNoParsed(cmd)
 	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
@@ -649,13 +723,13 @@ func (o *omcZMQ) UriToFilename(uri string) string {
 	return ""
 }
 
-func (o *omcZMQ) ConvertUnits(s1, s2 string) []interface{} {
+func (o *ZmqObject) ConvertUnits(s1, s2 string) []interface{} {
 	cmd := "convertUnits(\"" + s1 + "\",\"" + s2 + "\")"
 	data, _ := o.SendExpression(cmd)
 	return data
 }
 
-func (o *omcZMQ) GetSimulationOptions(className string) []string {
+func (o *ZmqObject) GetSimulationOptions(className string) []string {
 	var dataList []string
 	cmd := "getSimulationOptions(" + className + ")"
 	data, _ := o.SendExpression(cmd)
@@ -663,4 +737,90 @@ func (o *omcZMQ) GetSimulationOptions(className string) []string {
 		dataList = append(dataList, d.(string))
 	}
 	return dataList
+}
+
+func (o *ZmqObject) AddClassAnnotation(className, annotate string) bool {
+	cmd := "addClassAnnotation(" + className + ", annotate=" + annotate + ")"
+	result, ok := o.SendExpressionNoParsed(cmd)
+	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
+	if ok && string(result) == "true" {
+		return true
+	}
+	return false
+}
+
+func (o *ZmqObject) ReadSimulationResult(varNameList []string, path string) ([][]float64, bool) {
+	// readSimulationResult("result_res.mat", {time,Bessel.a[1]}, 0)
+	varNameStr := "time," + strings.Join(varNameList, ",")
+	cmd := "readSimulationResult(\"" + path + "\",{" + varNameStr + "},0)"
+	data, _ := o.SendExpressionNoParsed(cmd)
+	data = bytes.ReplaceAll(data, []byte("{"), []byte("["))
+	data = bytes.ReplaceAll(data, []byte("}"), []byte("]"))
+	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
+	var dataList [][]float64
+	err := json.Unmarshal(data, &dataList)
+	if err != nil || len(dataList) == 0 {
+		fmt.Println(err)
+		return nil, false
+	}
+	return dataList, true
+
+}
+
+func (o *ZmqObject) ParseFile(path string) (string, bool) {
+	pwd, _ := os.Getwd()
+	cmd := "parseFile(\"" + pwd + "/" + path + "\",\"UTF-8\")"
+	result, ok := o.SendExpressionNoParsed(cmd)
+	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
+	if ok {
+		result = result[1 : len(result)-1]
+		return string(result), true
+	}
+	return "", false
+}
+
+func (o *ZmqObject) LoadFile(path string) bool {
+	pwd, _ := os.Getwd()
+	cmd := "loadFile(\"" + pwd + "/" + path + "\",\"UTF-8\")"
+	result, ok := o.SendExpressionNoParsed(cmd)
+	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
+	if ok && string(result) == "true" {
+		return true
+	}
+	return false
+}
+
+func (o *ZmqObject) ParseString(code, path string) (string, bool) {
+	jsonCode, _ := json.Marshal(code)
+	jsonCode = bytes.ReplaceAll(jsonCode, []byte("\\u003c"), []byte("<"))
+	jsonCode = bytes.ReplaceAll(jsonCode, []byte("\\u003e"), []byte(">"))
+	jsonCode = bytes.ReplaceAll(jsonCode, []byte("\\u0026"), []byte("&"))
+	jsonCode = bytes.ReplaceAll(jsonCode, []byte("\\u2028"), []byte("U+2028"))
+	jsonCode = bytes.ReplaceAll(jsonCode, []byte("\\u2029"), []byte("U+2029"))
+	cmd := "parseString(" + string(jsonCode) + ",\"" + path + "\")"
+	result, ok := o.SendExpressionNoParsed(cmd)
+	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
+	resultStr := string(result)
+	if ok && strings.HasPrefix(resultStr, "{") && strings.HasSuffix(resultStr, "}") {
+		resultStr = resultStr[1 : len(resultStr)-1]
+		return resultStr, true
+	}
+	return resultStr, false
+}
+
+func (o *ZmqObject) LoadString(code, path string) bool {
+	pwd, _ := os.Getwd()
+	jsonCode, _ := json.Marshal(code)
+	jsonCode = bytes.ReplaceAll(jsonCode, []byte("\\u003c"), []byte("<"))
+	jsonCode = bytes.ReplaceAll(jsonCode, []byte("\\u003e"), []byte(">"))
+	jsonCode = bytes.ReplaceAll(jsonCode, []byte("\\u0026"), []byte("&"))
+	jsonCode = bytes.ReplaceAll(jsonCode, []byte("\\u2028"), []byte("U+2028"))
+	jsonCode = bytes.ReplaceAll(jsonCode, []byte("\\u2029"), []byte("U+2029"))
+	cmd := "loadString(" + string(jsonCode) + ",\"" + pwd + "/" + path + "\",\"UTF-8\")"
+	result, ok := o.SendExpressionNoParsed(cmd)
+	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
+	if ok && string(result) == "true" {
+		return true
+	}
+	return false
 }

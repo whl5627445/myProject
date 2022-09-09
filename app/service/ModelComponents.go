@@ -9,7 +9,9 @@ import (
 
 func GetElements(className, componentName string) []interface{} {
 	componentsData := omc.OMC.GetElements(className)
+
 	var componentData []interface{}
+
 	for i := 0; i < len(componentsData); i++ {
 		cData := componentsData[i].([]interface{})
 		switch {
@@ -23,13 +25,13 @@ func GetElements(className, componentName string) []interface{} {
 	return componentData
 }
 
-func GetComponentName(className, componentName string) string {
-	componentData := omc.OMC.GetElements(className)
-	nameList := strings.Split(componentName, ".")
+func GetComponentName(modelName, className string) string {
+	componentData := omc.OMC.GetElements(modelName)
+	nameList := strings.Split(className, ".")
 	name := strings.ToLower(nameList[len(nameList)-1])
 	nameNum := 0
 	nameMap := map[string]bool{}
-	if _, ok := config.ModelicaKeywords[componentName]; ok {
+	if _, ok := config.ModelicaKeywords[className]; ok {
 		nameNum += 1
 	}
 	for _, c := range componentData {
@@ -41,25 +43,27 @@ func GetComponentName(className, componentName string) string {
 		}
 	}
 	for i := 1; i < nameNum+1; i++ {
-		n := componentName + strconv.Itoa(i)
-		if _, ok := config.ModelicaKeywords[n]; !ok {
+		n := name + strconv.Itoa(i)
+		_, ok := config.ModelicaKeywords[n]
+		mapOk := nameMap[n]
+		if !ok && !mapOk {
 			return n
 		}
 	}
 	return name
 }
 
-func AddComponentVerification(oldComponentName, newComponentName, modelNameAll string) (bool, string) {
+func AddComponentVerification(oldComponentName, newComponentName, modelName string) (bool, string) {
 	classInformation := omc.OMC.GetClassInformation(oldComponentName)
 	classTypeAll := map[string]bool{"model": true, "class": true, "connector": true, "block": true}
 	if classInformation != nil {
 		classType := classInformation[0].(string)
 		noType := classTypeAll[classType]
-		if noType {
-			return false, "不能插入：" + oldComponentName + ", 这是一个 \"" + classType + " \"类型。组件视图层只允许有model、class、connector或者block。"
+		if !noType {
+			return false, "不能插入：" + oldComponentName + ", 这是一个 \"" + classType + " \"类型。组件视图层只允许有model、class、connector、function或者block。"
 		}
 	}
-	elementsData := omc.OMC.GetElements(modelNameAll)
+	elementsData := omc.OMC.GetElements(modelName)
 	for _, e := range elementsData {
 		if e.([]interface{})[3] == newComponentName {
 			return false, "新增组件失败，名称 \"" + newComponentName + "\" 已经存在或是 Modelica 关键字。 请选择其他名称。"
@@ -68,12 +72,12 @@ func AddComponentVerification(oldComponentName, newComponentName, modelNameAll s
 	return true, ""
 }
 
-func AddComponent(oldComponentName, newComponentName, modelNameAll, origin, rotation string, extent []string) (bool, string) {
-	v, msg := AddComponentVerification(oldComponentName, newComponentName, modelNameAll)
+func AddComponent(oldComponentName, newComponentName, modelName, origin, rotation string, extent []string) (bool, string) {
+	v, msg := AddComponentVerification(oldComponentName, newComponentName, modelName)
 	if !v {
 		return false, msg
 	}
-	result := omc.OMC.AddComponent(modelNameAll, newComponentName, oldComponentName, origin, rotation, extent)
+	result := omc.OMC.AddComponent(modelName, newComponentName, oldComponentName, origin, rotation, extent)
 	if !result {
 		msg = "新增组件失败"
 	}
