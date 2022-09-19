@@ -3,10 +3,10 @@ package fileOperation
 import (
 	"container/list"
 	"errors"
-	"fmt"
 	"github.com/mholt/archiver/v3"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -16,7 +16,7 @@ func CreateFilePath(filePath string) bool {
 	//filePathList := strings.Split(filePath, "/")
 	//path := strings.Join(filePathList[:len(filePathList)-1], "/")
 	//fileName := filePathList[len(filePathList)-1]
-	err := os.MkdirAll(filePath, 0777)
+	err := os.MkdirAll(filePath, 0755)
 	if err != nil {
 		panic(err)
 	}
@@ -26,7 +26,7 @@ func CreateFilePath(filePath string) bool {
 func CreateFile(filePath string) (io.ReadWriteCloser, bool) {
 	filePathList := strings.Split(filePath, "/")
 	path := strings.Join(filePathList[:len(filePathList)-1], "/")
-	os.MkdirAll(path, 0777)
+	os.MkdirAll(path, 0755)
 
 	nfs, err := os.Create(filePath)
 	if err != nil {
@@ -39,7 +39,19 @@ func CreateFile(filePath string) (io.ReadWriteCloser, bool) {
 func WriteFile(fileName string, data string) bool {
 	nfs, ok := CreateFile(fileName)
 	if ok {
-		err := ioutil.WriteFile(fileName, []byte(data), 0644)
+		err := ioutil.WriteFile(fileName, []byte(data), 0755)
+		if err != nil {
+			return false
+		}
+	}
+	nfs.Close()
+	return true
+}
+
+func WriteFileByte(fileName string, data []byte) bool {
+	nfs, ok := CreateFile(fileName)
+	if ok {
+		err := ioutil.WriteFile(fileName, data, 0755)
 		if err != nil {
 			return false
 		}
@@ -51,7 +63,7 @@ func WriteFile(fileName string, data string) bool {
 func UnZip(filePath string, toPath string) error {
 	err := archiver.Unarchive(filePath, toPath)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return err
 	}
 	return nil

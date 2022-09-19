@@ -5,8 +5,8 @@ import (
 	ModelAPI "yssim-go/app/api/model"
 )
 
-func ModelRouter(e *gin.Engine) {
-	var Models = e.Group("/model")
+func ModelRouter(g *gin.Engine) {
+	var Models = g.Group("/model")
 	{
 		Models.GET("/root_library", ModelAPI.GetRootModelView)
 		Models.GET("/list_library", ModelAPI.GetListModelView)
@@ -34,5 +34,5 @@ func ModelRouter(e *gin.Engine) {
 		Models.POST("/units/convert", ModelAPI.ConvertUnitsView)
 
 	}
-	e.POST("/test", ModelAPI.Test)
+	g.POST("/test", ModelAPI.Test)
 }

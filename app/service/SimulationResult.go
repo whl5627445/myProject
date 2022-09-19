@@ -3,7 +3,7 @@ package service
 import (
 	"encoding/csv"
 	"encoding/xml"
-	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -129,7 +129,7 @@ func SimulationResultTree(path string, parent string) []map[string]interface{} {
 	v := xmlInit{}
 	err := xmlOperation.ParseXML(path, &v)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 	scalarVariableList := v.ModelVariables.ScalarVariable
 	var nameList []string

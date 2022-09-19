@@ -3,7 +3,7 @@ package omc
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
+	"log"
 	"strings"
 )
 
@@ -15,10 +15,10 @@ func DataToGo(data []byte) ([]interface{}, error) {
 	}
 	err := json.Unmarshal([]byte(resStr), &resData)
 	if err != nil {
-		fmt.Println("数据转换失败: ", err)
-		fmt.Println("data:  ", string(data))
-		fmt.Println("Str:  ", resStr)
-		fmt.Println("mark:  ", mark)
+		log.Println("数据转换失败: ", err)
+		log.Println("data:  ", string(data))
+		log.Println("Str:  ", resStr)
+		log.Println("mark:  ", mark)
 		return nil, err
 	}
 	return resData, err

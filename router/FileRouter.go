@@ -5,8 +5,8 @@ import (
 	FileAPI "yssim-go/app/api/file"
 )
 
-func FileRouter(e *gin.Engine) {
-	var Models = e.Group("/file")
+func FileRouter(g *gin.Engine) {
+	var Models = g.Group("/file")
 	{
 		Models.POST("/upload/package", FileAPI.UploadModelPackageView)
 		Models.POST("/update/package", FileAPI.UpdateModelPackageView)

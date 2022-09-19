@@ -2,9 +2,11 @@ package omc
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
-	"fmt"
+	"log"
 	"sync"
+	"yssim-go/config"
 
 	//"github.com/go-zeromq/zmq4"
 
@@ -20,33 +22,31 @@ type ZmqObject struct {
 }
 
 var cacheRefresh = false
-var AllModelCache = map[string][]byte{}
+
+//var AllModelCache = make(map[string][]byte, 1000)
+
+var AllModelCache = config.R
 
 // SendExpression 发送指令，获取数据
 func (o *ZmqObject) SendExpression(cmd string) ([]interface{}, bool) {
 	o.Lock()
 	defer o.Unlock()
 	var msg []byte
-	msg, ok := AllModelCache[cmd]
-	if !ok {
+
+	//msg, ok := AllModelCache[cmd]
+	ctx := context.Background()
+	msg, err := AllModelCache.HGet(ctx, "yssim-GraphicsData", cmd).Bytes()
+	//if !ok {
+	if err != nil {
 		_ = o.Send(zmq4.NewMsgString(cmd))
 
 		data, _ := o.Recv()
 		msg = data.Bytes()
 		if cacheRefresh && len(msg) > 0 {
-			AllModelCache[cmd] = msg
+			//AllModelCache[cmd] = msg
+			AllModelCache.HSet(ctx, "yssim-GraphicsData", cmd, msg)
 		}
 	}
-	//if !ok {
-	//	o.SendChan <- [][]byte{[]byte(cmd)}
-	//	//_ = o.SendMulti(zmq4.NewMsgString(cmd))
-	//	data := <-o.RecvChan
-	//	msg = data[0]
-	//	if cacheRefresh {
-	//		AllModelCache[cmd] = msg
-	//	}
-	//}
-
 	parseData, _ := DataToGo(msg)
 	if len(parseData) == 0 {
 		return nil, false
@@ -59,24 +59,19 @@ func (o *ZmqObject) SendExpressionNoParsed(cmd string) ([]byte, bool) {
 	o.Lock()
 	defer o.Unlock()
 	var msg []byte
-	msg, ok := AllModelCache[cmd]
-	if !ok {
+	//msg, ok := AllModelCache[cmd]
+	ctx := context.Background()
+	msg, err := AllModelCache.HGet(ctx, "yssim-GraphicsData", cmd).Bytes()
+	//if !ok {
+	if err != nil {
 		_ = o.Send(zmq4.NewMsgString(cmd))
 		data, _ := o.Recv()
 		msg = data.Bytes()
 		if cacheRefresh && len(msg) > 0 {
-			AllModelCache[cmd] = msg
+			//AllModelCache[cmd] = msg
+			AllModelCache.HSet(ctx, "yssim-GraphicsData", cmd, msg)
 		}
 	}
-	//if !ok {
-	//	o.SendChan <- [][]byte{[]byte(cmd)}
-	//	//_ = o.SendMulti(zmq4.NewMsgString(cmd))
-	//	data := <-o.RecvChan
-	//	msg = data[0]
-	//	if cacheRefresh {
-	//		AllModelCache[cmd] = msg
-	//	}
-	//}
 	msg = bytes.ReplaceAll(msg, []byte("\"\"\n"), []byte(""))
 	msg = bytes.ReplaceAll(msg, []byte("\"false\""), []byte("false"))
 	msg = bytes.ReplaceAll(msg, []byte("\"true\""), []byte("true"))
@@ -107,12 +102,12 @@ func (o *ZmqObject) BuildModel(className, fileNamePrefix string, simulateParamet
 // 清空加载的模型库
 func (o *ZmqObject) Clear() {
 	o.SendExpressionNoParsed("clearCommandLineOptions()")
-	o.SendExpressionNoParsed("clear()")
-	o.SendExpressionNoParsed("clearVariables()")
-	o.SendExpressionNoParsed("clearProgram()")
+	//o.SendExpressionNoParsed("clear()")
+	//o.SendExpressionNoParsed("clearVariables()")
+	//o.SendExpressionNoParsed("clearProgram()")
 	o.SendExpressionNoParsed("setCommandLineOptions(\"+ignoreSimulationFlagsAnnotation=false\")")
-	o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nfAPI\")")
-	//o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nogen,noevalfunc,newInst,nfAPI\")")
+	//o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nfAPI\")")
+	o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nogen,noevalfunc,newInst,nfAPI\")")
 }
 
 //改变缓存策略
@@ -259,7 +254,10 @@ func (o *ZmqObject) GetComponentsList(classNameList []string) [][]interface{} {
 
 // 获取给定模型的组成部分，包含组件信息,新API
 func (o *ZmqObject) GetElements(className string) []interface{} {
-	cmd := "getElements(" + className + ", useQuotes = true)"
+	if className == "Real" {
+		return nil
+	}
+	cmd := "getElements(" + className + ", useQuotes = false)"
 	components, _ := o.SendExpression(cmd)
 	return components
 }
@@ -268,7 +266,10 @@ func (o *ZmqObject) GetElements(className string) []interface{} {
 func (o *ZmqObject) GetElementsList(classNameList []string) [][]interface{} {
 	var dataList [][]interface{}
 	for i := 0; i < len(classNameList); i++ {
-		cmd := "getElements(" + classNameList[i] + ", useQuotes = true)"
+		if classNameList[i] == "Real" {
+			continue
+		}
+		cmd := "getElements(" + classNameList[i] + ", useQuotes = false)"
 		components, ok := o.SendExpression(cmd)
 		if ok {
 			for p := 0; p < len(components); p++ {
@@ -311,8 +312,12 @@ func (o *ZmqObject) GetComponentAnnotationsList(classNameList []string) [][]inte
 // 获取切片给定模型的组件注释信息,新API
 func (o *ZmqObject) GetElementAnnotationsList(classNameList []string) [][]interface{} {
 	var dataList [][]interface{}
+
 	for i := 0; i < len(classNameList); i++ {
-		cmd := "getElementAnnotations(" + classNameList[i] + ", useQuotes = true)"
+		if classNameList[i] == "Real" {
+			continue
+		}
+		cmd := "getElementAnnotations(" + classNameList[i] + ", useQuotes = false)"
 		componentAnnotations, ok := o.SendExpression(cmd)
 		if ok {
 			for p := 0; p < len(componentAnnotations); p++ {
@@ -480,7 +485,7 @@ func (o *ZmqObject) GetDerivedClassModifierValue(className string, modifierName 
 
 func (o *ZmqObject) GetExtendsModifierNames(classNameOne string, classNameTwo string) []string {
 	var dataList []string
-	cmd := "getExtendsModifierNames(" + classNameOne + "," + classNameTwo + ", useQuotes = true)"
+	cmd := "getExtendsModifierNames(" + classNameOne + "," + classNameTwo + ", useQuotes = false)"
 	data, ok := o.SendExpression(cmd)
 	if ok {
 		for p := 0; p < len(data); p++ {
@@ -685,7 +690,7 @@ func (o *ZmqObject) GetDocumentationAnnotation(className string) []string {
 	var docList []string
 	cmd := "getDocumentationAnnotation(" + className + ")"
 	data, ok := o.SendExpressionNoParsed(cmd)
-	if ok {
+	if ok && len(data) > 0 {
 		data = bytes.TrimSuffix(data, []byte("\n"))
 		data = bytes.ReplaceAll(data, []byte("\n"), []byte("\\n"))
 		data = data[1 : len(data)-1]
@@ -760,7 +765,7 @@ func (o *ZmqObject) ReadSimulationResult(varNameList []string, path string) ([][
 	var dataList [][]float64
 	err := json.Unmarshal(data, &dataList)
 	if err != nil || len(dataList) == 0 {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, false
 	}
 	return dataList, true
@@ -772,7 +777,7 @@ func (o *ZmqObject) ParseFile(path string) (string, bool) {
 	cmd := "parseFile(\"" + pwd + "/" + path + "\",\"UTF-8\")"
 	result, ok := o.SendExpressionNoParsed(cmd)
 	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
-	if ok {
+	if ok && len(result) > 0 {
 		result = result[1 : len(result)-1]
 		return string(result), true
 	}

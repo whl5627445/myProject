@@ -114,15 +114,15 @@ func GetModelParameters(modelName, name, componentName string) []interface{} {
 	m.classAll = omc.OMC.GetInheritedClassesListAll([]string{componentName})
 	m.components = omc.OMC.GetElementsList(m.classAll)
 	m.componentAnnotations = omc.OMC.GetElementAnnotationsList(m.classAll)
-	//fmt.Println("componentAnnotations", len(m.componentAnnotations))
-	//fmt.Println("components", len(m.components))
+	//log.Println("componentAnnotations", len(m.componentAnnotations))
+	//log.Println("components", len(m.components))
 	if len(m.components) == 0 {
 		return dataList
 	}
 	m.componentsDict = map[string]interface{}{}
 	for i := 0; i < len(m.components); i++ {
 
-		//fmt.Println("componentAnnotations[i]", m.componentAnnotations[i])
+		//log.Println("componentAnnotations[i]", m.componentAnnotations[i])
 		m.components[i] = append(m.components[i], m.componentAnnotations[i])
 		m.componentsDict[m.components[i][3].(string)] = m.components[i]
 	}

@@ -1,10 +1,10 @@
 package Init
 
 import (
-	"fmt"
 	"github.com/nacos-group/nacos-sdk-go/clients"
 	"github.com/nacos-group/nacos-sdk-go/common/constant"
 	"github.com/nacos-group/nacos-sdk-go/vo"
+	"log"
 	"time"
 	"yssim-go/config"
 )
@@ -31,7 +31,7 @@ func NacosRegister() {
 			},
 		)
 		if err != nil {
-			fmt.Println("服务注册出现错误： ", err)
+			log.Println("服务注册出现错误： ", err)
 			time.Sleep(time.Second * 10)
 			continue
 		}
@@ -46,10 +46,10 @@ func NacosRegister() {
 			Metadata:    map[string]string{},
 		})
 		if success {
-			fmt.Println("服务注册成功")
+			log.Println("服务注册成功")
 			break
 		} else {
-			fmt.Println("服务注册失败正在准备重新尝试")
+			log.Println("服务注册失败正在准备重新尝试")
 			time.Sleep(time.Second * 10)
 			continue
 		}

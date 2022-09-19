@@ -211,9 +211,9 @@ func (g *GraphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 		return len(caDataFilter)
 	}()
 	for i := 0; i < dataLen2; i++ {
-		//fmt.Println("dataLen", dataLen2)
-		//fmt.Println("len(caDataFilter)", len(caDataFilter))
-		//fmt.Println("len(cDataFilter)", len(cDataFilter))
+		//log.Println("dataLen", dataLen2)
+		//log.Println("len(caDataFilter)", len(caDataFilter))
+		//log.Println("len(cDataFilter)", len(cDataFilter))
 		if len(caDataFilter[i]) > 2 {
 			caDataFilter[i] = caDataFilter[i][len(caDataFilter[i])-2:]
 		}

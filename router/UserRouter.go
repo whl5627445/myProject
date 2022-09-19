@@ -5,8 +5,8 @@ import (
 	UserAPI "yssim-go/app/api/user"
 )
 
-func UserRouter(e *gin.Engine) {
-	var Models = e.Group("/user")
+func UserRouter(g *gin.Engine) {
+	var Models = g.Group("/user")
 	{
 		Models.GET("/userspace/get", UserAPI.GetUserSpaceView)
 		Models.POST("/userspace/create", UserAPI.CreateUserSpaceView)

@@ -5,8 +5,8 @@ import (
 	SimulationAPI "yssim-go/app/api/simulate"
 )
 
-func SimulateRouter(e *gin.Engine) {
-	var Models = e.Group("/simulation")
+func SimulateRouter(g *gin.Engine) {
+	var Models = g.Group("/simulation")
 	{
 		Models.GET("/options/get", SimulationAPI.GetSimulationOptionsView)
 		Models.POST("/options/set", SimulationAPI.SetSimulationOptionsView)

@@ -2,10 +2,10 @@ package API
 
 import (
 	"encoding/base64"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"regexp"
 	"strings"
@@ -144,7 +144,7 @@ func CreateModelPackageView(c *gin.Context) {
 	var item CreateModelPackageData
 	err := c.BindJSON(&item)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
@@ -289,7 +289,7 @@ func GetPackageFileView(c *gin.Context) {
 	var item PackageFileData
 	err := c.BindJSON(&item)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
@@ -309,7 +309,7 @@ func GetResultFileView(c *gin.Context) {
 	var item ResultFileData
 	err := c.BindJSON(&item)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
@@ -330,7 +330,7 @@ func GetFilterResultFileView(c *gin.Context) {
 	var item FilterResultFileData
 	err := c.BindJSON(&item)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}

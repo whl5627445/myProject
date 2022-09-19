@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -26,7 +27,6 @@ func GetRootModelView(c *gin.Context) {
 	var modelData []map[string]interface{}
 	var packageModel []DataBaseModel.YssimModels
 	DB.Where("sys_or_user IN ? AND userspace_id IN ?", []string{"sys", username}, []string{"0", userSpaceId}).Find(&packageModel)
-
 	for i := 0; i < len(packageModel); i++ {
 		data := map[string]interface{}{
 			"package_id":   packageModel[i].ID,
@@ -156,7 +156,7 @@ func SetModelParametersView(c *gin.Context) {
 	var item SetComponentModifierValueData
 	err := c.BindJSON(&item)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
@@ -220,7 +220,7 @@ func SetComponentPropertiesView(c *gin.Context) {
 	if err != nil {
 		res.Status = 2
 		res.Err = "设置失败"
-		fmt.Println(err)
+		log.Println(err)
 		c.JSON(http.StatusBadRequest, res)
 		return
 	}
@@ -268,7 +268,7 @@ func CopyClassView(c *gin.Context) {
 	var item CopyClassData
 	err := c.BindJSON(&item)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
@@ -305,8 +305,8 @@ func CopyClassView(c *gin.Context) {
 			}
 			err := DB.Create(&model).Error
 			if err != nil {
-				fmt.Println("err：", err)
-				fmt.Println("复制模型失败")
+				log.Println("err：", err)
+				log.Println("复制模型失败")
 			}
 		}
 	} else {
@@ -381,7 +381,7 @@ func AddModelComponentView(c *gin.Context) {
 	var item AddComponentData
 	err := c.BindJSON(&item)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
@@ -717,7 +717,7 @@ func Test(c *gin.Context) {
 		d, _ := omc.OMC.SendExpressionNoParsed(cmd)
 		data = string(d)
 	}
-	fmt.Println(data)
+	log.Println(data)
 	var res ResponseData
 	res.Data = data
 	c.JSON(http.StatusOK, res)

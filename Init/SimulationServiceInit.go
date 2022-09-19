@@ -1,7 +1,7 @@
 package Init
 
 import (
-	"fmt"
+	"log"
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/service"
 	"yssim-go/config"
@@ -22,13 +22,13 @@ func SimulationService() {
 			Package: packageModel,
 		}
 		service.SimulateTaskChan <- &task
-		fmt.Printf("未完成任务进入排队通道： %+v", task)
+		log.Printf("未完成任务进入排队通道： %s \n", task.SRecord.ID)
 	}
-	fmt.Println("未完成任务排队完成，仿真任务线程启动")
+	log.Println("未完成任务排队完成，仿真任务线程启动")
 	for {
 		task := <-service.SimulateTaskChan
 		service.ModelSimulate(task)
-		fmt.Printf("仿真任务执行完成： %s \n", task.SRecord.ID)
+		log.Printf("仿真任务执行完成： %s \n", task.SRecord.ID)
 	}
 
 }
