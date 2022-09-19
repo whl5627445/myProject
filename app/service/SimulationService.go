@@ -170,7 +170,7 @@ func jModelicaSimulate(task *SimulateTask, resultFilePath string, SimulationPraD
 		"tolerance":        tolerance,            // 相对公差
 		"type":             "compile",            // 是编译还是计算， 默认是编译
 	}
-	dial, err := net.Dial("tcp", config.JMODELICA_CONNECT)
+	dial, err := net.Dial("tcp", config.JmodelicaConnect)
 	defer dial.Close()
 	if err != nil {
 		log.Printf("连接JModelica服务失败: %s", err)
@@ -197,7 +197,7 @@ func jModelicaSimulate(task *SimulateTask, resultFilePath string, SimulationPraD
 		data["type"] = "simulate"
 		data["modelname"] = modelName_
 		dataJson, _ = json.Marshal(data)
-		dialRes, err := net.Dial("tcp", config.JMODELICA_CONNECT)
+		dialRes, err := net.Dial("tcp", config.JmodelicaConnect)
 		defer dialRes.Close()
 		_, err = dialRes.Write(dataJson)
 		log.Printf("发送仿真数据: %s", data)

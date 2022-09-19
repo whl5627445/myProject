@@ -31,7 +31,7 @@ func DymolaFmuExport(fmuPar map[string]interface{}, token, username, fmuName, pa
 		files := url.NewFiles()
 		files.SetFile("file", fileName+".mo", filePath, "")
 		req.Files = files
-		uploadFileRes, err := requests.Post(config.DymolafmuConnect+"/file/upload", req)
+		uploadFileRes, err := requests.Post(config.DymolaConnect+"/file/upload", req)
 		if err != nil {
 			log.Println(err)
 			return resultFmuFileData, false
@@ -47,7 +47,7 @@ func DymolaFmuExport(fmuPar map[string]interface{}, token, username, fmuName, pa
 	}
 	req = url.NewRequest()
 	req.Json = data
-	exportFmuRes, err := requests.Post(config.DymolafmuConnect+"/dymola/translateModelFMU", req)
+	exportFmuRes, err := requests.Post(config.DymolaConnect+"/dymola/translateModelFMU", req)
 	exportResult, _ := exportFmuRes.Json()
 	ResultCode, ok := exportResult["code"]
 	if err != nil || len(exportResult) == 0 || (ok && ResultCode.(float64) != 200) {
@@ -56,7 +56,7 @@ func DymolaFmuExport(fmuPar map[string]interface{}, token, username, fmuName, pa
 	}
 	if res {
 		req = url.NewRequest()
-		fmuFileUrl := config.DymolafmuConnect + "/file/download?fileName=" + exportResult["msg"].(string)
+		fmuFileUrl := config.DymolaConnect + "/file/download?fileName=" + exportResult["msg"].(string)
 		fmuFileRes, err := requests.Get(fmuFileUrl, req)
 		if err != nil {
 			return resultFmuFileData, false

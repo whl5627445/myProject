@@ -42,6 +42,6 @@ var EXAMPLES = []map[string]string{
 
 var MoldelSimutalionStatus = map[string]string{"1": "仿真排队中", "2": "正在仿真", "3": "仿真失败", "4": "仿真完成"}
 
-var DymolafmuConnect = "http://121.37.183.103:8060"
-var DymolaSimutalionConnect = "http://gateway:6535/dymola"
-var JMODELICA_CONNECT = "yssim-Jmodelica:56789"
+const DymolaConnect = "http://gateway:6535"
+const DymolaSimutalionConnect = DymolaConnect + "/dymola"
+const JmodelicaConnect = "yssim-Jmodelica:56789"
