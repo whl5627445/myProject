@@ -27,6 +27,7 @@ func GetRootModelView(c *gin.Context) {
 	var modelData []map[string]interface{}
 	var packageModel []DataBaseModel.YssimModels
 	DB.Where("sys_or_user IN ? AND userspace_id IN ?", []string{"sys", username}, []string{"0", userSpaceId}).Find(&packageModel)
+
 	for i := 0; i < len(packageModel); i++ {
 		data := map[string]interface{}{
 			"package_id":   packageModel[i].ID,
@@ -38,9 +39,7 @@ func GetRootModelView(c *gin.Context) {
 		if packageModel[i].SysUser != "sys" {
 			data["sys_or_user"] = "user"
 		}
-		//if data["haschild"] == true {
 		modelData = append(modelData, data)
-		//}
 	}
 	res.Data = modelData
 	c.JSON(http.StatusOK, res)
@@ -129,12 +128,12 @@ func GetModelParametersView(c *gin.Context) {
 	parameters := service.GetModelParameters(modelName, componentName, className)
 	elements := service.GetElements(modelName, componentName)
 	if len(elements) > 0 && componentName != "" {
-		dimension := elements[len(elements)-1].(string)
+		dimension := elements[len(elements)-1].([]interface{})
 		properties = map[string]interface{}{
 			"model_name":     modelName,
 			"component_name": componentName,
 			"path":           elements[2],
-			"dimension":      "[" + dimension[1:len(dimension)-1] + "]",
+			"dimension":      fmt.Sprintf("%s", dimension),
 			"annotation":     elements[4],
 			"Properties":     []string{elements[6].(string), elements[5].(string), elements[9].(string)},
 			"Variability":    elements[10],
@@ -289,7 +288,7 @@ func CopyClassView(c *gin.Context) {
 		filePath = packageModel.FilePath
 	} else {
 		packageName = item.ModelName
-		filePath = "public/UserFiles/UploadFile/" + username + "/" + time.Now().Local().Format("20060102150405") + "/" + item.ModelName + ".mo"
+		filePath = "public/UserFiles/UploadFile/" + username + "/" + packageName + "/" + time.Now().Local().Format("20060102150405") + "/" + item.ModelName + ".mo"
 	}
 
 	result, msg := service.SaveModel(item.ModelName, item.CopiedClassName, item.ParentName, packageName, "copy", filePath)

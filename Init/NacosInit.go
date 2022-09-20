@@ -5,6 +5,7 @@ import (
 	"github.com/nacos-group/nacos-sdk-go/common/constant"
 	"github.com/nacos-group/nacos-sdk-go/vo"
 	"log"
+	"strconv"
 	"time"
 	"yssim-go/config"
 )
@@ -23,6 +24,9 @@ var serverConfigs = []constant.ServerConfig{
 }
 
 func NacosRegister() {
+	if config.DEBUG != "" {
+		return
+	}
 	for {
 		Client, err := clients.NewNamingClient(
 			vo.NacosClientParam{
@@ -35,9 +39,10 @@ func NacosRegister() {
 			time.Sleep(time.Second * 10)
 			continue
 		}
+		port, _ := strconv.ParseUint(config.PORT, 10, 64)
 		success, err := Client.RegisterInstance(vo.RegisterInstanceParam{
 			Ip:          config.USERNAME,
-			Port:        uint64(config.PORT),
+			Port:        port,
 			ServiceName: config.USERNAME,
 			Weight:      10,
 			Enable:      true,

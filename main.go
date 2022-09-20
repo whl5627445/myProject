@@ -2,8 +2,8 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"os"
 	_ "yssim-go/Init"
+	"yssim-go/config"
 	"yssim-go/middleware"
 	"yssim-go/router"
 )
@@ -22,11 +22,11 @@ func main() {
 		router.FileRouter(g)
 	}
 
-	port, ok := os.LookupEnv("PORT")
-	if !ok {
-		port = "8912"
-	}
+	//port, ok := os.LookupEnv("PORT")
+	//if !ok {
+	//	port = "8912"
+	//}
 	//port := "8913"
-	addr := "0.0.0.0:"
-	g.Run(addr + port)
+
+	g.Run(config.ADDR + config.PORT)
 }

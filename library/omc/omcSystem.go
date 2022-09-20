@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"sync"
+	"time"
 	"yssim-go/config"
 
 	//"github.com/go-zeromq/zmq4"
@@ -29,6 +31,7 @@ var AllModelCache = config.R
 
 // SendExpression 发送指令，获取数据
 func (o *ZmqObject) SendExpression(cmd string) ([]interface{}, bool) {
+	s := time.Now().UnixNano() / 1e6
 	o.Lock()
 	defer o.Unlock()
 	var msg []byte
@@ -51,11 +54,16 @@ func (o *ZmqObject) SendExpression(cmd string) ([]interface{}, bool) {
 	if len(parseData) == 0 {
 		return nil, false
 	}
+	if time.Now().UnixNano()/1e6-s > 10 {
+		fmt.Println("cmd: ", cmd)
+		fmt.Println("消耗时间: ", time.Now().UnixNano()/1e6-s)
+	}
 	return parseData, true
 }
 
 // SendExpressionNoParsed 发送指令，获取数据，但是不进行数据转换
 func (o *ZmqObject) SendExpressionNoParsed(cmd string) ([]byte, bool) {
+	s := time.Now().UnixNano() / 1e6
 	o.Lock()
 	defer o.Unlock()
 	var msg []byte
@@ -77,6 +85,10 @@ func (o *ZmqObject) SendExpressionNoParsed(cmd string) ([]byte, bool) {
 	msg = bytes.ReplaceAll(msg, []byte("\"true\""), []byte("true"))
 	if len(msg) == 0 {
 		return nil, false
+	}
+	if time.Now().UnixNano()/1e6-s > 10 {
+		fmt.Println("cmd: ", cmd)
+		fmt.Println("消耗时间: ", time.Now().UnixNano()/1e6-s)
 	}
 	return msg, true
 }
@@ -108,6 +120,7 @@ func (o *ZmqObject) Clear() {
 	o.SendExpressionNoParsed("setCommandLineOptions(\"+ignoreSimulationFlagsAnnotation=false\")")
 	//o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nfAPI\")")
 	o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nogen,noevalfunc,newInst,nfAPI\")")
+	o.SendExpressionNoParsed("setCommandLineOptions({\"-g=Modelica\",\"-d=nogen,noevalfunc,newInst,nfAPI\"})")
 }
 
 //改变缓存策略
@@ -828,4 +841,27 @@ func (o *ZmqObject) LoadString(code, path string) bool {
 		return true
 	}
 	return false
+}
+
+func (o *ZmqObject) GetClassRestriction(className string) string {
+
+	cmd := "getClassRestriction(" + className + ")"
+	result, ok := o.SendExpressionNoParsed(cmd)
+	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
+	result = bytes.ReplaceAll(result, []byte("\""), []byte(""))
+	if ok && len(result) > 0 {
+		return string(result)
+	}
+	return ""
+}
+
+func (o *ZmqObject) GetModelInstance(className string) string {
+	cmd := "getModelInstance(" + className + ")"
+	result, ok := o.SendExpressionNoParsed(cmd)
+	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
+	result = result[1 : len(result)-1]
+	if ok && len(result) > 0 {
+		return string(result)
+	}
+	return ""
 }

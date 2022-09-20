@@ -35,7 +35,7 @@ func GetMessagesStringInternal() []map[string]string {
 				messageMap["type"] = level[len(level)-1]
 			}
 		}
-		if len(messageMap) > 0 {
+		if len(messageMap["message"]) > 0 {
 			messageList = append(messageList, messageMap)
 		}
 	}

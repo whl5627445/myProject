@@ -9,8 +9,8 @@ func copyModel(copiedClassName, className, parentName string) (bool, string) {
 	if parentName == "" {
 		parentName = "TopLevel"
 	} else {
-		parentInformation := omc.OMC.GetClassInformation(parentName)
-		if len(parentInformation) > 0 && parentInformation[0].(string) != "package" {
+		parentInformation := omc.OMC.GetClassRestriction(parentName)
+		if parentInformation != "package" {
 			return false, "模型父节点不是包类型或根节点"
 		}
 	}

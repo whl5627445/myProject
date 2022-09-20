@@ -41,7 +41,7 @@ func ModelLibraryInitialization(packageModel []DataBaseModel.YssimModels) {
 			log.Println("模型库：" + models.PackageName + "  初始化失败")
 		}
 	}
-	config.R.HSet(context.Background(), "yssim-GraphicsData", "1")
+	config.R.HSet(context.Background(), "yssim-GraphicsData", map[string]string{"status": "1"})
 }
 
 func init() {
@@ -73,6 +73,22 @@ func modelCache(packageModel string) {
 			log.Println("正在缓存：", modelsALL[p], " 的图形数据")
 			GetGraphicsData(modelsALL[p])
 		}
+	}
+	omc.OMC.CacheRefreshSet(false)
+}
+
+// 暂时不用，参数接口速度并不慢
+func parametersCache(packageModel string) {
+	modelsALL := omc.OMC.GetClassNames(packageModel, true)
+
+	omc.OMC.CacheRefreshSet(true)
+	for p := 0; p < len(modelsALL); p++ {
+		e := omc.OMC.GetElements(modelsALL[p])
+		for ee := 0; ee < len(e); ee++ {
+			log.Println("正在缓存：", modelsALL[p], " 的参数数据")
+			GetGraphicsData(modelsALL[p])
+		}
+
 	}
 	omc.OMC.CacheRefreshSet(false)
 }

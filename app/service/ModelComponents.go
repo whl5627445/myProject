@@ -54,14 +54,11 @@ func GetComponentName(modelName, className string) string {
 }
 
 func AddComponentVerification(oldComponentName, newComponentName, modelName string) (bool, string) {
-	classInformation := omc.OMC.GetClassInformation(oldComponentName)
-	classTypeAll := map[string]bool{"model": true, "class": true, "connector": true, "block": true}
-	if classInformation != nil {
-		classType := classInformation[0].(string)
-		noType := classTypeAll[classType]
-		if !noType {
-			return false, "不能插入：" + oldComponentName + ", 这是一个 \"" + classType + " \"类型。组件视图层只允许有model、class、connector、function或者block。"
-		}
+	classType := omc.OMC.GetClassRestriction(oldComponentName)
+
+	noType := config.ClassTypeAll[classType]
+	if !noType {
+		return false, "不能插入：" + oldComponentName + ", 这是一个 \"" + classType + " \"类型。组件视图层只允许有model、class、connector、function或者block。"
 	}
 	elementsData := omc.OMC.GetElements(modelName)
 	for _, e := range elementsData {
@@ -89,7 +86,7 @@ func DeleteComponent(componentName, modelNameAll string) bool {
 	return result
 }
 
-func UpdateComponent(componentName, ComponentClassName, modelNameAll, origin, rotation string, extent []string) bool {
-	result := omc.OMC.UpdateComponent(componentName, ComponentClassName, modelNameAll, origin, rotation, extent)
+func UpdateComponent(componentName, componentClassName, modelNameAll, origin, rotation string, extent []string) bool {
+	result := omc.OMC.UpdateComponent(componentName, componentClassName, modelNameAll, origin, rotation, extent)
 	return result
 }

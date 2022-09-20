@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -33,9 +34,11 @@ func GetGraphicsData(modelName string) [][]map[string]interface{} {
 func GetComponentGraphicsData(modelName string, componentName string) [][]map[string]interface{} {
 	var g = GraphicsData{}
 	g.data = [][]map[string]interface{}{{}, {}}
-	nameList := g.getICList(modelName)
-	components := omc.OMC.GetElementsList(nameList)
-	componentAnnotations := omc.OMC.GetComponentAnnotationsList(nameList)
+	//nameList := g.getICList(modelName)
+	//components := omc.OMC.GetElementsList(nameList)
+	//componentAnnotations := omc.OMC.GetComponentAnnotationsList(nameList)
+	components := omc.OMC.GetElementsList([]string{modelName})
+	componentAnnotations := omc.OMC.GetComponentAnnotationsList([]string{modelName})
 	var componentsData [][]interface{}
 	var componentAnnotationsData [][]interface{}
 	for i := 0; i < len(components); i++ {
@@ -237,7 +240,12 @@ func (g *GraphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 			componentannotationsData := omc.OMC.GetElementAnnotationsList(nameList)
 			IconAnnotationData := omc.OMC.GetIconAnnotationList(nameList)
 			caf := caDataFilter[i][placementIndex+1].([]interface{})
+			if len(caf) < 7 {
+				// 出现错误会使数据不可用， 长度小于预期，弃用
+				continue
+			}
 			rotateAngle := func() string {
+
 				if caf[7] == "-" {
 					return "0"
 				} else {
@@ -271,8 +279,9 @@ func (g *GraphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 			data["extent2Diagram"] = strings.Join([]string{caf[5].(string), caf[6].(string)}, ",")
 			data["rotation"] = rotateAngle
 			data["output_type"] = func() string {
-				t := cDataFilter[i][len(cDataFilter[i])-1].(string)
-				return "[" + t[1:len(t)-1] + "]"
+				t := cDataFilter[i][len(cDataFilter[i])-1].([]interface{})
+				str := fmt.Sprintf("%s", t)
+				return str
 			}()
 			data["inputOutputs"] = g.data02(componentsData, componentannotationsData, true, data["name"].(string))
 			data["subShapes"] = g.data01(IconAnnotationData)

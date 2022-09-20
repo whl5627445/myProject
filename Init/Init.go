@@ -5,4 +5,5 @@ func init() {
 	LogInit()
 	go SimulationService()
 	go NacosRegister()
+	go OMCMessagesInit()
 }

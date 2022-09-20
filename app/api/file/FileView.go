@@ -2,6 +2,7 @@ package API
 
 import (
 	"encoding/base64"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"io/ioutil"
@@ -27,7 +28,8 @@ func UploadModelPackageView(c *gin.Context) {
 	modelFile, _ := c.FormFile("file")
 	file, _ := modelFile.Open()
 	fileName := modelFile.Filename
-	saveFilePath := "public/UserFiles/UploadFile/" + username + "/" + time.Now().Local().Format("20060102150405") + "/"
+	removeSuffix := strings.Split(modelFile.Filename, ".")[0]
+	saveFilePath := "public/UserFiles/UploadFile/" + username + "/" + removeSuffix + "/" + time.Now().Local().Format("20060102150405") + "/"
 	zipPackagePath := saveFilePath + fileName
 
 	packageName, ok := service.PackageFileParse(fileName, saveFilePath, zipPackagePath, file)
@@ -55,15 +57,17 @@ func UploadModelPackageView(c *gin.Context) {
 			if err != nil {
 				res.Err = "上传失败，请重试"
 				res.Status = 2
-				c.JSON(http.StatusOK, res)
-				return
+				service.DeleteLibrary(packageName)
+			} else {
+				res.Msg = packageName + " 包已上传成功"
 			}
-			res.Msg = packageName + " 包已上传成功"
-		} else {
-			res.Err = "模型包解析失败，请检查后上传"
-			res.Status = 2
+			c.JSON(http.StatusOK, res)
+			return
 		}
 	}
+	service.DeleteLibrary(packageName)
+	res.Err = "模型包解析失败,存在语法错误，请检查后重新上传"
+	res.Status = 2
 	c.JSON(http.StatusOK, res)
 
 }
@@ -82,6 +86,7 @@ func UpdateModelPackageView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
+	fmt.Println("ModelStr: ", item.ModelStr)
 	username := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
 	var packageRecord DataBaseModel.YssimModels
@@ -99,7 +104,7 @@ func UpdateModelPackageView(c *gin.Context) {
 	}
 	oldCode := service.GetModelCode(packageRecord.PackageName)
 	parseResult, ok := service.ParseCodeString(modelStr, packageRecord.PackageName)
-	if ok {
+	if ok && len(parseResult) > 0 {
 		loadResult := service.LoadCodeString(modelStr, packageRecord.PackageName)
 		if loadResult {
 			saveResult := service.SaveModelCode(packageRecord.PackageName, packageRecord.FilePath)
@@ -119,7 +124,6 @@ func UpdateModelPackageView(c *gin.Context) {
 	}
 	res.Err = "语法错误，请重新检查"
 	res.Status = 2
-	service.MessageNotice(map[string]string{"message": parseResult})
 	c.JSON(http.StatusOK, res)
 
 }
@@ -260,7 +264,7 @@ func GetPackageFileListView(c *gin.Context) {
 	username := c.GetHeader("username")
 	//userSpaceId := c.GetHeader("space_id")
 	var packageRecord []map[string]interface{}
-	DB.Raw("select m.id, m.package_name, m.create_time, m.update_time, s.space_name from yssim_models as m, yssim_user_spaces as s where m.sys_or_user = ? AND m.userspace_id = s.id;", username).Find(&packageRecord)
+	DB.Raw("select m.id, m.package_name, m.create_time, m.update_time, s.space_name from yssim_models as m, yssim_user_spaces as s where m.sys_or_user = ? AND m.userspace_id = s.id AND m.deleted_at IS NULL;", username).Find(&packageRecord)
 	var dataList []map[string]interface{}
 	for id, models := range packageRecord {
 		data := map[string]interface{}{
@@ -382,6 +386,7 @@ func FmuExportModelView(c *gin.Context) {
 	if ok {
 		c.Header("content-disposition", `attachment; filename=`+item.FmuName+".fmu")
 		c.Data(http.StatusOK, "application/octet-stream", resDy)
+		return
 	}
 	var res ResponseData
 	res.Err = "下载失败，请稍后再试"
