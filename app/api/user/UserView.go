@@ -121,7 +121,7 @@ func ExamplesView(c *gin.Context) {
 
 func GetUserRecentlyOpenedView(c *gin.Context) {
 	/*
-		#获取用户空间的最近一次打开
+		#获取用户空间的最近打开
 	*/
 	username := c.GetHeader("username")
 	var res ResponseData
