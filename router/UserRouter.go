@@ -13,5 +13,7 @@ func UserRouter(g *gin.Engine) {
 		Models.POST("/userspace/delete", UserAPI.DeleteUserSpaceView)
 		Models.POST("/userspace/login", UserAPI.LoginUserSpaceView)
 		Models.GET("/examples", UserAPI.ExamplesView)
+
+		Models.GET("/userspace/recently", UserAPI.GetUserRecentlyOpenedView)
 	}
 }

@@ -118,3 +118,19 @@ func ExamplesView(c *gin.Context) {
 	res.Data = config.EXAMPLES
 	c.JSON(http.StatusOK, res)
 }
+
+func GetUserRecentlyOpenedView(c *gin.Context) {
+	/*
+		#获取用户空间的最近一次打开
+	*/
+	username := c.GetHeader("username")
+	var res ResponseData
+	var modelData []map[string]string
+	var userSpace []DataBaseModel.YssimUserSpace
+	DB.Where("username = ?", username).Order("last_login_time desc").Find(&userSpace)
+	for _, space := range userSpace {
+		modelData = append(modelData, map[string]string{"id": space.ID, "name": space.SpaceName})
+	}
+	res.Data = modelData
+	c.JSON(http.StatusOK, res)
+}

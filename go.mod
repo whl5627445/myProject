@@ -6,13 +6,13 @@ require (
 	github.com/PuerkitoBio/goquery v1.8.0
 	github.com/gin-gonic/gin v1.8.1
 	github.com/go-redis/redis/v8 v8.11.5
-	github.com/go-zeromq/goczmq/v4 v4.2.2
+	github.com/go-zeromq/goczmq/v4 v4.2.2 // indirect
 	//github.com/go-zeromq/zmq4 v0.15.0
 	github.com/google/uuid v1.3.0
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/wangluozhe/requests v1.0.3
-	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f
-	golang.org/x/text v0.3.7
+	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f // indirect
+	golang.org/x/text v0.3.7 // indirect
 	gorm.io/driver/mysql v1.3.5
 	gorm.io/gorm v1.23.8
 )
