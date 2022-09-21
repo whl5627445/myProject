@@ -4,6 +4,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"strconv"
 	"strings"
 	"yssim-go/library/fileOperation"
 	"yssim-go/library/omc"
@@ -20,11 +21,14 @@ func GetModelCode(modelName string) string {
 }
 
 func SaveModelCode(modelName, path string) bool {
-	os.Rename(path, path+".old")
+	filesList, _ := ioutil.ReadDir("./")
+	num := strconv.Itoa(len(filesList))
+	os.Rename(path, path+".old"+num)
+	//ok := omc.OMC.SaveModel(path, modelName)
 	codeData := GetModelCode(modelName)
 	ok := fileOperation.WriteFile(path, codeData)
 	if !ok {
-		os.Rename(path+".old", path)
+		os.Rename(path+".old"+num, path)
 		return false
 	}
 	return true

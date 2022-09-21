@@ -865,3 +865,13 @@ func (o *ZmqObject) GetModelInstance(className string) string {
 	}
 	return ""
 }
+
+func (o *ZmqObject) SaveModel(fileName, className string) bool {
+	cmd := "saveModel(\"" + fileName + "\"," + className + ")"
+	result, ok := o.SendExpressionNoParsed(cmd)
+	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
+	if ok && string(result) == "true" {
+		return true
+	}
+	return false
+}

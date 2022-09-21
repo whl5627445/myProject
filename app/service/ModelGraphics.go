@@ -214,9 +214,6 @@ func (g *GraphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 		return len(caDataFilter)
 	}()
 	for i := 0; i < dataLen2; i++ {
-		//log.Println("dataLen", dataLen2)
-		//log.Println("len(caDataFilter)", len(caDataFilter))
-		//log.Println("len(cDataFilter)", len(cDataFilter))
 		if len(caDataFilter[i]) > 2 {
 			caDataFilter[i] = caDataFilter[i][len(caDataFilter[i])-2:]
 		}
@@ -227,9 +224,9 @@ func (g *GraphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 			continue
 		}
 		placementIndex := func() int {
-			for i2, i3 := range caDataFilter[i] {
-				if i3 == "Placement" {
-					return i2
+			for index, p := range caDataFilter[i] {
+				if p == "Placement" {
+					return index
 				}
 			}
 			return -1

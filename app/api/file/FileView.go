@@ -2,7 +2,6 @@ package API
 
 import (
 	"encoding/base64"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"io/ioutil"
@@ -86,7 +85,6 @@ func UpdateModelPackageView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
-	fmt.Println("ModelStr: ", item.ModelStr)
 	username := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
 	var packageRecord DataBaseModel.YssimModels

@@ -20,7 +20,7 @@ func GetUserSpaceView(c *gin.Context) {
 	var res ResponseData
 	var modelData []map[string]string
 	var userSpace []DataBaseModel.YssimUserSpace
-	_ = DB.Where("UserName = ?", username).Find(&userSpace)
+	_ = DB.Where("username = ?", username).Find(&userSpace)
 	for _, space := range userSpace {
 		modelData = append(modelData, map[string]string{"id": space.ID, "name": space.SpaceName})
 	}
