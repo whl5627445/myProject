@@ -32,6 +32,7 @@ func GetUserSpaceView(c *gin.Context) {
 func CreateUserSpaceView(c *gin.Context) {
 	/*
 		# 创建用户空间
+		## space_name: 用户空间名称
 	*/
 	username := c.GetHeader("username")
 	var res ResponseData
@@ -73,6 +74,7 @@ func CreateUserSpaceView(c *gin.Context) {
 func DeleteUserSpaceView(c *gin.Context) {
 	/*
 		# 删除用户空间
+		## space_id: 用户空间id
 	*/
 	username := c.GetHeader("username")
 	var res ResponseData
@@ -91,6 +93,7 @@ func DeleteUserSpaceView(c *gin.Context) {
 func LoginUserSpaceView(c *gin.Context) {
 	/*
 		# 进入用户空间
+		## space_id: 用户空间id
 	*/
 	var res ResponseData
 	var item UserSpaceModel
