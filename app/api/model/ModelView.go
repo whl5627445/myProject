@@ -17,7 +17,29 @@ import (
 
 var DB = config.DB
 
-func GetRootModelView(c *gin.Context) {
+func GetSysRootModelView(c *gin.Context) {
+	/*
+		# 获取左侧模型列表接口， 此接口获取系统模型和用户上传模型的根节点列表，暂时没有图标信息
+	*/
+	var res ResponseData
+	var modelData []map[string]interface{}
+	var packageModel []DataBaseModel.YssimModels
+	DB.Where("sys_or_user =  ? AND userspace_id = ?", "sys", "0").Find(&packageModel)
+	for i := 0; i < len(packageModel); i++ {
+		data := map[string]interface{}{
+			"package_id":   packageModel[i].ID,
+			"package_name": packageModel[i].PackageName,
+			"haschild":     service.GetModelHasChild(packageModel[i].PackageName),
+			"image":        service.GetIcon(packageModel[i].PackageName),
+		}
+		modelData = append(modelData, data)
+	}
+	res.Data = modelData
+	c.JSON(http.StatusOK, res)
+
+}
+
+func GetUserRootModelView(c *gin.Context) {
 	/*
 		# 获取左侧模型列表接口， 此接口获取系统模型和用户上传模型的根节点列表，暂时没有图标信息
 	*/
@@ -26,18 +48,13 @@ func GetRootModelView(c *gin.Context) {
 	var res ResponseData
 	var modelData []map[string]interface{}
 	var packageModel []DataBaseModel.YssimModels
-	DB.Where("sys_or_user IN ? AND userspace_id IN ?", []string{"sys", username}, []string{"0", userSpaceId}).Find(&packageModel)
-
+	DB.Where("sys_or_user = ? AND userspace_id = ?", username, userSpaceId).Find(&packageModel)
 	for i := 0; i < len(packageModel); i++ {
 		data := map[string]interface{}{
 			"package_id":   packageModel[i].ID,
 			"package_name": packageModel[i].PackageName,
-			"sys_or_user":  packageModel[i].SysUser,
 			"haschild":     service.GetModelHasChild(packageModel[i].PackageName),
 			"image":        service.GetIcon(packageModel[i].PackageName),
-		}
-		if packageModel[i].SysUser != "sys" {
-			data["sys_or_user"] = "user"
 		}
 		modelData = append(modelData, data)
 	}
@@ -45,6 +62,35 @@ func GetRootModelView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 
 }
+
+//func GetRootModelView(c *gin.Context) {
+//	/*
+//		# 获取左侧模型列表接口， 此接口获取系统模型和用户上传模型的根节点列表，暂时没有图标信息
+//	*/
+//	username := c.GetHeader("username")
+//	userSpaceId := c.GetHeader("space_id")
+//	var res ResponseData
+//	var modelData []map[string]interface{}
+//	var packageModel []DataBaseModel.YssimModels
+//	DB.Where("sys_or_user IN ? AND userspace_id IN ?", []string{"sys", username}, []string{"0", userSpaceId}).Find(&packageModel)
+//
+//	for i := 0; i < len(packageModel); i++ {
+//		data := map[string]interface{}{
+//			"package_id":   packageModel[i].ID,
+//			"package_name": packageModel[i].PackageName,
+//			"sys_or_user":  packageModel[i].SysUser,
+//			"haschild":     service.GetModelHasChild(packageModel[i].PackageName),
+//			"image":        service.GetIcon(packageModel[i].PackageName),
+//		}
+//		if packageModel[i].SysUser != "sys" {
+//			data["sys_or_user"] = "user"
+//		}
+//		modelData = append(modelData, data)
+//	}
+//	res.Data = modelData
+//	c.JSON(http.StatusOK, res)
+//
+//}
 
 func GetListModelView(c *gin.Context) {
 	/*

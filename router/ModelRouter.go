@@ -8,7 +8,9 @@ import (
 func ModelRouter(g *gin.Engine) {
 	var Models = g.Group("/model")
 	{
-		Models.GET("/root_library", ModelAPI.GetRootModelView)
+		Models.GET("/sys_root_library", ModelAPI.GetSysRootModelView)
+		Models.GET("/user_root_library", ModelAPI.GetUserRootModelView)
+		//Models.GET("/root_library", ModelAPI.GetRootModelView)
 		Models.GET("/list_library", ModelAPI.GetListModelView)
 		Models.POST("/graphics", ModelAPI.GetGraphicsDataView)
 		Models.GET("/code", ModelAPI.GetModelCodeView)
