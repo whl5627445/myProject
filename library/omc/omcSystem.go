@@ -710,7 +710,7 @@ func (o *ZmqObject) GetMessagesStringInternal() string {
 }
 
 func (o *ZmqObject) GetDocumentationAnnotation(className string) []string {
-	var docList []string
+	var docList = []string{"", "", ""}
 	cmd := "getDocumentationAnnotation(" + className + ")"
 	data, ok := o.SendExpressionNoParsed(cmd)
 	if ok && len(data) > 0 {
@@ -721,9 +721,9 @@ func (o *ZmqObject) GetDocumentationAnnotation(className string) []string {
 		data = append(data, ']')
 		var docData []interface{}
 		_ = json.Unmarshal(data, &docData)
-		for _, d := range docData {
-			docList = append(docList, d.(string))
-		}
+		docList[0] = docData[0].(string)
+		docList[1] = docData[1].(string)
+		docList[2] = docData[2].(string)
 		return docList
 	}
 	return []string{"", "", ""}

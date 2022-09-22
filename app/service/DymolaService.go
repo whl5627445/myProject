@@ -51,22 +51,23 @@ func DymolaFmuExport(fmuPar map[string]interface{}, token, username, fmuName, pa
 	req.Json = data
 	req.Headers = Headers
 	exportFmuRes, err := requests.Post(config.DymolaSimutalionConnect+"/dymola/translateModelFMU", req)
+	if err != nil {
+		log.Println(err)
+		return resultFmuFileData, false
+	}
 	exportResult, _ := exportFmuRes.Json()
 	log.Println("dymola服务编译FMU结果：", exportResult)
 	ResultCode, ok := exportResult["code"]
 	if err != nil || len(exportResult) == 0 || (ok && ResultCode.(float64) != 200) {
 		return resultFmuFileData, false
 	}
-	if res {
-		req = url.NewRequest()
-		req.Headers = Headers
-		fmuFileUrl := config.DymolaSimutalionConnect + "/file/download?fileName=" + exportResult["msg"].(string)
-		fmuFileRes, err := requests.Get(fmuFileUrl, req)
-		if err != nil {
-			return resultFmuFileData, false
-		}
-		resultFmuFileData = fmuFileRes.Content
-		return resultFmuFileData, true
+	req = url.NewRequest()
+	req.Headers = Headers
+	fmuFileUrl := config.DymolaSimutalionConnect + "/file/download?fileName=" + exportResult["msg"].(string)
+	fmuFileRes, err := requests.Get(fmuFileUrl, req)
+	if err != nil {
+		return resultFmuFileData, false
 	}
-	return resultFmuFileData, false
+	resultFmuFileData = fmuFileRes.Content
+	return resultFmuFileData, true
 }

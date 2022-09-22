@@ -397,34 +397,3 @@ func ExperimentGetView(c *gin.Context) {
 	res.Data = dataList
 	c.JSON(http.StatusOK, res)
 }
-
-func ModelCodeSaveView(c *gin.Context) {
-	/*
-	   # 保存模型所在包的代码到.mo文件
-	   ## package_id: 包的id
-	   ## package_name： 包的名称
-	*/
-	var res ResponseData
-	var item ModelCodeSaveData
-	err := c.BindJSON(&item)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, "")
-		return
-	}
-	username := c.GetHeader("username")
-	userSpaceId := c.GetHeader("space_id")
-	var packageModel DataBaseModel.YssimModels
-	DB.Where("id = ? AND sys_or_user = ? AND userspace_id = ?", item.PackageId, username, userSpaceId).First(&packageModel)
-	if packageModel.FilePath == "" {
-		c.JSON(http.StatusBadRequest, "not found")
-		return
-	}
-	result := service.SaveModelToFile(item.PackageName, packageModel.FilePath)
-	if result {
-		res.Msg = "模型已保存"
-	} else {
-		res.Err = "保存模型失败"
-		res.Status = 2
-	}
-	c.JSON(http.StatusOK, res)
-}

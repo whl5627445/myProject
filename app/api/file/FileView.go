@@ -262,7 +262,7 @@ func GetPackageFileListView(c *gin.Context) {
 	username := c.GetHeader("username")
 	//userSpaceId := c.GetHeader("space_id")
 	var packageRecord []map[string]interface{}
-	DB.Raw("select m.id, m.package_name, m.create_time, m.update_time, s.space_name from yssim_models as m, yssim_user_spaces as s where m.sys_or_user = ? AND m.userspace_id = s.id AND m.deleted_at IS NULL;", username).Find(&packageRecord)
+	DB.Raw("select m.id, m.package_name, m.create_time, m.update_time, s.space_name from yssim_models as m, yssim_user_spaces as s where m.sys_or_user = ? AND m.userspace_id = s.id AND m.deleted_at IS NULL AND s.deleted_at IS NULL;", username).Find(&packageRecord)
 	var dataList []map[string]interface{}
 	for id, models := range packageRecord {
 		data := map[string]interface{}{
@@ -391,4 +391,35 @@ func FmuExportModelView(c *gin.Context) {
 	res.Status = 2
 	c.JSON(http.StatusOK, res)
 
+}
+
+func ModelCodeSaveView(c *gin.Context) {
+	/*
+	   # 保存模型所在包的代码到.mo文件
+	   ## package_id: 包的id
+	   ## package_name： 包的名称
+	*/
+	var res ResponseData
+	var item ModelCodeSaveData
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	username := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
+	var packageModel DataBaseModel.YssimModels
+	DB.Where("id = ? AND sys_or_user = ? AND userspace_id = ?", item.PackageId, username, userSpaceId).First(&packageModel)
+	if packageModel.FilePath == "" {
+		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+	result := service.SaveModelToFile(packageModel.PackageName, packageModel.FilePath)
+	if result {
+		res.Msg = "模型已保存"
+	} else {
+		res.Err = "保存模型失败"
+		res.Status = 2
+	}
+	c.JSON(http.StatusOK, res)
 }

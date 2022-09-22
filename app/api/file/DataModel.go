@@ -50,3 +50,8 @@ type PackageFileData struct {
 type ResultFileData struct {
 	RecordId string `json:"record_id" binding:"required"`
 }
+
+type ModelCodeSaveData struct {
+	PackageId string `json:"package_id" binding:"required"`
+	//ModelName string `json:"model_name" binding:"required"`
+}

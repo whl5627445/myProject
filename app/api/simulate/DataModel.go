@@ -52,8 +52,3 @@ type ExperimentEditData struct {
 	ExperimentName  string            `json:"experiment_name" binding:""`
 	SimulateVarData map[string]string `json:"simulate_var_data" binding:"required"`
 }
-
-type ModelCodeSaveData struct {
-	PackageId   string `json:"package_id" binding:"required"`
-	PackageName string `json:"package_name" binding:"required"`
-}

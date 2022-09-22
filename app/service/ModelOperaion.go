@@ -55,8 +55,9 @@ func SaveModel(className, copiedClassName, parentName, packageName, copeOrDelete
 	if result {
 		if parentName != "" {
 			go SaveModelToFile(packageName, fileName)
-		} else {
-			go SaveModelToFile(className, fileName)
+		}
+		if copeOrDelete == "copy" {
+			go SaveModelCode(className, fileName)
 		}
 	}
 	return result, msg

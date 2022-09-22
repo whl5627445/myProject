@@ -17,10 +17,10 @@ func ModelLibraryInitialization(packageModel []DataBaseModel.YssimModels) {
 	}
 	packageAll := omc.OMC.GetPackages()
 	for _, p := range packageAll {
-		if _, ok := packageModelMap[p]; ok && packageModelMap[p].SysUser != "sys" {
-			DeleteLibrary(p)
-		} else {
+		if _, ok := packageModelMap[p]; ok && packageModelMap[p].SysUser == "sys" {
 			delete(packageModelMap, p)
+		} else {
+			DeleteLibrary(p)
 		}
 	}
 	for _, models := range packageModelMap {
