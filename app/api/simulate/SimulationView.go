@@ -419,7 +419,7 @@ func ModelCodeSaveView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
-	result := service.SaveModelCode(item.PackageName, packageModel.FilePath)
+	result := service.SaveModelToFile(item.PackageName, packageModel.FilePath)
 	if result {
 		res.Msg = "模型已保存"
 	} else {

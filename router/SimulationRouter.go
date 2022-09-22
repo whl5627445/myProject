@@ -19,6 +19,6 @@ func SimulateRouter(g *gin.Engine) {
 		Models.POST("/experiment/delete", SimulationAPI.ExperimentDeleteView)
 		Models.POST("/experiment/edit", SimulationAPI.ExperimentEditView)
 		Models.GET("/experiment/list", SimulationAPI.ExperimentGetView)
-		Models.POST("/code/save", SimulationAPI.ModelCodeSaveView)
+
 	}
 }

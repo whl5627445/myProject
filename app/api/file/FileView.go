@@ -105,7 +105,7 @@ func UpdateModelPackageView(c *gin.Context) {
 	if ok && len(parseResult) > 0 {
 		loadResult := service.LoadCodeString(modelStr, packageRecord.PackageName)
 		if loadResult {
-			saveResult := service.SaveModelCode(packageRecord.PackageName, packageRecord.FilePath)
+			saveResult := service.SaveModelToFile(packageRecord.PackageName, packageRecord.FilePath)
 			if saveResult {
 				res.Data = map[string]string{
 					"id":        packageRecord.ID,
@@ -240,7 +240,7 @@ func UploadModelIconView(c *gin.Context) {
 	fileBase64Str := base64.StdEncoding.EncodeToString(iconData)
 	result := service.UploadIcon(modelName, fileBase64Str)
 	if result {
-		saveResult := service.SaveModelCode(packageRecord.PackageName, packageRecord.FilePath)
+		saveResult := service.SaveModelToFile(packageRecord.PackageName, packageRecord.FilePath)
 		if saveResult {
 			res.Msg = "图标上传成功"
 			c.JSON(http.StatusOK, res)

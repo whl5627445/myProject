@@ -292,7 +292,7 @@ func SetComponentPropertiesView(c *gin.Context) {
 		strconv.FormatBool(item.Outer),
 		item.Causality)
 	if result {
-		go service.SaveModelCode(packageModel.PackageName, packageModel.FilePath)
+		go service.SaveModelToFile(packageModel.PackageName, packageModel.FilePath)
 		res.Msg = "设置完成"
 	} else {
 		res.Err = "设置失败: 请检查参数是否正确"
@@ -719,7 +719,7 @@ func SetModelDocumentView(c *gin.Context) {
 		var packageModel DataBaseModel.YssimModels
 		DB.Where("sys_or_user = ? AND userspace_id = ?", username, userSpaceId).First(&packageModel)
 		if packageModel.FilePath != "" {
-			go service.SaveModelCode(packageModel.PackageName, packageModel.FilePath)
+			go service.SaveModelToFile(packageModel.PackageName, packageModel.FilePath)
 			if result {
 				res.Msg = "修改成功"
 				c.JSON(http.StatusOK, res)
