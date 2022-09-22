@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/service"
@@ -312,18 +313,24 @@ func CopyClassView(c *gin.Context) {
 	userSpaceId := c.GetHeader("space_id")
 	var item CopyClassData
 	err := c.BindJSON(&item)
+	//if err != nil || item.PackageId == "" && item.ParentName != "" {
 	if err != nil {
 		log.Println(err)
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
-	packageName := ""
+	packageName := strings.Split(item.ParentName+"."+item.ModelName, ".")[0]
 	filePath := ""
 	var res ResponseData
 	var packageModel DataBaseModel.YssimModels
-	DB.Where("id = ? AND sys_or_user = ? AND userspace_id = ?", item.PackageId, username, userSpaceId).First(&packageModel)
-	packageId := item.PackageId
-	if packageId == "" && packageModel.ID != "" {
+	DB.Where("package_name = ? AND userspace_id = ?", packageName, "0").Or("sys_or_user = ? AND userspace_id = ? AND package_name = ?", username, userSpaceId, packageName).First(&packageModel)
+	if packageModel.SysUser == "sys" {
+		res.Msg = "标准库不允许插入模型"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	if packageModel.PackageName == item.ModelName {
 		res.Msg = "模型名称已存在"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
@@ -373,6 +380,7 @@ func DeletePackageAndModelView(c *gin.Context) {
 	var item DeleteClassData
 	err := c.BindJSON(&item)
 	if err != nil {
+
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}

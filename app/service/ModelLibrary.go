@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/config"
 	"yssim-go/library/omc"
@@ -45,7 +46,10 @@ func ModelLibraryInitialization(packageModel []DataBaseModel.YssimModels) {
 }
 
 func init() {
-	omc.OMC.Clear()
+	commandLineOptions := omc.OMC.GetCommandLineOptions()
+	if strings.Index(commandLineOptions, "nfAPI") == -1 {
+		omc.OMC.Clear()
+	}
 }
 
 func DeleteLibrary(deletePackage string) {
@@ -54,18 +58,6 @@ func DeleteLibrary(deletePackage string) {
 
 func modelCache(packageModel string) {
 	modelsALL := omc.OMC.GetClassNames(packageModel, true)
-	//dataLen := func() int {
-	//	if len(modelsALL) > 500 {
-	//		return 500
-	//	}
-	//	return len(modelsALL)
-	//}()
-
-	// ("function","",false,false,false,"/usr/lib/omc/NFModelicaBuiltin.mo",true,1006,1,1015,15,{},false,false,"","",false,"")
-	// ("package","OpenModelica internal definitions and scripting functions",false,false,true,"/usr/lib/omc/NFModelicaBuiltin.mo",true,974,1,5503,17,{},false,false,"","text",false,"")
-	// ("record","",false,false,false,"/usr/lib/omc/NFModelicaBuiltin.mo",true,1009,3,1010,17,{},true,false,"","",false,"")
-	// ("type","Integer,Real,String,enumeration or array of some kind",false,false,false,"/usr/lib/omc/NFModelicaBuiltin.mo",true,1019,3,1020,18,{},false,false,"","",false,"")
-	// ("impure function","",false,false,false,"/usr/lib/omc/NFModelicaBuiltin.mo",true,1067,3,1072,21,{},false,false,"","",false,"")
 	omc.OMC.CacheRefreshSet(true)
 	for p := 0; p < len(modelsALL); p++ {
 		e := omc.OMC.GetClassInformation(modelsALL[p])

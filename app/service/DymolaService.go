@@ -55,7 +55,6 @@ func DymolaFmuExport(fmuPar map[string]interface{}, token, username, fmuName, pa
 	log.Println("dymola服务编译FMU结果：", exportResult)
 	ResultCode, ok := exportResult["code"]
 	if err != nil || len(exportResult) == 0 || (ok && ResultCode.(float64) != 200) {
-		log.Println(err)
 		return resultFmuFileData, false
 	}
 	if res {
@@ -67,6 +66,7 @@ func DymolaFmuExport(fmuPar map[string]interface{}, token, username, fmuName, pa
 			return resultFmuFileData, false
 		}
 		resultFmuFileData = fmuFileRes.Content
+		return resultFmuFileData, true
 	}
-	return resultFmuFileData, true
+	return resultFmuFileData, false
 }

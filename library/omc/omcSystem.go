@@ -120,7 +120,17 @@ func (o *ZmqObject) Clear() {
 	o.SendExpressionNoParsed("setCommandLineOptions(\"+ignoreSimulationFlagsAnnotation=false\")")
 	//o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nfAPI\")")
 	o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nogen,noevalfunc,newInst,nfAPI\")")
-	o.SendExpressionNoParsed("setCommandLineOptions({\"-g=Modelica\",\"-d=nogen,noevalfunc,newInst,nfAPI\"})")
+	//o.SendExpressionNoParsed("setCommandLineOptions({\"-g=Modelica\",\"-d=nogen,noevalfunc,newInst,nfAPI\"})")
+}
+
+func (o *ZmqObject) GetCommandLineOptions() string {
+	cmd := "getCommandLineOptions()"
+	data, ok := o.SendExpressionNoParsed(cmd)
+	data = bytes.TrimSuffix(data, []byte("\n"))
+	if ok {
+		return string(data)
+	}
+	return ""
 }
 
 //改变缓存策略

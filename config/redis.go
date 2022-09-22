@@ -8,7 +8,7 @@ var addr = "redis:6379"
 
 func openRedis() *redis.Client {
 	if DEBUG != "" {
-		addr = "192.168.121.150:6379"
+		addr = "192.168.121.153:6379"
 	}
 	rdb := redis.NewClient(&redis.Options{
 		//Addr:     "119.3.155.11:6379",

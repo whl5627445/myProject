@@ -5,7 +5,7 @@ import (
 )
 
 func copyModel(copiedClassName, className, parentName string) (bool, string) {
-
+	classNameAll := className
 	if parentName == "" {
 		parentName = "TopLevel"
 	} else {
@@ -13,8 +13,9 @@ func copyModel(copiedClassName, className, parentName string) (bool, string) {
 		if parentInformation != "package" {
 			return false, "模型父节点不是包类型或根节点"
 		}
+		classNameAll = parentName + "." + className
 	}
-	existClass := ExistClass(parentName + "." + className)
+	existClass := ExistClass(classNameAll)
 	if existClass {
 		return false, "模型名称已存在"
 	}
