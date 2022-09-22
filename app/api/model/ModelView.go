@@ -438,6 +438,14 @@ func AddModelComponentView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
+	var modelPackage DataBaseModel.YssimModels
+	DB.Where("id = ?", item.PackageId).First(&modelPackage)
+	if modelPackage.SysUser == "sys" {
+		res.Err = "该模型不允许此操作"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
 	rotation := strconv.Itoa(item.Rotation)
 	result, msg := service.AddComponent(item.OldComponentName, item.NewComponentName, item.ModelName, item.Origin, rotation, item.Extent)
 	if !result {
@@ -460,6 +468,14 @@ func DeleteModelComponentView(c *gin.Context) {
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+	var modelPackage DataBaseModel.YssimModels
+	DB.Where("id = ?", item.PackageId).First(&modelPackage)
+	if modelPackage.SysUser == "sys" {
+		res.Err = "该模型不允许此操作"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
 		return
 	}
 	result := true
@@ -499,16 +515,14 @@ func UpdateModelComponentView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
-	//p1List := strings.Split(item.Extent[0], ",")
-	//p2List := strings.Split(item.Extent[1], ",")
-	//p1left, _ := strconv.ParseFloat(p1List[0], 3)
-	//p1right, _ := strconv.ParseFloat(p1List[1], 3)
-	//p2left, _ := strconv.ParseFloat(p2List[0], 3)
-	//p2right, _ := strconv.ParseFloat(p2List[1], 3)
-	//leftP := strconv.FormatFloat((p1left+p2left)/2, 'f', -1, 64)
-	//rightP := strconv.FormatFloat((p1right+p2right)/2, 'f', -1, 64)
-	//origin := strings.Join([]string{leftP, rightP}, ",")
-	//result := service.UpdateComponent(item.ComponentName, item.ComponentClassName, item.ModelName, origin, item.Rotation, item.Extent)
+	var modelPackage DataBaseModel.YssimModels
+	DB.Where("id = ?", item.PackageId).First(&modelPackage)
+	if modelPackage.SysUser == "sys" {
+		res.Err = "该模型不允许此操作"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
 	result := service.UpdateComponent(item.ComponentName, item.ComponentClassName, item.ModelName, item.Origin, item.Rotation, item.Extent)
 	if !result {
 		res.Err = "更新组件失败"
@@ -535,6 +549,14 @@ func CreateConnectionAnnotationView(c *gin.Context) {
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+	var modelPackage DataBaseModel.YssimModels
+	DB.Where("id = ?", item.PackageId).First(&modelPackage)
+	if modelPackage.SysUser == "sys" {
+		res.Err = "该模型不允许此操作"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
 		return
 	}
 	result := service.AddConnection(item.ModelName, item.ConnectStart, item.ConnectEnd, item.Color, item.LinePoints)
@@ -565,6 +587,14 @@ func UpdateConnectionNamesView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
+	var modelPackage DataBaseModel.YssimModels
+	DB.Where("id = ?", item.PackageId).First(&modelPackage)
+	if modelPackage.SysUser == "sys" {
+		res.Err = "该模型不允许此操作"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
 	result := service.UpdateConnectionNames(item.ModelName, item.FromName, item.ToName, item.FromNameNew, item.ToNameNew)
 	if !result {
 		res.Err = "更新连线失败"
@@ -589,6 +619,14 @@ func DeleteConnectionAnnotationView(c *gin.Context) {
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+	var modelPackage DataBaseModel.YssimModels
+	DB.Where("id = ?", item.PackageId).First(&modelPackage)
+	if modelPackage.SysUser == "sys" {
+		res.Err = "该模型不允许此操作"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
 		return
 	}
 	result := service.DeleteConnection(item.ModelName, item.ConnectStart, item.ConnectEnd)
@@ -617,6 +655,14 @@ func UpdateConnectionAnnotationView(c *gin.Context) {
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+	var modelPackage DataBaseModel.YssimModels
+	DB.Where("id = ?", item.PackageId).First(&modelPackage)
+	if modelPackage.SysUser == "sys" {
+		res.Err = "该模型不允许此操作"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
 		return
 	}
 	result := service.UpdateConnection(item.ModelName, item.ConnectStart, item.ConnectEnd, item.Color, item.LinePoints)
