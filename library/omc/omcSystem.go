@@ -713,9 +713,9 @@ func (o *ZmqObject) GetDocumentationAnnotation(className string) []string {
 	var docList = []string{"", "", ""}
 	cmd := "getDocumentationAnnotation(" + className + ")"
 	data, ok := o.SendExpressionNoParsed(cmd)
+	data = bytes.TrimSuffix(data, []byte("\n"))
+	data = bytes.ReplaceAll(data, []byte("\n"), []byte("\\n"))
 	if ok && len(data) > 0 {
-		data = bytes.TrimSuffix(data, []byte("\n"))
-		data = bytes.ReplaceAll(data, []byte("\n"), []byte("\\n"))
 		data = data[1 : len(data)-1]
 		data = append([]byte{'['}, data...)
 		data = append(data, ']')
@@ -758,11 +758,15 @@ func (o *ZmqObject) ConvertUnits(s1, s2 string) []interface{} {
 }
 
 func (o *ZmqObject) GetSimulationOptions(className string) []string {
-	var dataList []string
+	var dataList = []string{"", "", "", "", ""}
 	cmd := "getSimulationOptions(" + className + ")"
-	data, _ := o.SendExpression(cmd)
-	for _, d := range data {
-		dataList = append(dataList, d.(string))
+	data, ok := o.SendExpression(cmd)
+	if ok && len(data) > 4 {
+		dataList[0] = data[0].(string)
+		dataList[1] = data[1].(string)
+		dataList[2] = data[2].(string)
+		dataList[3] = data[3].(string)
+		dataList[4] = data[4].(string)
 	}
 	return dataList
 }

@@ -291,6 +291,7 @@ func ExperimentCreateView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
+	item.SimulateVarData["id"] = experimentRecord.ID
 	res.Data = item.SimulateVarData
 	res.Msg = "实验记录创建成功"
 	c.JSON(http.StatusOK, res)

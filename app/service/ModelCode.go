@@ -20,11 +20,11 @@ func GetModelCode(modelName string) string {
 	return codeData
 }
 
+// SaveModelCode 手动写入文件的形式将模型源码保存的到对应文件，并发不安全
 func SaveModelCode(modelName, path string) bool {
 	filesList, _ := ioutil.ReadDir("./")
 	num := strconv.Itoa(len(filesList))
 	os.Rename(path, path+".old"+num)
-	//ok := omc.OMC.SaveModel(path, modelName)
 	codeData := GetModelCode(modelName)
 	ok := fileOperation.WriteFile(path, codeData)
 	if !ok {
@@ -34,15 +34,10 @@ func SaveModelCode(modelName, path string) bool {
 	return true
 }
 
+// SaveModelToFile 用omc提供的API将模型源码保存的到对应文件， 并发安全
 func SaveModelToFile(modelName, path string) bool {
-	//filesList, _ := ioutil.ReadDir("./")
-	//num := strconv.Itoa(len(filesList))
-	//os.Rename(path, path+".old"+num)
 	ok := omc.OMC.SaveModel(path, modelName)
-	//codeData := GetModelCode(modelName)
-	//ok := fileOperation.WriteFile(path, codeData)
 	if !ok {
-		//os.Rename(path+".old"+num, path)
 		return false
 	}
 	return true
@@ -62,7 +57,9 @@ func PackageFileParse(fileName, saveFilePath, zipPackagePath string, file io.Rea
 		packagePath = saveFilePath + "/package.mo"
 	}
 	packageName, ok := omc.OMC.ParseFile(packagePath)
-	omc.OMC.LoadFile(packagePath)
+	if ok {
+		omc.OMC.LoadFile(packagePath)
+	}
 	return packageName, ok
 }
 

@@ -53,10 +53,10 @@ func SaveModel(className, copiedClassName, parentName, packageName, copeOrDelete
 		msg = "未知操作"
 	}
 	if result {
-		if parentName != "" {
+		switch {
+		case parentName != "":
 			go SaveModelToFile(packageName, fileName)
-		}
-		if copeOrDelete == "copy" {
+		default:
 			go SaveModelCode(className, fileName)
 		}
 	}
