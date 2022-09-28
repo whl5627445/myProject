@@ -1,8 +1,13 @@
 package omc
 
-var omcInit, _ = Connect("127.0.0.1", "23456")
+func omcInit() *ZmqObject {
+	addr := "127.0.0.1"
+	port := "23456"
+	omcInit, _ := Connect(addr, port)
+	return omcInit
+}
 
-var OMC = omcInit
+var OMC = omcInit()
 
 //var OMC = func() ZmqObject {
 //	omcInit, _ := Connect("127.0.0.1", "23456")

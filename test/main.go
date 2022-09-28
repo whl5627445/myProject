@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
+	"log"
 )
 
 func main() {
@@ -73,11 +73,11 @@ func main() {
 	//log.Println(b)
 	//log.Println(a)
 	files, err := ioutil.ReadDir("./")
-	fmt.Println(files)
+	log.Println(files)
 	for _, file := range files {
-		fmt.Println(file.Name())
+		log.Println(file.Name())
 	}
-	fmt.Println(err)
+	log.Println(err)
 }
 
 //func ParseStringTest(data []byte) string {

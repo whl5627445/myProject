@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -55,8 +54,8 @@ func (o *ZmqObject) SendExpression(cmd string) ([]interface{}, bool) {
 		return nil, false
 	}
 	if time.Now().UnixNano()/1e6-s > 10 {
-		fmt.Println("cmd: ", cmd)
-		fmt.Println("消耗时间: ", time.Now().UnixNano()/1e6-s)
+		log.Println("cmd: ", cmd)
+		log.Println("消耗时间: ", time.Now().UnixNano()/1e6-s)
 	}
 	return parseData, true
 }
@@ -87,8 +86,8 @@ func (o *ZmqObject) SendExpressionNoParsed(cmd string) ([]byte, bool) {
 		return nil, false
 	}
 	if time.Now().UnixNano()/1e6-s > 10 {
-		fmt.Println("cmd: ", cmd)
-		fmt.Println("消耗时间: ", time.Now().UnixNano()/1e6-s)
+		log.Println("cmd: ", cmd)
+		log.Println("消耗时间: ", time.Now().UnixNano()/1e6-s)
 	}
 	return msg, true
 }
@@ -720,13 +719,16 @@ func (o *ZmqObject) GetDocumentationAnnotation(className string) []string {
 		data = append([]byte{'['}, data...)
 		data = append(data, ']')
 		var docData []interface{}
-		_ = json.Unmarshal(data, &docData)
+		err := json.Unmarshal(data, &docData)
+		if err != nil {
+			log.Println("docData: ", string(data))
+			log.Println("err: ", err)
+		}
 		docList[0] = docData[0].(string)
 		docList[1] = docData[1].(string)
 		docList[2] = docData[2].(string)
-		return docList
 	}
-	return []string{"", "", ""}
+	return docList
 }
 
 func (o *ZmqObject) SetDocumentationAnnotation(className, info, revisions string) bool {

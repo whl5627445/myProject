@@ -71,6 +71,10 @@ func LoadCodeString(code, path string) bool {
 	return omc.OMC.LoadString(code, path)
 }
 
+func LoadFile(packagePath string) bool {
+	return omc.OMC.LoadFile(packagePath)
+}
+
 func CreateModelAndPackage(createPackageName, insertTo, expand, strType, createPackageNameAll, comment string, partial, encapsulated, state bool) bool {
 	if expand != "" {
 		expand = " extends " + expand + ";"

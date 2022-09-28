@@ -19,7 +19,7 @@ var DB = config.DB
 
 func UploadModelPackageView(c *gin.Context) {
 	/*
-		# 上传模型包文件，支持.mo与rar、zip、7z三种压缩格式
+		# 上传模型包文件，支持.mo与rar、zip两种压缩格式
 	*/
 	var res ResponseData
 	username := c.GetHeader("username")
@@ -27,10 +27,16 @@ func UploadModelPackageView(c *gin.Context) {
 	modelFile, _ := c.FormFile("file")
 	file, _ := modelFile.Open()
 	fileName := modelFile.Filename
+	nameList := strings.Split(modelFile.Filename, ".")
+	if len(nameList) < 2 || (nameList[1] != "rar" && nameList[1] != "mo" && nameList[1] != "zip") {
+		res.Msg = "请上传后缀为：mo与rar、zip三种格式的文件"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
 	removeSuffix := strings.Split(modelFile.Filename, ".")[0]
 	saveFilePath := "public/UserFiles/UploadFile/" + username + "/" + removeSuffix + "/" + time.Now().Local().Format("20060102150405") + "/"
 	zipPackagePath := saveFilePath + fileName
-
 	packageName, ok := service.PackageFileParse(fileName, saveFilePath, zipPackagePath, file)
 
 	if ok {

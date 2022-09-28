@@ -54,36 +54,53 @@ func GetComponentGraphicsData(modelName string, componentName string) [][]map[st
 	return g.data
 }
 
-func oneDimensionalProcessing(drawingData []interface{}) string {
-	var data []string
-	defer func() {
-		if err := recover(); err != nil {
-			data = []string{}
+func oneDimensionalProcessing(Data interface{}) string {
+	if reflect.TypeOf(Data).String() == "[]interface {}" {
+		drawingData := Data.([]interface{})
+		var data []string
+		defer func() {
+			if err := recover(); err != nil {
+				data = []string{}
+			}
+		}()
+		if len(drawingData) >= 1 && reflect.TypeOf(drawingData[0]).String() != "string" {
+			return ""
 		}
-	}()
-	if len(drawingData) >= 1 && reflect.TypeOf(drawingData[0]).String() != "string" {
-		return ""
-	}
-	for i := 0; i < len(drawingData); i++ {
-		data = append(data, drawingData[i].(string))
-	}
+		for i := 0; i < len(drawingData); i++ {
+			data = append(data, drawingData[i].(string))
+		}
 
-	return strings.Join(data, ",")
+		return strings.Join(data, ",")
+	}
+	return ""
 }
 
 func twoDimensionalProcessing(drawingData []interface{}) []string {
 	var data []string
-	defer func() {
-		if err := recover(); err != nil {
-			data = []string{""}
+	dataType := reflect.TypeOf(drawingData[0].([]interface{})[0]).String()
+
+	if dataType == "string" {
+		for i := 0; i < len(drawingData); i++ {
+			var piList []string
+			for pi := 0; pi < len(drawingData[i].([]interface{})); pi++ {
+				piList = append(piList, drawingData[i].([]interface{})[pi].(string))
+			}
+			data = append(data, strings.Join(piList, ","))
 		}
-	}()
-	for i := 0; i < len(drawingData); i++ {
-		var piList []string
-		for pi := 0; pi < len(drawingData[i].([]interface{})); pi++ {
-			piList = append(piList, drawingData[i].([]interface{})[pi].(string))
+		return data
+	}
+	if dataType == "[]interface {}" {
+		for i := 0; i < len(drawingData); {
+			for pi := 0; pi < len(drawingData[i].([]interface{})); pi++ {
+				var piList []string
+				for pii := 0; pii < len(drawingData[i].([]interface{})[pi].([]interface{})); pii++ {
+					piList = append(piList, drawingData[i].([]interface{})[pi].([]interface{})[pii].(string))
+				}
+				data = append(data, strings.Join(piList, ","))
+			}
+			break
 		}
-		data = append(data, strings.Join(piList, ","))
+		return data
 	}
 	return data
 }
@@ -119,17 +136,26 @@ func (g *GraphicsData) data01(cData []interface{}) []map[string]interface{} {
 		drawingDataList := cData[i+1].([]interface{})
 
 		DynamicSelect := find(drawingDataList, "DynamicSelect")
-		if len(drawingDataList) < 9 || DynamicSelect {
+		if DynamicSelect {
+			var drawingDataListFilter []interface{}
+			for _, i2 := range drawingDataList {
+				if i2 == "DynamicSelect" {
+					continue
+				}
+				drawingDataListFilter = append(drawingDataListFilter, i2)
+			}
+			drawingDataList = drawingDataListFilter
+		}
+		if len(drawingDataList) < 9 {
 			continue
 		}
-
 		dataType := cData[i]
 		data["type"] = dataType
 		data["visible"] = drawingDataList[0]
-		data["originalPoint"] = oneDimensionalProcessing(drawingDataList[1].([]interface{}))
+		data["originalPoint"] = oneDimensionalProcessing(drawingDataList[1])
 		data["rotation"] = drawingDataList[2]
-		data["color"] = oneDimensionalProcessing(drawingDataList[3].([]interface{}))
-		data["fillColor"] = oneDimensionalProcessing(drawingDataList[4].([]interface{}))
+		data["color"] = oneDimensionalProcessing(drawingDataList[3])
+		data["fillColor"] = oneDimensionalProcessing(drawingDataList[4])
 		data["linePattern"] = drawingDataList[5]
 		data["fillPattern"] = drawingDataList[6]
 		data["lineThickness"] = drawingDataList[7]
@@ -145,9 +171,9 @@ func (g *GraphicsData) data01(cData []interface{}) []map[string]interface{} {
 			delete(data, "fillColor")
 			delete(data, "fillPattern")
 			data["points"] = twoDimensionalProcessing(drawingDataList[3].([]interface{}))
-			data["color"] = oneDimensionalProcessing(drawingDataList[4].([]interface{}))
+			data["color"] = oneDimensionalProcessing(drawingDataList[4])
 			data["lineThickness"] = drawingDataList[6]
-			data["arrow"] = oneDimensionalProcessing(drawingDataList[7].([]interface{}))
+			data["arrow"] = oneDimensionalProcessing(drawingDataList[7])
 			data["arrowSize"] = drawingDataList[8]
 			data["smooth"] = drawingDataList[9]
 		case "Text":
@@ -160,7 +186,7 @@ func (g *GraphicsData) data01(cData []interface{}) []map[string]interface{} {
 				data["originalTextString"] = drawingDataList[9]
 			}
 			data["fontSize"] = drawingDataList[10]
-			data["textColor"] = oneDimensionalProcessing(drawingDataList[11].([]interface{}))
+			data["textColor"] = oneDimensionalProcessing(drawingDataList[11])
 			data["fontName"] = drawingDataList[12]
 			data["textStyles"] = drawingDataList[13]
 			data["horizontalAlignment"] = drawingDataList[14]

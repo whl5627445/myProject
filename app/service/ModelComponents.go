@@ -55,7 +55,10 @@ func GetComponentName(modelName, className string) string {
 
 func AddComponentVerification(oldComponentName, newComponentName, modelName string) (bool, string) {
 	classType := omc.OMC.GetClassRestriction(oldComponentName)
-
+	modelType := omc.OMC.GetClassRestriction(modelName)
+	if modelType == "package" {
+		return false, " package类型不能新增组件"
+	}
 	noType := config.ClassTypeAll[classType]
 	if !noType {
 		return false, "不能插入：" + oldComponentName + ", 这是一个 \"" + classType + " \"类型。组件视图层只允许有model、class、connector、function或者block。"

@@ -66,3 +66,8 @@ func SaveModel(className, copiedClassName, parentName, packageName, copeOrDelete
 func ExistClass(className string) bool {
 	return omc.OMC.ExistClass(className)
 }
+
+func GetModelType(modelName string) string {
+	modelType := omc.OMC.GetClassRestriction(modelName)
+	return modelType
+}

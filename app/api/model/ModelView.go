@@ -32,6 +32,7 @@ func GetSysRootModelView(c *gin.Context) {
 			"package_name": packageModel[i].PackageName,
 			"haschild":     service.GetModelHasChild(packageModel[i].PackageName),
 			"image":        service.GetIcon(packageModel[i].PackageName),
+			"type":         service.GetModelType(packageModel[i].PackageName),
 		}
 		modelData = append(modelData, data)
 	}
@@ -56,6 +57,7 @@ func GetUserRootModelView(c *gin.Context) {
 			"package_name": packageModel[i].PackageName,
 			"haschild":     service.GetModelHasChild(packageModel[i].PackageName),
 			"image":        service.GetIcon(packageModel[i].PackageName),
+			"type":         service.GetModelType(packageModel[i].PackageName),
 		}
 		modelData = append(modelData, data)
 	}
@@ -104,6 +106,7 @@ func GetListModelView(c *gin.Context) {
 	modelChildList := service.GetModelChild(modelName)
 	for i := 0; i < len(modelChildList); i++ {
 		modelChildList[i]["image"] = service.GetIcon(modelName + "." + modelChildList[i]["name"].(string))
+		modelChildList[i]["type"] = service.GetModelType(modelName + "." + modelChildList[i]["name"].(string))
 	}
 	res.Data = modelChildList
 	c.JSON(http.StatusOK, res)
@@ -206,7 +209,16 @@ func SetModelParametersView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
+
 	var res ResponseData
+	var modelPackage DataBaseModel.YssimModels
+	DB.Where("id = ?", item.PackageId).First(&modelPackage)
+	if modelPackage.SysUser == "sys" {
+		res.Err = "该模型不允许此操作"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
 	result := service.SetComponentModifierValue(item.ModelName, item.ParameterValue)
 	if result {
 		res.Msg = "设置完成"

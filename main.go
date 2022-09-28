@@ -22,11 +22,5 @@ func main() {
 		router.FileRouter(g)
 	}
 
-	//port, ok := os.LookupEnv("PORT")
-	//if !ok {
-	//	port = "8912"
-	//}
-	//port := "8913"
-
 	g.Run(config.ADDR + config.PORT)
 }

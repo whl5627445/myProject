@@ -147,7 +147,7 @@ func dymolaSimulate(task *SimulateTask, resultFilePath string, SimulationPraData
 }
 
 func jModelicaSimulate(task *SimulateTask, resultFilePath string, SimulationPraData map[string]string) bool {
-	moFilePath := task.Package.FilePath
+	moFilePath := "/" + task.Package.FilePath
 	if task.Package.FilePath == "" {
 		moFilePath = "/omlibrary/" + task.Package.PackageName + " " + task.Package.Version
 	}
@@ -190,7 +190,8 @@ func jModelicaSimulate(task *SimulateTask, resultFilePath string, SimulationPraD
 		log.Printf("接收编译结果数据失败，错误为: %s", err)
 		return false
 	}
-	log.Printf("编译数据: %s", string(compileRes[:n]))
+	log.Printf("编译结果: %s", string(compileRes[:n]))
+	log.Printf("编译数据: %s", dataJson)
 	if string(compileRes[:n]) == "ok" {
 		MessageNotice(map[string]string{"message": task.SRecord.SimulateModelName + " 编译成功，开始仿真"})
 		modelName_ := strings.ReplaceAll(task.SRecord.SimulateModelName, ".", "_")

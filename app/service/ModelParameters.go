@@ -3,24 +3,10 @@ package service
 import (
 	"strconv"
 	"strings"
-	"yssim-go/config"
 	"yssim-go/library/omc"
 )
 
-//var parameterTranslation = map[string]string{
-//	"Initialization": "初始化",
-//	"General":        "通用设置",
-//	"Advanced":       "高级设置",
-//	"Attributes":     "属性设置",
-//	"Parameters":     "参数",
-//	"Modifiers":      "Modifiers",
-//	"Dummy":          "Dummy",
-//	"Component":      "组件",
-//	"Name":           "名称",
-//	"comment":        "注释",
-//}
-
-var parameterTranslation = config.ParameterTranslation
+//var ParameterTranslation = config.ParameterTranslation
 
 type modelParameters struct {
 	name                 string
@@ -127,7 +113,7 @@ func GetModelParameters(modelName, name, componentName string) []interface{} {
 		m.componentsDict[m.components[i][3].(string)] = m.components[i]
 	}
 	for i := 0; i < len(m.components); i++ {
-		dataDefault := map[string]interface{}{"tab": "通用设置", "type": "Normal", "group": ""}
+		dataDefault := map[string]interface{}{"tab": "General", "type": "Normal", "group": ""}
 		p := m.componentsDict[m.components[i][3].(string)].([]interface{})
 		if p[2] != "-" {
 			m.className = p[2].(string)
@@ -154,8 +140,10 @@ func GetModelParameters(modelName, name, componentName string) []interface{} {
 			}
 			tab := dList[tabIndex].([]interface{})[0]
 			group := dList[tabIndex].([]interface{})[1]
-			dataDefault["tab"] = parameterTranslation[tab.(string)]
-			dataDefault["group"] = parameterTranslation[group.(string)]
+			//dataDefault["tab"] = parameterTranslation[tab.(string)]
+			dataDefault["tab"] = tab.(string)
+			//dataDefault["group"] = parameterTranslation[group.(string)]
+			dataDefault["group"] = group.(string)
 			showStartAttribute = dList[tabIndex].([]interface{})[3].(string)
 		}
 		ComponentModifierValue := omc.OMC.GetElementModifierValue(modelName, name+"."+dataDefault["name"].(string))
@@ -247,8 +235,7 @@ func GetModelParameters(modelName, name, componentName string) []interface{} {
 			varName := strings.TrimSuffix(extendModifierName[i], ".start")
 			m.className = m.componentsDict[varName].([]interface{})[2].(string)
 			dataDefault := map[string]interface{}{
-				"tab":          "通用设置",
-				"tab1":         "",
+				"tab":          "General",
 				"type":         "Normal",
 				"group":        "初始化",
 				"name":         varName + ".start",
