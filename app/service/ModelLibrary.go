@@ -35,7 +35,6 @@ func ModelLibraryInitialization(packageModel []DataBaseModel.YssimModels) {
 		if ok {
 			cacheStatus, _ := config.R.HGet(context.Background(), "yssim-GraphicsData", "status").Result() // 1是已缓存完成
 			log.Println("缓存标记：", cacheStatus)
-			log.Println("库类型：", models.SysUser)
 			if models.SysUser == "sys" && cacheStatus != "1" {
 				modelCache(models.PackageName)
 			}

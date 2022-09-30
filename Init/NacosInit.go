@@ -50,13 +50,13 @@ func NacosRegister() {
 			Ephemeral:   true,
 			Metadata:    map[string]string{},
 		})
+		log.Println("注册结果： ", success)
 		if success {
 			log.Println("服务注册成功")
 			break
 		} else {
 			log.Println("服务注册失败正在准备重新尝试")
 			time.Sleep(time.Second * 10)
-			continue
 		}
 	}
 }

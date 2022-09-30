@@ -9,9 +9,9 @@ import (
 
 func openMySql() *gorm.DB {
 	dsn := "root:simtek_cloud_sim@tcp(mysql:3306)/test?charset=utf8mb4&parseTime=True&loc=Local"
-	//if DEBUG != "" {
-	//	dsn = "root:simtek_cloud_sim@tcp(192.168.121.153:3307)/test?charset=utf8mb4&parseTime=True&loc=Local"
-	//}
+	if DEBUG != "" {
+		dsn = "root:simtek_cloud_sim@tcp(192.168.121.153:3309)/test?charset=utf8mb4&parseTime=True&loc=Local"
+	}
 	//dsn := "root:simtek_cloud_sim@tcp(mysql:3306)/simtek_cloud?charset=utf8mb4&parseTime=True&loc=Local"
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
 		PrepareStmt: true,
