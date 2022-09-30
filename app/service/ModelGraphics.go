@@ -117,6 +117,19 @@ func (g *GraphicsData) getICList(name string) []string {
 			break
 		}
 	}
+	//dataList去重
+	var datalistLen = len(dataList)
+	for i := 0; i < datalistLen; i++ {
+		for j := i + 1; j < datalistLen; j++ {
+			if dataList[i] == dataList[j] {
+				dataList = append(dataList[:i], dataList[i+1:]...)
+				datalistLen--
+				i--
+				break
+			}
+		}
+	}
+
 	return dataList
 }
 
