@@ -53,7 +53,7 @@ func GetComponentName(modelName, className string) string {
 	return name
 }
 
-func AddComponentVerification(oldComponentName, newComponentName, modelName string) (bool, string) {
+func addComponentVerification(oldComponentName, newComponentName, modelName string) (bool, string) {
 	classType := omc.OMC.GetClassRestriction(oldComponentName)
 	modelType := omc.OMC.GetClassRestriction(modelName)
 	if modelType == "package" {
@@ -61,7 +61,7 @@ func AddComponentVerification(oldComponentName, newComponentName, modelName stri
 	}
 	noType := config.ClassTypeAll[classType]
 	if !noType {
-		return false, "不能插入：" + oldComponentName + ", 这是一个 \"" + classType + " \"类型。组件视图层只允许有model、class、connector、function或者block。"
+		return false, "不能插入：" + oldComponentName + ", 这是一个 \"" + classType + " \"类型。组件视图层只允许有model、record、expandable connector、class、connector、function或者block。"
 	}
 	elementsData := omc.OMC.GetElements(modelName)
 	for _, e := range elementsData {
@@ -73,7 +73,7 @@ func AddComponentVerification(oldComponentName, newComponentName, modelName stri
 }
 
 func AddComponent(oldComponentName, newComponentName, modelName, origin, rotation string, extent []string) (bool, string) {
-	v, msg := AddComponentVerification(oldComponentName, newComponentName, modelName)
+	v, msg := addComponentVerification(oldComponentName, newComponentName, modelName)
 	if !v {
 		return false, msg
 	}

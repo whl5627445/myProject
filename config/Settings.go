@@ -38,10 +38,10 @@ var EXAMPLES = []map[string]string{
 }
 
 var MoldelSimutalionStatus = map[string]string{"1": "仿真排队中", "2": "正在仿真", "3": "仿真失败", "4": "仿真完成"}
-var ClassTypeAll = map[string]bool{"model": true, "class": true, "connector": true, "block": true, "function": true}
+var ClassTypeAll = map[string]bool{"model": true, "class": true, "connector": true, "block": true, "function": true, "record": true, "expandable connector": true}
 
-const DymolaConnect = "http://gateway:6535"
-const DymolaSimutalionConnect = DymolaConnect + "/dymola"
+const dymolaConnect = "http://gateway:6535"
+const DymolaSimutalionConnect = dymolaConnect + "/dymola"
 const JmodelicaConnect = "yssim-Jmodelica:56789"
 const ADDR = "0.0.0.0:"
 

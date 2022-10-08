@@ -9,12 +9,12 @@ import (
 	"yssim-go/library/omc"
 )
 
-type GraphicsData struct {
+type graphicsData struct {
 	data [][]map[string]interface{}
 }
 
 func GetGraphicsData(modelName string) [][]map[string]interface{} {
-	var g = GraphicsData{}
+	var g = graphicsData{}
 	g.data = [][]map[string]interface{}{{}, {}}
 	nameList := g.getICList(modelName)
 	diagramAnnotationData := omc.OMC.GetDiagramAnnotationList(nameList)
@@ -32,7 +32,7 @@ func GetGraphicsData(modelName string) [][]map[string]interface{} {
 }
 
 func GetComponentGraphicsData(modelName string, componentName string) [][]map[string]interface{} {
-	var g = GraphicsData{}
+	var g = graphicsData{}
 	g.data = [][]map[string]interface{}{{}, {}}
 	//nameList := g.getICList(modelName)
 	//components := omc.OMC.GetElementsList(nameList)
@@ -105,7 +105,7 @@ func twoDimensionalProcessing(drawingData []interface{}) []string {
 	return data
 }
 
-func (g *GraphicsData) getICList(name string) []string {
+func (g *graphicsData) getICList(name string) []string {
 	dataList := []string{name}
 	nameList := []string{name}
 	for {
@@ -142,7 +142,7 @@ func find(data []interface{}, str string) bool {
 	return false
 }
 
-func (g *GraphicsData) data01(cData []interface{}) []map[string]interface{} {
+func (g *graphicsData) data01(cData []interface{}) []map[string]interface{} {
 	dataList := make([]map[string]interface{}, 0, 1)
 	for i := 0; i < len(cData); i += 2 {
 		data := map[string]interface{}{}
@@ -219,7 +219,7 @@ func (g *GraphicsData) data01(cData []interface{}) []map[string]interface{} {
 	return dataList
 }
 
-func (g *GraphicsData) data02(cData [][]interface{}, caData [][]interface{}, isIcon bool, parent string) []map[string]interface{} {
+func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isIcon bool, parent string) []map[string]interface{} {
 	dataList := make([]map[string]interface{}, 0, 1)
 	var cDataFilter [][]interface{}
 	var caDataFilter [][]interface{}
@@ -327,7 +327,7 @@ func (g *GraphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 	return dataList
 }
 
-func (g *GraphicsData) getnthconnectionData(nameList []string) {
+func (g *graphicsData) getnthconnectionData(nameList []string) {
 	ConnectionCount := omc.OMC.GetConnectionCountList(nameList)
 	for i := 0; i < len(ConnectionCount); i++ {
 		for c := 0; c < ConnectionCount[i]; c++ {
