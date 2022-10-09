@@ -8,10 +8,14 @@ import (
 )
 
 func GetElements(className, componentName string) []interface{} {
-	componentsData := omc.OMC.GetElements(className)
+	classNameList := GetInheritedClassNameList(className)
+	var componentsData []interface{}
+	for i := 0; i < len(classNameList); i++ {
+		classnameData := omc.OMC.GetElements(classNameList[i])
+		componentsData = append(componentsData, classnameData...)
+	}
 
 	var componentData []interface{}
-
 	for i := 0; i < len(componentsData); i++ {
 		cData := componentsData[i].([]interface{})
 		switch {
@@ -22,6 +26,8 @@ func GetElements(className, componentName string) []interface{} {
 			componentData = append(componentData, cData)
 		}
 	}
+
+	//componentData = append(componentData, icnamelist)
 	return componentData
 }
 
@@ -92,4 +98,31 @@ func DeleteComponent(componentName, modelNameAll string) bool {
 func UpdateComponent(componentName, componentClassName, modelNameAll, origin, rotation string, extent []string) bool {
 	result := omc.OMC.UpdateComponent(componentName, componentClassName, modelNameAll, origin, rotation, extent)
 	return result
+}
+
+func GetInheritedClassNameList(name string) []string {
+	dataList := []string{name}
+	nameList := []string{name}
+	for {
+		InheritedClassesData := omc.OMC.GetInheritedClassesList(nameList)
+		if len(InheritedClassesData) > 0 {
+			dataList = append(dataList, InheritedClassesData...)
+			nameList = InheritedClassesData
+		} else {
+			break
+		}
+	}
+	//dataList去重
+	var datalistLen = len(dataList)
+	for i := 0; i < datalistLen; i++ {
+		for j := i + 1; j < datalistLen; j++ {
+			if dataList[i] == dataList[j] {
+				dataList = append(dataList[:i], dataList[i+1:]...)
+				datalistLen--
+				i--
+				break
+			}
+		}
+	}
+	return dataList
 }
