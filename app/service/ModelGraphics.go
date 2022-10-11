@@ -2,6 +2,8 @@ package service
 
 import (
 	"fmt"
+	"log"
+	"os"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -160,6 +162,27 @@ func (g *graphicsData) data01(cData []interface{}) []map[string]interface{} {
 			drawingDataList = drawingDataListFilter
 		}
 		if len(drawingDataList) < 9 {
+			dataType := cData[i]
+			if dataType == "Bitmap" {
+				data["type"] = dataType
+				data["visible"] = drawingDataList[0]
+				data["originalPoint"] = oneDimensionalProcessing(drawingDataList[1])
+				data["rotation"] = drawingDataList[2]
+				data["points"] = twoDimensionalProcessing(drawingDataList[3].([]interface{}))
+				dataImagePath := drawingDataList[4]
+				if dataImagePath != "" {
+					imagePath := omc.OMC.UriToFilename(dataImagePath.(string))
+					bytes, err := os.ReadFile(imagePath)
+					if err != nil {
+						log.Fatal(err)
+					}
+					data["imageBase64"] = bytes
+				} else {
+					data["imageBase64"] = drawingDataList[5]
+				}
+				dataList = append(dataList, data)
+				continue
+			}
 			continue
 		}
 		dataType := cData[i]
