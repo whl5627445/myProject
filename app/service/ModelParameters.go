@@ -100,15 +100,12 @@ func GetModelParameters(modelName, name, componentName string) []interface{} {
 	m.classAll = omc.OMC.GetInheritedClassesListAll([]string{componentName})
 	m.components = omc.OMC.GetElementsList(m.classAll)
 	m.componentAnnotations = omc.OMC.GetElementAnnotationsList(m.classAll)
-	//log.Println("componentAnnotations", len(m.componentAnnotations))
-	//log.Println("components", len(m.components))
 	if len(m.components) == 0 {
 		return dataList
 	}
 	m.componentsDict = map[string]interface{}{}
 	for i := 0; i < len(m.components); i++ {
 
-		//log.Println("componentAnnotations[i]", m.componentAnnotations[i])
 		m.components[i] = append(m.components[i], m.componentAnnotations[i])
 		m.componentsDict[m.components[i][3].(string)] = m.components[i]
 	}
@@ -233,7 +230,12 @@ func GetModelParameters(modelName, name, componentName string) []interface{} {
 	if len(extendModifierName) > 0 && len(extendModifierValue) > 0 {
 		for i := 0; i < len(extendModifierName); i++ {
 			varName := strings.TrimSuffix(extendModifierName[i], ".start")
-			m.className = m.componentsDict[varName].([]interface{})[2].(string)
+			component, ok := m.componentsDict[varName]
+			if ok {
+				m.className = component.([]interface{})[2].(string)
+			} else {
+				continue
+			}
 			dataDefault := map[string]interface{}{
 				"tab":          "General",
 				"type":         "Normal",

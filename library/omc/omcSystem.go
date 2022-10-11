@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"log"
 	"sync"
-	"time"
 	"yssim-go/config"
 
 	//"github.com/go-zeromq/zmq4"
@@ -30,14 +29,14 @@ var AllModelCache = config.R
 
 // SendExpression 发送指令，获取数据
 func (o *ZmqObject) SendExpression(cmd string) ([]interface{}, bool) {
-	s := time.Now().UnixNano() / 1e6
+	//s := time.Now().UnixNano() / 1e6
 	o.Lock()
 	defer o.Unlock()
 	var msg []byte
 
 	//msg, ok := AllModelCache[cmd]
 	ctx := context.Background()
-	msg, err := AllModelCache.HGet(ctx, "yssim-GraphicsData", cmd).Bytes()
+	msg, err := AllModelCache.HGet(ctx, "yssim-GraphicsData1", cmd).Bytes()
 	//if !ok {
 	if err != nil {
 		_ = o.Send(zmq4.NewMsgString(cmd))
@@ -46,29 +45,35 @@ func (o *ZmqObject) SendExpression(cmd string) ([]interface{}, bool) {
 		msg = data.Bytes()
 		if cacheRefresh && len(msg) > 0 {
 			//AllModelCache[cmd] = msg
-			AllModelCache.HSet(ctx, "yssim-GraphicsData", cmd, msg)
+			AllModelCache.HSet(ctx, "yssim-GraphicsData1", cmd, msg)
 		}
 	}
-	parseData, _ := DataToGo(msg)
+	//log.Println("cmd: ", cmd)
+	parseData, err := dataToGo(msg)
+	if err != nil {
+		log.Println("cmd: ", cmd)
+		return nil, false
+	}
 	if len(parseData) == 0 {
 		return nil, false
 	}
-	if time.Now().UnixNano()/1e6-s > 10 {
-		log.Println("cmd: ", cmd)
-		log.Println("消耗时间: ", time.Now().UnixNano()/1e6-s)
-	}
+
+	//if time.Now().UnixNano()/1e6-s > 1 {
+	//	log.Println("cmd: ", cmd)
+	//log.Println("消耗时间: ", time.Now().UnixNano()/1e6-s)
+	//}
 	return parseData, true
 }
 
 // SendExpressionNoParsed 发送指令，获取数据，但是不进行数据转换
 func (o *ZmqObject) SendExpressionNoParsed(cmd string) ([]byte, bool) {
-	s := time.Now().UnixNano() / 1e6
+	//s := time.Now().UnixNano() / 1e6
 	o.Lock()
 	defer o.Unlock()
 	var msg []byte
 	//msg, ok := AllModelCache[cmd]
 	ctx := context.Background()
-	msg, err := AllModelCache.HGet(ctx, "yssim-GraphicsData", cmd).Bytes()
+	msg, err := AllModelCache.HGet(ctx, "yssim-GraphicsData1", cmd).Bytes()
 	//if !ok {
 	if err != nil {
 		_ = o.Send(zmq4.NewMsgString(cmd))
@@ -76,7 +81,7 @@ func (o *ZmqObject) SendExpressionNoParsed(cmd string) ([]byte, bool) {
 		msg = data.Bytes()
 		if cacheRefresh && len(msg) > 0 {
 			//AllModelCache[cmd] = msg
-			AllModelCache.HSet(ctx, "yssim-GraphicsData", cmd, msg)
+			AllModelCache.HSet(ctx, "yssim-GraphicsData1", cmd, msg)
 		}
 	}
 	msg = bytes.ReplaceAll(msg, []byte("\"\"\n"), []byte(""))
@@ -85,10 +90,10 @@ func (o *ZmqObject) SendExpressionNoParsed(cmd string) ([]byte, bool) {
 	if len(msg) == 0 {
 		return nil, false
 	}
-	if time.Now().UnixNano()/1e6-s > 10 {
-		log.Println("cmd: ", cmd)
-		log.Println("消耗时间: ", time.Now().UnixNano()/1e6-s)
-	}
+	//if time.Now().UnixNano()/1e6-s > 1 {
+	//	log.Println("cmd: ", cmd)
+	//log.Println("消耗时间: ", time.Now().UnixNano()/1e6-s)
+	//}
 	return msg, true
 }
 
@@ -116,10 +121,12 @@ func (o *ZmqObject) Clear() {
 	//o.SendExpressionNoParsed("clear()")
 	//o.SendExpressionNoParsed("clearVariables()")
 	//o.SendExpressionNoParsed("clearProgram()")
-	o.SendExpressionNoParsed("setCommandLineOptions(\"+ignoreSimulationFlagsAnnotation=false\")")
 	//o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nfAPI\")")
-	o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nogen,noevalfunc,newInst,nfAPI\")")
 	//o.SendExpressionNoParsed("setCommandLineOptions({\"-g=Modelica\",\"-d=nogen,noevalfunc,newInst,nfAPI\"})")
+	o.SendExpressionNoParsed("setCommandLineOptions(\"+ignoreSimulationFlagsAnnotation=false\")")
+	o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nogen,noevalfunc,newInst,nfAPI\")")
+	o.SendExpressionNoParsed("setCommandLineOptions(\"--matchingAlgorithm=PFPlusExt --indexReductionMethod=dynamicStateSelection -d=initialization,NLSanalyticJacobian\")")
+
 }
 
 func (o *ZmqObject) GetCommandLineOptions() string {
@@ -546,8 +553,8 @@ func (o *ZmqObject) SetComponentModifierValue(className string, parameter string
 
 func (o *ZmqObject) RenameComponentInClass(className string, oldComponentName string, newComponentName string) bool {
 	cmd := "renameComponentInClass(" + className + "," + oldComponentName + ", " + newComponentName + ")"
-	_, ok := o.SendExpression(cmd)
-	if ok {
+	result, ok := o.SendExpression(cmd)
+	if ok && len(result) > 0 {
 		return true
 	}
 	return false

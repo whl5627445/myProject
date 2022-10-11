@@ -1,12 +1,10 @@
 package service
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"strings"
 	"yssim-go/app/DataBaseModel"
-	"yssim-go/config"
 	"yssim-go/library/omc"
 )
 
@@ -33,18 +31,46 @@ func ModelLibraryInitialization(packageModel []DataBaseModel.YssimModels) {
 			ok = omc.OMC.LoadFile(models.FilePath)
 		}
 		if ok {
-			cacheStatus, _ := config.R.HGet(context.Background(), "yssim-GraphicsData", "status").Result() // 1是已缓存完成
-			log.Println("缓存标记：", cacheStatus)
-			if models.SysUser == "sys" && cacheStatus != "1" {
-				modelCache(models.PackageName)
-			}
+			//cacheStatus, _ := config.R.HGet(context.Background(), "yssim-GraphicsData", "status").Result() // 1是已缓存完成
+			//log.Println("缓存标记：", cacheStatus)
+			//if models.SysUser == "sys" && cacheStatus != "1" {
+			//	modelCache(models.PackageName)
+			//}
 			log.Printf("初始化模型库： %s  %t \n", models.PackageName, true)
 		} else {
 			log.Println("模型库：" + models.PackageName + "  初始化失败")
 		}
 	}
-	config.R.HSet(context.Background(), "yssim-GraphicsData", map[string]string{"status": "1"})
+	//config.R.HSet(context.Background(), "yssim-GraphicsData", map[string]string{"status": "1"})
 }
+
+//func ModelLibraryInitialization(packageModel []DataBaseModel.YssimModels) {
+//	packageModelMap := map[string]DataBaseModel.YssimModels{}
+//	for _, models := range packageModel {
+//		packageModelMap[models.PackageName] = models
+//	}
+//	for _, models := range packageModelMap {
+//		ok := false
+//		if models.FilePath == "" {
+//			cmd := fmt.Sprintf("loadModel(%s, {\"%s\"},true,\"\",false)", models.PackageName, models.Version)
+//			_, ok = omc.OMC.SendExpressionNoParsed(cmd)
+//
+//		} else {
+//			ok = omc.OMC.LoadFile(models.FilePath)
+//		}
+//		if ok {
+//			//cacheStatus, _ := config.R.HGet(context.Background(), "yssim-GraphicsData", "status").Result() // 1是已缓存完成
+//			//log.Println("缓存标记：", cacheStatus)
+//			//if models.SysUser == "sys" && cacheStatus != "1" {
+//			//	modelCache(models.PackageName)
+//			//}
+//			log.Printf("初始化模型库： %s  %t \n", models.PackageName, true)
+//		} else {
+//			log.Println("模型库：" + models.PackageName + "  初始化失败")
+//		}
+//	}
+//	//config.R.HSet(context.Background(), "yssim-GraphicsData", map[string]string{"status": "1"})
+//}
 
 func init() {
 	commandLineOptions := omc.OMC.GetCommandLineOptions()
@@ -63,7 +89,7 @@ func modelCache(packageModel string) {
 	for p := 0; p < len(modelsALL); p++ {
 		e := omc.OMC.GetClassInformation(modelsALL[p])
 		if len(e) > 1 && e[0].(string) == "model" {
-			log.Println("正在缓存：", modelsALL[p], " 的图形数据")
+			//log.Println("正在缓存：", modelsALL[p], " 的图形数据")
 			GetGraphicsData(modelsALL[p])
 		}
 	}
