@@ -28,10 +28,9 @@ func GetGraphicsData(modelName string) [][]map[string]interface{} {
 	g.getnthconnectionData(nameList)
 
 	//nameList第一个名字是模型自身的名字，先获取模型自身的视图数据
-	selfMobleName := nameList[0:1] //模型自身的名字
-	componentsData := omc.OMC.GetElementsList(selfMobleName)
-	componentannotationsData := omc.OMC.GetElementAnnotationsList(selfMobleName)
-	data2 := g.data02(componentsData, componentannotationsData, false, "")
+	componentsData := omc.OMC.GetElementsList(nameList[:1])
+	componentAnnotationsData := getElementAndDiagramAnnotations(nameList[:1])
+	data2 := g.data02(componentsData, componentAnnotationsData, false, "")
 	for i := 0; i < len(data2); i++ {
 		data2[i]["mobility"] = true //模型自身的组件是可以移动的，设置字段"mobility"为true
 	}
@@ -39,15 +38,15 @@ func GetGraphicsData(modelName string) [][]map[string]interface{} {
 
 	//nameList第二个名字开始是继承模型的名字，获取继承模型的视图数据
 	componentsData = omc.OMC.GetElementsList(nameList[1:])
-	componentannotationsData = omc.OMC.GetElementAnnotationsList(nameList[1:])
-	data2 = g.data02(componentsData, componentannotationsData, false, "")
+	componentAnnotationsData = getElementAndDiagramAnnotations(nameList[1:])
+	data2 = g.data02(componentsData, componentAnnotationsData, false, "")
 	for i := 0; i < len(data2); i++ {
 		data2[i]["mobility"] = false //继承模型的组件是不可以移动的，设置字段"mobility"为false
 	}
 
-	componentsData := omc.OMC.GetElementsList(nameList)
-	componentAnnotationsData := getElementAndDiagramAnnotations(nameList)
-	data2 := g.data02(componentsData, componentAnnotationsData, false, "")
+	//componentsData := omc.OMC.GetElementsList(nameList)
+	//componentAnnotationsData := getElementAndDiagramAnnotations(nameList)
+	//data2 := g.data02(componentsData, componentAnnotationsData, false, "")
 	g.data[1] = append(g.data[1], data2...)
 	return g.data
 }

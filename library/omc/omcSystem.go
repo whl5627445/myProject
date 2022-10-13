@@ -646,9 +646,9 @@ func (o *ZmqObject) UpdateComponent(newComponentName, oldComponentName, classNam
 }
 
 func (o *ZmqObject) UpdateInterfacesComponent(newComponentName, oldComponentName, className, origin, rotation string, extent []string) bool {
-	// updateComponent(add3,Modelica.Blocks.Math.Add3,test,annotate=Placement(visible=true, transformation=transformation(origin={-68,24}, extent={{-10,-10},{10,10}}, rotation=0)))
-	//updateComponent(tan1,Modelica.Blocks.Math.Tan,test,annotate=Placement(visible=true, transformation=transformation(origin={-,-}, extent={{120,-52},{140,-72}}, rotation=0.0)))
-	annotate := "annotate=Placement(visible=true, transformation=transformation(origin={" + origin + "}, extent={{" + extent[0] + "},{" + extent[1] + "}}, rotation=" + rotation + "),iconTransformation=transformation(origin={" + origin + "}, extent={{" + extent[0] + "},{" + extent[1] + "}}, rotation=" + rotation + ")))"
+	// updateComponent(y,Modelica.Blocks.Interfaces.RealVectorOutput,q,        annotate=Placement(visible=true, transformation=transformation(origin={-60,-20}, extent={{-20,-20},{20,20}}, rotation=0),         iconTransformation=transformation(origin={-36,-22}, extent={{-20,-20},{20,20}}, rotation=0)))
+	// updateComponent(u2,Modelica.Blocks.Interfaces.IntegerInput,FullRobot_ng,annotate=Placement(visible=true, transformation=transformation(origin={84,-56}, extent={{-20.0,-20.0},{20.0,20.0}}, rotation=0.0),iconTransformation=transformation(origin={84,-56}, extent={{-20.0,-20.0},{20.0,20.0}}, rotation=0.0)))
+	annotate := "annotate=Placement(visible=true, transformation=transformation(origin={" + origin + "}, extent={{" + extent[0] + "},{" + extent[1] + "}}, rotation=" + rotation + "),iconTransformation=transformation(origin={" + origin + "}, extent={{" + extent[0] + "},{" + extent[1] + "}}, rotation=" + rotation + "))"
 	cmd := "updateComponent(" + newComponentName + "," + oldComponentName + "," + className + "," + annotate + ")"
 	result, ok := o.SendExpressionNoParsed(cmd)
 	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
