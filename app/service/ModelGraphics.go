@@ -26,6 +26,25 @@ func GetGraphicsData(modelName string) [][]map[string]interface{} {
 		g.data[0] = append(g.data[0], data1...)
 	}
 	g.getnthconnectionData(nameList)
+
+	//nameList第一个名字是模型自身的名字，先获取模型自身的视图数据
+	selfMobleName := nameList[0:1] //模型自身的名字
+	componentsData := omc.OMC.GetElementsList(selfMobleName)
+	componentannotationsData := omc.OMC.GetElementAnnotationsList(selfMobleName)
+	data2 := g.data02(componentsData, componentannotationsData, false, "")
+	for i := 0; i < len(data2); i++ {
+		data2[i]["mobility"] = true //模型自身的组件是可以移动的，设置字段"mobility"为true
+	}
+	g.data[1] = append(g.data[1], data2...)
+
+	//nameList第二个名字开始是继承模型的名字，获取继承模型的视图数据
+	componentsData = omc.OMC.GetElementsList(nameList[1:])
+	componentannotationsData = omc.OMC.GetElementAnnotationsList(nameList[1:])
+	data2 = g.data02(componentsData, componentannotationsData, false, "")
+	for i := 0; i < len(data2); i++ {
+		data2[i]["mobility"] = false //继承模型的组件是不可以移动的，设置字段"mobility"为false
+	}
+
 	componentsData := omc.OMC.GetElementsList(nameList)
 	componentAnnotationsData := getElementAndDiagramAnnotations(nameList)
 	data2 := g.data02(componentsData, componentAnnotationsData, false, "")
@@ -367,6 +386,11 @@ func (g *graphicsData) getnthconnectionData(nameList []string) {
 			d1Data := g.data01(ncaData)
 			if len(ncData) != 0 && len(ncaData) != 0 && len(d1Data) != 0 {
 				daData := d1Data[0]
+				if i == 0 { //i==0的时候，表示目前遍历的是模型自身的组件，模型自身的组件可以移动，设在"mobility"为true
+					daData["mobility"] = true
+				} else {
+					daData["mobility"] = false
+				}
 				daData["connectionfrom_original_name"] = ncData[0]
 				daData["connectionto_original_name"] = ncData[1]
 				re1, _ := regexp.Compile("[[0-9]+]$")
