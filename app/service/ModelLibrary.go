@@ -89,7 +89,7 @@ func modelCache(packageModel string) {
 	for p := 0; p < len(modelsALL); p++ {
 		e := omc.OMC.GetClassInformation(modelsALL[p])
 		if len(e) > 1 && e[0].(string) == "model" {
-			//log.Println("正在缓存：", modelsALL[p], " 的图形数据")
+			log.Println("正在缓存：", modelsALL[p], " 的图形数据")
 			GetGraphicsData(modelsALL[p])
 		}
 	}

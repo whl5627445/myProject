@@ -27,8 +27,8 @@ func GetGraphicsData(modelName string) [][]map[string]interface{} {
 	}
 	g.getnthconnectionData(nameList)
 	componentsData := omc.OMC.GetElementsList(nameList)
-	componentannotationsData := omc.OMC.GetElementAnnotationsList(nameList)
-	data2 := g.data02(componentsData, componentannotationsData, false, "")
+	componentAnnotationsData := getElementAndDiagramAnnotations(nameList)
+	data2 := g.data02(componentsData, componentAnnotationsData, false, "")
 	g.data[1] = append(g.data[1], data2...)
 	return g.data
 }
@@ -36,11 +36,9 @@ func GetGraphicsData(modelName string) [][]map[string]interface{} {
 func GetComponentGraphicsData(modelName string, componentName string) [][]map[string]interface{} {
 	var g = graphicsData{}
 	g.data = [][]map[string]interface{}{{}, {}}
-	//nameList := g.getICList(modelName)
-	//components := omc.OMC.GetElementsList(nameList)
-	//componentAnnotations := omc.OMC.GetComponentAnnotationsList(nameList)
+
 	components := omc.OMC.GetElementsList([]string{modelName})
-	componentAnnotations := omc.OMC.GetComponentAnnotationsList([]string{modelName})
+	componentAnnotations := getElementAndDiagramAnnotations([]string{modelName})
 	var componentsData [][]interface{}
 	var componentAnnotationsData [][]interface{}
 	for i := 0; i < len(components); i++ {
@@ -254,12 +252,17 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 	}()
 	if isIcon == true && cData != nil && caData != nil {
 		for i := 0; i < dataLen; i++ {
-			cDataSplit := strings.Split(cData[i][2].(string), ".")
-			for ii := 0; ii < len(cDataSplit); ii++ {
-				if "Interfaces" == cDataSplit[ii] {
-					cDataFilter = append(cDataFilter, cData[i])
-					caDataFilter = append(caDataFilter, caData[i])
-				}
+			//cDataSplit := strings.Split(cData[i][2].(string), ".")
+			//for ii := 0; ii < len(cDataSplit); ii++ {
+			//	if "Interfaces" == cDataSplit[ii] {
+			//		cDataFilter = append(cDataFilter, cData[i])
+			//		caDataFilter = append(caDataFilter, caData[i])
+			//	}
+			//}
+			nameType := omc.OMC.GetClassRestriction(cData[i][2].(string))
+			if nameType == "connector" {
+				cDataFilter = append(cDataFilter, cData[i])
+				caDataFilter = append(caDataFilter, caData[i])
 			}
 		}
 	} else {
@@ -296,8 +299,8 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 		if placementIndex != -1 {
 
 			componentsData := omc.OMC.GetElementsList(nameList)
-			componentannotationsData := omc.OMC.GetElementAnnotationsList(nameList)
-			IconAnnotationData := omc.OMC.GetIconAnnotationList(nameList)
+			componentAnnotationsData := omc.OMC.GetElementAnnotationsList(nameList)
+			IconAnnotationData := getIconAndDiagramAnnotations(nameList, isIcon)
 			caf := caDataFilter[i][placementIndex+1].([]interface{})
 			if len(caf) < 7 {
 				// 出现错误会使数据不可用， 长度小于预期，弃用
@@ -312,19 +315,24 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 				}
 			}()
 			data := map[string]interface{}{"type": "Transformation"}
+			//data["graphType"] = func() string {
+			//	dList := strings.Split(name, ".")
+			//	for dii := 0; dii < len(dList); dii++ {
+			//		if dList[dii] == "Interfaces" {
+			//			return "connecter"
+			//		}
+			//	}
+			//	return ""
+			//}()
 			data["graphType"] = func() string {
-				for di := 0; di < len(cDataFilter); di++ {
-					dList := strings.Split(cDataFilter[di][2].(string), ".")
-					for dii := 0; dii < len(dList); dii++ {
-						if dList[dii] == "Interfaces" {
-							return "connecter"
-						}
-					}
+				nameType := omc.OMC.GetClassRestriction(name)
+				if nameType == "connector" {
+					return "connecter"
 				}
 				return ""
 			}()
 			data["ID"] = strconv.Itoa(i)
-			data["classname"] = cDataFilter[i][2]
+			data["classname"] = name
 			data["name"] = cDataFilter[i][3]
 			data["original_name"] = cDataFilter[i][3]
 			data["parent"] = parent
@@ -342,7 +350,7 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 				str := fmt.Sprintf("%s", t)
 				return str
 			}()
-			data["inputOutputs"] = g.data02(componentsData, componentannotationsData, true, data["name"].(string))
+			data["inputOutputs"] = g.data02(componentsData, componentAnnotationsData, true, data["name"].(string))
 			data["subShapes"] = g.data01(IconAnnotationData)
 			dataList = append(dataList, data)
 		}
@@ -371,4 +379,38 @@ func (g *graphicsData) getnthconnectionData(nameList []string) {
 			}
 		}
 	}
+}
+
+func getElementAndDiagramAnnotations(nameList []string) [][]interface{} {
+	var data [][]interface{}
+
+	for _, name := range nameList {
+		var result []interface{}
+		//if strings.Index(name, "Interfaces") == -1 {
+		if omc.OMC.GetClassRestriction(name) != "connector" {
+			result = omc.OMC.GetElementAnnotations(name)
+		} else {
+			result = omc.OMC.GetDiagramAnnotation(name)
+		}
+		for _, i := range result {
+			data = append(data, i.([]interface{}))
+		}
+	}
+	return data
+}
+
+func getIconAndDiagramAnnotations(nameList []string, isIcon bool) []interface{} {
+	var data []interface{}
+	for _, name := range nameList {
+		var result []interface{}
+		if omc.OMC.GetClassRestriction(name) == "connector" && isIcon == false {
+			result = omc.OMC.GetDiagramAnnotation(name)
+		} else {
+			result = omc.OMC.GetIconAnnotation(name)
+		}
+		for _, i := range result {
+			data = append(data, i)
+		}
+	}
+	return data
 }
