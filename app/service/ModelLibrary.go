@@ -13,14 +13,14 @@ func ModelLibraryInitialization(packageModel []DataBaseModel.YssimModels) {
 	for _, models := range packageModel {
 		packageModelMap[models.PackageName] = models
 	}
-	packageAll := omc.OMC.GetPackages()
-	for _, p := range packageAll {
-		if _, ok := packageModelMap[p]; ok && packageModelMap[p].SysUser == "sys" {
-			delete(packageModelMap, p)
-		} else {
-			DeleteLibrary(p)
-		}
-	}
+	//packageAll := omc.OMC.GetPackages()
+	//for _, p := range packageAll {
+	//if _, ok := packageModelMap[p]; ok && packageModelMap[p].SysUser == "sys" {
+	//	delete(packageModelMap, p)
+	//} else {
+	//	DeleteLibrary(p)
+	//}
+	//}
 	for _, models := range packageModelMap {
 		ok := false
 		if models.FilePath == "" {

@@ -11,6 +11,8 @@ import (
 func dataToGo(data []byte) ([]interface{}, error) {
 	var resData []interface{}
 	data = replaceDynamicSelectData(data)
+	data = dialogErrorReplace(data)
+	data = iconErrorReplace(data)
 	resStr := parseString(data)
 	if resStr == "" {
 		return []interface{}{}, nil
@@ -346,6 +348,26 @@ func replaceDynamicSelectData(data []byte) []byte {
 		}
 		data = bytes.ReplaceAll(data, allData, defaultData)
 		return replaceDynamicSelectData(data)
+	}
+	return data
+}
+
+func dialogErrorReplace(data []byte) []byte {
+	index := bytes.Index(data, []byte("{Dialog(\"error evaluating: annotation"))
+	if index != -1 {
+		endIndex := bytes.Index(data[index+1:], []byte("}"))
+		replaceStr := data[index : index+endIndex+2]
+		data = bytes.Replace(data, replaceStr, []byte("{}"), 1)
+		return dialogErrorReplace(data)
+	}
+	return data
+}
+
+func iconErrorReplace(data []byte) []byte {
+	index := bytes.Index(data, []byte("Icon(\"error evaluating: annotation("))
+	if index != -1 {
+
+		return []byte("{}")
 	}
 	return data
 }

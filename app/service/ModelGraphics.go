@@ -186,11 +186,13 @@ func (g *graphicsData) data01(cData []interface{}) []map[string]interface{} {
 				data["rotation"] = drawingDataList[2]
 				data["points"] = twoDimensionalProcessing(drawingDataList[3].([]interface{}))
 				dataImagePath := drawingDataList[4]
-				if dataImagePath != "" {
+				if drawingDataList[5] == "" {
+					// TODO: 这里文件读出来的数据没有进行base64转换， 需要修改
 					imagePath := omc.OMC.UriToFilename(dataImagePath.(string))
 					bytes, err := os.ReadFile(imagePath)
 					if err != nil {
-						log.Fatal(err)
+						log.Println("dataImagePath 错误：", dataImagePath)
+						log.Println("err：", err)
 					}
 					data["imageBase64"] = bytes
 				} else {
@@ -278,7 +280,7 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 			//	}
 			//}
 			nameType := omc.OMC.GetClassRestriction(cData[i][2].(string))
-			if nameType == "connector" {
+			if nameType == "connector" || nameType == "expandable connector" {
 				cDataFilter = append(cDataFilter, cData[i])
 				caDataFilter = append(caDataFilter, caData[i])
 			}
@@ -314,7 +316,7 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 			}
 			return -1
 		}()
-		if placementIndex != -1 {
+		if placementIndex != -1 || cDataFilter[i][9] == "true" {
 
 			componentsData := omc.OMC.GetElementsList(nameList)
 			componentAnnotationsData := omc.OMC.GetElementAnnotationsList(nameList)
@@ -333,18 +335,10 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 				}
 			}()
 			data := map[string]interface{}{"type": "Transformation"}
-			//data["graphType"] = func() string {
-			//	dList := strings.Split(name, ".")
-			//	for dii := 0; dii < len(dList); dii++ {
-			//		if dList[dii] == "Interfaces" {
-			//			return "connecter"
-			//		}
-			//	}
-			//	return ""
-			//}()
+
 			data["graphType"] = func() string {
 				nameType := omc.OMC.GetClassRestriction(name)
-				if nameType == "connector" {
+				if nameType == "connector" || nameType == "expandable connector" {
 					return "connecter"
 				}
 				return ""
@@ -356,9 +350,6 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 			data["parent"] = parent
 			data["visible"] = caf[0]
 			data["rotateAngle"] = rotateAngle
-			data["originDiagram"] = strings.Join([]string{caDataFilter[i][1].([]interface{})[1].(string), caDataFilter[i][1].([]interface{})[2].(string)}, ",")
-			data["extent1Diagram"] = strings.Join([]string{caDataFilter[i][1].([]interface{})[3].(string), caDataFilter[i][1].([]interface{})[4].(string)}, ",")
-			data["extent2Diagram"] = strings.Join([]string{caDataFilter[i][1].([]interface{})[5].(string), caDataFilter[i][1].([]interface{})[6].(string)}, ",")
 			data["originDiagram"] = strings.Join([]string{caf[1].(string), caf[2].(string)}, ",")
 			data["extent1Diagram"] = strings.Join([]string{caf[3].(string), caf[4].(string)}, ",")
 			data["extent2Diagram"] = strings.Join([]string{caf[5].(string), caf[6].(string)}, ",")
@@ -410,10 +401,11 @@ func getElementAndDiagramAnnotations(nameList []string) [][]interface{} {
 	for _, name := range nameList {
 		var result []interface{}
 		//if strings.Index(name, "Interfaces") == -1 {
-		if omc.OMC.GetClassRestriction(name) != "connector" {
-			result = omc.OMC.GetElementAnnotations(name)
-		} else {
+		nameType := omc.OMC.GetClassRestriction(name)
+		if nameType == "connector" || nameType == "expandable connector" {
 			result = omc.OMC.GetDiagramAnnotation(name)
+		} else {
+			result = omc.OMC.GetElementAnnotations(name)
 		}
 		for _, i := range result {
 			data = append(data, i.([]interface{}))
@@ -426,7 +418,8 @@ func getIconAndDiagramAnnotations(nameList []string, isIcon bool) []interface{} 
 	var data []interface{}
 	for _, name := range nameList {
 		var result []interface{}
-		if omc.OMC.GetClassRestriction(name) == "connector" && isIcon == false {
+		nameType := omc.OMC.GetClassRestriction(name)
+		if (nameType == "connector" || nameType == "expandable connector") && isIcon == false {
 			result = omc.OMC.GetDiagramAnnotation(name)
 		} else {
 			result = omc.OMC.GetIconAnnotation(name)
@@ -437,3 +430,5 @@ func getIconAndDiagramAnnotations(nameList []string, isIcon bool) []interface{} 
 	}
 	return data
 }
+
+//Buildings.ThermalZones.EnergyPlus.Examples.SmallOffice.Unconditioned

@@ -49,6 +49,7 @@ func (o *ZmqObject) SendExpression(cmd string) ([]interface{}, bool) {
 		}
 	}
 	//log.Println("cmd: ", cmd)
+	//log.Println("msg: ", string(msg))
 	parseData, err := dataToGo(msg)
 	if err != nil {
 		log.Println("cmd: ", cmd)
