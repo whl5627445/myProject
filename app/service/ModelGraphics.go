@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/base64"
 	"fmt"
 	"log"
 	"os"
@@ -194,7 +195,7 @@ func (g *graphicsData) data01(cData []interface{}) []map[string]interface{} {
 						log.Println("dataImagePath 错误：", dataImagePath)
 						log.Println("err：", err)
 					}
-					data["imageBase64"] = bytes
+					data["imageBase64"] = base64.StdEncoding.EncodeToString(bytes)
 				} else {
 					data["imageBase64"] = drawingDataList[5]
 				}
