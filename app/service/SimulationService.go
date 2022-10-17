@@ -2,8 +2,6 @@ package service
 
 import (
 	"encoding/json"
-	"github.com/wangluozhe/requests"
-	"github.com/wangluozhe/requests/url"
 	"log"
 	"net"
 	"os"
@@ -11,6 +9,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/wangluozhe/requests"
+	"github.com/wangluozhe/requests/url"
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/config"
 	"yssim-go/library/fileOperation"
@@ -114,10 +115,12 @@ func dymolaSimulate(task *SimulateTask, resultFilePath string, SimulationPraData
 			req.Json = simulateReqData
 			simulateRes, err := requests.Post(config.DymolaSimutalionConnect+"/dymola/simulate", req)
 			simulateResData, err := simulateRes.Json()
+			simulateResDataCode, ok := simulateResData["code"]
+			log.Println("dymola仿真结果：", simulateResData)
 			if err != nil {
 				return false
 			}
-			if simulateResData["code"].(float64) == 200 {
+			if ok && simulateResDataCode.(float64) == 200 {
 				resFileUrl := config.DymolaSimutalionConnect + "/file/download?fileName=" + simulateResData["msg"].(string)
 				fmuFileUrl := config.DymolaSimutalionConnect + "/file/download?fileName=" + compileResData["msg"].(string)
 				downloadResFileUrl, err := requests.Get(resFileUrl, req)
@@ -242,8 +245,8 @@ func ModelSimulate(task *SimulateTask) {
 		"startTime": task.SRecord.StartTime,
 		"stopTime":  task.SRecord.StopTime,
 		"method":    task.SRecord.Method,
-		//"outputFormat": "\"csv\"",  // csv不能使用omc的api读取结果
-		//"numberOfIntervals": "500",
+		// "outputFormat": "\"csv\"",  // csv不能使用omc的api读取结果
+		// "numberOfIntervals": "500",
 		"numberOfIntervals": task.SRecord.NumberOfIntervals,
 		"tolerance":         task.SRecord.Tolerance,
 	}
