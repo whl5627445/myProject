@@ -29,8 +29,8 @@ func GetGraphicsData(modelName string) [][]map[string]interface{} {
 	g.getnthconnectionData(nameList)
 
 	//nameList第一个名字是模型自身的名字，先获取模型自身的视图数据
-	componentsData := omc.OMC.GetElementsList(nameList[:1])
-	componentAnnotationsData := getElementAndDiagramAnnotations(nameList[:1])
+	componentsData := omc.OMC.GetElementsList([]string{modelName})
+	componentAnnotationsData := getElementAndDiagramAnnotations([]string{modelName})
 	data2 := g.data02(componentsData, componentAnnotationsData, false, "")
 	for i := 0; i < len(data2); i++ {
 		data2[i]["mobility"] = true //模型自身的组件是可以移动的，设置字段"mobility"为true
@@ -38,8 +38,8 @@ func GetGraphicsData(modelName string) [][]map[string]interface{} {
 	g.data[1] = append(g.data[1], data2...)
 
 	//nameList第二个名字开始是继承模型的名字，获取继承模型的视图数据
-	componentsData = omc.OMC.GetElementsList(nameList[1:])
-	componentAnnotationsData = getElementAndDiagramAnnotations(nameList[1:])
+	componentsData = omc.OMC.GetElementsList(nameList[:len(nameList)-1])
+	componentAnnotationsData = getElementAndDiagramAnnotations(nameList[:len(nameList)-1])
 	data2 = g.data02(componentsData, componentAnnotationsData, false, "")
 	for i := 0; i < len(data2); i++ {
 		data2[i]["mobility"] = false //继承模型的组件是不可以移动的，设置字段"mobility"为false
@@ -148,8 +148,11 @@ func (g *graphicsData) getICList(name string) []string {
 			}
 		}
 	}
-
-	return dataList
+	var dataListNew []string
+	for i := len(dataList) - 1; i >= 0; i-- {
+		dataListNew = append(dataListNew, dataList[i])
+	}
+	return dataListNew
 }
 
 func find(data []interface{}, str string) bool {
@@ -322,6 +325,9 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 			componentsData := omc.OMC.GetElementsList(nameList)
 			componentAnnotationsData := omc.OMC.GetElementAnnotationsList(nameList)
 			IconAnnotationData := getIconAndDiagramAnnotations(nameList, isIcon)
+			if len(caDataFilter[i]) < 1 {
+				continue
+			}
 			caf := caDataFilter[i][placementIndex+1].([]interface{})
 			if len(caf) < 7 {
 				// 出现错误会使数据不可用， 长度小于预期，弃用
