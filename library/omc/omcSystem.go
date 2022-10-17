@@ -36,7 +36,7 @@ func (o *ZmqObject) SendExpression(cmd string) ([]interface{}, bool) {
 
 	//msg, ok := AllModelCache[cmd]
 	ctx := context.Background()
-	msg, err := AllModelCache.HGet(ctx, "yssim-GraphicsData1", cmd).Bytes()
+	msg, err := AllModelCache.HGet(ctx, "yssim-GraphicsData", cmd).Bytes()
 	//if !ok {
 	if err != nil {
 		_ = o.Send(zmq4.NewMsgString(cmd))
@@ -45,10 +45,11 @@ func (o *ZmqObject) SendExpression(cmd string) ([]interface{}, bool) {
 		msg = data.Bytes()
 		if cacheRefresh && len(msg) > 0 {
 			//AllModelCache[cmd] = msg
-			AllModelCache.HSet(ctx, "yssim-GraphicsData1", cmd, msg)
+			AllModelCache.HSet(ctx, "yssim-GraphicsData", cmd, msg)
 		}
 	}
 	//log.Println("cmd: ", cmd)
+	//log.Println("msg: ", string(msg))
 	parseData, err := dataToGo(msg)
 	if err != nil {
 		log.Println("cmd: ", cmd)
@@ -73,7 +74,7 @@ func (o *ZmqObject) SendExpressionNoParsed(cmd string) ([]byte, bool) {
 	var msg []byte
 	//msg, ok := AllModelCache[cmd]
 	ctx := context.Background()
-	msg, err := AllModelCache.HGet(ctx, "yssim-GraphicsData1", cmd).Bytes()
+	msg, err := AllModelCache.HGet(ctx, "yssim-GraphicsData", cmd).Bytes()
 	//if !ok {
 	if err != nil {
 		_ = o.Send(zmq4.NewMsgString(cmd))
@@ -81,7 +82,7 @@ func (o *ZmqObject) SendExpressionNoParsed(cmd string) ([]byte, bool) {
 		msg = data.Bytes()
 		if cacheRefresh && len(msg) > 0 {
 			//AllModelCache[cmd] = msg
-			AllModelCache.HSet(ctx, "yssim-GraphicsData1", cmd, msg)
+			AllModelCache.HSet(ctx, "yssim-GraphicsData", cmd, msg)
 		}
 	}
 	msg = bytes.ReplaceAll(msg, []byte("\"\"\n"), []byte(""))
@@ -209,6 +210,17 @@ func (o *ZmqObject) GetDiagramAnnotationList(classNameList []string) []interface
 	return dataList
 }
 
+func (o *ZmqObject) GetDiagramAnnotation(className string) []interface{} {
+	var dataList []interface{}
+	cmd := "getDiagramAnnotation(" + className + ")"
+	diagramAnnotationData, ok := o.SendExpression(cmd)
+	if ok && len(diagramAnnotationData) > 8 {
+		data := diagramAnnotationData[8]
+		dataList = append(dataList, data.([]interface{})...)
+	}
+	return dataList
+}
+
 // 获取切片给定模型当中有多少个连接线，一个数字
 func (o *ZmqObject) GetConnectionCountList(classNameList []string) []int {
 	var dataList []int
@@ -320,22 +332,21 @@ func (o *ZmqObject) GetComponentAnnotationsList(classNameList []string) [][]inte
 				dataList = append(dataList, componentAnnotations[p].([]interface{}))
 			}
 		}
-
-		//cmd := "getComponentAnnotations(" + classNameList[i] + ")"
-		//componentAnnotations, ok := AllModelCache[cmd].([]interface{})
-		//if !ok {
-		//
-		//	componentAnnotations, ok = o.SendExpression(cmd)
-		//
-		//}
-		//if ok {
-		//	for p := 0; p < len(componentAnnotations); p++ {
-		//		dataList = append(dataList, componentAnnotations[p].([]interface{}))
-		//		AllModelCache[cmd] = componentAnnotations
-		//	}
-		//}
 	}
 	return dataList
+}
+
+// 获取给定模型名字模型的组件注释信息,新API
+func (o *ZmqObject) GetElementAnnotations(className string) []interface{} {
+	var componentAnnotations []interface{}
+	if className == "Real" {
+		return componentAnnotations
+	}
+	cmd := "getElementAnnotations(" + className + ", useQuotes = false)"
+	componentAnnotations, _ = o.SendExpression(cmd)
+	//annotation(Placement(visible = true,transformation(origin = {16,-87},extent = {{-10,  -10},{10, 10}},rotation = 0,iconTransformation(origin = {168.94117431640626,-87.15294189453125},extent = {{-10,-10},{10,10}},rotation = 0))))
+	//annotation(Placement(visible = true,transformation(origin = {-8, 40}, extent = {{-10, -10},{10, 10}}, rotation = 0), iconTransformation(origin = {-36, 20}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+	return componentAnnotations
 }
 
 // 获取切片给定模型的组件注释信息,新API
@@ -362,20 +373,10 @@ func (o *ZmqObject) GetIconAnnotation(className string) []interface{} {
 	var dataList []interface{}
 	cmd := "getIconAnnotation(" + className + ")"
 	iconAnnotationData, ok := o.SendExpression(cmd)
-	if ok {
-		dataList = append(dataList, iconAnnotationData...)
+	if ok && len(iconAnnotationData) > 8 {
+		data := iconAnnotationData[8]
+		dataList = append(dataList, data.([]interface{})...)
 	}
-
-	//cmd := "getIconAnnotation(" + className + ")"
-	//iconAnnotationData, ok := AllModelCache[cmd].([]interface{})
-	//if !ok {
-	//
-	//	iconAnnotationData, ok = o.SendExpression(cmd)
-	//}
-	//if ok {
-	//	dataList = append(dataList, iconAnnotationData...)
-	//	AllModelCache[cmd] = iconAnnotationData
-	//}
 	return dataList
 }
 
@@ -389,18 +390,6 @@ func (o *ZmqObject) GetIconAnnotationList(classNameList []string) []interface{} 
 			data := iconAnnotationData[8]
 			dataList = append(dataList, data.([]interface{})...)
 		}
-
-		//cmd := "getIconAnnotation(" + classNameList[i] + ")"
-		//iconAnnotationData, ok := AllModelCache[cmd].([]interface{})
-		//if !ok {
-		//
-		//	iconAnnotationData, ok = o.SendExpression(cmd)
-		//}
-		//if ok && len(iconAnnotationData) > 8 {
-		//	data := iconAnnotationData[8]
-		//	dataList = append(dataList, data.([]interface{})...)
-		//	AllModelCache[cmd] = iconAnnotationData
-		//}
 	}
 	return dataList
 }
@@ -610,10 +599,24 @@ func (o *ZmqObject) DeleteClass(className string) bool {
 	return true
 }
 
-func (o *ZmqObject) AddComponent(className, newComponentName, oldComponentName, origin, rotation string, extent []string) bool {
+func (o *ZmqObject) AddComponent(newComponentName, oldComponentName, className, origin, rotation string, extent []string) bool {
 	annotate := "annotate=Placement(visible=true, transformation=transformation(origin={" + origin + "}, extent={{" + extent[0] + "},{" + extent[1] + "}}, rotation=" + rotation + "))"
 	cmd := "addComponent(" + newComponentName + "," + oldComponentName + "," + className + "," + annotate + ")"
 	result, ok := o.SendExpressionNoParsed(cmd)
+	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
+	if ok && string(result) == "false" {
+		return false
+	}
+	return true
+}
+
+func (o *ZmqObject) AddInterfacesComponent(newComponentName, oldComponentName, className, origin, rotation string, extent []string) bool {
+	// addComponent(Modelica.Blocks.Interfaces.RealInput,t,realinput,annotate=Placement(visible=true, transformation=transformation(origin={168.94117431640626,-87.15294189453125}, extent={{-10,-10},{10,10}}, rotation=0,iconTransformation=transformation(origin={168.94117431640626,-87.15294189453125}, extent={{-10,-10},{10,10}}, rotation=0))))
+	//addComponent(y, Modelica.Blocks.Interfaces.RealVectorOutput,q,annotate=Placement(visible=true, transformation=transformation(origin={-36,-22}, extent={{-20,-20},{20,20}}, rotation=0), iconTransformation=transformation(origin={-36,-22}, extent={{-20,-20},{20,20}}, rotation=0))) 09:42:19:196
+	annotate := "annotate=Placement(visible=true, transformation=transformation(origin={" + origin + "}, extent={{" + extent[0] + "},{" + extent[1] + "}}, rotation=" + rotation + "),iconTransformation=transformation(origin={" + origin + "}, extent={{" + extent[0] + "},{" + extent[1] + "}}, rotation=" + rotation + "))"
+	cmd := "addComponent(" + newComponentName + "," + oldComponentName + "," + className + "," + annotate + ")"
+	result, ok := o.SendExpressionNoParsed(cmd)
+	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
 	if ok && string(result) == "false" {
 		return false
 	}
@@ -623,19 +626,31 @@ func (o *ZmqObject) AddComponent(className, newComponentName, oldComponentName, 
 func (o *ZmqObject) DeleteComponent(componentName, className string) bool {
 	cmd := "deleteComponent(" + componentName + "," + className + ")"
 	result, ok := o.SendExpressionNoParsed(cmd)
+	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
 	if ok && string(result) == "false" {
 		return false
 	}
 	return true
 }
 
-func (o *ZmqObject) UpdateComponent(componentName, ComponentClassName, modelNameAll, origin, rotation string, extent []string) bool {
-	// updateComponent(add3,Modelica.Blocks.Math.Add3,test,annotate=Placement(visible=true, transformation=transformation(origin={-68,24}, extent={{-10,-10},{10,10}}, rotation=0)))
-	//updateComponent(tan1,Modelica.Blocks.Math.Tan,test,annotate=Placement(visible=true, transformation=transformation(origin={-,-}, extent={{120,-52},{140,-72}}, rotation=0.0)))
+func (o *ZmqObject) UpdateComponent(newComponentName, oldComponentName, className, origin, rotation string, extent []string) bool {
 	annotate := "annotate=Placement(visible=true, transformation=transformation(origin={" + origin + "}, extent={{" + extent[0] + "},{" + extent[1] + "}}, rotation=" + rotation + "))"
-	cmd := "updateComponent(" + componentName + "," + ComponentClassName + "," + modelNameAll + "," + annotate + ")"
+	cmd := "updateComponent(" + newComponentName + "," + oldComponentName + "," + className + "," + annotate + ")"
 	// updateComponent(cos,Modelica.Blocks.Math.Cos,test,annotate=Placement(visible=true, transformation=transformation(origin={4,-16}, extent={{-10,-10},{10,10}}, rotation=0)))
 	// updateComponent(CriticalDamping,Modelica.Blocks.Continuous.Filter,test.Filter,annotate=Placement(visible=true, transformation=transformation(origin={34,0}, extent={{-20.0,40.0},{0.0,60.0}}, rotation=0)))
+	result, ok := o.SendExpressionNoParsed(cmd)
+	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
+	if ok && string(result) == "true" {
+		return true
+	}
+	return false
+}
+
+func (o *ZmqObject) UpdateInterfacesComponent(newComponentName, oldComponentName, className, origin, rotation string, extent []string) bool {
+	// updateComponent(y,Modelica.Blocks.Interfaces.RealVectorOutput,q,        annotate=Placement(visible=true, transformation=transformation(origin={-60,-20}, extent={{-20,-20},{20,20}}, rotation=0),         iconTransformation=transformation(origin={-36,-22}, extent={{-20,-20},{20,20}}, rotation=0)))
+	// updateComponent(u2,Modelica.Blocks.Interfaces.IntegerInput,FullRobot_ng,annotate=Placement(visible=true, transformation=transformation(origin={84,-56}, extent={{-20.0,-20.0},{20.0,20.0}}, rotation=0.0),iconTransformation=transformation(origin={84,-56}, extent={{-20.0,-20.0},{20.0,20.0}}, rotation=0.0)))
+	annotate := "annotate=Placement(visible=true, transformation=transformation(origin={" + origin + "}, extent={{" + extent[0] + "},{" + extent[1] + "}}, rotation=" + rotation + "),iconTransformation=transformation(origin={" + origin + "}, extent={{" + extent[0] + "},{" + extent[1] + "}}, rotation=" + rotation + "))"
+	cmd := "updateComponent(" + newComponentName + "," + oldComponentName + "," + className + "," + annotate + ")"
 	result, ok := o.SendExpressionNoParsed(cmd)
 	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
 	if ok && string(result) == "true" {

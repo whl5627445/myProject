@@ -78,12 +78,18 @@ func addComponentVerification(oldComponentName, newComponentName, modelName stri
 	return true, ""
 }
 
-func AddComponent(oldComponentName, newComponentName, modelName, origin, rotation string, extent []string) (bool, string) {
-	v, msg := addComponentVerification(oldComponentName, newComponentName, modelName)
+func AddComponent(componentName, componentClassName, modelNameAll, origin, rotation string, extent []string) (bool, string) {
+	v, msg := addComponentVerification(componentClassName, componentName, modelNameAll)
 	if !v {
 		return false, msg
 	}
-	result := omc.OMC.AddComponent(modelName, newComponentName, oldComponentName, origin, rotation, extent)
+	result := false
+	//if strings.Index(componentClassName, "Interfaces") == -1 {
+	if omc.OMC.GetClassRestriction(componentClassName) != "connector" {
+		result = omc.OMC.AddComponent(componentName, componentClassName, modelNameAll, origin, rotation, extent)
+	} else {
+		result = omc.OMC.AddInterfacesComponent(componentName, componentClassName, modelNameAll, origin, rotation, extent)
+	}
 	if !result {
 		msg = "新增组件失败"
 	}
@@ -96,7 +102,12 @@ func DeleteComponent(componentName, modelNameAll string) bool {
 }
 
 func UpdateComponent(componentName, componentClassName, modelNameAll, origin, rotation string, extent []string) bool {
-	result := omc.OMC.UpdateComponent(componentName, componentClassName, modelNameAll, origin, rotation, extent)
+	result := false
+	if omc.OMC.GetClassRestriction(componentClassName) != "connector" {
+		result = omc.OMC.UpdateComponent(componentName, componentClassName, modelNameAll, origin, rotation, extent)
+	} else {
+		result = omc.OMC.UpdateInterfacesComponent(componentName, componentClassName, modelNameAll, origin, rotation, extent)
+	}
 	return result
 }
 

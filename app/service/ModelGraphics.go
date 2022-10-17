@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/base64"
 	"fmt"
 	"log"
 	"os"
@@ -26,9 +27,27 @@ func GetGraphicsData(modelName string) [][]map[string]interface{} {
 		g.data[0] = append(g.data[0], data1...)
 	}
 	g.getnthconnectionData(nameList)
-	componentsData := omc.OMC.GetElementsList(nameList)
-	componentannotationsData := omc.OMC.GetElementAnnotationsList(nameList)
-	data2 := g.data02(componentsData, componentannotationsData, false, "")
+
+	//nameList第一个名字是模型自身的名字，先获取模型自身的视图数据
+	componentsData := omc.OMC.GetElementsList(nameList[:1])
+	componentAnnotationsData := getElementAndDiagramAnnotations(nameList[:1])
+	data2 := g.data02(componentsData, componentAnnotationsData, false, "")
+	for i := 0; i < len(data2); i++ {
+		data2[i]["mobility"] = true //模型自身的组件是可以移动的，设置字段"mobility"为true
+	}
+	g.data[1] = append(g.data[1], data2...)
+
+	//nameList第二个名字开始是继承模型的名字，获取继承模型的视图数据
+	componentsData = omc.OMC.GetElementsList(nameList[1:])
+	componentAnnotationsData = getElementAndDiagramAnnotations(nameList[1:])
+	data2 = g.data02(componentsData, componentAnnotationsData, false, "")
+	for i := 0; i < len(data2); i++ {
+		data2[i]["mobility"] = false //继承模型的组件是不可以移动的，设置字段"mobility"为false
+	}
+
+	//componentsData := omc.OMC.GetElementsList(nameList)
+	//componentAnnotationsData := getElementAndDiagramAnnotations(nameList)
+	//data2 := g.data02(componentsData, componentAnnotationsData, false, "")
 	g.data[1] = append(g.data[1], data2...)
 	return g.data
 }
@@ -36,11 +55,9 @@ func GetGraphicsData(modelName string) [][]map[string]interface{} {
 func GetComponentGraphicsData(modelName string, componentName string) [][]map[string]interface{} {
 	var g = graphicsData{}
 	g.data = [][]map[string]interface{}{{}, {}}
-	//nameList := g.getICList(modelName)
-	//components := omc.OMC.GetElementsList(nameList)
-	//componentAnnotations := omc.OMC.GetComponentAnnotationsList(nameList)
+
 	components := omc.OMC.GetElementsList([]string{modelName})
-	componentAnnotations := omc.OMC.GetComponentAnnotationsList([]string{modelName})
+	componentAnnotations := getElementAndDiagramAnnotations([]string{modelName})
 	var componentsData [][]interface{}
 	var componentAnnotationsData [][]interface{}
 	for i := 0; i < len(components); i++ {
@@ -170,13 +187,15 @@ func (g *graphicsData) data01(cData []interface{}) []map[string]interface{} {
 				data["rotation"] = drawingDataList[2]
 				data["points"] = twoDimensionalProcessing(drawingDataList[3].([]interface{}))
 				dataImagePath := drawingDataList[4]
-				if dataImagePath != "" {
+				if drawingDataList[5] == "" {
+					// TODO: 这里文件读出来的数据没有进行base64转换， 需要修改
 					imagePath := omc.OMC.UriToFilename(dataImagePath.(string))
 					bytes, err := os.ReadFile(imagePath)
 					if err != nil {
-						log.Fatal(err)
+						log.Println("dataImagePath 错误：", dataImagePath)
+						log.Println("err：", err)
 					}
-					data["imageBase64"] = bytes
+					data["imageBase64"] = base64.StdEncoding.EncodeToString(bytes)
 				} else {
 					data["imageBase64"] = drawingDataList[5]
 				}
@@ -254,12 +273,17 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 	}()
 	if isIcon == true && cData != nil && caData != nil {
 		for i := 0; i < dataLen; i++ {
-			cDataSplit := strings.Split(cData[i][2].(string), ".")
-			for ii := 0; ii < len(cDataSplit); ii++ {
-				if "Interfaces" == cDataSplit[ii] {
-					cDataFilter = append(cDataFilter, cData[i])
-					caDataFilter = append(caDataFilter, caData[i])
-				}
+			//cDataSplit := strings.Split(cData[i][2].(string), ".")
+			//for ii := 0; ii < len(cDataSplit); ii++ {
+			//	if "Interfaces" == cDataSplit[ii] {
+			//		cDataFilter = append(cDataFilter, cData[i])
+			//		caDataFilter = append(caDataFilter, caData[i])
+			//	}
+			//}
+			nameType := omc.OMC.GetClassRestriction(cData[i][2].(string))
+			if nameType == "connector" || nameType == "expandable connector" {
+				cDataFilter = append(cDataFilter, cData[i])
+				caDataFilter = append(caDataFilter, caData[i])
 			}
 		}
 	} else {
@@ -293,11 +317,11 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 			}
 			return -1
 		}()
-		if placementIndex != -1 {
+		if placementIndex != -1 || cDataFilter[i][9] == "true" {
 
 			componentsData := omc.OMC.GetElementsList(nameList)
-			componentannotationsData := omc.OMC.GetElementAnnotationsList(nameList)
-			IconAnnotationData := omc.OMC.GetIconAnnotationList(nameList)
+			componentAnnotationsData := omc.OMC.GetElementAnnotationsList(nameList)
+			IconAnnotationData := getIconAndDiagramAnnotations(nameList, isIcon)
 			caf := caDataFilter[i][placementIndex+1].([]interface{})
 			if len(caf) < 7 {
 				// 出现错误会使数据不可用， 长度小于预期，弃用
@@ -312,27 +336,21 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 				}
 			}()
 			data := map[string]interface{}{"type": "Transformation"}
+
 			data["graphType"] = func() string {
-				for di := 0; di < len(cDataFilter); di++ {
-					dList := strings.Split(cDataFilter[di][2].(string), ".")
-					for dii := 0; dii < len(dList); dii++ {
-						if dList[dii] == "Interfaces" {
-							return "connecter"
-						}
-					}
+				nameType := omc.OMC.GetClassRestriction(name)
+				if nameType == "connector" || nameType == "expandable connector" {
+					return "connecter"
 				}
 				return ""
 			}()
 			data["ID"] = strconv.Itoa(i)
-			data["classname"] = cDataFilter[i][2]
+			data["classname"] = name
 			data["name"] = cDataFilter[i][3]
 			data["original_name"] = cDataFilter[i][3]
 			data["parent"] = parent
 			data["visible"] = caf[0]
 			data["rotateAngle"] = rotateAngle
-			data["originDiagram"] = strings.Join([]string{caDataFilter[i][1].([]interface{})[1].(string), caDataFilter[i][1].([]interface{})[2].(string)}, ",")
-			data["extent1Diagram"] = strings.Join([]string{caDataFilter[i][1].([]interface{})[3].(string), caDataFilter[i][1].([]interface{})[4].(string)}, ",")
-			data["extent2Diagram"] = strings.Join([]string{caDataFilter[i][1].([]interface{})[5].(string), caDataFilter[i][1].([]interface{})[6].(string)}, ",")
 			data["originDiagram"] = strings.Join([]string{caf[1].(string), caf[2].(string)}, ",")
 			data["extent1Diagram"] = strings.Join([]string{caf[3].(string), caf[4].(string)}, ",")
 			data["extent2Diagram"] = strings.Join([]string{caf[5].(string), caf[6].(string)}, ",")
@@ -342,7 +360,7 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 				str := fmt.Sprintf("%s", t)
 				return str
 			}()
-			data["inputOutputs"] = g.data02(componentsData, componentannotationsData, true, data["name"].(string))
+			data["inputOutputs"] = g.data02(componentsData, componentAnnotationsData, true, data["name"].(string))
 			data["subShapes"] = g.data01(IconAnnotationData)
 			dataList = append(dataList, data)
 		}
@@ -359,6 +377,11 @@ func (g *graphicsData) getnthconnectionData(nameList []string) {
 			d1Data := g.data01(ncaData)
 			if len(ncData) != 0 && len(ncaData) != 0 && len(d1Data) != 0 {
 				daData := d1Data[0]
+				if i == 0 { //i==0的时候，表示目前遍历的是模型自身的组件，模型自身的组件可以移动，设在"mobility"为true
+					daData["mobility"] = true
+				} else {
+					daData["mobility"] = false
+				}
 				daData["connectionfrom_original_name"] = ncData[0]
 				daData["connectionto_original_name"] = ncData[1]
 				re1, _ := regexp.Compile("[[0-9]+]$")
@@ -372,3 +395,41 @@ func (g *graphicsData) getnthconnectionData(nameList []string) {
 		}
 	}
 }
+
+func getElementAndDiagramAnnotations(nameList []string) [][]interface{} {
+	var data [][]interface{}
+
+	for _, name := range nameList {
+		var result []interface{}
+		//if strings.Index(name, "Interfaces") == -1 {
+		nameType := omc.OMC.GetClassRestriction(name)
+		if nameType == "connector" || nameType == "expandable connector" {
+			result = omc.OMC.GetDiagramAnnotation(name)
+		} else {
+			result = omc.OMC.GetElementAnnotations(name)
+		}
+		for _, i := range result {
+			data = append(data, i.([]interface{}))
+		}
+	}
+	return data
+}
+
+func getIconAndDiagramAnnotations(nameList []string, isIcon bool) []interface{} {
+	var data []interface{}
+	for _, name := range nameList {
+		var result []interface{}
+		nameType := omc.OMC.GetClassRestriction(name)
+		if (nameType == "connector" || nameType == "expandable connector") && isIcon == false {
+			result = omc.OMC.GetDiagramAnnotation(name)
+		} else {
+			result = omc.OMC.GetIconAnnotation(name)
+		}
+		for _, i := range result {
+			data = append(data, i)
+		}
+	}
+	return data
+}
+
+//Buildings.ThermalZones.EnergyPlus.Examples.SmallOffice.Unconditioned

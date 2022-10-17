@@ -6,11 +6,13 @@ import (
 
 func GetIcon(modelName string) string {
 	iconData := omc.OMC.GetIconAnnotation(modelName)
-	if len(iconData) > 8 {
-		imageData := iconData[8]
-		if imageData.([]interface{})[0] == "Bitmap" {
-			image := imageData.([]interface{})[1].([]interface{})[5].(string)
-			return image
+	if len(iconData) > 1 {
+		for i := 0; i < len(iconData); i += 2 {
+			imageData := iconData[i]
+			if imageData == "Bitmap" {
+				image := iconData[i+1].([]interface{})[5].(string)
+				return image
+			}
 		}
 	}
 	return ""

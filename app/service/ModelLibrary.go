@@ -13,14 +13,14 @@ func ModelLibraryInitialization(packageModel []DataBaseModel.YssimModels) {
 	for _, models := range packageModel {
 		packageModelMap[models.PackageName] = models
 	}
-	packageAll := omc.OMC.GetPackages()
-	for _, p := range packageAll {
-		if _, ok := packageModelMap[p]; ok && packageModelMap[p].SysUser == "sys" {
-			delete(packageModelMap, p)
-		} else {
-			DeleteLibrary(p)
-		}
-	}
+	//packageAll := omc.OMC.GetPackages()
+	//for _, p := range packageAll {
+	//if _, ok := packageModelMap[p]; ok && packageModelMap[p].SysUser == "sys" {
+	//	delete(packageModelMap, p)
+	//} else {
+	//	DeleteLibrary(p)
+	//}
+	//}
 	for _, models := range packageModelMap {
 		ok := false
 		if models.FilePath == "" {
@@ -89,7 +89,7 @@ func modelCache(packageModel string) {
 	for p := 0; p < len(modelsALL); p++ {
 		e := omc.OMC.GetClassInformation(modelsALL[p])
 		if len(e) > 1 && e[0].(string) == "model" {
-			//log.Println("正在缓存：", modelsALL[p], " 的图形数据")
+			log.Println("正在缓存：", modelsALL[p], " 的图形数据")
 			GetGraphicsData(modelsALL[p])
 		}
 	}

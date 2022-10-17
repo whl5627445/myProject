@@ -459,7 +459,7 @@ func AddModelComponentView(c *gin.Context) {
 		return
 	}
 	rotation := strconv.Itoa(item.Rotation)
-	result, msg := service.AddComponent(item.OldComponentName, item.NewComponentName, item.ModelName, item.Origin, rotation, item.Extent)
+	result, msg := service.AddComponent(item.NewComponentName, item.OldComponentName, item.ModelName, item.Origin, rotation, item.Extent)
 	if !result {
 		res.Err = msg
 		res.Status = 2
