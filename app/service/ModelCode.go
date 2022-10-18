@@ -80,7 +80,7 @@ func CreateModelAndPackage(createPackageName, insertTo, expand, strType, createP
 		expand = " extends " + expand + ";"
 	}
 	if comment != "" {
-		comment = " \\\"" + comment + "\\\""
+		comment = " \"" + comment + "\""
 	}
 	modelStrBase := strType + " " + createPackageName + comment + expand + " end " + createPackageName + ";"
 	modelStr := ""

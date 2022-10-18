@@ -187,6 +187,15 @@ func CreateModelPackageView(c *gin.Context) {
 		var insertPackageRecord DataBaseModel.YssimModels
 		DB.Where("id = ? AND sys_or_user = ? AND userspace_id = ?", item.PackageId, username, userSpaceId).First(&insertPackageRecord)
 		createPackageNameALL = item.Vars.InsertTo + "." + item.Name
+		modelChildList := service.GetModelChild(item.Vars.InsertTo)
+		for i := 0; i < len(modelChildList); i++ {
+			if modelChildList[i]["name"] == item.Name {
+				res.Err = "名称已存在，请修改后再试。"
+				res.Status = 2
+				c.JSON(http.StatusOK, res)
+				return
+			}
+		}
 		newPackage = insertPackageRecord
 	}
 	result := service.CreateModelAndPackage(createPackageName, item.Vars.InsertTo, item.Vars.Expand, item.StrType, createPackageNameALL, item.Comment, item.Vars.Partial, item.Vars.Encapsulated, item.Vars.State)
