@@ -154,30 +154,50 @@ func SimulateResultView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
-	var record DataBaseModel.YssimSimulateRecord
-	err = DB.Where("id = ? AND username = ?", item.RecordId, username).First(&record).Error
-	if err != nil || record.SimulateStatus != "4" {
-		c.JSON(http.StatusBadRequest, "not found")
+
+	var res ResponseData
+	var resData []map[string]interface{}
+
+	//判断记录是否存在，有一条不存在就返回"not found"
+	recordIdList := item.RecordId
+	var record []DataBaseModel.YssimSimulateRecord
+	err = DB.Where("id IN ? AND username = ?", recordIdList, username).Find(&record).Error
+	for i := 0; i < len(record); i++ {
+		if err != nil || record[i].SimulateStatus != "4" {
+			c.JSON(http.StatusBadRequest, "not found")
+			return
+		}
+	}
+	//判断输入id个数和输出结果长度是否一致!
+	if len(record) != len(recordIdList) {
+		c.JSON(http.StatusBadRequest, "输入id个数和输出结果长度不一致!")
 		return
 	}
-	var res ResponseData
-	data, ok := service.ReadSimulationResult([]string{item.Variable}, record.SimulateModelResultPath+"result_res.mat")
-	unitsData := service.ConvertUnits(item.S2, item.S1)
-	if ok {
-		unitsScaleFactor, _ := strconv.ParseFloat(unitsData[1], 64)
-		ordinate := data[1]
-		for i := 0; i < len(ordinate); i++ {
-			ordinate[i] = ordinate[i] * unitsScaleFactor
+
+	//遍历入参数中的id，依次读取结果，每次经过插入到resData
+	for i := 0; i < len(recordIdList); i++ {
+		data, ok := service.ReadSimulationResult([]string{item.Variable}, record[i].SimulateModelResultPath+"result_res.mat")
+		unitsData := service.ConvertUnits(item.S2, item.S1)
+		if ok {
+			unitsScaleFactor, _ := strconv.ParseFloat(unitsData[1], 64)
+			ordinate := data[1]
+			for i := 0; i < len(ordinate); i++ {
+				ordinate[i] = ordinate[i] * unitsScaleFactor
+			}
+			oneData := map[string]interface{}{
+				"abscissa":  data[0],
+				"ordinate":  ordinate,
+				"startTime": record[i].StartTime,
+				"stopTime":  record[i].StopTime,
+			}
+			resData = append(resData, oneData)
+			res.Data = resData
+		} else {
+			res.Err = "结果不存在"
+			res.Status = 2
+			c.JSON(http.StatusOK, res)
+			return
 		}
-		res.Data = map[string]interface{}{
-			"abscissa":  data[0],
-			"ordinate":  ordinate,
-			"startTime": record.StartTime,
-			"stopTime":  record.StopTime,
-		}
-	} else {
-		res.Err = "结果不存在"
-		res.Status = 2
 	}
 	c.JSON(http.StatusOK, res)
 }

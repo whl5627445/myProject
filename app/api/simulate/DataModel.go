@@ -30,10 +30,10 @@ type ModelSimulateData struct {
 }
 
 type ModelSimulateResultData struct {
-	RecordId string `json:"id" binding:"required"`
-	Variable string `json:"variable" binding:"required"`
-	S1       string `json:"s1" binding:""`
-	S2       string `json:"s2" binding:""`
+	RecordId []string `json:"id" binding:"required"`
+	Variable string   `json:"variable" binding:"required"`
+	S1       string   `json:"s1" binding:""`
+	S2       string   `json:"s2" binding:""`
 }
 
 type ExperimentCreateData struct {
