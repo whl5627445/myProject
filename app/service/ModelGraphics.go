@@ -19,6 +19,34 @@ type graphicsData struct {
 func GetGraphicsData(modelName string) [][]map[string]interface{} {
 	var g = graphicsData{}
 	g.data = [][]map[string]interface{}{{}, {}}
+	nameType := omc.OMC.GetClassRestriction(modelName)
+	if nameType == "connector" || nameType == "expandable connector" {
+		interfaceDiagramAnnotationData := omc.OMC.GetDiagramAnnotation(modelName)
+		interfaceGraphicsData := interfaceDiagramAnnotationData[8].([]interface{})
+		data := make(map[string]interface{}, 0)
+		data["ID"] = "0"
+		data["classname"] = modelName
+		data["extent1Diagram"] = interfaceDiagramAnnotationData[0].(string) + "," + interfaceDiagramAnnotationData[1].(string)
+		data["extent2Diagram"] = interfaceDiagramAnnotationData[2].(string) + "," + interfaceDiagramAnnotationData[3].(string)
+		data["graphType"] = ""
+		data["mobility"] = false
+		data["name"] = ""
+		data["originDiagram"] = "0.0,0.0"
+		data["original_name"] = ""
+		data["output_type"] = "[]"
+		data["parent"] = ""
+		data["rotateAngle"] = "0.0"
+		data["rotation"] = "0.0"
+		data["type"] = "Transformation"
+		data["visible"] = "true"
+		data["inputOutputs"] = make([]map[string]interface{}, 0, 1)
+		data["subShapes"] = make([]map[string]interface{}, 0, 1)
+		data1 := g.data01(interfaceGraphicsData)
+		data["subShapes"] = data1
+		g.data[1] = append(g.data[1], data)
+		log.Println("g.data: ", g.data)
+		return g.data
+	}
 	nameList := g.getICList(modelName)
 	diagramAnnotationData := omc.OMC.GetDiagramAnnotationList(nameList)
 	if len(diagramAnnotationData) >= 8 {
@@ -30,7 +58,8 @@ func GetGraphicsData(modelName string) [][]map[string]interface{} {
 
 	//nameList第一个名字是模型自身的名字，先获取模型自身的视图数据
 	componentsData := omc.OMC.GetElementsList([]string{modelName})
-	componentAnnotationsData := getElementAndDiagramAnnotations([]string{modelName})
+	componentAnnotationsData := omc.OMC.GetComponentAnnotationsList([]string{modelName})
+	//componentAnnotationsData := getElementAndDiagramAnnotations([]string{modelName})
 	data2 := g.data02(componentsData, componentAnnotationsData, false, "")
 	for i := 0; i < len(data2); i++ {
 		data2[i]["mobility"] = true //模型自身的组件是可以移动的，设置字段"mobility"为true
@@ -45,9 +74,6 @@ func GetGraphicsData(modelName string) [][]map[string]interface{} {
 		data2[i]["mobility"] = false //继承模型的组件是不可以移动的，设置字段"mobility"为false
 	}
 
-	//componentsData := omc.OMC.GetElementsList(nameList)
-	//componentAnnotationsData := getElementAndDiagramAnnotations(nameList)
-	//data2 := g.data02(componentsData, componentAnnotationsData, false, "")
 	g.data[1] = append(g.data[1], data2...)
 	return g.data
 }
@@ -125,34 +151,8 @@ func twoDimensionalProcessing(drawingData []interface{}) []string {
 }
 
 func (g *graphicsData) getICList(name string) []string {
-	dataList := []string{name}
-	nameList := []string{name}
-	for {
-		InheritedClassesData := omc.OMC.GetInheritedClassesList(nameList)
-		if len(InheritedClassesData) > 0 {
-			dataList = append(dataList, InheritedClassesData...)
-			nameList = InheritedClassesData
-		} else {
-			break
-		}
-	}
-	//dataList去重
-	var datalistLen = len(dataList)
-	for i := 0; i < datalistLen; i++ {
-		for j := i + 1; j < datalistLen; j++ {
-			if dataList[i] == dataList[j] {
-				dataList = append(dataList[:i], dataList[i+1:]...)
-				datalistLen--
-				i--
-				break
-			}
-		}
-	}
-	var dataListNew []string
-	for i := len(dataList) - 1; i >= 0; i-- {
-		dataListNew = append(dataListNew, dataList[i])
-	}
-	return dataListNew
+	dataList := GetICList(name)
+	return dataList
 }
 
 func find(data []interface{}, str string) bool {
@@ -191,7 +191,6 @@ func (g *graphicsData) data01(cData []interface{}) []map[string]interface{} {
 				data["points"] = twoDimensionalProcessing(drawingDataList[3].([]interface{}))
 				dataImagePath := drawingDataList[4]
 				if drawingDataList[5] == "" {
-					// TODO: 这里文件读出来的数据没有进行base64转换， 需要修改
 					imagePath := omc.OMC.UriToFilename(dataImagePath.(string))
 					bytes, err := os.ReadFile(imagePath)
 					if err != nil {
@@ -333,8 +332,8 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 				// 出现错误会使数据不可用， 长度小于预期，弃用
 				continue
 			}
+			// TODO 默认填充色修改
 			rotateAngle := func() string {
-
 				if caf[7] == "-" {
 					return "0"
 				} else {
@@ -411,6 +410,9 @@ func getElementAndDiagramAnnotations(nameList []string) [][]interface{} {
 		nameType := omc.OMC.GetClassRestriction(name)
 		if nameType == "connector" || nameType == "expandable connector" {
 			result = omc.OMC.GetDiagramAnnotation(name)
+			if len(result) > 8 {
+				result = result[8].([]interface{})
+			}
 		} else {
 			result = omc.OMC.GetElementAnnotations(name)
 		}
@@ -428,6 +430,9 @@ func getIconAndDiagramAnnotations(nameList []string, isIcon bool) []interface{} 
 		nameType := omc.OMC.GetClassRestriction(name)
 		if (nameType == "connector" || nameType == "expandable connector") && isIcon == false {
 			result = omc.OMC.GetDiagramAnnotation(name)
+			if len(result) > 8 {
+				result = result[8].([]interface{})
+			}
 		} else {
 			result = omc.OMC.GetIconAnnotation(name)
 		}

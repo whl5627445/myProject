@@ -292,7 +292,7 @@ func SetComponentPropertiesView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, res)
 		return
 	}
-	result := service.SetComponentProperties(
+	result, msg := service.SetComponentProperties(
 		item.ModelName,
 		item.NewComponentName,
 		item.OldComponentName,
@@ -307,7 +307,7 @@ func SetComponentPropertiesView(c *gin.Context) {
 		go service.SaveModelToFile(packageModel.PackageName, packageModel.FilePath)
 		res.Msg = "设置完成"
 	} else {
-		res.Err = "设置失败: 请检查参数是否正确"
+		res.Err = msg
 		res.Status = 2
 	}
 	c.JSON(http.StatusOK, res)
@@ -464,6 +464,7 @@ func AddModelComponentView(c *gin.Context) {
 		res.Err = msg
 		res.Status = 2
 	} else {
+		service.SaveModelToFile(modelPackage.PackageName, modelPackage.FilePath)
 		res.Msg = "新增组件成功"
 	}
 	c.JSON(http.StatusOK, res)

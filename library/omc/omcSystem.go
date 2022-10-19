@@ -145,7 +145,7 @@ func (o *ZmqObject) CacheRefreshSet(cache bool) {
 	cacheRefresh = cache
 }
 
-// 获取给定切片当中所有模型的继承项，包含原始数据
+// 获取给定切片当中所有模型的继承项，包含原始数据，并不迭代
 func (o *ZmqObject) GetInheritedClassesList(classNameList []string) []string {
 	var dataList []string
 	for i := 0; i < len(classNameList); i++ {
@@ -159,22 +159,11 @@ func (o *ZmqObject) GetInheritedClassesList(classNameList []string) []string {
 				dataList = append(dataList, InheritedclassesData[p].(string))
 			}
 		}
-		//cmd := "getInheritedClasses(" + classNameList[i] + ")"
-		//InheritedclassesData, ok := AllModelCache[cmd].([]interface{})
-		//if !ok {
-		//	InheritedclassesData, ok = o.SendExpression(cmd)
-		//}
-		//if ok {
-		//	for p := 0; p < len(InheritedclassesData); p++ {
-		//		dataList = append(dataList, InheritedclassesData[p].(string))
-		//		AllModelCache[cmd] = InheritedclassesData
-		//	}
-		//
-		//}
 	}
 	return dataList
 }
 
+// 获取给定切片当中所有模型的继承项，包含原始数据, 迭代到最顶层的继承
 func (o *ZmqObject) GetInheritedClassesListAll(classNameList []string) []string {
 	var dataList = classNameList
 	var nameList = classNameList
@@ -214,9 +203,8 @@ func (o *ZmqObject) GetDiagramAnnotation(className string) []interface{} {
 	var dataList []interface{}
 	cmd := "getDiagramAnnotation(" + className + ")"
 	diagramAnnotationData, ok := o.SendExpression(cmd)
-	if ok && len(diagramAnnotationData) > 8 {
-		data := diagramAnnotationData[8]
-		dataList = append(dataList, data.([]interface{})...)
+	if ok {
+		return diagramAnnotationData
 	}
 	return dataList
 }
@@ -540,10 +528,12 @@ func (o *ZmqObject) SetComponentModifierValue(className string, parameter string
 	return string(data)
 }
 
+// 此函数不返回正确与错误，不报错均视为执行成功
 func (o *ZmqObject) RenameComponentInClass(className string, oldComponentName string, newComponentName string) bool {
 	cmd := "renameComponentInClass(" + className + "," + oldComponentName + ", " + newComponentName + ")"
-	result, ok := o.SendExpression(cmd)
-	if ok && len(result) > 0 {
+	result, ok := o.SendExpressionNoParsed(cmd)
+	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
+	if ok && string(result) != "Error" {
 		return true
 	}
 	return false
@@ -912,4 +902,14 @@ func (o *ZmqObject) SaveModel(fileName, className string) bool {
 		return true
 	}
 	return false
+}
+
+// GetAvailableLibraries 获取可用库
+func (o *ZmqObject) GetAvailableLibraries(fileName, className string) []interface{} {
+	cmd := "getAvailableLibraries()"
+	result, ok := o.SendExpression(cmd)
+	if ok {
+		return result
+	}
+	return nil
 }

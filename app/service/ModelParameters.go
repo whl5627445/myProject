@@ -95,6 +95,9 @@ func GetModelParameters(modelName, name, componentName string) []interface{} {
 	if name == "" || componentName == "" {
 		m.name = modelName
 		m.componentName = modelName
+	} else {
+		m.name = name
+		m.componentName = componentName
 	}
 	m.modelName = modelName
 	m.classAll = omc.OMC.GetInheritedClassesListAll([]string{m.componentName})

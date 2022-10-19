@@ -8,7 +8,7 @@ import (
 )
 
 func GetElements(className, componentName string) []interface{} {
-	classNameList := GetInheritedClassNameList(className)
+	classNameList := GetICList(className)
 	var componentsData []interface{}
 	for i := 0; i < len(classNameList); i++ {
 		classnameData := omc.OMC.GetElements(classNameList[i])
@@ -111,18 +111,9 @@ func UpdateComponent(componentName, componentClassName, modelNameAll, origin, ro
 	return result
 }
 
-func GetInheritedClassNameList(name string) []string {
-	dataList := []string{name}
+func GetICList(name string) []string {
 	nameList := []string{name}
-	for {
-		InheritedClassesData := omc.OMC.GetInheritedClassesList(nameList)
-		if len(InheritedClassesData) > 0 {
-			dataList = append(dataList, InheritedClassesData...)
-			nameList = InheritedClassesData
-		} else {
-			break
-		}
-	}
+	dataList := omc.OMC.GetInheritedClassesListAll(nameList)
 	//dataList去重
 	var datalistLen = len(dataList)
 	for i := 0; i < datalistLen; i++ {
@@ -135,5 +126,9 @@ func GetInheritedClassNameList(name string) []string {
 			}
 		}
 	}
-	return dataList
+	var dataListNew []string
+	for i := len(dataList) - 1; i >= 0; i-- {
+		dataListNew = append(dataListNew, dataList[i])
+	}
+	return dataListNew
 }
