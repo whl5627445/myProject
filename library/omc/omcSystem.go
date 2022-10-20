@@ -140,7 +140,7 @@ func (o *ZmqObject) GetCommandLineOptions() string {
 	return ""
 }
 
-//改变缓存策略
+// 改变缓存策略
 func (o *ZmqObject) CacheRefreshSet(cache bool) {
 	cacheRefresh = cache
 }
@@ -421,7 +421,6 @@ func (o *ZmqObject) List(className string) string {
 	return code
 }
 
-//
 func (o *ZmqObject) GetElementModifierValue(className string, modifierName string) string {
 	cmd := "getElementModifierValue(" + className + "," + modifierName + ")"
 	data, _ := o.SendExpressionNoParsed(cmd)
@@ -725,12 +724,13 @@ func (o *ZmqObject) GetDocumentationAnnotation(className string) []string {
 	cmd := "getDocumentationAnnotation(" + className + ")"
 	data, ok := o.SendExpressionNoParsed(cmd)
 	data = bytes.TrimSuffix(data, []byte("\n"))
+	data = bytes.ReplaceAll(data, []byte("\r"), []byte("\\r"))
 	data = bytes.ReplaceAll(data, []byte("\n"), []byte("\\n"))
 	if ok && len(data) > 0 {
 		data = data[1 : len(data)-1]
 		data = append([]byte{'['}, data...)
 		data = append(data, ']')
-		var docData []interface{}
+		var docData = []interface{}{"", "", ""}
 		err := json.Unmarshal(data, &docData)
 		if err != nil {
 			log.Println("docData: ", string(data))
@@ -905,7 +905,7 @@ func (o *ZmqObject) SaveModel(fileName, className string) bool {
 }
 
 // GetAvailableLibraries 获取可用库
-func (o *ZmqObject) GetAvailableLibraries(fileName, className string) []interface{} {
+func (o *ZmqObject) GetAvailableLibraries() []interface{} {
 	cmd := "getAvailableLibraries()"
 	result, ok := o.SendExpression(cmd)
 	if ok {

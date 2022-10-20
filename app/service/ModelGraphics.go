@@ -2,6 +2,7 @@ package service
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -44,7 +45,6 @@ func GetGraphicsData(modelName string) [][]map[string]interface{} {
 		data1 := g.data01(interfaceGraphicsData)
 		data["subShapes"] = data1
 		g.data[1] = append(g.data[1], data)
-		log.Println("g.data: ", g.data)
 		return g.data
 	}
 	nameList := g.getICList(modelName)
@@ -332,7 +332,6 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 				// 出现错误会使数据不可用， 长度小于预期，弃用
 				continue
 			}
-			// TODO 默认填充色修改
 			rotateAngle := func() string {
 				if caf[7] == "-" {
 					return "0"
@@ -406,7 +405,6 @@ func getElementAndDiagramAnnotations(nameList []string) [][]interface{} {
 
 	for _, name := range nameList {
 		var result []interface{}
-		//if strings.Index(name, "Interfaces") == -1 {
 		nameType := omc.OMC.GetClassRestriction(name)
 		if nameType == "connector" || nameType == "expandable connector" {
 			result = omc.OMC.GetDiagramAnnotation(name)
@@ -425,7 +423,7 @@ func getElementAndDiagramAnnotations(nameList []string) [][]interface{} {
 
 func getIconAndDiagramAnnotations(nameList []string, isIcon bool) []interface{} {
 	var data []interface{}
-	for _, name := range nameList {
+	for i, name := range nameList {
 		var result []interface{}
 		nameType := omc.OMC.GetClassRestriction(name)
 		if (nameType == "connector" || nameType == "expandable connector") && isIcon == false {
@@ -435,12 +433,15 @@ func getIconAndDiagramAnnotations(nameList []string, isIcon bool) []interface{} 
 			}
 		} else {
 			result = omc.OMC.GetIconAnnotation(name)
+			if result == nil && (nameType == "connector" || nameType == "expandable connector") && len(nameList) == i+1 && len(data) == 0 {
+				var defaultData []interface{}
+				json.Unmarshal([]byte("[\"Ellipse\",[\"true\",[\"0.0\",\"0.0\"],\"0.0\",[\"95\",\"95\",\"95\"],[\"255\",\"255\",\"255\"],\"LinePattern.Solid\",\"FillPattern.Solid\",\"0.25\",[[\"-90.0\",\"90.0\"],[\"90.0\",\"-90.0\"]],\"0.0\",\"360.0\",\"EllipseClosure.Chord\"]]"), &defaultData)
+				result = defaultData
+			}
 		}
-		for _, i := range result {
-			data = append(data, i)
+		for _, p := range result {
+			data = append(data, p)
 		}
 	}
 	return data
 }
-
-//Buildings.ThermalZones.EnergyPlus.Examples.SmallOffice.Unconditioned
