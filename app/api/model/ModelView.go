@@ -407,6 +407,8 @@ func DeletePackageAndModelView(c *gin.Context) {
 	if result {
 		res.Msg = msg
 		if item.ParentName == "" {
+			var simulateRecord []DataBaseModel.YssimSimulateRecord
+			DB.Where("package_id = ? AND username = ? AND userspace_id = ?", item.PackageId, username, userSpaceId).Delete(&simulateRecord)
 			DB.Delete(&packageModel)
 		}
 	} else {

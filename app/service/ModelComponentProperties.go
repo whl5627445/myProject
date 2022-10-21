@@ -12,9 +12,13 @@ func renameComponentInClass(className, oldComponentName, newComponentName string
 		return false, "名称为关键字，请更换另一个名称"
 	}
 	for i := 0; i < len(data); i++ {
+		if data[i].([]interface{})[3].(string) == newComponentName && data[i].([]interface{})[3].(string) != oldComponentName {
+			return false, "名称重复，请更换另一个名称"
+		}
+	}
+	for i := 0; i < len(data); i++ {
 		if data[i].([]interface{})[3].(string) == oldComponentName {
 			_ = omc.OMC.RenameComponentInClass(className, oldComponentName, newComponentName)
-
 			return true, ""
 		}
 	}
