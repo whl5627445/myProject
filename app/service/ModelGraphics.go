@@ -58,8 +58,8 @@ func GetGraphicsData(modelName string) [][]map[string]interface{} {
 
 	//nameList第一个名字是模型自身的名字，先获取模型自身的视图数据
 	componentsData := omc.OMC.GetElementsList([]string{modelName})
-	componentAnnotationsData := omc.OMC.GetComponentAnnotationsList([]string{modelName})
-	//componentAnnotationsData := getElementAndDiagramAnnotations([]string{modelName})
+	componentAnnotationsData := getElementAndDiagramAnnotations([]string{modelName})
+	//componentAnnotationsData := omc.OMC.GetComponentAnnotationsList([]string{modelName})
 	data2 := g.data02(componentsData, componentAnnotationsData, false, "")
 	for i := 0; i < len(data2); i++ {
 		data2[i]["mobility"] = true //模型自身的组件是可以移动的，设置字段"mobility"为true
@@ -95,6 +95,9 @@ func GetComponentGraphicsData(modelName string, componentName string) [][]map[st
 		}
 	}
 	data2 := g.data02(componentsData, componentAnnotationsData, false, "")
+	for i := 0; i < len(data2); i++ {
+		data2[i]["mobility"] = true //模型自身的组件是可以移动的，设置字段"mobility"为true
+	}
 	g.data[1] = append(g.data[1], data2...)
 	return g.data
 }
@@ -275,13 +278,6 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 	}()
 	if isIcon == true && cData != nil && caData != nil {
 		for i := 0; i < dataLen; i++ {
-			//cDataSplit := strings.Split(cData[i][2].(string), ".")
-			//for ii := 0; ii < len(cDataSplit); ii++ {
-			//	if "Interfaces" == cDataSplit[ii] {
-			//		cDataFilter = append(cDataFilter, cData[i])
-			//		caDataFilter = append(caDataFilter, caData[i])
-			//	}
-			//}
 			nameType := omc.OMC.GetClassRestriction(cData[i][2].(string))
 			if nameType == "connector" || nameType == "expandable connector" {
 				cDataFilter = append(cDataFilter, cData[i])
@@ -319,7 +315,8 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 			}
 			return -1
 		}()
-		if placementIndex != -1 || cDataFilter[i][9] == "true" {
+		//if placementIndex != -1 || cDataFilter[i][9] == "true" {
+		if placementIndex != -1 {
 
 			componentsData := omc.OMC.GetElementsList(nameList)
 			componentAnnotationsData := omc.OMC.GetElementAnnotationsList(nameList)

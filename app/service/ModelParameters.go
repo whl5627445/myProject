@@ -230,7 +230,7 @@ func GetModelParameters(modelName, name, componentName string) []interface{} {
 		dataList = append(dataList, dataDefault)
 	}
 	extendModifierName, extendModifierValue, extendModifierFinal := m.getExtendsModifierNameAndValue()
-	if len(extendModifierName) > 0 && len(extendModifierValue) > 0 {
+	if len(extendModifierName) == len(extendModifierValue) {
 		for i := 0; i < len(extendModifierName); i++ {
 			varName := strings.TrimSuffix(extendModifierName[i], ".start")
 			component, ok := m.componentsDict[varName]
