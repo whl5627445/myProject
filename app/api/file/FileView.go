@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"regexp"
@@ -27,10 +27,12 @@ func UploadModelPackageView(c *gin.Context) {
 	modelFile, err := c.FormFile("file")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
+		return
 	}
 	file, err := modelFile.Open()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
+		return
 	}
 	fileName := modelFile.Filename
 	nameList := strings.Split(modelFile.Filename, ".")
@@ -245,7 +247,11 @@ func UploadModelIconView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	iconFile, _ := c.FormFile("file")
+	iconFile, err := c.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
 	iconFileName := iconFile.Filename
 	iconFileNameList := strings.Split(iconFileName, ".")
 	iconFileNameSuffix := iconFileNameList[len(iconFileNameList)-1]
@@ -257,7 +263,7 @@ func UploadModelIconView(c *gin.Context) {
 		return
 	}
 	file, _ := iconFile.Open()
-	iconData, _ := ioutil.ReadAll(file)
+	iconData, _ := io.ReadAll(file)
 	fileBase64Str := base64.StdEncoding.EncodeToString(iconData)
 	result := service.UploadIcon(modelName, fileBase64Str)
 	if result {
