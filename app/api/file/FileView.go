@@ -302,7 +302,7 @@ func GetPackageFileView(c *gin.Context) {
 	*/
 	//var res ResponseData
 	username := c.GetHeader("username")
-	userSpaceId := c.GetHeader("space_id")
+	//userSpaceId := c.GetHeader("space_id")
 	var item PackageFileData
 	err := c.BindJSON(&item)
 	if err != nil {
@@ -311,7 +311,7 @@ func GetPackageFileView(c *gin.Context) {
 		return
 	}
 	var packageRecord DataBaseModel.YssimModels
-	DB.Where("id = ? AND sys_or_user = ? AND userspace_id = ? ", item.PackageId, username, userSpaceId).First(&packageRecord)
+	DB.Where("id = ? AND sys_or_user = ?", item.PackageId, username).First(&packageRecord)
 	//c.JSON(http.StatusOK, res)
 	c.Header("content-disposition", `attachment; filename=`+packageRecord.PackageName+".mo")
 	c.File(packageRecord.FilePath)
