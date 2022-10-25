@@ -333,7 +333,8 @@ func GetResultFileView(c *gin.Context) {
 	//recordId := c.Query("record_id")
 	var resultRecord DataBaseModel.YssimSimulateRecord
 	DB.Where("id = ? AND username = ? AND userspace_id = ? ", item.RecordId, username, userSpaceId).First(&resultRecord)
-	c.Header("content-disposition", `attachment; filename=`+time.Now().Local().Format("20060102150405")+".mat")
+	//c.Header("content-disposition", `attachment; filename=`+time.Now().Local().Format("20060102150405")+".mat")
+	c.Header("content-disposition", `attachment; filename=`+resultRecord.SimulateModelName+".mat")
 	//c.Data(http.StatusOK, "application/octet-stream", resDy)
 	c.File(resultRecord.SimulateModelResultPath + "result_res.mat")
 }
