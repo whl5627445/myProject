@@ -24,8 +24,14 @@ func UploadModelPackageView(c *gin.Context) {
 	var res ResponseData
 	username := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
-	modelFile, _ := c.FormFile("file")
-	file, _ := modelFile.Open()
+	modelFile, err := c.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+	}
+	file, err := modelFile.Open()
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+	}
 	fileName := modelFile.Filename
 	nameList := strings.Split(modelFile.Filename, ".")
 	if len(nameList) < 2 || (nameList[1] != "rar" && nameList[1] != "mo" && nameList[1] != "zip") {
