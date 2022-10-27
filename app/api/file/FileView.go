@@ -24,6 +24,15 @@ func UploadModelPackageView(c *gin.Context) {
 	var res ResponseData
 	username := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
+
+	// 检查用户名和用户空间id是否存在
+	var userspaceRecord DataBaseModel.YssimModels
+	DB.Where("sys_or_user = ? AND userspace_id = ?", username, userSpaceId).First(&userspaceRecord)
+	if userspaceRecord.UserSpaceId == "" {
+		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+
 	modelFile, err := c.FormFile("file")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
