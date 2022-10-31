@@ -2,13 +2,14 @@ package API
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/service"
 	"yssim-go/library/omc"
@@ -66,7 +67,7 @@ func GetUserRootModelView(c *gin.Context) {
 
 }
 
-//func GetRootModelView(c *gin.Context) {
+// func GetRootModelView(c *gin.Context) {
 //	/*
 //		# 获取左侧模型列表接口， 此接口获取系统模型和用户上传模型的根节点列表，暂时没有图标信息
 //	*/
@@ -93,7 +94,7 @@ func GetUserRootModelView(c *gin.Context) {
 //	res.Data = modelData
 //	c.JSON(http.StatusOK, res)
 //
-//}
+// }
 
 func GetListModelView(c *gin.Context) {
 	/*
@@ -169,12 +170,13 @@ func GetModelParametersView(c *gin.Context) {
 	modelName := c.Query("model_name")
 	componentName := c.Query("component_name")
 	className := c.Query("class_name")
+
 	var res ResponseData
 	properties := make(map[string]interface{}, 0)
-	//if modelName == "" || componentName == "" || className == "" {
+	// if modelName == "" || componentName == "" || className == "" {
 	//	c.JSON(http.StatusBadRequest, "")
 	//	return
-	//}
+	// }
 	parameters := service.GetModelParameters(modelName, componentName, className)
 	elements := service.GetElements(modelName, componentName)
 	if len(elements) > 0 && componentName != "" {
@@ -213,7 +215,7 @@ func SetModelParametersView(c *gin.Context) {
 	var res ResponseData
 	var modelPackage DataBaseModel.YssimModels
 	DB.Where("id = ?", item.PackageId).First(&modelPackage)
-	if modelPackage.SysUser == "sys" {
+	if modelPackage.SysUser == "sys" || modelPackage.ID == "" {
 		res.Err = "该模型不允许此操作"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
@@ -325,7 +327,7 @@ func CopyClassView(c *gin.Context) {
 	userSpaceId := c.GetHeader("space_id")
 	var item CopyClassData
 	err := c.BindJSON(&item)
-	//if err != nil || item.PackageId == "" && item.ParentName != "" {
+	// if err != nil || item.PackageId == "" && item.ParentName != "" {
 	if err != nil {
 		log.Println(err)
 		c.JSON(http.StatusBadRequest, "not found")
@@ -466,7 +468,7 @@ func AddModelComponentView(c *gin.Context) {
 		res.Err = msg
 		res.Status = 2
 	} else {
-		service.SaveModelToFile(modelPackage.PackageName, modelPackage.FilePath)
+		go service.SaveModelToFile(modelPackage.PackageName, modelPackage.FilePath)
 		res.Msg = "新增组件成功"
 	}
 	c.JSON(http.StatusOK, res)

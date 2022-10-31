@@ -3,6 +3,7 @@ package service
 import (
 	"strconv"
 	"strings"
+
 	"yssim-go/config"
 	"yssim-go/library/omc"
 )
@@ -27,7 +28,7 @@ func GetElements(className, componentName string) []interface{} {
 		}
 	}
 
-	//componentData = append(componentData, icnamelist)
+	// componentData = append(componentData, icnamelist)
 	return componentData
 }
 
@@ -37,7 +38,7 @@ func GetComponentName(modelName, className string) string {
 	name := strings.ToLower(nameList[len(nameList)-1])
 	nameNum := 0
 	nameMap := map[string]bool{}
-	if _, ok := config.ModelicaKeywords[className]; ok {
+	if _, ok := config.ModelicaKeywords[name]; ok {
 		nameNum += 1
 	}
 	for _, c := range componentData {
@@ -84,7 +85,6 @@ func AddComponent(componentName, componentClassName, modelNameAll, origin, rotat
 		return false, msg
 	}
 	result := false
-	//if strings.Index(componentClassName, "Interfaces") == -1 {
 	if omc.OMC.GetClassRestriction(componentClassName) != "connector" {
 		result = omc.OMC.AddComponent(componentName, componentClassName, modelNameAll, origin, rotation, extent)
 	} else {
@@ -114,7 +114,7 @@ func UpdateComponent(componentName, componentClassName, modelNameAll, origin, ro
 func GetICList(name string) []string {
 	nameList := []string{name}
 	dataList := omc.OMC.GetInheritedClassesListAll(nameList)
-	//dataList去重
+	// dataList去重
 	var datalistLen = len(dataList)
 	for i := 0; i < datalistLen; i++ {
 		for j := i + 1; j < datalistLen; j++ {

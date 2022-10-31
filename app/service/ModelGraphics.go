@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
 	"yssim-go/library/omc"
 )
 
@@ -18,6 +19,7 @@ type graphicsData struct {
 }
 
 func GetGraphicsData(modelName string) [][]map[string]interface{} {
+
 	var g = graphicsData{}
 	g.data = [][]map[string]interface{}{{}, {}}
 	nameType := omc.OMC.GetClassRestriction(modelName)
@@ -56,25 +58,43 @@ func GetGraphicsData(modelName string) [][]map[string]interface{} {
 	}
 	g.getnthconnectionData(nameList)
 
-	//nameList第一个名字是模型自身的名字，先获取模型自身的视图数据
+	// nameList第一个名字是模型自身的名字，先获取模型自身的视图数据
 	componentsData := omc.OMC.GetElementsList([]string{modelName})
 	componentAnnotationsData := getElementAndDiagramAnnotations([]string{modelName})
-	//componentAnnotationsData := omc.OMC.GetComponentAnnotationsList([]string{modelName})
+	// componentAnnotationsData := omc.OMC.GetComponentAnnotationsList([]string{modelName})
 	data2 := g.data02(componentsData, componentAnnotationsData, false, "")
 	for i := 0; i < len(data2); i++ {
-		data2[i]["mobility"] = true //模型自身的组件是可以移动的，设置字段"mobility"为true
+		data2[i]["mobility"] = true // 模型自身的组件是可以移动的，设置字段"mobility"为true
 	}
 	g.data[1] = append(g.data[1], data2...)
 
-	//nameList第二个名字开始是继承模型的名字，获取继承模型的视图数据
+	// nameList第二个名字开始是继承模型的名字，获取继承模型的视图数据
 	componentsData = omc.OMC.GetElementsList(nameList[:len(nameList)-1])
 	componentAnnotationsData = getElementAndDiagramAnnotations(nameList[:len(nameList)-1])
 	data2 = g.data02(componentsData, componentAnnotationsData, false, "")
 	for i := 0; i < len(data2); i++ {
-		data2[i]["mobility"] = false //继承模型的组件是不可以移动的，设置字段"mobility"为false
+		data2[i]["mobility"] = false // 继承模型的组件是不可以移动的，设置字段"mobility"为false
 	}
-
 	g.data[1] = append(g.data[1], data2...)
+	for i := 0; i < len(g.data[1]); i++ {
+		if len(g.data[1][i]["subShapes"].([]map[string]interface{})) == 0 {
+			g.data[1][i]["subShapes"] = append(g.data[1][i]["subShapes"].([]map[string]interface{}), map[string]interface{}{
+				"borderPattern": "BorderPattern.None",
+				"color":         "0,0,127",
+				"extentsPoints": []string{"-100.0,-100.0",
+					"100.0,100.0"},
+				"fillColor":     "255,255,255",
+				"fillPattern":   "FillPattern.Solid",
+				"linePattern":   "LinePattern.Solid",
+				"lineThickness": "0.25",
+				"originalPoint": "0.0,0.0",
+				"radius":        "0.0",
+				"rotation":      "0.0",
+				"type":          "Rectangle",
+				"visible":       "true",
+			})
+		}
+	}
 	return g.data
 }
 
@@ -96,9 +116,28 @@ func GetComponentGraphicsData(modelName string, componentName string) [][]map[st
 	}
 	data2 := g.data02(componentsData, componentAnnotationsData, false, "")
 	for i := 0; i < len(data2); i++ {
-		data2[i]["mobility"] = true //模型自身的组件是可以移动的，设置字段"mobility"为true
+		data2[i]["mobility"] = true // 模型自身的组件是可以移动的，设置字段"mobility"为true
+		if len(g.data[1][i]["subShapes"].([]map[string]interface{})) == 0 {
+			g.data[1][i]["subShapes"] = append(g.data[1][i]["subShapes"].([]map[string]interface{}), map[string]interface{}{
+				"borderPattern": "BorderPattern.None",
+				"color":         "0,0,127",
+				"extentsPoints": []string{"-100.0,-100.0",
+					"100.0,100.0"},
+				"fillColor":     "255,255,255",
+				"fillPattern":   "FillPattern.Solid",
+				"linePattern":   "LinePattern.Solid",
+				"lineThickness": "0.25",
+				"originalPoint": "0.0,0.0",
+				"radius":        "0.0",
+				"rotation":      "0.0",
+				"type":          "Rectangle",
+				"visible":       "true",
+			})
+		}
+
 	}
 	g.data[1] = append(g.data[1], data2...)
+
 	return g.data
 }
 
@@ -315,7 +354,7 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 			}
 			return -1
 		}()
-		//if placementIndex != -1 || cDataFilter[i][9] == "true" {
+		// if placementIndex != -1 || cDataFilter[i][9] == "true" {
 		if placementIndex != -1 {
 
 			componentsData := omc.OMC.GetElementsList(nameList)
@@ -378,7 +417,7 @@ func (g *graphicsData) getnthconnectionData(nameList []string) {
 			d1Data := g.data01(ncaData)
 			if len(ncData) != 0 && len(ncaData) != 0 && len(d1Data) != 0 {
 				daData := d1Data[0]
-				if i == 0 { //i==0的时候，表示目前遍历的是模型自身的组件，模型自身的组件可以移动，设在"mobility"为true
+				if i == 0 { // i==0的时候，表示目前遍历的是模型自身的组件，模型自身的组件可以移动，设在"mobility"为true
 					daData["mobility"] = true
 				} else {
 					daData["mobility"] = false
@@ -442,3 +481,6 @@ func getIconAndDiagramAnnotations(nameList []string, isIcon bool) []interface{} 
 	}
 	return data
 }
+
+// addComponent(block,Modelica.Blocks.Icons.Block,PID_Controller,annotate=Placement(visible=true, transformation=transformation(origin={-95.30669555664062,-78.57142944335938}, extent={{-10,-10},{10,10}}, rotation=0)))
+// addComponent(block12435234, Modelica.Blocks.Icons.Block,q,annotate=Placement(visible=true, transformation=transformation(origin={-18,-20}, extent={{-10,-10},{10,10}}, rotation=0)))

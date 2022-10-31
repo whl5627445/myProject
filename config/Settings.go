@@ -4,7 +4,7 @@ import (
 	"os"
 )
 
-var ModelicaKeywords = map[string]bool{"der": true, "and": true, "or": true, "not": true, "constant": true, "sum": true, "abs": true, "sign": true, "sqrt": true}
+var ModelicaKeywords = map[string]bool{"model": true, "class": true, "connector": true, "block": true, "function": true, "record": true, "expandable connector": true, "der": true, "and": true, "or": true, "not": true, "constant": true, "sum": true, "abs": true, "sign": true, "sqrt": true}
 
 // var ParameterTranslation = map[string]string{
 //	"Initialization": "初始化",
