@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -358,6 +359,37 @@ func GetResultFileView(c *gin.Context) {
 	c.Header("content-disposition", `attachment; filename=`+resultRecord.SimulateModelName+".mat")
 	//c.Data(http.StatusOK, "application/octet-stream", resDy)
 	c.File(resultRecord.SimulateModelResultPath + "result_res.mat")
+}
+
+func DeleteResultFileView(c *gin.Context) {
+	/*
+	   # 2022.11.1 徐庆达修改（新接口）：删除仿真结果文件与数据库的记录
+	*/
+	username := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
+	var item ResultFileData
+	err := c.BindJSON(&item)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	var resultRecord DataBaseModel.YssimSimulateRecord
+	DB.Where("id = ? AND username = ? AND userspace_id = ? ", item.RecordId, username, userSpaceId).First(&resultRecord)
+	var res ResponseData
+	SimulateResultPath := resultRecord.SimulateModelResultPath
+	res.Data = SimulateResultPath
+	_, err = os.Stat(SimulateResultPath)
+	if err == nil {
+		_err := os.RemoveAll(SimulateResultPath)
+		if _err != nil {
+			log.Println(_err)
+		}
+	}
+	DB.Delete(&resultRecord)
+	res.Msg = "删除成功"
+	c.JSON(http.StatusOK, res)
+
 }
 
 func GetFilterResultFileView(c *gin.Context) {
