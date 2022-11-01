@@ -228,6 +228,15 @@ func SimulateResultListView(c *gin.Context) {
 			"simulate_start_time": record.SimulateStartTime,
 			"simulate_end_time":   record.SimulateEndTime,
 			"simulate_model_name": record.SimulateModelName,
+
+			// 2022/11/1 徐庆达修改：增加下面几个字段：实验参数设置
+			"start_time":       record.StartTime,
+			"stop_time":        record.StopTime,
+			"step_size":        record.StepSize,
+			"tolerance":        record.Tolerance,
+			"solver":           record.Solver,
+			"method":           record.Method,
+			"number_intervals": record.NumberOfIntervals,
 		}
 		dataList = append(dataList, data)
 	}
