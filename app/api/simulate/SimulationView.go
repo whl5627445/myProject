@@ -1,10 +1,11 @@
 package API
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"net/http"
 	"strconv"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/service"
 	"yssim-go/config"
@@ -158,7 +159,7 @@ func SimulateResultView(c *gin.Context) {
 	var res ResponseData
 	var resData []map[string]interface{}
 
-	//判断记录是否存在，有一条不存在就返回"not found"
+	// 判断记录是否存在，有一条不存在就返回"not found"
 	recordIdList := item.RecordId
 	var record []DataBaseModel.YssimSimulateRecord
 	err = DB.Where("id IN ? AND username = ?", recordIdList, username).Find(&record).Error
@@ -168,13 +169,13 @@ func SimulateResultView(c *gin.Context) {
 			return
 		}
 	}
-	//判断输入id个数和输出结果长度是否一致!
+	// 判断输入id个数和输出结果长度是否一致!
 	if len(record) != len(recordIdList) {
 		c.JSON(http.StatusBadRequest, "输入id个数和输出结果长度不一致!")
 		return
 	}
 
-	//遍历入参数中的id，依次读取结果，每次经过插入到resData
+	// 遍历入参数中的id，依次读取结果，每次经过插入到resData
 	for i := 0; i < len(recordIdList); i++ {
 		data, ok := service.ReadSimulationResult([]string{item.Variable}, record[i].SimulateModelResultPath+"result_res.mat")
 		unitsData := service.ConvertUnits(item.S2, item.S1)
@@ -220,7 +221,7 @@ func SimulateResultListView(c *gin.Context) {
 	var dataList []map[string]interface{}
 	for i, record := range recordList {
 		data := map[string]interface{}{
-			"index":               i,
+			"index":               i + 1,
 			"id":                  record.ID,
 			"create_time":         record.CreatedAt.Format("2006-01-02 15:04:05"),
 			"simulate_status":     config.MoldelSimutalionStatus[record.SimulateStatus],

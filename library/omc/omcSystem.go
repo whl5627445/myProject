@@ -5,15 +5,16 @@ import (
 	"context"
 	"encoding/json"
 	"log"
-	"sync"
-	"yssim-go/config"
-
-	//"github.com/go-zeromq/zmq4"
-
-	"github.com/go-zeromq/zmq4"
 	"os"
 	"strconv"
 	"strings"
+	"sync"
+
+	"yssim-go/config"
+
+	// "github.com/go-zeromq/zmq4"
+
+	"github.com/go-zeromq/zmq4"
 )
 
 type ZmqObject struct {
@@ -23,33 +24,33 @@ type ZmqObject struct {
 
 var cacheRefresh = false
 
-//var AllModelCache = make(map[string][]byte, 1000)
+// var AllModelCache = make(map[string][]byte, 1000)
 
 var AllModelCache = config.R
 
 // SendExpression 发送指令，获取数据
 func (o *ZmqObject) SendExpression(cmd string) ([]interface{}, bool) {
-	//s := time.Now().UnixNano() / 1e6
+	// s := time.Now().UnixNano() / 1e6
 	o.Lock()
 	defer o.Unlock()
 	var msg []byte
 
-	//msg, ok := AllModelCache[cmd]
+	// msg, ok := AllModelCache[cmd]
 	ctx := context.Background()
 	msg, err := AllModelCache.HGet(ctx, "yssim-GraphicsData", cmd).Bytes()
-	//if !ok {
+	// if !ok {
 	if err != nil {
 		_ = o.Send(zmq4.NewMsgString(cmd))
 
 		data, _ := o.Recv()
 		msg = data.Bytes()
 		if cacheRefresh && len(msg) > 0 {
-			//AllModelCache[cmd] = msg
+			// AllModelCache[cmd] = msg
 			AllModelCache.HSet(ctx, "yssim-GraphicsData", cmd, msg)
 		}
 	}
-	//log.Println("cmd: ", cmd)
-	//log.Println("msg: ", string(msg))
+	// log.Println("cmd: ", cmd)
+	// log.Println("msg: ", string(msg))
 	parseData, err := dataToGo(msg)
 	if err != nil {
 		log.Println("cmd: ", cmd)
@@ -59,42 +60,44 @@ func (o *ZmqObject) SendExpression(cmd string) ([]interface{}, bool) {
 		return nil, false
 	}
 
-	//if time.Now().UnixNano()/1e6-s > 1 {
+	// if time.Now().UnixNano()/1e6-s > 1 {
 	//	log.Println("cmd: ", cmd)
-	//log.Println("消耗时间: ", time.Now().UnixNano()/1e6-s)
-	//}
+	// log.Println("消耗时间: ", time.Now().UnixNano()/1e6-s)
+	// }
 	return parseData, true
 }
 
 // SendExpressionNoParsed 发送指令，获取数据，但是不进行数据转换
 func (o *ZmqObject) SendExpressionNoParsed(cmd string) ([]byte, bool) {
-	//s := time.Now().UnixNano() / 1e6
+	// s := time.Now().UnixNano() / 1e6
 	o.Lock()
 	defer o.Unlock()
 	var msg []byte
-	//msg, ok := AllModelCache[cmd]
+	// msg, ok := AllModelCache[cmd]
 	ctx := context.Background()
 	msg, err := AllModelCache.HGet(ctx, "yssim-GraphicsData", cmd).Bytes()
-	//if !ok {
+	// if !ok {
 	if err != nil {
 		_ = o.Send(zmq4.NewMsgString(cmd))
 		data, _ := o.Recv()
 		msg = data.Bytes()
 		if cacheRefresh && len(msg) > 0 {
-			//AllModelCache[cmd] = msg
+			// AllModelCache[cmd] = msg
 			AllModelCache.HSet(ctx, "yssim-GraphicsData", cmd, msg)
 		}
 	}
 	msg = bytes.ReplaceAll(msg, []byte("\"\"\n"), []byte(""))
 	msg = bytes.ReplaceAll(msg, []byte("\"false\""), []byte("false"))
 	msg = bytes.ReplaceAll(msg, []byte("\"true\""), []byte("true"))
+	// log.Println("cmd: ", cmd)
+	// log.Println("msg: ", string(msg))
 	if len(msg) == 0 {
 		return nil, false
 	}
-	//if time.Now().UnixNano()/1e6-s > 1 {
+	// if time.Now().UnixNano()/1e6-s > 1 {
 	//	log.Println("cmd: ", cmd)
-	//log.Println("消耗时间: ", time.Now().UnixNano()/1e6-s)
-	//}
+	// log.Println("消耗时间: ", time.Now().UnixNano()/1e6-s)
+	// }
 	return msg, true
 }
 
@@ -119,11 +122,11 @@ func (o *ZmqObject) BuildModel(className, fileNamePrefix string, simulateParamet
 // 清空加载的模型库
 func (o *ZmqObject) Clear() {
 	o.SendExpressionNoParsed("clearCommandLineOptions()")
-	//o.SendExpressionNoParsed("clear()")
-	//o.SendExpressionNoParsed("clearVariables()")
-	//o.SendExpressionNoParsed("clearProgram()")
-	//o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nfAPI\")")
-	//o.SendExpressionNoParsed("setCommandLineOptions({\"-g=Modelica\",\"-d=nogen,noevalfunc,newInst,nfAPI\"})")
+	// o.SendExpressionNoParsed("clear()")
+	// o.SendExpressionNoParsed("clearVariables()")
+	// o.SendExpressionNoParsed("clearProgram()")
+	// o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nfAPI\")")
+	// o.SendExpressionNoParsed("setCommandLineOptions({\"-g=Modelica\",\"-d=nogen,noevalfunc,newInst,nfAPI\"})")
 	o.SendExpressionNoParsed("setCommandLineOptions(\"+ignoreSimulationFlagsAnnotation=false\")")
 	o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nogen,noevalfunc,newInst,nfAPI\")")
 	o.SendExpressionNoParsed("setCommandLineOptions(\"--matchingAlgorithm=PFPlusExt --indexReductionMethod=dynamicStateSelection -d=initialization,NLSanalyticJacobian\")")
@@ -184,15 +187,15 @@ func (o *ZmqObject) GetDiagramAnnotationList(classNameList []string) []interface
 	var dataList []interface{}
 	for i := 0; i < len(classNameList); i++ {
 		cmd := "getDiagramAnnotation(" + classNameList[i] + ")"
-		//diagramannotationData, ok := AllModelCache[cmd].([]interface{})
+		// diagramannotationData, ok := AllModelCache[cmd].([]interface{})
 		diagramannotationData, ok := o.SendExpression(cmd)
-		//if !ok {
+		// if !ok {
 		//	diagramannotationData, ok = o.SendExpression(cmd)
-		//}
+		// }
 		if ok && len(diagramannotationData) > 8 {
 			for di := 0; di < len(diagramannotationData); di++ {
 				dataList = append(dataList, diagramannotationData[di])
-				//AllModelCache[cmd] = diagramannotationData
+				// AllModelCache[cmd] = diagramannotationData
 			}
 		}
 	}
@@ -265,18 +268,18 @@ func (o *ZmqObject) GetComponentsList(classNameList []string) [][]interface{} {
 			}
 		}
 
-		//cmd := "getComponents(" + classNameList[i] + ")"
-		//components, ok := AllModelCache[cmd].([]interface{})
-		//if !ok {
+		// cmd := "getComponents(" + classNameList[i] + ")"
+		// components, ok := AllModelCache[cmd].([]interface{})
+		// if !ok {
 		//
 		//	components, ok = o.SendExpression(cmd)
-		//}
-		//if ok {
+		// }
+		// if ok {
 		//	for p := 0; p < len(components); p++ {
 		//		dataList = append(dataList, components[p].([]interface{}))
 		//		AllModelCache[cmd] = components
 		//	}
-		//}
+		// }
 	}
 	return dataList
 }
@@ -332,8 +335,8 @@ func (o *ZmqObject) GetElementAnnotations(className string) []interface{} {
 	}
 	cmd := "getElementAnnotations(" + className + ", useQuotes = false)"
 	componentAnnotations, _ = o.SendExpression(cmd)
-	//annotation(Placement(visible = true,transformation(origin = {16,-87},extent = {{-10,  -10},{10, 10}},rotation = 0,iconTransformation(origin = {168.94117431640626,-87.15294189453125},extent = {{-10,-10},{10,10}},rotation = 0))))
-	//annotation(Placement(visible = true,transformation(origin = {-8, 40}, extent = {{-10, -10},{10, 10}}, rotation = 0), iconTransformation(origin = {-36, 20}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+	// annotation(Placement(visible = true,transformation(origin = {16,-87},extent = {{-10,  -10},{10, 10}},rotation = 0,iconTransformation(origin = {168.94117431640626,-87.15294189453125},extent = {{-10,-10},{10,10}},rotation = 0))))
+	// annotation(Placement(visible = true,transformation(origin = {-8, 40}, extent = {{-10, -10},{10, 10}}, rotation = 0), iconTransformation(origin = {-36, 20}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
 	return componentAnnotations
 }
 
@@ -593,15 +596,15 @@ func (o *ZmqObject) AddComponent(newComponentName, oldComponentName, className, 
 	cmd := "addComponent(" + newComponentName + "," + oldComponentName + "," + className + "," + annotate + ")"
 	result, ok := o.SendExpressionNoParsed(cmd)
 	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
-	if ok && string(result) == "false" {
-		return false
+	if ok && string(result) == "true" {
+		return true
 	}
-	return true
+	return false
 }
 
 func (o *ZmqObject) AddInterfacesComponent(newComponentName, oldComponentName, className, origin, rotation string, extent []string) bool {
 	// addComponent(Modelica.Blocks.Interfaces.RealInput,t,realinput,annotate=Placement(visible=true, transformation=transformation(origin={168.94117431640626,-87.15294189453125}, extent={{-10,-10},{10,10}}, rotation=0,iconTransformation=transformation(origin={168.94117431640626,-87.15294189453125}, extent={{-10,-10},{10,10}}, rotation=0))))
-	//addComponent(y, Modelica.Blocks.Interfaces.RealVectorOutput,q,annotate=Placement(visible=true, transformation=transformation(origin={-36,-22}, extent={{-20,-20},{20,20}}, rotation=0), iconTransformation=transformation(origin={-36,-22}, extent={{-20,-20},{20,20}}, rotation=0))) 09:42:19:196
+	// addComponent(y, Modelica.Blocks.Interfaces.RealVectorOutput,q,annotate=Placement(visible=true, transformation=transformation(origin={-36,-22}, extent={{-20,-20},{20,20}}, rotation=0), iconTransformation=transformation(origin={-36,-22}, extent={{-20,-20},{20,20}}, rotation=0))) 09:42:19:196
 	annotate := "annotate=Placement(visible=true, transformation=transformation(origin={" + origin + "}, extent={{" + extent[0] + "},{" + extent[1] + "}}, rotation=" + rotation + "),iconTransformation=transformation(origin={" + origin + "}, extent={{" + extent[0] + "},{" + extent[1] + "}}, rotation=" + rotation + "))"
 	cmd := "addComponent(" + newComponentName + "," + oldComponentName + "," + className + "," + annotate + ")"
 	result, ok := o.SendExpressionNoParsed(cmd)
@@ -703,7 +706,7 @@ func (o *ZmqObject) UpdateConnectionAnnotation(classNameAll, connectStart, conne
 func (o *ZmqObject) CheckModel(className string) string {
 	cmd := "checkModel(" + className + ")"
 	data, ok := o.SendExpressionNoParsed(cmd)
-	//data = bytes.TrimSuffix(data, []byte("\n"))
+	// data = bytes.TrimSuffix(data, []byte("\n"))
 	if ok {
 		return string(data[1 : len(data)-1])
 	}
