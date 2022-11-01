@@ -2,6 +2,7 @@ package Init
 
 import (
 	"log"
+
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/service"
 	"yssim-go/config"
@@ -10,7 +11,7 @@ import (
 func SimulationService() {
 	username := config.USERNAME
 	var undoneRecordAll []DataBaseModel.YssimSimulateRecord
-	err := config.DB.Where("username = ?", username).Not("simulate_status = 4").Find(&undoneRecordAll).Error
+	err := config.DB.Where("username = ? ", username).Not("simulate_status = 4").Not("simulate_status = 3").Find(&undoneRecordAll).Error
 	if err != nil {
 		panic(err)
 	}
