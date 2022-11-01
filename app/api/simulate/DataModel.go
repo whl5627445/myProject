@@ -25,7 +25,7 @@ type ModelSimulateData struct {
 	StopTime          string `json:"stopTime" binding:"required"`
 	Tolerance         string `json:"tolerance" binding:"required"`
 	NumberOfIntervals string `json:"numberOfIntervals" binding:"required"`
-	//Interval          string `json:"interval" binding:"required"`
+	// Interval          string `json:"interval" binding:"required"`
 	Method string `json:"method" binding:""`
 }
 
@@ -34,6 +34,13 @@ type ModelSimulateResultData struct {
 	Variable string   `json:"variable" binding:"required"`
 	S1       string   `json:"s1" binding:""`
 	S2       string   `json:"s2" binding:""`
+}
+
+type ModelSimulateResultSingularData struct {
+	RecordId string `json:"id" binding:"required"`
+	Variable string `json:"variable" binding:"required"`
+	S1       string `json:"s1" binding:""`
+	S2       string `json:"s2" binding:""`
 }
 
 type ExperimentCreateData struct {
@@ -55,5 +62,5 @@ type ExperimentEditData struct {
 
 type ModelCodeSaveData struct {
 	PackageId string `json:"package_id" binding:"required"`
-	//PackageName string `json:"package_name" binding:"required"`
+	// PackageName string `json:"package_name" binding:"required"`
 }

@@ -138,9 +138,9 @@ func ModelSimulateView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-func SimulateResultView(c *gin.Context) {
+func SimulateResultGraphicsView(c *gin.Context) {
 	/*
-		# 仿真结果获取接口
+		# 仿真结果获取接口， 可一次获取多条
 		## variable: 模型变量名字，
 		## id: 仿真记录id值，在/simulate/record/list接口获取，
 		## s1: 单位转换使用，固定为初始单位
@@ -199,6 +199,56 @@ func SimulateResultView(c *gin.Context) {
 			c.JSON(http.StatusOK, res)
 			return
 		}
+	}
+	c.JSON(http.StatusOK, res)
+}
+
+func SimulateResultSingularView(c *gin.Context) {
+	/*
+		# 仿真结果获取接口,单数
+		## variable: 模型变量名字，
+		## id: 仿真记录id值，在/simulate/record/list接口获取，
+		## s1: 单位转换使用，固定为初始单位
+		## s2: 位单位转换使用，需要转换为什么单位
+	*/
+
+	username := c.GetHeader("username")
+	var item ModelSimulateResultSingularData
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+
+	var res ResponseData
+	// 判断记录是否存在，有一条不存在就返回"not found"
+	recordIdList := item.RecordId
+	var record DataBaseModel.YssimSimulateRecord
+	err = DB.Where("id = ? AND username = ?", recordIdList, username).First(&record).Error
+	if err != nil || record.SimulateStatus != "4" {
+		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+
+	data, ok := service.ReadSimulationResult([]string{item.Variable}, record.SimulateModelResultPath+"result_res.mat")
+	unitsData := service.ConvertUnits(item.S2, item.S1)
+	if ok {
+		unitsScaleFactor, _ := strconv.ParseFloat(unitsData[1], 64)
+		ordinate := data[1]
+		for i := 0; i < len(ordinate); i++ {
+			ordinate[i] = ordinate[i] * unitsScaleFactor
+		}
+		res.Data = map[string]interface{}{
+			"abscissa":  data[0],
+			"ordinate":  ordinate,
+			"startTime": record.StartTime,
+			"stopTime":  record.StopTime,
+		}
+	} else {
+		res.Err = "结果不存在"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
 	}
 	c.JSON(http.StatusOK, res)
 }
