@@ -363,6 +363,7 @@ func ExperimentCreateView(c *gin.Context) {
 		NumberOfIntervals: item.SimulateVarData["numberOfIntervals"],
 		Tolerance:         item.SimulateVarData["tolerance"],
 		Interval:          item.SimulateVarData["interval"],
+		ModelVarData:      item.ModelVarData,
 	}
 	err = DB.Create(&experimentRecord).Error
 	if err != nil {
@@ -372,6 +373,7 @@ func ExperimentCreateView(c *gin.Context) {
 		return
 	}
 	item.SimulateVarData["id"] = experimentRecord.ID
+	// item.SimulateVarData["ModelVarData"] = item.ModelVarData
 	res.Data = item.SimulateVarData
 	res.Msg = "实验记录创建成功"
 	c.JSON(http.StatusOK, res)
@@ -434,6 +436,7 @@ func ExperimentEditView(c *gin.Context) {
 		NumberOfIntervals: item.SimulateVarData["numberOfIntervals"],
 		Tolerance:         item.SimulateVarData["tolerance"],
 		Interval:          item.SimulateVarData["interval"],
+		ModelVarData:      item.ModelVarData,
 	}).Error
 	if err != nil {
 		res.Err = "更新失败，请稍后再试"

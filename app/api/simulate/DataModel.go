@@ -1,5 +1,9 @@
 package API
 
+import (
+	"gorm.io/datatypes"
+)
+
 type ResponseData struct {
 	Data   interface{} `json:"data"`
 	Msg    string      `json:"msg"`
@@ -48,6 +52,7 @@ type ExperimentCreateData struct {
 	ModelName       string            `json:"model_name" binding:"required"`
 	ExperimentName  string            `json:"experiment_name" binding:"required"`
 	SimulateVarData map[string]string `json:"simulate_var_data" binding:"required"`
+	ModelVarData    datatypes.JSON    `json:"model_var_data" binding:""`
 }
 
 type ExperimentDeleteData struct {
@@ -58,6 +63,7 @@ type ExperimentEditData struct {
 	ExperimentId    string            `json:"experiment_id" binding:"required"`
 	ExperimentName  string            `json:"experiment_name" binding:""`
 	SimulateVarData map[string]string `json:"simulate_var_data" binding:"required"`
+	ModelVarData    datatypes.JSON    `json:"model_var_data" binding:""`
 }
 
 type ModelCodeSaveData struct {

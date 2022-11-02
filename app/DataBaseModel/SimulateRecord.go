@@ -1,8 +1,10 @@
 package DataBaseModel
 
 import (
-	"gorm.io/gorm"
 	"time"
+
+	"gorm.io/datatypes"
+	"gorm.io/gorm"
 )
 
 type YssimSimulateRecord struct {
@@ -40,6 +42,7 @@ type YssimExperimentRecord struct {
 	Username          string         `gorm:"column:username"`
 	ExperimentName    string         `gorm:"column:experiment_name"`
 	ModelName         string         `gorm:"column:model_name"`
+	ModelVarData      datatypes.JSON `gorm:"column:model_var_data;TYPE:json"`
 	StartTime         string         `gorm:"column:start_time"`
 	StopTime          string         `gorm:"column:stop_time"`
 	Method            string         `gorm:"column:method"`
