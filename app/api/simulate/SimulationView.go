@@ -329,6 +329,22 @@ func SimulateResultTreeView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+func SimulateResultDeleteView(c *gin.Context) {
+	/*
+	   # 2022.11.2 徐庆达修改（新接口）：删除仿真结果在数据库中的记录
+	*/
+	username := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
+	recordId := c.Query("record_id")
+	var resultRecord DataBaseModel.YssimSimulateRecord
+	DB.Where("id = ? AND username = ? AND userspace_id = ? ", recordId, username, userSpaceId).First(&resultRecord)
+	var res ResponseData
+	DB.Delete(&resultRecord)
+	res.Msg = "删除成功"
+	c.JSON(http.StatusOK, res)
+
+}
+
 func ExperimentCreateView(c *gin.Context) {
 	/*
 	   # 仿真实验创建记录接口，

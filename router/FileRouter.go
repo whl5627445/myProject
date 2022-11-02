@@ -15,7 +15,6 @@ func FileRouter(g *gin.Engine) {
 		Models.GET("/package/list", FileAPI.GetPackageFileListView)
 		Models.POST("/package/get", FileAPI.GetPackageFileView)
 		Models.POST("/result/all/get", FileAPI.GetResultFileView)
-		Models.POST("/result/all/delete", FileAPI.DeleteResultFileView)
 		Models.POST("/result/filter/get", FileAPI.GetFilterResultFileView)
 		Models.POST("/fmu/export", FileAPI.FmuExportModelView)
 		Models.POST("/code/save", FileAPI.ModelCodeSaveView)
