@@ -3,6 +3,7 @@ package API
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -270,14 +271,18 @@ func SimulateResultListView(c *gin.Context) {
 	}
 	var dataList []map[string]interface{}
 	for i, record := range recordList {
+		simulateStartTime, _ := time.Parse("2006-01-02 15:04:05", record.SimulateStartTime) //string转time
+		simulateEndTime, _ := time.Parse("2006-01-02 15:04:05", record.SimulateEndTime)     //string转time
+		simulateRunTime := simulateEndTime.Sub(simulateStartTime)
 		data := map[string]interface{}{
-			"index":               i,
-			"id":                  record.ID,
-			"create_time":         record.CreatedAt.Format("2006-01-02 15:04:05"),
+			"index": i + 1,
+			"id":    record.ID,
+			//"create_time":         record.CreatedAt.Format("2006-01-02 15:04:05"),
 			"simulate_status":     config.MoldelSimutalionStatus[record.SimulateStatus],
 			"simulate_start_time": record.SimulateStartTime,
-			"simulate_end_time":   record.SimulateEndTime,
+			//"simulate_end_time":   record.SimulateEndTime,
 			"simulate_model_name": record.SimulateModelName,
+			"simulate_run_time":   simulateRunTime.Seconds(),
 
 			// 2022/11/1 徐庆达修改：增加下面几个字段：实验参数设置
 			"start_time":       record.StartTime,
