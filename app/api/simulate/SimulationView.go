@@ -271,7 +271,7 @@ func SimulateResultListView(c *gin.Context) {
 	var dataList []map[string]interface{}
 	for i, record := range recordList {
 		data := map[string]interface{}{
-			"index":               i + 1,
+			"index":               i,
 			"id":                  record.ID,
 			"create_time":         record.CreatedAt.Format("2006-01-02 15:04:05"),
 			"simulate_status":     config.MoldelSimutalionStatus[record.SimulateStatus],
