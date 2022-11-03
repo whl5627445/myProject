@@ -275,12 +275,12 @@ func SimulateResultListView(c *gin.Context) {
 		simulateEndTime, _ := time.Parse("2006-01-02 15:04:05", record.SimulateEndTime)     //string转time
 		simulateRunTime := simulateEndTime.Sub(simulateStartTime)
 		data := map[string]interface{}{
-			"index": i + 1,
-			"id":    record.ID,
-			//"create_time":         record.CreatedAt.Format("2006-01-02 15:04:05"),
+			"index":               i + 1,
+			"id":                  record.ID,
+			"create_time":         record.CreatedAt.Format("2006-01-02 15:04:05"),
 			"simulate_status":     config.MoldelSimutalionStatus[record.SimulateStatus],
 			"simulate_start_time": record.SimulateStartTime,
-			//"simulate_end_time":   record.SimulateEndTime,
+			"simulate_end_time":   record.SimulateEndTime,
 			"simulate_model_name": record.SimulateModelName,
 			"simulate_run_time":   simulateRunTime.Seconds(),
 
