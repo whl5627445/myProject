@@ -231,7 +231,7 @@ func jModelicaSimulate(task *SimulateTask, resultFilePath string, SimulationPraD
 func ModelSimulate(task *SimulateTask) {
 	resultFilePath := "public/UserFiles/ModelResult/" + task.SRecord.Username + "/" + strings.ReplaceAll(task.SRecord.SimulateModelName, ".", "-") + "/" + time.Now().Local().Format("20060102150405") + "/"
 	fileOperation.CreateFilePath(resultFilePath)
-	task.SRecord.SimulateStartTime = time.Now().Local().Format("2006-01-02 15:04:05")
+	task.SRecord.SimulateStartTime = time.Now().Unix()
 	task.SRecord.SimulateStart = true
 	task.SRecord.SimulateStatus = "2"
 
@@ -267,7 +267,7 @@ func ModelSimulate(task *SimulateTask) {
 		MessageNotice(map[string]string{"message": task.SRecord.SimulateModelName + " 模型仿真失败"})
 	}
 
-	task.SRecord.SimulateEndTime = time.Now().Local().Format("2006-01-02 15:04:05")
+	task.SRecord.SimulateEndTime = time.Now().Unix()
 	task.SRecord.SimulateStart = false
 	config.DB.Save(&task.SRecord)
 }

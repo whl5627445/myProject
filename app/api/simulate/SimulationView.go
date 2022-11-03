@@ -1,6 +1,7 @@
 package API
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -122,6 +123,7 @@ func ModelSimulateView(c *gin.Context) {
 		SimulateType:      item.SimulateType,
 		NumberOfIntervals: item.NumberOfIntervals,
 		Tolerance:         item.Tolerance,
+		ExperimentId:      item.ExperimentId,
 	}
 	err = DB.Create(&record).Error
 	if err != nil {
@@ -256,7 +258,7 @@ func SimulateResultSingularView(c *gin.Context) {
 
 func SimulateResultListView(c *gin.Context) {
 	/*
-	   # 仿真记录获取接口
+	   # 仿真记录列表获取接口
 	   ## return: 返回对应用户的所有仿真记录
 	*/
 
@@ -269,34 +271,56 @@ func SimulateResultListView(c *gin.Context) {
 	} else {
 		DB.Where("username = ? AND userspace_id = ?", username, userSpaceId).Order("create_time desc").Find(&recordList)
 	}
+
 	var dataList []map[string]interface{}
 	for i, record := range recordList {
-		simulateStartTime, _ := time.Parse("2006-01-02 15:04:05", record.SimulateStartTime) //string转time
-		simulateEndTime, _ := time.Parse("2006-01-02 15:04:05", record.SimulateEndTime)     //string转time
-		simulateRunTime := simulateEndTime.Sub(simulateStartTime)
+		simulateStartTime := time.Unix(record.SimulateStartTime, 0)
+		simulateEndTime := time.Unix(record.SimulateEndTime, 0)
 		data := map[string]interface{}{
-			"index":               i + 1,
-			"id":                  record.ID,
-			"create_time":         record.CreatedAt.Format("2006-01-02 15:04:05"),
+			"index": i,
+			"id":    record.ID,
+			// "create_time":         record.CreatedAt.Format("2006-01-02 15:04:05"),
 			"simulate_status":     config.MoldelSimutalionStatus[record.SimulateStatus],
-			"simulate_start_time": record.SimulateStartTime,
-			"simulate_end_time":   record.SimulateEndTime,
+			"simulate_start_time": simulateStartTime.Format("2006-01-01 15:04:05"),
+			// "simulate_end_time":   simulateEndTime.Format("2006-01-01 15:04:05"),
 			"simulate_model_name": record.SimulateModelName,
-			"simulate_run_time":   simulateRunTime.Seconds(),
-
-			// 2022/11/1 徐庆达修改：增加下面几个字段：实验参数设置
-			"start_time":       record.StartTime,
-			"stop_time":        record.StopTime,
-			"step_size":        record.StepSize,
-			"tolerance":        record.Tolerance,
-			"solver":           record.Solver,
-			"method":           record.Method,
-			"number_intervals": record.NumberOfIntervals,
+			"simulate_run_time":   strconv.FormatFloat(simulateEndTime.Sub(simulateStartTime).Minutes(), 'f', 0, 32) + "分钟",
 		}
 		dataList = append(dataList, data)
 	}
 	var res ResponseData
 	res.Data = dataList
+	c.JSON(http.StatusOK, res)
+}
+
+func SimulateResultDetailsView(c *gin.Context) {
+	/*
+	   # 仿真记录相关实验参数获取接口
+	   ## return: 返回对应用户的所有仿真记录
+	*/
+
+	username := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
+	id := c.Query("id")
+	var simulateRecord DataBaseModel.YssimSimulateRecord
+	DB.Where("id = ? AND username = ? AND userspace_id = ? AND simulate_status = ?", id, username, userSpaceId, "4").First(&simulateRecord)
+	var experimentRecord DataBaseModel.YssimExperimentRecord
+	log.Println("simulateRecord: ", simulateRecord)
+	DB.Where("id = ? AND username = ? AND userspace_id = ?", simulateRecord.ExperimentId, username, userSpaceId).First(&experimentRecord)
+
+	data := map[string]interface{}{
+		"start_time":       simulateRecord.StartTime,
+		"stop_time":        simulateRecord.StopTime,
+		"step_size":        experimentRecord.Interval,
+		"tolerance":        experimentRecord.Tolerance,
+		"solver":           config.Solver[experimentRecord.SimulateType],
+		"method":           experimentRecord.Method,
+		"number_intervals": experimentRecord.NumberOfIntervals,
+		"model_var_data":   experimentRecord.ModelVarData,
+	}
+	var res ResponseData
+	res.Data = data
+
 	c.JSON(http.StatusOK, res)
 }
 

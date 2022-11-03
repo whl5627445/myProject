@@ -30,7 +30,8 @@ type ModelSimulateData struct {
 	Tolerance         string `json:"tolerance" binding:"required"`
 	NumberOfIntervals string `json:"numberOfIntervals" binding:"required"`
 	// Interval          string `json:"interval" binding:"required"`
-	Method string `json:"method" binding:""`
+	Method       string `json:"method" binding:""`
+	ExperimentId string `json:"experiment_id" binding:""`
 }
 
 type ModelSimulateResultData struct {

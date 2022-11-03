@@ -1,8 +1,9 @@
 package DataBaseModel
 
 import (
-	"gorm.io/gorm"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type YssimModels struct {
