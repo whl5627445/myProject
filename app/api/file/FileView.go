@@ -360,29 +360,6 @@ func GetResultFileView(c *gin.Context) {
 	c.File(resultRecord.SimulateModelResultPath + "result_res.mat")
 }
 
-func DeleteResultFileView(c *gin.Context) {
-	/*
-	   # 2022.11.2 徐庆达修改（新接口）：删除仿真结果在数据库中的记录
-	*/
-	username := c.GetHeader("username")
-	userSpaceId := c.GetHeader("space_id")
-	var item ResultFileData
-	err := c.BindJSON(&item)
-	if err != nil {
-		log.Println(err)
-		c.JSON(http.StatusBadRequest, "")
-		return
-	}
-	var resultRecord DataBaseModel.YssimSimulateRecord
-	DB.Where("id = ? AND username = ? AND userspace_id = ? ", item.RecordId, username, userSpaceId).First(&resultRecord)
-	var res ResponseData
-
-	DB.Delete(&resultRecord)
-	res.Msg = "删除成功"
-	c.JSON(http.StatusOK, res)
-
-}
-
 func GetFilterResultFileView(c *gin.Context) {
 	/*
 	   # 用户筛选仿真结果文件下载
