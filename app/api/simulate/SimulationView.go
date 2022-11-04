@@ -1,7 +1,6 @@
 package API
 
 import (
-	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -277,7 +276,7 @@ func SimulateResultListView(c *gin.Context) {
 		simulateStartTime := time.Unix(record.SimulateStartTime, 0)
 		simulateEndTime := time.Unix(record.SimulateEndTime, 0)
 		data := map[string]interface{}{
-			"index": i,
+			"index": i + 1,
 			"id":    record.ID,
 			// "create_time":         record.CreatedAt.Format("2006-01-02 15:04:05"),
 			"simulate_status":     config.MoldelSimutalionStatus[record.SimulateStatus],
@@ -305,19 +304,17 @@ func SimulateResultDetailsView(c *gin.Context) {
 	var simulateRecord DataBaseModel.YssimSimulateRecord
 	DB.Where("id = ? AND username = ? AND userspace_id = ? AND simulate_status = ?", id, username, userSpaceId, "4").First(&simulateRecord)
 	var experimentRecord DataBaseModel.YssimExperimentRecord
-	log.Println("simulateRecord: ", simulateRecord)
 	DB.Where("id = ? AND username = ? AND userspace_id = ?", simulateRecord.ExperimentId, username, userSpaceId).First(&experimentRecord)
+	data := map[string]interface{}{"start_time": "", "stop_time": "", "step_size": "", "tolerance": "", "solver": "", "method": "", "number_intervals": "", "model_var_data": ""}
+	data["start_time"] = simulateRecord.StartTime                 // 开始时间
+	data["stop_time"] = simulateRecord.StopTime                   // 结束时间
+	data["step_size"] = experimentRecord.Interval                 // 步长
+	data["tolerance"] = experimentRecord.Tolerance                // 容差
+	data["solver"] = config.Solver[experimentRecord.SimulateType] // 求解器
+	data["method"] = experimentRecord.Method                      // 方法
+	data["number_intervals"] = experimentRecord.NumberOfIntervals // 间隔
+	data["model_var_data"] = experimentRecord.ModelVarData        // 模型组件相关参数属性
 
-	data := map[string]interface{}{
-		"start_time":       simulateRecord.StartTime,
-		"stop_time":        simulateRecord.StopTime,
-		"step_size":        experimentRecord.Interval,
-		"tolerance":        experimentRecord.Tolerance,
-		"solver":           config.Solver[experimentRecord.SimulateType],
-		"method":           experimentRecord.Method,
-		"number_intervals": experimentRecord.NumberOfIntervals,
-		"model_var_data":   experimentRecord.ModelVarData,
-	}
 	var res ResponseData
 	res.Data = data
 
