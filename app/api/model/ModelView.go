@@ -338,6 +338,7 @@ func CopyClassView(c *gin.Context) {
 	var res ResponseData
 	var packageModel DataBaseModel.YssimModels
 	DB.Where("package_name = ? AND userspace_id = ?", packageName, "0").Or("sys_or_user = ? AND userspace_id = ? AND package_name = ?", username, userSpaceId, packageName).First(&packageModel)
+
 	if packageModel.SysUser == "sys" {
 		res.Msg = "标准库不允许插入模型"
 		res.Status = 2

@@ -15,13 +15,15 @@ import (
 )
 
 type graphicsData struct {
-	data [][]map[string]interface{}
+	data      [][]map[string]interface{}
+	modelName string
 }
 
 func GetGraphicsData(modelName string) [][]map[string]interface{} {
 
 	var g = graphicsData{}
 	g.data = [][]map[string]interface{}{{}, {}}
+	g.modelName = modelName
 	nameType := omc.OMC.GetClassRestriction(modelName)
 	if nameType == "connector" || nameType == "expandable connector" {
 		interfaceDiagramAnnotationData := omc.OMC.GetDiagramAnnotation(modelName)
@@ -44,7 +46,7 @@ func GetGraphicsData(modelName string) [][]map[string]interface{} {
 		data["visible"] = "true"
 		data["inputOutputs"] = make([]map[string]interface{}, 0, 1)
 		data["subShapes"] = make([]map[string]interface{}, 0, 1)
-		data1 := g.data01(interfaceGraphicsData)
+		data1 := g.data01(interfaceGraphicsData, "", "")
 		data["subShapes"] = data1
 		g.data[1] = append(g.data[1], data)
 		return g.data
@@ -53,7 +55,7 @@ func GetGraphicsData(modelName string) [][]map[string]interface{} {
 	diagramAnnotationData := omc.OMC.GetDiagramAnnotationList(nameList)
 	if len(diagramAnnotationData) >= 8 {
 		dData := diagramAnnotationData[len(diagramAnnotationData)-1]
-		data1 := g.data01(dData.([]interface{}))
+		data1 := g.data01(dData.([]interface{}), "", "")
 		g.data[0] = append(g.data[0], data1...)
 	}
 	g.getnthconnectionData(nameList)
@@ -206,7 +208,7 @@ func find(data []interface{}, str string) bool {
 	return false
 }
 
-func (g *graphicsData) data01(cData []interface{}) []map[string]interface{} {
+func (g *graphicsData) data01(cData []interface{}, className, component string) []map[string]interface{} {
 	dataList := make([]map[string]interface{}, 0, 1)
 	for i := 0; i < len(cData); i += 2 {
 		data := map[string]interface{}{}
@@ -281,8 +283,41 @@ func (g *graphicsData) data01(cData []interface{}) []map[string]interface{} {
 			typeOriginalTextString, ok := drawingDataList[9].([]interface{})
 			if ok {
 				data["originalTextString"] = typeOriginalTextString[0]
+
 			} else {
-				data["originalTextString"] = drawingDataList[9]
+				originalTextString := drawingDataList[9].(string)
+				pSignIndex := strings.Index(originalTextString, "%")
+				if pSignIndex != -1 {
+					prefix := originalTextString[:pSignIndex]
+					varName := originalTextString[pSignIndex+1:]
+					varValue := varName
+					if varName != "name" {
+						varValue = omc.OMC.GetElementModifierValue(g.modelName, component+"."+varName)
+						if varValue == "" {
+							varValue = omc.OMC.GetParameterValue(className, varName)
+						}
+						varValueList := strings.Split(varValue, ".") // 某些值是模型全称的需要取最后一部分。所以分割一下
+						varValue = varValueList[len(varValueList)-1]
+						classComponentList := omc.OMC.GetElements(className)
+						Unit := ""
+						for p := 0; p < len(classComponentList); p++ {
+							varClassType := classComponentList[p].([]interface{})[3].(string)
+							varClassName := classComponentList[p].([]interface{})[2].(string)
+							if varClassName == "Real" {
+								Unit = " " + varValue
+								break
+							}
+							if varClassType == varName {
+								UnitList := getDerivedClassModifierValueALL(varClassName)
+								Unit = " " + strings.Join(UnitList, "")
+								break
+							}
+						}
+						data["originalTextString"] = prefix + varValue + Unit
+					} else {
+						continue
+					}
+				}
 			}
 			data["fontSize"] = drawingDataList[10]
 			data["textColor"] = oneDimensionalProcessing(drawingDataList[11])
@@ -340,8 +375,8 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 		if len(caDataFilter[i]) > 2 {
 			caDataFilter[i] = caDataFilter[i][len(caDataFilter[i])-2:]
 		}
-		name := cDataFilter[i][2].(string)
-		nameList := g.getICList(name)
+		classname := cDataFilter[i][2].(string)
+		nameList := g.getICList(classname)
 		DynamicSelect := find(caDataFilter[i], "DynamicSelect")
 		if DynamicSelect {
 			continue
@@ -378,14 +413,14 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 			data := map[string]interface{}{"type": "Transformation"}
 
 			data["graphType"] = func() string {
-				nameType := omc.OMC.GetClassRestriction(name)
+				nameType := omc.OMC.GetClassRestriction(classname)
 				if nameType == "connector" || nameType == "expandable connector" {
 					return "connecter"
 				}
 				return ""
 			}()
 			data["ID"] = strconv.Itoa(i)
-			data["classname"] = name
+			data["classname"] = classname
 			data["name"] = cDataFilter[i][3]
 			data["original_name"] = cDataFilter[i][3]
 			data["parent"] = parent
@@ -401,7 +436,7 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 				return str
 			}()
 			data["inputOutputs"] = g.data02(componentsData, componentAnnotationsData, true, data["name"].(string))
-			data["subShapes"] = g.data01(IconAnnotationData)
+			data["subShapes"] = g.data01(IconAnnotationData, classname, cDataFilter[i][3].(string))
 			dataList = append(dataList, data)
 		}
 	}
@@ -414,7 +449,7 @@ func (g *graphicsData) getnthconnectionData(nameList []string) {
 		for c := 0; c < ConnectionCount[i]; c++ {
 			ncData := omc.OMC.GetNthConnection(nameList[i], c+1)
 			ncaData := omc.OMC.GetNthConnectionAnnotation(nameList[i], c+1) //
-			d1Data := g.data01(ncaData)
+			d1Data := g.data01(ncaData, "", "")
 			if len(ncData) != 0 && len(ncaData) != 0 && len(d1Data) != 0 {
 				daData := d1Data[0]
 				if i == 0 { // i==0的时候，表示目前遍历的是模型自身的组件，模型自身的组件可以移动，设在"mobility"为true
