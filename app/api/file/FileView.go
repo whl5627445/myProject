@@ -378,7 +378,7 @@ func GetFilterResultFileView(c *gin.Context) {
 	newFileName := "public/tmp/" + username + "/" + strings.ReplaceAll(resultRecord.SimulateModelName, ".", "-") + "/" + time.Now().Local().Format("20060102150405") + ".csv"
 	ok := service.FilterSimulationResult(item.VarList, resultRecord.SimulateModelResultPath+"result_res.mat", newFileName)
 	if ok {
-		c.Header("content-disposition", `attachment; filename=`+time.Now().Local().Format("20060102150405")+".csv")
+		c.Header("content-disposition", `attachment; filename=`+resultRecord.SimulateModelName+".csv")
 		c.File(newFileName)
 		return
 	}
