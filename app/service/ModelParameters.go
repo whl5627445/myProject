@@ -30,6 +30,7 @@ func (m modelParameters) getParameterValue(name string) string {
 			return data
 		}
 	}
+
 	return data
 }
 
@@ -38,14 +39,21 @@ func (m modelParameters) getElementModifierFixedValue(name string) string {
 	return data
 }
 
-func (m modelParameters) getDerivedClassModifierValue() []string {
-	DerivedClassModifierNames := omc.OMC.GetDerivedClassModifierNames(m.className)
+func getDerivedClassModifierValueALL(className string) []string {
+	classAll := GetICList(className)
 	var DerivedClassModifierValue []string
-	for i := 1; i < len(DerivedClassModifierNames); i++ {
-		data := omc.OMC.GetDerivedClassModifierValue(m.className, DerivedClassModifierNames[i].(string))
-		DerivedClassModifierValue = append(DerivedClassModifierValue, data)
+	for p := 0; p < len(classAll); p++ {
+		names := omc.OMC.GetDerivedClassModifierNames(classAll[p])
+		for i := 1; i < len(names); i++ {
+			data := omc.OMC.GetDerivedClassModifierValue(classAll[p], names[i].(string))
+			DerivedClassModifierValue = append(DerivedClassModifierValue, data)
+		}
 	}
 	return DerivedClassModifierValue
+}
+
+func (m modelParameters) getDerivedClassModifierValue() []string {
+	return getDerivedClassModifierValueALL(m.className)
 }
 
 func (m modelParameters) getElementModifierStartValue(name string, showStartAttribute bool) string {
