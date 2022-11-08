@@ -149,7 +149,7 @@ func SimulationResultTree(path string, parent string) []map[string]interface{} {
 		} else {
 			splitName = []string{trimPrefixName}
 		}
-		if strings.HasPrefix(name, parent) && !nameMap[splitName[0]] && scalarVariableMap[name].HideResult == false && scalarVariableMap[name].IsProtected == false {
+		if strings.HasPrefix(name, parent+".") && !nameMap[splitName[0]] && scalarVariableMap[name].HideResult == false && scalarVariableMap[name].IsProtected == false {
 			data := map[string]interface{}{
 				"variables":    splitName[0],
 				"description":  scalarVariableMap[name].Description,
