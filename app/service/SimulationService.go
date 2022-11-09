@@ -89,6 +89,10 @@ func dymolaSimulate(task *SimulateTask, resultFilePath string, SimulationPraData
 		req := url.NewRequest()
 		req.Json = compileReqData
 		compileRes, err := requests.Post(config.DymolaSimutalionConnect+"/dymola/translate", req)
+		if err != nil {
+			log.Println("dymola服务编译错误： ", err)
+			return false
+		}
 		compileResData, err := compileRes.Json()
 		if err != nil {
 			return false

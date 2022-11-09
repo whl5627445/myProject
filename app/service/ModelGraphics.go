@@ -117,6 +117,7 @@ func GetComponentGraphicsData(modelName string, componentName string) [][]map[st
 		}
 	}
 	data2 := g.data02(componentsData, componentAnnotationsData, false, "")
+	g.data[1] = append(g.data[1], data2...)
 	for i := 0; i < len(data2); i++ {
 		data2[i]["mobility"] = true // 模型自身的组件是可以移动的，设置字段"mobility"为true
 		if len(g.data[1][i]["subShapes"].([]map[string]interface{})) == 0 {
@@ -138,8 +139,6 @@ func GetComponentGraphicsData(modelName string, componentName string) [][]map[st
 		}
 
 	}
-	g.data[1] = append(g.data[1], data2...)
-
 	return g.data
 }
 
