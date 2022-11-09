@@ -10,6 +10,7 @@ import (
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/service"
 	"yssim-go/config"
+	"yssim-go/library/omc"
 )
 
 var DB = config.DB
@@ -276,9 +277,6 @@ func SimulateResultListView(c *gin.Context) {
 		simulateStartTime := time.Unix(record.SimulateStartTime, 0)
 		simulateEndTime := time.Unix(record.SimulateEndTime, 0)
 		simulateSecond := simulateEndTime.Sub(simulateStartTime).Seconds()
-		hours := int(simulateSecond / 3600)
-		minutes := int(simulateSecond) % 3600 / 60
-		seconds := int(simulateSecond) % 60
 		data := map[string]interface{}{
 			"index":               i + 1,
 			"id":                  record.ID,
@@ -287,7 +285,7 @@ func SimulateResultListView(c *gin.Context) {
 			"simulate_start_time": simulateStartTime.Format("2006-01-01 15:04:05"),
 			"simulate_end_time":   simulateEndTime.Format("2006-01-01 15:04:05"),
 			"simulate_model_name": record.SimulateModelName,
-			"simulate_run_time":   strconv.Itoa(hours) + "小时" + strconv.Itoa(minutes) + "分钟" + strconv.Itoa(seconds) + "秒",
+			"simulate_run_time":   omc.SecondToTimeString(simulateSecond),
 		}
 		dataList = append(dataList, data)
 	}
