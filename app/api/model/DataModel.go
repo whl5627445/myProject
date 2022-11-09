@@ -115,3 +115,8 @@ type ConvertUnitsData struct {
 	S1 string `json:"s1" binding:"required"`
 	S2 string `json:"s2" binding:"required"`
 }
+
+type ModelCollectionData struct {
+	PackageId string `json:"package_id" binding:"required"`
+	ModelName string `json:"model_name" binding:"required"`
+}

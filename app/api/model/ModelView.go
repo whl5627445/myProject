@@ -821,6 +821,113 @@ func ConvertUnitsView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+func CreateCollectionModelView(c *gin.Context) {
+	/*
+		# 新增收藏模型
+		## package_id: 模型包的id
+		## modelname: 需要增加的模型名称，全称， 例如“Modelica.Blocks.Examples.PID_Controller”
+
+	*/
+	username := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
+	var item ModelCollectionData
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	//检测PackageId，userspace_id是否存在
+	var packageModel DataBaseModel.YssimModels
+	err = DB.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", item.PackageId, []string{"sys", username}, []string{"0", userSpaceId}).First(&packageModel).Error
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+	//omc检测模型是否存在
+	result := service.ExistClass(item.ModelName)
+	if !result {
+		c.JSON(http.StatusBadRequest, "model not found")
+		return
+	}
+	//检测数据库表中是否存在同名模型
+	var modelCollection DataBaseModel.YssimModelsCollection
+	var res ResponseData
+	DB.Where("model_name = ? ", item.ModelName).First(&modelCollection)
+	if modelCollection.ID != "" {
+		res.Err = "名称已存在，请修改后再试。"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	//表中插入记录
+	var newCollection = DataBaseModel.YssimModelsCollection{
+		ID:          uuid.New().String(),
+		PackageId:   item.PackageId,
+		UserSpaceId: userSpaceId,
+		ModelName:   item.ModelName,
+	}
+	err = DB.Create(&newCollection).Error
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "Creation failed")
+		return
+	}
+
+	res.Msg = "创建成功"
+	c.JSON(http.StatusOK, res)
+
+}
+
+func GetCollectionModelView(c *gin.Context) {
+	/*
+		# 获取收藏模型列表
+	*/
+	//username := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
+	var res ResponseData
+	var modelData []map[string]interface{}
+	var modelCollections []DataBaseModel.YssimModelsCollection
+	DB.Where("userspace_id = ?", userSpaceId).Find(&modelCollections)
+	for i := 0; i < len(modelCollections); i++ {
+		//检测模型是否存在，不存在就从表中删除记录
+		result := service.ExistClass(modelCollections[i].ModelName)
+		if !result {
+			DB.Delete(&modelCollections[i])
+			continue
+		}
+		data := map[string]interface{}{
+			"id":         modelCollections[i].ID,
+			"package_id": modelCollections[i].PackageId,
+			"model_name": modelCollections[i].ModelName,
+			"haschild":   service.GetModelHasChild(modelCollections[i].ModelName),
+			"image":      service.GetIcon(modelCollections[i].ModelName),
+			"type":       service.GetModelType(modelCollections[i].ModelName),
+		}
+		modelData = append(modelData, data)
+	}
+	res.Data = modelData
+	c.JSON(http.StatusOK, res)
+}
+
+func DeleteCollectionModelView(c *gin.Context) {
+	/*
+		# 删除收藏的模型
+	*/
+	//username := c.GetHeader("username")
+	//userSpaceId := c.GetHeader("space_id")
+
+	id := c.Query("id")
+	var res ResponseData
+	var modelCollection DataBaseModel.YssimModelsCollection
+	DB.Where("id = ?", id).First(&modelCollection)
+	if modelCollection.ID == "" {
+		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+	DB.Delete(&modelCollection)
+	res.Msg = "删除成功"
+	c.JSON(http.StatusOK, res)
+}
+
 func Test(c *gin.Context) {
 	/*
 		测试omc命令
