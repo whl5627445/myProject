@@ -35,6 +35,10 @@ func ModelRouter(g *gin.Engine) {
 		Models.POST("/document/set", ModelAPI.SetModelDocumentView)
 		Models.POST("/units/convert", ModelAPI.ConvertUnitsView)
 
+		Models.POST("/collection/create", ModelAPI.CreateCollectionModelView)
+		Models.GET("/collection/get", ModelAPI.GetCollectionModelView)
+		Models.GET("/collection/delete", ModelAPI.DeleteCollectionModelView)
+
 	}
 	g.POST("/test", ModelAPI.Test)
 }
