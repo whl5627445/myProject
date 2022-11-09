@@ -282,7 +282,6 @@ func (g *graphicsData) data01(cData []interface{}, className, component string) 
 			typeOriginalTextString, ok := drawingDataList[9].([]interface{})
 			if ok {
 				data["originalTextString"] = typeOriginalTextString[0]
-
 			} else {
 				originalTextString := drawingDataList[9].(string)
 				pSignIndex := strings.Index(originalTextString, "%")
@@ -303,7 +302,7 @@ func (g *graphicsData) data01(cData []interface{}, className, component string) 
 							varClassType := classComponentList[p].([]interface{})[3].(string)
 							varClassName := classComponentList[p].([]interface{})[2].(string)
 							if varClassName == "Real" {
-								Unit = " " + varValue
+								//Unit = " " + varValue
 								break
 							}
 							if varClassType == varName {
@@ -312,11 +311,10 @@ func (g *graphicsData) data01(cData []interface{}, className, component string) 
 								break
 							}
 						}
-						data["originalTextString"] = prefix + varValue + Unit
-					} else {
-						continue
+						originalTextString = prefix + varValue + Unit
 					}
 				}
+				data["originalTextString"] = originalTextString
 			}
 			data["fontSize"] = drawingDataList[10]
 			data["textColor"] = oneDimensionalProcessing(drawingDataList[11])
