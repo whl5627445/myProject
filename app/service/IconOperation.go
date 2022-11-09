@@ -6,8 +6,8 @@ import (
 	"yssim-go/library/omc"
 )
 
-func GetIcon(modelName string) string {
-	fileName := "static/ModelicaIcons/" + modelName + ".svg"
+func GetIcon(modelName, packageName, version string) string {
+	fileName := "static/ModelicaIcons/" + packageName + "/" + version + "/" + modelName + ".svg"
 	imageBytes, _ := os.ReadFile(fileName)
 	if len(imageBytes) == 0 {
 		iconData := omc.OMC.GetIconAnnotation(modelName)

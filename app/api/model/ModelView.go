@@ -32,7 +32,7 @@ func GetSysRootModelView(c *gin.Context) {
 			"package_id":   packageModel[i].ID,
 			"package_name": packageModel[i].PackageName,
 			"haschild":     service.GetModelHasChild(packageModel[i].PackageName),
-			"image":        service.GetIcon(packageModel[i].PackageName),
+			"image":        service.GetIcon(packageModel[i].PackageName, packageModel[i].PackageName, packageModel[i].Version),
 			"type":         service.GetModelType(packageModel[i].PackageName),
 		}
 		modelData = append(modelData, data)
@@ -57,7 +57,7 @@ func GetUserRootModelView(c *gin.Context) {
 			"package_id":   packageModel[i].ID,
 			"package_name": packageModel[i].PackageName,
 			"haschild":     service.GetModelHasChild(packageModel[i].PackageName),
-			"image":        service.GetIcon(packageModel[i].PackageName),
+			"image":        service.GetIcon(packageModel[i].PackageName, packageModel[i].PackageName, packageModel[i].Version),
 			"type":         service.GetModelType(packageModel[i].PackageName),
 		}
 		modelData = append(modelData, data)
@@ -67,35 +67,6 @@ func GetUserRootModelView(c *gin.Context) {
 
 }
 
-// func GetRootModelView(c *gin.Context) {
-//	/*
-//		# 获取左侧模型列表接口， 此接口获取系统模型和用户上传模型的根节点列表，暂时没有图标信息
-//	*/
-//	username := c.GetHeader("username")
-//	userSpaceId := c.GetHeader("space_id")
-//	var res ResponseData
-//	var modelData []map[string]interface{}
-//	var packageModel []DataBaseModel.YssimModels
-//	DB.Where("sys_or_user IN ? AND userspace_id IN ?", []string{"sys", username}, []string{"0", userSpaceId}).Find(&packageModel)
-//
-//	for i := 0; i < len(packageModel); i++ {
-//		data := map[string]interface{}{
-//			"package_id":   packageModel[i].ID,
-//			"package_name": packageModel[i].PackageName,
-//			"sys_or_user":  packageModel[i].SysUser,
-//			"haschild":     service.GetModelHasChild(packageModel[i].PackageName),
-//			"image":        service.GetIcon(packageModel[i].PackageName),
-//		}
-//		if packageModel[i].SysUser != "sys" {
-//			data["sys_or_user"] = "user"
-//		}
-//		modelData = append(modelData, data)
-//	}
-//	res.Data = modelData
-//	c.JSON(http.StatusOK, res)
-//
-// }
-
 func GetListModelView(c *gin.Context) {
 	/*
 		# 获取左侧模型列表接口， 此接口获取系统模型和用户上传模型的子节点节点列表(需用传入父节点名称，返回子节点列表)，暂时没有图标信息
@@ -103,10 +74,15 @@ func GetListModelView(c *gin.Context) {
 		## modelname: 模型的父节点名称
 	*/
 	modelName := c.Query("model_name")
+	packageId := c.Query("package_id")
+	userName := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
+	var packageModel DataBaseModel.YssimModels
+	DB.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", packageId, []string{"sys", userName}, []string{"0", userSpaceId}).First(&packageModel)
 	var res ResponseData
 	modelChildList := service.GetModelChild(modelName)
 	for i := 0; i < len(modelChildList); i++ {
-		modelChildList[i]["image"] = service.GetIcon(modelName + "." + modelChildList[i]["name"].(string))
+		modelChildList[i]["image"] = service.GetIcon(modelName+"."+modelChildList[i]["name"].(string), packageModel.PackageName, packageModel.Version)
 		modelChildList[i]["type"] = service.GetModelType(modelName + "." + modelChildList[i]["name"].(string))
 	}
 	res.Data = modelChildList
@@ -885,22 +861,24 @@ func GetCollectionModelView(c *gin.Context) {
 	userSpaceId := c.GetHeader("space_id")
 	var res ResponseData
 	var modelData []map[string]interface{}
-	var modelCollections []DataBaseModel.YssimModelsCollection
-	DB.Where("userspace_id = ?", userSpaceId).Find(&modelCollections)
+	//var modelCollections []DataBaseModel.YssimModelsCollection
+	var modelCollections []map[string]string
+	DB.Raw("select ymc.id, ymc.package_id, ym.package_name, ymc.model_name, ym.version from yssim_models_collections as ymc  left join yssim_models ym on ymc.package_id = ym.id where ymc.userspace_id = ? and ymc.deleted_at is NULL", userSpaceId).Find(&modelCollections)
+
 	for i := 0; i < len(modelCollections); i++ {
 		//检测模型是否存在，不存在就从表中删除记录
-		result := service.ExistClass(modelCollections[i].ModelName)
+		result := service.ExistClass(modelCollections[i]["ModelName"])
 		if !result {
 			DB.Delete(&modelCollections[i])
 			continue
 		}
 		data := map[string]interface{}{
-			"id":         modelCollections[i].ID,
-			"package_id": modelCollections[i].PackageId,
-			"model_name": modelCollections[i].ModelName,
-			"haschild":   service.GetModelHasChild(modelCollections[i].ModelName),
-			"image":      service.GetIcon(modelCollections[i].ModelName),
-			"type":       service.GetModelType(modelCollections[i].ModelName),
+			"id":         modelCollections[i]["id"],
+			"package_id": modelCollections[i]["package_id"],
+			"model_name": modelCollections[i]["model_name"],
+			"haschild":   service.GetModelHasChild(modelCollections[i]["model_name"]),
+			"image":      service.GetIcon(modelCollections[i]["model_name"], modelCollections[i]["package_name"], modelCollections[i]["version"]),
+			"type":       service.GetModelType(modelCollections[i]["model_name"]),
 		}
 		modelData = append(modelData, data)
 	}

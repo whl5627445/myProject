@@ -9,7 +9,7 @@ import (
 type YssimModels struct {
 	ID          string         `gorm:"primaryKey"`
 	PackageName string         `gorm:"column:package_name"`
-	Version     string         `gorm:"column:version;default:\"\""`
+	Version     string         `gorm:"column:version;default:\"default\""`
 	SysUser     string         `gorm:"column:sys_or_user"`
 	FilePath    string         `gorm:"column:file_path"`
 	CreatedAt   *time.Time     `gorm:"column:create_time;autoCreateTime"`
