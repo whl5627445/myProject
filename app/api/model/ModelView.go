@@ -828,7 +828,7 @@ func CreateCollectionModelView(c *gin.Context) {
 	//检测数据库表中是否存在同名模型
 	var modelCollection DataBaseModel.YssimModelsCollection
 	var res ResponseData
-	DB.Where("model_name = ? ", item.ModelName).First(&modelCollection)
+	DB.Where("model_name = ? userspace_id = ?", item.ModelName, userSpaceId).First(&modelCollection)
 	if modelCollection.ID != "" {
 		res.Err = "名称已存在，请修改后再试。"
 		res.Status = 2
