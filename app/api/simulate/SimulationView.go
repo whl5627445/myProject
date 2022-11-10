@@ -5,13 +5,13 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+	"yssim-go/library/timeConvert"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/service"
 	"yssim-go/config"
-	"yssim-go/library/omc"
 )
 
 var DB = config.DB
@@ -292,7 +292,7 @@ func SimulateResultListView(c *gin.Context) {
 				"simulate_start_time": simulateStartTime.Format("2006-01-01 15:04:05"),
 				"simulate_end_time":   simulateEndTime.Format("2006-01-01 15:04:05"),
 				"simulate_model_name": recordList[i].SimulateModelName,
-				"simulate_run_time":   omc.SecondToTimeString(simulateSecond),
+				"simulate_run_time":   timeConvert.SecondToTimeString(simulateSecond),
 			}
 			dataList = append(dataList, data)
 		}

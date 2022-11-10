@@ -161,7 +161,9 @@ func GetModelParameters(modelName, name, componentName string) []interface{} {
 			continue
 		}
 		if p[10] == "parameter" || dataDefault["group"] != "Parameters" || p[9] != "True" {
-			dataDefault["group"] = "参数"
+			if dataDefault["group"] == "Parameters" {
+				dataDefault["group"] = "参数"
+			}
 			isEnumeration := omc.OMC.IsEnumeration(m.className)
 			if isEnumeration {
 				Literals := omc.OMC.GetEnumerationLiterals(m.className)

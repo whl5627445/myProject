@@ -857,17 +857,19 @@ func GetCollectionModelView(c *gin.Context) {
 	/*
 		# 获取收藏模型列表
 	*/
-	//username := c.GetHeader("username")
+	username := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
 	var res ResponseData
 	var modelData []map[string]interface{}
-	//var modelCollections []DataBaseModel.YssimModelsCollection
-	var modelCollections []map[string]string
-	DB.Raw("select ymc.id, ymc.package_id, ym.package_name, ymc.model_name, ym.version from yssim_models_collections as ymc  left join yssim_models ym on ymc.package_id = ym.id where ymc.userspace_id = ? and ymc.deleted_at is NULL", userSpaceId).Find(&modelCollections)
-
+	var modelCollections []map[string]interface{}
+	DB.Raw("select mc.id, mc.package_id, m.package_name, mc.model_name, m.version from yssim_models_collections as mc  left join yssim_models m on mc.package_id = m.id where mc.userspace_id = ?  and m.sys_or_user IN (?,\"sys\") and mc.deleted_at is NULL", userSpaceId, username).Scan(&modelCollections)
 	for i := 0; i < len(modelCollections); i++ {
 		//检测模型是否存在，不存在就从表中删除记录
-		result := service.ExistClass(modelCollections[i]["ModelName"])
+
+		modelName := modelCollections[i]["model_name"].(string)
+		packageName := modelCollections[i]["package_name"].(string)
+		version := modelCollections[i]["version"].(string)
+		result := service.ExistClass(modelName)
 		if !result {
 			DB.Delete(&modelCollections[i])
 			continue
@@ -876,10 +878,11 @@ func GetCollectionModelView(c *gin.Context) {
 			"id":         modelCollections[i]["id"],
 			"package_id": modelCollections[i]["package_id"],
 			"model_name": modelCollections[i]["model_name"],
-			"haschild":   service.GetModelHasChild(modelCollections[i]["model_name"]),
-			"image":      service.GetIcon(modelCollections[i]["model_name"], modelCollections[i]["package_name"], modelCollections[i]["version"]),
-			"type":       service.GetModelType(modelCollections[i]["model_name"]),
+			"haschild":   service.GetModelHasChild(modelName),
+			"image":      service.GetIcon(modelName, packageName, version),
+			"type":       service.GetModelType(modelName),
 		}
+
 		modelData = append(modelData, data)
 	}
 	res.Data = modelData

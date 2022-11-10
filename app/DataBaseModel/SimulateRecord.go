@@ -19,18 +19,18 @@ type YssimSimulateRecord struct {
 	SimulateStatus          string         `gorm:"column:simulate_status"`
 	SimulateStartTime       int64          `gorm:"column:simulate_start_time;default:0"`
 	SimulateEndTime         int64          `gorm:"column:simulate_end_time;default:0"`
-	FmiVersion              string         `gorm:"column:fmi_version"`
-	Description             string         `gorm:"column:description"`
-	StartTime               string         `gorm:"column:start_time"`
-	StopTime                string         `gorm:"column:stop_time"`
-	Method                  string         `gorm:"column:method"`
-	SimulateType            string         `gorm:"column:simulate_type"`
-	NumberOfIntervals       string         `gorm:"column:number_intervals"`
-	StepSize                string         `gorm:"column:step_size"`
-	Tolerance               string         `gorm:"column:tolerance"`
-	Solver                  string         `gorm:"column:solver"`
-	OutputFormat            string         `gorm:"column:output_format"`
-	VariableFilter          string         `gorm:"column:variable_filter"`
+	FmiVersion              string         `gorm:"column:fmi_version;default:\"\""`
+	Description             string         `gorm:"column:description;default:\"\""`
+	StartTime               string         `gorm:"column:start_time;default:\"\""`
+	StopTime                string         `gorm:"column:stop_time;default:\"\""`
+	Method                  string         `gorm:"column:method;default:\"\""`
+	SimulateType            string         `gorm:"column:simulate_type;default:\"\""`
+	NumberOfIntervals       string         `gorm:"column:number_intervals;default:\"\""`
+	StepSize                string         `gorm:"column:step_size;default:\"\""`
+	Tolerance               string         `gorm:"column:tolerance;default:\"\""`
+	Solver                  string         `gorm:"column:solver;default:\"\""`
+	OutputFormat            string         `gorm:"column:output_format;default:\"\""`
+	VariableFilter          string         `gorm:"column:variable_filte;default:\"\"r"`
 	SimulateStart           bool           `gorm:"column:simulate_start"`
 	CreatedAt               *time.Time     `gorm:"column:create_time;autoCreateTime"`
 	Deleted                 gorm.DeletedAt `gorm:"column:deleted_at"`
@@ -46,11 +46,11 @@ type YssimExperimentRecord struct {
 	ModelVarData      datatypes.JSON `gorm:"column:model_var_data;TYPE:json"`
 	StartTime         string         `gorm:"column:start_time"`
 	StopTime          string         `gorm:"column:stop_time"`
-	Method            string         `gorm:"column:method"`
-	SimulateType      string         `gorm:"column:simulate_type"`
-	NumberOfIntervals string         `gorm:"column:number_intervals"`
-	Tolerance         string         `gorm:"column:tolerance"`
-	Interval          string         `gorm:"column:interval"`
+	Method            string         `gorm:"column:method;default:\"\""`
+	SimulateType      string         `gorm:"column:simulate_type;default:\"\""`
+	NumberOfIntervals string         `gorm:"column:number_intervals;default:\"\""`
+	Tolerance         string         `gorm:"column:tolerance;default:\"\""`
+	Interval          string         `gorm:"column:interval;default:\"\""`
 	CreatedAt         *time.Time     `gorm:"column:create_time;autoCreateTime"`
 	Deleted           gorm.DeletedAt `gorm:"column:deleted_at"`
 }
