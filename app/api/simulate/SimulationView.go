@@ -268,41 +268,41 @@ func SimulateResultListView(c *gin.Context) {
 	modelName := c.Query("model_name")
 	pageNumStr := c.Query("page_num") //页码
 	pageNumInt, _ := strconv.Atoi(pageNumStr)
+	var totle int64 //总条数
 	var recordList []DataBaseModel.YssimSimulateRecord
-	if modelName != "" {
-		DB.Where("username = ? AND simulate_model_name = ? AND userspace_id = ? AND simulate_status = ?", username, modelName, userSpaceId, "4").Order("create_time desc").Find(&recordList)
-	} else {
-		DB.Where("username = ? AND userspace_id = ?", username, userSpaceId).Order("create_time desc").Find(&recordList)
-	}
 	var resData map[string]interface{}
 	resData = make(map[string]interface{})
 	var dataList []map[string]interface{}
-	for i := pageNumInt*10 - 10; i < pageNumInt*10-1; i++ {
-		if i >= len(recordList) || i < 0 {
-			break
-		} else {
-			simulateStartTime := time.Unix(recordList[i].SimulateStartTime, 0)
-			simulateEndTime := time.Unix(recordList[i].SimulateEndTime, 0)
-			simulateSecond := simulateEndTime.Sub(simulateStartTime).Seconds()
-			data := map[string]interface{}{
-				"index":               i + 1,
-				"id":                  recordList[i].ID,
-				"create_time":         recordList[i].CreatedAt.Format("2006-01-02 15:04:05"),
-				"simulate_status":     config.MoldelSimutalionStatus[recordList[i].SimulateStatus],
-				"simulate_start_time": simulateStartTime.Format("2006-01-01 15:04:05"),
-				"simulate_end_time":   simulateEndTime.Format("2006-01-01 15:04:05"),
-				"simulate_model_name": recordList[i].SimulateModelName,
-				"simulate_run_time":   timeConvert.SecondToTimeString(simulateSecond),
-			}
-			dataList = append(dataList, data)
+	if modelName != "" {
+		DB.Where("username = ? AND simulate_model_name = ? AND userspace_id = ? AND simulate_status = ?", username, modelName, userSpaceId, "4").Order("create_time desc").Find(&recordList)
+	} else {
+		DB.Where("username = ? AND userspace_id = ?", username, userSpaceId).Order("create_time desc").Find(&recordList).Count(&totle)
+		DB.Limit(10).Offset((pageNumInt-1)*10).Where("username = ? AND userspace_id = ?", username, userSpaceId).Order("create_time desc").Find(&recordList)
+	}
+	pageCount := math.Ceil(float64(totle) / 10) //总页数
+	for i := 0; i < len(recordList); i++ {
+		simulateStartTime := time.Unix(recordList[i].SimulateStartTime, 0)
+		simulateEndTime := time.Unix(recordList[i].SimulateEndTime, 0)
+		simulateSecond := simulateEndTime.Sub(simulateStartTime).Seconds()
+		data := map[string]interface{}{
+			"index":               i + 1,
+			"id":                  recordList[i].ID,
+			"create_time":         recordList[i].CreatedAt.Format("2006-01-02 15:04:05"),
+			"simulate_status":     config.MoldelSimutalionStatus[recordList[i].SimulateStatus],
+			"simulate_start_time": simulateStartTime.Format("2006-01-01 15:04:05"),
+			"simulate_end_time":   simulateEndTime.Format("2006-01-01 15:04:05"),
+			"simulate_model_name": recordList[i].SimulateModelName,
+			"simulate_run_time":   timeConvert.SecondToTimeString(simulateSecond),
 		}
+		dataList = append(dataList, data)
 	}
 	resData["resultList"] = dataList
-	resData["pageCount"] = math.Ceil(float64(len(recordList)) / 10) //总页数向上取整
-	resData["totle"] = len(recordList)                              //一共多少条数据
+	resData["pageCount"] = pageCount
+	resData["totle"] = totle
 	var res ResponseData
 	res.Data = resData
 	c.JSON(http.StatusOK, res)
+
 }
 
 func SimulateResultDetailsView(c *gin.Context) {
