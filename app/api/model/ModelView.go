@@ -864,14 +864,13 @@ func GetCollectionModelView(c *gin.Context) {
 	var modelCollections []map[string]interface{}
 	DB.Raw("select mc.id, mc.package_id, m.package_name, mc.model_name, m.version from yssim_models_collections as mc  left join yssim_models m on mc.package_id = m.id where mc.userspace_id = ?  and m.sys_or_user IN (?,\"sys\") and mc.deleted_at is NULL", userSpaceId, username).Scan(&modelCollections)
 	for i := 0; i < len(modelCollections); i++ {
-		//检测模型是否存在，不存在就从表中删除记录
-
 		modelName := modelCollections[i]["model_name"].(string)
 		packageName := modelCollections[i]["package_name"].(string)
 		version := modelCollections[i]["version"].(string)
+		//检测模型是否存在，不存在就从表中删除记录
 		result := service.ExistClass(modelName)
 		if !result {
-			DB.Delete(&modelCollections[i])
+			go DB.Delete(&modelCollections[i])
 			continue
 		}
 		data := map[string]interface{}{

@@ -148,9 +148,7 @@ func GetModelParameters(modelName, name, componentName string) []interface{} {
 			}
 			tab := dList[tabIndex].([]interface{})[0]
 			group := dList[tabIndex].([]interface{})[1]
-			//dataDefault["tab"] = parameterTranslation[tab.(string)]
 			dataDefault["tab"] = tab.(string)
-			//dataDefault["group"] = parameterTranslation[group.(string)]
 			dataDefault["group"] = group.(string)
 			showStartAttribute = dList[tabIndex].([]interface{})[3].(string)
 		}
@@ -161,7 +159,7 @@ func GetModelParameters(modelName, name, componentName string) []interface{} {
 			continue
 		}
 		if p[10] == "parameter" || dataDefault["group"] != "Parameters" || p[9] != "True" {
-			if dataDefault["group"] == "Parameters" {
+			if dataDefault["group"] == "" {
 				dataDefault["group"] = "参数"
 			}
 			isEnumeration := omc.OMC.IsEnumeration(m.className)

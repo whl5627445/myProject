@@ -474,6 +474,9 @@ func (o *ZmqObject) GetElementModifierNamesList(classNameList []string, componen
 }
 
 func (o *ZmqObject) GetDerivedClassModifierNames(className string) []interface{} {
+	if className == "Real" || className == "Integer" {
+		return nil
+	}
 	cmd := "getDerivedClassModifierNames(" + className + ")"
 	data, _ := o.SendExpression(cmd)
 	return data
