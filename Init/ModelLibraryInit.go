@@ -7,7 +7,7 @@ import (
 	"yssim-go/config"
 )
 
-func ModelLibraryInit() {
+func modelLibraryInit() {
 	username := config.USERNAME
 
 	var userSpace DataBaseModel.YssimUserSpace

@@ -387,9 +387,12 @@ func DeletePackageAndModelView(c *gin.Context) {
 		res.Msg = msg
 		if item.ParentName == "" {
 			var simulateRecord []DataBaseModel.YssimSimulateRecord
-			DB.Where("package_id = ? AND username = ? AND userspace_id = ?", item.PackageId, username, userSpaceId).Delete(&simulateRecord)
+			DB.Where("package_id = ? AND username = ? AND userspace_id = ?", item.PackageId, username, userSpaceId).Find(&simulateRecord)
 			DB.Delete(&packageModel)
 		}
+		var modelCollection []DataBaseModel.YssimModelsCollection
+		DB.Where("package_id = ? AND model_name = ? AND userspace_id = ?", packageModel.ID, item.ModelName, userSpaceId).Find(&modelCollection)
+		DB.Delete(&modelCollection)
 	} else {
 		res.Msg = msg
 		res.Status = 2

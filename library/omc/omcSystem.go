@@ -122,12 +122,10 @@ func (o *ZmqObject) Clear() {
 	//o.SendExpressionNoParsed("clear()")
 	//o.SendExpressionNoParsed("clearVariables()")
 	//o.SendExpressionNoParsed("clearProgram()")
-	//o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nfAPI\")")
-	//o.SendExpressionNoParsed("setCommandLineOptions({\"-g=Modelica\",\"-d=nogen,noevalfunc,newInst,nfAPI\"})")
+	o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nfAPI\")")
 	o.SendExpressionNoParsed("setCommandLineOptions(\"+ignoreSimulationFlagsAnnotation=false\")")
-	o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nogen,noevalfunc,newInst,nfAPI\")")
+	//o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nogen,noevalfunc,newInst,nfAPI\")")
 	o.SendExpressionNoParsed("setCommandLineOptions(\"--matchingAlgorithm=PFPlusExt --indexReductionMethod=dynamicStateSelection -d=initialization,NLSanalyticJacobian\")")
-
 }
 
 func (o *ZmqObject) GetCommandLineOptions() string {
@@ -915,4 +913,22 @@ func (o *ZmqObject) GetAvailableLibraries() []interface{} {
 		return result
 	}
 	return nil
+}
+
+func (o *ZmqObject) GetAllSubtypeOf(baseClassName, className string) []interface{} {
+	cmd := "getAllSubtypeOf(" + baseClassName + "," + className + ",false,false,false)"
+	result, ok := o.SendExpression(cmd)
+	if ok && len(result) > 0 {
+		return result
+	}
+	return make([]interface{}, 1)
+}
+
+func (o *ZmqObject) GcSetMaxHeapSize(size string) []interface{} {
+	cmd := "GC_set_max_heap_size(" + size + ")"
+	result, ok := o.SendExpression(cmd)
+	if ok && len(result) > 0 {
+		return result
+	}
+	return make([]interface{}, 1)
 }
