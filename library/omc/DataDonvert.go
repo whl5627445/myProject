@@ -126,7 +126,7 @@ func parseString(data []byte) string {
 						Str.WriteString("\\\"")
 					}
 					if num == 0 {
-						if data[p+1] != '"' {
+						if p < len(data)-1 && data[p+1] != '"' {
 							Str.WriteString("\"")
 							mark = false
 						}

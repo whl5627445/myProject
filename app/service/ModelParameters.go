@@ -97,15 +97,15 @@ func (m modelParameters) getExtendsModifierNameAndValue() ([]string, []string, [
 	return dataNameList, dataValueList, dataFinalList
 }
 
-func GetModelParameters(modelName, name, componentName string) []interface{} {
+func GetModelParameters(modelName, componentName, componentClassName string) []interface{} {
 	var m modelParameters
 	var dataList []interface{}
-	if name == "" || componentName == "" {
+	if componentName == "" || componentClassName == "" {
 		m.name = modelName
 		m.componentName = modelName
 	} else {
-		m.name = name
-		m.componentName = componentName
+		m.name = componentName
+		m.componentName = componentClassName
 	}
 	m.modelName = modelName
 	m.classAll = omc.OMC.GetInheritedClassesListAll([]string{m.componentName})
@@ -116,7 +116,6 @@ func GetModelParameters(modelName, name, componentName string) []interface{} {
 	}
 	m.componentsDict = map[string]interface{}{}
 	for i := 0; i < len(m.components); i++ {
-
 		m.components[i] = append(m.components[i], m.componentAnnotations[i])
 		m.componentsDict[m.components[i][3].(string)] = m.components[i]
 	}
@@ -131,6 +130,41 @@ func GetModelParameters(modelName, name, componentName string) []interface{} {
 		varName := p[3].(string)
 		dataDefault["name"] = varName
 		dataDefault["comment"] = p[4].(string)
+		ComponentModifierValue := omc.OMC.GetElementModifierValue(modelName, componentName+"."+dataDefault["name"].(string))
+		dataDefault["value"] = ComponentModifierValue
+		//getElements(EnergySystems.Blocks.Production.proGlass, useQuotes = true) 15:37:27:812
+		//{"co", "-", "EnergySystems.Blocks.Production.Date.Date2021", "date", "", "public", "false", "false", "false", "true", "unspecified", "none", "unspecified", "EnergySystems.Blocks.Production.Date.DateBase", "{}"},
+		//{"co", "-", "Modelica.Blocks.Sources.IntegerTable",          "year", "", "public", "false", "false", "false", "false", "unspecified", "none", "unspecified", "$Any", "{}"}
+
+		//getAllSubtypeOf(EnergySystems.Blocks.Production.Date.DateBase,EnergySystems.Blocks.Production.proGlass,false,false,false) 15:37:38:647
+		//{EnergySystems.Blocks.Production.Date.Date2021} 15:38:08:956
+
+		//setElementModifierValue(EnergySystems.Examples.Scenario1_Status, environment.water_flow, $Code((redeclare Buildings.BoundaryConditions.WeatherData.BaseClasses.SourceSelector water_flow))) 15:53:12:232
+		//Ok 15:53:12:232
+
+		//getElementModifierNames(EnergySystems.Examples.Scenario1_Status,"environment") 15:53:12:232
+		//{"water_flow"} 15:53:12:232
+
+		//getElementModifierValue(EnergySystems.Examples.Scenario1_Status,environment.water_flow) 15:53:12:232
+		//"redeclare Buildings.BoundaryConditions.WeatherData.BaseClasses.SourceSelector water_flow" 15:53:12:232
+		if p[9] == "true" {
+			dataDefault["type"] = "Enumeration"
+			dataDefault["defaultvalue"] = p[2]
+			dataDefault["disable"] = true
+			dataDefault["group"] = "参数"
+			oData := make([]string, 1)
+			//if p[13].(string) != "$Any"{
+			//	options := omc.OMC.GetAllSubtypeOf(p[13].(string), componentClassName)
+			//	for _, option := range options {
+			//		optionData := "redeclare "+ option.(string) + " " + componentName+"."+dataDefault["name"].(string)
+			//		oData = append(oData, optionData)
+			//	}
+			//	dataDefault["disable"] = false
+			//}
+			dataDefault["options"] = oData
+			dataList = append(dataList, dataDefault)
+			continue
+		}
 		dList := p[len(p)-1].([]interface{})
 		DialogIndex, DialogIndexOk := func() (int, bool) {
 			for n := 0; n < len(dList); n++ {
@@ -152,13 +186,11 @@ func GetModelParameters(modelName, name, componentName string) []interface{} {
 			dataDefault["group"] = group.(string)
 			showStartAttribute = dList[tabIndex].([]interface{})[3].(string)
 		}
-		ComponentModifierValue := omc.OMC.GetElementModifierValue(modelName, name+"."+dataDefault["name"].(string))
 
-		dataDefault["value"] = ComponentModifierValue
 		if (p[10] != "parameter" && dataDefault["group"] != "Parameters" && p[9] != "True") || p[5] == "protected" || p[6] == "True" {
 			continue
 		}
-		if p[10] == "parameter" || dataDefault["group"] != "Parameters" || p[9] != "True" {
+		if p[10] == "parameter" || dataDefault["group"] != "Parameters" {
 			if dataDefault["group"] == "" {
 				dataDefault["group"] = "参数"
 			}
@@ -167,9 +199,9 @@ func GetModelParameters(modelName, name, componentName string) []interface{} {
 				Literals := omc.OMC.GetEnumerationLiterals(m.className)
 				dataDefault["options"] = func() []string {
 					var oData []string
-					for i := 0; i < len(Literals); i++ {
-						if Literals[i] != "" {
-							oData = append(oData, strings.TrimPrefix(m.className, ".")+"."+Literals[i])
+					for _, literal := range Literals {
+						if literal != "" {
+							oData = append(oData, strings.TrimPrefix(m.className, ".")+"."+literal)
 						}
 					}
 					return oData

@@ -30,7 +30,7 @@ type YssimSimulateRecord struct {
 	Tolerance               string         `gorm:"column:tolerance;default:\"\""`
 	Solver                  string         `gorm:"column:solver;default:\"\""`
 	OutputFormat            string         `gorm:"column:output_format;default:\"\""`
-	VariableFilter          string         `gorm:"column:variable_filte;default:\"\"r"`
+	VariableFilter          string         `gorm:"column:variable_filter;default:\"\""`
 	SimulateStart           bool           `gorm:"column:simulate_start"`
 	CreatedAt               *time.Time     `gorm:"column:create_time;autoCreateTime"`
 	Deleted                 gorm.DeletedAt `gorm:"column:deleted_at"`
