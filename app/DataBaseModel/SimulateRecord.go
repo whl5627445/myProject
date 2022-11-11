@@ -17,8 +17,8 @@ type YssimSimulateRecord struct {
 	SimulateModelResultPath string         `gorm:"column:simulate_model_result_path"`
 	SimulateResultStr       string         `gorm:"column:simulate_result_str"`
 	SimulateStatus          string         `gorm:"column:simulate_status"`
-	SimulateStartTime       int64          `gorm:"column:simulate_start_time;default:0"`
-	SimulateEndTime         int64          `gorm:"column:simulate_end_time;default:0"`
+	SimulateStartTime       int64          `gorm:"column:simulate_start_time"`
+	SimulateEndTime         int64          `gorm:"column:simulate_end_time"`
 	FmiVersion              string         `gorm:"column:fmi_version;default:\"\""`
 	Description             string         `gorm:"column:description;default:\"\""`
 	StartTime               string         `gorm:"column:start_time;default:\"\""`
