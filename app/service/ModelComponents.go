@@ -33,7 +33,8 @@ func GetElements(className, componentName string) []interface{} {
 }
 
 func GetComponentName(modelName, className string) string {
-	componentData := omc.OMC.GetElements(modelName)
+	modelNameList := GetICList(modelName)
+	componentsData := omc.OMC.GetElementsList(modelNameList)
 	nameList := strings.Split(className, ".")
 	name := strings.ToLower(nameList[len(nameList)-1])
 	nameNum := 0
@@ -41,8 +42,8 @@ func GetComponentName(modelName, className string) string {
 	if _, ok := config.ModelicaKeywords[name]; ok {
 		nameNum += 1
 	}
-	for _, c := range componentData {
-		cList := c.([]interface{})
+	for _, c := range componentsData {
+		cList := c
 		n := cList[3].(string)
 		if len(cList) >= 2 && strings.HasPrefix(n, name) {
 			nameMap[n] = true
@@ -52,7 +53,7 @@ func GetComponentName(modelName, className string) string {
 	for i := 1; i < nameNum+1; i++ {
 		n := name + strconv.Itoa(i)
 		_, ok := config.ModelicaKeywords[n]
-		mapOk := nameMap[n]
+		_, mapOk := nameMap[n]
 		if !ok && !mapOk {
 			return n
 		}

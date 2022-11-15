@@ -52,14 +52,22 @@ func GetGraphicsData(modelName string) [][]map[string]interface{} {
 		return g.data
 	}
 	nameList := g.getICList(modelName)
-	diagramAnnotationData := omc.OMC.GetDiagramAnnotationList(nameList)
+	modelNameDiagramAnnotationData := omc.OMC.GetDiagramAnnotation(modelName)
+	if len(modelNameDiagramAnnotationData) >= 8 && modelNameDiagramAnnotationData[len(modelNameDiagramAnnotationData)-1] != "" {
+		dData := modelNameDiagramAnnotationData[len(modelNameDiagramAnnotationData)-1]
+		data1 := g.data01(dData.([]interface{}), "", "")
+		for _, d := range data1 {
+			d["mobility"] = true
+			g.data[0] = append(g.data[0], d)
+		}
+	}
+	diagramAnnotationData := omc.OMC.GetDiagramAnnotationList(nameList[:len(nameList)-1])
 	if len(diagramAnnotationData) >= 8 {
 		dData := diagramAnnotationData[len(diagramAnnotationData)-1]
 		data1 := g.data01(dData.([]interface{}), "", "")
 		g.data[0] = append(g.data[0], data1...)
 	}
 	g.getnthconnectionData(nameList)
-
 	// nameList第一个名字是模型自身的名字，先获取模型自身的视图数据
 	componentsData := omc.OMC.GetElementsList([]string{modelName})
 	componentAnnotationsData := getElementAndDiagramAnnotations([]string{modelName})
@@ -212,7 +220,6 @@ func (g *graphicsData) data01(cData []interface{}, className, component string) 
 	for i := 0; i < len(cData); i += 2 {
 		data := map[string]interface{}{}
 		drawingDataList := cData[i+1].([]interface{})
-
 		DynamicSelect := find(drawingDataList, "DynamicSelect")
 		if DynamicSelect {
 			var drawingDataListFilter []interface{}
@@ -449,7 +456,7 @@ func (g *graphicsData) getnthconnectionData(nameList []string) {
 			d1Data := g.data01(ncaData, "", "")
 			if len(ncData) != 0 && len(ncaData) != 0 && len(d1Data) != 0 {
 				daData := d1Data[0]
-				if i == 0 { // i==0的时候，表示目前遍历的是模型自身的组件，模型自身的组件可以移动，设在"mobility"为true
+				if i == len(nameList)-1 { // i==0的时候，表示目前遍历的是模型自身的组件，模型自身的组件可以移动，设在"mobility"为true
 					daData["mobility"] = true
 				} else {
 					daData["mobility"] = false
