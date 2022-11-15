@@ -165,35 +165,39 @@ func SimulateResultGraphicsView(c *gin.Context) {
 
 	// 判断记录是否存在，有一条不存在就返回"not found"
 	recordIdList := item.RecordId
-	var record []DataBaseModel.YssimSimulateRecord
-	err = DB.Where("id IN ? AND username = ?", recordIdList, username).Find(&record).Error
-	for i := 0; i < len(record); i++ {
-		if err != nil || record[i].SimulateStatus != "4" {
+	var recordList []DataBaseModel.YssimSimulateRecord
+	err = DB.Where("id IN ? AND username = ?", recordIdList, username).Order("").Find(&recordList).Error
+	for i := 0; i < len(recordList); i++ {
+		if err != nil || recordList[i].SimulateStatus != "4" {
 			c.JSON(http.StatusBadRequest, "not found")
 			return
 		}
 	}
 	// 判断输入id个数和输出结果长度是否一致!
-	if len(record) != len(recordIdList) {
+	if len(recordList) != len(recordIdList) {
 		c.JSON(http.StatusBadRequest, "输入id个数和输出结果长度不一致!")
 		return
 	}
-
+	recordDict := map[string]DataBaseModel.YssimSimulateRecord{}
+	for _, record := range recordList {
+		recordDict[record.ID] = record
+	}
 	// 遍历入参数中的id，依次读取结果，每次经过插入到resData
 	for i := 0; i < len(recordIdList); i++ {
-		data, ok := service.ReadSimulationResult([]string{item.Variable}, record[i].SimulateModelResultPath+"result_res.mat")
+		data, ok := service.ReadSimulationResult([]string{item.Variable}, recordDict[recordIdList[i]].SimulateModelResultPath+"result_res.mat")
 		unitsData := service.ConvertUnits(item.S2, item.S1)
 		if ok {
 			unitsScaleFactor, _ := strconv.ParseFloat(unitsData[1], 64)
 			ordinate := data[1]
-			for i := 0; i < len(ordinate); i++ {
-				ordinate[i] = ordinate[i] * unitsScaleFactor
+			for p := 0; p < len(ordinate); p++ {
+				ordinate[p] = ordinate[p] * unitsScaleFactor
 			}
 			oneData := map[string]interface{}{
+				"id":        recordDict[recordIdList[i]].ID,
 				"abscissa":  data[0],
 				"ordinate":  ordinate,
-				"startTime": record[i].StartTime,
-				"stopTime":  record[i].StopTime,
+				"startTime": recordDict[recordIdList[i]].StartTime,
+				"stopTime":  recordDict[recordIdList[i]].StopTime,
 			}
 			resData = append(resData, oneData)
 			res.Data = resData
@@ -243,7 +247,6 @@ func SimulateResultSingularView(c *gin.Context) {
 			ordinate[i] = ordinate[i] * unitsScaleFactor
 		}
 		res.Data = map[string]interface{}{
-			"abscissa":  data[0],
 			"ordinate":  ordinate,
 			"startTime": record.StartTime,
 			"stopTime":  record.StopTime,
@@ -276,7 +279,7 @@ func SimulateResultListView(c *gin.Context) {
 	if modelName != "" {
 		DB.Limit(10).Where("username = ? AND simulate_model_name = ? AND userspace_id = ? AND simulate_status = ?", username, modelName, userSpaceId, "4").Order("create_time desc").Find(&recordList)
 	} else {
-		DB.Where("username = ? AND userspace_id = ?", username, userSpaceId).Order("create_time desc").Count(&totle)
+		DB.Where("username = ? AND userspace_id = ?", username, userSpaceId).Find(&recordList).Count(&totle)
 		DB.Limit(10).Offset((pageNumInt-1)*10).Where("username = ? AND userspace_id = ?", username, userSpaceId).Order("create_time desc").Find(&recordList)
 	}
 	pageCount := math.Ceil(float64(totle) / 10) //总页数
