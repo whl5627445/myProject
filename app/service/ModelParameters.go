@@ -153,14 +153,15 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 			dataDefault["disable"] = true
 			dataDefault["group"] = "参数"
 			oData := make([]string, 1)
-			//if p[13].(string) != "$Any"{
-			//	options := omc.OMC.GetAllSubtypeOf(p[13].(string), componentClassName)
-			//	for _, option := range options {
-			//		optionData := "redeclare "+ option.(string) + " " + componentName+"."+dataDefault["name"].(string)
-			//		oData = append(oData, optionData)
-			//	}
-			//	dataDefault["disable"] = false
-			//}
+			if p[13].(string) != "$Any" {
+				// 模板参数获取有内存泄露问题， 暂时不用
+				//options := omc.OMC.GetAllSubtypeOf(p[13].(string), componentClassName)
+				//for _, option := range options {
+				//	optionData := "redeclare "+ option.(string) + " " + componentName+"."+dataDefault["name"].(string)
+				//	oData = append(oData, optionData)
+				//}
+				dataDefault["disable"] = false
+			}
 			dataDefault["options"] = oData
 			dataList = append(dataList, dataDefault)
 			continue
@@ -191,7 +192,7 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 			continue
 		}
 		if p[10] == "parameter" || dataDefault["group"] != "Parameters" {
-			if dataDefault["group"] == "" {
+			if dataDefault["group"] == "" || dataDefault["group"] == "Parameters" {
 				dataDefault["group"] = "参数"
 			}
 			isEnumeration := omc.OMC.IsEnumeration(m.className)
