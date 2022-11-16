@@ -2,6 +2,8 @@ package service
 
 import (
 	"encoding/json"
+	"github.com/wangluozhe/requests"
+	"github.com/wangluozhe/requests/url"
 	"log"
 	"net"
 	"os"
@@ -9,9 +11,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/wangluozhe/requests"
-	"github.com/wangluozhe/requests/url"
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/config"
 	"yssim-go/library/fileOperation"
@@ -23,10 +22,32 @@ type SimulateTask struct {
 	Package DataBaseModel.YssimModels
 }
 
+type ModelVarData struct {
+	FinalAttributesStr map[string]string `json:"final_attributes_str"`
+}
+
 var SimulateTaskChan = make(chan *SimulateTask, 100)
 
 func openModelica(task *SimulateTask, resultFilePath string, SimulationPraData map[string]string) bool {
 	res := false
+	var ComponentValue ModelVarData
+	//查询数据库中的实验id对应的记录
+	var experimentRecord DataBaseModel.YssimExperimentRecord
+	config.DB.Where("id = ? ", task.SRecord.ExperimentId).First(&experimentRecord)
+	//根据实验id对应的记录，设置组件参数与属性
+	err := json.Unmarshal(experimentRecord.ModelVarData, &ComponentValue) //json数据绑定到结构体
+	if err != nil {
+		log.Println("err: ", err)
+		log.Println("json2map filed!")
+	}
+	//设置组件参数
+	result := SetComponentModifierValue(experimentRecord.ModelName, ComponentValue.FinalAttributesStr)
+	if result {
+		log.Println("设置完成。")
+	} else {
+		log.Println("设置失败。")
+	}
+
 	pwd, _ := os.Getwd()
 	buildModelRes := omc.OMC.BuildModel(task.SRecord.SimulateModelName, pwd+"/"+resultFilePath, SimulationPraData)
 	if buildModelRes {
