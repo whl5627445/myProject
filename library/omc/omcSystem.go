@@ -122,6 +122,7 @@ func (o *ZmqObject) Clear() {
 	//o.SendExpressionNoParsed("clear()")
 	//o.SendExpressionNoParsed("clearVariables()")
 	//o.SendExpressionNoParsed("clearProgram()")
+	//o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nfAPI,execstat,rml,nfAPIDynamicSelect=false\")")
 	o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nfAPI\")")
 	o.SendExpressionNoParsed("setCommandLineOptions(\"+ignoreSimulationFlagsAnnotation=false\")")
 	//o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nogen,noevalfunc,newInst,nfAPI\")")
@@ -182,15 +183,10 @@ func (o *ZmqObject) GetDiagramAnnotationList(classNameList []string) []interface
 	var dataList []interface{}
 	for i := 0; i < len(classNameList); i++ {
 		cmd := "getDiagramAnnotation(" + classNameList[i] + ")"
-		//diagramannotationData, ok := AllModelCache[cmd].([]interface{})
-		diagramannotationData, ok := o.SendExpression(cmd)
-		//if !ok {
-		//	diagramannotationData, ok = o.SendExpression(cmd)
-		//}
-		if ok && len(diagramannotationData) > 8 {
-			for di := 0; di < len(diagramannotationData); di++ {
-				dataList = append(dataList, diagramannotationData[di])
-				//AllModelCache[cmd] = diagramannotationData
+		diagramAnnotationData, ok := o.SendExpression(cmd)
+		if ok && len(diagramAnnotationData) > 8 {
+			for di := 0; di < len(diagramAnnotationData); di++ {
+				dataList = append(dataList, diagramAnnotationData[di])
 			}
 		}
 	}
@@ -281,7 +277,7 @@ func (o *ZmqObject) GetComponentsList(classNameList []string) [][]interface{} {
 
 // 获取给定模型的组成部分，包含组件信息,新API
 func (o *ZmqObject) GetElements(className string) []interface{} {
-	if className == "Real" {
+	if className == "Real" || className == "" {
 		return nil
 	}
 	cmd := "getElements(" + className + ", useQuotes = false)"
@@ -293,7 +289,7 @@ func (o *ZmqObject) GetElements(className string) []interface{} {
 func (o *ZmqObject) GetElementsList(classNameList []string) [][]interface{} {
 	var dataList [][]interface{}
 	for i := 0; i < len(classNameList); i++ {
-		if classNameList[i] == "Real" {
+		if classNameList[i] == "Real" || classNameList[i] == "" {
 			continue
 		}
 		cmd := "getElements(" + classNameList[i] + ", useQuotes = false)"

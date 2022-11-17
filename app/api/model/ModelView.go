@@ -106,7 +106,8 @@ func GetGraphicsDataView(c *gin.Context) {
 	username := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
 	var packageModel DataBaseModel.YssimModels
-	err = DB.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", item.PackageId, []string{"sys", username}, []string{"0", userSpaceId}).First(&packageModel).Error
+	packageName := strings.Split(item.ModelName, ".")[0]
+	err = DB.Where("package_name = ? AND sys_or_user IN ? AND userspace_id IN ?", packageName, []string{"sys", username}, []string{"0", userSpaceId}).First(&packageModel).Error
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
@@ -115,6 +116,13 @@ func GetGraphicsDataView(c *gin.Context) {
 	var graphicsData [][]map[string]interface{}
 	if item.ComponentName == "" {
 		graphicsData = service.GetGraphicsData(item.ModelName)
+		if packageModel.SysUser == "sys" {
+			for _, dataList := range graphicsData {
+				for _, d := range dataList {
+					d["mobility"] = false
+				}
+			}
+		}
 	} else {
 		graphicsData = service.GetComponentGraphicsData(item.ModelName, item.ComponentName)
 	}

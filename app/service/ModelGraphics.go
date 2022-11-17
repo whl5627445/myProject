@@ -220,6 +220,9 @@ func (g *graphicsData) data01(cData []interface{}, className, component string) 
 	for i := 0; i < len(cData); i += 2 {
 		data := map[string]interface{}{}
 		drawingDataList := cData[i+1].([]interface{})
+		if drawingDataList[0].(string) == "false" {
+			continue
+		}
 		DynamicSelect := find(drawingDataList, "DynamicSelect")
 		if DynamicSelect {
 			var drawingDataListFilter []interface{}
@@ -231,6 +234,7 @@ func (g *graphicsData) data01(cData []interface{}, className, component string) 
 			}
 			drawingDataList = drawingDataListFilter
 		}
+
 		if len(drawingDataList) < 9 {
 			dataType := cData[i]
 			if dataType == "Bitmap" {
@@ -403,7 +407,7 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 				continue
 			}
 			caf := caDataFilter[i][placementIndex+1].([]interface{})
-			if len(caf) < 7 {
+			if len(caf) < 7 || caf[0].(string) == "false" {
 				// 出现错误会使数据不可用， 长度小于预期，弃用
 				continue
 			}
