@@ -71,7 +71,6 @@ func GetGraphicsData(modelName string) [][]map[string]interface{} {
 	// nameList第一个名字是模型自身的名字，先获取模型自身的视图数据
 	componentsData := omc.OMC.GetElementsList([]string{modelName})
 	componentAnnotationsData := getElementAndDiagramAnnotations([]string{modelName})
-	// componentAnnotationsData := omc.OMC.GetComponentAnnotationsList([]string{modelName})
 	data2 := g.data02(componentsData, componentAnnotationsData, false, "")
 	for i := 0; i < len(data2); i++ {
 		data2[i]["mobility"] = true // 模型自身的组件是可以移动的，设置字段"mobility"为true
@@ -111,7 +110,7 @@ func GetGraphicsData(modelName string) [][]map[string]interface{} {
 func GetComponentGraphicsData(modelName string, componentName string) [][]map[string]interface{} {
 	var g = graphicsData{}
 	g.data = [][]map[string]interface{}{{}, {}}
-
+	g.modelName = modelName
 	components := omc.OMC.GetElementsList([]string{modelName})
 	componentAnnotations := getElementAndDiagramAnnotations([]string{modelName})
 	var componentsData [][]interface{}
