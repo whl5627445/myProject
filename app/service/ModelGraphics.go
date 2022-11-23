@@ -508,6 +508,8 @@ func getIconAndDiagramAnnotations(nameList []string, isIcon bool) []interface{} 
 			result = omc.OMC.GetDiagramAnnotation(name)
 			if len(result) > 8 {
 				result = result[8].([]interface{})
+			} else {
+				continue
 			}
 		} else {
 			result = omc.OMC.GetIconAnnotation(name)
