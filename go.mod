@@ -26,6 +26,7 @@ require (
 require (
 	github.com/Danny-Dasilva/fhttp v0.0.0-20220418170016-5ea1c560e6a8 // indirect
 	github.com/Danny-Dasilva/utls v0.0.0-20220524230213-ddef7e504c5f // indirect
+	github.com/ajstarks/svgo v0.0.0-20211024235047-1546f124cd8b // indirect
 	github.com/aliyun/alibaba-cloud-sdk-go v1.61.18 // indirect
 	github.com/andybalholm/brotli v1.0.4 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect

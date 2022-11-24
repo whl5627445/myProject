@@ -77,7 +77,7 @@ func ModelLibraryInitialization(packageModel []DataBaseModel.YssimModels) {
 func init() {
 	commandLineOptions := omc.OMC.GetCommandLineOptions()
 	if strings.Index(commandLineOptions, "nfAPI") == -1 {
-		omc.OMC.Clear()
+		//omc.OMC.Clear()
 	}
 }
 

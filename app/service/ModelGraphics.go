@@ -301,26 +301,39 @@ func (g *graphicsData) data01(cData []interface{}, className, component string) 
 					varValue := varName
 					if varName != "name" {
 						varValue = omc.OMC.GetElementModifierValue(g.modelName, component+"."+varName)
+						Unit := ""
 						if varValue == "" {
-							varValue = omc.OMC.GetParameterValue(className, varName)
+							parameterValue := omc.OMC.GetParameterValue(className, varName)
+							if parameterValue != "" {
+								varValue = parameterValue
+							} else {
+								varValue = varName
+							}
 						}
 						varValueList := strings.Split(varValue, ".") // 某些值是模型全称的需要取最后一部分。所以分割一下
 						varValue = varValueList[len(varValueList)-1]
-						classComponentList := omc.OMC.GetElements(className)
-						Unit := ""
-						for p := 0; p < len(classComponentList); p++ {
-							varClassType := classComponentList[p].([]interface{})[3].(string)
-							varClassName := classComponentList[p].([]interface{})[2].(string)
-							if varClassName == "Real" {
-								//Unit = " " + varValue
-								break
-							}
-							if varClassType == varName {
-								UnitList := getDerivedClassModifierValueALL(varClassName)
-								Unit = " " + strings.Join(UnitList, "")
+						classAll := GetICList(className)
+						for _, c := range classAll {
+							unitStr := omc.OMC.GetElementModifierValue(c, varName+"."+"unit")
+							if unitStr != "" {
+								Unit = " " + unitStr
 								break
 							}
 						}
+						if Unit == "" {
+							classComponentList := omc.OMC.GetElements(className)
+							for p := 0; p < len(classComponentList); p++ {
+								name := classComponentList[p].([]interface{})[3].(string)
+								varClassName := classComponentList[p].([]interface{})[2].(string)
+								log.Println("classComponentList[p]", classComponentList[p])
+								if name != varName {
+									continue
+								}
+								Unit = " " + getDerivedClassModifierValueALL(varClassName)
+								break
+							}
+						}
+
 						originalTextString = prefix + varValue + Unit
 					}
 				}
@@ -508,8 +521,6 @@ func getIconAndDiagramAnnotations(nameList []string, isIcon bool) []interface{} 
 			result = omc.OMC.GetDiagramAnnotation(name)
 			if len(result) > 8 {
 				result = result[8].([]interface{})
-			} else {
-				continue
 			}
 		} else {
 			result = omc.OMC.GetIconAnnotation(name)
