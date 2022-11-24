@@ -69,6 +69,8 @@ def service():
                         opts["result_file_name"] = result_file_path + "/" + data["result_name"]
                         start_time = data.get("start_time", 0.0)
                         final_time = data.get("final_time", 10.0)
+                        vdp.get(data["initialNames"])
+                        vdp.set(data["initialNames"],data["initialValues"])
                         res = vdp.simulate(start_time=start_time, final_time=final_time, options=opts)
                         soc.send('ok')
                     except Exception as e:

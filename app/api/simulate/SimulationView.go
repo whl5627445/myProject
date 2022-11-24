@@ -104,6 +104,9 @@ func ModelSimulateView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
+	//查询数据库中的实验id对应的记录
+	var experimentRecord DataBaseModel.YssimExperimentRecord
+	DB.Where("id = ? ", item.ExperimentId).First(&experimentRecord)
 
 	var packageModel DataBaseModel.YssimModels
 	err = DB.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", item.PackageId, []string{"sys", username}, []string{"0", userSpaceId}).First(&packageModel).Error
@@ -132,8 +135,9 @@ func ModelSimulateView(c *gin.Context) {
 		return
 	}
 	SData := service.SimulateTask{
-		SRecord: record,
-		Package: packageModel,
+		SRecord:          record,
+		Package:          packageModel,
+		ExperimentRecord: experimentRecord,
 	}
 	service.SimulateTaskChan <- &SData
 	var res ResponseData

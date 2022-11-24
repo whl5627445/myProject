@@ -14,34 +14,35 @@ import (
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/config"
 	"yssim-go/library/fileOperation"
+	"yssim-go/library/mapProcessing"
 	"yssim-go/library/omc"
 )
 
 type SimulateTask struct {
-	SRecord DataBaseModel.YssimSimulateRecord
-	Package DataBaseModel.YssimModels
+	SRecord          DataBaseModel.YssimSimulateRecord
+	Package          DataBaseModel.YssimModels
+	ExperimentRecord DataBaseModel.YssimExperimentRecord
 }
 
 type ModelVarData struct {
-	FinalAttributesStr map[string]string `json:"final_attributes_str"`
+	FinalAttributesStr map[string]interface{} `json:"final_attributes_str"`
 }
 
 var SimulateTaskChan = make(chan *SimulateTask, 100)
 
 func openModelica(task *SimulateTask, resultFilePath string, SimulationPraData map[string]string) bool {
 	res := false
+	//YssimExperimentRecord表的json数据绑定到结构体
 	var ComponentValue ModelVarData
-	//查询数据库中的实验id对应的记录
-	var experimentRecord DataBaseModel.YssimExperimentRecord
-	config.DB.Where("id = ? ", task.SRecord.ExperimentId).First(&experimentRecord)
-	//根据实验id对应的记录，设置组件参数与属性
-	err := json.Unmarshal(experimentRecord.ModelVarData, &ComponentValue) //json数据绑定到结构体
+	err := json.Unmarshal(task.ExperimentRecord.ModelVarData, &ComponentValue)
 	if err != nil {
 		log.Println("err: ", err)
 		log.Println("json2map filed!")
 	}
+	//将map中的["name.name","1"]转换为“name.name”
+	mapAttributesStr := mapProcessing.MapInterfaceProcessing(ComponentValue.FinalAttributesStr, "om")
 	//设置组件参数
-	result := SetComponentModifierValue(experimentRecord.ModelName, ComponentValue.FinalAttributesStr)
+	result := SetComponentModifierValue(task.ExperimentRecord.ModelName, mapAttributesStr)
 	if result {
 		log.Println("设置完成。")
 	} else {
@@ -118,6 +119,16 @@ func dymolaSimulate(task *SimulateTask, resultFilePath string, SimulationPraData
 		if err != nil {
 			return false
 		}
+		//YssimExperimentRecord表的json数据绑定到结构体
+		var ComponentValue ModelVarData
+		err = json.Unmarshal(task.ExperimentRecord.ModelVarData, &ComponentValue)
+		if err != nil {
+			log.Println("err: ", err)
+			log.Println("json2map filed!")
+		}
+		//将map中的["name.name","1"]转换为“1”
+		mapAttributesStr := mapProcessing.MapInterfaceProcessing(ComponentValue.FinalAttributesStr, "dm")
+		initialNames, initialValues := mapProcessing.GetMapKeysAndValues(mapAttributesStr)
 		if compileResData["code"].(float64) == 200 {
 			MessageNotice(map[string]string{"message": task.SRecord.SimulateModelName + " 编译成功，开始仿真"})
 			simulateReqData := map[string]interface{}{
@@ -133,8 +144,8 @@ func dymolaSimulate(task *SimulateTask, resultFilePath string, SimulationPraData
 				"tolerance":         SimulationPraData["tolerance"],
 				"fixedStepSize":     0.0,
 				"resultFile":        "dsres",
-				"initialNames":      "",
-				"initialValues":     "",
+				"initialNames":      initialNames,
+				"initialValues":     initialValues,
 				"finalNames":        "",
 			}
 			req.Json = simulateReqData
@@ -187,6 +198,16 @@ func jModelicaSimulate(task *SimulateTask, resultFilePath string, SimulationPraD
 		log.Printf("数据转换失败: %s", err)
 		return false
 	}
+	//YssimExperimentRecord表的json数据绑定到结构体
+	var ComponentValue ModelVarData
+	err = json.Unmarshal(task.ExperimentRecord.ModelVarData, &ComponentValue)
+	if err != nil {
+		log.Println("err: ", err)
+		log.Println("json2map filed!")
+	}
+	//将map中的["name.name","1"]转换为“1”
+	mapAttributesStr := mapProcessing.MapInterfaceProcessing(ComponentValue.FinalAttributesStr, "jm")
+	initialNames, initialValues := mapProcessing.GetMapKeysAndValues(mapAttributesStr)
 	data := map[string]interface{}{
 		"start_time":       startTime,
 		"final_time":       finalTime,
@@ -197,6 +218,8 @@ func jModelicaSimulate(task *SimulateTask, resultFilePath string, SimulationPraD
 		"result_file_path": "/" + resultFilePath, // 结果文件名字
 		"tolerance":        tolerance,            // 相对公差
 		"type":             "compile",            // 是编译还是计算， 默认是编译
+		"initialNames":     initialNames,
+		"initialValues":    initialValues,
 	}
 	dial, err := net.Dial("tcp", config.JmodelicaConnect)
 	defer dial.Close()
