@@ -216,10 +216,12 @@ func find(data []interface{}, str string) bool {
 
 func (g *graphicsData) data01(cData []interface{}, className, component string) []map[string]interface{} {
 	dataList := make([]map[string]interface{}, 0, 1)
+	modelNameAll := omc.OMC.GetInheritedClassesListAll([]string{g.modelName})
+
 	for i := 0; i < len(cData); i += 2 {
 		data := map[string]interface{}{}
 		drawingDataList := cData[i+1].([]interface{})
-		if drawingDataList[0].(string) == "false" {
+		if drawingDataList[0].(string) != "true" {
 			continue
 		}
 		DynamicSelect := find(drawingDataList, "DynamicSelect")
@@ -294,47 +296,70 @@ func (g *graphicsData) data01(cData []interface{}, className, component string) 
 				data["originalTextString"] = typeOriginalTextString[0]
 			} else {
 				originalTextString := drawingDataList[9].(string)
-				pSignIndex := strings.Index(originalTextString, "%")
-				if pSignIndex != -1 {
-					prefix := originalTextString[:pSignIndex]
-					varName := originalTextString[pSignIndex+1:]
-					varValue := varName
-					if varName != "name" {
-						varValue = omc.OMC.GetElementModifierValue(g.modelName, component+"."+varName)
-						Unit := ""
-						if varValue == "" {
-							parameterValue := omc.OMC.GetParameterValue(className, varName)
-							if parameterValue != "" {
-								varValue = parameterValue
-							} else {
-								varValue = varName
-							}
-						}
-						varValueList := strings.Split(varValue, ".") // 某些值是模型全称的需要取最后一部分。所以分割一下
-						varValue = varValueList[len(varValueList)-1]
-						classAll := GetICList(className)
-						for _, c := range classAll {
-							unitStr := omc.OMC.GetElementModifierValue(c, varName+"."+"unit")
-							if unitStr != "" {
-								Unit = " " + unitStr
-								break
-							}
-						}
-						if Unit == "" {
-							classComponentList := omc.OMC.GetElements(className)
-							for p := 0; p < len(classComponentList); p++ {
-								name := classComponentList[p].([]interface{})[3].(string)
-								varClassName := classComponentList[p].([]interface{})[2].(string)
-								log.Println("classComponentList[p]", classComponentList[p])
-								if name != varName {
-									continue
+				data["textType"] = "var"
+				if strings.Index(originalTextString, "%") == -1 {
+					data["textType"] = "text"
+				}
+				textList := strings.Split(originalTextString, ",")
+				for _, t := range textList {
+					pSignIndex := strings.Index(t, "%")
+					if pSignIndex != -1 {
+						varName := t[pSignIndex+1:]
+						varValue := varName
+						if varName != "name" {
+							varNameList := strings.Split(varName, " ")
+							varName = varNameList[0]
+							modifierName := component + "." + varName
+							for _, n := range modelNameAll {
+								varValue = omc.OMC.GetElementModifierValue(n, modifierName)
+								if varValue != "" {
+									break
 								}
-								Unit = " " + getDerivedClassModifierValueALL(varClassName)
-								break
 							}
+							if varValue == "" {
+								parameterValue := omc.OMC.GetParameterValue(className, varName)
+								if parameterValue != "" {
+									varValue = parameterValue
+								} else {
+									varValue = varName
+								}
+							}
+							if len(varValue) > 30 && strings.Index(varValue, ".") != -1 && strings.Index(varValue, " ") == -1 {
+								varValueList := strings.Split(varValue, ".") // 某些值是模型全称的需要取最后一部分。所以分割一下
+								varValue = varValueList[len(varValueList)-1]
+							}
+							classAll := GetICList(className)
+							Unit := ""
+							for _, c := range classAll {
+								unitStr := omc.OMC.GetElementModifierValue(c, varName+"."+"unit")
+								if unitStr != "" {
+									Unit = " " + unitStr
+									break
+								}
+							}
+							if Unit == "" {
+								classNameList := omc.OMC.GetInheritedClassesList([]string{className})
+								classNameList = append(classNameList, className)
+								var componentsData []interface{}
+								for n := 0; n < len(classNameList); n++ {
+									classnameData := omc.OMC.GetElements(classNameList[n])
+									componentsData = append(componentsData, classnameData...)
+								}
+								for p := 0; p < len(componentsData); p++ {
+									name := componentsData[p].([]interface{})[3].(string)
+									varClassName := componentsData[p].([]interface{})[2].(string)
+									if name != varName {
+										continue
+									}
+									Unit = " " + getDerivedClassModifierValueALL(varClassName)
+									break
+								}
+							}
+							oldVarName := "%" + strings.Join(varNameList, " ")
+							varNameList[0] = varValue
+							varValueUnit := strings.Join(varNameList, " ") + Unit
+							originalTextString = strings.Replace(originalTextString, oldVarName, varValueUnit, 1)
 						}
-
-						originalTextString = prefix + varValue + Unit
 					}
 				}
 				data["originalTextString"] = originalTextString
@@ -419,7 +444,7 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 				continue
 			}
 			caf := caDataFilter[i][placementIndex+1].([]interface{})
-			if len(caf) < 7 || caf[0].(string) == "false" {
+			if len(caf) < 7 || caf[0].(string) != "true" {
 				// 出现错误会使数据不可用， 长度小于预期，弃用
 				continue
 			}
