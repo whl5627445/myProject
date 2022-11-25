@@ -5,15 +5,15 @@ import (
 	"strconv"
 )
 
-func MapInterfaceProcessing(m map[string]interface{}, mode string) map[string]string {
+func MapDataConversion(m map[string]interface{}, mode string) map[string]string {
 	resMap := make(map[string]string)
 	for k, v := range m {
-		typeArray := reflect.TypeOf(m[k]).String()
-		if typeArray == "[2]string" {
+		typeArray := reflect.TypeOf(v).String()
+		if typeArray == "[]interface {}" {
 			if mode == "om" {
-				resMap[k] = m[k].([2]string)[0]
+				resMap[k] = v.([]interface{})[0].(string)
 			} else {
-				indexNumStr := m[k].([2]string)[1]
+				indexNumStr := v.([]interface{})[1].(string)
 				indexNum, _ := strconv.Atoi(indexNumStr)
 				resMap[k] = strconv.Itoa(indexNum + 1)
 			}

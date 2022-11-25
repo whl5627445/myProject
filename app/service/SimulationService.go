@@ -40,13 +40,13 @@ func openModelica(task *SimulateTask, resultFilePath string, SimulationPraData m
 		log.Println("json2map filed!")
 	}
 	//将map中的["name.name","1"]转换为“name.name”
-	mapAttributesStr := mapProcessing.MapInterfaceProcessing(ComponentValue.FinalAttributesStr, "om")
+	mapAttributesStr := mapProcessing.MapDataConversion(ComponentValue.FinalAttributesStr, "om")
 	//设置组件参数
 	result := SetComponentModifierValue(task.ExperimentRecord.ModelName, mapAttributesStr)
 	if result {
-		log.Println("设置完成。")
+		log.Println("openModelica重新设置参数-完成。")
 	} else {
-		log.Println("设置失败。")
+		log.Println("openModelica重新设置参数-失败。")
 	}
 
 	pwd, _ := os.Getwd()
@@ -127,7 +127,7 @@ func dymolaSimulate(task *SimulateTask, resultFilePath string, SimulationPraData
 			log.Println("json2map filed!")
 		}
 		//将map中的["name.name","1"]转换为“1”
-		mapAttributesStr := mapProcessing.MapInterfaceProcessing(ComponentValue.FinalAttributesStr, "dm")
+		mapAttributesStr := mapProcessing.MapDataConversion(ComponentValue.FinalAttributesStr, "dm")
 		initialNames, initialValues := mapProcessing.GetMapKeysAndValues(mapAttributesStr)
 		if compileResData["code"].(float64) == 200 {
 			MessageNotice(map[string]string{"message": task.SRecord.SimulateModelName + " 编译成功，开始仿真"})
@@ -206,7 +206,7 @@ func jModelicaSimulate(task *SimulateTask, resultFilePath string, SimulationPraD
 		log.Println("json2map filed!")
 	}
 	//将map中的["name.name","1"]转换为“1”
-	mapAttributesStr := mapProcessing.MapInterfaceProcessing(ComponentValue.FinalAttributesStr, "jm")
+	mapAttributesStr := mapProcessing.MapDataConversion(ComponentValue.FinalAttributesStr, "jm")
 	initialNames, initialValues := mapProcessing.GetMapKeysAndValues(mapAttributesStr)
 	data := map[string]interface{}{
 		"start_time":       startTime,
