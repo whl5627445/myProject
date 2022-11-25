@@ -1,6 +1,9 @@
 package mapProcessing
 
-import "reflect"
+import (
+	"reflect"
+	"strconv"
+)
 
 func MapInterfaceProcessing(m map[string]interface{}, mode string) map[string]string {
 	resMap := make(map[string]string)
@@ -10,7 +13,9 @@ func MapInterfaceProcessing(m map[string]interface{}, mode string) map[string]st
 			if mode == "om" {
 				resMap[k] = m[k].([2]string)[0]
 			} else {
-				resMap[k] = m[k].([2]string)[1]
+				indexNumStr := m[k].([2]string)[1]
+				indexNum, _ := strconv.Atoi(indexNumStr)
+				resMap[k] = strconv.Itoa(indexNum + 1)
 			}
 		} else {
 			resMap[k] = v.(string)
