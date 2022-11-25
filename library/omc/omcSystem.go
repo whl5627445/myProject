@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"log"
 	"sync"
+	"time"
 	"yssim-go/config"
 
 	//"github.com/go-zeromq/zmq4"
@@ -29,27 +30,22 @@ var AllModelCache = config.R
 
 // SendExpression 发送指令，获取数据
 func (o *ZmqObject) SendExpression(cmd string) ([]interface{}, bool) {
-	//s := time.Now().UnixNano() / 1e6
+	s := time.Now().UnixNano() / 1e6
 	o.Lock()
 	defer o.Unlock()
 	var msg []byte
 
-	//msg, ok := AllModelCache[cmd]
 	ctx := context.Background()
 	msg, err := AllModelCache.HGet(ctx, "yssim-GraphicsData", cmd).Bytes()
-	//if !ok {
 	if err != nil {
 		_ = o.Send(zmq4.NewMsgString(cmd))
 
 		data, _ := o.Recv()
 		msg = data.Bytes()
 		if cacheRefresh && len(msg) > 0 {
-			//AllModelCache[cmd] = msg
 			AllModelCache.HSet(ctx, "yssim-GraphicsData", cmd, msg)
 		}
 	}
-	//log.Println("cmd: ", cmd)
-	//log.Println("msg: ", string(msg))
 	parseData, err := dataToGo(msg)
 	if err != nil {
 		log.Println("cmd: ", cmd)
@@ -59,10 +55,10 @@ func (o *ZmqObject) SendExpression(cmd string) ([]interface{}, bool) {
 		return nil, false
 	}
 
-	//if time.Now().UnixNano()/1e6-s > 1 {
-	//	log.Println("cmd: ", cmd)
-	//log.Println("消耗时间: ", time.Now().UnixNano()/1e6-s)
-	//}
+	if time.Now().UnixNano()/1e6-s > 20 {
+		log.Println("cmd: ", cmd)
+		log.Println("消耗时间: ", time.Now().UnixNano()/1e6-s)
+	}
 	return parseData, true
 }
 
@@ -123,7 +119,7 @@ func (o *ZmqObject) Clear() {
 	//o.SendExpressionNoParsed("clearVariables()")
 	//o.SendExpressionNoParsed("clearProgram()")
 	//o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nfAPI,execstat,rml,nfAPIDynamicSelect=false\")")
-	o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nfAPI\")")
+	o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nfAPI\",nfAPIDynamicSelect=false)")
 	o.SendExpressionNoParsed("setCommandLineOptions(\"+ignoreSimulationFlagsAnnotation=false\")")
 	//o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nogen,noevalfunc,newInst,nfAPI\")")
 	o.SendExpressionNoParsed("setCommandLineOptions(\"--matchingAlgorithm=PFPlusExt --indexReductionMethod=dynamicStateSelection -d=initialization,NLSanalyticJacobian\")")
@@ -144,7 +140,7 @@ func (o *ZmqObject) CacheRefreshSet(cache bool) {
 	cacheRefresh = cache
 }
 
-// 获取给定切片当中所有模型的继承项，包含原始数据，并不迭代
+// 获取给定切片当中所有模型的继承项
 func (o *ZmqObject) GetInheritedClassesList(classNameList []string) []string {
 	var dataList []string
 	for i := 0; i < len(classNameList); i++ {

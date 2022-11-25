@@ -217,7 +217,6 @@ func find(data []interface{}, str string) bool {
 func (g *graphicsData) data01(cData []interface{}, className, component string) []map[string]interface{} {
 	dataList := make([]map[string]interface{}, 0, 1)
 	modelNameAll := omc.OMC.GetInheritedClassesListAll([]string{g.modelName})
-
 	for i := 0; i < len(cData); i += 2 {
 		data := map[string]interface{}{}
 		drawingDataList := cData[i+1].([]interface{})
@@ -316,19 +315,26 @@ func (g *graphicsData) data01(cData []interface{}, className, component string) 
 									break
 								}
 							}
+							classAll := GetICList(className)
 							if varValue == "" {
-								parameterValue := omc.OMC.GetParameterValue(className, varName)
-								if parameterValue != "" {
-									varValue = parameterValue
-								} else {
-									varValue = varName
+								for _, c := range classAll {
+									varValue = omc.OMC.GetElementModifierValue(c, varName+".min")
+									if varValue != "" {
+										break
+									}
+									varValue = omc.OMC.GetParameterValue(c, varName)
+									if varValue != "" {
+										break
+									}
 								}
+							}
+							if varValue == "" {
+								varValue = varName
 							}
 							if len(varValue) > 30 && strings.Index(varValue, ".") != -1 && strings.Index(varValue, " ") == -1 {
 								varValueList := strings.Split(varValue, ".") // 某些值是模型全称的需要取最后一部分。所以分割一下
 								varValue = varValueList[len(varValueList)-1]
 							}
-							classAll := GetICList(className)
 							Unit := ""
 							for _, c := range classAll {
 								unitStr := omc.OMC.GetElementModifierValue(c, varName+"."+"unit")
