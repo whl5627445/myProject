@@ -1,6 +1,7 @@
 package mapProcessing
 
 import (
+	"fmt"
 	"reflect"
 	"strconv"
 )
@@ -13,10 +14,11 @@ func MapDataConversion(m map[string]interface{}, mode string) map[string]string 
 			if mode == "om" {
 				resMap[k] = v.([]interface{})[0].(string)
 			} else {
-				indexNumStr := v.([]interface{})[1].(string)
-				indexNum, _ := strconv.Atoi(indexNumStr)
-				resMap[k] = strconv.Itoa(indexNum + 1)
+				indexNum := v.([]interface{})[1].(float64)
+				resMap[k] = strconv.Itoa(int(indexNum + 1))
 			}
+		} else if typeArray == "bool" {
+			resMap[k] = fmt.Sprintf("%t", v)
 		} else {
 			resMap[k] = v.(string)
 		}
