@@ -1,10 +1,13 @@
 package API
 
 import (
+	"encoding/json"
+	"log"
 	"math"
 	"net/http"
 	"strconv"
 	"time"
+	"yssim-go/library/mapProcessing"
 	"yssim-go/library/timeConvert"
 
 	"github.com/gin-gonic/gin"
@@ -541,5 +544,38 @@ func ExperimentGetView(c *gin.Context) {
 	}
 	var res ResponseData
 	res.Data = dataList
+	c.JSON(http.StatusOK, res)
+}
+
+func ExperimentParametersView(c *gin.Context) {
+	/*
+	   # 获取仿真实验中的模型参数接口，
+	   ## experiment_id: 实验id
+	*/
+	type ModelVarData struct {
+		FinalAttributesStr map[string]interface{} `json:"final_attributes_str"`
+	}
+	experimentId := c.Query("experiment_id")
+	var record DataBaseModel.YssimExperimentRecord
+	DB.Where("id =?", experimentId).First(&record)
+
+	var ComponentValue ModelVarData
+	err := json.Unmarshal(record.ModelVarData, &ComponentValue)
+	if err != nil {
+		log.Println("err: ", err)
+		log.Println("json2map filed!")
+	}
+	mapAttributesStr := mapProcessing.MapDataConversion(ComponentValue.FinalAttributesStr, "om")
+	var parametersData []map[string]string
+	for k, v := range mapAttributesStr {
+		data := map[string]string{
+			"name":         k,
+			"defaultvalue": v,
+		}
+		parametersData = append(parametersData, data)
+
+	}
+	var res ResponseData
+	res.Data = map[string]interface{}{"parameters": parametersData}
 	c.JSON(http.StatusOK, res)
 }
