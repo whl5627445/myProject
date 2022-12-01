@@ -8,8 +8,8 @@ import (
 	"os"
 	"reflect"
 	"regexp"
-	"strconv"
 	"strings"
+	"yssim-go/library/stringOperation"
 
 	"yssim-go/library/omc"
 )
@@ -52,21 +52,7 @@ func GetGraphicsData(modelName string) [][]map[string]interface{} {
 		return g.data
 	}
 	nameList := g.getICList(modelName)
-	modelNameDiagramAnnotationData := omc.OMC.GetDiagramAnnotation(modelName)
-	if len(modelNameDiagramAnnotationData) >= 8 && modelNameDiagramAnnotationData[len(modelNameDiagramAnnotationData)-1] != "" {
-		dData := modelNameDiagramAnnotationData[len(modelNameDiagramAnnotationData)-1]
-		data1 := g.data01(dData.([]interface{}), "", "")
-		for _, d := range data1 {
-			d["mobility"] = true
-			g.data[0] = append(g.data[0], d)
-		}
-	}
-	diagramAnnotationData := omc.OMC.GetDiagramAnnotationList(nameList[:len(nameList)-1])
-	if len(diagramAnnotationData) >= 8 {
-		dData := diagramAnnotationData[len(diagramAnnotationData)-1]
-		data1 := g.data01(dData.([]interface{}), "", "")
-		g.data[0] = append(g.data[0], data1...)
-	}
+	g.getDiagramAnnotationData()
 	g.getnthconnectionData(nameList)
 	// nameList第一个名字是模型自身的名字，先获取模型自身的视图数据
 	componentsData := omc.OMC.GetElementsList([]string{modelName})
@@ -299,15 +285,16 @@ func (g *graphicsData) data01(cData []interface{}, className, component string) 
 				if strings.Index(originalTextString, "%") == -1 {
 					data["textType"] = "text"
 				}
-				textList := strings.Split(originalTextString, ",")
+				textList := stringOperation.PluralSplit(originalTextString, []string{",", "\t", "\n", "\r", " "})
 				for _, t := range textList {
 					pSignIndex := strings.Index(t, "%")
 					if pSignIndex != -1 {
 						varName := t[pSignIndex+1:]
 						varValue := varName
 						if varName != "name" {
-							varNameList := strings.Split(varName, " ")
-							varName = varNameList[0]
+							//varNameList := stringOperation.PluralSplit(varName, []string{"\t", "\n", "\r", " "})
+							//log.Println("varNameList", varNameList)
+							varName = strings.TrimSuffix(varName, "%")
 							modifierName := component + "." + varName
 							for _, n := range modelNameAll {
 								varValue = omc.OMC.GetElementModifierValue(n, modifierName)
@@ -361,9 +348,9 @@ func (g *graphicsData) data01(cData []interface{}, className, component string) 
 									break
 								}
 							}
-							oldVarName := "%" + strings.Join(varNameList, " ")
-							varNameList[0] = varValue
-							varValueUnit := strings.Join(varNameList, " ") + Unit
+							oldVarName := "%" + varName
+							varValueUnit := varName + Unit
+							varValueUnit = strings.Replace(varValueUnit, varName, varValue, 1)
 							originalTextString = strings.Replace(originalTextString, oldVarName, varValueUnit, 1)
 						}
 					}
@@ -470,7 +457,7 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 				}
 				return ""
 			}()
-			data["ID"] = strconv.Itoa(i)
+			//data["ID"] = strconv.Itoa(i)
 			data["classname"] = classname
 			data["name"] = cDataFilter[i][3]
 			data["original_name"] = cDataFilter[i][3]
@@ -568,5 +555,66 @@ func getIconAndDiagramAnnotations(nameList []string, isIcon bool) []interface{} 
 	return data
 }
 
-// addComponent(block,Modelica.Blocks.Icons.Block,PID_Controller,annotate=Placement(visible=true, transformation=transformation(origin={-95.30669555664062,-78.57142944335938}, extent={{-10,-10},{10,10}}, rotation=0)))
-// addComponent(block12435234, Modelica.Blocks.Icons.Block,q,annotate=Placement(visible=true, transformation=transformation(origin={-18,-20}, extent={{-10,-10},{10,10}}, rotation=0)))
+func (g *graphicsData) getDiagramAnnotationData() {
+	modelNameDiagramAnnotationData := omc.OMC.GetDiagramAnnotation(g.modelName)
+	if len(modelNameDiagramAnnotationData) >= 8 && modelNameDiagramAnnotationData[len(modelNameDiagramAnnotationData)-1] != "" {
+		dData := modelNameDiagramAnnotationData[len(modelNameDiagramAnnotationData)-1]
+		data1 := g.data01(dData.([]interface{}), "", "")
+		for _, d := range data1 {
+			d["mobility"] = true
+			//log.Println("d", d)
+			//data := map[string]interface{}{
+			//	"ID":            i,
+			//	"mobility":      true,
+			//	"name":          "Diagram" + strconv.Itoa(i),
+			//	"originDiagram": d["originalPoint"],
+			//	"rotation":      d["rotation"],
+			//	"subShapes":     []map[string]interface{}{d},
+			//	"visible":       "true",
+			//}
+			//if d["type"] != "Line" {
+			//	data["extent1Diagram"] = d["extentsPoints"].([]string)[0]
+			//	data["extent2Diagram"] = d["extentsPoints"].([]string)[1]
+			//}
+			//subShapes := map[string]interface{}{
+			//	"color":         d["color"],
+			//	"extentsPoints": d["extentsPoints"],
+			//	"fillColor":     d["fillColor"],
+			//	"fillPattern":   d["fillPattern"],
+			//	"linePattern":   d["linePattern"],
+			//	"lineThickness": d["lineThickness"],
+			//	"mobility":      true,
+			//	"originalPoint": d["originalPoint"],
+			//	"radius":        "0.0",
+			//	"rotation":      d["rotation"],
+			//	"type":          d["type"],
+			//	"visible":       "true",
+			//}
+			//switch d["type"] {
+			//case "Rectangle":
+			//	subShapes["borderPattern"] = d["borderPattern"]
+			//	subShapes["radius"] = d["radius"]
+			//	subShapes["extentsPoints"] = d["extentsPoints"]
+			//case "Polygon":
+			//	subShapes["polygonPoints"] = d["polygonPoints"]
+			//	subShapes["smooth"] = d["smooth"]
+			//case "Line":
+			//	delete(subShapes, "fillColor")
+			//	delete(subShapes, "fillPattern")
+			//	subShapes["points"] = d["points"]
+			//	subShapes["arrow"] = d["arrow"]
+			//	subShapes["arrowSize"] = d["arrowSize"]
+			//	subShapes["smooth"] = d["smooth"]
+			//case "Text":
+			//	subShapes["fontSize"] = d["fontSize"]
+			//	subShapes["textColor"] = d["fontSize"]
+			//	subShapes["fontName"] = d["fontName"]
+			//	subShapes["textStyles"] = d["textStyles"]
+			//	subShapes["horizontalAlignment"] = d["horizontalAlignment"]
+			//}
+			//log.Println("data", data)
+
+			g.data[0] = append(g.data[0], d)
+		}
+	}
+}
