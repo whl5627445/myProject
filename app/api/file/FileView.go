@@ -21,7 +21,7 @@ func UploadModelPackageView(c *gin.Context) {
 	/*
 		# 上传模型包文件，支持.mo与rar、zip两种压缩格式
 	*/
-	var res ResponseData
+	var res responseData
 	username := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
 
@@ -101,8 +101,8 @@ func UpdateModelPackageView(c *gin.Context) {
 		## package_name: 要更新内容的模型或包名，必须是全名
 		## package_id: 包的id
 	*/
-	var res ResponseData
-	var item UpdateModelPackageData
+	var res responseData
+	var item updateModelPackageData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "not found")
@@ -165,8 +165,8 @@ func CreateModelPackageView(c *gin.Context) {
 		##     "state": False 状态
 		##     }
 	*/
-	var res ResponseData
-	var item CreateModelPackageData
+	var res responseData
+	var item createModelPackageData
 	err := c.BindJSON(&item)
 	if err != nil {
 		log.Println(err)
@@ -243,7 +243,7 @@ func UploadModelIconView(c *gin.Context) {
 		## model_name: 模型名称
 		## package_id: 包id
 	*/
-	var res ResponseData
+	var res responseData
 	username := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
 	modelName := c.PostForm("model_name")
@@ -294,7 +294,7 @@ func GetPackageFileListView(c *gin.Context) {
 	   # 用户获取mo文件信息接口， 可以进行下载
 	   ## return: 包id， 包名， 上传时间， 修改时间
 	*/
-	var res ResponseData
+	var res responseData
 	username := c.GetHeader("username")
 	//userSpaceId := c.GetHeader("space_id")
 	var packageRecord []map[string]interface{}
@@ -324,7 +324,7 @@ func GetPackageFileView(c *gin.Context) {
 	//var res ResponseData
 	username := c.GetHeader("username")
 	//userSpaceId := c.GetHeader("space_id")
-	var item PackageFileData
+	var item packageFileData
 	err := c.BindJSON(&item)
 	if err != nil {
 		log.Println(err)
@@ -344,7 +344,7 @@ func GetResultFileView(c *gin.Context) {
 	*/
 	username := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
-	var item ResultFileData
+	var item resultFileData
 	err := c.BindJSON(&item)
 	if err != nil {
 		log.Println(err)
@@ -366,7 +366,7 @@ func GetFilterResultFileView(c *gin.Context) {
 	*/
 	username := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
-	var item FilterResultFileData
+	var item filterResultFileData
 	err := c.BindJSON(&item)
 	if err != nil {
 		log.Println(err)
@@ -382,7 +382,7 @@ func GetFilterResultFileView(c *gin.Context) {
 		c.File(newFileName)
 		return
 	}
-	var res ResponseData
+	var res responseData
 	res.Err = "下载失败，请稍后再试"
 	res.Status = 2
 	c.JSON(http.StatusOK, res)
@@ -399,7 +399,7 @@ func FmuExportModelView(c *gin.Context) {
 	   ## download_local： 是否下载到本地
 	*/
 
-	var item FmuExportData
+	var item fmuExportData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err)
@@ -423,7 +423,7 @@ func FmuExportModelView(c *gin.Context) {
 		c.Data(http.StatusOK, "application/octet-stream", resDy)
 		return
 	}
-	var res ResponseData
+	var res responseData
 	res.Err = "下载失败，请稍后再试"
 	res.Status = 2
 	c.JSON(http.StatusOK, res)
@@ -436,8 +436,8 @@ func ModelCodeSaveView(c *gin.Context) {
 	   ## package_id: 包的id
 	   ## package_name： 包的名称
 	*/
-	var res ResponseData
-	var item ModelCodeSaveData
+	var res responseData
+	var item modelCodeSaveData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")

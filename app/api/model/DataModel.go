@@ -1,25 +1,25 @@
 package API
 
-type ResponseData struct {
+type responseData struct {
 	Data   interface{} `json:"data"`
 	Msg    string      `json:"msg"`
 	Status int         `json:"status"` // 正常是0，系统级错误是1， 用戶错误是2
 	Err    string      `json:"err"`
 }
 
-type ModelGraphicsData struct {
+type modelGraphicsData struct {
 	PackageId     string `json:"package_id" binding:"required"`
 	ModelName     string `json:"model_name" binding:"required"`
 	ComponentName string `json:"component_name,omitempty" binding:""`
 }
 
-type SetComponentModifierValueData struct {
+type setComponentModifierValueData struct {
 	PackageId      string            `json:"package_id" binding:"required"`
 	ModelName      string            `json:"model_name" binding:"required"`
 	ParameterValue map[string]string `json:"parameter_value" binding:"required"`
 }
 
-type SetComponentPropertiesData struct {
+type setComponentPropertiesData struct {
 	PackageId        string `json:"package_id" binding:"required"`
 	ModelName        string `json:"model_name" binding:"required"`
 	OldComponentName string `json:"old_component_name" binding:"required"`
@@ -33,20 +33,20 @@ type SetComponentPropertiesData struct {
 	Causality        string `json:"causality" binding:""`
 }
 
-type CopyClassData struct {
+type copyClassData struct {
 	PackageId       string `json:"package_id" binding:""`
 	ParentName      string `json:"parent_name" binding:""`
 	ModelName       string `json:"model_name" binding:"required"`
 	CopiedClassName string `json:"copied_class_name" binding:"required"`
 }
 
-type DeleteClassData struct {
+type deleteClassData struct {
 	PackageId  string `json:"package_id" binding:"required"`
 	ParentName string `json:"parent_name" binding:""`
 	ModelName  string `json:"model_name" binding:"required"`
 }
 
-type AddComponentData struct {
+type addComponentData struct {
 	PackageId        string   `json:"package_id" binding:"required"`
 	NewComponentName string   `json:"new_component_name" binding:"required"`
 	OldComponentName string   `json:"old_component_name" binding:"required"`
@@ -56,7 +56,7 @@ type AddComponentData struct {
 	Rotation         int      `json:"rotation" binding:""`
 }
 
-type DeleteComponentMap struct {
+type deleteComponentMap struct {
 	DeleteType    string `json:"delete_type" binding:"required"`
 	ComponentName string `json:"component_name" binding:"required"`
 	ModelName     string `json:"model_name" binding:"required"`
@@ -64,12 +64,12 @@ type DeleteComponentMap struct {
 	ConnectEnd    string `json:"connect_end" binding:"required"`
 }
 
-type DeleteComponentData struct {
+type deleteComponentData struct {
 	PackageId     string               `json:"package_id" binding:"required"`
-	ComponentList []DeleteComponentMap `json:"component_list" binding:"required"`
+	ComponentList []deleteComponentMap `json:"component_list" binding:"required"`
 }
 
-type UpdateComponentData struct {
+type updateComponentData struct {
 	PackageId          string   `json:"package_id" binding:"required"`
 	ComponentName      string   `json:"component_name" binding:"required"`
 	ComponentClassName string   `json:"component_class_name" binding:"required"`
@@ -79,7 +79,7 @@ type UpdateComponentData struct {
 	Rotation           string   `json:"rotation" binding:"required"`
 }
 
-type UpdateConnectionAnnotationData struct {
+type updateConnectionAnnotationData struct {
 	PackageId    string   `json:"package_id" binding:"required"`
 	ModelName    string   `json:"model_name" binding:"required"`
 	ConnectStart string   `json:"connect_start" binding:"required"`
@@ -88,7 +88,7 @@ type UpdateConnectionAnnotationData struct {
 	LinePoints   []string `json:"line_points" binding:"required"`
 }
 
-type UpdateConnectionNamesData struct {
+type updateConnectionNamesData struct {
 	PackageId   string `json:"package_id" binding:"required"`
 	ModelName   string `json:"model_name" binding:"required"`
 	FromName    string `json:"from_name" binding:"required"`
@@ -97,26 +97,26 @@ type UpdateConnectionNamesData struct {
 	ToNameNew   string `json:"to_name_new" binding:"required"`
 }
 
-type DeleteConnectionData struct {
+type deleteConnectionData struct {
 	PackageId    string `json:"package_id" binding:"required"`
 	ModelName    string `json:"model_name" binding:"required"`
 	ConnectStart string `json:"connect_start" binding:"required"`
 	ConnectEnd   string `json:"connect_end" binding:"required"`
 }
 
-type SetModelDocumentData struct {
+type setModelDocumentData struct {
 	PackageId string `json:"package_id" binding:"required"`
 	ModelName string `json:"model_name" binding:"required"`
 	Document  string `json:"document" binding:"required"`
 	Revisions string `json:"revisions" binding:"required"`
 }
 
-type ConvertUnitsData struct {
+type convertUnitsData struct {
 	S1 string `json:"s1" binding:"required"`
 	S2 string `json:"s2" binding:"required"`
 }
 
-type ModelCollectionData struct {
+type modelCollectionData struct {
 	PackageId string `json:"package_id" binding:"required"`
 	ModelName string `json:"model_name" binding:"required"`
 }

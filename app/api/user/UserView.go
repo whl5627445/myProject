@@ -17,7 +17,7 @@ func GetUserSpaceView(c *gin.Context) {
 		# 获取用户所有的用户空间条目
 	*/
 	username := c.GetHeader("username")
-	var res ResponseData
+	var res responseData
 	var modelData []map[string]string
 	var userSpace []DataBaseModel.YssimUserSpace
 	_ = DB.Where("username = ?", username).Find(&userSpace)
@@ -35,8 +35,8 @@ func CreateUserSpaceView(c *gin.Context) {
 		## space_name: 用户空间名称
 	*/
 	username := c.GetHeader("username")
-	var res ResponseData
-	var item UserSpaceModel
+	var res responseData
+	var item userSpaceModel
 	err := c.BindJSON(&item)
 	if err != nil {
 		return
@@ -77,8 +77,8 @@ func DeleteUserSpaceView(c *gin.Context) {
 		## space_id: 用户空间id
 	*/
 	username := c.GetHeader("username")
-	var res ResponseData
-	var item UserSpaceModel
+	var res responseData
+	var item userSpaceModel
 	err := c.BindJSON(&item)
 	if err != nil {
 		return
@@ -95,8 +95,8 @@ func LoginUserSpaceView(c *gin.Context) {
 		# 进入用户空间
 		## space_id: 用户空间id
 	*/
-	var res ResponseData
-	var item UserSpaceModel
+	var res responseData
+	var item userSpaceModel
 	err := c.BindJSON(&item)
 	if err != nil {
 		return
@@ -117,7 +117,7 @@ func ExamplesView(c *gin.Context) {
 	/*
 		# 获取示例
 	*/
-	var res ResponseData
+	var res responseData
 	res.Data = config.EXAMPLES
 	c.JSON(http.StatusOK, res)
 }
@@ -127,7 +127,7 @@ func GetUserRecentlyOpenedView(c *gin.Context) {
 		#获取用户空间的最近打开
 	*/
 	username := c.GetHeader("username")
-	var res ResponseData
+	var res responseData
 	var modelData []map[string]string
 	var userSpace []DataBaseModel.YssimUserSpace
 	DB.Where("username = ?", username).Order("last_login_time desc").Find(&userSpace)

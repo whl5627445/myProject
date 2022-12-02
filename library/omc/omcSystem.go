@@ -119,7 +119,7 @@ func (o *ZmqObject) Clear() {
 	//o.SendExpressionNoParsed("clearVariables()")
 	//o.SendExpressionNoParsed("clearProgram()")
 	//o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nfAPI,execstat,rml,nfAPIDynamicSelect=false\")")
-	o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nfAPI\",nfAPIDynamicSelect=false)")
+	o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nfAPI\")")
 	o.SendExpressionNoParsed("setCommandLineOptions(\"+ignoreSimulationFlagsAnnotation=false\")")
 	//o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nogen,noevalfunc,newInst,nfAPI\")")
 	o.SendExpressionNoParsed("setCommandLineOptions(\"--matchingAlgorithm=PFPlusExt --indexReductionMethod=dynamicStateSelection -d=initialization,NLSanalyticJacobian\")")

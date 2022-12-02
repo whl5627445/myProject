@@ -4,14 +4,14 @@ import (
 	"gorm.io/datatypes"
 )
 
-type ResponseData struct {
+type responseData struct {
 	Data   interface{} `json:"data"`
 	Msg    string      `json:"msg"`
 	Status int         `json:"status"` // 正常是0，系统级错误是1， 用戶错误是2
 	Err    string      `json:"err"`
 }
 
-type SetSimulationOptionsData struct {
+type setSimulationOptionsData struct {
 	PackageId         string `json:"package_id" binding:"required"`
 	ModelName         string `json:"model_name" binding:"required"`
 	StartTime         string `json:"startTime" binding:"required"`
@@ -21,7 +21,7 @@ type SetSimulationOptionsData struct {
 	Interval          string `json:"interval" binding:"required"`
 }
 
-type ModelSimulateData struct {
+type modelSimulateData struct {
 	PackageId         string `json:"package_id" binding:"required"`
 	ModelName         string `json:"model_name" binding:"required"`
 	SimulateType      string `json:"simulate_type" binding:"required"`
@@ -34,21 +34,21 @@ type ModelSimulateData struct {
 	ExperimentId string `json:"experiment_id" binding:""`
 }
 
-type ModelSimulateResultData struct {
+type modelSimulateResultData struct {
 	RecordId []string `json:"id" binding:"required"`
 	Variable string   `json:"variable" binding:"required"`
 	S1       string   `json:"s1" binding:""`
 	S2       string   `json:"s2" binding:""`
 }
 
-type ModelSimulateResultSingularData struct {
+type modelSimulateResultSingularData struct {
 	RecordId string `json:"id" binding:"required"`
 	Variable string `json:"variable" binding:"required"`
 	S1       string `json:"s1" binding:""`
 	S2       string `json:"s2" binding:""`
 }
 
-type ExperimentCreateData struct {
+type experimentCreateData struct {
 	PackageId       string            `json:"package_id" binding:"required"`
 	ModelName       string            `json:"model_name" binding:"required"`
 	ExperimentName  string            `json:"experiment_name" binding:"required"`
@@ -56,18 +56,18 @@ type ExperimentCreateData struct {
 	ModelVarData    datatypes.JSON    `json:"model_var_data" binding:""`
 }
 
-type ExperimentDeleteData struct {
+type experimentDeleteData struct {
 	ExperimentId string `json:"experiment_id" binding:"required"`
 }
 
-type ExperimentEditData struct {
+type experimentEditData struct {
 	ExperimentId    string            `json:"experiment_id" binding:"required"`
 	ExperimentName  string            `json:"experiment_name" binding:""`
 	SimulateVarData map[string]string `json:"simulate_var_data" binding:"required"`
 	ModelVarData    datatypes.JSON    `json:"model_var_data" binding:""`
 }
 
-type ModelCodeSaveData struct {
+type modelCodeSaveData struct {
 	PackageId string `json:"package_id" binding:"required"`
 	// PackageName string `json:"package_name" binding:"required"`
 }

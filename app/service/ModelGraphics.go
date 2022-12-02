@@ -285,15 +285,13 @@ func (g *graphicsData) data01(cData []interface{}, className, component string) 
 				if strings.Index(originalTextString, "%") == -1 {
 					data["textType"] = "text"
 				}
-				textList := stringOperation.PluralSplit(originalTextString, []string{",", "\t", "\n", "\r", " "})
+				textList := stringOperation.PluralSplit(originalTextString, []string{"/", ",", "\t", "\n", "\r", " "})
 				for _, t := range textList {
 					pSignIndex := strings.Index(t, "%")
 					if pSignIndex != -1 {
 						varName := t[pSignIndex+1:]
 						varValue := varName
 						if varName != "name" {
-							//varNameList := stringOperation.PluralSplit(varName, []string{"\t", "\n", "\r", " "})
-							//log.Println("varNameList", varNameList)
 							varName = strings.TrimSuffix(varName, "%")
 							modifierName := component + "." + varName
 							for _, n := range modelNameAll {
@@ -464,9 +462,19 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 			data["parent"] = parent
 			data["visible"] = caf[0]
 			data["rotateAngle"] = rotateAngle
-			data["originDiagram"] = strings.Join([]string{caf[1].(string), caf[2].(string)}, ",")
-			data["extent1Diagram"] = strings.Join([]string{caf[3].(string), caf[4].(string)}, ",")
-			data["extent2Diagram"] = strings.Join([]string{caf[5].(string), caf[6].(string)}, ",")
+			if caf[10].(string) != "-" {
+				extentX1, _ := caf[10].(string)
+				extentY1, _ := caf[11].(string)
+				extentX2, _ := caf[12].(string)
+				extentY2, _ := caf[13].(string)
+				data["originDiagram"] = strings.Join([]string{caf[8].(string), caf[9].(string)}, ",")
+				data["extent1Diagram"] = strings.Join([]string{extentX1, extentY1}, ",")
+				data["extent2Diagram"] = strings.Join([]string{extentX2, extentY2}, ",")
+			} else {
+				data["extent1Diagram"] = strings.Join([]string{caf[3].(string), caf[4].(string)}, ",")
+				data["extent2Diagram"] = strings.Join([]string{caf[5].(string), caf[6].(string)}, ",")
+				data["originDiagram"] = strings.Join([]string{caf[1].(string), caf[2].(string)}, ",")
+			}
 			data["rotation"] = rotateAngle
 			data["output_type"] = func() string {
 				t := cDataFilter[i][len(cDataFilter[i])-1].([]interface{})

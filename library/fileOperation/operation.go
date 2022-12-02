@@ -13,9 +13,6 @@ import (
 )
 
 func CreateFilePath(filePath string) bool {
-	//filePathList := strings.Split(filePath, "/")
-	//path := strings.Join(filePathList[:len(filePathList)-1], "/")
-	//fileName := filePathList[len(filePathList)-1]
 	err := os.MkdirAll(filePath, 0755)
 	if err != nil {
 		panic(err)
@@ -39,7 +36,7 @@ func CreateFile(filePath string) (io.ReadWriteCloser, bool) {
 func WriteFile(fileName string, data string) bool {
 	nfs, ok := CreateFile(fileName)
 	if ok {
-		err := ioutil.WriteFile(fileName, []byte(data), 0755)
+		err := os.WriteFile(fileName, []byte(data), 0755)
 		if err != nil {
 			return false
 		}
@@ -51,7 +48,7 @@ func WriteFile(fileName string, data string) bool {
 func WriteFileByte(fileName string, data []byte) bool {
 	nfs, ok := CreateFile(fileName)
 	if ok {
-		err := ioutil.WriteFile(fileName, data, 0755)
+		err := os.WriteFile(fileName, data, 0755)
 		if err != nil {
 			return false
 		}

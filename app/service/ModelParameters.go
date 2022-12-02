@@ -10,7 +10,7 @@ import (
 
 type modelParameters struct {
 	name                 string
-	componentName        string
+	componentClassName   string
 	packageName          string
 	className            string
 	modelName            string
@@ -43,11 +43,6 @@ func getDerivedClassModifierValueALL(className string) string {
 	classAll := GetICList(className)
 	var DerivedClassModifierValue string
 	for p := 0; p < len(classAll); p++ {
-		//names := omc.OMC.GetDerivedClassModifierNames(classAll[p])
-		//for i := 1; i < len(names); i++ {
-		//	data := omc.OMC.GetDerivedClassModifierValue(classAll[p], names[i].(string))
-		//	DerivedClassModifierValue = append(DerivedClassModifierValue, data)
-		//}
 		data := omc.OMC.GetDerivedClassModifierValue(classAll[p], "unit")
 		if data != "" {
 			return data
@@ -106,14 +101,26 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 	var dataList []interface{}
 	if componentName == "" || componentClassName == "" {
 		m.name = modelName
-		m.componentName = modelName
+		m.componentClassName = modelName
 	} else {
 		m.name = componentName
-		m.componentName = componentClassName
+		m.componentClassName = componentClassName
 	}
-	m.modelName = modelName
-	m.classAll = omc.OMC.GetInheritedClassesListAll([]string{m.componentName})
-	//m.components = omc.OMC.GetElementsList(m.classAll)
+	m.modelName = ""
+	m.classAll = omc.OMC.GetInheritedClassesListAll([]string{modelName})
+	for i := 1; i < len(m.classAll); i++ {
+		data := omc.OMC.GetElements(m.classAll[i])
+		for _, d := range data {
+			if d.([]interface{})[3] == componentName {
+				m.modelName = m.classAll[i]
+				break
+			}
+		}
+	}
+	if m.modelName == "" {
+		m.modelName = modelName
+		m.classAll = omc.OMC.GetInheritedClassesListAll([]string{m.componentClassName})
+	}
 	for _, c := range m.classAll {
 		data := omc.OMC.GetElements(c)
 		for _, d := range data {
@@ -146,7 +153,7 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 		}
 		dataDefault["name"] = varName
 		dataDefault["comment"] = p[4].(string)
-		ComponentModifierValue := omc.OMC.GetElementModifierValue(modelName, componentName+"."+dataDefault["name"].(string))
+		ComponentModifierValue := omc.OMC.GetElementModifierValue(m.modelName, componentName+"."+dataDefault["name"].(string))
 		dataDefault["value"] = ComponentModifierValue
 
 		if p[9] == "true" {
@@ -225,7 +232,6 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 			}
 		}
 
-		//if (p[10] != "parameter" && dataDefault["group"] != "Parameters" && p[9] != "True") || p[5] == "protected" || p[6] == "True" {
 		if p[10] == "parameter" {
 			if dataDefault["group"] == "" || dataDefault["group"] == "Parameters" {
 				dataDefault["group"] = "参数"

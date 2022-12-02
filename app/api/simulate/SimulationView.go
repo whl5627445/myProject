@@ -25,7 +25,7 @@ func GetSimulationOptionsView(c *gin.Context) {
 		## model_name: 模型名称，
 	*/
 	modelName := c.Query("model_name")
-	var res ResponseData
+	var res responseData
 	result := service.GetSimulationOptions(modelName)
 	res.Data = result
 	c.JSON(http.StatusOK, res)
@@ -42,13 +42,13 @@ func SetSimulationOptionsView(c *gin.Context) {
 		## numberOfIntervals：间隔数，
 		## interval：间隔时间，秒计数
 	*/
-	var item SetSimulationOptionsData
+	var item setSimulationOptionsData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
-	var res ResponseData
+	var res responseData
 	result := service.SetSimulationOptions(item.ModelName, item.StartTime, item.StopTime, item.Tolerance, item.Interval)
 	if !result {
 		res.Err = "设置失败，请稍后再试"
@@ -74,7 +74,7 @@ func GetModelStateView(c *gin.Context) {
 	modelName := c.Query("model_name")
 	var modelRecord DataBaseModel.YssimSimulateRecord
 	DB.Where("package_id = ? AND username = ? AND simulate_model_name = ? AND simulate_start = ? AND userspace_id = ?", packageId, username, modelName, true, userSpaceId).First(&modelRecord)
-	var res ResponseData
+	var res responseData
 	if modelRecord.ID != "" {
 		res.Data = 2
 	} else {
@@ -96,7 +96,7 @@ func ModelSimulateView(c *gin.Context) {
 	*/
 	username := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
-	var item ModelSimulateData
+	var item modelSimulateData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
@@ -143,7 +143,7 @@ func ModelSimulateView(c *gin.Context) {
 		ExperimentRecord: experimentRecord,
 	}
 	service.SimulateTaskChan <- &SData
-	var res ResponseData
+	var res responseData
 	res.Msg = "仿真任务正在准备，请等待仿真完成"
 	res.Data = map[string]string{"id": record.ID}
 	c.JSON(http.StatusOK, res)
@@ -160,14 +160,14 @@ func SimulateResultGraphicsView(c *gin.Context) {
 
 	username := c.GetHeader("username")
 
-	var item ModelSimulateResultData
+	var item modelSimulateResultData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
 
-	var res ResponseData
+	var res responseData
 	var resData []map[string]interface{}
 
 	// 判断记录是否存在，有一条不存在就返回"not found"
@@ -228,14 +228,14 @@ func SimulateResultSingularView(c *gin.Context) {
 	*/
 
 	username := c.GetHeader("username")
-	var item ModelSimulateResultSingularData
+	var item modelSimulateResultSingularData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
 
-	var res ResponseData
+	var res responseData
 	// 判断记录是否存在，有一条不存在就返回"not found"
 	recordIdList := item.RecordId
 	var record DataBaseModel.YssimSimulateRecord
@@ -309,7 +309,7 @@ func SimulateResultListView(c *gin.Context) {
 	resData["resultList"] = dataList
 	resData["pageCount"] = pageCount
 	resData["totle"] = totle
-	var res ResponseData
+	var res responseData
 	res.Data = resData
 	c.JSON(http.StatusOK, res)
 
@@ -338,7 +338,7 @@ func SimulateResultDetailsView(c *gin.Context) {
 	data["number_intervals"] = experimentRecord.NumberOfIntervals // 间隔
 	data["model_var_data"] = experimentRecord.ModelVarData        // 模型组件相关参数属性
 
-	var res ResponseData
+	var res responseData
 	res.Data = data
 
 	c.JSON(http.StatusOK, res)
@@ -362,7 +362,7 @@ func SimulateResultTreeView(c *gin.Context) {
 		return
 	}
 
-	var res ResponseData
+	var res responseData
 	if record.SimulateModelResultPath != "" && record.SimulateStart == false {
 		result := service.SimulationResultTree(record.SimulateModelResultPath+"result_init.xml", parentNode)
 		res.Data = result
@@ -382,7 +382,7 @@ func SimulateResultDeleteView(c *gin.Context) {
 	recordId := c.Query("record_id")
 	var resultRecord DataBaseModel.YssimSimulateRecord
 	DB.Where("id = ? AND username = ? AND userspace_id = ? ", recordId, username, userSpaceId).First(&resultRecord)
-	var res ResponseData
+	var res responseData
 	DB.Delete(&resultRecord)
 	res.Msg = "删除成功"
 	c.JSON(http.StatusOK, res)
@@ -398,8 +398,8 @@ func ExperimentCreateView(c *gin.Context) {
 	   ## simulate_var_data: 模型仿真选项数据
 	   ## experiment_name: 实验名称
 	*/
-	var res ResponseData
-	var item ExperimentCreateData
+	var res responseData
+	var item experimentCreateData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
@@ -450,8 +450,8 @@ func ExperimentDeleteView(c *gin.Context) {
 	   ## id: 实验id，此接口其他值无须传入
 	*/
 
-	var res ResponseData
-	var item ExperimentDeleteData
+	var res responseData
+	var item experimentDeleteData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
@@ -475,8 +475,8 @@ func ExperimentEditView(c *gin.Context) {
 	   ## experiment_name: 实验名称
 	*/
 
-	var res ResponseData
-	var item ExperimentEditData
+	var res responseData
+	var item experimentEditData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
@@ -542,7 +542,7 @@ func ExperimentGetView(c *gin.Context) {
 		}
 		dataList = append(dataList, data)
 	}
-	var res ResponseData
+	var res responseData
 	res.Data = dataList
 	c.JSON(http.StatusOK, res)
 }
@@ -582,7 +582,7 @@ func ExperimentParametersView(c *gin.Context) {
 			parametersData = append(parametersData, data)
 		}
 	}
-	var res ResponseData
+	var res responseData
 	res.Data = map[string]interface{}{"parameters": parametersData}
 	c.JSON(http.StatusOK, res)
 }

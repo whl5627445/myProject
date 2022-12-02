@@ -10,7 +10,6 @@ func ModelRouter(g *gin.Engine) {
 	{
 		Models.GET("/root_library/sys", ModelAPI.GetSysRootModelView)
 		Models.GET("/root_library/user", ModelAPI.GetUserRootModelView)
-		//Models.GET("/root_library", ModelAPI.GetRootModelView)
 		Models.GET("/list_library", ModelAPI.GetListModelView)
 		Models.POST("/graphics", ModelAPI.GetGraphicsDataView)
 		Models.GET("/code", ModelAPI.GetModelCodeView)

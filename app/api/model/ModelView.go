@@ -23,7 +23,7 @@ func GetSysRootModelView(c *gin.Context) {
 	/*
 		# 获取左侧模型列表接口， 此接口获取系统模型和用户上传模型的根节点列表，暂时没有图标信息
 	*/
-	var res ResponseData
+	var res responseData
 	var modelData []map[string]interface{}
 	var packageModel []DataBaseModel.YssimModels
 	DB.Where("sys_or_user =  ? AND userspace_id = ?", "sys", "0").Find(&packageModel)
@@ -48,7 +48,7 @@ func GetUserRootModelView(c *gin.Context) {
 	*/
 	username := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
-	var res ResponseData
+	var res responseData
 	var modelData []map[string]interface{}
 	var packageModel []DataBaseModel.YssimModels
 	DB.Where("sys_or_user = ? AND userspace_id = ?", username, userSpaceId).Find(&packageModel)
@@ -79,7 +79,7 @@ func GetListModelView(c *gin.Context) {
 	userSpaceId := c.GetHeader("space_id")
 	var packageModel DataBaseModel.YssimModels
 	DB.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", packageId, []string{"sys", userName}, []string{"0", userSpaceId}).First(&packageModel)
-	var res ResponseData
+	var res responseData
 	modelChildList := service.GetModelChild(modelName)
 	for i := 0; i < len(modelChildList); i++ {
 		modelChildList[i]["image"] = service.GetIcon(modelName+"."+modelChildList[i]["name"].(string), packageModel.PackageName, packageModel.Version)
@@ -97,7 +97,7 @@ func GetGraphicsDataView(c *gin.Context) {
 		## component_name: 模型的组件名称，用于获取单个组件时传入
 	*/
 
-	var item ModelGraphicsData
+	var item modelGraphicsData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
@@ -112,7 +112,7 @@ func GetGraphicsDataView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
-	var res ResponseData
+	var res responseData
 	var graphicsData [][]map[string]interface{}
 	if item.ComponentName == "" {
 		graphicsData = service.GetGraphicsData(item.ModelName)
@@ -137,7 +137,7 @@ func GetModelCodeView(c *gin.Context) {
 		## modelname: 需要查询的模型名称，全称， 例如“Modelica.Blocks.Examples.PID_Controller”
 	*/
 	modelName := c.Query("model_name")
-	var res ResponseData
+	var res responseData
 	modelCode := service.GetModelCode(modelName)
 	res.Data = modelCode
 	c.JSON(http.StatusOK, res)
@@ -155,7 +155,7 @@ func GetModelParametersView(c *gin.Context) {
 	componentName := c.Query("component_name")
 	className := c.Query("class_name")
 
-	var res ResponseData
+	var res responseData
 	properties := make(map[string]interface{}, 0)
 	// if modelName == "" || componentName == "" || className == "" {
 	//	c.JSON(http.StatusBadRequest, "")
@@ -188,7 +188,7 @@ func SetModelParametersView(c *gin.Context) {
 		## model_name: 需要设置参数的模型名称，全称，例如“ENN.Examples.Scenario1_Status”
 		## parameter_value: 需要设置的变量和新的值，全称，例如{"PID.k": "200"}， k是模型的组件别名和变量名字的组成， 类似于“别名.变量名”
 	*/
-	var item SetComponentModifierValueData
+	var item setComponentModifierValueData
 	err := c.BindJSON(&item)
 	if err != nil {
 		log.Println(err)
@@ -196,7 +196,7 @@ func SetModelParametersView(c *gin.Context) {
 		return
 	}
 
-	var res ResponseData
+	var res responseData
 	var modelPackage DataBaseModel.YssimModels
 	DB.Where("id = ?", item.PackageId).First(&modelPackage)
 	if modelPackage.SysUser == "sys" || modelPackage.ID == "" {
@@ -224,7 +224,7 @@ func GetComponentPropertiesView(c *gin.Context) {
 	*/
 	modelName := c.Query("model_name")
 	componentsName := c.Query("component_name")
-	var res ResponseData
+	var res responseData
 	result := service.GetElements(modelName, componentsName)
 	if len(result) > 0 {
 		dimension := result[len(result)-1].(string)
@@ -258,8 +258,8 @@ func SetComponentPropertiesView(c *gin.Context) {
 		## outer: "true" or "false",
 		## causality: "output" or "input"
 	*/
-	var res ResponseData
-	var item SetComponentPropertiesData
+	var res responseData
+	var item setComponentPropertiesData
 	err := c.BindJSON(&item)
 	if err != nil {
 		res.Status = 2
@@ -309,7 +309,7 @@ func CopyClassView(c *gin.Context) {
 	*/
 	username := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
-	var item CopyClassData
+	var item copyClassData
 	err := c.BindJSON(&item)
 	// if err != nil || item.PackageId == "" && item.ParentName != "" {
 	if err != nil {
@@ -319,7 +319,7 @@ func CopyClassView(c *gin.Context) {
 	}
 	packageName := strings.Split(item.ParentName+"."+item.ModelName, ".")[0]
 	filePath := ""
-	var res ResponseData
+	var res responseData
 	var packageModel DataBaseModel.YssimModels
 	DB.Where("package_name = ? AND userspace_id = ?", packageName, "0").Or("sys_or_user = ? AND userspace_id = ? AND package_name = ?", username, userSpaceId, packageName).First(&packageModel)
 
@@ -376,14 +376,14 @@ func DeletePackageAndModelView(c *gin.Context) {
 	*/
 	username := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
-	var item DeleteClassData
+	var item deleteClassData
 	err := c.BindJSON(&item)
 	if err != nil {
 
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
-	var res ResponseData
+	var res responseData
 	var packageModel DataBaseModel.YssimModels
 	err = DB.Where("id = ? AND sys_or_user = ? AND userspace_id = ?", item.PackageId, username, userSpaceId).First(&packageModel).Error
 	if packageModel.ID == "" {
@@ -422,7 +422,7 @@ func GetComponentNameView(c *gin.Context) {
 	modelName := c.Query("model_name")
 	className := c.Query("class_name")
 	name := service.GetComponentName(modelName, className)
-	var res ResponseData
+	var res responseData
 	res.Data = []string{name}
 	c.JSON(http.StatusOK, res)
 }
@@ -438,8 +438,8 @@ func AddModelComponentView(c *gin.Context) {
 		## extent: 范围坐标, 例如["-10,-10", "10,10"]
 		## rotation: 旋转角度, 例如"0"，不旋转`
 	*/
-	var res ResponseData
-	var item AddComponentData
+	var res responseData
+	var item addComponentData
 	err := c.BindJSON(&item)
 	if err != nil {
 		log.Println(err)
@@ -472,8 +472,8 @@ func DeleteModelComponentView(c *gin.Context) {
 		## package_id： 包id
 		## component_list：需要删除的数据数组(delete_type：删除类型，component_name：删除的组件名字，model_name：模型名称，connect_start：连线类型起点，connect_end：终点)
 	*/
-	var res ResponseData
-	var item DeleteComponentData
+	var res responseData
+	var item deleteComponentData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "not found")
@@ -517,8 +517,8 @@ func UpdateModelComponentView(c *gin.Context) {
 		## extent: 范围坐标, 例如["-10,-10", "10,10"]
 		## rotation: 旋转角度, 例如"0"，不旋转
 	*/
-	var res ResponseData
-	var item UpdateComponentData
+	var res responseData
+	var item updateComponentData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "not found")
@@ -553,8 +553,8 @@ func CreateConnectionAnnotationView(c *gin.Context) {
 		## color：连线颜色， 例如"0,0,127"
 		## line_points：连线拐点坐标，包含起始点坐标，从起点开始到终点 例如["213,-38","-163.25,-38","-163.25,-4"]
 	*/
-	var res ResponseData
-	var item UpdateConnectionAnnotationData
+	var res responseData
+	var item updateConnectionAnnotationData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "not found")
@@ -589,8 +589,8 @@ func UpdateConnectionNamesView(c *gin.Context) {
 		## from_name_new：连线起点， 输出点， 例如"sum1new.y"
 		## to_name_new：连线终点， 输入点， 例如"sum2new.y"
 	*/
-	var res ResponseData
-	var item UpdateConnectionNamesData
+	var res responseData
+	var item updateConnectionNamesData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "not found")
@@ -623,8 +623,8 @@ func DeleteConnectionAnnotationView(c *gin.Context) {
 		## connect_start： 连线起始位置
 		## connect_end： 连线终止位置
 	*/
-	var res ResponseData
-	var item DeleteConnectionData
+	var res responseData
+	var item deleteConnectionData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "not found")
@@ -659,8 +659,8 @@ func UpdateConnectionAnnotationView(c *gin.Context) {
 		## color：连线颜色， 例如"0,0,127"
 		## line_points：连线拐点坐标，包含起始点坐标，从起点开始到终点 例如["213,-38","-163.25,-38","-163.25,-4"]
 	*/
-	var res ResponseData
-	var item UpdateConnectionAnnotationData
+	var res responseData
+	var item updateConnectionAnnotationData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "not found")
@@ -691,7 +691,7 @@ func ExistsView(c *gin.Context) {
 		## package_id： 包id
 		## model_name：模型全称
 	*/
-	var res ResponseData
+	var res responseData
 	modelName := c.Query("model_name")
 	result := service.ExistClass(modelName)
 	res.Data = []bool{result}
@@ -704,7 +704,7 @@ func CheckView(c *gin.Context) {
 		## package_id： 包id
 		## model_name：模型全称
 	*/
-	var res ResponseData
+	var res responseData
 	modelName := c.Query("model_name")
 	dataList := service.CheckModel(modelName)
 	for _, mes := range dataList {
@@ -720,7 +720,7 @@ func GetComponentsView(c *gin.Context) {
 		##  model_name: 需要查询属性数据的模型名称，全称，例如“Modelica.Blocks.Examples.PID_Controller”
 		##  package_id: 所属package的id值，例如“1”
 	*/
-	var res ResponseData
+	var res responseData
 	modelName := c.Query("model_name")
 	result := service.GetElements(modelName, "")
 	var data []map[string]string
@@ -742,7 +742,7 @@ func GetModelDocumentView(c *gin.Context) {
 		##  model_name: 需要查询文档的模型名称，全称，例如“Modelica.Blocks.Examples.PID_Controller”
 		##  package_id: 所属package的id值，例如“1”
 	*/
-	var res ResponseData
+	var res responseData
 	modelName := c.Query("model_name")
 	result := service.GetModelDocument(modelName)
 	res.Data = map[string]string{
@@ -760,8 +760,8 @@ func SetModelDocumentView(c *gin.Context) {
 		##  document: 文档内容
 		##  package_id: 所属package的id值，例如“1”
 	*/
-	var res ResponseData
-	var item SetModelDocumentData
+	var res responseData
+	var item setModelDocumentData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "not found")
@@ -793,8 +793,8 @@ func ConvertUnitsView(c *gin.Context) {
 		##  s1: 转换后的单位, new单位
 		##  s2: 需要转换的单位， old单位
 	*/
-	var res ResponseData
-	var item ConvertUnitsData
+	var res responseData
+	var item convertUnitsData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "not found")
@@ -821,7 +821,7 @@ func CreateCollectionModelView(c *gin.Context) {
 	*/
 	username := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
-	var item ModelCollectionData
+	var item modelCollectionData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
@@ -842,7 +842,7 @@ func CreateCollectionModelView(c *gin.Context) {
 	}
 	//检测数据库表中是否存在同名模型
 	var modelCollection DataBaseModel.YssimModelsCollection
-	var res ResponseData
+	var res responseData
 	DB.Where("model_name = ? AND userspace_id = ?", item.ModelName, userSpaceId).First(&modelCollection)
 	if modelCollection.ID != "" {
 		res.Err = "名称已存在，请修改后再试。"
@@ -874,7 +874,7 @@ func GetCollectionModelView(c *gin.Context) {
 	*/
 	username := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
-	var res ResponseData
+	var res responseData
 	var modelData []map[string]interface{}
 	var modelCollections []map[string]interface{}
 	DB.Raw("select mc.id, mc.package_id, m.package_name, mc.model_name, m.version from yssim_models_collections as mc  left join yssim_models m on mc.package_id = m.id where mc.userspace_id = ?  and m.sys_or_user IN (?,\"sys\") and mc.deleted_at is NULL", userSpaceId, username).Scan(&modelCollections)
@@ -911,7 +911,7 @@ func DeleteCollectionModelView(c *gin.Context) {
 	//userSpaceId := c.GetHeader("space_id")
 
 	id := c.Query("id")
-	var res ResponseData
+	var res responseData
 	var modelCollection DataBaseModel.YssimModelsCollection
 	DB.Where("id = ?", id).First(&modelCollection)
 	if modelCollection.ID == "" {
@@ -937,7 +937,7 @@ func Test(c *gin.Context) {
 		data = string(d)
 	}
 	log.Println(data)
-	var res ResponseData
+	var res responseData
 	res.Data = data
 	c.JSON(http.StatusOK, res)
 }
