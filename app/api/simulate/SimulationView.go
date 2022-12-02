@@ -5,9 +5,9 @@ import (
 	"log"
 	"math"
 	"net/http"
+	"reflect"
 	"strconv"
 	"time"
-	"yssim-go/library/mapProcessing"
 	"yssim-go/library/timeConvert"
 
 	"github.com/gin-gonic/gin"
@@ -565,15 +565,22 @@ func ExperimentParametersView(c *gin.Context) {
 		log.Println("err: ", err)
 		log.Println("json2map filed!")
 	}
-	mapAttributesStr := mapProcessing.MapDataConversion(ComponentValue.FinalAttributesStr, "om")
-	var parametersData []map[string]string
-	for k, v := range mapAttributesStr {
-		data := map[string]string{
-			"name":         k,
-			"defaultvalue": v,
+	var parametersData []map[string]interface{}
+	for k, v := range ComponentValue.FinalAttributesStr {
+		typeArray := reflect.TypeOf(v).String()
+		if typeArray == "[]interface {}" {
+			data := map[string]interface{}{
+				"name":         k,
+				"defaultvalue": v.([]interface{})[0].(string),
+			}
+			parametersData = append(parametersData, data)
+		} else {
+			data := map[string]interface{}{
+				"name":         k,
+				"defaultvalue": v,
+			}
+			parametersData = append(parametersData, data)
 		}
-		parametersData = append(parametersData, data)
-
 	}
 	var res ResponseData
 	res.Data = map[string]interface{}{"parameters": parametersData}
