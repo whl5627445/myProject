@@ -46,7 +46,7 @@ func GetGraphicsData(modelName string) [][]map[string]interface{} {
 		data["visible"] = "true"
 		data["inputOutputs"] = make([]map[string]interface{}, 0, 1)
 		data["subShapes"] = make([]map[string]interface{}, 0, 1)
-		data1 := g.data01(interfaceGraphicsData, "", "")
+		data1 := g.data01(interfaceGraphicsData, modelName, modelName)
 		data["subShapes"] = data1
 		g.data[1] = append(g.data[1], data)
 		return g.data
@@ -495,7 +495,7 @@ func (g *graphicsData) getnthconnectionData(nameList []string) {
 		for c := 0; c < ConnectionCount[i]; c++ {
 			ncData := omc.OMC.GetNthConnection(nameList[i], c+1)
 			ncaData := omc.OMC.GetNthConnectionAnnotation(nameList[i], c+1) //
-			d1Data := g.data01(ncaData, "", "")
+			d1Data := g.data01(ncaData, nameList[i], nameList[i])
 			if len(ncData) != 0 && len(ncaData) != 0 && len(d1Data) != 0 {
 				daData := d1Data[0]
 				if i == len(nameList)-1 { // i==0的时候，表示目前遍历的是模型自身的组件，模型自身的组件可以移动，设在"mobility"为true
@@ -567,61 +567,10 @@ func (g *graphicsData) getDiagramAnnotationData() {
 	modelNameDiagramAnnotationData := omc.OMC.GetDiagramAnnotation(g.modelName)
 	if len(modelNameDiagramAnnotationData) >= 8 && modelNameDiagramAnnotationData[len(modelNameDiagramAnnotationData)-1] != "" {
 		dData := modelNameDiagramAnnotationData[len(modelNameDiagramAnnotationData)-1]
-		data1 := g.data01(dData.([]interface{}), "", "")
+		data1 := g.data01(dData.([]interface{}), g.modelName, g.modelName)
 		for _, d := range data1 {
 			d["mobility"] = true
-			//log.Println("d", d)
-			//data := map[string]interface{}{
-			//	"ID":            i,
-			//	"mobility":      true,
-			//	"name":          "Diagram" + strconv.Itoa(i),
-			//	"originDiagram": d["originalPoint"],
-			//	"rotation":      d["rotation"],
-			//	"subShapes":     []map[string]interface{}{d},
-			//	"visible":       "true",
-			//}
-			//if d["type"] != "Line" {
-			//	data["extent1Diagram"] = d["extentsPoints"].([]string)[0]
-			//	data["extent2Diagram"] = d["extentsPoints"].([]string)[1]
-			//}
-			//subShapes := map[string]interface{}{
-			//	"color":         d["color"],
-			//	"extentsPoints": d["extentsPoints"],
-			//	"fillColor":     d["fillColor"],
-			//	"fillPattern":   d["fillPattern"],
-			//	"linePattern":   d["linePattern"],
-			//	"lineThickness": d["lineThickness"],
-			//	"mobility":      true,
-			//	"originalPoint": d["originalPoint"],
-			//	"radius":        "0.0",
-			//	"rotation":      d["rotation"],
-			//	"type":          d["type"],
-			//	"visible":       "true",
-			//}
-			//switch d["type"] {
-			//case "Rectangle":
-			//	subShapes["borderPattern"] = d["borderPattern"]
-			//	subShapes["radius"] = d["radius"]
-			//	subShapes["extentsPoints"] = d["extentsPoints"]
-			//case "Polygon":
-			//	subShapes["polygonPoints"] = d["polygonPoints"]
-			//	subShapes["smooth"] = d["smooth"]
-			//case "Line":
-			//	delete(subShapes, "fillColor")
-			//	delete(subShapes, "fillPattern")
-			//	subShapes["points"] = d["points"]
-			//	subShapes["arrow"] = d["arrow"]
-			//	subShapes["arrowSize"] = d["arrowSize"]
-			//	subShapes["smooth"] = d["smooth"]
-			//case "Text":
-			//	subShapes["fontSize"] = d["fontSize"]
-			//	subShapes["textColor"] = d["fontSize"]
-			//	subShapes["fontName"] = d["fontName"]
-			//	subShapes["textStyles"] = d["textStyles"]
-			//	subShapes["horizontalAlignment"] = d["horizontalAlignment"]
-			//}
-			//log.Println("data", data)
-
+			d["diagram"] = true
 			g.data[0] = append(g.data[0], d)
 		}
 	}

@@ -411,12 +411,22 @@ func (o *ZmqObject) List(className string) string {
 	return code
 }
 
+func (o *ZmqObject) GetElementModifierNames(className string, modifierName string) string {
+	cmd := "getElementModifierNames(" + className + "," + modifierName + ")"
+	data, _ := o.SendExpressionNoParsed(cmd)
+	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
+	data = bytes.ReplaceAll(data, []byte("\""), []byte(""))
+	data = bytes.ReplaceAll(data, []byte("\\"), []byte(""))
+	return string(data)
+}
+
 func (o *ZmqObject) GetElementModifierValue(className string, modifierName string) string {
 	cmd := "getElementModifierValue(" + className + "," + modifierName + ")"
 	data, _ := o.SendExpressionNoParsed(cmd)
 	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
 	data = bytes.ReplaceAll(data, []byte("\""), []byte(""))
 	data = bytes.ReplaceAll(data, []byte("\\"), []byte(""))
+	log.Println("cmd:", cmd)
 	return string(data)
 }
 
@@ -447,6 +457,7 @@ func (o *ZmqObject) GetParameterValue(className string, modifierName string) str
 	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
 	data = bytes.ReplaceAll(data, []byte("\""), []byte(""))
 	data = bytes.ReplaceAll(data, []byte("\\"), []byte(""))
+	log.Println("cmd:", cmd)
 	return string(data)
 }
 
@@ -924,4 +935,14 @@ func (o *ZmqObject) GcSetMaxHeapSize(size string) []interface{} {
 		return result
 	}
 	return make([]interface{}, 1)
+}
+
+func (o *ZmqObject) IsPackage(packageName string) bool {
+	cmd := "isPackage(" + packageName + ")"
+	result, ok := o.SendExpressionNoParsed(cmd)
+	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
+	if ok && string(result) == "true" {
+		return true
+	}
+	return false
 }

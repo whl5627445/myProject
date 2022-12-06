@@ -1,7 +1,7 @@
 package Init
 
 func init() {
-	modelLibraryInit()
+	ModelLibraryInit()
 	LogInit()
 	go SimulationService()
 	go NacosRegister()

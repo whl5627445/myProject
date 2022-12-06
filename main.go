@@ -15,6 +15,7 @@ func main() {
 	g := gin.Default()
 
 	g.Use(middleware.Cors())
+	g.Use(middleware.CheckMOC())
 	{
 		router.ModelRouter(g)
 		router.SimulateRouter(g)

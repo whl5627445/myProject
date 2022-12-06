@@ -109,10 +109,13 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 	m.modelName = ""
 	m.classAll = omc.OMC.GetInheritedClassesListAll([]string{modelName})
 	for i := 1; i < len(m.classAll); i++ {
-		data := omc.OMC.GetElements(m.classAll[i])
-		for _, d := range data {
-			if d.([]interface{})[3] == componentName {
+		elementsData := omc.OMC.GetElements(m.classAll[i])
+		annotationsData := omc.OMC.GetElementAnnotations(m.classAll[i])
+		for n, d := range elementsData {
+			if d.([]interface{})[3] == componentName && (len(annotationsData[n].([]interface{})) != 0 || annotationsData[n].([]interface{})[0].(string) == "Placement") {
 				m.modelName = m.classAll[i]
+				inheritedClassAll := omc.OMC.GetInheritedClassesListAll([]string{d.([]interface{})[2].(string)})
+				m.classAll = inheritedClassAll
 				break
 			}
 		}
@@ -148,13 +151,68 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 		}
 		IsExtendsModifierFinal := omc.OMC.IsExtendsModifierFinal(componentClassName, p[len(p)-2].(string), varName)
 		//if (p[10] != "parameter" && p[9] != "True") || p[5] == "protected" {
-		if p[5] == "protected" || IsExtendsModifierFinal == "true" {
+		if p[5] == "protected" || IsExtendsModifierFinal == "true" || p[6] == "true" {
 			continue
 		}
 		dataDefault["name"] = varName
 		dataDefault["comment"] = p[4].(string)
-		ComponentModifierValue := omc.OMC.GetElementModifierValue(m.modelName, componentName+"."+dataDefault["name"].(string))
-		dataDefault["value"] = ComponentModifierValue
+
+		dList := p[len(p)-1].([]interface{})
+
+		DialogIndex, DialogIndexOk := func() (int, bool) {
+			for n := 0; n < len(dList); n++ {
+				if dList[n] == "Dialog" {
+					return n, true
+				}
+			}
+			return 0, false
+		}()
+		showStartAttribute := ""
+		if DialogIndexOk {
+			tabIndex := DialogIndex + 1
+			if len(dList) <= 1 || dList[tabIndex].([]interface{})[len(dList[tabIndex].([]interface{}))-1] == "true" {
+				continue
+			}
+			tab := dList[tabIndex].([]interface{})[0]
+			group := dList[tabIndex].([]interface{})[1]
+			dataDefault["tab"] = tab.(string)
+			dataDefault["group"] = group.(string)
+			showStartAttribute = dList[tabIndex].([]interface{})[3].(string)
+		}
+		if showStartAttribute == "true" {
+			fixedValueString := m.getElementModifierFixedValue(m.name + "." + varName + ".fixed")
+			startValueString := m.getElementModifierFixedValue(m.name + "." + varName + ".start")
+			value, _ := strconv.ParseBool(fixedValueString)
+			var fixedValueBool interface{}
+			if fixedValueString == "" {
+				fixedValueBool = ""
+			} else {
+				fixedValueBool = value
+			}
+			fixed := map[string]interface{}{
+				"type":         "fixed",
+				"name":         varName + ".fixed",
+				"comment":      dataDefault["comment"],
+				"tab":          dataDefault["tab"],
+				"group":        dataDefault["group"],
+				"defaultvalue": "",
+				"value":        fixedValueBool,
+				"unit":         m.getDerivedClassModifierValue(),
+			}
+			start := map[string]interface{}{
+				"type":         "Normal",
+				"name":         varName + ".start",
+				"comment":      dataDefault["comment"],
+				"tab":          dataDefault["tab"],
+				"group":        dataDefault["group"],
+				"defaultvalue": "",
+				"value":        startValueString,
+				"unit":         m.getDerivedClassModifierValue(),
+			}
+			dataList = append(dataList, fixed)
+			dataList = append(dataList, start)
+			continue
+		}
 
 		if p[9] == "true" {
 			dataDefault["type"] = "Enumeration"
@@ -175,64 +233,9 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 			dataList = append(dataList, dataDefault)
 			continue
 		}
-
-		dList := p[len(p)-1].([]interface{})
-		DialogIndex, DialogIndexOk := func() (int, bool) {
-			for n := 0; n < len(dList); n++ {
-				if dList[n] == "Dialog" {
-					return n, true
-				}
-			}
-			return 0, false
-		}()
-		showStartAttribute := ""
-		if DialogIndexOk {
-			tabIndex := DialogIndex + 1
-			if len(dList) <= 1 {
-				continue
-			}
-			tab := dList[tabIndex].([]interface{})[0]
-			group := dList[tabIndex].([]interface{})[1]
-			dataDefault["tab"] = tab.(string)
-			dataDefault["group"] = group.(string)
-			showStartAttribute = dList[tabIndex].([]interface{})[3].(string)
-			if showStartAttribute == "true" {
-				fixedValueString := m.getElementModifierFixedValue(m.name + "." + varName + ".fixed")
-				startValueString := m.getElementModifierFixedValue(m.name + "." + varName + ".start")
-				value, _ := strconv.ParseBool(fixedValueString)
-				var fixedValueBool interface{}
-				if fixedValueString == "" {
-					fixedValueBool = ""
-				} else {
-					fixedValueBool = value
-				}
-				fixed := map[string]interface{}{
-					"type":         "fixed",
-					"name":         varName + ".fixed",
-					"comment":      dataDefault["comment"],
-					"tab":          dataDefault["tab"],
-					"group":        dataDefault["group"],
-					"defaultvalue": "",
-					"value":        fixedValueBool,
-					"unit":         m.getDerivedClassModifierValue(),
-				}
-				start := map[string]interface{}{
-					"type":         "Normal",
-					"name":         varName + ".start",
-					"comment":      dataDefault["comment"],
-					"tab":          dataDefault["tab"],
-					"group":        dataDefault["group"],
-					"defaultvalue": "",
-					"value":        startValueString,
-					"unit":         m.getDerivedClassModifierValue(),
-				}
-				dataList = append(dataList, fixed)
-				dataList = append(dataList, start)
-				continue
-			}
-		}
-
-		if p[10] == "parameter" {
+		ComponentModifierValue := omc.OMC.GetElementModifierValue(m.modelName, componentName+"."+dataDefault["name"].(string))
+		dataDefault["value"] = ComponentModifierValue
+		if p[10] == "parameter" || ComponentModifierValue != "" || dataDefault["group"] == "Parameters" {
 			if dataDefault["group"] == "" || dataDefault["group"] == "Parameters" {
 				dataDefault["group"] = "参数"
 			}
@@ -250,7 +253,7 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 				}()
 				dataDefault["type"] = "Enumeration"
 			}
-			parameterValue := m.getParameterValue(dataDefault["name"].(string))
+			parameterValue := omc.OMC.GetParameterValue(p[len(p)-2].(string), dataDefault["name"].(string))
 			dataDefault["defaultvalue"] = parameterValue
 			if p[2] == "Boolean" {
 				dataDefault["type"] = "CheckBox"
@@ -272,6 +275,46 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 				dataDefault["unit"] = unit
 			}
 			dataList = append(dataList, dataDefault)
+			continue
+		}
+
+		fixedValueString := m.getElementModifierFixedValue(m.name + "." + varName + ".fixed")
+		startValueString := m.getElementModifierFixedValue(m.name + "." + varName + ".start")
+		if fixedValueString == "" && startValueString == "" {
+			name := p[len(p)-2].(string)
+			fixedValueString = omc.OMC.GetElementModifierValue(name, varName+".fixed")
+			startValueString = omc.OMC.GetElementModifierValue(name, varName+".start")
+		}
+		value, _ := strconv.ParseBool(fixedValueString)
+		var fixedValueBool interface{}
+		if fixedValueString == "" {
+			fixedValueBool = ""
+		} else {
+			fixedValueBool = value
+		}
+		if fixedValueString != "" || startValueString != "" {
+			fixed := map[string]interface{}{
+				"type":         "fixed",
+				"name":         varName + ".fixed",
+				"comment":      dataDefault["comment"],
+				"defaultvalue": "",
+				"value":        fixedValueBool,
+				"unit":         m.getDerivedClassModifierValue(),
+				"tab":          "General",
+				"group":        "Initialization",
+			}
+			start := map[string]interface{}{
+				"type":         "Normal",
+				"name":         varName + ".start",
+				"comment":      dataDefault["comment"],
+				"defaultvalue": "",
+				"value":        startValueString,
+				"unit":         m.getDerivedClassModifierValue(),
+				"tab":          "General",
+				"group":        "Initialization",
+			}
+			dataList = append(dataList, fixed)
+			dataList = append(dataList, start)
 		}
 	}
 	return dataList

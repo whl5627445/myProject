@@ -2,10 +2,8 @@ package API
 
 import (
 	"encoding/json"
-	"log"
 	"math"
 	"net/http"
-	"reflect"
 	"strconv"
 	"time"
 	"yssim-go/library/timeConvert"
@@ -552,34 +550,31 @@ func ExperimentParametersView(c *gin.Context) {
 	   # 获取仿真实验中的模型参数接口，
 	   ## experiment_id: 实验id
 	*/
-	type ModelVarData struct {
-		FinalAttributesStr map[string]interface{} `json:"final_attributes_str"`
-	}
 	experimentId := c.Query("experiment_id")
 	var record DataBaseModel.YssimExperimentRecord
 	DB.Where("id =?", experimentId).First(&record)
 
-	var ComponentValue ModelVarData
-	err := json.Unmarshal(record.ModelVarData, &ComponentValue)
-	if err != nil {
-		log.Println("err: ", err)
-		log.Println("json2map filed!")
-	}
+	var componentValue map[string]interface{}
 	var parametersData []map[string]interface{}
-	for k, v := range ComponentValue.FinalAttributesStr {
-		typeArray := reflect.TypeOf(v).String()
-		if typeArray == "[]interface {}" {
-			data := map[string]interface{}{
-				"name":         k,
-				"defaultvalue": v.([]interface{})[0].(string),
+	jData, _ := record.ModelVarData.MarshalJSON()
+	json.Unmarshal(jData, &componentValue)
+	finalAttributesStr, ok := componentValue["final_attributes_str"]
+	if ok {
+		for k, v := range finalAttributesStr.(map[string]interface{}) {
+			typeArray, ok := v.([]interface{})
+			if ok {
+				data := map[string]interface{}{
+					"name":         k,
+					"defaultvalue": typeArray[0].(string),
+				}
+				parametersData = append(parametersData, data)
+			} else {
+				data := map[string]interface{}{
+					"name":         k,
+					"defaultvalue": v,
+				}
+				parametersData = append(parametersData, data)
 			}
-			parametersData = append(parametersData, data)
-		} else {
-			data := map[string]interface{}{
-				"name":         k,
-				"defaultvalue": v,
-			}
-			parametersData = append(parametersData, data)
 		}
 	}
 	var res responseData

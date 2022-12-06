@@ -11,9 +11,13 @@ import (
 func GetElements(className, componentName string) []interface{} {
 	classNameList := GetICList(className)
 	var componentsData []interface{}
+	var annotationsData []interface{}
 	for i := 0; i < len(classNameList); i++ {
 		classnameData := omc.OMC.GetElements(classNameList[i])
+		classnameAnnotationsData := omc.OMC.GetElementAnnotations(classNameList[i])
 		componentsData = append(componentsData, classnameData...)
+		annotationsData = append(annotationsData, classnameAnnotationsData...)
+
 	}
 
 	var componentData []interface{}
@@ -23,7 +27,7 @@ func GetElements(className, componentName string) []interface{} {
 		case componentName != "" && cData[3] == componentName:
 			componentData = cData
 			break
-		case !(cData[5] == "protected" || cData[6] == "true" || cData[10] == "parameter") && componentName == "":
+		case !(cData[5] == "protected" || cData[6] == "true" || len(annotationsData[i].([]interface{})) == 0 || annotationsData[i].([]interface{})[0].(string) != "Placement") && componentName == "":
 			componentData = append(componentData, cData)
 		}
 	}

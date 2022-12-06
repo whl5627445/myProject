@@ -3,6 +3,8 @@ package middleware
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"yssim-go/Init"
+	"yssim-go/library/omc"
 )
 
 func Cors() gin.HandlerFunc {
@@ -16,6 +18,16 @@ func Cors() gin.HandlerFunc {
 		// 允许放行OPTIONS请求
 		if method == "OPTIONS" {
 			context.AbortWithStatus(http.StatusNoContent)
+		}
+		context.Next()
+	}
+}
+
+func CheckMOC() gin.HandlerFunc {
+	return func(context *gin.Context) {
+		checkOMC := omc.OMC.IsPackage("Modelica")
+		if !checkOMC {
+			Init.ModelLibraryInit()
 		}
 		context.Next()
 	}
