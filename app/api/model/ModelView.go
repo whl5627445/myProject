@@ -157,10 +157,10 @@ func GetModelParametersView(c *gin.Context) {
 
 	var res responseData
 	properties := make(map[string]interface{}, 0)
-	// if modelName == "" || componentName == "" || className == "" {
-	//	c.JSON(http.StatusBadRequest, "")
-	//	return
-	// }
+	if modelName == "" || componentName == "" || className == "" {
+		componentName = modelName
+		className = modelName
+	}
 	parameters := service.GetModelParameters(modelName, componentName, className)
 	elements := service.GetElements(modelName, componentName)
 	if len(elements) > 0 && componentName != "" {
