@@ -1,6 +1,7 @@
 package service
 
 import (
+	"log"
 	"strconv"
 	"strings"
 	"yssim-go/library/omc"
@@ -99,14 +100,9 @@ func (m modelParameters) getExtendsModifierNameAndValue() ([]string, []string, [
 func GetModelParameters(modelName, componentName, componentClassName string) []interface{} {
 	var m modelParameters
 	var dataList []interface{}
-	if componentName == "" || componentClassName == "" {
-		m.name = modelName
-		m.componentClassName = modelName
-	} else {
-		m.name = componentName
-		m.componentClassName = componentClassName
-	}
-	m.modelName = ""
+	m.name = componentName
+	m.componentClassName = componentClassName
+	m.modelName = modelName
 	m.classAll = omc.OMC.GetInheritedClassesListAll([]string{modelName})
 	for i := 1; i < len(m.classAll); i++ {
 		elementsData := omc.OMC.GetElements(m.classAll[i])
@@ -120,8 +116,7 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 			}
 		}
 	}
-	if m.modelName == "" {
-		m.modelName = modelName
+	if m.modelName == modelName {
 		m.classAll = omc.OMC.GetInheritedClassesListAll([]string{m.componentClassName})
 	}
 	for _, c := range m.classAll {
@@ -143,6 +138,7 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 	for i := 0; i < len(m.components); i++ {
 		dataDefault := map[string]interface{}{"tab": "General", "type": "Normal", "group": ""}
 		p := m.componentsDict[m.components[i][3].(string)].([]interface{})
+
 		varName := p[3].(string)
 		if p[2] != "-" {
 			m.className = p[2].(string)
@@ -150,7 +146,6 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 			m.className = ""
 		}
 		IsExtendsModifierFinal := omc.OMC.IsExtendsModifierFinal(componentClassName, p[len(p)-2].(string), varName)
-		//if (p[10] != "parameter" && p[9] != "True") || p[5] == "protected" {
 		if p[5] == "protected" || IsExtendsModifierFinal == "true" || p[6] == "true" {
 			continue
 		}
@@ -171,6 +166,7 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 		if DialogIndexOk {
 			tabIndex := DialogIndex + 1
 			if len(dList) <= 1 || dList[tabIndex].([]interface{})[len(dList[tabIndex].([]interface{}))-1] == "true" {
+				log.Println("丢弃数据", p, dList[tabIndex].([]interface{}))
 				continue
 			}
 			tab := dList[tabIndex].([]interface{})[0]
@@ -235,7 +231,7 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 		}
 		ComponentModifierValue := omc.OMC.GetElementModifierValue(m.modelName, componentName+"."+dataDefault["name"].(string))
 		dataDefault["value"] = ComponentModifierValue
-		if p[10] == "parameter" || ComponentModifierValue != "" || dataDefault["group"] == "Parameters" {
+		if p[10] == "parameter" || ComponentModifierValue != "" || dataDefault["group"] != "" {
 			if dataDefault["group"] == "" || dataDefault["group"] == "Parameters" {
 				dataDefault["group"] = "参数"
 			}

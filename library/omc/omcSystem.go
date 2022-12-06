@@ -426,7 +426,6 @@ func (o *ZmqObject) GetElementModifierValue(className string, modifierName strin
 	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
 	data = bytes.ReplaceAll(data, []byte("\""), []byte(""))
 	data = bytes.ReplaceAll(data, []byte("\\"), []byte(""))
-	log.Println("cmd:", cmd)
 	return string(data)
 }
 
@@ -457,7 +456,6 @@ func (o *ZmqObject) GetParameterValue(className string, modifierName string) str
 	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
 	data = bytes.ReplaceAll(data, []byte("\""), []byte(""))
 	data = bytes.ReplaceAll(data, []byte("\\"), []byte(""))
-	log.Println("cmd:", cmd)
 	return string(data)
 }
 
