@@ -11,6 +11,7 @@ import (
 )
 
 func ModelLibraryInitialization(packageModel []DataBaseModel.YssimModels) {
+	setOptions()
 	packageModelMap := map[string]DataBaseModel.YssimModels{}
 	for _, models := range packageModel {
 		packageModelMap[models.PackageName] = models
@@ -46,7 +47,7 @@ func ModelLibraryInitialization(packageModel []DataBaseModel.YssimModels) {
 	config.R.HSet(context.Background(), "yssim-GraphicsData", map[string]string{"status": "1"})
 }
 
-func init() {
+func setOptions() {
 	commandLineOptions := omc.OMC.GetCommandLineOptions()
 	if strings.Index(commandLineOptions, "nfAPI") == -1 {
 		omc.OMC.Clear()
