@@ -2,7 +2,6 @@ package service
 
 import (
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -15,12 +14,12 @@ import (
 )
 
 type graphicsData struct {
-	data      [][]map[string]interface{}
-	modelName string
+	data          [][]map[string]interface{}
+	modelName     string
+	modelNameList []string
 }
 
 func GetGraphicsData(modelName string) [][]map[string]interface{} {
-
 	var g = graphicsData{}
 	g.data = [][]map[string]interface{}{{}, {}}
 	g.modelName = modelName
@@ -51,9 +50,10 @@ func GetGraphicsData(modelName string) [][]map[string]interface{} {
 		g.data[1] = append(g.data[1], data)
 		return g.data
 	}
-	nameList := g.getICList(modelName)
+
+	g.modelNameList = g.getICList(modelName)
 	g.getDiagramAnnotationData()
-	g.getnthconnectionData(nameList)
+	g.getnthconnectionData()
 	// nameList第一个名字是模型自身的名字，先获取模型自身的视图数据
 	componentsData := omc.OMC.GetElementsList([]string{modelName})
 	componentAnnotationsData := getElementAndDiagramAnnotations([]string{modelName})
@@ -62,34 +62,33 @@ func GetGraphicsData(modelName string) [][]map[string]interface{} {
 		data2[i]["mobility"] = true // 模型自身的组件是可以移动的，设置字段"mobility"为true
 	}
 	g.data[1] = append(g.data[1], data2...)
-
 	// nameList第二个名字开始是继承模型的名字，获取继承模型的视图数据
-	componentsData = omc.OMC.GetElementsList(nameList[:len(nameList)-1])
-	componentAnnotationsData = getElementAndDiagramAnnotations(nameList[:len(nameList)-1])
+	componentsData = omc.OMC.GetElementsList(g.modelNameList[:len(g.modelNameList)-1])
+	componentAnnotationsData = getElementAndDiagramAnnotations(g.modelNameList[:len(g.modelNameList)-1])
 	data2 = g.data02(componentsData, componentAnnotationsData, false, "")
 	for i := 0; i < len(data2); i++ {
 		data2[i]["mobility"] = false // 继承模型的组件是不可以移动的，设置字段"mobility"为false
 	}
 	g.data[1] = append(g.data[1], data2...)
-	for i := 0; i < len(g.data[1]); i++ {
-		if len(g.data[1][i]["subShapes"].([]map[string]interface{})) == 0 {
-			g.data[1][i]["subShapes"] = append(g.data[1][i]["subShapes"].([]map[string]interface{}), map[string]interface{}{
-				"borderPattern": "BorderPattern.None",
-				"color":         "0,0,127",
-				"extentsPoints": []string{"-100.0,-100.0",
-					"100.0,100.0"},
-				"fillColor":     "255,255,255",
-				"fillPattern":   "FillPattern.Solid",
-				"linePattern":   "LinePattern.Solid",
-				"lineThickness": "0.25",
-				"originalPoint": "0.0,0.0",
-				"radius":        "0.0",
-				"rotation":      "0.0",
-				"type":          "Rectangle",
-				"visible":       "true",
-			})
-		}
-	}
+	//for i := 0; i < len(g.data[1]); i++ {
+	//	if len(g.data[1][i]["subShapes"].([]map[string]interface{})) == 0 {
+	//		g.data[1][i]["subShapes"] = append(g.data[1][i]["subShapes"].([]map[string]interface{}), map[string]interface{}{
+	//			"borderPattern": "BorderPattern.None",
+	//			"color":         "0,0,127",
+	//			"extentsPoints": []string{"-100.0,-100.0",
+	//				"100.0,100.0"},
+	//			"fillColor":     "255,255,255",
+	//			"fillPattern":   "FillPattern.Solid",
+	//			"linePattern":   "LinePattern.Solid",
+	//			"lineThickness": "0.25",
+	//			"originalPoint": "0.0,0.0",
+	//			"radius":        "0.0",
+	//			"rotation":      "0.0",
+	//			"type":          "Rectangle",
+	//			"visible":       "true",
+	//		})
+	//	}
+	//}
 	return g.data
 }
 
@@ -113,23 +112,23 @@ func GetComponentGraphicsData(modelName string, componentName string) [][]map[st
 	g.data[1] = append(g.data[1], data2...)
 	for i := 0; i < len(data2); i++ {
 		data2[i]["mobility"] = true // 模型自身的组件是可以移动的，设置字段"mobility"为true
-		if len(g.data[1][i]["subShapes"].([]map[string]interface{})) == 0 {
-			g.data[1][i]["subShapes"] = append(g.data[1][i]["subShapes"].([]map[string]interface{}), map[string]interface{}{
-				"borderPattern": "BorderPattern.None",
-				"color":         "0,0,127",
-				"extentsPoints": []string{"-100.0,-100.0",
-					"100.0,100.0"},
-				"fillColor":     "255,255,255",
-				"fillPattern":   "FillPattern.Solid",
-				"linePattern":   "LinePattern.Solid",
-				"lineThickness": "0.25",
-				"originalPoint": "0.0,0.0",
-				"radius":        "0.0",
-				"rotation":      "0.0",
-				"type":          "Rectangle",
-				"visible":       "true",
-			})
-		}
+		//if len(g.data[1][i]["subShapes"].([]map[string]interface{})) == 0 {
+		//	g.data[1][i]["subShapes"] = append(g.data[1][i]["subShapes"].([]map[string]interface{}), map[string]interface{}{
+		//		"borderPattern": "BorderPattern.None",
+		//		"color":         "0,0,127",
+		//		"extentsPoints": []string{"-100.0,-100.0",
+		//			"100.0,100.0"},
+		//		"fillColor":     "255,255,255",
+		//		"fillPattern":   "FillPattern.Solid",
+		//		"linePattern":   "LinePattern.Solid",
+		//		"lineThickness": "0.25",
+		//		"originalPoint": "0.0,0.0",
+		//		"radius":        "0.0",
+		//		"rotation":      "0.0",
+		//		"type":          "Rectangle",
+		//		"visible":       "true",
+		//	})
+		//}
 
 	}
 	return g.data
@@ -202,7 +201,7 @@ func find(data []interface{}, str string) bool {
 
 func (g *graphicsData) data01(cData []interface{}, className, component string) []map[string]interface{} {
 	dataList := make([]map[string]interface{}, 0, 1)
-	modelNameAll := omc.OMC.GetInheritedClassesListAll([]string{g.modelName})
+	//modelNameAll := omc.OMC.GetInheritedClassesListAll([]string{g.modelName})
 	for i := 0; i < len(cData); i += 2 {
 		data := map[string]interface{}{}
 		drawingDataList := cData[i+1].([]interface{})
@@ -294,23 +293,24 @@ func (g *graphicsData) data01(cData []interface{}, className, component string) 
 						if varName != "name" {
 							varName = strings.TrimSuffix(varName, "%")
 							modifierName := component + "." + varName
-							for _, n := range modelNameAll {
+							for _, n := range g.modelNameList {
 								varValue = omc.OMC.GetElementModifierValue(n, modifierName)
 								if varValue != "" {
 									break
 								}
 							}
-							classAll := GetICList(className)
+							//classAll := GetICList(className)
 							if varValue == "" {
-								for _, c := range classAll {
-									varValue = omc.OMC.GetElementModifierValue(c, varName+".min")
-									if varValue != "" {
-										break
-									}
-									varValue = omc.OMC.GetParameterValue(c, varName)
-									if varValue != "" {
-										break
-									}
+								//for _, c := range classAll {
+								varValue = omc.OMC.GetElementModifierValue(className, varName+".min")
+								//if varValue != "" {
+								//	break
+								//}
+								if varValue == "" {
+									varValue = omc.OMC.GetParameterValue(className, varName)
+									//if varValue != "" {
+									//	break
+									//}
 								}
 							}
 							if varValue == "" {
@@ -321,12 +321,12 @@ func (g *graphicsData) data01(cData []interface{}, className, component string) 
 								varValue = varValueList[len(varValueList)-1]
 							}
 							Unit := ""
-							for _, c := range classAll {
-								unitStr := omc.OMC.GetElementModifierValue(c, varName+"."+"unit")
-								if unitStr != "" {
-									Unit = " " + unitStr
-									break
-								}
+							//for _, c := range classAll {
+							unitStr := omc.OMC.GetElementModifierValue(className, varName+"."+"unit")
+							if unitStr != "" {
+								Unit = " " + unitStr
+								//break
+								//}
 							}
 							if Unit == "" {
 								classNameList := omc.OMC.GetInheritedClassesList([]string{className})
@@ -449,11 +449,12 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 			data := map[string]interface{}{"type": "Transformation"}
 
 			data["graphType"] = func() string {
-				nameType := omc.OMC.GetClassRestriction(classname)
-				if nameType == "connector" || nameType == "expandable connector" {
+				if isIcon == true {
 					return "connecter"
+				} else {
+					nameType := omc.OMC.GetClassRestriction(classname)
+					return nameType
 				}
-				return ""
 			}()
 			//data["ID"] = strconv.Itoa(i)
 			data["classname"] = classname
@@ -489,16 +490,16 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 	return dataList
 }
 
-func (g *graphicsData) getnthconnectionData(nameList []string) {
-	ConnectionCount := omc.OMC.GetConnectionCountList(nameList)
+func (g *graphicsData) getnthconnectionData() {
+	ConnectionCount := omc.OMC.GetConnectionCountList(g.modelNameList)
 	for i := 0; i < len(ConnectionCount); i++ {
 		for c := 0; c < ConnectionCount[i]; c++ {
-			ncData := omc.OMC.GetNthConnection(nameList[i], c+1)
-			ncaData := omc.OMC.GetNthConnectionAnnotation(nameList[i], c+1) //
-			d1Data := g.data01(ncaData, nameList[i], nameList[i])
+			ncData := omc.OMC.GetNthConnection(g.modelNameList[i], c+1)
+			ncaData := omc.OMC.GetNthConnectionAnnotation(g.modelNameList[i], c+1) //
+			d1Data := g.data01(ncaData, g.modelNameList[i], g.modelNameList[i])
 			if len(ncData) != 0 && len(ncaData) != 0 && len(d1Data) != 0 {
 				daData := d1Data[0]
-				if i == len(nameList)-1 { // i==0的时候，表示目前遍历的是模型自身的组件，模型自身的组件可以移动，设在"mobility"为true
+				if i == len(g.modelNameList)-1 { // i==0的时候，表示目前遍历的是模型自身的组件，模型自身的组件可以移动，设在"mobility"为true
 					daData["mobility"] = true
 				} else {
 					daData["mobility"] = false
@@ -540,7 +541,7 @@ func getElementAndDiagramAnnotations(nameList []string) [][]interface{} {
 
 func getIconAndDiagramAnnotations(nameList []string, isIcon bool) []interface{} {
 	var data []interface{}
-	for i, name := range nameList {
+	for _, name := range nameList {
 		var result []interface{}
 		nameType := omc.OMC.GetClassRestriction(name)
 		if (nameType == "connector" || nameType == "expandable connector") && isIcon == false {
@@ -550,11 +551,11 @@ func getIconAndDiagramAnnotations(nameList []string, isIcon bool) []interface{} 
 			}
 		} else {
 			result = omc.OMC.GetIconAnnotation(name)
-			if result == nil && (nameType == "connector" || nameType == "expandable connector") && len(nameList) == i+1 && len(data) == 0 {
-				var defaultData []interface{}
-				json.Unmarshal([]byte("[\"Ellipse\",[\"true\",[\"0.0\",\"0.0\"],\"0.0\",[\"95\",\"95\",\"95\"],[\"255\",\"255\",\"255\"],\"LinePattern.Solid\",\"FillPattern.Solid\",\"0.25\",[[\"-90.0\",\"90.0\"],[\"90.0\",\"-90.0\"]],\"0.0\",\"360.0\",\"EllipseClosure.Chord\"]]"), &defaultData)
-				result = defaultData
-			}
+			//if result == nil && (nameType == "connector" || nameType == "expandable connector") && len(nameList) == i+1 && len(data) == 0 {
+			//	var defaultData []interface{}
+			//	json.Unmarshal([]byte("[\"Ellipse\",[\"true\",[\"0.0\",\"0.0\"],\"0.0\",[\"95\",\"95\",\"95\"],[\"255\",\"255\",\"255\"],\"LinePattern.Solid\",\"FillPattern.Solid\",\"0.25\",[[\"-90.0\",\"90.0\"],[\"90.0\",\"-90.0\"]],\"0.0\",\"360.0\",\"EllipseClosure.Chord\"]]"), &defaultData)
+			//	result = defaultData
+			//}
 		}
 		for _, p := range result {
 			data = append(data, p)
@@ -565,7 +566,7 @@ func getIconAndDiagramAnnotations(nameList []string, isIcon bool) []interface{} 
 
 func (g *graphicsData) getDiagramAnnotationData() {
 	modelNameDiagramAnnotationData := omc.OMC.GetDiagramAnnotation(g.modelName)
-	if len(modelNameDiagramAnnotationData) >= 8 && modelNameDiagramAnnotationData[len(modelNameDiagramAnnotationData)-1] != "" {
+	if len(modelNameDiagramAnnotationData) > 8 && modelNameDiagramAnnotationData[len(modelNameDiagramAnnotationData)-1] != "" {
 		dData := modelNameDiagramAnnotationData[len(modelNameDiagramAnnotationData)-1]
 		data1 := g.data01(dData.([]interface{}), g.modelName, g.modelName)
 		for _, d := range data1 {

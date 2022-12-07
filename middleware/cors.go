@@ -23,10 +23,11 @@ func Cors() gin.HandlerFunc {
 	}
 }
 
-func CheckMOC() gin.HandlerFunc {
+func CheckOMC() gin.HandlerFunc {
 	return func(context *gin.Context) {
 		checkOMC := omc.OMC.IsPackage("Modelica")
 		if !checkOMC {
+			omc.OMC = omc.OmcInit()
 			Init.ModelLibraryInit()
 		}
 		context.Next()
