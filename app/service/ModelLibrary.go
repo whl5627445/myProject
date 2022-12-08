@@ -60,6 +60,7 @@ func DeleteLibrary(deletePackage string) {
 
 func modelCache(packageModel string) {
 	modelsALL := omc.OMC.GetClassNames(packageModel, true)
+	omc.OMC.Lock()
 	omc.OMC.CacheRefreshSet(true)
 	for p := 0; p < len(modelsALL); p++ {
 		e := omc.OMC.GetClassInformation(modelsALL[p])
@@ -68,6 +69,7 @@ func modelCache(packageModel string) {
 			GetGraphicsData(modelsALL[p])
 		}
 	}
+	omc.OMC.Unlock()
 	omc.OMC.CacheRefreshSet(false)
 }
 

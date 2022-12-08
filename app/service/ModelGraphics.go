@@ -45,7 +45,7 @@ func GetGraphicsData(modelName string) [][]map[string]interface{} {
 		data["visible"] = "true"
 		data["inputOutputs"] = make([]map[string]interface{}, 0, 1)
 		data["subShapes"] = make([]map[string]interface{}, 0, 1)
-		data1 := g.data01(interfaceGraphicsData, modelName, modelName)
+		data1 := g.data01(interfaceGraphicsData, modelName, modelName, modelName)
 		data["subShapes"] = data1
 		g.data[1] = append(g.data[1], data)
 		return g.data
@@ -55,7 +55,7 @@ func GetGraphicsData(modelName string) [][]map[string]interface{} {
 	g.getDiagramAnnotationData()
 	g.getnthconnectionData()
 	// nameList第一个名字是模型自身的名字，先获取模型自身的视图数据
-	componentsData := omc.OMC.GetElementsList([]string{modelName})
+	componentsData := getElementsAndModelName([]string{modelName})
 	componentAnnotationsData := getElementAndDiagramAnnotations([]string{modelName})
 	data2 := g.data02(componentsData, componentAnnotationsData, false, "")
 	for i := 0; i < len(data2); i++ {
@@ -63,40 +63,34 @@ func GetGraphicsData(modelName string) [][]map[string]interface{} {
 	}
 	g.data[1] = append(g.data[1], data2...)
 	// nameList第二个名字开始是继承模型的名字，获取继承模型的视图数据
-	componentsData = omc.OMC.GetElementsList(g.modelNameList[:len(g.modelNameList)-1])
+	componentsData = getElementsAndModelName(g.modelNameList[:len(g.modelNameList)-1])
 	componentAnnotationsData = getElementAndDiagramAnnotations(g.modelNameList[:len(g.modelNameList)-1])
 	data2 = g.data02(componentsData, componentAnnotationsData, false, "")
 	for i := 0; i < len(data2); i++ {
 		data2[i]["mobility"] = false // 继承模型的组件是不可以移动的，设置字段"mobility"为false
 	}
 	g.data[1] = append(g.data[1], data2...)
-	//for i := 0; i < len(g.data[1]); i++ {
-	//	if len(g.data[1][i]["subShapes"].([]map[string]interface{})) == 0 {
-	//		g.data[1][i]["subShapes"] = append(g.data[1][i]["subShapes"].([]map[string]interface{}), map[string]interface{}{
-	//			"borderPattern": "BorderPattern.None",
-	//			"color":         "0,0,127",
-	//			"extentsPoints": []string{"-100.0,-100.0",
-	//				"100.0,100.0"},
-	//			"fillColor":     "255,255,255",
-	//			"fillPattern":   "FillPattern.Solid",
-	//			"linePattern":   "LinePattern.Solid",
-	//			"lineThickness": "0.25",
-	//			"originalPoint": "0.0,0.0",
-	//			"radius":        "0.0",
-	//			"rotation":      "0.0",
-	//			"type":          "Rectangle",
-	//			"visible":       "true",
-	//		})
-	//	}
-	//}
 	return g.data
+}
+
+func getElementsAndModelName(nameList []string) [][]interface{} {
+	var data [][]interface{}
+	for _, name := range nameList {
+		componentsData := omc.OMC.GetElements(name)
+		for _, c := range componentsData {
+			component := c.([]interface{})
+			component = append(component, name)
+			data = append(data, component)
+		}
+	}
+	return data
 }
 
 func GetComponentGraphicsData(modelName string, componentName string) [][]map[string]interface{} {
 	var g = graphicsData{}
 	g.data = [][]map[string]interface{}{{}, {}}
 	g.modelName = modelName
-	components := omc.OMC.GetElementsList([]string{modelName})
+	components := getElementsAndModelName([]string{modelName})
 	componentAnnotations := getElementAndDiagramAnnotations([]string{modelName})
 	var componentsData [][]interface{}
 	var componentAnnotationsData [][]interface{}
@@ -112,24 +106,6 @@ func GetComponentGraphicsData(modelName string, componentName string) [][]map[st
 	g.data[1] = append(g.data[1], data2...)
 	for i := 0; i < len(data2); i++ {
 		data2[i]["mobility"] = true // 模型自身的组件是可以移动的，设置字段"mobility"为true
-		//if len(g.data[1][i]["subShapes"].([]map[string]interface{})) == 0 {
-		//	g.data[1][i]["subShapes"] = append(g.data[1][i]["subShapes"].([]map[string]interface{}), map[string]interface{}{
-		//		"borderPattern": "BorderPattern.None",
-		//		"color":         "0,0,127",
-		//		"extentsPoints": []string{"-100.0,-100.0",
-		//			"100.0,100.0"},
-		//		"fillColor":     "255,255,255",
-		//		"fillPattern":   "FillPattern.Solid",
-		//		"linePattern":   "LinePattern.Solid",
-		//		"lineThickness": "0.25",
-		//		"originalPoint": "0.0,0.0",
-		//		"radius":        "0.0",
-		//		"rotation":      "0.0",
-		//		"type":          "Rectangle",
-		//		"visible":       "true",
-		//	})
-		//}
-
 	}
 	return g.data
 }
@@ -199,9 +175,8 @@ func find(data []interface{}, str string) bool {
 	return false
 }
 
-func (g *graphicsData) data01(cData []interface{}, className, component string) []map[string]interface{} {
+func (g *graphicsData) data01(cData []interface{}, className, component, modelName string) []map[string]interface{} {
 	dataList := make([]map[string]interface{}, 0, 1)
-	//modelNameAll := omc.OMC.GetInheritedClassesListAll([]string{g.modelName})
 	for i := 0; i < len(cData); i += 2 {
 		data := map[string]interface{}{}
 		drawingDataList := cData[i+1].([]interface{})
@@ -288,29 +263,20 @@ func (g *graphicsData) data01(cData []interface{}, className, component string) 
 				for _, t := range textList {
 					pSignIndex := strings.Index(t, "%")
 					if pSignIndex != -1 {
+						classNameAll := omc.OMC.GetInheritedClassesListAll([]string{className})
 						varName := t[pSignIndex+1:]
 						varValue := varName
 						if varName != "name" {
 							varName = strings.TrimSuffix(varName, "%")
 							modifierName := component + "." + varName
-							for _, n := range g.modelNameList {
-								varValue = omc.OMC.GetElementModifierValue(n, modifierName)
-								if varValue != "" {
-									break
-								}
-							}
-							//classAll := GetICList(className)
+							varValue = omc.OMC.GetElementModifierValue(modelName, modifierName)
+
 							if varValue == "" {
-								//for _, c := range classAll {
-								varValue = omc.OMC.GetElementModifierValue(className, varName+".min")
-								//if varValue != "" {
-								//	break
-								//}
-								if varValue == "" {
-									varValue = omc.OMC.GetParameterValue(className, varName)
-									//if varValue != "" {
-									//	break
-									//}
+								for _, name := range classNameAll {
+									varValue = omc.OMC.GetParameterValue(name, varName)
+									if varValue != "" {
+										break
+									}
 								}
 							}
 							if varValue == "" {
@@ -320,30 +286,28 @@ func (g *graphicsData) data01(cData []interface{}, className, component string) 
 								varValueList := strings.Split(varValue, ".") // 某些值是模型全称的需要取最后一部分。所以分割一下
 								varValue = varValueList[len(varValueList)-1]
 							}
+
 							Unit := ""
-							//for _, c := range classAll {
-							unitStr := omc.OMC.GetElementModifierValue(className, varName+"."+"unit")
-							if unitStr != "" {
-								Unit = " " + unitStr
-								//break
-								//}
+							classNameList := append(classNameAll, className)
+							for n := 0; n < len(classNameList); n++ {
+								Unit = omc.OMC.GetElementModifierValue(classNameList[n], varName+"."+"unit")
+								if Unit != "" {
+									Unit = " " + Unit
+									break
+								}
 							}
 							if Unit == "" {
-								classNameList := omc.OMC.GetInheritedClassesList([]string{className})
-								classNameList = append(classNameList, className)
-								var componentsData []interface{}
 								for n := 0; n < len(classNameList); n++ {
 									classnameData := omc.OMC.GetElements(classNameList[n])
-									componentsData = append(componentsData, classnameData...)
-								}
-								for p := 0; p < len(componentsData); p++ {
-									name := componentsData[p].([]interface{})[3].(string)
-									varClassName := componentsData[p].([]interface{})[2].(string)
-									if name != varName {
-										continue
+									for p := 0; p < len(classnameData); p++ {
+										name := classnameData[p].([]interface{})[3].(string)
+										varClassName := classnameData[p].([]interface{})[2].(string)
+										if name != varName {
+											continue
+										}
+										Unit = " " + getDerivedClassModifierValueALL(varClassName)
+										break
 									}
-									Unit = " " + getDerivedClassModifierValueALL(varClassName)
-									break
 								}
 							}
 							oldVarName := "%" + varName
@@ -408,6 +372,7 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 		return len(caDataFilter)
 	}()
 	for i := 0; i < dataLen2; i++ {
+		modelName := cDataFilter[i][len(cDataFilter[i])-1].(string)
 		if len(caDataFilter[i]) > 2 {
 			caDataFilter[i] = caDataFilter[i][len(caDataFilter[i])-2:]
 		}
@@ -427,8 +392,7 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 		}()
 		// if placementIndex != -1 || cDataFilter[i][9] == "true" {
 		if placementIndex != -1 {
-
-			componentsData := omc.OMC.GetElementsList(nameList)
+			componentsData := getElementsAndModelName(nameList)
 			componentAnnotationsData := omc.OMC.GetElementAnnotationsList(nameList)
 			IconAnnotationData := getIconAndDiagramAnnotations(nameList, isIcon)
 			if len(caDataFilter[i]) < 1 {
@@ -478,12 +442,12 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 			}
 			data["rotation"] = rotateAngle
 			data["output_type"] = func() string {
-				t := cDataFilter[i][len(cDataFilter[i])-1].([]interface{})
+				t := cDataFilter[i][len(cDataFilter[i])-2].([]interface{})
 				str := fmt.Sprintf("%s", t)
 				return str
 			}()
 			data["inputOutputs"] = g.data02(componentsData, componentAnnotationsData, true, data["name"].(string))
-			data["subShapes"] = g.data01(IconAnnotationData, classname, cDataFilter[i][3].(string))
+			data["subShapes"] = g.data01(IconAnnotationData, classname, cDataFilter[i][3].(string), modelName)
 			dataList = append(dataList, data)
 		}
 	}
@@ -496,7 +460,7 @@ func (g *graphicsData) getnthconnectionData() {
 		for c := 0; c < ConnectionCount[i]; c++ {
 			ncData := omc.OMC.GetNthConnection(g.modelNameList[i], c+1)
 			ncaData := omc.OMC.GetNthConnectionAnnotation(g.modelNameList[i], c+1) //
-			d1Data := g.data01(ncaData, g.modelNameList[i], g.modelNameList[i])
+			d1Data := g.data01(ncaData, g.modelNameList[i], g.modelNameList[i], g.modelNameList[i])
 			if len(ncData) != 0 && len(ncaData) != 0 && len(d1Data) != 0 {
 				daData := d1Data[0]
 				if i == len(g.modelNameList)-1 { // i==0的时候，表示目前遍历的是模型自身的组件，模型自身的组件可以移动，设在"mobility"为true
@@ -568,7 +532,7 @@ func (g *graphicsData) getDiagramAnnotationData() {
 	modelNameDiagramAnnotationData := omc.OMC.GetDiagramAnnotation(g.modelName)
 	if len(modelNameDiagramAnnotationData) > 8 && modelNameDiagramAnnotationData[len(modelNameDiagramAnnotationData)-1] != "" {
 		dData := modelNameDiagramAnnotationData[len(modelNameDiagramAnnotationData)-1]
-		data1 := g.data01(dData.([]interface{}), g.modelName, g.modelName)
+		data1 := g.data01(dData.([]interface{}), g.modelName, g.modelName, g.modelName)
 		for _, d := range data1 {
 			d["mobility"] = true
 			d["diagram"] = true

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"strings"
 	"yssim-go/library/omc"
 )
 
@@ -69,5 +70,6 @@ func ExistClass(className string) bool {
 
 func GetModelType(modelName string) string {
 	modelType := omc.OMC.GetClassRestriction(modelName)
+	modelType = strings.TrimSpace(modelType)
 	return modelType
 }

@@ -42,7 +42,7 @@ func (o *ZmqObject) SendExpression(cmd string) ([]interface{}, bool) {
 
 		data, _ := o.Recv()
 		msg = data.Bytes()
-		if cacheRefresh && len(msg) > 0 {
+		if cacheRefresh {
 			AllModelCache.HSet(ctx, "yssim-GraphicsData", cmd, msg)
 		}
 	}
@@ -76,8 +76,7 @@ func (o *ZmqObject) SendExpressionNoParsed(cmd string) ([]byte, bool) {
 		_ = o.Send(zmq4.NewMsgString(cmd))
 		data, _ := o.Recv()
 		msg = data.Bytes()
-		if cacheRefresh && len(msg) > 0 {
-			//AllModelCache[cmd] = msg
+		if cacheRefresh {
 			AllModelCache.HSet(ctx, "yssim-GraphicsData", cmd, msg)
 		}
 	}
@@ -120,9 +119,9 @@ func (o *ZmqObject) Clear() {
 	//o.SendExpressionNoParsed("clearProgram()")
 	//o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nfAPI,execstat,rml,nfAPIDynamicSelect=false\")")
 	o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nfAPI\")")
-	o.SendExpressionNoParsed("setCommandLineOptions(\"+ignoreSimulationFlagsAnnotation=false\")")
+	//o.SendExpressionNoParsed("setCommandLineOptions(\"+ignoreSimulationFlagsAnnotation=false\")")
 	//o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nogen,noevalfunc,newInst,nfAPI\")")
-	o.SendExpressionNoParsed("setCommandLineOptions(\"--matchingAlgorithm=PFPlusExt --indexReductionMethod=dynamicStateSelection -d=initialization,NLSanalyticJacobian\")")
+	//o.SendExpressionNoParsed("setCommandLineOptions(\"--matchingAlgorithm=PFPlusExt --indexReductionMethod=dynamicStateSelection -d=initialization,NLSanalyticJacobian\")")
 }
 
 func (o *ZmqObject) GetCommandLineOptions() string {
@@ -141,17 +140,30 @@ func (o *ZmqObject) CacheRefreshSet(cache bool) {
 }
 
 // 获取给定切片当中所有模型的继承项
+func (o *ZmqObject) GetInheritedClasses(className string) []string {
+	cmd := "getInheritedClasses(" + className + ")"
+	inheritedClassesData, ok := o.SendExpression(cmd)
+	var dataList []string
+	if ok {
+		for i := 0; i < len(inheritedClassesData); i++ {
+			dataList = append(dataList, inheritedClassesData[i].(string))
+		}
+	}
+	return dataList
+}
+
+// 获取给定切片当中所有模型的继承项
 func (o *ZmqObject) GetInheritedClassesList(classNameList []string) []string {
 	var dataList []string
 	for i := 0; i < len(classNameList); i++ {
 		cmd := "getInheritedClasses(" + classNameList[i] + ")"
-		InheritedclassesData, ok := o.SendExpression(cmd)
+		inheritedClassesData, ok := o.SendExpression(cmd)
 		if ok {
-			for p := 0; p < len(InheritedclassesData); p++ {
-				if InheritedclassesData[p].(string) == classNameList[i] {
+			for p := 0; p < len(inheritedClassesData); p++ {
+				if inheritedClassesData[p].(string) == classNameList[i] {
 					continue
 				}
-				dataList = append(dataList, InheritedclassesData[p].(string))
+				dataList = append(dataList, inheritedClassesData[p].(string))
 			}
 		}
 	}
@@ -411,8 +423,8 @@ func (o *ZmqObject) List(className string) string {
 	return code
 }
 
-func (o *ZmqObject) GetElementModifierNames(className string, modifierName string) string {
-	cmd := "getElementModifierNames(" + className + "," + modifierName + ")"
+func (o *ZmqObject) GetElementModifierNames(className string, componentName string) string {
+	cmd := "getElementModifierNames(" + className + "," + componentName + ")"
 	data, _ := o.SendExpressionNoParsed(cmd)
 	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
 	data = bytes.ReplaceAll(data, []byte("\""), []byte(""))

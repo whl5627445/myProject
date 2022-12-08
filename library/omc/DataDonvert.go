@@ -34,9 +34,8 @@ func parseString(data []byte) string {
 	data = bytes.ReplaceAll(data, []byte("\\\\\\"), []byte("\\"))
 	data = bytes.ReplaceAll(data, []byte(", "), []byte(","))
 	data = bytes.ReplaceAll(data, []byte("{extent={{"), []byte("{extent{{"))
-	//data = bytes.ReplaceAll(data, []byte("(\""), []byte("("))
-	//data = bytes.ReplaceAll(data, []byte("\")"), []byte(")"))
 	data = bytes.TrimSuffix(data, []byte(","))
+	data = bytes.TrimSuffix(data, []byte(" "))
 	data = bytes.TrimSuffix(data, []byte("\\n"))
 	if len(data) <= 5 {
 		d := string(data)
