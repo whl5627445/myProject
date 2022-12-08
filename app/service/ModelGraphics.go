@@ -32,7 +32,7 @@ func GetGraphicsData(modelName string) [][]map[string]interface{} {
 		data["classname"] = modelName
 		data["extent1Diagram"] = interfaceDiagramAnnotationData[0].(string) + "," + interfaceDiagramAnnotationData[1].(string)
 		data["extent2Diagram"] = interfaceDiagramAnnotationData[2].(string) + "," + interfaceDiagramAnnotationData[3].(string)
-		data["graphType"] = ""
+		data["graphType"] = "model"
 		data["mobility"] = false
 		data["name"] = ""
 		data["originDiagram"] = "0.0,0.0"

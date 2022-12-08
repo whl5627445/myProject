@@ -1,7 +1,6 @@
 package service
 
 import (
-	"log"
 	"strconv"
 	"strings"
 	"yssim-go/library/omc"
@@ -41,6 +40,7 @@ func (m modelParameters) getElementModifierFixedValue(name string) string {
 }
 
 func getDerivedClassModifierValueALL(className string) string {
+
 	classAll := GetICList(className)
 	var DerivedClassModifierValue string
 	for p := 0; p < len(classAll); p++ {
@@ -52,8 +52,19 @@ func getDerivedClassModifierValueALL(className string) string {
 	return DerivedClassModifierValue
 }
 
-func (m modelParameters) getDerivedClassModifierValue() []string {
-	return []string{getDerivedClassModifierValueALL(m.className)}
+func getUnit(modelName, componentClassName, varName string) []string {
+	modelNameAll := []string{modelName}
+	for len(modelNameAll) > 0 {
+		for _, name := range modelNameAll {
+			value := omc.OMC.GetElementModifierValue(name, varName+"."+"unit")
+			if value != "" {
+				return []string{value}
+			}
+		}
+		modelNameAll = omc.OMC.GetInheritedClassesList(modelNameAll)
+	}
+
+	return []string{getDerivedClassModifierValueALL(componentClassName)}
 }
 
 func (m modelParameters) getElementModifierStartValue(name string, showStartAttribute bool) string {
@@ -166,7 +177,6 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 		if DialogIndexOk {
 			tabIndex := DialogIndex + 1
 			if len(dList) <= 1 || dList[tabIndex].([]interface{})[len(dList[tabIndex].([]interface{}))-1] == "true" {
-				log.Println("丢弃数据", p, dList[tabIndex].([]interface{}))
 				continue
 			}
 			tab := dList[tabIndex].([]interface{})[0]
@@ -193,7 +203,7 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 				"group":        dataDefault["group"],
 				"defaultvalue": "",
 				"value":        fixedValueBool,
-				"unit":         m.getDerivedClassModifierValue(),
+				"unit":         getUnit(componentClassName, m.className, varName),
 			}
 			start := map[string]interface{}{
 				"type":         "Normal",
@@ -203,7 +213,7 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 				"group":        dataDefault["group"],
 				"defaultvalue": "",
 				"value":        startValueString,
-				"unit":         m.getDerivedClassModifierValue(),
+				"unit":         getUnit(componentClassName, m.className, varName),
 			}
 			dataList = append(dataList, fixed)
 			dataList = append(dataList, start)
@@ -229,9 +239,10 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 			dataList = append(dataList, dataDefault)
 			continue
 		}
-		ComponentModifierValue := omc.OMC.GetElementModifierValue(m.modelName, componentName+"."+dataDefault["name"].(string))
-		dataDefault["value"] = ComponentModifierValue
-		if p[10] == "parameter" || ComponentModifierValue != "" || dataDefault["group"] != "" {
+		componentModifierValue := omc.OMC.GetElementModifierValue(m.modelName, componentName+"."+dataDefault["name"].(string))
+
+		dataDefault["value"] = componentModifierValue
+		if p[10] == "parameter" || componentModifierValue != "" || dataDefault["group"] != "" {
 			if dataDefault["group"] == "" || dataDefault["group"] == "Parameters" {
 				dataDefault["group"] = "参数"
 			}
@@ -253,10 +264,10 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 			dataDefault["defaultvalue"] = parameterValue
 			if p[2] == "Boolean" {
 				dataDefault["type"] = "CheckBox"
-				if ComponentModifierValue == "true" || ComponentModifierValue == "false" {
-					dataDefault["value"] = ComponentModifierValue
-					dataDefault["checked"] = ComponentModifierValue
-					dataDefault["defaultvalue"] = ComponentModifierValue
+				if componentModifierValue == "true" || componentModifierValue == "false" {
+					dataDefault["value"] = componentModifierValue
+					dataDefault["checked"] = componentModifierValue
+					dataDefault["defaultvalue"] = componentModifierValue
 				} else {
 					if parameterValue == "true" || parameterValue == "false" {
 						dataDefault["value"] = parameterValue
@@ -266,7 +277,7 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 				}
 			}
 			dataDefault["unit"] = ""
-			unit := m.getDerivedClassModifierValue()
+			unit := getUnit(componentClassName, m.className, varName)
 			if len(unit) > 0 {
 				dataDefault["unit"] = unit
 			}
@@ -295,7 +306,7 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 				"comment":      dataDefault["comment"],
 				"defaultvalue": "",
 				"value":        fixedValueBool,
-				"unit":         m.getDerivedClassModifierValue(),
+				"unit":         getUnit(componentClassName, m.className, varName),
 				"tab":          "General",
 				"group":        "Initialization",
 			}
@@ -305,7 +316,7 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 				"comment":      dataDefault["comment"],
 				"defaultvalue": "",
 				"value":        startValueString,
-				"unit":         m.getDerivedClassModifierValue(),
+				"unit":         getUnit(componentClassName, m.className, varName),
 				"tab":          "General",
 				"group":        "Initialization",
 			}
