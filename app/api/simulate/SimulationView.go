@@ -291,16 +291,16 @@ func SimulateResultListView(c *gin.Context) {
 	for i := 0; i < len(recordList); i++ {
 		simulateStartTime := time.Unix(recordList[i].SimulateStartTime, 0)
 		simulateEndTime := time.Unix(recordList[i].SimulateEndTime, 0)
-		simulateSecond := simulateEndTime.Sub(simulateStartTime).Seconds()
+
 		data := map[string]interface{}{
 			"index":               i + 1,
 			"id":                  recordList[i].ID,
 			"create_time":         recordList[i].CreatedAt.Format("2006-01-02 15:04:05"),
 			"simulate_status":     config.MoldelSimutalionStatus[recordList[i].SimulateStatus],
-			"simulate_start_time": simulateStartTime.Format("2006-01-01 15:04:05"),
-			"simulate_end_time":   simulateEndTime.Format("2006-01-01 15:04:05"),
+			"simulate_start_time": simulateStartTime.Format("2006-01-02 15:04:05"),
+			"simulate_end_time":   simulateEndTime.Format("2006-01-02 15:04:05"),
 			"simulate_model_name": recordList[i].SimulateModelName,
-			"simulate_run_time":   timeConvert.SecondToTimeString(simulateSecond),
+			"simulate_run_time":   timeConvert.UseTime(int(simulateStartTime.Unix()), int(simulateEndTime.Unix())),
 		}
 		dataList = append(dataList, data)
 	}

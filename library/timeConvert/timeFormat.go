@@ -1,11 +1,17 @@
 package timeConvert
 
-import "strconv"
+import (
+	"strconv"
+	"time"
+)
 
-func SecondToTimeString(simulateSecond float64) string {
-	hours := int(simulateSecond / 3600)
-	minutes := int(simulateSecond) % 3600 / 60
-	seconds := int(simulateSecond) % 60
+func secondToTimeString(simulateSecond int) string {
+	hours := simulateSecond / 3600
+	minutes := simulateSecond % 3600 / 60
+	seconds := simulateSecond % 60
+	if hours < 0 {
+		return "0秒"
+	}
 	if hours == 0 {
 		if minutes == 0 {
 			return strconv.Itoa(seconds) + "秒"
@@ -15,5 +21,11 @@ func SecondToTimeString(simulateSecond float64) string {
 	} else {
 		return strconv.Itoa(hours) + "小时" + strconv.Itoa(minutes) + "分钟" + strconv.Itoa(seconds) + "秒"
 	}
+}
 
+func UseTime(startTime, endTime int) string {
+	if endTime <= 0 {
+		endTime = int(time.Now().Unix())
+	}
+	return secondToTimeString(endTime - startTime)
 }

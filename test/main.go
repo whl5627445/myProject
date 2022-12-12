@@ -1,11 +1,5 @@
 package main
 
-import (
-	"bytes"
-	"fmt"
-	"time"
-)
-
 //func main() {
 //
 //	//pprof.StartCPUProfile(os.Stdout)
@@ -76,8 +70,6 @@ import (
 //
 //}
 
-var expFloat = "[+-]?\\d+(?:.\\d+)?(?:e[+-]?\\d+)?"
-
 func main() {
 	//a := "{-100.0,-100.0,100.0,100.0,true,0.16,2.0,2.0,{Line(true, {0.0, 0.0}, 0.0, {{-80.0, 68.0}, {-80.0, -80.0}}, {192, 192, 192}, LinePattern.Solid, 0.25, {Arrow.None, Arrow.None}, 3.0, Smooth.None), Polygon(true, {0.0, 0.0}, 0.0, {192, 192, 192}, {192, 192, 192}, LinePattern.Solid, FillPattern.Solid, 0.25, {{-80.0, 90.0}, {-88.0, 68.0}, {-72.0, 68.0}, {-80.0, 90.0}}, Smooth.None), Line(true, {0.0, 0.0}, 0.0, {{-90.0, -70.0}, {82.0, -70.0}}, {192, 192, 192}, LinePattern.Solid, 0.25, {Arrow.None, Arrow.None}, 3.0, Smooth.None), Polygon(true, {0.0, 0.0}, 0.0, {192, 192, 192}, {192, 192, 192}, LinePattern.Solid, FillPattern.Solid, 0.25, {{90.0, -70.0}, {68.0, -62.0}, {68.0, -78.0}, {90.0, -70.0}}, Smooth.None), Line(true, {0.0, 0.0}, 0.0, {{-80.0, -70.0}, {0.0, -70.0}, {0.0, 50.0}, {80.0, 50.0}}, {0, 0, 0}, LinePattern.Solid, 0.25, {Arrow.None, Arrow.None}, 3.0, Smooth.None), Text(true, {0.0, 0.0}, 0.0, {0, 0, 0}, {0, 0, 0}, LinePattern.Solid, FillPattern.None, 0.25, {{-150.0, -150.0}, {150.0, -110.0}}, \"startTime=%startTime\", 0.0, {-1, -1, -1}, \"\", {}, TextAlignment.Center)}}"
 	//regexCoordsys := regexp.MustCompile(
@@ -122,60 +114,4 @@ func main() {
 	//g := "DynamicSelect({{-100, 0}, {100, 0}, {100, 0}, {0, 0}, {-100, 0}, {-100, 0}}, {{-100.0, 50.0 * opening_actual}, {-100.0, 50.0 * opening_actual}, {100.0, -50.0 * opening}, {100.0, 50.0 * opening_actual}, {0.0, 0.0}, {-100.0, -50.0 * opening_actual}, {-100.0, 50.0 * opening}})"
 	//g := "DynamicSelect(\"m_flow\", String(m_flow_in, 3, 0, false)),"
 	//g := "DynamicSelect(568, String(m_flow_in, 3, 0, false))"
-	g := "{-,-,-,-,-,-,-,,{Text(true, {0.0, 0.0}, 0.0, {0, 0, 127}, {0, 0, 0}, LinePattern.Solid, FillPattern.None, 0.25, {{-40.0, 126.0}, {-160.0, 76.0}}, DynamicSelect(\"m_flow\", String(m_flow_in, 3, 0, false)), 0.0, {-1, -1, -1}, \"\", {}, TextAlignment.Center)}} 17:58:46:470\n"
-	//regexPolygon := regexp.MustCompile(
-	//	"DynamicSelect\\({(" + expFloat + "), (" + expFloat + ")}, (" + expFloat + "), {(\\d+), (\\d+), (\\d+)}, {(\\d+), (\\d+), (\\d+)}, (\\w+.\\w+), (\\w+.\\w+), (" + expFloat + "), ({{" + expFloat + "(?:e[+-]?\\d+)?, " + expFloat + "(?:e[+-]?\\d+)?}(?:, {" + expFloat + ", " + expFloat + "})*})")
-	s := time.Now().Unix() / 1e6
-	for i := 0; i < 10000; i++ {
-		replaceDynamicSelectData([]byte(g))
-		g += "1"
-	}
-	fmt.Println(time.Now().Unix()/1e6 - s)
-	//fmt.Println(string(replaceDynamicSelectData([]byte(g))))
-}
-func replaceDynamicSelectData(data []byte) []byte {
-	index := bytes.Index(data, []byte("DynamicSelect"))
-	wordIndex := index + 13
-	startIndex := index + 14
-	var defaultData []byte
-	var allData []byte
-	if index != -1 {
-		num := 0
-		switch true {
-		case data[startIndex] == '{':
-			for i := startIndex; i < len(data); i++ {
-				if data[i] == '{' {
-					num += 1
-				}
-				if data[i] == '}' {
-					num -= 1
-				}
-				if num == 0 {
-					defaultData = data[startIndex : i+1]
-					break
-				}
-			}
-		case data[startIndex] == '"':
-			i := bytes.Index(data[startIndex+1:], []byte("\""))
-			defaultData = data[startIndex : startIndex+i+2]
-		default:
-			i := bytes.Index(data[startIndex+1:], []byte(","))
-			defaultData = data[startIndex : startIndex+i+1]
-		}
-		for i := wordIndex; i < len(data); i++ {
-			if data[i] == '(' {
-				num += 1
-			}
-			if data[i] == ')' {
-				num -= 1
-			}
-			if num == 0 {
-				allData = data[index : i+1]
-				break
-			}
-		}
-		data = bytes.ReplaceAll(data, allData, defaultData)
-		return replaceDynamicSelectData(data)
-	}
-	return data
 }

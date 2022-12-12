@@ -26,28 +26,30 @@ func GetGraphicsData(modelName string) [][]map[string]interface{} {
 	nameType := omc.OMC.GetClassRestriction(modelName)
 	if nameType == "connector" || nameType == "expandable connector" {
 		interfaceDiagramAnnotationData := omc.OMC.GetDiagramAnnotation(modelName)
-		interfaceGraphicsData := interfaceDiagramAnnotationData[8].([]interface{})
-		data := make(map[string]interface{}, 0)
-		data["ID"] = "0"
-		data["classname"] = modelName
-		data["extent1Diagram"] = interfaceDiagramAnnotationData[0].(string) + "," + interfaceDiagramAnnotationData[1].(string)
-		data["extent2Diagram"] = interfaceDiagramAnnotationData[2].(string) + "," + interfaceDiagramAnnotationData[3].(string)
-		data["graphType"] = "model"
-		data["mobility"] = false
-		data["name"] = ""
-		data["originDiagram"] = "0.0,0.0"
-		data["original_name"] = ""
-		data["output_type"] = "[]"
-		data["parent"] = ""
-		data["rotateAngle"] = "0.0"
-		data["rotation"] = "0.0"
-		data["type"] = "Transformation"
-		data["visible"] = "true"
-		data["inputOutputs"] = make([]map[string]interface{}, 0, 1)
-		data["subShapes"] = make([]map[string]interface{}, 0, 1)
-		data1 := g.data01(interfaceGraphicsData, modelName, modelName, modelName)
-		data["subShapes"] = data1
-		g.data[1] = append(g.data[1], data)
+		if len(interfaceDiagramAnnotationData) > 8 {
+			interfaceGraphicsData := interfaceDiagramAnnotationData[8].([]interface{})
+			data := make(map[string]interface{}, 0)
+			data["ID"] = "0"
+			data["classname"] = modelName
+			data["extent1Diagram"] = interfaceDiagramAnnotationData[0].(string) + "," + interfaceDiagramAnnotationData[1].(string)
+			data["extent2Diagram"] = interfaceDiagramAnnotationData[2].(string) + "," + interfaceDiagramAnnotationData[3].(string)
+			data["graphType"] = "model"
+			data["mobility"] = false
+			data["name"] = ""
+			data["originDiagram"] = "0.0,0.0"
+			data["original_name"] = ""
+			data["output_type"] = "[]"
+			data["parent"] = ""
+			data["rotateAngle"] = "0.0"
+			data["rotation"] = "0.0"
+			data["type"] = "Transformation"
+			data["visible"] = "true"
+			data["inputOutputs"] = make([]map[string]interface{}, 0, 1)
+			data["subShapes"] = make([]map[string]interface{}, 0, 1)
+			data1 := g.data01(interfaceGraphicsData, modelName, modelName, modelName)
+			data["subShapes"] = data1
+			g.data[1] = append(g.data[1], data)
+		}
 		return g.data
 	}
 
