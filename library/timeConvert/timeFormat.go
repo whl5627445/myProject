@@ -23,7 +23,7 @@ func secondToTimeString(simulateSecond int) string {
 	}
 }
 
-func UseTime(startTime, endTime int) string {
+func UseTimeFormat(startTime, endTime int) string {
 	if endTime <= 0 {
 		endTime = int(time.Now().Unix())
 	}

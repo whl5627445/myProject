@@ -291,15 +291,29 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 			name := p[len(p)-2].(string)
 			fixedValueString = omc.OMC.GetElementModifierValue(name, varName+".fixed")
 			startValueString = omc.OMC.GetElementModifierValue(name, varName+".start")
-		}
-		value, _ := strconv.ParseBool(fixedValueString)
-		var fixedValueBool interface{}
-		if fixedValueString == "" {
-			fixedValueBool = ""
-		} else {
-			fixedValueBool = value
+			if fixedValueString == "" && startValueString == "" {
+				extendName := []string{m.componentClassName}
+				for len(extendName) != 0 {
+					extendName = omc.OMC.GetInheritedClassesList(extendName)
+					for _, n := range extendName {
+						fixedValueString = omc.OMC.GetExtendsModifierValue(m.componentClassName, n, varName+".fixed")
+						startValueString = omc.OMC.GetExtendsModifierValue(m.componentClassName, n, varName+".start")
+						if fixedValueString != "" || startValueString != "" {
+							extendName = nil
+							break
+						}
+					}
+				}
+			}
 		}
 		if fixedValueString != "" || startValueString != "" {
+			value, _ := strconv.ParseBool(fixedValueString)
+			var fixedValueBool interface{}
+			if fixedValueString == "" {
+				fixedValueBool = ""
+			} else {
+				fixedValueBool = value
+			}
 			fixed := map[string]interface{}{
 				"type":         "fixed",
 				"name":         varName + ".fixed",

@@ -197,8 +197,10 @@ func SetModelParametersView(c *gin.Context) {
 	}
 
 	var res responseData
+	nameList := strings.Split(item.ModelName, ".")
+	packageName := nameList[0]
 	var modelPackage DataBaseModel.YssimModels
-	DB.Where("id = ?", item.PackageId).First(&modelPackage)
+	DB.Where("package_name = ?", packageName).First(&modelPackage)
 	if modelPackage.SysUser == "sys" || modelPackage.ID == "" {
 		res.Err = "该模型不允许此操作"
 		res.Status = 2
@@ -446,8 +448,10 @@ func AddModelComponentView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
+	nameList := strings.Split(item.ModelName, ".")
+	packageName := nameList[0]
 	var modelPackage DataBaseModel.YssimModels
-	DB.Where("id = ?", item.PackageId).First(&modelPackage)
+	DB.Where("package_name = ?", packageName).First(&modelPackage)
 	if modelPackage.SysUser == "sys" {
 		res.Err = "该模型不允许此操作"
 		res.Status = 2
@@ -524,8 +528,10 @@ func UpdateModelComponentView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
+	nameList := strings.Split(item.ModelName, ".")
+	packageName := nameList[0]
 	var modelPackage DataBaseModel.YssimModels
-	DB.Where("id = ?", item.PackageId).First(&modelPackage)
+	DB.Where("package_name = ?", packageName).First(&modelPackage)
 	if modelPackage.SysUser == "sys" {
 		res.Err = "该模型不允许此操作"
 		res.Status = 2
@@ -560,8 +566,10 @@ func CreateConnectionAnnotationView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
+	nameList := strings.Split(item.ModelName, ".")
+	packageName := nameList[0]
 	var modelPackage DataBaseModel.YssimModels
-	DB.Where("id = ?", item.PackageId).First(&modelPackage)
+	DB.Where("package_name = ?", packageName).First(&modelPackage)
 	if modelPackage.SysUser == "sys" {
 		res.Err = "该模型不允许此操作"
 		res.Status = 2
@@ -596,8 +604,10 @@ func UpdateConnectionNamesView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
+	nameList := strings.Split(item.ModelName, ".")
+	packageName := nameList[0]
 	var modelPackage DataBaseModel.YssimModels
-	DB.Where("id = ?", item.PackageId).First(&modelPackage)
+	DB.Where("package_name = ?", packageName).First(&modelPackage)
 	if modelPackage.SysUser == "sys" {
 		res.Err = "该模型不允许此操作"
 		res.Status = 2
@@ -630,8 +640,10 @@ func DeleteConnectionAnnotationView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
+	nameList := strings.Split(item.ModelName, ".")
+	packageName := nameList[0]
 	var modelPackage DataBaseModel.YssimModels
-	DB.Where("id = ?", item.PackageId).First(&modelPackage)
+	DB.Where("package_name = ?", packageName).First(&modelPackage)
 	if modelPackage.SysUser == "sys" {
 		res.Err = "该模型不允许此操作"
 		res.Status = 2
@@ -666,8 +678,10 @@ func UpdateConnectionAnnotationView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
+	nameList := strings.Split(item.ModelName, ".")
+	packageName := nameList[0]
 	var modelPackage DataBaseModel.YssimModels
-	DB.Where("id = ?", item.PackageId).First(&modelPackage)
+	DB.Where("package_name = ?", packageName).First(&modelPackage)
 	if modelPackage.SysUser == "sys" {
 		res.Err = "该模型不允许此操作"
 		res.Status = 2

@@ -300,7 +300,7 @@ func SimulateResultListView(c *gin.Context) {
 			"simulate_start_time": simulateStartTime.Format("2006-01-02 15:04:05"),
 			"simulate_end_time":   simulateEndTime.Format("2006-01-02 15:04:05"),
 			"simulate_model_name": recordList[i].SimulateModelName,
-			"simulate_run_time":   timeConvert.UseTime(int(simulateStartTime.Unix()), int(simulateEndTime.Unix())),
+			"simulate_run_time":   timeConvert.UseTimeFormat(int(simulateStartTime.Unix()), int(simulateEndTime.Unix())),
 		}
 		dataList = append(dataList, data)
 	}

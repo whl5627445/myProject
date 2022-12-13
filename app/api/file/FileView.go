@@ -193,7 +193,7 @@ func CreateModelPackageView(c *gin.Context) {
 		FilePath:    "public/UserFiles/UploadFile/" + username + "/" + createPackageName + "/" + time.Now().Local().Format("20060102150405") + "/" + createPackageName + ".mo",
 		UserSpaceId: userSpaceId,
 	}
-	DB.Where("package_name = ? AND sys_or_user = ? AND userspace_id = ?", item.Name, username, userSpaceId).First(&packageRecord)
+	DB.Where("package_name = ? AND sys_or_user IN ? AND userspace_id IN ?", item.Name, []string{"sys", username}, []string{"0", userSpaceId}).First(&packageRecord)
 	if packageRecord.PackageName != "" && item.Vars.InsertTo == "" {
 		res.Err = "名称已存在，请修改后再试。"
 		res.Status = 2
@@ -224,8 +224,9 @@ func CreateModelPackageView(c *gin.Context) {
 			}
 			res.Msg = "创建成功"
 			res.Data = map[string]string{
-				"model_str": service.GetModelCode(createPackageName),
-				"id":        newPackage.ID,
+				"model_str": "",
+				//"model_str": service.GetModelCode(createPackageName),
+				"id": newPackage.ID,
 			}
 		}
 	} else {
