@@ -81,11 +81,19 @@ func GetListModelView(c *gin.Context) {
 	DB.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", packageId, []string{"sys", userName}, []string{"0", userSpaceId}).First(&packageModel)
 	var res responseData
 	modelChildList := service.GetModelChild(modelName)
+	var modelChildListNew []map[string]interface{}
 	for i := 0; i < len(modelChildList); i++ {
+		classInformation := service.GetClassInformation(modelName + "." + modelChildList[i]["name"].(string))
+		isProtect := classInformation[12].(string)
+		if isProtect == "true" {
+			continue
+		}
+		modelType := strings.TrimSpace(classInformation[0].(string))
 		modelChildList[i]["image"] = service.GetIcon(modelName+"."+modelChildList[i]["name"].(string), packageModel.PackageName, packageModel.Version)
-		modelChildList[i]["type"] = service.GetModelType(modelName + "." + modelChildList[i]["name"].(string))
+		modelChildList[i]["type"] = modelType
+		modelChildListNew = append(modelChildListNew, modelChildList[i])
 	}
-	res.Data = modelChildList
+	res.Data = modelChildListNew
 	c.JSON(http.StatusOK, res)
 }
 

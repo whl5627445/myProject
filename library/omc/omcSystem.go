@@ -119,9 +119,13 @@ func (o *ZmqObject) Clear() {
 	//o.SendExpressionNoParsed("clearProgram()")
 	//o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nfAPI,execstat,rml,nfAPIDynamicSelect=false\")")
 	o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nfAPI\")")
-	//o.SendExpressionNoParsed("setCommandLineOptions(\"+ignoreSimulationFlagsAnnotation=false\")")
+	o.SendExpressionNoParsed("setCommandLineOptions(\"+ignoreSimulationFlagsAnnotation=false\")")
+	o.SendExpressionNoParsed("setCommandLineOptions(\"+ignoreCommandLineOptionsAnnotation=false\")")
+	o.SendExpressionNoParsed("setCommandLineOptions(\"--simCodeTarget=C\")")
 	//o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nogen,noevalfunc,newInst,nfAPI\")")
-	//o.SendExpressionNoParsed("setCommandLineOptions(\"--matchingAlgorithm=PFPlusExt --indexReductionMethod=dynamicStateSelection -d=initialization,NLSanalyticJacobian\")")
+	o.SendExpressionNoParsed("setCommandLineOptions(\"--matchingAlgorithm=PFPlusExt --indexReductionMethod=dynamicStateSelection -d=initialization,NLSanalyticJacobian\")")
+	o.SendExpressionNoParsed("setCompiler(\"clang\")")
+	o.SendExpressionNoParsed("setCXXCompiler(\"clang++\")")
 }
 
 func (o *ZmqObject) GetCommandLineOptions() string {

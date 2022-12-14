@@ -73,3 +73,9 @@ func GetModelType(modelName string) string {
 	modelType = strings.TrimSpace(modelType)
 	return modelType
 }
+
+func GetClassInformation(modelName string) []interface{} {
+	classInformation := omc.OMC.GetClassInformation(modelName)
+
+	return classInformation
+}

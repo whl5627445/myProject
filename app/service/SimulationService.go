@@ -24,7 +24,7 @@ type SimulateTask struct {
 	ExperimentRecord DataBaseModel.YssimExperimentRecord
 }
 
-type ModelVarData struct {
+type modelVarData struct {
 	FinalAttributesStr map[string]interface{} `json:"final_attributes_str"`
 }
 
@@ -32,22 +32,6 @@ var SimulateTaskChan = make(chan *SimulateTask, 100)
 
 func openModelica(task *SimulateTask, resultFilePath string, SimulationPraData map[string]string) bool {
 	res := false
-	//YssimExperimentRecord表的json数据绑定到结构体
-	var ComponentValue ModelVarData
-	err := json.Unmarshal(task.ExperimentRecord.ModelVarData, &ComponentValue)
-	if err != nil {
-		log.Println("err: ", err)
-		log.Println("json2map filed!")
-	}
-	//将map中的["name.name","1"]转换为“name.name”
-	mapAttributesStr := mapProcessing.MapDataConversion(ComponentValue.FinalAttributesStr, "om")
-	//设置组件参数
-	result := SetComponentModifierValue(task.ExperimentRecord.ModelName, mapAttributesStr)
-	if result {
-		log.Println("openModelica重新设置参数-完成。")
-	} else {
-		log.Println("openModelica重新设置参数-失败。")
-	}
 
 	pwd, _ := os.Getwd()
 	buildModelRes := omc.OMC.BuildModel(task.SRecord.SimulateModelName, pwd+"/"+resultFilePath, SimulationPraData)
@@ -74,7 +58,7 @@ func openModelica(task *SimulateTask, resultFilePath string, SimulationPraData m
 	return res
 }
 
-func dymolaSimulate(task *SimulateTask, resultFilePath string, SimulationPraData map[string]string) bool {
+func dymolaSimulate(task *SimulateTask, resultFilePath string, SimulationPraData map[string]string, simulateFilePath string) bool {
 	path := task.Package.PackageName + "/" + strings.ReplaceAll(task.SRecord.SimulateModelName, ".", "-") + "/" + time.Now().Local().Format("20060102150405")
 	packageFileName := task.Package.PackageName + ".mo"
 	uploadResult := false
@@ -86,7 +70,7 @@ func dymolaSimulate(task *SimulateTask, resultFilePath string, SimulationPraData
 		req.Params = params
 		req.Timeout = 600 * time.Second
 		files := url.NewFiles()
-		files.SetFile("file", packageFileName, task.Package.FilePath, "")
+		files.SetFile("file", packageFileName, simulateFilePath, "")
 		req.Files = files
 		uploadFileRes, err := requests.Post(config.DymolaSimutalionConnect+"/file/upload", req)
 		uploadRes, err := uploadFileRes.Json()
@@ -119,16 +103,7 @@ func dymolaSimulate(task *SimulateTask, resultFilePath string, SimulationPraData
 		if err != nil {
 			return false
 		}
-		//YssimExperimentRecord表的json数据绑定到结构体
-		var ComponentValue ModelVarData
-		err = json.Unmarshal(task.ExperimentRecord.ModelVarData, &ComponentValue)
-		if err != nil {
-			log.Println("err: ", err)
-			log.Println("json2map filed!")
-		}
-		//将map中的["name.name","1"]转换为“1”
-		mapAttributesStr := mapProcessing.MapDataConversion(ComponentValue.FinalAttributesStr, "dm")
-		initialNames, initialValues := mapProcessing.GetMapKeysAndValues(mapAttributesStr)
+
 		if compileResData["code"].(float64) == 200 {
 			MessageNotice(map[string]string{"message": task.SRecord.SimulateModelName + " 编译成功，开始仿真"})
 			simulateReqData := map[string]interface{}{
@@ -144,9 +119,11 @@ func dymolaSimulate(task *SimulateTask, resultFilePath string, SimulationPraData
 				"tolerance":         SimulationPraData["tolerance"],
 				"fixedStepSize":     0.0,
 				"resultFile":        "dsres",
-				"initialNames":      initialNames,
-				"initialValues":     initialValues,
-				"finalNames":        "",
+				"initialNames":      []string{},
+				"initialValues":     []float64{},
+				//"initialNames":      initialNames,
+				//"initialValues":     initialValues,
+				"finalNames": "",
 			}
 			req.Json = simulateReqData
 			simulateRes, err := requests.Post(config.DymolaSimutalionConnect+"/dymola/simulate", req)
@@ -185,8 +162,8 @@ func dymolaSimulate(task *SimulateTask, resultFilePath string, SimulationPraData
 	return false
 }
 
-func jModelicaSimulate(task *SimulateTask, resultFilePath string, SimulationPraData map[string]string) bool {
-	moFilePath := "/" + task.Package.FilePath
+func jModelicaSimulate(task *SimulateTask, resultFilePath string, SimulationPraData map[string]string, simulateFilePath string) bool {
+	moFilePath := "/" + simulateFilePath
 	if task.Package.FilePath == "" {
 		moFilePath = "/omlibrary/" + task.Package.PackageName + " " + task.Package.Version
 	}
@@ -198,16 +175,6 @@ func jModelicaSimulate(task *SimulateTask, resultFilePath string, SimulationPraD
 		log.Printf("数据转换失败: %s", err)
 		return false
 	}
-	//YssimExperimentRecord表的json数据绑定到结构体
-	var ComponentValue ModelVarData
-	err = json.Unmarshal(task.ExperimentRecord.ModelVarData, &ComponentValue)
-	if err != nil {
-		log.Println("err: ", err)
-		log.Println("json2map filed!")
-	}
-	//将map中的["name.name","1"]转换为“1”
-	mapAttributesStr := mapProcessing.MapDataConversion(ComponentValue.FinalAttributesStr, "jm")
-	initialNames, initialValues := mapProcessing.GetMapKeysAndValues(mapAttributesStr)
 	data := map[string]interface{}{
 		"start_time":       startTime,
 		"final_time":       finalTime,
@@ -218,8 +185,8 @@ func jModelicaSimulate(task *SimulateTask, resultFilePath string, SimulationPraD
 		"result_file_path": "/" + resultFilePath, // 结果文件名字
 		"tolerance":        tolerance,            // 相对公差
 		"type":             "compile",            // 是编译还是计算， 默认是编译
-		"initialNames":     initialNames,
-		"initialValues":    initialValues,
+		//"initialNames":     initialNames,
+		//"initialValues":    initialValues,
 	}
 	dial, err := net.Dial("tcp", config.JmodelicaConnect)
 	defer dial.Close()
@@ -284,9 +251,27 @@ func ModelSimulate(task *SimulateTask) {
 	task.SRecord.SimulateStatus = "2"
 
 	config.DB.Save(&task.SRecord)
-	if task.Package.FilePath != "" {
-		SaveModelCode(task.Package.PackageName, task.Package.FilePath)
+	if task.Package.SysUser != "sys" {
+		//YssimExperimentRecord表的json数据绑定到结构体
+		var componentValue modelVarData
+		err := json.Unmarshal(task.ExperimentRecord.ModelVarData, &componentValue)
+		if err == nil {
+			mapAttributesStr := mapProcessing.MapDataConversion(componentValue.FinalAttributesStr)
+			//设置组件参数
+			result := SetComponentModifierValue(task.ExperimentRecord.ModelName, mapAttributesStr)
+			if result {
+				log.Println("重新设置参数-完成。")
+			} else {
+				log.Println("重新设置参数-失败: ", mapAttributesStr)
+			}
+		} else {
+			log.Println("modelVarData: ", task.ExperimentRecord.ModelVarData)
+			log.Println("err: ", err)
+			log.Println("json2map filed!")
+		}
 	}
+	FilePath := "public/tmp/simulateModelFile" + strconv.FormatInt(time.Now().Unix(), 10) + ".mo"
+
 	MessageNotice(map[string]string{"message": task.SRecord.SimulateModelName + " 模型开始编译"})
 	sResult := true
 	SimulationPraData := map[string]string{
@@ -298,13 +283,16 @@ func ModelSimulate(task *SimulateTask) {
 		"numberOfIntervals": task.SRecord.NumberOfIntervals,
 		"tolerance":         task.SRecord.Tolerance,
 	}
+	if task.Package.FilePath != "" && (task.SRecord.SimulateType == "DM" || task.SRecord.SimulateType == "JM") {
+		SaveModelCode(task.Package.PackageName, FilePath)
+	}
 	switch task.SRecord.SimulateType {
 	case "OM":
 		sResult = openModelica(task, resultFilePath, SimulationPraData)
 	case "DM":
-		sResult = dymolaSimulate(task, resultFilePath, SimulationPraData)
+		sResult = dymolaSimulate(task, resultFilePath, SimulationPraData, FilePath)
 	case "JM":
-		sResult = jModelicaSimulate(task, resultFilePath, SimulationPraData)
+		sResult = jModelicaSimulate(task, resultFilePath, SimulationPraData, FilePath)
 	}
 	if sResult {
 		task.SRecord.SimulateModelResultPath = resultFilePath
@@ -314,7 +302,7 @@ func ModelSimulate(task *SimulateTask) {
 		task.SRecord.SimulateStatus = "3"
 		MessageNotice(map[string]string{"message": task.SRecord.SimulateModelName + " 模型仿真失败"})
 	}
-
+	os.Remove(FilePath)
 	task.SRecord.SimulateEndTime = time.Now().Unix()
 	task.SRecord.SimulateStart = false
 	config.DB.Save(&task.SRecord)
