@@ -188,35 +188,24 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 		if showStartAttribute == "true" {
 			fixedValueString := m.getElementModifierFixedValue(m.name + "." + varName + ".fixed")
 			startValueString := m.getElementModifierFixedValue(m.name + "." + varName + ".start")
-			value, _ := strconv.ParseBool(fixedValueString)
+			fixedValue, _ := strconv.ParseBool(fixedValueString)
 			var fixedValueBool interface{}
 			if fixedValueString == "" {
 				fixedValueBool = ""
 			} else {
-				fixedValueBool = value
+				fixedValueBool = fixedValue
 			}
-			fixed := map[string]interface{}{
-				"type":         "fixed",
-				"name":         varName + ".fixed",
-				"comment":      dataDefault["comment"],
-				"tab":          dataDefault["tab"],
-				"group":        dataDefault["group"],
-				"defaultvalue": "",
-				"value":        fixedValueBool,
-				"unit":         getUnit(componentClassName, m.className, varName),
+			value := map[string]interface{}{"isFixed": fixedValueBool, "value": startValueString}
+			data := map[string]interface{}{
+				"type":    "checkWrite",
+				"name":    varName + ".start",
+				"comment": dataDefault["comment"],
+				"tab":     dataDefault["tab"],
+				"group":   dataDefault["group"],
+				"value":   value,
+				"unit":    getUnit(componentClassName, m.className, varName),
 			}
-			start := map[string]interface{}{
-				"type":         "Normal",
-				"name":         varName + ".start",
-				"comment":      dataDefault["comment"],
-				"tab":          dataDefault["tab"],
-				"group":        dataDefault["group"],
-				"defaultvalue": "",
-				"value":        startValueString,
-				"unit":         getUnit(componentClassName, m.className, varName),
-			}
-			dataList = append(dataList, fixed)
-			dataList = append(dataList, start)
+			dataList = append(dataList, data)
 			continue
 		}
 
@@ -307,35 +296,24 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 			}
 		}
 		if fixedValueString != "" || startValueString != "" {
-			value, _ := strconv.ParseBool(fixedValueString)
+			fixedValue, _ := strconv.ParseBool(fixedValueString)
 			var fixedValueBool interface{}
 			if fixedValueString == "" {
 				fixedValueBool = ""
 			} else {
-				fixedValueBool = value
+				fixedValueBool = fixedValue
 			}
-			fixed := map[string]interface{}{
-				"type":         "fixed",
-				"name":         varName + ".fixed",
-				"comment":      dataDefault["comment"],
-				"defaultvalue": "",
-				"value":        fixedValueBool,
-				"unit":         getUnit(componentClassName, m.className, varName),
-				"tab":          "General",
-				"group":        "Initialization",
+			value := map[string]interface{}{"isFixed": fixedValueBool, "value": startValueString}
+			data := map[string]interface{}{
+				"type":    "checkWrite",
+				"name":    varName + ".start",
+				"comment": dataDefault["comment"],
+				"tab":     dataDefault["tab"],
+				"group":   dataDefault["group"],
+				"value":   value,
+				"unit":    getUnit(componentClassName, m.className, varName),
 			}
-			start := map[string]interface{}{
-				"type":         "Normal",
-				"name":         varName + ".start",
-				"comment":      dataDefault["comment"],
-				"defaultvalue": "",
-				"value":        startValueString,
-				"unit":         getUnit(componentClassName, m.className, varName),
-				"tab":          "General",
-				"group":        "Initialization",
-			}
-			dataList = append(dataList, fixed)
-			dataList = append(dataList, start)
+			dataList = append(dataList, data)
 		}
 	}
 	return dataList
