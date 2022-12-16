@@ -210,28 +210,39 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 		}
 
 		if p[9] == "true" {
-			dataDefault["type"] = "Enumeration"
-			dataDefault["defaultvalue"] = p[2]
-			dataDefault["disable"] = true
-			dataDefault["group"] = "参数"
-			oData := make([]string, 1)
-			if p[13].(string) != "$Any" {
-				// 模板参数获取有内存泄露问题， 暂时不用
-				//options := omc.OMC.GetAllSubtypeOf(p[13].(string), componentClassName)
-				//for _, option := range options {
-				//	optionData := "redeclare "+ option.(string) + " " + componentName+"."+dataDefault["name"].(string)
-				//	oData = append(oData, optionData)
-				//}
-				dataDefault["disable"] = false
-			}
-			dataDefault["options"] = oData
-			dataList = append(dataList, dataDefault)
 			continue
+			//dataDefault["type"] = "Enumeration"
+			//dataDefault["defaultvalue"] = p[2]
+			//dataDefault["disable"] = true
+			//dataDefault["group"] = "参数"
+			//oData := make([]string, 1)
+			//if p[13].(string) != "$Any" {
+			// 模板参数获取有内存泄露问题， 暂时不用
+			//options := omc.OMC.GetAllSubtypeOf(p[13].(string), componentClassName)
+			//for _, option := range options {
+			//	optionData := "redeclare "+ option.(string) + " " + componentName+"."+dataDefault["name"].(string)
+			//	oData = append(oData, optionData)
+			//}
+			//	dataDefault["disable"] = false
+			//}
+			//dataDefault["options"] = oData
+			//dataList = append(dataList, dataDefault)
+			//continue
 		}
-		componentModifierValue := omc.OMC.GetElementModifierValue(m.modelName, componentName+"."+dataDefault["name"].(string))
 
-		dataDefault["value"] = componentModifierValue
-		if p[10] == "parameter" || componentModifierValue != "" || dataDefault["group"] != "" {
+		if p[10] == "parameter" || dataDefault["group"] != "" {
+			componentModifierValue := omc.OMC.GetElementModifierValue(m.modelName, componentName+"."+dataDefault["name"].(string))
+
+			dataDefault["value"] = componentModifierValue
+			if componentModifierValue == "" {
+				for _, n := range m.classAll {
+					componentModifierValue = omc.OMC.GetExtendsModifierValue(m.componentClassName, n, varName)
+					if componentModifierValue != "" {
+						dataDefault["value"] = componentModifierValue
+						break
+					}
+				}
+			}
 			if dataDefault["group"] == "" || dataDefault["group"] == "Parameters" {
 				dataDefault["group"] = "参数"
 			}
@@ -239,10 +250,12 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 			if isEnumeration {
 				Literals := omc.OMC.GetEnumerationLiterals(m.className)
 				dataDefault["options"] = func() []string {
-					var oData []string
+					//var oData []string
+					oData := []string{componentModifierValue}
 					for _, literal := range Literals {
-						if literal != "" {
-							oData = append(oData, strings.TrimPrefix(m.className, ".")+"."+literal)
+						literalValue := strings.TrimPrefix(m.className, ".") + "." + literal
+						if literal != "" && literalValue != componentModifierValue {
+							oData = append(oData, literalValue)
 						}
 					}
 					return oData
@@ -251,18 +264,26 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 			}
 			parameterValue := omc.OMC.GetParameterValue(p[len(p)-2].(string), dataDefault["name"].(string))
 			dataDefault["defaultvalue"] = parameterValue
-			if p[2] == "Boolean" {
+			if p[2] == "Boolean" && (componentModifierValue != "" || parameterValue != "") {
 				dataDefault["type"] = "CheckBox"
-				if componentModifierValue == "true" || componentModifierValue == "false" {
-					dataDefault["value"] = componentModifierValue
-					dataDefault["checked"] = componentModifierValue
+				if componentModifierValue != "" {
+					if componentModifierValue == "true" || componentModifierValue == "false" {
+						dataDefault["checked"] = componentModifierValue
+					} else {
+						dataDefault["type"] = "Enumeration"
+						dataDefault["options"] = []string{componentModifierValue, "true", "false"}
+					}
 					dataDefault["defaultvalue"] = componentModifierValue
+					dataDefault["value"] = componentModifierValue
 				} else {
 					if parameterValue == "true" || parameterValue == "false" {
-						dataDefault["value"] = parameterValue
 						dataDefault["checked"] = parameterValue
-						dataDefault["defaultvalue"] = parameterValue
+					} else {
+						dataDefault["type"] = "Enumeration"
+						dataDefault["options"] = []string{componentModifierValue, "true", "false"}
 					}
+					dataDefault["value"] = parameterValue
+					dataDefault["defaultvalue"] = parameterValue
 				}
 			}
 			dataDefault["unit"] = ""
@@ -276,24 +297,12 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 
 		fixedValueString := m.getElementModifierFixedValue(m.name + "." + varName + ".fixed")
 		startValueString := m.getElementModifierFixedValue(m.name + "." + varName + ".start")
-		if fixedValueString == "" && startValueString == "" {
-			name := p[len(p)-2].(string)
-			fixedValueString = omc.OMC.GetElementModifierValue(name, varName+".fixed")
-			startValueString = omc.OMC.GetElementModifierValue(name, varName+".start")
-			if fixedValueString == "" && startValueString == "" {
-				extendName := []string{m.componentClassName}
-				for len(extendName) != 0 {
-					extendName = omc.OMC.GetInheritedClassesList(extendName)
-					for _, n := range extendName {
-						fixedValueString = omc.OMC.GetExtendsModifierValue(m.componentClassName, n, varName+".fixed")
-						startValueString = omc.OMC.GetExtendsModifierValue(m.componentClassName, n, varName+".start")
-						if fixedValueString != "" || startValueString != "" {
-							extendName = nil
-							break
-						}
-					}
-				}
-			}
+		name := p[len(p)-2].(string)
+		if fixedValueString == "" {
+			fixedValueString = m.getStartAndFixedValue(name, varName, "fixed")
+		}
+		if startValueString == "" {
+			startValueString = m.getStartAndFixedValue(name, varName, "start")
 		}
 		if fixedValueString != "" || startValueString != "" {
 			fixedValue, _ := strconv.ParseBool(fixedValueString)
@@ -309,7 +318,7 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 				"name":    varName + ".start",
 				"comment": dataDefault["comment"],
 				"tab":     dataDefault["tab"],
-				"group":   dataDefault["group"],
+				"group":   "Initialization",
 				"value":   value,
 				"unit":    getUnit(componentClassName, m.className, varName),
 			}
@@ -317,6 +326,24 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 		}
 	}
 	return dataList
+}
+
+func (m modelParameters) getStartAndFixedValue(name, varName, varType string) string {
+	valueString := omc.OMC.GetElementModifierValue(name, varName+"."+varType)
+	if valueString == "" {
+		extendName := []string{m.componentClassName}
+		for extendName != nil {
+			extendName = omc.OMC.GetInheritedClassesList(extendName)
+			for _, n := range extendName {
+				valueString = omc.OMC.GetExtendsModifierValue(m.componentClassName, n, varName+"."+varType)
+				if valueString != "" {
+					extendName = nil
+					break
+				}
+			}
+		}
+	}
+	return valueString
 }
 
 func SetComponentModifierValue(className string, parameterValue map[string]string) bool {

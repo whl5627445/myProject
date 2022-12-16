@@ -368,6 +368,17 @@ func (o *ZmqObject) GetIconAnnotation(className string) []interface{} {
 	cmd := "getIconAnnotation(" + className + ")"
 	iconAnnotationData, ok := o.SendExpression(cmd)
 	if ok && len(iconAnnotationData) > 8 {
+		return iconAnnotationData
+	}
+	return dataList
+}
+
+// 获取给定模型的图标数据
+func (o *ZmqObject) GetIconAnnotationLineData(className string) []interface{} {
+	var dataList []interface{}
+	cmd := "getIconAnnotation(" + className + ")"
+	iconAnnotationData, ok := o.SendExpression(cmd)
+	if ok && len(iconAnnotationData) > 8 {
 		data := iconAnnotationData[8]
 		dataList = append(dataList, data.([]interface{})...)
 	}

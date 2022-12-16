@@ -397,6 +397,12 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 			componentsData := getElementsAndModelName(nameList)
 			componentAnnotationsData := omc.OMC.GetElementAnnotationsList(nameList)
 			IconAnnotationData := getIconAndDiagramAnnotations(nameList, isIcon)
+			//modelIconAnnotationAll := omc.OMC.GetIconAnnotation(classname)
+			//initialScale := "1"
+			//if len(modelIconAnnotationAll)>0 {
+			//	initialScale = modelIconAnnotationAll[5].(string)
+			//}
+
 			if len(caDataFilter[i]) < 1 {
 				continue
 			}
@@ -429,6 +435,7 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 			data["parent"] = parent
 			data["visible"] = caf[0]
 			data["rotateAngle"] = rotateAngle
+			//data["initialScale"] = initialScale
 			if caf[10].(string) != "-" {
 				extentX1, _ := caf[10].(string)
 				extentY1, _ := caf[11].(string)
@@ -516,7 +523,7 @@ func getIconAndDiagramAnnotations(nameList []string, isIcon bool) []interface{} 
 				result = result[8].([]interface{})
 			}
 		} else {
-			result = omc.OMC.GetIconAnnotation(name)
+			result = omc.OMC.GetIconAnnotationLineData(name)
 			//if result == nil && (nameType == "connector" || nameType == "expandable connector") && len(nameList) == i+1 && len(data) == 0 {
 			//	var defaultData []interface{}
 			//	json.Unmarshal([]byte("[\"Ellipse\",[\"true\",[\"0.0\",\"0.0\"],\"0.0\",[\"95\",\"95\",\"95\"],[\"255\",\"255\",\"255\"],\"LinePattern.Solid\",\"FillPattern.Solid\",\"0.25\",[[\"-90.0\",\"90.0\"],[\"90.0\",\"-90.0\"]],\"0.0\",\"360.0\",\"EllipseClosure.Chord\"]]"), &defaultData)
