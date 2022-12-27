@@ -6,8 +6,6 @@ import (
 	"yssim-go/library/omc"
 )
 
-//var ParameterTranslation = config.ParameterTranslation
-
 type modelParameters struct {
 	name                 string
 	componentClassName   string
@@ -156,7 +154,13 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 		} else {
 			m.className = ""
 		}
-		IsExtendsModifierFinal := omc.OMC.IsExtendsModifierFinal(componentClassName, p[len(p)-2].(string), varName)
+		IsExtendsModifierFinal := "false"
+		for _, c := range m.classAll {
+			IsExtendsModifierFinal = omc.OMC.IsExtendsModifierFinal(c, p[len(p)-2].(string), varName)
+			if IsExtendsModifierFinal == "true" {
+				break
+			}
+		}
 		if p[5] == "protected" || IsExtendsModifierFinal == "true" || p[6] == "true" {
 			continue
 		}
@@ -232,7 +236,6 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 
 		if p[10] == "parameter" || dataDefault["group"] != "" {
 			componentModifierValue := omc.OMC.GetElementModifierValue(m.modelName, componentName+"."+dataDefault["name"].(string))
-
 			dataDefault["value"] = componentModifierValue
 			if componentModifierValue == "" {
 				for _, n := range m.classAll {
@@ -243,14 +246,10 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 					}
 				}
 			}
-			if dataDefault["group"] == "" || dataDefault["group"] == "Parameters" {
-				dataDefault["group"] = "参数"
-			}
 			isEnumeration := omc.OMC.IsEnumeration(m.className)
 			if isEnumeration {
 				Literals := omc.OMC.GetEnumerationLiterals(m.className)
 				dataDefault["options"] = func() []string {
-					//var oData []string
 					oData := []string{componentModifierValue}
 					for _, literal := range Literals {
 						literalValue := strings.TrimPrefix(m.className, ".") + "." + literal
@@ -325,7 +324,17 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 			dataList = append(dataList, data)
 		}
 	}
-	return dataList
+	nameMap := make(map[string]int, 1)
+	var data []interface{}
+	for n := 0; n < len(dataList); n++ {
+		name := dataList[n].(map[string]interface{})["name"].(string)
+		_, ok := nameMap[name]
+		if !ok {
+			data = append(data, dataList[n])
+			nameMap[name] = n
+		}
+	}
+	return data
 }
 
 func (m modelParameters) getStartAndFixedValue(name, varName, varType string) string {
