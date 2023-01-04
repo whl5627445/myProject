@@ -202,7 +202,7 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 			value := map[string]interface{}{"isFixed": fixedValueBool, "value": startValueString}
 			data := map[string]interface{}{
 				"type":    "checkWrite",
-				"name":    varName + ".start",
+				"name":    varName,
 				"comment": dataDefault["comment"],
 				"tab":     dataDefault["tab"],
 				"group":   dataDefault["group"],
@@ -314,7 +314,7 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 			value := map[string]interface{}{"isFixed": fixedValueBool, "value": startValueString}
 			data := map[string]interface{}{
 				"type":    "checkWrite",
-				"name":    varName + ".start",
+				"name":    varName,
 				"comment": dataDefault["comment"],
 				"tab":     dataDefault["tab"],
 				"group":   "Initialization",

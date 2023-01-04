@@ -538,14 +538,16 @@ func getIconAndDiagramAnnotations(nameList []string, isIcon bool) []interface{} 
 }
 
 func (g *graphicsData) getDiagramAnnotationData() {
-	modelNameDiagramAnnotationData := omc.OMC.GetDiagramAnnotation(g.modelName)
-	if len(modelNameDiagramAnnotationData) > 8 && modelNameDiagramAnnotationData[len(modelNameDiagramAnnotationData)-1] != "" {
-		dData := modelNameDiagramAnnotationData[len(modelNameDiagramAnnotationData)-1]
-		data1 := g.data01(dData.([]interface{}), g.modelName, g.modelName, g.modelName)
-		for _, d := range data1 {
-			d["mobility"] = true
-			d["diagram"] = true
-			g.data[0] = append(g.data[0], d)
+	for _, name := range g.modelNameList {
+		modelNameDiagramAnnotationData := omc.OMC.GetDiagramAnnotation(name)
+		if len(modelNameDiagramAnnotationData) > 8 && modelNameDiagramAnnotationData[len(modelNameDiagramAnnotationData)-1] != "" {
+			dData := modelNameDiagramAnnotationData[len(modelNameDiagramAnnotationData)-1]
+			data1 := g.data01(dData.([]interface{}), g.modelName, g.modelName, g.modelName)
+			for _, d := range data1 {
+				d["mobility"] = true
+				d["diagram"] = true
+				g.data[0] = append(g.data[0], d)
+			}
 		}
 	}
 }
