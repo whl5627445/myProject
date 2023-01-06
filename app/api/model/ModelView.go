@@ -83,14 +83,7 @@ func GetListModelView(c *gin.Context) {
 	modelChildList := service.GetModelChild(modelName)
 	var modelChildListNew []map[string]interface{}
 	for i := 0; i < len(modelChildList); i++ {
-		classInformation := service.GetClassInformation(modelName + "." + modelChildList[i]["name"].(string))
-		isProtect := classInformation[12].(string)
-		if isProtect == "true" {
-			continue
-		}
-		modelType := strings.TrimSpace(classInformation[0].(string))
 		modelChildList[i]["image"] = service.GetIcon(modelName+"."+modelChildList[i]["name"].(string), packageModel.PackageName, packageModel.Version)
-		modelChildList[i]["type"] = modelType
 		modelChildListNew = append(modelChildListNew, modelChildList[i])
 	}
 	res.Data = modelChildListNew
@@ -958,7 +951,7 @@ func Test(c *gin.Context) {
 		d, _ := omc.OMC.SendExpressionNoParsed(cmd)
 		data = string(d)
 	}
-	log.Println(data)
+	//log.Println(data)
 	var res responseData
 	res.Data = data
 	c.JSON(http.StatusOK, res)

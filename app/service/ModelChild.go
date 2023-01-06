@@ -10,20 +10,28 @@ func GetModelChild(modelName string) []map[string]interface{} {
 	childAllList := omc.OMC.GetClassNames(modelName, true)
 	var dataList []map[string]interface{}
 	if childAllList != nil {
+
 		modelLen := len(strings.Split(modelName, "."))
 		childMap := map[string]map[string]any{}
 		var childList []string
 		for i := 0; i < len(childAllList); i++ {
+			classInformation := GetClassInformation(childAllList[i])
+			isProtect := classInformation[12].(string)
+			if isProtect == "true" {
+				continue
+			}
+			modelType := strings.TrimSpace(classInformation[0].(string))
 			PrefixOK := strings.HasPrefix(childAllList[i], modelName)
 			modelChildLen := len(strings.Split(childAllList[i], "."))
 			if PrefixOK == true && modelChildLen != modelLen {
 				modelNameList := strings.Split(childAllList[i], ".")
 				modelNameAll := strings.Join(modelNameList[:modelLen+1], ".")
-				modelName := modelNameList[len(modelNameList)-1]
+				name := modelNameList[len(modelNameList)-1]
 				data := map[string]interface{}{
-					"name":       modelName,
+					"name":       name,
 					"model_name": modelNameAll,
 					"haschild":   false,
+					"type":       modelType,
 				}
 				_, ok := childMap[modelNameAll]
 				if ok && modelChildLen > modelLen+1 {
