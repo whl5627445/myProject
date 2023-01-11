@@ -471,21 +471,24 @@ func (g *graphicsData) getnthconnectionData() {
 			ncaData := omc.OMC.GetNthConnectionAnnotation(g.modelNameList[i], c+1) //
 			d1Data := g.data01(ncaData, g.modelNameList[i], g.modelNameList[i], g.modelNameList[i])
 			if len(ncData) != 0 && len(ncaData) != 0 && len(d1Data) != 0 {
-				daData := d1Data[0]
-				if i == len(g.modelNameList)-1 { // i==0的时候，表示目前遍历的是模型自身的组件，模型自身的组件可以移动，设在"mobility"为true
-					daData["mobility"] = true
-				} else {
-					daData["mobility"] = false
+				for _, daData := range d1Data {
+					if daData["type"] == "Line" {
+						if i == len(g.modelNameList)-1 { // i==0的时候，表示目前遍历的是模型自身的组件，模型自身的组件可以移动，设在"mobility"为true
+							daData["mobility"] = true
+						} else {
+							daData["mobility"] = false
+						}
+						daData["connectionfrom_original_name"] = ncData[0]
+						daData["connectionto_original_name"] = ncData[1]
+						re1, _ := regexp.Compile("[[0-9]+]$")
+						re2, _ := regexp.Compile("[[0-9]+].")
+						connectionfrom := re1.ReplaceAll([]byte(ncData[0]), []byte(""))
+						connectionto := re1.ReplaceAll([]byte(ncData[1]), []byte(""))
+						daData["connectionfrom"] = string(re2.ReplaceAll(connectionfrom, []byte(".")))
+						daData["connectionto"] = string(re2.ReplaceAll(connectionto, []byte(".")))
+					}
+					g.data[0] = append(g.data[0], daData)
 				}
-				daData["connectionfrom_original_name"] = ncData[0]
-				daData["connectionto_original_name"] = ncData[1]
-				re1, _ := regexp.Compile("[[0-9]+]$")
-				re2, _ := regexp.Compile("[[0-9]+].")
-				connectionfrom := re1.ReplaceAll([]byte(ncData[0]), []byte(""))
-				connectionto := re1.ReplaceAll([]byte(ncData[1]), []byte(""))
-				daData["connectionfrom"] = string(re2.ReplaceAll(connectionfrom, []byte(".")))
-				daData["connectionto"] = string(re2.ReplaceAll(connectionto, []byte(".")))
-				g.data[0] = append(g.data[0], daData)
 			}
 		}
 	}

@@ -145,7 +145,7 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 		m.componentsDict[m.components[i][3].(string)] = m.components[i]
 	}
 	for i := 0; i < len(m.components); i++ {
-		dataDefault := map[string]interface{}{"tab": "General", "type": "Normal", "group": ""}
+		dataDefault := map[string]interface{}{"tab": "General", "type": "Normal", "group": "Parameters"}
 		p := m.componentsDict[m.components[i][3].(string)].([]interface{})
 
 		varName := p[3].(string)
@@ -234,7 +234,7 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 			//continue
 		}
 
-		if p[10] == "parameter" || dataDefault["group"] != "" {
+		if p[10] == "parameter" || dataDefault["group"] != "Parameters" {
 			componentModifierValue := omc.OMC.GetElementModifierValue(m.modelName, componentName+"."+dataDefault["name"].(string))
 			dataDefault["value"] = componentModifierValue
 			if componentModifierValue == "" {

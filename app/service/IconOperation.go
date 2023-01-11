@@ -11,11 +11,12 @@ func GetIcon(modelName, packageName, version string) string {
 	imageBytes, _ := os.ReadFile(fileName)
 	if len(imageBytes) == 0 {
 		iconData := omc.OMC.GetIconAnnotation(modelName)
-		if len(iconData) > 1 {
-			for i := 0; i < len(iconData); i += 2 {
-				imageData := iconData[i]
+		if len(iconData) >= 8 {
+			bitmapData := iconData[8].([]interface{})
+			for i := 0; i < len(bitmapData); i += 2 {
+				imageData := bitmapData[i]
 				if imageData == "Bitmap" {
-					image := iconData[i+1].([]interface{})[5].(string)
+					image := bitmapData[i+1].([]interface{})[5].(string)
 					return "data:image/png;base64," + image
 				}
 			}

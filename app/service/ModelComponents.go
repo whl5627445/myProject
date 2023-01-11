@@ -119,7 +119,19 @@ func UpdateComponent(componentName, componentClassName, modelNameAll, origin, ro
 
 func GetICList(name string) []string {
 	nameList := []string{name}
-	dataList := omc.OMC.GetInheritedClassesListAll(nameList)
+	dataList := []string{name}
+	for {
+		var data []string
+		for _, n := range nameList {
+			data = omc.OMC.GetInheritedClasses(n)
+		}
+		if len(data) == 0 {
+			break
+		}
+		dataList = append(data, dataList...)
+		nameList = data
+	}
+	//dataList := omc.OMC.GetInheritedClassesListAll(nameList)
 	// dataList去重
 	var datalistLen = len(dataList)
 	for i := 0; i < datalistLen; i++ {
@@ -132,9 +144,9 @@ func GetICList(name string) []string {
 			}
 		}
 	}
-	var dataListNew []string
-	for i := len(dataList) - 1; i >= 0; i-- {
-		dataListNew = append(dataListNew, dataList[i])
-	}
-	return dataListNew
+	//var dataListNew []string
+	//for i := len(dataList) - 1; i >= 0; i-- {
+	//	dataListNew = append(dataListNew, dataList[i])
+	//}
+	return dataList
 }
