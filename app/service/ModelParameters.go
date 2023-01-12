@@ -234,7 +234,7 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 			//continue
 		}
 
-		if p[10] == "parameter" || dataDefault["group"] != "Parameters" {
+		if p[10] == "parameter" || dataDefault["group"] != "Parameters" || DialogIndexOk == true {
 			componentModifierValue := omc.OMC.GetElementModifierValue(m.modelName, componentName+"."+dataDefault["name"].(string))
 			dataDefault["value"] = componentModifierValue
 			if componentModifierValue == "" {

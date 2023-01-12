@@ -31,8 +31,8 @@ func GetGraphicsData(modelName string) [][]map[string]interface{} {
 			data := make(map[string]interface{}, 0)
 			data["ID"] = "0"
 			data["classname"] = modelName
-			data["extent1Diagram"] = interfaceDiagramAnnotationData[0].(string) + "," + interfaceDiagramAnnotationData[1].(string)
-			data["extent2Diagram"] = interfaceDiagramAnnotationData[2].(string) + "," + interfaceDiagramAnnotationData[3].(string)
+			data["extent1Diagram"] = strings.Replace(interfaceDiagramAnnotationData[0].(string)+","+interfaceDiagramAnnotationData[1].(string), "-,-", "-100.0,-100.0", 1)
+			data["extent2Diagram"] = strings.Replace(interfaceDiagramAnnotationData[2].(string)+","+interfaceDiagramAnnotationData[3].(string), "-,-", "100.0,100.0", 1)
 			data["graphType"] = "model"
 			data["mobility"] = false
 			data["name"] = ""
@@ -66,12 +66,17 @@ func GetGraphicsData(modelName string) [][]map[string]interface{} {
 	g.data[1] = append(g.data[1], data2...)
 	// nameList第二个名字开始是继承模型的名字，获取继承模型的视图数据
 	componentsData = getElementsAndModelName(g.modelNameList[:len(g.modelNameList)-1])
-	componentAnnotationsData = getElementAndDiagramAnnotations(g.modelNameList[:len(g.modelNameList)-1])
+	componentAnnotationsData = getElementAnnotations(g.modelNameList[:len(g.modelNameList)-1])
 	data2 = g.data02(componentsData, componentAnnotationsData, false, "")
 	for i := 0; i < len(data2); i++ {
 		data2[i]["mobility"] = false // 继承模型的组件是不可以移动的，设置字段"mobility"为false
 	}
 	g.data[1] = append(g.data[1], data2...)
+	for i := 0; i < len(g.data[1]); i++ {
+		if len(g.data[1][i]["subShapes"].([]map[string]interface{})) == 0 {
+			g.data[1][i]["subShapes"] = append(g.data[1][i]["subShapes"].([]map[string]interface{}), rectangleDefault)
+		}
+	}
 	return g.data
 }
 
@@ -93,7 +98,7 @@ func GetComponentGraphicsData(modelName string, componentName string) [][]map[st
 	g.data = [][]map[string]interface{}{{}, {}}
 	g.modelName = modelName
 	components := getElementsAndModelName([]string{modelName})
-	componentAnnotations := getElementAndDiagramAnnotations([]string{modelName})
+	componentAnnotations := getElementAnnotations([]string{modelName})
 	var componentsData [][]interface{}
 	var componentAnnotationsData [][]interface{}
 	for i := 0; i < len(components); i++ {
@@ -105,10 +110,13 @@ func GetComponentGraphicsData(modelName string, componentName string) [][]map[st
 		}
 	}
 	data2 := g.data02(componentsData, componentAnnotationsData, false, "")
-	g.data[1] = append(g.data[1], data2...)
 	for i := 0; i < len(data2); i++ {
 		data2[i]["mobility"] = true // 模型自身的组件是可以移动的，设置字段"mobility"为true
+		if len(data2[i]["subShapes"].([]map[string]interface{})) == 0 {
+			data2[i]["subShapes"] = append(data2[i]["subShapes"].([]map[string]interface{}), rectangleDefault)
+		}
 	}
+	g.data[1] = append(g.data[1], data2...)
 	return g.data
 }
 
@@ -375,9 +383,9 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 	}()
 	for i := 0; i < dataLen2; i++ {
 		modelName := cDataFilter[i][len(cDataFilter[i])-1].(string)
-		if len(caDataFilter[i]) > 2 {
-			caDataFilter[i] = caDataFilter[i][len(caDataFilter[i])-2:]
-		}
+		//if len(caDataFilter[i]) > 2 {
+		//	caDataFilter[i] = caDataFilter[i][len(caDataFilter[i])-2:]
+		//}
 		classname := cDataFilter[i][2].(string)
 		nameList := g.getICList(classname)
 		DynamicSelect := find(caDataFilter[i], "DynamicSelect")
@@ -394,9 +402,7 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 		}()
 		// if placementIndex != -1 || cDataFilter[i][9] == "true" {
 		if placementIndex != -1 {
-			componentsData := getElementsAndModelName(nameList)
-			componentAnnotationsData := omc.OMC.GetElementAnnotationsList(nameList)
-			IconAnnotationData := getIconAndDiagramAnnotations(nameList, isIcon)
+
 			//modelIconAnnotationAll := omc.OMC.GetIconAnnotation(classname)
 			//initialScale := "1"
 			//if len(modelIconAnnotationAll)>0 {
@@ -411,13 +417,7 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 				// 出现错误会使数据不可用， 长度小于预期，弃用
 				continue
 			}
-			rotateAngle := func() string {
-				if caf[7] == "-" {
-					return "0"
-				} else {
-					return caf[7].(string)
-				}
-			}()
+
 			data := map[string]interface{}{"type": "Transformation"}
 
 			data["graphType"] = func() string {
@@ -434,8 +434,17 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 			data["original_name"] = cDataFilter[i][3]
 			data["parent"] = parent
 			data["visible"] = caf[0]
-			data["rotateAngle"] = rotateAngle
 			//data["initialScale"] = initialScale
+			rotateAngle := func() string {
+				if caf[14] != "" {
+					return caf[14].(string)
+				}
+				if caf[7] != "-" {
+					return caf[7].(string)
+				} else {
+					return "0"
+				}
+			}()
 			if caf[10].(string) != "-" {
 				extentX1, _ := caf[10].(string)
 				extentY1, _ := caf[11].(string)
@@ -449,12 +458,18 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 				data["extent2Diagram"] = strings.Join([]string{caf[5].(string), caf[6].(string)}, ",")
 				data["originDiagram"] = strings.Join([]string{caf[1].(string), caf[2].(string)}, ",")
 			}
+			data["extent1Diagram"] = strings.Replace(data["extent1Diagram"].(string), "-,-", "-100.0,-100.0", 1)
+			data["extent2Diagram"] = strings.Replace(data["extent2Diagram"].(string), "-,-", "100.0,100.0", 1)
+			data["rotateAngle"] = rotateAngle
 			data["rotation"] = rotateAngle
 			data["output_type"] = func() string {
 				t := cDataFilter[i][len(cDataFilter[i])-2].([]interface{})
 				str := fmt.Sprintf("%s", t)
 				return str
 			}()
+			componentsData := getElementsAndModelName(nameList)
+			componentAnnotationsData := getElementAnnotations(nameList)
+			IconAnnotationData := getIconAndDiagramAnnotations(nameList, isIcon)
 			data["inputOutputs"] = g.data02(componentsData, componentAnnotationsData, true, data["name"].(string))
 			data["subShapes"] = g.data01(IconAnnotationData, classname, cDataFilter[i][3].(string), modelName)
 			dataList = append(dataList, data)
@@ -494,20 +509,20 @@ func (g *graphicsData) getnthconnectionData() {
 	}
 }
 
-func getElementAndDiagramAnnotations(nameList []string) [][]interface{} {
+func getElementAnnotations(nameList []string) [][]interface{} {
 	var data [][]interface{}
-
 	for _, name := range nameList {
 		var result []interface{}
-		nameType := omc.OMC.GetClassRestriction(name)
-		if nameType == "connector" || nameType == "expandable connector" {
-			result = omc.OMC.GetDiagramAnnotation(name)
-			if len(result) > 8 {
-				result = result[8].([]interface{})
-			}
-		} else {
-			result = omc.OMC.GetElementAnnotations(name)
-		}
+		//nameType := omc.OMC.GetClassRestriction(name)
+		//if nameType == "connector" || nameType == "expandable connector" && isIcon == false {
+		//	result = omc.OMC.GetDiagramAnnotation(name)
+		//	if len(result) > 8 {
+		//		result = result[8].([]interface{})
+		//	}
+		//} else {
+		//	result = omc.OMC.GetElementAnnotations(name)
+		//}
+		result = omc.OMC.GetElementAnnotations(name)
 		for _, i := range result {
 			data = append(data, i.([]interface{}))
 		}
@@ -524,18 +539,16 @@ func getIconAndDiagramAnnotations(nameList []string, isIcon bool) []interface{} 
 			result = omc.OMC.GetDiagramAnnotation(name)
 			if len(result) > 8 {
 				result = result[8].([]interface{})
+			} else {
+				result = omc.OMC.GetIconAnnotationLineData(name)
 			}
 		} else {
 			result = omc.OMC.GetIconAnnotationLineData(name)
-			//if result == nil && (nameType == "connector" || nameType == "expandable connector") && len(nameList) == i+1 && len(data) == 0 {
-			//	var defaultData []interface{}
-			//	json.Unmarshal([]byte("[\"Ellipse\",[\"true\",[\"0.0\",\"0.0\"],\"0.0\",[\"95\",\"95\",\"95\"],[\"255\",\"255\",\"255\"],\"LinePattern.Solid\",\"FillPattern.Solid\",\"0.25\",[[\"-90.0\",\"90.0\"],[\"90.0\",\"-90.0\"]],\"0.0\",\"360.0\",\"EllipseClosure.Chord\"]]"), &defaultData)
-			//	result = defaultData
-			//}
 		}
 		for _, p := range result {
 			data = append(data, p)
 		}
+
 	}
 	return data
 }
@@ -553,4 +566,16 @@ func (g *graphicsData) getDiagramAnnotationData() {
 			}
 		}
 	}
+}
+
+var rectangleDefault = map[string]interface{}{"borderPattern": "BorderPattern.None", "color": "0,0,127", "extentsPoints": []string{"-100.0,-100.0", "100.0,100.0"},
+	"fillColor":     "255,255,255",
+	"fillPattern":   "FillPattern.Solid",
+	"linePattern":   "LinePattern.Solid",
+	"lineThickness": "0.25",
+	"originalPoint": "0.0,0.0",
+	"radius":        "0.0",
+	"rotation":      "0.0",
+	"type":          "Rectangle",
+	"visible":       "true",
 }
