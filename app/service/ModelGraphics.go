@@ -58,7 +58,7 @@ func GetGraphicsData(modelName string) [][]map[string]interface{} {
 	g.getnthconnectionData()
 	// nameList第一个名字是模型自身的名字，先获取模型自身的视图数据
 	componentsData := getElementsAndModelName([]string{modelName})
-	componentAnnotationsData := getElementAndDiagramAnnotations([]string{modelName})
+	componentAnnotationsData := getElementAnnotations([]string{modelName})
 	data2 := g.data02(componentsData, componentAnnotationsData, false, "")
 	for i := 0; i < len(data2); i++ {
 		data2[i]["mobility"] = true // 模型自身的组件是可以移动的，设置字段"mobility"为true
@@ -386,7 +386,11 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 		//if len(caDataFilter[i]) > 2 {
 		//	caDataFilter[i] = caDataFilter[i][len(caDataFilter[i])-2:]
 		//}
+
 		classname := cDataFilter[i][2].(string)
+		if classname == "Modelica.Magnetic.QuasiStatic.FundamentalWave.Components.EddyCurrent" {
+			log.Println("")
+		}
 		nameList := g.getICList(classname)
 		DynamicSelect := find(caDataFilter[i], "DynamicSelect")
 		if DynamicSelect {
@@ -408,7 +412,6 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 			//if len(modelIconAnnotationAll)>0 {
 			//	initialScale = modelIconAnnotationAll[5].(string)
 			//}
-
 			if len(caDataFilter[i]) < 1 {
 				continue
 			}

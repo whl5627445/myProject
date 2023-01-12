@@ -123,7 +123,8 @@ func GetICList(name string) []string {
 	for {
 		var data []string
 		for _, n := range nameList {
-			data = omc.OMC.GetInheritedClasses(n)
+			data = append(data, omc.OMC.GetInheritedClasses(n)...)
+
 		}
 		if len(data) == 0 {
 			break
