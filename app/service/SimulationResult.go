@@ -148,10 +148,11 @@ func SimulationResultTree(path string, parent string) []map[string]interface{} {
 	for _, name := range nameList {
 		trimPrefixName := strings.TrimPrefix(name, parent+".")
 		var splitName []string
-		if !strings.HasPrefix(name, "der(") {
+		if !strings.HasPrefix(name, "der(") && !strings.HasPrefix(name, "$") {
 			splitName = strings.Split(trimPrefixName, ".")
 		} else {
-			splitName = []string{trimPrefixName}
+			//splitName = []string{trimPrefixName}
+			continue
 		}
 		if strings.HasPrefix(name, parentName) && !nameMap[splitName[0]] && scalarVariableMap[name].HideResult == false && scalarVariableMap[name].IsProtected == false {
 			data := map[string]interface{}{

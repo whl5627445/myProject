@@ -545,6 +545,10 @@ func UpdateModelComponentView(c *gin.Context) {
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
+	} else {
+		for _, connect := range item.ConnectionList {
+			service.UpdateConnection(connect.ModelName, connect.ConnectStart, connect.ConnectEnd, connect.Color, connect.LinePoints)
+		}
 	}
 	res.Msg = "更新组件成功"
 	c.JSON(http.StatusOK, res)

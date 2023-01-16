@@ -206,11 +206,6 @@ func SimulateResultGraphicsView(c *gin.Context) {
 			}
 			resData = append(resData, oneData)
 			res.Data = resData
-		} else {
-			res.Err = "结果不存在"
-			res.Status = 2
-			c.JSON(http.StatusOK, res)
-			return
 		}
 	}
 	c.JSON(http.StatusOK, res)

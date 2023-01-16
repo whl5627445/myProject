@@ -70,17 +70,18 @@ type deleteComponentData struct {
 }
 
 type updateComponentData struct {
-	PackageId          string   `json:"package_id" binding:"required"`
-	ComponentName      string   `json:"component_name" binding:"required"`
-	ComponentClassName string   `json:"component_class_name" binding:"required"`
-	ModelName          string   `json:"model_name" binding:"required"`
-	Origin             string   `json:"origin" binding:"required"`
-	Extent             []string `json:"extent" binding:"required"`
-	Rotation           string   `json:"rotation" binding:"required"`
+	PackageId          string                           `json:"package_id" binding:"required"`
+	ConnectionList     []updateConnectionAnnotationData `json:"connection_list" binding:"required"`
+	ComponentName      string                           `json:"component_name" binding:"required"`
+	ComponentClassName string                           `json:"component_class_name" binding:"required"`
+	ModelName          string                           `json:"model_name" binding:"required"`
+	Origin             string                           `json:"origin" binding:"required"`
+	Extent             []string                         `json:"extent" binding:"required"`
+	Rotation           string                           `json:"rotation" binding:"required"`
 }
 
 type updateConnectionAnnotationData struct {
-	PackageId    string   `json:"package_id" binding:"required"`
+	PackageId    string   `json:"package_id" binding:""`
 	ModelName    string   `json:"model_name" binding:"required"`
 	ConnectStart string   `json:"connect_start" binding:"required"`
 	ConnectEnd   string   `json:"connect_end" binding:"required"`

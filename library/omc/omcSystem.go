@@ -833,14 +833,15 @@ func (o *ZmqObject) ReadSimulationResult(varNameList []string, path string) ([][
 	data = bytes.ReplaceAll(data, []byte("{"), []byte("["))
 	data = bytes.ReplaceAll(data, []byte("}"), []byte("]"))
 	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
-	var dataList [][]float64
-	err := json.Unmarshal(data, &dataList)
-	if err != nil || len(dataList) == 0 {
-		log.Println(err)
-		return nil, false
-	}
+	dataList := make([][]float64, 0, 2)
+	dataList = append(dataList, make([]float64, 0, 1))
+	dataList = append(dataList, make([]float64, 0, 1))
+	_ = json.Unmarshal(data, &dataList)
+	//if err != nil || len(dataList) == 0 {
+	//	log.Println(err)
+	//	return nil, false
+	//}
 	return dataList, true
-
 }
 
 func (o *ZmqObject) ParseFile(path string) (string, bool) {
