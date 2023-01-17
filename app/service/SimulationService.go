@@ -41,7 +41,7 @@ func openModelica(task *SimulateTask, resultFilePath string, SimulationPraData m
 		out, err := cmd.Output()
 		simulateResultStr := string(out)
 		if err != nil {
-			log.Println("err: ", err)
+			//log.Println("err: ", err)
 			log.Println("仿真执行失败")
 		}
 		if strings.Index(simulateResultStr, "successfully") != -1 {
@@ -49,10 +49,10 @@ func openModelica(task *SimulateTask, resultFilePath string, SimulationPraData m
 		} else {
 			task.SRecord.SimulateStatus = "3"
 		}
-		task.SRecord.SimulateResultStr = simulateResultStr
+		//task.SRecord.SimulateResultStr = simulateResultStr
 	} else {
 		task.SRecord.SimulateStatus = "3"
-		task.SRecord.SimulateResultStr = "编译失败"
+		//task.SRecord.SimulateResultStr = "编译失败"
 	}
 	config.DB.Save(&task.SRecord)
 	return res

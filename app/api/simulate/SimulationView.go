@@ -194,12 +194,32 @@ func SimulateResultGraphicsView(c *gin.Context) {
 		if ok {
 			unitsScaleFactor, _ := strconv.ParseFloat(unitsData[1], 64)
 			ordinate := data[1]
+			abscissa := data[0]
+			if len(ordinate) > 500 {
+				step := len(ordinate) / 500
+				o := []float64{}
+				a := []float64{}
+				for s := 0; s < len(ordinate); s++ {
+					index := s * step
+					if index > len(ordinate) {
+						break
+					}
+					o = append(o, data[1][index])
+					a = append(a, data[0][index])
+				}
+				if len(ordinate)%500 != 0 {
+					o = append(o, data[1][len(ordinate)-1])
+					a = append(a, data[0][len(ordinate)-1])
+				}
+				ordinate = o
+				abscissa = a
+			}
 			for p := 0; p < len(ordinate); p++ {
 				ordinate[p] = ordinate[p] * unitsScaleFactor
 			}
 			oneData := map[string]interface{}{
 				"id":        recordDict[recordIdList[i]].ID,
-				"abscissa":  data[0],
+				"abscissa":  abscissa,
 				"ordinate":  ordinate,
 				"startTime": recordDict[recordIdList[i]].StartTime,
 				"stopTime":  recordDict[recordIdList[i]].StopTime,

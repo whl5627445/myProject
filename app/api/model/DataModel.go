@@ -71,7 +71,7 @@ type deleteComponentData struct {
 
 type updateComponentData struct {
 	PackageId          string                           `json:"package_id" binding:"required"`
-	ConnectionList     []updateConnectionAnnotationData `json:"connection_list" binding:"required"`
+	ConnectionList     []updateConnectionAnnotationData `json:"connection_list" binding:""`
 	ComponentName      string                           `json:"component_name" binding:"required"`
 	ComponentClassName string                           `json:"component_class_name" binding:"required"`
 	ModelName          string                           `json:"model_name" binding:"required"`

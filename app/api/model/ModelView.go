@@ -547,7 +547,7 @@ func UpdateModelComponentView(c *gin.Context) {
 		return
 	} else {
 		for _, connect := range item.ConnectionList {
-			service.UpdateConnection(connect.ModelName, connect.ConnectStart, connect.ConnectEnd, connect.Color, connect.LinePoints)
+			service.UpdateConnection(item.ModelName, connect.ConnectStart, connect.ConnectEnd, connect.Color, connect.LinePoints)
 		}
 	}
 	res.Msg = "更新组件成功"
