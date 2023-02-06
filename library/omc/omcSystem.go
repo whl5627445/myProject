@@ -833,6 +833,15 @@ func (o *ZmqObject) ReadSimulationResult(varNameList []string, path string) ([][
 	data = bytes.ReplaceAll(data, []byte("{"), []byte("["))
 	data = bytes.ReplaceAll(data, []byte("}"), []byte("]"))
 	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
+	dataCutOff := make([]string, 0)
+	for i := 0; i < len(data); i++ {
+		index := strings.Index(string(data[i]), ".")
+		if index > 0 {
+			dataCutOff = append(dataCutOff, string(data[i])[:5])
+		} else {
+			dataCutOff = append(dataCutOff, string(data[i]))
+		}
+	}
 	dataList := make([][]float64, 0, 2)
 	dataList = append(dataList, make([]float64, 0, 1))
 	dataList = append(dataList, make([]float64, 0, 1))

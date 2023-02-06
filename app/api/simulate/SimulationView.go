@@ -201,7 +201,7 @@ func SimulateResultGraphicsView(c *gin.Context) {
 				a := []float64{}
 				for s := 0; s < len(ordinate); s++ {
 					index := s * step
-					if index > len(ordinate) {
+					if index >= len(ordinate) {
 						break
 					}
 					o = append(o, data[1][index])
