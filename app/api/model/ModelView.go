@@ -896,11 +896,15 @@ func GetCollectionModelView(c *gin.Context) {
 	var res responseData
 	var modelData []map[string]interface{}
 	var modelCollections []map[string]interface{}
-	DB.Raw("select mc.id, mc.package_id, m.package_name, mc.model_name, m.version from yssim_models_collections as mc  left join yssim_models m on mc.package_id = m.id where mc.userspace_id = ?  and m.sys_or_user IN (?,\"sys\") and mc.deleted_at is NULL", userSpaceId, username).Scan(&modelCollections)
+	DB.Raw("select mc.id, mc.package_id, m.package_name, mc.model_name, m.version, m.sys_or_user from yssim_models_collections as mc  left join yssim_models m on mc.package_id = m.id where mc.userspace_id = ?  and m.sys_or_user IN (?,\"sys\") and mc.deleted_at is NULL", userSpaceId, username).Scan(&modelCollections)
 	for i := 0; i < len(modelCollections); i++ {
 		modelName := modelCollections[i]["model_name"].(string)
 		packageName := modelCollections[i]["package_name"].(string)
 		version := modelCollections[i]["version"].(string)
+		sysOrUser := false
+		if modelCollections[i]["sys_or_user"].(string) == "sys" {
+			sysOrUser = true
+		}
 		//检测模型是否存在，不存在就从表中删除记录
 		result := service.ExistClass(modelName)
 		if !result {
@@ -908,12 +912,13 @@ func GetCollectionModelView(c *gin.Context) {
 			continue
 		}
 		data := map[string]interface{}{
-			"id":         modelCollections[i]["id"],
-			"package_id": modelCollections[i]["package_id"],
-			"model_name": modelCollections[i]["model_name"],
-			"haschild":   service.GetModelHasChild(modelName),
-			"image":      service.GetIcon(modelName, packageName, version),
-			"type":       service.GetModelType(modelName),
+			"id":          modelCollections[i]["id"],
+			"package_id":  modelCollections[i]["package_id"],
+			"model_name":  modelCollections[i]["model_name"],
+			"haschild":    service.GetModelHasChild(modelName),
+			"image":       service.GetIcon(modelName, packageName, version),
+			"type":        service.GetModelType(modelName),
+			"sys_or_user": sysOrUser,
 		}
 
 		modelData = append(modelData, data)
