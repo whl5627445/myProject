@@ -113,7 +113,8 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 	m.componentClassName = componentClassName
 	m.modelName = modelName
 	m.classAll = omc.OMC.GetInheritedClassesListAll([]string{modelName})
-	for i := 1; i < len(m.classAll); i++ {
+	bEnd := false
+	for i := 1; i < len(m.classAll) && !bEnd; i++ {
 		elementsData := omc.OMC.GetElements(m.classAll[i])
 		annotationsData := omc.OMC.GetElementAnnotations(m.classAll[i])
 		for n, d := range elementsData {
@@ -121,6 +122,7 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 				m.modelName = m.classAll[i]
 				inheritedClassAll := omc.OMC.GetInheritedClassesListAll([]string{d.([]interface{})[2].(string)})
 				m.classAll = inheritedClassAll
+				bEnd = true
 				break
 			}
 		}
@@ -239,13 +241,14 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 			dataDefault["value"] = componentModifierValue
 			if componentModifierValue == "" {
 				for _, n := range m.classAll {
-					componentModifierValue = omc.OMC.GetExtendsModifierValue(m.componentClassName, n, varName)
-					if componentModifierValue != "" {
-						dataDefault["value"] = componentModifierValue
+					componentExtendsModifierValue := omc.OMC.GetExtendsModifierValue(m.componentClassName, n, varName)
+					if componentExtendsModifierValue != "" {
+						dataDefault["value"] = componentExtendsModifierValue
 						break
 					}
 				}
 			}
+
 			isEnumeration := omc.OMC.IsEnumeration(m.className)
 			if isEnumeration {
 				Literals := omc.OMC.GetEnumerationLiterals(m.className)
@@ -263,6 +266,7 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 			}
 			parameterValue := omc.OMC.GetParameterValue(p[len(p)-2].(string), dataDefault["name"].(string))
 			dataDefault["defaultvalue"] = parameterValue
+
 			if p[2] == "Boolean" && (componentModifierValue != "" || parameterValue != "") {
 				dataDefault["type"] = "CheckBox"
 				if componentModifierValue != "" {
@@ -326,11 +330,27 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 	}
 	nameMap := make(map[string]int, 1)
 	var data []interface{}
+	extendsModifierNamesList := omc.OMC.GetExtendsModifierNames(modelName, m.modelName)
+	extendsNameMap := map[string]map[string]string{}
+	for _, nameAll := range extendsModifierNamesList {
+		if strings.HasPrefix(nameAll, componentName) {
+			nameList := strings.Split(nameAll, ".")
+			cName := nameList[0]
+			pName := nameList[1]
+			extendsNameMap[pName] = map[string]string{"cName": cName, "nameAll": nameAll}
+		}
+	}
 	for n := 0; n < len(dataList); n++ {
-		name := dataList[n].(map[string]interface{})["name"].(string)
+		pData := dataList[n].(map[string]interface{})
+		name := pData["name"].(string)
 		_, ok := nameMap[name]
 		if !ok {
-			data = append(data, dataList[n])
+			extendsModifierData, ok := extendsNameMap[name]
+			if ok {
+				extendsModifierValue := omc.OMC.GetExtendsModifierValue(modelName, m.modelName, extendsModifierData["nameAll"])
+				pData["value"] = extendsModifierValue
+			}
+			data = append(data, pData)
 			nameMap[name] = n
 		}
 	}

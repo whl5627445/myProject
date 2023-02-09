@@ -6,47 +6,27 @@ import (
 )
 
 func GetModelChild(modelName string) []map[string]interface{} {
-
-	childAllList := omc.OMC.GetClassNames(modelName, true)
+	childAllList := omc.OMC.GetClassNames(modelName, false)
 	var dataList []map[string]interface{}
 	if childAllList != nil {
-
-		modelLen := len(strings.Split(modelName, "."))
-		childMap := map[string]map[string]any{}
-		var childList []string
 		for i := 0; i < len(childAllList); i++ {
-			classInformation := GetClassInformation(childAllList[i])
-			isProtect := classInformation[12].(string)
-			if isProtect == "true" {
-				continue
-			}
+			modelChildName := modelName + "." + childAllList[i]
+			classInformation := GetClassInformation(modelChildName)
 			modelType := strings.TrimSpace(classInformation[0].(string))
-			PrefixOK := strings.HasPrefix(childAllList[i], modelName)
-			modelChildLen := len(strings.Split(childAllList[i], "."))
-			if PrefixOK == true && modelChildLen != modelLen {
-				modelNameList := strings.Split(childAllList[i], ".")
-				modelNameAll := strings.Join(modelNameList[:modelLen+1], ".")
-				name := modelNameList[len(modelNameList)-1]
-				data := map[string]interface{}{
-					"name":       name,
-					"model_name": modelNameAll,
-					"haschild":   false,
-					"type":       modelType,
-				}
-				_, ok := childMap[modelNameAll]
-				if ok && modelChildLen > modelLen+1 {
-					childMap[modelNameAll]["haschild"] = true
-				}
-				if modelChildLen == modelLen+1 && !ok {
-					childMap[modelNameAll] = data
-					childList = append(childList, modelNameAll)
-				}
+			data := map[string]interface{}{
+				"name":       childAllList[i],
+				"model_name": modelChildName,
+				"haschild":   false,
+				"type":       modelType,
 			}
-		}
-		for _, c := range childList {
-			dataList = append(dataList, childMap[c])
+			childList := omc.OMC.GetClassNames(modelChildName, false)
+			if len(childList) > 0 {
+				data["haschild"] = true
+			}
+			dataList = append(dataList, data)
 		}
 	}
+
 	return dataList
 }
 

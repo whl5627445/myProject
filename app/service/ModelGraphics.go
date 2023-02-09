@@ -275,23 +275,35 @@ func (g *graphicsData) data01(cData []interface{}, className, component, modelNa
 					if pSignIndex != -1 {
 						classNameAll := omc.OMC.GetInheritedClassesListAll([]string{className})
 						varName := t[pSignIndex+1:]
-						varValue := varName
+						varValue := ""
 						if varName != "name" {
 							varName = strings.TrimSuffix(varName, "%")
 							modifierName := component + "." + varName
-							varValue = omc.OMC.GetElementModifierValue(modelName, modifierName)
-
-							if varValue == "" {
-								for _, name := range classNameAll {
-									varValue = omc.OMC.GetParameterValue(name, varName)
-									if varValue != "" {
-										break
+							extendsModifierNamesList := omc.OMC.GetExtendsModifierNames(g.modelName, modelName)
+							for _, nameAll := range extendsModifierNamesList {
+								if modifierName == nameAll {
+									extendsModifierVarValue := omc.OMC.GetExtendsModifierValue(g.modelName, modelName, modifierName)
+									if extendsModifierVarValue != varName {
+										varValue = extendsModifierVarValue
 									}
 								}
 							}
 							if varValue == "" {
-								varValue = varName
+								varValue = omc.OMC.GetElementModifierValue(modelName, modifierName)
+								if varValue == "" {
+									for _, name := range classNameAll {
+										varValue = omc.OMC.GetParameterValue(name, varName)
+										if varValue != "" {
+											break
+										}
+									}
+
+									if varValue == "" {
+										varValue = varName
+									}
+								}
 							}
+
 							if len(varValue) > 30 && strings.Index(varValue, ".") != -1 && strings.Index(varValue, " ") == -1 {
 								varValueList := strings.Split(varValue, ".") // 某些值是模型全称的需要取最后一部分。所以分割一下
 								varValue = varValueList[len(varValueList)-1]
@@ -388,9 +400,7 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 		//}
 
 		classname := cDataFilter[i][2].(string)
-		if classname == "Modelica.Magnetic.QuasiStatic.FundamentalWave.Components.EddyCurrent" {
-			log.Println("")
-		}
+
 		nameList := g.getICList(classname)
 		DynamicSelect := find(caDataFilter[i], "DynamicSelect")
 		if DynamicSelect {

@@ -63,9 +63,15 @@ func modelCache(packageModel string) {
 	omc.OMC.CacheRefreshSet(true)
 	for p := 0; p < len(modelsALL); p++ {
 		e := omc.OMC.GetClassInformation(modelsALL[p])
-		if len(e) > 1 && e[0].(string) == "model" {
+		//if len(e) > 1 && e[0].(string) == "model" {
+		if len(e) > 1 {
 			log.Println("正在缓存：", modelsALL[p], " 的图形数据")
+			if modelsALL[p] == "Modelica.Fluid.Examples.AST_BatchPlant.BaseClasses.TankWith3InletOutletArraysWithEvaporatorCondensor" {
+				log.Println("")
+			}
 			GetGraphicsData(modelsALL[p])
+		} else {
+			log.Println(modelsALL[p], " 不是model类型，跳过")
 		}
 	}
 	omc.OMC.CacheRefreshSet(false)
