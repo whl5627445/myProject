@@ -12,7 +12,7 @@ require (
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/wangluozhe/requests v1.0.3
 	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f // indirect
-	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/text v0.6.0 // indirect
 	gorm.io/driver/mysql v1.3.5
 	gorm.io/gorm v1.23.8
 )
@@ -20,20 +20,21 @@ require (
 require (
 	github.com/go-zeromq/zmq4 v0.15.0
 	github.com/nacos-group/nacos-sdk-go v1.1.2
+	google.golang.org/grpc v1.53.0
+	google.golang.org/protobuf v1.28.1
 	gorm.io/datatypes v1.0.7
 )
 
 require (
 	github.com/Danny-Dasilva/fhttp v0.0.0-20220418170016-5ea1c560e6a8 // indirect
 	github.com/Danny-Dasilva/utls v0.0.0-20220524230213-ddef7e504c5f // indirect
-	github.com/ajstarks/svgo v0.0.0-20211024235047-1546f124cd8b // indirect
 	github.com/aliyun/alibaba-cloud-sdk-go v1.61.18 // indirect
 	github.com/andybalholm/brotli v1.0.4 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/bitly/go-simplejson v0.5.0 // indirect
 	github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869 // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
-	github.com/cespare/xxhash/v2 v2.1.2 // indirect
+	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/dsnet/compress v0.0.2-0.20210315054119-f66993602bf5 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
@@ -43,6 +44,7 @@ require (
 	github.com/go-playground/validator/v10 v10.10.0 // indirect
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/goccy/go-json v0.9.7 // indirect
+	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
@@ -66,10 +68,11 @@ require (
 	go.uber.org/multierr v1.5.0 // indirect
 	go.uber.org/zap v1.15.0 // indirect
 	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d // indirect
-	golang.org/x/net v0.0.0-20220706163947-c90051bbdb60 // indirect
-	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
-	google.golang.org/protobuf v1.28.0 // indirect
+	golang.org/x/net v0.5.0 // indirect
+	golang.org/x/sys v0.4.0 // indirect
+	google.golang.org/genproto v0.0.0-20230110181048-76db0878b65f // indirect
 	gopkg.in/ini.v1 v1.42.0 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
+	honnef.co/go/tools v0.1.3 // indirect
 )
