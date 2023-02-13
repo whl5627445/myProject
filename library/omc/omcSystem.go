@@ -1007,6 +1007,16 @@ func (o *ZmqObject) IsPackage(packageName string) bool {
 	return false
 }
 
+func (o *ZmqObject) BuildModelFMU(className string) string {
+	cmd := "buildModelFMU(" + className + ")"
+	result, ok := o.SendExpressionNoParsed(cmd)
+	log.Println(result, ok)
+	if ok {
+		return string(result)
+	}
+	return ""
+}
+
 //func (o *ZmqObject) ModelInstance(modelName string, ModelInstance *serviceType.ModelInstance) bool {
 //	cmd := "getModelInstance(" + modelName + ")"
 //	result, ok := o.SendExpressionNoParsed(cmd)

@@ -100,7 +100,7 @@ func ModelSimulateView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
-	SimulateTypeDict := map[string]bool{"OM": true, "JM": true, "DM": true}
+	SimulateTypeDict := map[string]bool{"OM": true, "JM": true, "DM": true, "FmPy": true}
 	if !SimulateTypeDict[item.SimulateType] {
 		c.JSON(http.StatusBadRequest, "")
 		return

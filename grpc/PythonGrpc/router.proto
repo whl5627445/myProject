@@ -10,12 +10,13 @@ service Greeter {
 
 message FmuSimulationRequest {
   string uuid = 1;
-  int32 startTime = 2;
-  int32 stopTime = 3;
+  float startTime = 2;
+  float stopTime = 3;
   string fmuPath = 4;
   string resPath = 5;
   map<string, string> params = 6;
   int32 outputInterval = 7;
+  float tolerance=8;
 }
 message FmuSimulationReply {
   string log = 1;

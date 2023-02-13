@@ -1,6 +1,6 @@
 import time
 from fmpy.fmi2 import fmi2Warning
-from db_config.config import Session, ProcessState
+from db_config.config import Session, YssimSimulateRecords
 from fmpy import *
 import zarr
 from multiprocessing import Process
@@ -11,17 +11,17 @@ def TimeStampToTime(timestamp):
     return time.strftime('%Y-%m-%d %H:%M:%S', timeStruct)
 
 
-def updateDb(uuid, progress, exception, log, state, processStartTime, processRunTime):
-    with Session() as session:
-        processDetails = session.query(ProcessState).filter(ProcessState.uuid == uuid).first()
-        if processDetails:
-            processDetails.progress = progress
-            processDetails.exception = exception
-            processDetails.log = log
-            processDetails.state = state
-            processDetails.processStartTime = processStartTime
-            processDetails.processRunTime = processRunTime
-            session.commit()
+# def updateDb(uuid, log, state, processStartTime, processRunTime):
+#     with Session() as session:
+#         processDetails = session.query(YssimSimulateRecords).filter(YssimSimulateRecords.uuid == uuid).first()
+#         if processDetails:
+#             # processDetails.progress = progress
+#             # processDetails.exception = exception
+#             processDetails.simulate_result_str = log
+#             processDetails.simulate_status = state
+#             processDetails.simulate_start_time = processStartTime
+#             processDetails.simulate_end_time = processRunTime
+#             session.commit()
 
 
 def saveZarr(path, ojb):
@@ -41,13 +41,16 @@ class MyProcess(Process):
         self.managerResDict = managerResDict
 
         self.resPath = request.resPath
-        updateDb(uuid=self.uuid, progress=self.progress1, exception=0, log=self.AllLogTxt,
-                 state="初始化", processStartTime=None, processRunTime=None)
+        # updateDb(uuid=self.uuid, progress=self.progress1, exception=0, log=self.AllLogTxt,
+        #          state="初始化", processStartTime=None, processRunTime=None)
+        with Session() as session:
+            processDetails = session.query(YssimSimulateRecords).filter(YssimSimulateRecords.id == self.uuid).first()
+            if processDetails:
+                processDetails.simulate_status = "1"
+                session.commit()
 
     def stepFinished(self, running_time, recorder):
-
         self.simulateRes = recorder.result()
-
         self.managerResDict[self.uuid] = recorder.result()
         # saveZarr(os.path.join(self.resFilePath, "result_res.zarr"), self.simulateRes)
 
@@ -91,9 +94,19 @@ class MyProcess(Process):
             self.outputs = [v.name for v in read_model_description(self.request.fmuPath).modelVariables]
             time2 = time.time()
             print("读取变量耗时：", time2 - time1)
-            updateDb(uuid=self.uuid, progress=self.progress1, exception=0, log=self.AllLogTxt,
-                     state="正在运行", processStartTime=TimeStampToTime(self.processStartTime),
-                     processRunTime=TimeStampToTime(time.time()))
+            # updateDb(uuid=self.uuid, progress=self.progress1, exception=0, log=self.AllLogTxt,
+            #          state="正在运行", processStartTime=TimeStampToTime(self.processStartTime),
+            #          processRunTime=TimeStampToTime(time.time()))
+            with Session() as session:
+                processDetails = session.query(YssimSimulateRecords).filter(
+                    YssimSimulateRecords.id == self.uuid).first()
+                if processDetails:
+                    processDetails.simulate_result_str = self.AllLogTxt
+                    processDetails.simulate_status = "2"
+                    processDetails.simulate_start_time = self.processStartTime
+                    processDetails.simulate_end_time = time.time()
+                    session.commit()
+
             simulate_fmu(self.request.fmuPath,
                          start_time=self.request.startTime,
                          stop_time=self.request.stopTime,
@@ -101,20 +114,40 @@ class MyProcess(Process):
                          start_values=dict(self.request.params),
                          output=self.outputs,
                          step_finished=self.stepFinished,
+                         relative_tolerance=self.request.tolerance,
                          logger=self.logFMUMessage
                          )
 
         except Exception as e:
             log = "(error)" + str(e)
             print(log)
-            updateDb(uuid=self.uuid, progress=self.progress1, exception=1, log=self.AllLogTxt + log,
-                     state="运行结束", processStartTime=TimeStampToTime(self.processStartTime),
-                     processRunTime=TimeStampToTime(time.time()))
+            # updateDb(uuid=self.uuid, progress=self.progress1, exception=1, log=self.AllLogTxt + log,
+            #          state="运行结束", processStartTime=TimeStampToTime(self.processStartTime),
+            #          processRunTime=TimeStampToTime(time.time()))
+
+            with Session() as session:
+                processDetails = session.query(YssimSimulateRecords).filter(
+                    YssimSimulateRecords.id == self.uuid).first()
+                if processDetails:
+                    processDetails.simulate_result_str = self.AllLogTxt + log
+                    processDetails.simulate_status = "3"
+                    processDetails.simulate_start_time = self.processStartTime
+                    processDetails.simulate_end_time = time.time()
+                    session.commit()
 
         else:
-            updateDb(uuid=self.uuid, progress=self.progress1, exception=0, log=self.AllLogTxt,
-                     state="运行结束", processStartTime=TimeStampToTime(self.processStartTime),
-                     processRunTime=TimeStampToTime(time.time()))
+            # updateDb(uuid=self.uuid, progress=self.progress1, exception=0, log=self.AllLogTxt,
+            #          state="运行结束", processStartTime=TimeStampToTime(self.processStartTime),
+            #          processRunTime=TimeStampToTime(time.time()))
+            with Session() as session:
+                processDetails = session.query(YssimSimulateRecords).filter(
+                    YssimSimulateRecords.id == self.uuid).first()
+                if processDetails:
+                    processDetails.simulate_result_str = self.AllLogTxt
+                    processDetails.simulate_status = "4"
+                    processDetails.simulate_start_time = self.processStartTime
+                    processDetails.simulate_end_time = time.time()
+                    session.commit()
 
         finally:
 
