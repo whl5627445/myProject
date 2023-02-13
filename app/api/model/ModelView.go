@@ -1,7 +1,6 @@
 package API
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -165,14 +164,14 @@ func GetModelParametersView(c *gin.Context) {
 	parameters := service.GetModelParameters(modelName, componentName, className)
 	elements := service.GetElements(modelName, componentName)
 	if len(elements) > 0 && componentName != "" {
-		dimension := elements[len(elements)-1].([]interface{})
+		dimension := elements[len(elements)-1].(string)
 		properties = map[string]interface{}{
 			"model_name":     modelName,
 			"component_name": componentName,
 			"path":           elements[2],
-			"dimension":      fmt.Sprintf("%s", dimension),
+			"dimension":      dimension,
 			"annotation":     elements[4],
-			"Properties":     []string{elements[6].(string), elements[5].(string), elements[9].(string)},
+			"Properties":     []interface{}{elements[6], elements[5], elements[9]},
 			"Variability":    elements[10],
 			"Inner/Outer":    elements[11],
 			"Causality":      elements[12],
@@ -947,6 +946,20 @@ func DeleteCollectionModelView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+func SearchModelView(c *gin.Context) {
+	/*
+		# 搜索模型
+	*/
+
+	keywords := c.Query("keywords")
+	parent := c.Query("parent")
+	var res responseData
+	modelNameList := service.SearchModel(keywords, parent)
+	res.Data = modelNameList
+
+	c.JSON(http.StatusOK, res)
+}
+
 func Test(c *gin.Context) {
 	/*
 		测试omc命令
@@ -961,6 +974,17 @@ func Test(c *gin.Context) {
 		data = string(d)
 	}
 	//log.Println(data)
+	var res responseData
+	res.Data = data
+	c.JSON(http.StatusOK, res)
+}
+
+func Test1(c *gin.Context) {
+	/*
+		测试omc命令
+	*/
+	cmd := c.Query("cmd")
+	data := service.GetGraphicsDataNew(cmd)
 	var res responseData
 	res.Data = data
 	c.JSON(http.StatusOK, res)

@@ -152,6 +152,8 @@ func SimulateResultGraphicsView(c *gin.Context) {
 		# 仿真结果获取接口， 可一次获取多条
 		## variable: 模型变量名字，
 		## id: 仿真记录id值，在/simulate/record/list接口获取，
+		## s1: 单位转换使用，固定为初始单位
+		## s2: 位单位转换使用，需要转换为什么单位
 	*/
 
 	username := c.GetHeader("username")
@@ -188,29 +190,36 @@ func SimulateResultGraphicsView(c *gin.Context) {
 	// 遍历入参数中的id，依次读取结果，每次经过插入到resData
 	for i := 0; i < len(recordIdList); i++ {
 		data, ok := service.ReadSimulationResult([]string{item.Variable}, recordDict[recordIdList[i]].SimulateModelResultPath+"result_res.mat")
+		unitsData := service.ConvertUnits(item.S2, item.S1)
 		if ok {
 			ordinate := data[1]
 			abscissa := data[0]
-			if len(ordinate) > 500 {
-				step := len(ordinate) / 500
-				o := []float64{}
-				a := []float64{}
-				for s := 0; s < len(ordinate); s++ {
-					index := s * step
-					if index >= len(ordinate) {
-						break
+			if unitsData[0] == "true" {
+				scaleFactor, _ := strconv.ParseFloat(unitsData[1], 64)
+				offset, _ := strconv.ParseFloat(unitsData[2], 64)
+				if len(ordinate) > 500 {
+					step := len(ordinate) / 500
+					o := []float64{}
+					a := []float64{}
+					for s := 0; s < len(ordinate); s++ {
+						index := s * step
+						if index >= len(ordinate) {
+							break
+						}
+						o = append(o, data[1][index])
+						a = append(a, data[0][index])
 					}
-					o = append(o, data[1][index])
-					a = append(a, data[0][index])
+					if len(ordinate)%500 != 0 {
+						o = append(o, data[1][len(ordinate)-1])
+						a = append(a, data[0][len(ordinate)-1])
+					}
+					ordinate = o
+					abscissa = a
 				}
-				if len(ordinate)%500 != 0 {
-					o = append(o, data[1][len(ordinate)-1])
-					a = append(a, data[0][len(ordinate)-1])
+				for p := 0; p < len(ordinate); p++ {
+					ordinate[p] = ordinate[p]*scaleFactor + offset
 				}
-				ordinate = o
-				abscissa = a
 			}
-
 			oneData := map[string]interface{}{
 				"id":        recordDict[recordIdList[i]].ID,
 				"abscissa":  abscissa,
@@ -230,6 +239,8 @@ func SimulateResultSingularView(c *gin.Context) {
 		# 仿真结果获取接口,单数
 		## variable: 模型变量名字，
 		## id: 仿真记录id值，在/simulate/record/list接口获取，
+		## s1: 单位转换使用，固定为初始单位
+		## s2: 位单位转换使用，需要转换为什么单位
 	*/
 
 	username := c.GetHeader("username")
@@ -251,8 +262,16 @@ func SimulateResultSingularView(c *gin.Context) {
 	}
 
 	data, ok := service.ReadSimulationResult([]string{item.Variable}, record.SimulateModelResultPath+"result_res.mat")
+	unitsData := service.ConvertUnits(item.S2, item.S1)
 	if ok {
+		scaleFactor, _ := strconv.ParseFloat(unitsData[1], 64)
+		offset, _ := strconv.ParseFloat(unitsData[2], 64)
 		ordinate := data[1]
+		if unitsData[0] == "true" {
+			for i := 0; i < len(ordinate); i++ {
+				ordinate[i] = ordinate[i]*scaleFactor + offset
+			}
+		}
 		res.Data = map[string]interface{}{
 			"ordinate":  ordinate,
 			"startTime": record.StartTime,
