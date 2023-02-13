@@ -6,10 +6,7 @@ import (
 	"encoding/json"
 	"log"
 	"sync"
-	"time"
 	"yssim-go/config"
-
-	//"github.com/go-zeromq/zmq4"
 
 	"github.com/go-zeromq/zmq4"
 	"os"
@@ -30,7 +27,7 @@ var AllModelCache = config.R
 
 // SendExpression 发送指令，获取数据
 func (o *ZmqObject) SendExpression(cmd string) ([]interface{}, bool) {
-	s := time.Now().UnixNano() / 1e6
+	//s := time.Now().UnixNano() / 1e6
 	o.Lock()
 	defer o.Unlock()
 	var msg []byte
@@ -39,10 +36,9 @@ func (o *ZmqObject) SendExpression(cmd string) ([]interface{}, bool) {
 	msg, err := AllModelCache.HGet(ctx, "yssim-GraphicsData", cmd).Bytes()
 	if err != nil {
 		_ = o.Send(zmq4.NewMsgString(cmd))
-
 		data, _ := o.Recv()
 		msg = data.Bytes()
-		if cacheRefresh {
+		if cacheRefresh && len(msg) > 0 {
 			AllModelCache.HSet(ctx, "yssim-GraphicsData", cmd, msg)
 		}
 	}
@@ -55,10 +51,10 @@ func (o *ZmqObject) SendExpression(cmd string) ([]interface{}, bool) {
 		return nil, false
 	}
 
-	if time.Now().UnixNano()/1e6-s > 20 {
-		log.Println("cmd: ", cmd)
-		log.Println("消耗时间: ", time.Now().UnixNano()/1e6-s)
-	}
+	//if time.Now().UnixNano()/1e6-s > 20 {
+	//	log.Println("cmd: ", cmd)
+	//	log.Println("消耗时间: ", time.Now().UnixNano()/1e6-s)
+	//}
 	return parseData, true
 }
 
@@ -76,7 +72,7 @@ func (o *ZmqObject) SendExpressionNoParsed(cmd string) ([]byte, bool) {
 		_ = o.Send(zmq4.NewMsgString(cmd))
 		data, _ := o.Recv()
 		msg = data.Bytes()
-		if cacheRefresh {
+		if cacheRefresh && len(msg) > 0 {
 			AllModelCache.HSet(ctx, "yssim-GraphicsData", cmd, msg)
 		}
 	}
@@ -90,6 +86,7 @@ func (o *ZmqObject) SendExpressionNoParsed(cmd string) ([]byte, bool) {
 	//	log.Println("cmd: ", cmd)
 	//log.Println("消耗时间: ", time.Now().UnixNano()/1e6-s)
 	//}
+
 	return msg, true
 }
 
@@ -113,7 +110,7 @@ func (o *ZmqObject) BuildModel(className, fileNamePrefix string, simulateParamet
 
 // 清空加载的模型库
 func (o *ZmqObject) Clear() {
-	o.SendExpressionNoParsed("clearCommandLineOptions()")
+	//o.SendExpressionNoParsed("clearCommandLineOptions()")
 	//o.SendExpressionNoParsed("clear()")
 	//o.SendExpressionNoParsed("clearVariables()")
 	//o.SendExpressionNoParsed("clearProgram()")
@@ -124,8 +121,9 @@ func (o *ZmqObject) Clear() {
 	o.SendExpressionNoParsed("setCommandLineOptions(\"--simCodeTarget=C\")")
 	//o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nogen,noevalfunc,newInst,nfAPI\")")
 	o.SendExpressionNoParsed("setCommandLineOptions(\"--matchingAlgorithm=PFPlusExt --indexReductionMethod=dynamicStateSelection -d=initialization,NLSanalyticJacobian\")")
-	o.SendExpressionNoParsed("setCompiler(\"clang\")")
-	o.SendExpressionNoParsed("setCXXCompiler(\"clang++\")")
+	o.SendExpressionNoParsed("setModelicaPath(\"/usr/lib/omlibrary\")")
+	//o.SendExpressionNoParsed("setCompiler(\"clang\")")
+	//o.SendExpressionNoParsed("setCXXCompiler(\"clang++\")")
 }
 
 func (o *ZmqObject) GetCommandLineOptions() string {
@@ -150,7 +148,9 @@ func (o *ZmqObject) GetInheritedClasses(className string) []string {
 	var dataList []string
 	if ok {
 		for i := 0; i < len(inheritedClassesData); i++ {
-			dataList = append(dataList, inheritedClassesData[i].(string))
+			if inheritedClassesData[i].(string) != className {
+				dataList = append(dataList, inheritedClassesData[i].(string))
+			}
 		}
 	}
 	return dataList
@@ -292,9 +292,23 @@ func (o *ZmqObject) GetElements(className string) []interface{} {
 	if className == "Real" || className == "" {
 		return nil
 	}
-	cmd := "getElements(" + className + ", useQuotes = false)"
-	components, _ := o.SendExpression(cmd)
-	return components
+	cmd := "getElements(" + className + ", useQuotes = true)"
+	components, _ := o.SendExpressionNoParsed(cmd)
+	components = bytes.ReplaceAll(components, []byte("{"), []byte("["))
+	components = bytes.ReplaceAll(components, []byte("}"), []byte("]"))
+	components = bytes.TrimSuffix(components, []byte("\n"))
+	components = bytes.ReplaceAll(components, []byte("\n"), []byte("\\n"))
+	var resData []interface{}
+	if string(components) != "Error" && len(components) > 0 {
+		err := json.Unmarshal(components, &resData)
+		if err != nil {
+			log.Println("getElements err: ", err)
+			log.Println("components: ", string(components))
+			log.Println("cmd: ", cmd)
+			return nil
+		}
+	}
+	return resData
 }
 
 // 获取切片给定模型的组成部分，包含组件信息,新API
@@ -304,11 +318,22 @@ func (o *ZmqObject) GetElementsList(classNameList []string) [][]interface{} {
 		if classNameList[i] == "Real" || classNameList[i] == "" {
 			continue
 		}
-		cmd := "getElements(" + classNameList[i] + ", useQuotes = false)"
-		components, ok := o.SendExpression(cmd)
-		if ok {
-			for p := 0; p < len(components); p++ {
-				dataList = append(dataList, components[p].([]interface{}))
+		cmd := "getElements(" + classNameList[i] + ", useQuotes = true)"
+		components, ok := o.SendExpressionNoParsed(cmd)
+		components = bytes.ReplaceAll(components, []byte("{"), []byte("["))
+		components = bytes.ReplaceAll(components, []byte("}"), []byte("]"))
+		components = bytes.TrimSuffix(components, []byte("\n"))
+		var resData []interface{}
+		err := json.Unmarshal(components, &resData)
+		if err != nil {
+			log.Println("getElements err: ", err)
+			log.Println("components: ", string(components))
+			log.Println("cmd: ", cmd)
+			return nil
+		}
+		if ok && len(resData) > 0 {
+			for p := 0; p < len(resData); p++ {
+				dataList = append(dataList, resData[p].([]interface{}))
 			}
 		}
 	}
@@ -981,3 +1006,16 @@ func (o *ZmqObject) IsPackage(packageName string) bool {
 	}
 	return false
 }
+
+//func (o *ZmqObject) ModelInstance(modelName string, ModelInstance *serviceType.ModelInstance) bool {
+//	cmd := "getModelInstance(" + modelName + ")"
+//	result, ok := o.SendExpressionNoParsed(cmd)
+//	if ok && len(result) > 1 {
+//		result = bytes.ReplaceAll(result, []byte("\\\""), []byte("\""))
+//		result = bytes.ReplaceAll(result, []byte("\\\\"), []byte("\\"))
+//		result = result[1 : len(result)-2]
+//		_ = json.Unmarshal(result, ModelInstance)
+//		return true
+//	}
+//	return false
+//}
