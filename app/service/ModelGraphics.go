@@ -2,7 +2,6 @@ package service
 
 import (
 	"encoding/base64"
-	"fmt"
 	"log"
 	"os"
 	"reflect"
@@ -368,9 +367,9 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 	var caDataFilter [][]interface{}
 	dataLen := func() int {
 		if len(cData) > len(caData) {
-			return len(cDataFilter)
+			return len(caData)
 		}
-		return len(caData)
+		return len(cData)
 	}()
 	if isIcon == true && cData != nil && caData != nil {
 		for i := 0; i < dataLen; i++ {
@@ -476,9 +475,8 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 			data["rotateAngle"] = rotateAngle
 			data["rotation"] = rotateAngle
 			data["output_type"] = func() string {
-				t := cDataFilter[i][len(cDataFilter[i])-2].([]interface{})
-				str := fmt.Sprintf("%s", t)
-				return str
+				t := cDataFilter[i][len(cDataFilter[i])-2].(string)
+				return t
 			}()
 			componentsData := getElementsAndModelName(nameList)
 			componentAnnotationsData := getElementAnnotations(nameList)

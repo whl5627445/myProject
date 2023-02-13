@@ -182,14 +182,17 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 		showStartAttribute := ""
 		if DialogIndexOk {
 			tabIndex := DialogIndex + 1
-			if len(dList) <= 1 || dList[tabIndex].([]interface{})[len(dList[tabIndex].([]interface{}))-1] == "true" {
-				continue
+			dListTab := dList[tabIndex].([]interface{})
+			if tabIndex > 0 && len(dListTab) > 3 {
+				if len(dList) <= 1 || dListTab[len(dListTab)-1] == "true" {
+					continue
+				}
+				tab := dListTab[0]
+				group := dListTab[1]
+				dataDefault["tab"] = tab.(string)
+				dataDefault["group"] = group.(string)
+				showStartAttribute = dListTab[3].(string)
 			}
-			tab := dList[tabIndex].([]interface{})[0]
-			group := dList[tabIndex].([]interface{})[1]
-			dataDefault["tab"] = tab.(string)
-			dataDefault["group"] = group.(string)
-			showStartAttribute = dList[tabIndex].([]interface{})[3].(string)
 		}
 		if showStartAttribute == "true" {
 			fixedValueString := m.getElementModifierFixedValue(m.name + "." + varName + ".fixed")
@@ -215,25 +218,26 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 			continue
 		}
 
-		if p[9] == "true" {
-			continue
-			//dataDefault["type"] = "Enumeration"
-			//dataDefault["defaultvalue"] = p[2]
-			//dataDefault["disable"] = true
-			//dataDefault["group"] = "参数"
-			//oData := make([]string, 1)
-			//if p[13].(string) != "$Any" {
-			// 模板参数获取有内存泄露问题， 暂时不用
-			//options := omc.OMC.GetAllSubtypeOf(p[13].(string), componentClassName)
-			//for _, option := range options {
-			//	optionData := "redeclare "+ option.(string) + " " + componentName+"."+dataDefault["name"].(string)
-			//	oData = append(oData, optionData)
-			//}
-			//	dataDefault["disable"] = false
-			//}
-			//dataDefault["options"] = oData
-			//dataList = append(dataList, dataDefault)
+		if p[9] == true {
 			//continue
+			//oData := make([]string, 1)
+			dataDefault["type"] = "Enumeration"
+			dataDefault["disable"] = true
+			dataDefault["defaultvalue"] = omc.OMC.GetElementModifierValue(m.modelName, componentName+"."+dataDefault["name"].(string))
+			//if p[13].(string) != "$Any" {
+			//	dataDefault["defaultvalue"] = p[13]
+			//}
+			//	//模板参数获取有内存泄露问题， 暂时不用
+			//	options := omc.OMC.GetAllSubtypeOf(p[13].(string), componentClassName)
+			//	for _, option := range options {
+			//		optionData := "redeclare " + option.(string) + " " + componentName + "." + dataDefault["name"].(string)
+			//		oData = append(oData, optionData)
+			//	}
+			//	dataDefault["disable"] = false
+
+			//dataDefault["options"] = oData
+			dataList = append(dataList, dataDefault)
+			continue
 		}
 
 		if p[10] == "parameter" || dataDefault["group"] != "Parameters" || DialogIndexOk == true {

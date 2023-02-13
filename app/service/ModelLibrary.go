@@ -25,7 +25,7 @@ func ModelLibraryInitialization(packageModel []DataBaseModel.YssimModels) {
 		}
 	}
 	for _, models := range packageModelMap {
-		ok := true
+		ok := false
 		if models.FilePath == "" {
 			cmd := fmt.Sprintf("loadModel(%s, {\"%s\"},true,\"\",false)", models.PackageName, models.Version)
 			_, ok = omc.OMC.SendExpressionNoParsed(cmd)
@@ -35,11 +35,10 @@ func ModelLibraryInitialization(packageModel []DataBaseModel.YssimModels) {
 		}
 		if ok {
 			cacheStatus, _ := config.R.HGet(context.Background(), "yssim-GraphicsData", "status").Result() // 1是已缓存完成
-			log.Println("缓存标记：", cacheStatus)
 			if models.SysUser == "sys" && cacheStatus != "1" {
 				modelCache(models.PackageName)
 			}
-			log.Printf("初始化模型库： %s  %t \n", models.PackageName, true)
+			log.Printf("初始化模型库： %s  %t \n", models.PackageName, ok)
 		} else {
 			log.Println("模型库：" + models.PackageName + "  初始化失败")
 		}
@@ -62,17 +61,14 @@ func modelCache(packageModel string) {
 	modelsALL := omc.OMC.GetClassNames(packageModel, true)
 	omc.OMC.CacheRefreshSet(true)
 	for p := 0; p < len(modelsALL); p++ {
-		e := omc.OMC.GetClassInformation(modelsALL[p])
+		//e := omc.OMC.GetClassInformation(modelsALL[p])
 		//if len(e) > 1 && e[0].(string) == "model" {
-		if len(e) > 1 {
-			log.Println("正在缓存：", modelsALL[p], " 的图形数据")
-			if modelsALL[p] == "Modelica.Fluid.Examples.AST_BatchPlant.BaseClasses.TankWith3InletOutletArraysWithEvaporatorCondensor" {
-				log.Println("")
-			}
-			GetGraphicsData(modelsALL[p])
-		} else {
-			log.Println(modelsALL[p], " 不是model类型，跳过")
-		}
+		//if len(e) > 1 {
+		log.Println("正在缓存：", modelsALL[p], " 的图形数据")
+		GetGraphicsData(modelsALL[p])
+		//} else {
+		//	log.Println(modelsALL[p], " 不是model类型，跳过")
+		//}
 	}
 	omc.OMC.CacheRefreshSet(false)
 }
