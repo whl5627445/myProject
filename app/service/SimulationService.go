@@ -1,9 +1,13 @@
 package service
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/wangluozhe/requests"
 	"github.com/wangluozhe/requests/url"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"log"
 	"net"
 	"os"
@@ -13,9 +17,14 @@ import (
 	"time"
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/config"
+	"yssim-go/grpc/grpcPb"
 	"yssim-go/library/fileOperation"
 	"yssim-go/library/mapProcessing"
 	"yssim-go/library/omc"
+)
+
+const (
+	address = "fmpy_grpc:50051"
 )
 
 type SimulateTask struct {
@@ -243,6 +252,56 @@ func jModelicaSimulate(task *SimulateTask, resultFilePath string, SimulationPraD
 	return false
 }
 
+func fmpySimulate(task *SimulateTask, resultFilePath string, SimulationPraData map[string]string) bool {
+	conn, err := grpc.Dial(
+		address, grpc.WithTransportCredentials(insecure.NewCredentials())) // 建立链接
+	if err != nil {
+		log.Println("did not connect:", err)
+		return false
+	}
+	client := grpcPb.NewGreeterClient(conn) // 初始化客户端
+	ctx := context.Background()             // 初始化元数据
+	log.Println(task.SRecord.SimulateModelName)
+	fmuOldPath := omc.OMC.BuildModelFMU(task.SRecord.SimulateModelName) // 生成fmu文件
+	if fmuOldPath == "" {
+		log.Println("编译fmu失败")
+		return false
+	}
+	fmuNewPath := resultFilePath + strings.Replace(task.Package.PackageName, ".", "_", -1) + ".fmu"
+	err = os.Rename(fmuOldPath, fmuNewPath)      // fmu文件移动
+	zarrPath := resultFilePath + "zarr_res.zarr" // zarr结果文件路径
+
+	finalTime, err := strconv.ParseFloat(SimulationPraData["stopTime"], 64)
+	startTime, err := strconv.ParseFloat(SimulationPraData["startTime"], 64)
+	numberOfIntervals, err := strconv.Atoi(SimulationPraData["numberOfIntervals"])
+	tolerance, err := strconv.ParseFloat(SimulationPraData["tolerance"], 64)
+	if err != nil {
+		log.Printf("数据转换失败: %s", err)
+		return false
+	}
+	FmuSimulationRequestTest := &grpcPb.FmuSimulationRequest{
+		Uuid:           task.SRecord.ID,
+		StartTime:      float32(startTime),
+		StopTime:       float32(finalTime),
+		FmuPath:        fmuNewPath,
+		ResPath:        zarrPath,
+		OutputInterval: int32(numberOfIntervals),
+		Tolerance:      float32(tolerance),
+	} // 构造请求体
+	FmuSimulationRes, err := client.FmuSimulation(ctx, FmuSimulationRequestTest) // 调用grpc服务
+
+	if err != nil {
+		fmt.Println("调用grpc服务(FmuSimulation)出错：", err)
+		return false
+	}
+	fmt.Println("仿真提交任务:", FmuSimulationRes.Log)
+	if FmuSimulationRes.Log == "true" {
+		return true
+	}
+	return false
+
+}
+
 func ModelSimulate(task *SimulateTask) {
 	resultFilePath := "public/UserFiles/ModelResult/" + task.SRecord.Username + "/" + strings.ReplaceAll(task.SRecord.SimulateModelName, ".", "-") + "/" + time.Now().Local().Format("20060102150405") + "/"
 	fileOperation.CreateFilePath(resultFilePath)
@@ -293,6 +352,9 @@ func ModelSimulate(task *SimulateTask) {
 		sResult = dymolaSimulate(task, resultFilePath, SimulationPraData, FilePath)
 	case "JM":
 		sResult = jModelicaSimulate(task, resultFilePath, SimulationPraData, FilePath)
+	case "FmPy":
+		sResult = fmpySimulate(task, resultFilePath, SimulationPraData)
+
 	}
 	if sResult {
 		task.SRecord.SimulateModelResultPath = resultFilePath

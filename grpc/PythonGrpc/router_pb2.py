@@ -13,7 +13,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0crouter.proto\"\xe5\x01\n\x14\x46muSimulationRequest\x12\x0c\n\x04uuid\x18\x01 \x01(\t\x12\x11\n\tstartTime\x18\x02 \x01(\x05\x12\x10\n\x08stopTime\x18\x03 \x01(\x05\x12\x0f\n\x07\x66muPath\x18\x04 \x01(\t\x12\x0f\n\x07resPath\x18\x05 \x01(\t\x12\x31\n\x06params\x18\x06 \x03(\x0b\x32!.FmuSimulationRequest.ParamsEntry\x12\x16\n\x0eoutputInterval\x18\x07 \x01(\x05\x1a-\n\x0bParamsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"!\n\x12\x46muSimulationReply\x12\x0b\n\x03log\x18\x01 \x01(\t\"\'\n\x17GetProcessStatusRequest\x12\x0c\n\x04uuid\x18\x01 \x01(\t\"\x9b\x01\n\x15GetProcessStatusReply\x12\x0b\n\x03log\x18\x01 \x01(\t\x12\x11\n\texception\x18\x02 \x01(\x05\x12\x10\n\x08progress\x18\x03 \x01(\x05\x12\x18\n\x10processStartTime\x18\x04 \x01(\t\x12\r\n\x05state\x18\x05 \x01(\t\x12\x16\n\x0eprocessRunTime\x18\x06 \x01(\t\x12\x0f\n\x07resPath\x18\x07 \x01(\t\"\x1c\n\x1aGetAllProcessNumberRequest\"h\n\x18GetAllProcessNumberReply\x12\x12\n\ntotalTasks\x18\x01 \x01(\x05\x12\x1b\n\x13numOfRunningProcess\x18\x02 \x01(\x05\x12\x1b\n\x13numOfPendingProcess\x18\x03 \x01(\x05\"2\n\x10GetResultRequest\x12\x0c\n\x04uuid\x18\x01 \x01(\t\x12\x10\n\x08variable\x18\x02 \x01(\t\"+\n\x0eGetResultReply\x12\x0b\n\x03log\x18\x01 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x02 \x03(\x02\">\n\x17ProcessOperationRequest\x12\x0c\n\x04uuid\x18\x01 \x01(\t\x12\x15\n\roperationName\x18\x02 \x01(\t\"$\n\x15ProcessOperationReply\x12\x0b\n\x03msg\x18\x01 \x01(\t2\xdc\x02\n\x07Greeter\x12=\n\rFmuSimulation\x12\x15.FmuSimulationRequest\x1a\x13.FmuSimulationReply\"\x00\x12\x46\n\x10GetProcessStatus\x12\x18.GetProcessStatusRequest\x1a\x16.GetProcessStatusReply\"\x00\x12O\n\x13GetAllProcessNumber\x12\x1b.GetAllProcessNumberRequest\x1a\x19.GetAllProcessNumberReply\"\x00\x12\x31\n\tGetResult\x12\x11.GetResultRequest\x1a\x0f.GetResultReply\"\x00\x12\x46\n\x10ProcessOperation\x12\x18.ProcessOperationRequest\x1a\x16.ProcessOperationReply\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0crouter.proto\"\xf8\x01\n\x14\x46muSimulationRequest\x12\x0c\n\x04uuid\x18\x01 \x01(\t\x12\x11\n\tstartTime\x18\x02 \x01(\x02\x12\x10\n\x08stopTime\x18\x03 \x01(\x02\x12\x0f\n\x07\x66muPath\x18\x04 \x01(\t\x12\x0f\n\x07resPath\x18\x05 \x01(\t\x12\x31\n\x06params\x18\x06 \x03(\x0b\x32!.FmuSimulationRequest.ParamsEntry\x12\x16\n\x0eoutputInterval\x18\x07 \x01(\x05\x12\x11\n\ttolerance\x18\x08 \x01(\x02\x1a-\n\x0bParamsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"!\n\x12\x46muSimulationReply\x12\x0b\n\x03log\x18\x01 \x01(\t\"\'\n\x17GetProcessStatusRequest\x12\x0c\n\x04uuid\x18\x01 \x01(\t\"\x9b\x01\n\x15GetProcessStatusReply\x12\x0b\n\x03log\x18\x01 \x01(\t\x12\x11\n\texception\x18\x02 \x01(\x05\x12\x10\n\x08progress\x18\x03 \x01(\x05\x12\x18\n\x10processStartTime\x18\x04 \x01(\t\x12\r\n\x05state\x18\x05 \x01(\t\x12\x16\n\x0eprocessRunTime\x18\x06 \x01(\t\x12\x0f\n\x07resPath\x18\x07 \x01(\t\"\x1c\n\x1aGerAllProcessNumberRequest\"h\n\x18GerAllProcessNumberReply\x12\x12\n\ntotalTasks\x18\x01 \x01(\x05\x12\x1b\n\x13numOfRunningProcess\x18\x02 \x01(\x05\x12\x1b\n\x13numOfPendingProcess\x18\x03 \x01(\x05\"2\n\x10GetResultRequest\x12\x0c\n\x04uuid\x18\x01 \x01(\t\x12\x10\n\x08variable\x18\x02 \x01(\t\"+\n\x0eGetResultReply\x12\x0b\n\x03log\x18\x01 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x02 \x03(\x02\">\n\x17ProcessOperationRequest\x12\x0c\n\x04uuid\x18\x01 \x01(\t\x12\x15\n\roperationName\x18\x02 \x01(\t\"$\n\x15ProcessOperationReply\x12\x0b\n\x03msg\x18\x01 \x01(\t2\xdc\x02\n\x07Greeter\x12=\n\rFmuSimulation\x12\x15.FmuSimulationRequest\x1a\x13.FmuSimulationReply\"\x00\x12\x46\n\x10GetProcessStatus\x12\x18.GetProcessStatusRequest\x1a\x16.GetProcessStatusReply\"\x00\x12O\n\x13GerAllProcessNumber\x12\x1b.GerAllProcessNumberRequest\x1a\x19.GerAllProcessNumberReply\"\x00\x12\x31\n\tGetResult\x12\x11.GetResultRequest\x1a\x0f.GetResultReply\"\x00\x12\x46\n\x10ProcessOperation\x12\x18.ProcessOperationRequest\x1a\x16.ProcessOperationReply\"\x00\x62\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'router_pb2', globals())
@@ -23,27 +23,27 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _FMUSIMULATIONREQUEST_PARAMSENTRY._options = None
   _FMUSIMULATIONREQUEST_PARAMSENTRY._serialized_options = b'8\001'
   _FMUSIMULATIONREQUEST._serialized_start=17
-  _FMUSIMULATIONREQUEST._serialized_end=246
-  _FMUSIMULATIONREQUEST_PARAMSENTRY._serialized_start=201
-  _FMUSIMULATIONREQUEST_PARAMSENTRY._serialized_end=246
-  _FMUSIMULATIONREPLY._serialized_start=248
-  _FMUSIMULATIONREPLY._serialized_end=281
-  _GETPROCESSSTATUSREQUEST._serialized_start=283
-  _GETPROCESSSTATUSREQUEST._serialized_end=322
-  _GETPROCESSSTATUSREPLY._serialized_start=325
-  _GETPROCESSSTATUSREPLY._serialized_end=480
-  _GETALLPROCESSNUMBERREQUEST._serialized_start=482
-  _GETALLPROCESSNUMBERREQUEST._serialized_end=510
-  _GETALLPROCESSNUMBERREPLY._serialized_start=512
-  _GETALLPROCESSNUMBERREPLY._serialized_end=616
-  _GETRESULTREQUEST._serialized_start=618
-  _GETRESULTREQUEST._serialized_end=668
-  _GETRESULTREPLY._serialized_start=670
-  _GETRESULTREPLY._serialized_end=713
-  _PROCESSOPERATIONREQUEST._serialized_start=715
-  _PROCESSOPERATIONREQUEST._serialized_end=777
-  _PROCESSOPERATIONREPLY._serialized_start=779
-  _PROCESSOPERATIONREPLY._serialized_end=815
-  _GREETER._serialized_start=818
-  _GREETER._serialized_end=1166
+  _FMUSIMULATIONREQUEST._serialized_end=265
+  _FMUSIMULATIONREQUEST_PARAMSENTRY._serialized_start=220
+  _FMUSIMULATIONREQUEST_PARAMSENTRY._serialized_end=265
+  _FMUSIMULATIONREPLY._serialized_start=267
+  _FMUSIMULATIONREPLY._serialized_end=300
+  _GETPROCESSSTATUSREQUEST._serialized_start=302
+  _GETPROCESSSTATUSREQUEST._serialized_end=341
+  _GETPROCESSSTATUSREPLY._serialized_start=344
+  _GETPROCESSSTATUSREPLY._serialized_end=499
+  _GERALLPROCESSNUMBERREQUEST._serialized_start=501
+  _GERALLPROCESSNUMBERREQUEST._serialized_end=529
+  _GERALLPROCESSNUMBERREPLY._serialized_start=531
+  _GERALLPROCESSNUMBERREPLY._serialized_end=635
+  _GETRESULTREQUEST._serialized_start=637
+  _GETRESULTREQUEST._serialized_end=687
+  _GETRESULTREPLY._serialized_start=689
+  _GETRESULTREPLY._serialized_end=732
+  _PROCESSOPERATIONREQUEST._serialized_start=734
+  _PROCESSOPERATIONREQUEST._serialized_end=796
+  _PROCESSOPERATIONREPLY._serialized_start=798
+  _PROCESSOPERATIONREPLY._serialized_end=834
+  _GREETER._serialized_start=837
+  _GREETER._serialized_end=1185
 # @@protoc_insertion_point(module_scope)

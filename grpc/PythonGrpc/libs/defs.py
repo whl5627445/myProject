@@ -3,7 +3,7 @@ import os
 import zarr
 import psutil
 
-from db_config.config import Session, ProcessState
+from db_config.config import Session, YssimSimulateRecords
 
 
 # def TimeStampToTime(timestamp):
@@ -31,8 +31,8 @@ def suspendProcess(multiprocessing_id, processList):
             proc = psutil.Process(i.pid)  # 传入任意子进程的pid
             proc.suspend()  # 暂停子进程
             with Session() as session:
-                processDetails = session.query(ProcessState).filter(ProcessState.uuid == multiprocessing_id).first()
-                processDetails.state = "已暂停"
+                processDetails = session.query(YssimSimulateRecords).filter(YssimSimulateRecords.id == multiprocessing_id).first()
+                processDetails.simulate_status = "2"  # 暂停
                 session.commit()
             return {"msg": True}
     return {"msg": False}
@@ -44,8 +44,8 @@ def resumeProcess(multiprocessing_id, processList):
             proc = psutil.Process(i.pid)  # 传入任意子进程的pid
             proc.resume()  # 恢复子进程
             with Session() as session:
-                processDetails = session.query(ProcessState).filter(ProcessState.uuid == multiprocessing_id).first()
-                processDetails.state = "恢复运行"
+                processDetails = session.query(YssimSimulateRecords).filter(YssimSimulateRecords.id == multiprocessing_id).first()
+                processDetails.state = "2"   # 恢复运行
                 session.commit()
             return {"msg": True}
     return {"msg": False}
@@ -60,8 +60,8 @@ def killProcess(multiprocessing_id, processList, managerResDict):
             else:
                 i.close()
             with Session() as session:
-                processDetails = session.query(ProcessState).filter(ProcessState.uuid == multiprocessing_id).first()
-                processDetails.state = "已退出"
+                processDetails = session.query(YssimSimulateRecords).filter(YssimSimulateRecords.id == multiprocessing_id).first()
+                processDetails.state = "4"  # 退出
                 session.commit()
 
                 if multiprocessing_id in managerResDict:

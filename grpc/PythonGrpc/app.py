@@ -5,7 +5,7 @@ from libs.defs import getSate, suspendProcess, resumeProcess, killProcess
 from libs.FmpySimulation import MyProcess
 import threading
 import zarr
-from db_config.config import Session, ProcessState
+from db_config.config import Session, YssimSimulateRecords
 import time
 import grpc
 import router_pb2
@@ -27,10 +27,6 @@ if __name__ == '__main__':
                 return router_pb2.FmuSimulationReply(log="No such file or directory!")
                 # 最大任务数
             if len(processList) < 10:
-                with Session() as session:
-                    processDetails = ProcessState(uuid=request.uuid, resPath=request.resPath)
-                    session.add(processDetails)
-                    session.commit()
                 processOne = MyProcess(request, managerResDict)
                 processList.append(processOne)
                 return router_pb2.FmuSimulationReply(log="Task submitted successfully.")
@@ -42,15 +38,15 @@ if __name__ == '__main__':
         def GetProcessStatus(self, request, context):
             uuid = request.uuid
             with Session() as session:
-                processDetails = session.query(ProcessState).filter(ProcessState.uuid == uuid).first()
+                processDetails = session.query(YssimSimulateRecords).filter(YssimSimulateRecords.id == uuid).first()
             if processDetails:
-                return router_pb2.GetProcessStatusReply(log=str(processDetails.log),
-                                                        exception=int(processDetails.exception),
-                                                        progress=int(processDetails.progress),
-                                                        processStartTime=str(processDetails.processStartTime),
-                                                        state=str(processDetails.state),
-                                                        processRunTime=str(processDetails.processRunTime),
-                                                        resPath=str(processDetails.resPath)
+                return router_pb2.GetProcessStatusReply(log=str(processDetails.simulate_result_str),
+                                                        exception=int(processDetails.simulate_status),
+                                                        progress=int(processDetails.simulate_status),
+                                                        processStartTime=str(processDetails.simulate_start_time),
+                                                        state=str(processDetails.simulate_status),
+                                                        processRunTime=str(processDetails.simulate_end_time),
+                                                        resPath=str(processDetails.simulate_model_result_path)
                                                         )
 
             else:
@@ -63,7 +59,7 @@ if __name__ == '__main__':
                                                         resPath="")
 
         # 获取所有进程的数量
-        def GetAllProcessNumber(self, request, context):
+        def GerAllProcessNumber(self, request, context):
             running_num = 0
             pending_num = 0
             for i in processList:
@@ -72,7 +68,7 @@ if __name__ == '__main__':
                     pending_num += 1
                 if processState == 'started':
                     running_num += 1
-            return router_pb2.GetAllProcessNumberReply(totalTasks=len(processList),
+            return router_pb2.GerAllProcessNumberReply(totalTasks=len(processList),
                                                        numOfRunningProcess=running_num,
                                                        numOfPendingProcess=pending_num
                                                        )
@@ -80,12 +76,12 @@ if __name__ == '__main__':
         # 获取变量结果
         def GetResult(self, request, context):
             with Session() as session:
-                processDetails = session.query(ProcessState).filter(ProcessState.uuid == request.uuid).first()
+                processDetails = session.query(YssimSimulateRecords).filter(YssimSimulateRecords.id == request.uuid).first()
             if processDetails is None:
                 return router_pb2.GetResultReply(log="not found in db")
-            if processDetails.resPath:
-                if processDetails.state in ["运行结束", "已退出"]:
-                    res = zarr.load(processDetails.resPath)
+            if processDetails.simulate_model_result_path:
+                if processDetails.simulate_status in ["3", "4"]:
+                    res = zarr.load(processDetails.simulate_model_result_path)
                     if (res is not None) and (request.variable in res.dtype.names):
                         data = res[request.variable].tolist()
                         return router_pb2.GetResultReply(data=data)
@@ -93,8 +89,8 @@ if __name__ == '__main__':
                         return router_pb2.GetResultReply(log="not found var(end)")
                 else:
                     if request.uuid in managerResDict:
-                        zarr.save(processDetails.resPath, managerResDict[request.uuid])
-                        res = zarr.load(processDetails.resPath)
+                        zarr.save(processDetails.simulate_model_result_path, managerResDict[request.uuid])
+                        res = zarr.load(processDetails.simulate_model_result_path)
                         if (res.size != 0) and (request.variable in res.dtype.names):
                             data = res[request.variable].tolist()
                             return router_pb2.GetResultReply(data=data)
@@ -139,9 +135,9 @@ if __name__ == '__main__':
     # 启动 rpc 服务
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     router_pb2_grpc.add_GreeterServicer_to_server(Greeter(), server)
-    server.add_insecure_port('[::]:50051')
-    server.start()
+    server.add_insecure_port('0.0.0.0:5001')
     print("服务开启成功！")
+    server.start()
     try:
         while True:
             time.sleep(24 * 3600)  # one day in seconds
