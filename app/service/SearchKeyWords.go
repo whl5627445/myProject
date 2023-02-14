@@ -26,11 +26,11 @@ func SearchModel(keyWords, parentNode string) []interface{} {
 		parentIndex := strings.HasPrefix(name, parentNode)
 		if wordsIndex != -1 && parentIndex {
 			nameListAll := strings.Split(name, ".")
-			nameOnce := nameListAll[0]
-			nameParent := strings.Join(nameListAll[:1], ".")
-			if len(nameListAll) > 1 {
+			shortName := nameListAll[0]
+			nameParent := shortName
+			if parentNode != "" {
 				nameParent = strings.Join(nameListAll[:len(parentNodePackageList)+1], ".")
-				nameOnce = nameListAll[len(parentNodePackageList)]
+				shortName = nameListAll[len(parentNodePackageList)]
 			}
 			_, ok := searchModelMap[nameParent]
 			if !ok {
@@ -39,7 +39,7 @@ func SearchModel(keyWords, parentNode string) []interface{} {
 				classInformation := GetClassInformation(nameParent)
 				modelType := strings.TrimSpace(classInformation[0].(string))
 				data := map[string]interface{}{
-					"name":       nameOnce,
+					"name":       shortName,
 					"model_name": nameParent,
 					"haschild":   false,
 					"type":       modelType,
@@ -54,7 +54,5 @@ func SearchModel(keyWords, parentNode string) []interface{} {
 		}
 	}
 	return modelNameList
-	//re2, _ := regexp.Compile("[[0-9]+].")
-	//connectionfrom := re2.FindAllString([]byte(ncData[0]), -1)
 
 }

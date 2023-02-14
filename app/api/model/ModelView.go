@@ -30,6 +30,7 @@ func GetSysRootModelView(c *gin.Context) {
 		data := map[string]interface{}{
 			"package_id":   packageModel[i].ID,
 			"package_name": packageModel[i].PackageName,
+			"model_name":   packageModel[i].PackageName,
 			"haschild":     service.GetModelHasChild(packageModel[i].PackageName),
 			"image":        service.GetIcon(packageModel[i].PackageName, packageModel[i].PackageName, packageModel[i].Version),
 			"type":         service.GetModelType(packageModel[i].PackageName),
@@ -55,6 +56,7 @@ func GetUserRootModelView(c *gin.Context) {
 		data := map[string]interface{}{
 			"package_id":   packageModel[i].ID,
 			"package_name": packageModel[i].PackageName,
+			"model_name":   packageModel[i].PackageName,
 			"haschild":     service.GetModelHasChild(packageModel[i].PackageName),
 			"image":        service.GetIcon(packageModel[i].PackageName, packageModel[i].PackageName, packageModel[i].Version),
 			"type":         service.GetModelType(packageModel[i].PackageName),
