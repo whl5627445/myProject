@@ -374,6 +374,7 @@ func SimulateResultTreeView(c *gin.Context) {
 	userSpaceId := c.GetHeader("space_id")
 	recordId := c.Query("record_id")
 	parentNode := c.Query("parent_node")
+	keyWords := c.Query("key_words")
 	var record DataBaseModel.YssimSimulateRecord
 	DB.Where("username = ? AND userspace_id = ? AND ID = ? AND simulate_status = ?", username, userSpaceId, recordId, "4").First(&record)
 	if record.ID == "" {
@@ -383,10 +384,10 @@ func SimulateResultTreeView(c *gin.Context) {
 
 	var res responseData
 	if record.SimulateModelResultPath != "" && record.SimulateStart == false {
-		result := service.SimulationResultTree(record.SimulateModelResultPath+"result_init.xml", parentNode)
+		result := service.SimulationResultTree(record.SimulateModelResultPath+"result_init.xml", parentNode, keyWords)
 		res.Data = result
 	} else {
-		res.Err = "仿真还未完成或仿真已经失败，请勿查询结果"
+		res.Err = "查询失败"
 		res.Status = 2
 	}
 	c.JSON(http.StatusOK, res)

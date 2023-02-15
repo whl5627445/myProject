@@ -9,13 +9,10 @@ import (
 )
 
 func main() {
-	//omcPross := Init.StartOMC()
-	//defer omcPross.Process.Signal(syscall.SIGQUIT)
 
 	g := gin.Default()
-
 	g.Use(middleware.Cors())
-	g.Use(middleware.CheckOMC())
+
 	{
 		router.ModelRouter(g)
 		router.SimulateRouter(g)

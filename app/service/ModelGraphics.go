@@ -277,37 +277,38 @@ func (g *graphicsData) data01(cData []interface{}, className, component, modelNa
 						varValue := ""
 						if varName != "name" {
 							varName = strings.TrimSuffix(varName, "%")
-							modifierName := component + "." + varName
-							extendsModifierNamesList := omc.OMC.GetExtendsModifierNames(g.modelName, modelName)
-							for _, nameAll := range extendsModifierNamesList {
-								if modifierName == nameAll {
-									extendsModifierVarValue := omc.OMC.GetExtendsModifierValue(g.modelName, modelName, modifierName)
-									if extendsModifierVarValue != varName {
-										varValue = extendsModifierVarValue
-									}
-								}
-							}
-							if varValue == "" {
-								varValue = omc.OMC.GetElementModifierValue(modelName, modifierName)
-								if varValue == "" {
-									for _, name := range classNameAll {
-										varValue = omc.OMC.GetParameterValue(name, varName)
-										if varValue != "" {
-											break
+							if varName != "" {
+								modifierName := component + "." + varName
+								extendsModifierNamesList := omc.OMC.GetExtendsModifierNames(g.modelName, modelName)
+								for _, nameAll := range extendsModifierNamesList {
+									if modifierName == nameAll {
+										extendsModifierVarValue := omc.OMC.GetExtendsModifierValue(g.modelName, modelName, modifierName)
+										if extendsModifierVarValue != varName {
+											varValue = extendsModifierVarValue
 										}
 									}
-
+								}
+								if varValue == "" {
+									varValue = omc.OMC.GetElementModifierValue(modelName, modifierName)
 									if varValue == "" {
-										varValue = varName
+										for _, name := range classNameAll {
+											varValue = omc.OMC.GetParameterValue(name, varName)
+											if varValue != "" {
+												break
+											}
+										}
+
+										if varValue == "" {
+											varValue = varName
+										}
 									}
 								}
-							}
 
-							if len(varValue) > 30 && strings.Index(varValue, ".") != -1 && strings.Index(varValue, " ") == -1 {
-								varValueList := strings.Split(varValue, ".") // 某些值是模型全称的需要取最后一部分。所以分割一下
-								varValue = varValueList[len(varValueList)-1]
+								if len(varValue) > 30 && strings.Index(varValue, ".") != -1 && strings.Index(varValue, " ") == -1 {
+									varValueList := strings.Split(varValue, ".") // 某些值是模型全称的需要取最后一部分。所以分割一下
+									varValue = varValueList[len(varValueList)-1]
+								}
 							}
-
 							Unit := ""
 							classNameList := append(classNameAll, className)
 							for n := 0; n < len(classNameList); n++ {
@@ -333,6 +334,12 @@ func (g *graphicsData) data01(cData []interface{}, className, component, modelNa
 							}
 							oldVarName := "%" + varName
 							varValueUnit := varName + Unit
+							varValue := func() string {
+								if len(varValue) > 8 {
+									return varValue[:8] + "..."
+								}
+								return varValue
+							}()
 							varValueUnit = strings.Replace(varValueUnit, varName, varValue, 1)
 							originalTextString = strings.Replace(originalTextString, oldVarName, varValueUnit, 1)
 						}

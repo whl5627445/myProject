@@ -8,7 +8,7 @@ import (
 	"yssim-go/config"
 )
 
-func SimulationService() {
+func simulationService() {
 	username := config.USERNAME
 	var undoneRecordAll []DataBaseModel.YssimSimulateRecord
 	err := config.DB.Where("username = ? ", username).Not("simulate_status = 4").Not("simulate_status = 3").Find(&undoneRecordAll).Error
@@ -31,5 +31,4 @@ func SimulationService() {
 		service.ModelSimulate(task)
 		log.Printf("仿真任务执行完成： %s \n", task.SRecord.ID)
 	}
-
 }

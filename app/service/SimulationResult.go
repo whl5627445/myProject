@@ -124,7 +124,7 @@ type xmlInit struct {
 	DefaultExperiment defaultExperiment `xml:"DefaultExperiment"`
 }
 
-func SimulationResultTree(path string, parent string) []map[string]interface{} {
+func SimulationResultTree(path, parent, keyWords string) []map[string]interface{} {
 
 	v := xmlInit{}
 	err := xmlOperation.ParseXML(path, &v)
@@ -151,7 +151,6 @@ func SimulationResultTree(path string, parent string) []map[string]interface{} {
 		if !strings.HasPrefix(name, "der(") && !strings.HasPrefix(name, "$") {
 			splitName = strings.Split(trimPrefixName, ".")
 		} else {
-			//splitName = []string{trimPrefixName}
 			continue
 		}
 		if strings.HasPrefix(name, parentName) && !nameMap[splitName[0]] && scalarVariableMap[name].HideResult == false && scalarVariableMap[name].IsProtected == false {
@@ -171,7 +170,13 @@ func SimulationResultTree(path string, parent string) []map[string]interface{} {
 			}
 			id += 1
 			nameMap[splitName[0]] = true
-			dataList = append(dataList, data)
+			if keyWords != "" {
+				if strings.Index(strings.ToLower(name), strings.ToLower(keyWords)) != -1 {
+					dataList = append(dataList, data)
+				}
+			} else {
+				dataList = append(dataList, data)
+			}
 		}
 	}
 	return dataList

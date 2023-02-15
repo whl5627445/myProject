@@ -262,7 +262,6 @@ func fmpySimulate(task *SimulateTask, resultFilePath string, SimulationPraData m
 	}
 	client := grpcPb.NewGreeterClient(conn) // 初始化客户端
 	ctx := context.Background()             // 初始化元数据
-	log.Println(task.SRecord.SimulateModelName)
 	fmuFileHead := task.SRecord.Username + time.Now().Format("150405")
 	fmuOldPath_ := omc.OMC.BuildModelFMU(task.SRecord.SimulateModelName, fmuFileHead) // 生成fmu文件
 	if fmuOldPath_ == "" {
@@ -398,4 +397,5 @@ func ModelSimulate(task *SimulateTask) {
 	task.SRecord.SimulateEndTime = time.Now().Unix()
 	task.SRecord.SimulateStart = false
 	config.DB.Save(&task.SRecord)
+
 }

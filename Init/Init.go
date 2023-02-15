@@ -3,7 +3,8 @@ package Init
 func init() {
 	ModelLibraryInit()
 	LogInit()
-	go SimulationService()
+	go simulationService()
 	go NacosRegister()
 	go OMCMessagesInit()
+	go checkOMC()
 }
