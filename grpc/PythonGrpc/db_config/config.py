@@ -2,8 +2,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine, Column, String, Integer, Text, DateTime
 from sqlalchemy.orm import sessionmaker
 
-HOST = '124.70.211.127'  # 127.0.0.1/localhost 124.70.211.127
-PORT = 3307
+HOST = 'mysql'  # 127.0.0.1/localhost 124.70.211.127
+PORT = 3306
 DATA_BASE = 'yssim'
 USER = 'root'
 PWD = 'simtek_cloud_sim'

@@ -31,7 +31,7 @@ type FmuSimulationRequest struct {
 	FmuPath        string            `protobuf:"bytes,4,opt,name=fmuPath,proto3" json:"fmuPath,omitempty"`
 	ResPath        string            `protobuf:"bytes,5,opt,name=resPath,proto3" json:"resPath,omitempty"`
 	Params         map[string]string `protobuf:"bytes,6,rep,name=params,proto3" json:"params,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	OutputInterval int32             `protobuf:"varint,7,opt,name=outputInterval,proto3" json:"outputInterval,omitempty"`
+	OutputInterval float32           `protobuf:"fixed32,7,opt,name=outputInterval,proto3" json:"outputInterval,omitempty"`
 	Tolerance      float32           `protobuf:"fixed32,8,opt,name=tolerance,proto3" json:"tolerance,omitempty"`
 }
 
@@ -109,7 +109,7 @@ func (x *FmuSimulationRequest) GetParams() map[string]string {
 	return nil
 }
 
-func (x *FmuSimulationRequest) GetOutputInterval() int32 {
+func (x *FmuSimulationRequest) GetOutputInterval() float32 {
 	if x != nil {
 		return x.OutputInterval
 	}
@@ -312,14 +312,14 @@ func (x *GetProcessStatusReply) GetResPath() string {
 	return ""
 }
 
-type GerAllProcessNumberRequest struct {
+type GetAllProcessNumberRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 }
 
-func (x *GerAllProcessNumberRequest) Reset() {
-	*x = GerAllProcessNumberRequest{}
+func (x *GetAllProcessNumberRequest) Reset() {
+	*x = GetAllProcessNumberRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_router_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -327,13 +327,13 @@ func (x *GerAllProcessNumberRequest) Reset() {
 	}
 }
 
-func (x *GerAllProcessNumberRequest) String() string {
+func (x *GetAllProcessNumberRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GerAllProcessNumberRequest) ProtoMessage() {}
+func (*GetAllProcessNumberRequest) ProtoMessage() {}
 
-func (x *GerAllProcessNumberRequest) ProtoReflect() protoreflect.Message {
+func (x *GetAllProcessNumberRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_router_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -345,12 +345,12 @@ func (x *GerAllProcessNumberRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GerAllProcessNumberRequest.ProtoReflect.Descriptor instead.
-func (*GerAllProcessNumberRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetAllProcessNumberRequest.ProtoReflect.Descriptor instead.
+func (*GetAllProcessNumberRequest) Descriptor() ([]byte, []int) {
 	return file_router_proto_rawDescGZIP(), []int{4}
 }
 
-type GerAllProcessNumberReply struct {
+type GetAllProcessNumberReply struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -360,8 +360,8 @@ type GerAllProcessNumberReply struct {
 	NumOfPendingProcess int32 `protobuf:"varint,3,opt,name=numOfPendingProcess,proto3" json:"numOfPendingProcess,omitempty"`
 }
 
-func (x *GerAllProcessNumberReply) Reset() {
-	*x = GerAllProcessNumberReply{}
+func (x *GetAllProcessNumberReply) Reset() {
+	*x = GetAllProcessNumberReply{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_router_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -369,13 +369,13 @@ func (x *GerAllProcessNumberReply) Reset() {
 	}
 }
 
-func (x *GerAllProcessNumberReply) String() string {
+func (x *GetAllProcessNumberReply) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GerAllProcessNumberReply) ProtoMessage() {}
+func (*GetAllProcessNumberReply) ProtoMessage() {}
 
-func (x *GerAllProcessNumberReply) ProtoReflect() protoreflect.Message {
+func (x *GetAllProcessNumberReply) ProtoReflect() protoreflect.Message {
 	mi := &file_router_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -387,26 +387,26 @@ func (x *GerAllProcessNumberReply) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GerAllProcessNumberReply.ProtoReflect.Descriptor instead.
-func (*GerAllProcessNumberReply) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetAllProcessNumberReply.ProtoReflect.Descriptor instead.
+func (*GetAllProcessNumberReply) Descriptor() ([]byte, []int) {
 	return file_router_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *GerAllProcessNumberReply) GetTotalTasks() int32 {
+func (x *GetAllProcessNumberReply) GetTotalTasks() int32 {
 	if x != nil {
 		return x.TotalTasks
 	}
 	return 0
 }
 
-func (x *GerAllProcessNumberReply) GetNumOfRunningProcess() int32 {
+func (x *GetAllProcessNumberReply) GetNumOfRunningProcess() int32 {
 	if x != nil {
 		return x.NumOfRunningProcess
 	}
 	return 0
 }
 
-func (x *GerAllProcessNumberReply) GetNumOfPendingProcess() int32 {
+func (x *GetAllProcessNumberReply) GetNumOfPendingProcess() int32 {
 	if x != nil {
 		return x.NumOfPendingProcess
 	}
@@ -643,7 +643,7 @@ var file_router_proto_rawDesc = []byte{
 	0x69, 0x6d, 0x75, 0x6c, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
 	0x2e, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x06, 0x70, 0x61,
 	0x72, 0x61, 0x6d, 0x73, 0x12, 0x26, 0x0a, 0x0e, 0x6f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x49, 0x6e,
-	0x74, 0x65, 0x72, 0x76, 0x61, 0x6c, 0x18, 0x07, 0x20, 0x01, 0x28, 0x05, 0x52, 0x0e, 0x6f, 0x75,
+	0x74, 0x65, 0x72, 0x76, 0x61, 0x6c, 0x18, 0x07, 0x20, 0x01, 0x28, 0x02, 0x52, 0x0e, 0x6f, 0x75,
 	0x74, 0x70, 0x75, 0x74, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x76, 0x61, 0x6c, 0x12, 0x1c, 0x0a, 0x09,
 	0x74, 0x6f, 0x6c, 0x65, 0x72, 0x61, 0x6e, 0x63, 0x65, 0x18, 0x08, 0x20, 0x01, 0x28, 0x02, 0x52,
 	0x09, 0x74, 0x6f, 0x6c, 0x65, 0x72, 0x61, 0x6e, 0x63, 0x65, 0x1a, 0x39, 0x0a, 0x0b, 0x50, 0x61,
@@ -670,9 +670,9 @@ var file_router_proto_rawDesc = []byte{
 	0x75, 0x6e, 0x54, 0x69, 0x6d, 0x65, 0x18, 0x06, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0e, 0x70, 0x72,
 	0x6f, 0x63, 0x65, 0x73, 0x73, 0x52, 0x75, 0x6e, 0x54, 0x69, 0x6d, 0x65, 0x12, 0x18, 0x0a, 0x07,
 	0x72, 0x65, 0x73, 0x50, 0x61, 0x74, 0x68, 0x18, 0x07, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x72,
-	0x65, 0x73, 0x50, 0x61, 0x74, 0x68, 0x22, 0x1c, 0x0a, 0x1a, 0x47, 0x65, 0x72, 0x41, 0x6c, 0x6c,
+	0x65, 0x73, 0x50, 0x61, 0x74, 0x68, 0x22, 0x1c, 0x0a, 0x1a, 0x47, 0x65, 0x74, 0x41, 0x6c, 0x6c,
 	0x50, 0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x4e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x52, 0x65, 0x71,
-	0x75, 0x65, 0x73, 0x74, 0x22, 0x9e, 0x01, 0x0a, 0x18, 0x47, 0x65, 0x72, 0x41, 0x6c, 0x6c, 0x50,
+	0x75, 0x65, 0x73, 0x74, 0x22, 0x9e, 0x01, 0x0a, 0x18, 0x47, 0x65, 0x74, 0x41, 0x6c, 0x6c, 0x50,
 	0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x4e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x52, 0x65, 0x70, 0x6c,
 	0x79, 0x12, 0x1e, 0x0a, 0x0a, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x54, 0x61, 0x73, 0x6b, 0x73, 0x18,
 	0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x0a, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x54, 0x61, 0x73, 0x6b,
@@ -707,10 +707,10 @@ var file_router_proto_rawDesc = []byte{
 	0x12, 0x18, 0x2e, 0x47, 0x65, 0x74, 0x50, 0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x53, 0x74, 0x61,
 	0x74, 0x75, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x16, 0x2e, 0x47, 0x65, 0x74,
 	0x50, 0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x52, 0x65, 0x70,
-	0x6c, 0x79, 0x22, 0x00, 0x12, 0x4f, 0x0a, 0x13, 0x47, 0x65, 0x72, 0x41, 0x6c, 0x6c, 0x50, 0x72,
+	0x6c, 0x79, 0x22, 0x00, 0x12, 0x4f, 0x0a, 0x13, 0x47, 0x65, 0x74, 0x41, 0x6c, 0x6c, 0x50, 0x72,
 	0x6f, 0x63, 0x65, 0x73, 0x73, 0x4e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x12, 0x1b, 0x2e, 0x47, 0x65,
-	0x72, 0x41, 0x6c, 0x6c, 0x50, 0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x4e, 0x75, 0x6d, 0x62, 0x65,
-	0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x19, 0x2e, 0x47, 0x65, 0x72, 0x41, 0x6c,
+	0x74, 0x41, 0x6c, 0x6c, 0x50, 0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x4e, 0x75, 0x6d, 0x62, 0x65,
+	0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x19, 0x2e, 0x47, 0x65, 0x74, 0x41, 0x6c,
 	0x6c, 0x50, 0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x4e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x52, 0x65,
 	0x70, 0x6c, 0x79, 0x22, 0x00, 0x12, 0x31, 0x0a, 0x09, 0x47, 0x65, 0x74, 0x52, 0x65, 0x73, 0x75,
 	0x6c, 0x74, 0x12, 0x11, 0x2e, 0x47, 0x65, 0x74, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x52, 0x65,
@@ -742,8 +742,8 @@ var file_router_proto_goTypes = []interface{}{
 	(*FmuSimulationReply)(nil),         // 1: FmuSimulationReply
 	(*GetProcessStatusRequest)(nil),    // 2: GetProcessStatusRequest
 	(*GetProcessStatusReply)(nil),      // 3: GetProcessStatusReply
-	(*GerAllProcessNumberRequest)(nil), // 4: GerAllProcessNumberRequest
-	(*GerAllProcessNumberReply)(nil),   // 5: GerAllProcessNumberReply
+	(*GetAllProcessNumberRequest)(nil), // 4: GetAllProcessNumberRequest
+	(*GetAllProcessNumberReply)(nil),   // 5: GetAllProcessNumberReply
 	(*GetResultRequest)(nil),           // 6: GetResultRequest
 	(*GetResultReply)(nil),             // 7: GetResultReply
 	(*ProcessOperationRequest)(nil),    // 8: ProcessOperationRequest
@@ -754,12 +754,12 @@ var file_router_proto_depIdxs = []int32{
 	10, // 0: FmuSimulationRequest.params:type_name -> FmuSimulationRequest.ParamsEntry
 	0,  // 1: Greeter.FmuSimulation:input_type -> FmuSimulationRequest
 	2,  // 2: Greeter.GetProcessStatus:input_type -> GetProcessStatusRequest
-	4,  // 3: Greeter.GerAllProcessNumber:input_type -> GerAllProcessNumberRequest
+	4,  // 3: Greeter.GetAllProcessNumber:input_type -> GetAllProcessNumberRequest
 	6,  // 4: Greeter.GetResult:input_type -> GetResultRequest
 	8,  // 5: Greeter.ProcessOperation:input_type -> ProcessOperationRequest
 	1,  // 6: Greeter.FmuSimulation:output_type -> FmuSimulationReply
 	3,  // 7: Greeter.GetProcessStatus:output_type -> GetProcessStatusReply
-	5,  // 8: Greeter.GerAllProcessNumber:output_type -> GerAllProcessNumberReply
+	5,  // 8: Greeter.GetAllProcessNumber:output_type -> GetAllProcessNumberReply
 	7,  // 9: Greeter.GetResult:output_type -> GetResultReply
 	9,  // 10: Greeter.ProcessOperation:output_type -> ProcessOperationReply
 	6,  // [6:11] is the sub-list for method output_type
@@ -824,7 +824,7 @@ func file_router_proto_init() {
 			}
 		}
 		file_router_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GerAllProcessNumberRequest); i {
+			switch v := v.(*GetAllProcessNumberRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -836,7 +836,7 @@ func file_router_proto_init() {
 			}
 		}
 		file_router_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GerAllProcessNumberReply); i {
+			switch v := v.(*GetAllProcessNumberReply); i {
 			case 0:
 				return &v.state
 			case 1:

@@ -3,7 +3,7 @@ option go_package = "./grpcPb" ;
 service Greeter {
   rpc FmuSimulation(FmuSimulationRequest) returns (FmuSimulationReply) {}
   rpc GetProcessStatus(GetProcessStatusRequest) returns (GetProcessStatusReply) {}
-  rpc GerAllProcessNumber(GerAllProcessNumberRequest) returns (GerAllProcessNumberReply) {}
+  rpc GetAllProcessNumber(GetAllProcessNumberRequest) returns (GetAllProcessNumberReply) {}
   rpc GetResult(GetResultRequest) returns (GetResultReply) {}
   rpc ProcessOperation(ProcessOperationRequest) returns (ProcessOperationReply) {}
 }
@@ -15,7 +15,7 @@ message FmuSimulationRequest {
   string fmuPath = 4;
   string resPath = 5;
   map<string, string> params = 6;
-  int32 outputInterval = 7;
+  float outputInterval = 7;
   float tolerance=8;
 }
 message FmuSimulationReply {
@@ -35,8 +35,8 @@ message GetProcessStatusReply{
   string resPath = 7;
 }
 
-message GerAllProcessNumberRequest{}
-message GerAllProcessNumberReply{
+message GetAllProcessNumberRequest{}
+message GetAllProcessNumberReply{
   int32 totalTasks =1;
   int32 numOfRunningProcess =2;
   int32 numOfPendingProcess =3;

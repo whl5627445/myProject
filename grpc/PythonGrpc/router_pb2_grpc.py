@@ -24,10 +24,10 @@ class GreeterStub(object):
                 request_serializer=router__pb2.GetProcessStatusRequest.SerializeToString,
                 response_deserializer=router__pb2.GetProcessStatusReply.FromString,
                 )
-        self.GerAllProcessNumber = channel.unary_unary(
-                '/Greeter/GerAllProcessNumber',
-                request_serializer=router__pb2.GerAllProcessNumberRequest.SerializeToString,
-                response_deserializer=router__pb2.GerAllProcessNumberReply.FromString,
+        self.GetAllProcessNumber = channel.unary_unary(
+                '/Greeter/GetAllProcessNumber',
+                request_serializer=router__pb2.GetAllProcessNumberRequest.SerializeToString,
+                response_deserializer=router__pb2.GetAllProcessNumberReply.FromString,
                 )
         self.GetResult = channel.unary_unary(
                 '/Greeter/GetResult',
@@ -56,7 +56,7 @@ class GreeterServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def GerAllProcessNumber(self, request, context):
+    def GetAllProcessNumber(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -87,10 +87,10 @@ def add_GreeterServicer_to_server(servicer, server):
                     request_deserializer=router__pb2.GetProcessStatusRequest.FromString,
                     response_serializer=router__pb2.GetProcessStatusReply.SerializeToString,
             ),
-            'GerAllProcessNumber': grpc.unary_unary_rpc_method_handler(
-                    servicer.GerAllProcessNumber,
-                    request_deserializer=router__pb2.GerAllProcessNumberRequest.FromString,
-                    response_serializer=router__pb2.GerAllProcessNumberReply.SerializeToString,
+            'GetAllProcessNumber': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetAllProcessNumber,
+                    request_deserializer=router__pb2.GetAllProcessNumberRequest.FromString,
+                    response_serializer=router__pb2.GetAllProcessNumberReply.SerializeToString,
             ),
             'GetResult': grpc.unary_unary_rpc_method_handler(
                     servicer.GetResult,
@@ -147,7 +147,7 @@ class Greeter(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def GerAllProcessNumber(request,
+    def GetAllProcessNumber(request,
             target,
             options=(),
             channel_credentials=None,
@@ -157,9 +157,9 @@ class Greeter(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Greeter/GerAllProcessNumber',
-            router__pb2.GerAllProcessNumberRequest.SerializeToString,
-            router__pb2.GerAllProcessNumberReply.FromString,
+        return grpc.experimental.unary_unary(request, target, '/Greeter/GetAllProcessNumber',
+            router__pb2.GetAllProcessNumberRequest.SerializeToString,
+            router__pb2.GetAllProcessNumberReply.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

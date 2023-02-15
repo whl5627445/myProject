@@ -1007,10 +1007,12 @@ func (o *ZmqObject) IsPackage(packageName string) bool {
 	return false
 }
 
-func (o *ZmqObject) BuildModelFMU(className string) string {
-	cmd := "buildModelFMU(" + className + ")"
+func (o *ZmqObject) BuildModelFMU(className string, fmuFileNameId string) string {
+	//fileNamePrefix := "/home/xuqingda/GolandProjects/YssimGoService/"
+	//(Modelica.Blocks.Examples.PID_Controller,"2.0","me_cs","<default>",{"static"},false)
+	//cmd := "buildModelFMU(" + className + ",\"2.0\",\"me_cs\",\"" + fmuFileNameId + "\",{\"static\"},false" + ")"
+	cmd := "buildModelFMU(" + className + ",\"2.0\",\"me_cs\",\"" + fmuFileNameId + "\",{\"static\"},false" + ")"
 	result, ok := o.SendExpressionNoParsed(cmd)
-	log.Println(result, ok)
 	if ok {
 		return string(result)
 	}

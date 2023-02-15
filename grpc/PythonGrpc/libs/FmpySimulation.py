@@ -106,7 +106,6 @@ class MyProcess(Process):
                     processDetails.simulate_start_time = self.processStartTime
                     processDetails.simulate_end_time = time.time()
                     session.commit()
-
             simulate_fmu(self.request.fmuPath,
                          start_time=self.request.startTime,
                          stop_time=self.request.stopTime,
@@ -114,7 +113,7 @@ class MyProcess(Process):
                          start_values=dict(self.request.params),
                          output=self.outputs,
                          step_finished=self.stepFinished,
-                         relative_tolerance=self.request.tolerance,
+                         # relative_tolerance=self.request.tolerance,
                          logger=self.logFMUMessage
                          )
 
@@ -134,6 +133,7 @@ class MyProcess(Process):
                     processDetails.simulate_start_time = self.processStartTime
                     processDetails.simulate_end_time = time.time()
                     session.commit()
+            print("异常结束运行。")
 
         else:
             # updateDb(uuid=self.uuid, progress=self.progress1, exception=0, log=self.AllLogTxt,
@@ -145,9 +145,10 @@ class MyProcess(Process):
                 if processDetails:
                     processDetails.simulate_result_str = self.AllLogTxt
                     processDetails.simulate_status = "4"
-                    processDetails.simulate_start_time = self.processStartTime
-                    processDetails.simulate_end_time = time.time()
+                    processDetails.simulate_start_time = str(self.processStartTime)
+                    processDetails.simulate_end_time = str(time.time())
                     session.commit()
+            print("正常运行结束.")
 
         finally:
 

@@ -24,7 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type GreeterClient interface {
 	FmuSimulation(ctx context.Context, in *FmuSimulationRequest, opts ...grpc.CallOption) (*FmuSimulationReply, error)
 	GetProcessStatus(ctx context.Context, in *GetProcessStatusRequest, opts ...grpc.CallOption) (*GetProcessStatusReply, error)
-	GerAllProcessNumber(ctx context.Context, in *GerAllProcessNumberRequest, opts ...grpc.CallOption) (*GerAllProcessNumberReply, error)
+	GetAllProcessNumber(ctx context.Context, in *GetAllProcessNumberRequest, opts ...grpc.CallOption) (*GetAllProcessNumberReply, error)
 	GetResult(ctx context.Context, in *GetResultRequest, opts ...grpc.CallOption) (*GetResultReply, error)
 	ProcessOperation(ctx context.Context, in *ProcessOperationRequest, opts ...grpc.CallOption) (*ProcessOperationReply, error)
 }
@@ -55,9 +55,9 @@ func (c *greeterClient) GetProcessStatus(ctx context.Context, in *GetProcessStat
 	return out, nil
 }
 
-func (c *greeterClient) GerAllProcessNumber(ctx context.Context, in *GerAllProcessNumberRequest, opts ...grpc.CallOption) (*GerAllProcessNumberReply, error) {
-	out := new(GerAllProcessNumberReply)
-	err := c.cc.Invoke(ctx, "/Greeter/GerAllProcessNumber", in, out, opts...)
+func (c *greeterClient) GetAllProcessNumber(ctx context.Context, in *GetAllProcessNumberRequest, opts ...grpc.CallOption) (*GetAllProcessNumberReply, error) {
+	out := new(GetAllProcessNumberReply)
+	err := c.cc.Invoke(ctx, "/Greeter/GetAllProcessNumber", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +88,7 @@ func (c *greeterClient) ProcessOperation(ctx context.Context, in *ProcessOperati
 type GreeterServer interface {
 	FmuSimulation(context.Context, *FmuSimulationRequest) (*FmuSimulationReply, error)
 	GetProcessStatus(context.Context, *GetProcessStatusRequest) (*GetProcessStatusReply, error)
-	GerAllProcessNumber(context.Context, *GerAllProcessNumberRequest) (*GerAllProcessNumberReply, error)
+	GetAllProcessNumber(context.Context, *GetAllProcessNumberRequest) (*GetAllProcessNumberReply, error)
 	GetResult(context.Context, *GetResultRequest) (*GetResultReply, error)
 	ProcessOperation(context.Context, *ProcessOperationRequest) (*ProcessOperationReply, error)
 	mustEmbedUnimplementedGreeterServer()
@@ -104,8 +104,8 @@ func (UnimplementedGreeterServer) FmuSimulation(context.Context, *FmuSimulationR
 func (UnimplementedGreeterServer) GetProcessStatus(context.Context, *GetProcessStatusRequest) (*GetProcessStatusReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetProcessStatus not implemented")
 }
-func (UnimplementedGreeterServer) GerAllProcessNumber(context.Context, *GerAllProcessNumberRequest) (*GerAllProcessNumberReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GerAllProcessNumber not implemented")
+func (UnimplementedGreeterServer) GetAllProcessNumber(context.Context, *GetAllProcessNumberRequest) (*GetAllProcessNumberReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAllProcessNumber not implemented")
 }
 func (UnimplementedGreeterServer) GetResult(context.Context, *GetResultRequest) (*GetResultReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetResult not implemented")
@@ -162,20 +162,20 @@ func _Greeter_GetProcessStatus_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Greeter_GerAllProcessNumber_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GerAllProcessNumberRequest)
+func _Greeter_GetAllProcessNumber_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAllProcessNumberRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(GreeterServer).GerAllProcessNumber(ctx, in)
+		return srv.(GreeterServer).GetAllProcessNumber(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/Greeter/GerAllProcessNumber",
+		FullMethod: "/Greeter/GetAllProcessNumber",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GreeterServer).GerAllProcessNumber(ctx, req.(*GerAllProcessNumberRequest))
+		return srv.(GreeterServer).GetAllProcessNumber(ctx, req.(*GetAllProcessNumberRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -232,8 +232,8 @@ var Greeter_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Greeter_GetProcessStatus_Handler,
 		},
 		{
-			MethodName: "GerAllProcessNumber",
-			Handler:    _Greeter_GerAllProcessNumber_Handler,
+			MethodName: "GetAllProcessNumber",
+			Handler:    _Greeter_GetAllProcessNumber_Handler,
 		},
 		{
 			MethodName: "GetResult",

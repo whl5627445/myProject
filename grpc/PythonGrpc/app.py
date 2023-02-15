@@ -135,8 +135,8 @@ if __name__ == '__main__':
     # 启动 rpc 服务
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     router_pb2_grpc.add_GreeterServicer_to_server(Greeter(), server)
-    server.add_insecure_port('0.0.0.0:5001')
-    print("服务开启成功！")
+    server.add_insecure_port('0.0.0.0:50051')
+    print("服务开启成功！0.0.0.0:50051")
     server.start()
     try:
         while True:
