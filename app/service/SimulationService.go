@@ -12,7 +12,6 @@ import (
 	"net"
 	"os"
 	"os/exec"
-	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -262,43 +261,6 @@ func fmpySimulate(task *SimulateTask, resultFilePath string, SimulationPraData m
 	}
 	client := grpcPb.NewGreeterClient(conn) // 初始化客户端
 	ctx := context.Background()             // 初始化元数据
-	fmuFileHead := task.SRecord.Username + time.Now().Format("150405")
-	fmuOldPath_ := omc.OMC.BuildModelFMU(task.SRecord.SimulateModelName, fmuFileHead) // 生成fmu文件
-	if fmuOldPath_ == "" {
-		log.Println("编译fmu失败")
-		return false
-	}
-	log.Println(fmuOldPath_) //  "/home/ggg/eee/wanghailong15-04-05.fmu"
-	fmuOldPath := fmuOldPath_[1 : len(fmuOldPath_)-2]
-	log.Println(fmuOldPath)
-	fmuOldName := path.Base(fmuOldPath)
-	fmuFileName := strings.ReplaceAll(task.SRecord.SimulateModelName, ".", "_")
-	fmuNewPath := resultFilePath + fmuFileName + ".fmu"
-	zarrPath := resultFilePath + "zarr_res.zarr" // zarr结果文件路径
-	log.Println(fmuNewPath)
-	log.Println(zarrPath)
-	log.Println(fmuOldName)
-	err = os.Rename(fmuOldName, fmuNewPath) // fmu文件移动
-
-	if err != nil {
-		log.Printf("移动fmu文件错误: %s", err)
-		return false
-	}
-	// 获取当前目录下的文件列表
-	fileList, _ := os.Open(".")
-
-	// 读取文件列表
-	fileNames, _ := fileList.Readdirnames(-1)
-	for _, fileName := range fileNames {
-		// 判断文件名是否以"xqd"开头，如果是，且不是一个文件夹，删除文件
-		if strings.HasPrefix(fileName, fmuFileHead) && !strings.HasSuffix(fileName, "/") {
-			err := os.Remove(fileName)
-			if err != nil {
-				fmt.Println(err)
-			}
-		}
-	}
-	fileList.Close()
 
 	finalTime, err := strconv.ParseFloat(SimulationPraData["stopTime"], 64)
 	startTime, err := strconv.ParseFloat(SimulationPraData["startTime"], 64)
@@ -310,10 +272,12 @@ func fmpySimulate(task *SimulateTask, resultFilePath string, SimulationPraData m
 	}
 	FmuSimulationRequestTest := &grpcPb.FmuSimulationRequest{
 		Uuid:           task.SRecord.ID,
+		MoPath:         task.Package.FilePath,
+		ClassName:      task.Package.PackageName,
+		UserName:       task.SRecord.Username,
 		StartTime:      float32(startTime),
 		StopTime:       float32(finalTime),
-		FmuPath:        "/yssim-go/" + fmuNewPath,
-		ResPath:        "/yssim-go/" + zarrPath,
+		ResPath:        resultFilePath,
 		OutputInterval: float32(finalTime / float64(numberOfIntervals)),
 		Tolerance:      float32(tolerance),
 	} // 构造请求体
@@ -397,5 +361,4 @@ func ModelSimulate(task *SimulateTask) {
 	task.SRecord.SimulateEndTime = time.Now().Unix()
 	task.SRecord.SimulateStart = false
 	config.DB.Save(&task.SRecord)
-
 }

@@ -31,6 +31,7 @@ def saveZarr(path, ojb):
 class MyProcess(Process):
     def __init__(self, request, managerResDict):
         Process.__init__(self)
+        self.newFmuPath = "/yssim-go/" + request.resPath + request.className.replace(".", "_") + ".fmu"
         self.uuid = request.uuid
         self.request = request
         self.processStartTime = 0
@@ -40,7 +41,7 @@ class MyProcess(Process):
         self.simulateRes = None
         self.managerResDict = managerResDict
 
-        self.resPath = request.resPath
+        self.resPath = request.resPath+"zarr_res.zarr"
         # updateDb(uuid=self.uuid, progress=self.progress1, exception=0, log=self.AllLogTxt,
         #          state="初始化", processStartTime=None, processRunTime=None)
         with Session() as session:
@@ -58,10 +59,10 @@ class MyProcess(Process):
 
         if progress2 > self.progress1:
             self.progress1 = progress2
-            with open("log.txt", "a+") as f:
-                f.write(str(self.progress1) + "%" + '\t')
-                if progress2 == 100:
-                    f.write('\n')
+            # with open("log.txt", "a+") as f:
+            #     f.write(str(self.progress1) + "%" + '\t')
+            #     if progress2 == 100:
+            #         f.write('\n')
 
         # if self.progress1 == 100:
         #     stateString = "运行结束"
@@ -82,14 +83,14 @@ class MyProcess(Process):
         else:
             level = '(info)'
         logTxt = level + "  " + message.decode('utf-8')
-        with open("log.txt", "a+") as ff:
-            ff.write(logTxt)
+        # with open("log.txt", "a+") as ff:
+        #     ff.write(logTxt)
         self.AllLogTxt += logTxt
 
     def run(self):
         self.processStartTime = time.time()
         try:
-            print("start simulation.")
+            print("开始仿真")
             time1 = time.time()
             self.outputs = [v.name for v in read_model_description(self.request.fmuPath).modelVariables]
             time2 = time.time()
@@ -106,7 +107,12 @@ class MyProcess(Process):
                     processDetails.simulate_start_time = self.processStartTime
                     processDetails.simulate_end_time = time.time()
                     session.commit()
-            simulate_fmu(self.request.fmuPath,
+            print(self.newFmuPath,
+                  self.request.startTime,
+                  self.request.stopTime,
+                  "间隔:", self.request.outputInterval,
+                  self.request.tolerance)
+            simulate_fmu(self.newFmuPath,
                          start_time=self.request.startTime,
                          stop_time=self.request.stopTime,
                          output_interval=self.request.outputInterval,
@@ -130,10 +136,9 @@ class MyProcess(Process):
                 if processDetails:
                     processDetails.simulate_result_str = self.AllLogTxt + log
                     processDetails.simulate_status = "3"
-                    processDetails.simulate_start_time = self.processStartTime
-                    processDetails.simulate_end_time = time.time()
+                    processDetails.simulate_start_time = str(self.processStartTime)
+                    processDetails.simulate_end_time = str(time.time())
                     session.commit()
-            print("异常结束运行。")
 
         else:
             # updateDb(uuid=self.uuid, progress=self.progress1, exception=0, log=self.AllLogTxt,
@@ -148,10 +153,8 @@ class MyProcess(Process):
                     processDetails.simulate_start_time = str(self.processStartTime)
                     processDetails.simulate_end_time = str(time.time())
                     session.commit()
-            print("正常运行结束.")
 
         finally:
-
             if self.simulateRes is not None:
                 saveZarr(self.resPath, self.simulateRes)
             if self.uuid in self.managerResDict:

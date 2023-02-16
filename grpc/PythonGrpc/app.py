@@ -1,7 +1,7 @@
 from concurrent import futures
 import os.path
 from multiprocessing import Manager
-from libs.defs import getSate, suspendProcess, resumeProcess, killProcess
+from libs.defs import getSate, suspendProcess, resumeProcess, killProcess, initOmc, buildFMU
 from libs.FmpySimulation import MyProcess
 import threading
 import zarr
@@ -26,6 +26,8 @@ if __name__ == '__main__':
             if not os.path.exists(request.fmuPath):
                 return router_pb2.FmuSimulationReply(log="No such file or directory!")
                 # 最大任务数
+            if buildFMU(request.moPath, request.className, request.userName, request.resPath):
+                return router_pb2.FmuSimulationReply(log="buildFMU error!")
             if len(processList) < 10:
                 processOne = MyProcess(request, managerResDict)
                 processList.append(processOne)
@@ -76,7 +78,8 @@ if __name__ == '__main__':
         # 获取变量结果
         def GetResult(self, request, context):
             with Session() as session:
-                processDetails = session.query(YssimSimulateRecords).filter(YssimSimulateRecords.id == request.uuid).first()
+                processDetails = session.query(YssimSimulateRecords).filter(
+                    YssimSimulateRecords.id == request.uuid).first()
             if processDetails is None:
                 return router_pb2.GetResultReply(log="not found in db")
             if processDetails.simulate_model_result_path:
@@ -136,7 +139,8 @@ if __name__ == '__main__':
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     router_pb2_grpc.add_GreeterServicer_to_server(Greeter(), server)
     server.add_insecure_port('0.0.0.0:50051')
-    print("服务开启成功！0.0.0.0:50051")
+    initOmc()
+    print("服务开启成功！")
     server.start()
     try:
         while True:

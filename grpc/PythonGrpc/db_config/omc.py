@@ -1,0 +1,16 @@
+# -- coding: utf-8 --
+from libs.OMPython.OMCSessionZMQ import OMCSessionZMQ
+
+
+def omc_init():
+    omc_obj = OMCSessionZMQ()
+    omc_obj.sendExpression('setCommandLineOptions("-d=nogen,noevalfunc,newInst,nfAPI")')
+    # omc_obj.sendExpression("loadModel(Complex, {\"3.2.3\"},true,\"\",false)")
+    # omc_obj.sendExpression("loadModel(ModelicaServices, {\"3.2.3\"},true,\"\",false)")
+    # omc_obj.sendExpression("loadModel(ModelicaReference, {\"3.2.3\"},true,\"\",false)")
+    # omc_obj.sendExpression("loadModel(ModelicaReference, {\"3.2.3\"},true,\"\",false)")
+    # omc_obj.sendExpression("loadModel(ModelicaReference, {\"3.2.3\"},true,\"\",false)")
+
+    return omc_obj
+omc = omc_init()
+
