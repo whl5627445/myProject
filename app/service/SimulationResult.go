@@ -131,52 +131,49 @@ func SimulationResultTree(path, parent, keyWords string) []map[string]interface{
 	if err != nil {
 		log.Println(err)
 	}
-	parentName := parent
+	parentName := ""
 	if parent != "" {
 		parentName = parent + "."
 	}
 	scalarVariableList := v.ModelVariables.ScalarVariable
-	var nameList []string
 	scalarVariableMap := make(map[string]scalarVariable, 0)
-	for _, variable := range scalarVariableList {
-		nameList = append(nameList, variable.Name)
-		scalarVariableMap[variable.Name] = variable
-	}
 	var dataList []map[string]interface{}
 	nameMap := map[string]bool{}
 	id := 0
-	for _, name := range nameList {
+	for _, variable := range scalarVariableList {
+		name := variable.Name
+		splitName := []string{}
 		trimPrefixName := strings.TrimPrefix(name, parent+".")
-		var splitName []string
-		if !strings.HasPrefix(name, "der(") && !strings.HasPrefix(name, "$") {
-			splitName = strings.Split(trimPrefixName, ".")
-		} else {
-			continue
-		}
-		if strings.HasPrefix(name, parentName) && !nameMap[splitName[0]] && scalarVariableMap[name].HideResult == false && scalarVariableMap[name].IsProtected == false {
-			data := map[string]interface{}{
-				"variables":    splitName[0],
-				"description":  scalarVariableMap[name].Description,
-				"display_unit": scalarVariableMap[name].Real.DisplayUnit,
-				"has_child":    false,
-				"id":           id,
-				"start":        scalarVariableMap[name].Real.Start,
-				"unit":         scalarVariableMap[name].Real.Unit,
-			}
-			if len(splitName) > 1 {
-				data["has_child"] = true
-				data["unit"] = ""
-				data["display_unit"] = ""
-			}
-			id += 1
-			nameMap[splitName[0]] = true
-			if keyWords != "" {
-				if strings.Index(strings.ToLower(name), strings.ToLower(keyWords)) != -1 {
-					dataList = append(dataList, data)
-				}
+		if strings.HasPrefix(name, parentName) && strings.Index(strings.ToLower(name), strings.ToLower(keyWords)) != -1 {
+			scalarVariableMap[name] = variable
+			if !strings.HasPrefix(name, "der(") && !strings.HasPrefix(name, "$") {
+				splitName = strings.Split(trimPrefixName, ".")
 			} else {
-				dataList = append(dataList, data)
+				continue
 			}
+
+			if !nameMap[splitName[0]] && scalarVariableMap[name].HideResult == false && scalarVariableMap[name].IsProtected == false {
+				data := map[string]interface{}{
+					"variables":    splitName[0],
+					"description":  scalarVariableMap[name].Description,
+					"display_unit": scalarVariableMap[name].Real.DisplayUnit,
+					"has_child":    false,
+					"id":           id,
+					"start":        scalarVariableMap[name].Real.Start,
+					"unit":         scalarVariableMap[name].Real.Unit,
+				}
+				if len(splitName) > 1 {
+					data["has_child"] = true
+					data["unit"] = ""
+					data["display_unit"] = ""
+				}
+				id += 1
+				nameMap[splitName[0]] = true
+
+				dataList = append(dataList, data)
+
+			}
+
 		}
 	}
 	return dataList

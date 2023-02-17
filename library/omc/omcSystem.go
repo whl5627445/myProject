@@ -60,14 +60,11 @@ func (o *ZmqObject) SendExpression(cmd string) ([]interface{}, bool) {
 
 // SendExpressionNoParsed 发送指令，获取数据，但是不进行数据转换
 func (o *ZmqObject) SendExpressionNoParsed(cmd string) ([]byte, bool) {
-	//s := time.Now().UnixNano() / 1e6
 	o.Lock()
 	defer o.Unlock()
 	var msg []byte
-	//msg, ok := AllModelCache[cmd]
 	ctx := context.Background()
 	msg, err := AllModelCache.HGet(ctx, "yssim-GraphicsData", cmd).Bytes()
-	//if !ok {
 	if err != nil {
 		_ = o.Send(zmq4.NewMsgString(cmd))
 		data, _ := o.Recv()
