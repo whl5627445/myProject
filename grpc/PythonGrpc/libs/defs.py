@@ -12,17 +12,29 @@ from db_config.config import Session, YssimSimulateRecords
 def buildFMU(moPath, className, userName, resPath):
     # if omc.loadFile("/yssim-go/public/UserFiles/UploadFile/xuqingda/ChillerStage/20230216111124/ChillerStage.mo"):
     #     return False
-    fileNamePrefix =userName + time.strftime('%H%M%S', time.localtime(time.time()))
-    if omc.loadFile("/yssim-go/" + moPath):
-        print("加载" + moPath + "失败！")
-        return False
-    fmuPath = omc.buildModelFmu(className=className, fileNamePrefix=fileNamePrefix)
-    if fmuPath != "":
-        print("导出fmu" + className + "失败！")
-        return False
-    if omc.deleteClass(className):
-        print("卸载" + className + "失败！")
-        return False
+    fileNamePrefix = userName + time.strftime('%H%M%S', time.localtime(time.time()))
+
+    if moPath == "":  # 如果是系统模型,直接导出fmu
+        fmuPath = omc.buildModelFmu(className=className, fileNamePrefix=fileNamePrefix)
+        if fmuPath == "":
+            print("导出fmu" + className + "失败！")
+            return False
+    else:             # 如果不是系统模型，先判断mo文件是否存在，再加载mo文件，导出fmu，卸载模型
+        if os.path.exists("/yssim-go/" + moPath):
+            print("mo文件存在:", "/yssim-go/" + moPath)
+        else:
+            print("mo文件不存在:", "/yssim-go/" + moPath)
+            return False
+        if not omc.loadFile("/yssim-go/" + moPath):
+            print("加载" + moPath + "失败！")
+            return False
+        fmuPath = omc.buildModelFmu(className=className, fileNamePrefix=fileNamePrefix)
+        if fmuPath == "":
+            print("导出fmu" + className + "失败！")
+            return False
+        if not omc.deleteClass(className):
+            print("卸载" + className + "失败！")
+            return False
     try:
         newFmuPath = "/yssim-go/" + resPath + className.replace(".", "_") + ".fmu"
         copyPath = shutil.copy(fmuPath, newFmuPath)
@@ -37,6 +49,7 @@ def buildFMU(moPath, className, userName, resPath):
         for filename in os.listdir(dirname):
             if filename.startswith(fileNamePrefix):
                 os.remove(os.path.join(dirname, filename))
+                print("删除文件：", filename)
     except:
         return False
     return newFmuPath

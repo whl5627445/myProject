@@ -9,3 +9,4 @@ grpcio
 grpcio-tools
 future
 pyparsing
+zmq

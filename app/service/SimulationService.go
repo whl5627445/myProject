@@ -273,7 +273,7 @@ func fmpySimulate(task *SimulateTask, resultFilePath string, SimulationPraData m
 	FmuSimulationRequestTest := &grpcPb.FmuSimulationRequest{
 		Uuid:           task.SRecord.ID,
 		MoPath:         task.Package.FilePath,
-		ClassName:      task.Package.PackageName,
+		ClassName:      task.SRecord.SimulateModelName,
 		UserName:       task.SRecord.Username,
 		StartTime:      float32(startTime),
 		StopTime:       float32(finalTime),
@@ -288,7 +288,7 @@ func fmpySimulate(task *SimulateTask, resultFilePath string, SimulationPraData m
 		return false
 	}
 	fmt.Println("仿真提交任务:", FmuSimulationRes.Log)
-	if FmuSimulationRes.Log == "true" {
+	if FmuSimulationRes.Log == "Task submitted successfully." {
 		return true
 	}
 	return false
@@ -347,7 +347,14 @@ func ModelSimulate(task *SimulateTask) {
 		sResult = jModelicaSimulate(task, resultFilePath, SimulationPraData, FilePath)
 	case "FmPy":
 		sResult = fmpySimulate(task, resultFilePath, SimulationPraData)
-
+		if !sResult {
+			task.SRecord.SimulateStatus = "3"
+			MessageNotice(map[string]string{"message": task.SRecord.SimulateModelName + " 模型仿真失败"})
+			task.SRecord.SimulateEndTime = time.Now().Unix()
+			task.SRecord.SimulateStart = false
+			config.DB.Save(&task.SRecord)
+		}
+		return
 	}
 	if sResult {
 		task.SRecord.SimulateModelResultPath = resultFilePath
