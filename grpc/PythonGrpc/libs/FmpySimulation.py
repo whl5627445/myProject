@@ -92,7 +92,7 @@ class MyProcess(Process):
         try:
             print("开始仿真")
             time1 = time.time()
-            self.outputs = [v.name for v in read_model_description(self.request.fmuPath).modelVariables]
+            self.outputs = [v.name for v in read_model_description(self.newFmuPath).modelVariables]
             time2 = time.time()
             print("读取变量耗时：", time2 - time1)
             # updateDb(uuid=self.uuid, progress=self.progress1, exception=0, log=self.AllLogTxt,
@@ -136,6 +136,7 @@ class MyProcess(Process):
                 if processDetails:
                     processDetails.simulate_result_str = self.AllLogTxt + log
                     processDetails.simulate_status = "3"
+                    processDetails.simulate_start = "0"
                     processDetails.simulate_start_time = str(self.processStartTime)
                     processDetails.simulate_end_time = str(time.time())
                     session.commit()
@@ -144,19 +145,23 @@ class MyProcess(Process):
             # updateDb(uuid=self.uuid, progress=self.progress1, exception=0, log=self.AllLogTxt,
             #          state="运行结束", processStartTime=TimeStampToTime(self.processStartTime),
             #          processRunTime=TimeStampToTime(time.time()))
+            print("运行正常结束。")
             with Session() as session:
                 processDetails = session.query(YssimSimulateRecords).filter(
                     YssimSimulateRecords.id == self.uuid).first()
                 if processDetails:
+                    processDetails.simulate_model_result_path = self.request.resPath
                     processDetails.simulate_result_str = self.AllLogTxt
                     processDetails.simulate_status = "4"
+                    processDetails.simulate_start = "0"
                     processDetails.simulate_start_time = str(self.processStartTime)
                     processDetails.simulate_end_time = str(time.time())
                     session.commit()
 
         finally:
             if self.simulateRes is not None:
-                saveZarr(self.resPath, self.simulateRes)
+                print(self.resPath )
+                saveZarr("/yssim-go/"+self.resPath, self.simulateRes)
             if self.uuid in self.managerResDict:
                 del self.managerResDict[self.uuid]
         return "end"

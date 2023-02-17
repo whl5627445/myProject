@@ -23,10 +23,10 @@ if __name__ == '__main__':
         # 实现 proto 文件中定义的 rpc 调用
         # 仿真接口
         def FmuSimulation(self, request, context):
-            if not os.path.exists(request.fmuPath):
+            if not os.path.exists("/yssim-go/"+request.moPath):
                 return router_pb2.FmuSimulationReply(log="No such file or directory!")
                 # 最大任务数
-            if buildFMU(request.moPath, request.className, request.userName, request.resPath):
+            if not buildFMU(request.moPath, request.className, request.userName, request.resPath):
                 return router_pb2.FmuSimulationReply(log="buildFMU error!")
             if len(processList) < 10:
                 processOne = MyProcess(request, managerResDict)
@@ -34,7 +34,7 @@ if __name__ == '__main__':
                 return router_pb2.FmuSimulationReply(log="Task submitted successfully.")
             else:
                 return router_pb2.FmuSimulationReply(
-                    log="The total number of system tasks has exceeded 4. Please wait and request again!")
+                    log="The total number of system tasks has exceeded 8. Please wait and request again!")
 
         # 获取某个进程状态信息
         def GetProcessStatus(self, request, context):
@@ -122,12 +122,12 @@ if __name__ == '__main__':
 
     def action():
         while True:
-            time.sleep(2)
+            time.sleep(1)
             for i in processList:
                 processState = getSate(i.__repr__())
                 if processState in ["closed", "unknown", "stopped"]:
                     processList.remove(i)
-            for i in processList[:4]:
+            for i in processList[:8]:
                 if not i.is_alive():
                     i.start()
 
