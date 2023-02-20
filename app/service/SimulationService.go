@@ -1,13 +1,10 @@
 package service
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/wangluozhe/requests"
 	"github.com/wangluozhe/requests/url"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"log"
 	"net"
 	"os"
@@ -21,10 +18,6 @@ import (
 	"yssim-go/library/fileOperation"
 	"yssim-go/library/mapProcessing"
 	"yssim-go/library/omc"
-)
-
-const (
-	address = "fmpy_grpc:50051"
 )
 
 type SimulateTask struct {
@@ -253,14 +246,6 @@ func jModelicaSimulate(task *SimulateTask, resultFilePath string, SimulationPraD
 }
 
 func fmpySimulate(task *SimulateTask, resultFilePath string, SimulationPraData map[string]string) bool {
-	conn, err := grpc.Dial(
-		address, grpc.WithTransportCredentials(insecure.NewCredentials())) // 建立链接
-	if err != nil {
-		log.Println("did not connect:", err)
-		return false
-	}
-	client := grpcPb.NewGreeterClient(conn) // 初始化客户端
-	ctx := context.Background()             // 初始化元数据
 
 	finalTime, err := strconv.ParseFloat(SimulationPraData["stopTime"], 64)
 	startTime, err := strconv.ParseFloat(SimulationPraData["startTime"], 64)
@@ -281,7 +266,7 @@ func fmpySimulate(task *SimulateTask, resultFilePath string, SimulationPraData m
 		OutputInterval: float32(finalTime / float64(numberOfIntervals)),
 		Tolerance:      float32(tolerance),
 	} // 构造请求体
-	FmuSimulationRes, err := client.FmuSimulation(ctx, FmuSimulationRequestTest) // 调用grpc服务
+	FmuSimulationRes, err := grpcPb.Client.FmuSimulation(grpcPb.Ctx, FmuSimulationRequestTest) // 调用grpc服务
 
 	if err != nil {
 		fmt.Println("调用grpc服务(FmuSimulation)出错：", err)

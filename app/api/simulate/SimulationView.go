@@ -2,10 +2,12 @@ package API
 
 import (
 	"encoding/json"
+	"fmt"
 	"math"
 	"net/http"
 	"strconv"
 	"time"
+	"yssim-go/grpc/grpcPb"
 	"yssim-go/library/timeConvert"
 
 	"github.com/gin-gonic/gin"
@@ -180,7 +182,7 @@ func SimulateResultGraphicsView(c *gin.Context) {
 	}
 	// 判断输入id个数和输出结果长度是否一致!
 	if len(recordList) != len(recordIdList) {
-		c.JSON(http.StatusBadRequest, "输入id个数和输出结果长度不一致!")
+		c.JSON(http.StatusBadRequest, "输入id个数和输出结果个数不一致!")
 		return
 	}
 	recordDict := map[string]DataBaseModel.YssimSimulateRecord{}
@@ -189,7 +191,43 @@ func SimulateResultGraphicsView(c *gin.Context) {
 	}
 	// 遍历入参数中的id，依次读取结果，每次经过插入到resData
 	for i := 0; i < len(recordIdList); i++ {
-		data, ok := service.ReadSimulationResult([]string{item.Variable}, recordDict[recordIdList[i]].SimulateModelResultPath+"result_res.mat")
+		var data [][]float64
+		var ok bool
+		if recordDict[recordIdList[i]].SimulateType == "FmPy" {
+			GetResultRequestTime := &grpcPb.GetResultRequest{
+				Uuid:     recordIdList[i],
+				Variable: "time",
+			}
+			GetResultRequestVar := &grpcPb.GetResultRequest{
+				Uuid:     recordIdList[i],
+				Variable: item.Variable,
+			}
+			replyTime, err2 := grpcPb.Client.GetResult(grpcPb.Ctx, GetResultRequestTime)
+			replyVar, err2 := grpcPb.Client.GetResult(grpcPb.Ctx, GetResultRequestVar)
+			if err2 != nil {
+				fmt.Println("调用grpc服务(FmuSimulation)出错：", err)
+				return
+			}
+			if replyVar.Log == "true" {
+				ok = true
+				reply1Data := make([]float64, len(replyTime.Data))
+				for i, v := range replyTime.Data {
+					reply1Data[i] = float64(v)
+				}
+				reply2Data := make([]float64, len(replyVar.Data))
+				for i, v := range replyVar.Data {
+					reply2Data[i] = float64(v)
+				}
+				data = append(data, reply1Data)
+				data = append(data, reply2Data)
+			} else {
+				fmt.Println(replyVar.Log)
+				c.JSON(http.StatusBadRequest, replyVar.Log)
+				return
+			}
+		} else {
+			data, ok = service.ReadSimulationResult([]string{item.Variable}, recordDict[recordIdList[i]].SimulateModelResultPath+"result_res.mat")
+		}
 		unitsData := service.ConvertUnits(item.S2, item.S1)
 		if ok {
 			ordinate := data[1]
@@ -289,6 +327,7 @@ func SimulateResultSingularView(c *gin.Context) {
 func SimulateResultListView(c *gin.Context) {
 	/*
 	   # 仿真记录列表获取接口
+	   # 模型名为空的时候查所有模型，只有查所有模型的时候才会分页。
 	   ## return: 返回对应用户的所有仿真记录
 	*/
 

@@ -12,6 +12,7 @@ from db_config.config import Session, YssimSimulateRecords
 def buildFMU(moPath, className, userName, resPath):
     # if omc.loadFile("/yssim-go/public/UserFiles/UploadFile/xuqingda/ChillerStage/20230216111124/ChillerStage.mo"):
     #     return False
+    adsPath = "/home/simtek/code/"
     fileNamePrefix = userName + time.strftime('%H%M%S', time.localtime(time.time()))
 
     if moPath == "":  # 如果是系统模型,直接导出fmu
@@ -20,15 +21,16 @@ def buildFMU(moPath, className, userName, resPath):
             print("导出fmu" + className + "失败！")
             return False
     else:             # 如果不是系统模型，先判断mo文件是否存在，再加载mo文件，导出fmu，卸载模型
-        if os.path.exists("/yssim-go/" + moPath):
-            print("mo文件存在:", "/yssim-go/" + moPath)
+        if os.path.exists(adsPath + moPath):
+            print("mo文件存在:", adsPath + moPath)
         else:
-            print("mo文件不存在:", "/yssim-go/" + moPath)
+            print("mo文件不存在:", adsPath + moPath)
             return False
-        if not omc.loadFile("/yssim-go/" + moPath):
+        if not omc.loadFile(adsPath + moPath):
             print("加载" + moPath + "失败！")
             return False
         fmuPath = omc.buildModelFmu(className=className, fileNamePrefix=fileNamePrefix)
+        print("fmupath:", fmuPath)
         if fmuPath == "":
             print("导出fmu" + className + "失败！")
             return False
@@ -36,15 +38,13 @@ def buildFMU(moPath, className, userName, resPath):
             print("卸载" + className + "失败！")
             return False
     try:
-        newFmuPath = "/yssim-go/" + resPath + className.replace(".", "_") + ".fmu"
+        newFmuPath = adsPath + resPath + className.replace(".", "_") + ".fmu"
         copyPath = shutil.copy(fmuPath, newFmuPath)
-        print("copyPath:", copyPath)
         movePath = shutil.move(fmuPath, newFmuPath + ".zip")
-        print("movePath:", movePath)
         zip_file = zipfile.ZipFile(movePath)
-        zip_file.extractall("/yssim-go/" + resPath)
+        zip_file.extractall(adsPath + resPath)
         zip_file.close()
-        os.rename("/yssim-go/" + resPath + "modelDescription.xml", "/yssim-go/" + resPath + "result_init.xml")
+        os.rename(adsPath + resPath + "modelDescription.xml", adsPath + resPath + "result_init.xml")
         dirname = os.path.dirname(fmuPath)
         for filename in os.listdir(dirname):
             if filename.startswith(fileNamePrefix):
@@ -62,7 +62,13 @@ def initOmc():
     print("Modelica4.0.0初始化:", omc.sendExpression("loadModel(Modelica, {\"4.0.0\"},true,\"\",false)"))
     print("SolarPower初始化:", omc.sendExpression("loadModel(SolarPower, {\"\"},true,\"\",false)"))
     print("WindPowerSystem初始化:", omc.sendExpression("loadModel(WindPowerSystem, {\"\"},true,\"\",false)"))
-
+    fmuPath = omc.buildModelFmu(className="Modelica.Blocks.Examples.PID_Controller", fileNamePrefix="xxx")
+    print("testBuildFMU:",fmuPath )
+    dirname = os.path.dirname(fmuPath)
+    for filename in os.listdir(dirname):
+        if filename.startswith("xxx"):
+            os.remove(os.path.join(dirname, filename))
+            print("删除文件：", filename)
 
 # def TimeStampToTime(timestamp):
 #     timeStruct = time.localtime(timestamp)

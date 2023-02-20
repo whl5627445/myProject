@@ -31,7 +31,7 @@ def saveZarr(path, ojb):
 class MyProcess(Process):
     def __init__(self, request, managerResDict):
         Process.__init__(self)
-        self.newFmuPath = "/yssim-go/" + request.resPath + request.className.replace(".", "_") + ".fmu"
+        self.newFmuPath = "/home/simtek/code/" + request.resPath + request.className.replace(".", "_") + ".fmu"
         self.uuid = request.uuid
         self.request = request
         self.processStartTime = 0
@@ -107,11 +107,6 @@ class MyProcess(Process):
                     processDetails.simulate_start_time = self.processStartTime
                     processDetails.simulate_end_time = time.time()
                     session.commit()
-            print(self.newFmuPath,
-                  self.request.startTime,
-                  self.request.stopTime,
-                  "间隔:", self.request.outputInterval,
-                  self.request.tolerance)
             simulate_fmu(self.newFmuPath,
                          start_time=self.request.startTime,
                          stop_time=self.request.stopTime,
@@ -160,8 +155,7 @@ class MyProcess(Process):
 
         finally:
             if self.simulateRes is not None:
-                print(self.resPath )
-                saveZarr("/yssim-go/"+self.resPath, self.simulateRes)
+                saveZarr("/home/simtek/code/"+self.resPath, self.simulateRes)
             if self.uuid in self.managerResDict:
                 del self.managerResDict[self.uuid]
         return "end"
