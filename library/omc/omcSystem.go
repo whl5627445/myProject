@@ -450,7 +450,18 @@ func (o *ZmqObject) GetClassNames(className string, all bool) []string {
 	return dataList
 }
 
-// 返回给定模型的源码
+// ListFile 返回给定模型的文件源码
+func (o *ZmqObject) ListFile(className string) string {
+	code := ""
+	cmd := "listFile(" + className + ",nestedClasses=false)"
+	codeData, ok := o.SendExpressionNoParsed(cmd)
+	if ok {
+		code = string(codeData)
+	}
+	return code
+}
+
+// List 返回给定模型的源码
 func (o *ZmqObject) List(className string) string {
 	code := ""
 	cmd := "list(" + className + ")"

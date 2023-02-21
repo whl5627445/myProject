@@ -140,7 +140,7 @@ func GetModelCodeView(c *gin.Context) {
 	*/
 	modelName := c.Query("model_name")
 	var res responseData
-	modelCode := service.GetModelCode(modelName)
+	modelCode := service.GetModelFileCode(modelName)
 	res.Data = modelCode
 	c.JSON(http.StatusOK, res)
 }

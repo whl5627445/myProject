@@ -10,6 +10,16 @@ import (
 	"yssim-go/library/omc"
 )
 
+func GetModelFileCode(modelName string) string {
+	codeData := omc.OMC.ListFile(modelName)
+	codeData = strings.ReplaceAll(codeData, "\\\"", "\"")
+	codeData = strings.ReplaceAll(codeData, "\\\"", "\"")
+	if len(codeData) > 2 {
+		codeData = codeData[1 : len(codeData)-2]
+	}
+	return codeData
+}
+
 func GetModelCode(modelName string) string {
 	codeData := omc.OMC.List(modelName)
 	codeData = strings.ReplaceAll(codeData, "\\\"", "\"")
