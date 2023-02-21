@@ -7,6 +7,8 @@ service Greeter {
   rpc GetResult(GetResultRequest) returns (GetResultReply) {}
   rpc ProcessOperation(ProcessOperationRequest) returns (ProcessOperationReply) {}
   rpc SaveFilterResultToCsv(SaveFilterResultToCsvRequest) returns (SaveFilterResultToCsvReply) {}
+  rpc MatToCsv(MatToCsvRequest) returns (MatToCsvReply) {}
+  rpc ZarrToCsv(ZarrToCsvRequest) returns (ZarrToCsvReply) {}
 }
 
 message FmuSimulationRequest {
@@ -69,5 +71,19 @@ message SaveFilterResultToCsvRequest{
   string newFileName = 3;
 }
 message SaveFilterResultToCsvReply{
+  bool ok = 1;
+}
+
+message MatToCsvRequest{
+  string matPath = 1;
+}
+message MatToCsvReply{
+  bool ok = 1;
+}
+
+message ZarrToCsvRequest{
+  string zarrPath = 1;
+}
+message ZarrToCsvReply{
   bool ok = 1;
 }

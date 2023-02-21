@@ -10,3 +10,5 @@ grpcio-tools
 future
 pyparsing
 zmq
+dymat
+scipy

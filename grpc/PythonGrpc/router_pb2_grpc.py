@@ -44,6 +44,16 @@ class GreeterStub(object):
                 request_serializer=router__pb2.SaveFilterResultToCsvRequest.SerializeToString,
                 response_deserializer=router__pb2.SaveFilterResultToCsvReply.FromString,
                 )
+        self.MatToCsv = channel.unary_unary(
+                '/Greeter/MatToCsv',
+                request_serializer=router__pb2.MatToCsvRequest.SerializeToString,
+                response_deserializer=router__pb2.MatToCsvReply.FromString,
+                )
+        self.ZarrToCsv = channel.unary_unary(
+                '/Greeter/ZarrToCsv',
+                request_serializer=router__pb2.ZarrToCsvRequest.SerializeToString,
+                response_deserializer=router__pb2.ZarrToCsvReply.FromString,
+                )
 
 
 class GreeterServicer(object):
@@ -85,6 +95,18 @@ class GreeterServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def MatToCsv(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ZarrToCsv(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_GreeterServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -117,6 +139,16 @@ def add_GreeterServicer_to_server(servicer, server):
                     servicer.SaveFilterResultToCsv,
                     request_deserializer=router__pb2.SaveFilterResultToCsvRequest.FromString,
                     response_serializer=router__pb2.SaveFilterResultToCsvReply.SerializeToString,
+            ),
+            'MatToCsv': grpc.unary_unary_rpc_method_handler(
+                    servicer.MatToCsv,
+                    request_deserializer=router__pb2.MatToCsvRequest.FromString,
+                    response_serializer=router__pb2.MatToCsvReply.SerializeToString,
+            ),
+            'ZarrToCsv': grpc.unary_unary_rpc_method_handler(
+                    servicer.ZarrToCsv,
+                    request_deserializer=router__pb2.ZarrToCsvRequest.FromString,
+                    response_serializer=router__pb2.ZarrToCsvReply.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -227,5 +259,39 @@ class Greeter(object):
         return grpc.experimental.unary_unary(request, target, '/Greeter/SaveFilterResultToCsv',
             router__pb2.SaveFilterResultToCsvRequest.SerializeToString,
             router__pb2.SaveFilterResultToCsvReply.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def MatToCsv(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/Greeter/MatToCsv',
+            router__pb2.MatToCsvRequest.SerializeToString,
+            router__pb2.MatToCsvReply.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def ZarrToCsv(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/Greeter/ZarrToCsv',
+            router__pb2.ZarrToCsvRequest.SerializeToString,
+            router__pb2.ZarrToCsvReply.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

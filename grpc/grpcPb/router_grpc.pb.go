@@ -28,6 +28,8 @@ type GreeterClient interface {
 	GetResult(ctx context.Context, in *GetResultRequest, opts ...grpc.CallOption) (*GetResultReply, error)
 	ProcessOperation(ctx context.Context, in *ProcessOperationRequest, opts ...grpc.CallOption) (*ProcessOperationReply, error)
 	SaveFilterResultToCsv(ctx context.Context, in *SaveFilterResultToCsvRequest, opts ...grpc.CallOption) (*SaveFilterResultToCsvReply, error)
+	MatToCsv(ctx context.Context, in *MatToCsvRequest, opts ...grpc.CallOption) (*MatToCsvReply, error)
+	ZarrToCsv(ctx context.Context, in *ZarrToCsvRequest, opts ...grpc.CallOption) (*ZarrToCsvReply, error)
 }
 
 type greeterClient struct {
@@ -92,6 +94,24 @@ func (c *greeterClient) SaveFilterResultToCsv(ctx context.Context, in *SaveFilte
 	return out, nil
 }
 
+func (c *greeterClient) MatToCsv(ctx context.Context, in *MatToCsvRequest, opts ...grpc.CallOption) (*MatToCsvReply, error) {
+	out := new(MatToCsvReply)
+	err := c.cc.Invoke(ctx, "/Greeter/MatToCsv", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *greeterClient) ZarrToCsv(ctx context.Context, in *ZarrToCsvRequest, opts ...grpc.CallOption) (*ZarrToCsvReply, error) {
+	out := new(ZarrToCsvReply)
+	err := c.cc.Invoke(ctx, "/Greeter/ZarrToCsv", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GreeterServer is the server API for Greeter service.
 // All implementations must embed UnimplementedGreeterServer
 // for forward compatibility
@@ -102,6 +122,8 @@ type GreeterServer interface {
 	GetResult(context.Context, *GetResultRequest) (*GetResultReply, error)
 	ProcessOperation(context.Context, *ProcessOperationRequest) (*ProcessOperationReply, error)
 	SaveFilterResultToCsv(context.Context, *SaveFilterResultToCsvRequest) (*SaveFilterResultToCsvReply, error)
+	MatToCsv(context.Context, *MatToCsvRequest) (*MatToCsvReply, error)
+	ZarrToCsv(context.Context, *ZarrToCsvRequest) (*ZarrToCsvReply, error)
 	mustEmbedUnimplementedGreeterServer()
 }
 
@@ -126,6 +148,12 @@ func (UnimplementedGreeterServer) ProcessOperation(context.Context, *ProcessOper
 }
 func (UnimplementedGreeterServer) SaveFilterResultToCsv(context.Context, *SaveFilterResultToCsvRequest) (*SaveFilterResultToCsvReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SaveFilterResultToCsv not implemented")
+}
+func (UnimplementedGreeterServer) MatToCsv(context.Context, *MatToCsvRequest) (*MatToCsvReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MatToCsv not implemented")
+}
+func (UnimplementedGreeterServer) ZarrToCsv(context.Context, *ZarrToCsvRequest) (*ZarrToCsvReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ZarrToCsv not implemented")
 }
 func (UnimplementedGreeterServer) mustEmbedUnimplementedGreeterServer() {}
 
@@ -248,6 +276,42 @@ func _Greeter_SaveFilterResultToCsv_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Greeter_MatToCsv_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MatToCsvRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GreeterServer).MatToCsv(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Greeter/MatToCsv",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GreeterServer).MatToCsv(ctx, req.(*MatToCsvRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Greeter_ZarrToCsv_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ZarrToCsvRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GreeterServer).ZarrToCsv(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Greeter/ZarrToCsv",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GreeterServer).ZarrToCsv(ctx, req.(*ZarrToCsvRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Greeter_ServiceDesc is the grpc.ServiceDesc for Greeter service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -278,6 +342,14 @@ var Greeter_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SaveFilterResultToCsv",
 			Handler:    _Greeter_SaveFilterResultToCsv_Handler,
+		},
+		{
+			MethodName: "MatToCsv",
+			Handler:    _Greeter_MatToCsv_Handler,
+		},
+		{
+			MethodName: "ZarrToCsv",
+			Handler:    _Greeter_ZarrToCsv_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -751,6 +751,194 @@ func (x *SaveFilterResultToCsvReply) GetOk() bool {
 	return false
 }
 
+type MatToCsvRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	MatPath string `protobuf:"bytes,1,opt,name=matPath,proto3" json:"matPath,omitempty"`
+}
+
+func (x *MatToCsvRequest) Reset() {
+	*x = MatToCsvRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_router_proto_msgTypes[12]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MatToCsvRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MatToCsvRequest) ProtoMessage() {}
+
+func (x *MatToCsvRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_router_proto_msgTypes[12]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MatToCsvRequest.ProtoReflect.Descriptor instead.
+func (*MatToCsvRequest) Descriptor() ([]byte, []int) {
+	return file_router_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *MatToCsvRequest) GetMatPath() string {
+	if x != nil {
+		return x.MatPath
+	}
+	return ""
+}
+
+type MatToCsvReply struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Ok bool `protobuf:"varint,1,opt,name=ok,proto3" json:"ok,omitempty"`
+}
+
+func (x *MatToCsvReply) Reset() {
+	*x = MatToCsvReply{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_router_proto_msgTypes[13]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MatToCsvReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MatToCsvReply) ProtoMessage() {}
+
+func (x *MatToCsvReply) ProtoReflect() protoreflect.Message {
+	mi := &file_router_proto_msgTypes[13]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MatToCsvReply.ProtoReflect.Descriptor instead.
+func (*MatToCsvReply) Descriptor() ([]byte, []int) {
+	return file_router_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *MatToCsvReply) GetOk() bool {
+	if x != nil {
+		return x.Ok
+	}
+	return false
+}
+
+type ZarrToCsvRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	ZarrPath string `protobuf:"bytes,1,opt,name=zarrPath,proto3" json:"zarrPath,omitempty"`
+}
+
+func (x *ZarrToCsvRequest) Reset() {
+	*x = ZarrToCsvRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_router_proto_msgTypes[14]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ZarrToCsvRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ZarrToCsvRequest) ProtoMessage() {}
+
+func (x *ZarrToCsvRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_router_proto_msgTypes[14]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ZarrToCsvRequest.ProtoReflect.Descriptor instead.
+func (*ZarrToCsvRequest) Descriptor() ([]byte, []int) {
+	return file_router_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *ZarrToCsvRequest) GetZarrPath() string {
+	if x != nil {
+		return x.ZarrPath
+	}
+	return ""
+}
+
+type ZarrToCsvReply struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Ok bool `protobuf:"varint,1,opt,name=ok,proto3" json:"ok,omitempty"`
+}
+
+func (x *ZarrToCsvReply) Reset() {
+	*x = ZarrToCsvReply{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_router_proto_msgTypes[15]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ZarrToCsvReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ZarrToCsvReply) ProtoMessage() {}
+
+func (x *ZarrToCsvReply) ProtoReflect() protoreflect.Message {
+	mi := &file_router_proto_msgTypes[15]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ZarrToCsvReply.ProtoReflect.Descriptor instead.
+func (*ZarrToCsvReply) Descriptor() ([]byte, []int) {
+	return file_router_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *ZarrToCsvReply) GetOk() bool {
+	if x != nil {
+		return x.Ok
+	}
+	return false
+}
+
 var File_router_proto protoreflect.FileDescriptor
 
 var file_router_proto_rawDesc = []byte{
@@ -837,7 +1025,17 @@ var file_router_proto_rawDesc = []byte{
 	0x28, 0x09, 0x52, 0x0b, 0x6e, 0x65, 0x77, 0x46, 0x69, 0x6c, 0x65, 0x4e, 0x61, 0x6d, 0x65, 0x22,
 	0x2c, 0x0a, 0x1a, 0x53, 0x61, 0x76, 0x65, 0x46, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x52, 0x65, 0x73,
 	0x75, 0x6c, 0x74, 0x54, 0x6f, 0x43, 0x73, 0x76, 0x52, 0x65, 0x70, 0x6c, 0x79, 0x12, 0x0e, 0x0a,
-	0x02, 0x6f, 0x6b, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x02, 0x6f, 0x6b, 0x32, 0xb3, 0x03,
+	0x02, 0x6f, 0x6b, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x02, 0x6f, 0x6b, 0x22, 0x2b, 0x0a,
+	0x0f, 0x4d, 0x61, 0x74, 0x54, 0x6f, 0x43, 0x73, 0x76, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x12, 0x18, 0x0a, 0x07, 0x6d, 0x61, 0x74, 0x50, 0x61, 0x74, 0x68, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x07, 0x6d, 0x61, 0x74, 0x50, 0x61, 0x74, 0x68, 0x22, 0x1f, 0x0a, 0x0d, 0x4d, 0x61,
+	0x74, 0x54, 0x6f, 0x43, 0x73, 0x76, 0x52, 0x65, 0x70, 0x6c, 0x79, 0x12, 0x0e, 0x0a, 0x02, 0x6f,
+	0x6b, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x02, 0x6f, 0x6b, 0x22, 0x2e, 0x0a, 0x10, 0x5a,
+	0x61, 0x72, 0x72, 0x54, 0x6f, 0x43, 0x73, 0x76, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12,
+	0x1a, 0x0a, 0x08, 0x7a, 0x61, 0x72, 0x72, 0x50, 0x61, 0x74, 0x68, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x08, 0x7a, 0x61, 0x72, 0x72, 0x50, 0x61, 0x74, 0x68, 0x22, 0x20, 0x0a, 0x0e, 0x5a,
+	0x61, 0x72, 0x72, 0x54, 0x6f, 0x43, 0x73, 0x76, 0x52, 0x65, 0x70, 0x6c, 0x79, 0x12, 0x0e, 0x0a,
+	0x02, 0x6f, 0x6b, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x02, 0x6f, 0x6b, 0x32, 0x96, 0x04,
 	0x0a, 0x07, 0x47, 0x72, 0x65, 0x65, 0x74, 0x65, 0x72, 0x12, 0x3d, 0x0a, 0x0d, 0x46, 0x6d, 0x75,
 	0x53, 0x69, 0x6d, 0x75, 0x6c, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x15, 0x2e, 0x46, 0x6d, 0x75,
 	0x53, 0x69, 0x6d, 0x75, 0x6c, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
@@ -865,8 +1063,14 @@ var file_router_proto_rawDesc = []byte{
 	0x65, 0x72, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x54, 0x6f, 0x43, 0x73, 0x76, 0x52, 0x65, 0x71,
 	0x75, 0x65, 0x73, 0x74, 0x1a, 0x1b, 0x2e, 0x53, 0x61, 0x76, 0x65, 0x46, 0x69, 0x6c, 0x74, 0x65,
 	0x72, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x54, 0x6f, 0x43, 0x73, 0x76, 0x52, 0x65, 0x70, 0x6c,
-	0x79, 0x22, 0x00, 0x42, 0x0a, 0x5a, 0x08, 0x2e, 0x2f, 0x67, 0x72, 0x70, 0x63, 0x50, 0x62, 0x62,
-	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x79, 0x22, 0x00, 0x12, 0x2e, 0x0a, 0x08, 0x4d, 0x61, 0x74, 0x54, 0x6f, 0x43, 0x73, 0x76, 0x12,
+	0x10, 0x2e, 0x4d, 0x61, 0x74, 0x54, 0x6f, 0x43, 0x73, 0x76, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x1a, 0x0e, 0x2e, 0x4d, 0x61, 0x74, 0x54, 0x6f, 0x43, 0x73, 0x76, 0x52, 0x65, 0x70, 0x6c,
+	0x79, 0x22, 0x00, 0x12, 0x31, 0x0a, 0x09, 0x5a, 0x61, 0x72, 0x72, 0x54, 0x6f, 0x43, 0x73, 0x76,
+	0x12, 0x11, 0x2e, 0x5a, 0x61, 0x72, 0x72, 0x54, 0x6f, 0x43, 0x73, 0x76, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x1a, 0x0f, 0x2e, 0x5a, 0x61, 0x72, 0x72, 0x54, 0x6f, 0x43, 0x73, 0x76, 0x52,
+	0x65, 0x70, 0x6c, 0x79, 0x22, 0x00, 0x42, 0x0a, 0x5a, 0x08, 0x2e, 0x2f, 0x67, 0x72, 0x70, 0x63,
+	0x50, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -881,7 +1085,7 @@ func file_router_proto_rawDescGZIP() []byte {
 	return file_router_proto_rawDescData
 }
 
-var file_router_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
+var file_router_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
 var file_router_proto_goTypes = []interface{}{
 	(*FmuSimulationRequest)(nil),         // 0: FmuSimulationRequest
 	(*FmuSimulationReply)(nil),           // 1: FmuSimulationReply
@@ -895,24 +1099,32 @@ var file_router_proto_goTypes = []interface{}{
 	(*ProcessOperationReply)(nil),        // 9: ProcessOperationReply
 	(*SaveFilterResultToCsvRequest)(nil), // 10: SaveFilterResultToCsvRequest
 	(*SaveFilterResultToCsvReply)(nil),   // 11: SaveFilterResultToCsvReply
-	nil,                                  // 12: FmuSimulationRequest.ParamsEntry
+	(*MatToCsvRequest)(nil),              // 12: MatToCsvRequest
+	(*MatToCsvReply)(nil),                // 13: MatToCsvReply
+	(*ZarrToCsvRequest)(nil),             // 14: ZarrToCsvRequest
+	(*ZarrToCsvReply)(nil),               // 15: ZarrToCsvReply
+	nil,                                  // 16: FmuSimulationRequest.ParamsEntry
 }
 var file_router_proto_depIdxs = []int32{
-	12, // 0: FmuSimulationRequest.params:type_name -> FmuSimulationRequest.ParamsEntry
+	16, // 0: FmuSimulationRequest.params:type_name -> FmuSimulationRequest.ParamsEntry
 	0,  // 1: Greeter.FmuSimulation:input_type -> FmuSimulationRequest
 	2,  // 2: Greeter.GetProcessStatus:input_type -> GetProcessStatusRequest
 	4,  // 3: Greeter.GetAllProcessNumber:input_type -> GetAllProcessNumberRequest
 	6,  // 4: Greeter.GetResult:input_type -> GetResultRequest
 	8,  // 5: Greeter.ProcessOperation:input_type -> ProcessOperationRequest
 	10, // 6: Greeter.SaveFilterResultToCsv:input_type -> SaveFilterResultToCsvRequest
-	1,  // 7: Greeter.FmuSimulation:output_type -> FmuSimulationReply
-	3,  // 8: Greeter.GetProcessStatus:output_type -> GetProcessStatusReply
-	5,  // 9: Greeter.GetAllProcessNumber:output_type -> GetAllProcessNumberReply
-	7,  // 10: Greeter.GetResult:output_type -> GetResultReply
-	9,  // 11: Greeter.ProcessOperation:output_type -> ProcessOperationReply
-	11, // 12: Greeter.SaveFilterResultToCsv:output_type -> SaveFilterResultToCsvReply
-	7,  // [7:13] is the sub-list for method output_type
-	1,  // [1:7] is the sub-list for method input_type
+	12, // 7: Greeter.MatToCsv:input_type -> MatToCsvRequest
+	14, // 8: Greeter.ZarrToCsv:input_type -> ZarrToCsvRequest
+	1,  // 9: Greeter.FmuSimulation:output_type -> FmuSimulationReply
+	3,  // 10: Greeter.GetProcessStatus:output_type -> GetProcessStatusReply
+	5,  // 11: Greeter.GetAllProcessNumber:output_type -> GetAllProcessNumberReply
+	7,  // 12: Greeter.GetResult:output_type -> GetResultReply
+	9,  // 13: Greeter.ProcessOperation:output_type -> ProcessOperationReply
+	11, // 14: Greeter.SaveFilterResultToCsv:output_type -> SaveFilterResultToCsvReply
+	13, // 15: Greeter.MatToCsv:output_type -> MatToCsvReply
+	15, // 16: Greeter.ZarrToCsv:output_type -> ZarrToCsvReply
+	9,  // [9:17] is the sub-list for method output_type
+	1,  // [1:9] is the sub-list for method input_type
 	1,  // [1:1] is the sub-list for extension type_name
 	1,  // [1:1] is the sub-list for extension extendee
 	0,  // [0:1] is the sub-list for field type_name
@@ -1068,6 +1280,54 @@ func file_router_proto_init() {
 				return nil
 			}
 		}
+		file_router_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MatToCsvRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_router_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MatToCsvReply); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_router_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ZarrToCsvRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_router_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ZarrToCsvReply); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -1075,7 +1335,7 @@ func file_router_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_router_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   13,
+			NumMessages:   17,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

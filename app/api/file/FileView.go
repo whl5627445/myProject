@@ -358,9 +358,42 @@ func GetResultFileView(c *gin.Context) {
 	var resultRecord DataBaseModel.YssimSimulateRecord
 	DB.Where("id = ? AND username = ? AND userspace_id = ? ", item.RecordId, username, userSpaceId).First(&resultRecord)
 	//c.Header("content-disposition", `attachment; filename=`+time.Now().Local().Format("20060102150405")+".mat")
-	c.Header("content-disposition", `attachment; filename=`+resultRecord.SimulateModelName+".mat")
-	//c.Data(http.StatusOK, "application/octet-stream", resDy)
-	c.File(resultRecord.SimulateModelResultPath + "result_res.mat")
+	if resultRecord.SimulateType == "FmPy" {
+		ZarrToCsvRequestTest := &grpcPb.ZarrToCsvRequest{
+			ZarrPath: resultRecord.SimulateModelResultPath + "zarr_res.zarr",
+		} // 构造请求体
+		ZarrToCsvRes, err3 := grpcPb.Client.ZarrToCsv(grpcPb.Ctx, ZarrToCsvRequestTest) // 调用grpc服务
+		if err3 != nil {
+			fmt.Println("调用grpc服务(ZarrToCsv)出错：", err3)
+			return
+		}
+		if ZarrToCsvRes.Ok {
+			c.Header("content-disposition", `attachment; filename=`+resultRecord.SimulateModelName+".csv")
+			//c.Data(http.StatusOK, "application/octet-stream", resDy)
+			c.File(resultRecord.SimulateModelResultPath + "result_res.csv")
+		} else {
+			c.JSON(http.StatusBadRequest, "")
+			return
+		}
+	} else {
+		MatToCsvRequestTest := &grpcPb.MatToCsvRequest{
+			MatPath: resultRecord.SimulateModelResultPath + "result_res.mat",
+		} // 构造请求体
+		MatToCsvRes, err4 := grpcPb.Client.MatToCsv(grpcPb.Ctx, MatToCsvRequestTest) // 调用grpc服务
+		if err4 != nil {
+			fmt.Println("调用grpc服务(MatToCsv)出错：", err4)
+			return
+		}
+		if MatToCsvRes.Ok {
+			c.Header("content-disposition", `attachment; filename=`+resultRecord.SimulateModelName+".csv")
+			//c.Data(http.StatusOK, "application/octet-stream", resDy)
+			c.File(resultRecord.SimulateModelResultPath + "result_res.csv")
+		} else {
+			c.JSON(http.StatusBadRequest, "")
+			return
+		}
+	}
+
 }
 
 func GetFilterResultFileView(c *gin.Context) {
