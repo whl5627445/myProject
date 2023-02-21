@@ -1,5 +1,6 @@
 from concurrent import futures
 import os.path
+import pandas as pd
 from multiprocessing import Manager
 from libs.defs import getSate, suspendProcess, resumeProcess, killProcess, initOmc, buildFMU
 from libs.FmpySimulation import MyProcess
@@ -81,6 +82,7 @@ if __name__ == '__main__':
 
         # 获取变量结果
         def GetResult(self, request, context):
+            print("GetResult被调用。")
             with Session() as session:
                 processDetails = session.query(YssimSimulateRecords).filter(
                     YssimSimulateRecords.id == request.uuid).first()
@@ -111,6 +113,7 @@ if __name__ == '__main__':
 
         # 进程操作
         def ProcessOperation(self, request, context):
+            print("ProcessOperation被调用。")
             multiprocessing_id = request.uuid
             operationName = request.operationName
             if operationName == "kill":
@@ -123,6 +126,19 @@ if __name__ == '__main__':
                 resumeProcessReply = resumeProcess(multiprocessing_id, processList)
                 return router_pb2.ProcessOperationReply(msg=resumeProcessReply["msg"])
             return router_pb2.ProcessOperationReply(msg="Unknown operation!")
+
+        def SaveFilterResultToCsv(self, request, context):
+            print("SaveFilterResultToCsv被调用。")
+            res = zarr.load(adsPath+request.resultPath)
+            resDict = {"time": res["time"].tolist()}
+            if res is not None:
+                for i in request.Vars:
+                    resDict[i] = res[i].tolist()
+                df = pd.DataFrame(resDict)
+                df.to_csv(adsPath+request.newFileName, index=False, encoding='utf-8')
+                return router_pb2.SaveFilterResultToCsvReply(ok=True)
+            else:
+                return router_pb2.SaveFilterResultToCsvReply(ok=False)
 
 
     def action():

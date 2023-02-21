@@ -39,6 +39,11 @@ class GreeterStub(object):
                 request_serializer=router__pb2.ProcessOperationRequest.SerializeToString,
                 response_deserializer=router__pb2.ProcessOperationReply.FromString,
                 )
+        self.SaveFilterResultToCsv = channel.unary_unary(
+                '/Greeter/SaveFilterResultToCsv',
+                request_serializer=router__pb2.SaveFilterResultToCsvRequest.SerializeToString,
+                response_deserializer=router__pb2.SaveFilterResultToCsvReply.FromString,
+                )
 
 
 class GreeterServicer(object):
@@ -74,6 +79,12 @@ class GreeterServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def SaveFilterResultToCsv(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_GreeterServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -101,6 +112,11 @@ def add_GreeterServicer_to_server(servicer, server):
                     servicer.ProcessOperation,
                     request_deserializer=router__pb2.ProcessOperationRequest.FromString,
                     response_serializer=router__pb2.ProcessOperationReply.SerializeToString,
+            ),
+            'SaveFilterResultToCsv': grpc.unary_unary_rpc_method_handler(
+                    servicer.SaveFilterResultToCsv,
+                    request_deserializer=router__pb2.SaveFilterResultToCsvRequest.FromString,
+                    response_serializer=router__pb2.SaveFilterResultToCsvReply.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -194,5 +210,22 @@ class Greeter(object):
         return grpc.experimental.unary_unary(request, target, '/Greeter/ProcessOperation',
             router__pb2.ProcessOperationRequest.SerializeToString,
             router__pb2.ProcessOperationReply.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def SaveFilterResultToCsv(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/Greeter/SaveFilterResultToCsv',
+            router__pb2.SaveFilterResultToCsvRequest.SerializeToString,
+            router__pb2.SaveFilterResultToCsvReply.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

@@ -2,6 +2,7 @@ package API
 
 import (
 	"encoding/base64"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"io"
@@ -13,6 +14,7 @@ import (
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/service"
 	"yssim-go/config"
+	"yssim-go/grpc/grpcPb"
 )
 
 var DB = config.DB
@@ -375,9 +377,25 @@ func GetFilterResultFileView(c *gin.Context) {
 		return
 	}
 	var resultRecord DataBaseModel.YssimSimulateRecord
+	var ok bool
 	DB.Where("id = ? AND username = ? AND userspace_id = ? ", item.RecordId, username, userSpaceId).First(&resultRecord)
 	newFileName := "public/tmp/" + username + "/" + strings.ReplaceAll(resultRecord.SimulateModelName, ".", "-") + "/" + time.Now().Local().Format("20060102150405") + ".csv"
-	ok := service.FilterSimulationResult(item.VarList, resultRecord.SimulateModelResultPath+"result_res.mat", newFileName)
+	if resultRecord.SimulateType == "FmPy" {
+		SaveFilterResultTest := &grpcPb.SaveFilterResultToCsvRequest{ // 构造请求体
+			Vars:        item.VarList,
+			ResultPath:  resultRecord.SimulateModelResultPath + "zarr_res.zarr",
+			NewFileName: newFileName,
+		}
+		reply, err2 := grpcPb.Client.SaveFilterResultToCsv(grpcPb.Ctx, SaveFilterResultTest) // 调用grpc服务
+		ok = reply.Ok
+		if err2 != nil {
+			fmt.Println("调用grpc服务(FmuSimulation)出错：", err2)
+			return
+		}
+	} else {
+		ok = service.FilterSimulationResult(item.VarList, resultRecord.SimulateModelResultPath+"result_res.mat", newFileName)
+	}
+
 	if ok {
 		c.Header("content-disposition", `attachment; filename=`+resultRecord.SimulateModelName+".csv")
 		c.File(newFileName)

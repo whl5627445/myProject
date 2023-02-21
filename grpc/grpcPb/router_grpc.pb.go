@@ -27,6 +27,7 @@ type GreeterClient interface {
 	GetAllProcessNumber(ctx context.Context, in *GetAllProcessNumberRequest, opts ...grpc.CallOption) (*GetAllProcessNumberReply, error)
 	GetResult(ctx context.Context, in *GetResultRequest, opts ...grpc.CallOption) (*GetResultReply, error)
 	ProcessOperation(ctx context.Context, in *ProcessOperationRequest, opts ...grpc.CallOption) (*ProcessOperationReply, error)
+	SaveFilterResultToCsv(ctx context.Context, in *SaveFilterResultToCsvRequest, opts ...grpc.CallOption) (*SaveFilterResultToCsvReply, error)
 }
 
 type greeterClient struct {
@@ -82,6 +83,15 @@ func (c *greeterClient) ProcessOperation(ctx context.Context, in *ProcessOperati
 	return out, nil
 }
 
+func (c *greeterClient) SaveFilterResultToCsv(ctx context.Context, in *SaveFilterResultToCsvRequest, opts ...grpc.CallOption) (*SaveFilterResultToCsvReply, error) {
+	out := new(SaveFilterResultToCsvReply)
+	err := c.cc.Invoke(ctx, "/Greeter/SaveFilterResultToCsv", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GreeterServer is the server API for Greeter service.
 // All implementations must embed UnimplementedGreeterServer
 // for forward compatibility
@@ -91,6 +101,7 @@ type GreeterServer interface {
 	GetAllProcessNumber(context.Context, *GetAllProcessNumberRequest) (*GetAllProcessNumberReply, error)
 	GetResult(context.Context, *GetResultRequest) (*GetResultReply, error)
 	ProcessOperation(context.Context, *ProcessOperationRequest) (*ProcessOperationReply, error)
+	SaveFilterResultToCsv(context.Context, *SaveFilterResultToCsvRequest) (*SaveFilterResultToCsvReply, error)
 	mustEmbedUnimplementedGreeterServer()
 }
 
@@ -112,6 +123,9 @@ func (UnimplementedGreeterServer) GetResult(context.Context, *GetResultRequest) 
 }
 func (UnimplementedGreeterServer) ProcessOperation(context.Context, *ProcessOperationRequest) (*ProcessOperationReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ProcessOperation not implemented")
+}
+func (UnimplementedGreeterServer) SaveFilterResultToCsv(context.Context, *SaveFilterResultToCsvRequest) (*SaveFilterResultToCsvReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SaveFilterResultToCsv not implemented")
 }
 func (UnimplementedGreeterServer) mustEmbedUnimplementedGreeterServer() {}
 
@@ -216,6 +230,24 @@ func _Greeter_ProcessOperation_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Greeter_SaveFilterResultToCsv_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SaveFilterResultToCsvRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GreeterServer).SaveFilterResultToCsv(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Greeter/SaveFilterResultToCsv",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GreeterServer).SaveFilterResultToCsv(ctx, req.(*SaveFilterResultToCsvRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Greeter_ServiceDesc is the grpc.ServiceDesc for Greeter service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -242,6 +274,10 @@ var Greeter_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ProcessOperation",
 			Handler:    _Greeter_ProcessOperation_Handler,
+		},
+		{
+			MethodName: "SaveFilterResultToCsv",
+			Handler:    _Greeter_SaveFilterResultToCsv_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

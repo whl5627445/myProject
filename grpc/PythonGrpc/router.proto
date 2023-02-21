@@ -6,6 +6,7 @@ service Greeter {
   rpc GetAllProcessNumber(GetAllProcessNumberRequest) returns (GetAllProcessNumberReply) {}
   rpc GetResult(GetResultRequest) returns (GetResultReply) {}
   rpc ProcessOperation(ProcessOperationRequest) returns (ProcessOperationReply) {}
+  rpc SaveFilterResultToCsv(SaveFilterResultToCsvRequest) returns (SaveFilterResultToCsvReply) {}
 }
 
 message FmuSimulationRequest {
@@ -60,4 +61,13 @@ message ProcessOperationRequest{
 }
 message ProcessOperationReply{
   string msg =1;
+}
+
+message SaveFilterResultToCsvRequest{
+  repeated string Vars=1;
+  string  resultPath = 2;
+  string newFileName = 3;
+}
+message SaveFilterResultToCsvReply{
+  bool ok = 1;
 }

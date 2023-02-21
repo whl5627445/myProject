@@ -205,7 +205,7 @@ func SimulateResultGraphicsView(c *gin.Context) {
 			replyTime, err2 := grpcPb.Client.GetResult(grpcPb.Ctx, GetResultRequestTime)
 			replyVar, err2 := grpcPb.Client.GetResult(grpcPb.Ctx, GetResultRequestVar)
 			if err2 != nil {
-				fmt.Println("调用grpc服务(FmuSimulation)出错：", err)
+				fmt.Println("调用grpc服务(FmuSimulation)出错：", err2)
 				return
 			}
 			if replyVar.Log == "true" {
