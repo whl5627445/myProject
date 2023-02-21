@@ -24,7 +24,7 @@ var cacheRefresh = false
 
 //var AllModelCache = make(map[string][]byte, 1000)
 
-var AllModelCache = config.R
+var allModelCache = config.R
 
 // SendExpression 发送指令，获取数据
 func (o *ZmqObject) SendExpression(cmd string) ([]interface{}, bool) {
@@ -34,13 +34,13 @@ func (o *ZmqObject) SendExpression(cmd string) ([]interface{}, bool) {
 	var msg []byte
 
 	ctx := context.Background()
-	msg, err := AllModelCache.HGet(ctx, "yssim-GraphicsData", cmd).Bytes()
+	msg, err := allModelCache.HGet(ctx, "yssim-GraphicsData", cmd).Bytes()
 	if err != nil {
 		_ = o.Send(zmq4.NewMsgString(cmd))
 		data, _ := o.Recv()
 		msg = data.Bytes()
 		if cacheRefresh && len(msg) > 0 {
-			AllModelCache.HSet(ctx, "yssim-GraphicsData", cmd, msg)
+			allModelCache.HSet(ctx, "yssim-GraphicsData", cmd, msg)
 		}
 	}
 	parseData, err := dataToGo(msg)
@@ -65,13 +65,13 @@ func (o *ZmqObject) SendExpressionNoParsed(cmd string) ([]byte, bool) {
 	defer o.Unlock()
 	var msg []byte
 	ctx := context.Background()
-	msg, err := AllModelCache.HGet(ctx, "yssim-GraphicsData", cmd).Bytes()
+	msg, err := allModelCache.HGet(ctx, "yssim-GraphicsData", cmd).Bytes()
 	if err != nil {
 		_ = o.Send(zmq4.NewMsgString(cmd))
 		data, _ := o.Recv()
 		msg = data.Bytes()
 		if cacheRefresh && len(msg) > 0 {
-			AllModelCache.HSet(ctx, "yssim-GraphicsData", cmd, msg)
+			allModelCache.HSet(ctx, "yssim-GraphicsData", cmd, msg)
 		}
 	}
 	msg = bytes.ReplaceAll(msg, []byte("\"\"\n"), []byte(""))
@@ -88,6 +88,7 @@ func (o *ZmqObject) SendExpressionNoParsed(cmd string) ([]byte, bool) {
 	return msg, true
 }
 
+// BuildModel 编译模型为可执行文件
 func (o *ZmqObject) BuildModel(className, fileNamePrefix string, simulateParametersData map[string]string) bool {
 	cmd := className + ", fileNamePrefix = \"" + fileNamePrefix + "result\""
 	for k, v := range simulateParametersData {
@@ -106,7 +107,7 @@ func (o *ZmqObject) BuildModel(className, fileNamePrefix string, simulateParamet
 	return false
 }
 
-// 清空加载的模型库
+// Clear 清空加载的模型库， 设置OMC的命令行选项
 func (o *ZmqObject) Clear() {
 	//o.SendExpressionNoParsed("clearCommandLineOptions()")
 	//o.SendExpressionNoParsed("clear()")
@@ -134,12 +135,12 @@ func (o *ZmqObject) GetCommandLineOptions() string {
 	return ""
 }
 
-// 改变缓存策略
+// CacheRefreshSet 改变缓存策略
 func (o *ZmqObject) CacheRefreshSet(cache bool) {
 	cacheRefresh = cache
 }
 
-// 获取给定切片当中所有模型的继承项
+// GetInheritedClasses 获取给定切片当中所有模型的继承项
 func (o *ZmqObject) GetInheritedClasses(className string) []string {
 	cmd := "getInheritedClasses(" + className + ")"
 	inheritedClassesData, ok := o.SendExpression(cmd)
@@ -154,7 +155,7 @@ func (o *ZmqObject) GetInheritedClasses(className string) []string {
 	return dataList
 }
 
-// 获取给定切片当中所有模型的继承项
+// GetInheritedClassesList 获取给定切片当中所有模型的继承项
 func (o *ZmqObject) GetInheritedClassesList(classNameList []string) []string {
 	var dataList []string
 	for i := 0; i < len(classNameList); i++ {
@@ -172,7 +173,7 @@ func (o *ZmqObject) GetInheritedClassesList(classNameList []string) []string {
 	return dataList
 }
 
-// 获取给定切片当中所有模型的继承项，包含原始数据, 迭代到最顶层的继承
+// GetInheritedClassesListAll 获取给定切片当中所有模型的继承项，包含原始数据, 迭代到最顶层的继承
 func (o *ZmqObject) GetInheritedClassesListAll(classNameList []string) []string {
 	var dataList = classNameList
 	var nameList = classNameList
@@ -188,7 +189,7 @@ func (o *ZmqObject) GetInheritedClassesListAll(classNameList []string) []string 
 	return dataList
 }
 
-// 获取给定切片当中模型的本身视图数据
+// GetDiagramAnnotationList 获取给定切片当中模型的本身视图数据，多个模型的数据一起返回
 func (o *ZmqObject) GetDiagramAnnotationList(classNameList []string) []interface{} {
 	var dataList []interface{}
 	for i := 0; i < len(classNameList); i++ {
@@ -203,6 +204,7 @@ func (o *ZmqObject) GetDiagramAnnotationList(classNameList []string) []interface
 	return dataList
 }
 
+// GetDiagramAnnotation 获取模型的diagram注释信息
 func (o *ZmqObject) GetDiagramAnnotation(className string) []interface{} {
 	var dataList []interface{}
 	cmd := "getDiagramAnnotation(" + className + ")"
@@ -213,7 +215,7 @@ func (o *ZmqObject) GetDiagramAnnotation(className string) []interface{} {
 	return dataList
 }
 
-// 获取切片给定模型当中有多少个连接线，一个数字
+// GetConnectionCountList 获取切片给定模型当中有多少个连接线，一个数字，有多少个模型名称，就返回多少个数字
 func (o *ZmqObject) GetConnectionCountList(classNameList []string) []int {
 	var dataList []int
 	for i := 0; i < len(classNameList); i++ {
@@ -228,7 +230,7 @@ func (o *ZmqObject) GetConnectionCountList(classNameList []string) []int {
 	return dataList
 }
 
-// 获取给定模型与指定数字的连接线段其实位置与终点位置，返回接口的名称
+// GetNthConnection 获取给定模型与指定数字的连接线段其实位置与终点位置，返回接口的名称列表
 func (o *ZmqObject) GetNthConnection(className string, num int) []string {
 	var dataList []string
 	cmd := "getNthConnection(" + className + "," + strconv.Itoa(num) + ")"
@@ -241,7 +243,7 @@ func (o *ZmqObject) GetNthConnection(className string, num int) []string {
 	return dataList
 }
 
-// 获取模型与数字对应连接线的画图数据
+// GetNthConnectionAnnotation 获取模型与数字对应连接线的画图数据
 func (o *ZmqObject) GetNthConnectionAnnotation(className string, num int) []interface{} {
 	var data []interface{}
 	cmd := "getNthConnectionAnnotation(" + className + "," + strconv.Itoa(num) + ")"
@@ -250,14 +252,14 @@ func (o *ZmqObject) GetNthConnectionAnnotation(className string, num int) []inte
 	return data
 }
 
-// 获取给定模型的组成部分，包含组件信息
+// GetComponents 获取给定模型的组成部分，包含组件信息，返回列表
 func (o *ZmqObject) GetComponents(className string) []interface{} {
 	cmd := "getComponents(" + className + ")"
 	components, _ := o.SendExpression(cmd)
 	return components
 }
 
-// 获取切片给定模型的组成部分，包含组件信息
+// GetComponentsList 获取切片给定模型的组成部分，包含组件信息，返回二维列表
 func (o *ZmqObject) GetComponentsList(classNameList []string) [][]interface{} {
 	var dataList [][]interface{}
 	for i := 0; i < len(classNameList); i++ {
@@ -268,24 +270,11 @@ func (o *ZmqObject) GetComponentsList(classNameList []string) [][]interface{} {
 				dataList = append(dataList, components[p].([]interface{}))
 			}
 		}
-
-		//cmd := "getComponents(" + classNameList[i] + ")"
-		//components, ok := AllModelCache[cmd].([]interface{})
-		//if !ok {
-		//
-		//	components, ok = o.SendExpression(cmd)
-		//}
-		//if ok {
-		//	for p := 0; p < len(components); p++ {
-		//		dataList = append(dataList, components[p].([]interface{}))
-		//		AllModelCache[cmd] = components
-		//	}
-		//}
 	}
 	return dataList
 }
 
-// 获取给定模型的组成部分，包含组件信息,新API
+// GetElements 获取给定模型的组成部分，包含组件信息,新API
 func (o *ZmqObject) GetElements(className string) []interface{} {
 	if className == "Real" || className == "" {
 		return nil
@@ -309,7 +298,7 @@ func (o *ZmqObject) GetElements(className string) []interface{} {
 	return resData
 }
 
-// 获取切片给定模型的组成部分，包含组件信息,新API
+// GetElementsList 获取切片给定模型的组成部分，包含组件信息,新API
 func (o *ZmqObject) GetElementsList(classNameList []string) [][]interface{} {
 	var dataList [][]interface{}
 	for i := 0; i < len(classNameList); i++ {
@@ -338,7 +327,7 @@ func (o *ZmqObject) GetElementsList(classNameList []string) [][]interface{} {
 	return dataList
 }
 
-// 获取切片给定模型的组件注释信息
+// GetComponentAnnotationsList 获取切片给定模型的组件注释信息列表
 func (o *ZmqObject) GetComponentAnnotationsList(classNameList []string) [][]interface{} {
 	var dataList [][]interface{}
 	for i := 0; i < len(classNameList); i++ {
@@ -353,7 +342,7 @@ func (o *ZmqObject) GetComponentAnnotationsList(classNameList []string) [][]inte
 	return dataList
 }
 
-// 获取给定模型名字模型的组件注释信息,新API
+// GetElementAnnotations 获取给定模型名字模型的组件注释信息,新API
 func (o *ZmqObject) GetElementAnnotations(className string) []interface{} {
 	var componentAnnotations []interface{}
 	if className == "Real" {
@@ -366,7 +355,7 @@ func (o *ZmqObject) GetElementAnnotations(className string) []interface{} {
 	return componentAnnotations
 }
 
-// 获取切片给定模型的组件注释信息,新API
+// GetElementAnnotationsList 获取切片给定模型的组件注释信息列表,新API
 func (o *ZmqObject) GetElementAnnotationsList(classNameList []string) [][]interface{} {
 	var dataList [][]interface{}
 
@@ -385,7 +374,7 @@ func (o *ZmqObject) GetElementAnnotationsList(classNameList []string) [][]interf
 	return dataList
 }
 
-// 获取给定模型的图标数据
+// GetIconAnnotation 获取给定模型的图标注释数据
 func (o *ZmqObject) GetIconAnnotation(className string) []interface{} {
 	var dataList []interface{}
 	cmd := "getIconAnnotation(" + className + ")"
@@ -396,7 +385,7 @@ func (o *ZmqObject) GetIconAnnotation(className string) []interface{} {
 	return dataList
 }
 
-// 获取给定模型的图标数据
+// GetIconAnnotationLineData 获取给定模型的图标数据
 func (o *ZmqObject) GetIconAnnotationLineData(className string) []interface{} {
 	var dataList []interface{}
 	cmd := "getIconAnnotation(" + className + ")"
@@ -408,7 +397,7 @@ func (o *ZmqObject) GetIconAnnotationLineData(className string) []interface{} {
 	return dataList
 }
 
-// 获取给定切片模型的图标注释信息
+// GetIconAnnotationList 获取给定切片模型的图标注释信息
 func (o *ZmqObject) GetIconAnnotationList(classNameList []string) []interface{} {
 	var dataList []interface{}
 	for i := 0; i < len(classNameList); i++ {
@@ -422,6 +411,7 @@ func (o *ZmqObject) GetIconAnnotationList(classNameList []string) []interface{} 
 	return dataList
 }
 
+// GetPackages 获取可用的包名称列表
 func (o *ZmqObject) GetPackages() []string {
 	var dataList []string
 	cmd := "getClassNames()"
@@ -433,7 +423,7 @@ func (o *ZmqObject) GetPackages() []string {
 	return dataList
 }
 
-// 获取给定模型包含的子节点， all参数为true时，递归查询所有子节点，返回切片形式
+// GetClassNames 获取给定模型包含的子节点， all参数为true时，递归查询所有子节点，返回切片形式
 func (o *ZmqObject) GetClassNames(className string, all bool) []string {
 	var dataList []string
 	var cmd string
@@ -472,6 +462,7 @@ func (o *ZmqObject) List(className string) string {
 	return code
 }
 
+// GetElementModifierNames 获取模型组件的修饰符名称
 func (o *ZmqObject) GetElementModifierNames(className string, componentName string) string {
 	cmd := "getElementModifierNames(" + className + "," + componentName + ")"
 	data, _ := o.SendExpressionNoParsed(cmd)
@@ -481,6 +472,7 @@ func (o *ZmqObject) GetElementModifierNames(className string, componentName stri
 	return string(data)
 }
 
+// GetElementModifierValue 获取模型组件对应修饰符名称的值
 func (o *ZmqObject) GetElementModifierValue(className string, modifierName string) string {
 	cmd := "getElementModifierValue(" + className + "," + modifierName + ")"
 	data, _ := o.SendExpressionNoParsed(cmd)
@@ -490,6 +482,7 @@ func (o *ZmqObject) GetElementModifierValue(className string, modifierName strin
 	return string(data)
 }
 
+// IsEnumeration 判断给定名称是否是枚举类型
 func (o *ZmqObject) IsEnumeration(className string) bool {
 	cmd := "isEnumeration(" + className + ")"
 	result, ok := o.SendExpressionNoParsed(cmd)
@@ -501,6 +494,7 @@ func (o *ZmqObject) IsEnumeration(className string) bool {
 	return false
 }
 
+// GetEnumerationLiterals 获取枚举类型参数名的文字
 func (o *ZmqObject) GetEnumerationLiterals(parameterName string) []string {
 	var dataList []string
 	cmd := "getEnumerationLiterals(" + parameterName + ")"
@@ -511,6 +505,7 @@ func (o *ZmqObject) GetEnumerationLiterals(parameterName string) []string {
 	return dataList
 }
 
+// GetParameterValue 获取参数的默认值
 func (o *ZmqObject) GetParameterValue(className string, modifierName string) string {
 	cmd := "getParameterValue(" + className + ",\"" + modifierName + "\")"
 	data, _ := o.SendExpressionNoParsed(cmd)
@@ -520,29 +515,7 @@ func (o *ZmqObject) GetParameterValue(className string, modifierName string) str
 	return string(data)
 }
 
-func (o *ZmqObject) GetElementModifierNamesList(classNameList []string, componentName string) []string {
-	var dataList []string
-	for i := 0; i < len(classNameList); i++ {
-		cmd := "getElementModifierNames(" + classNameList[i] + ",\"" + componentName + "\")"
-		data, ok := o.SendExpression(cmd)
-		if ok {
-			for p := 0; p < len(data); p++ {
-				dataList = append(dataList, data[p].(string))
-			}
-		}
-	}
-	return dataList
-}
-
-func (o *ZmqObject) GetDerivedClassModifierNames(className string) []interface{} {
-	if className == "Real" || className == "Integer" {
-		return nil
-	}
-	cmd := "getDerivedClassModifierNames(" + className + ")"
-	data, _ := o.SendExpression(cmd)
-	return data
-}
-
+// GetDerivedClassModifierValue 获取模型派生类修饰符的值
 func (o *ZmqObject) GetDerivedClassModifierValue(className string, modifierName string) string {
 	cmd := "getDerivedClassModifierValue(" + className + "," + modifierName + ")"
 	data, _ := o.SendExpressionNoParsed(cmd)
@@ -552,6 +525,7 @@ func (o *ZmqObject) GetDerivedClassModifierValue(className string, modifierName 
 	return string(data)
 }
 
+// GetExtendsModifierNames 获取模型继承类修饰符的名称列表
 func (o *ZmqObject) GetExtendsModifierNames(classNameOne string, classNameTwo string) []string {
 	var dataList []string
 	cmd := "getExtendsModifierNames(" + classNameOne + "," + classNameTwo + ", useQuotes = false)"
@@ -564,6 +538,7 @@ func (o *ZmqObject) GetExtendsModifierNames(classNameOne string, classNameTwo st
 	return dataList
 }
 
+// GetExtendsModifierValue 获取模型与被模型的修饰符值
 func (o *ZmqObject) GetExtendsModifierValue(classNameOne string, classNameTwo string, name string) string {
 	cmd := "getExtendsModifierValue(" + classNameOne + "," + classNameTwo + "," + name + ")"
 	data, _ := o.SendExpressionNoParsed(cmd)
@@ -572,6 +547,7 @@ func (o *ZmqObject) GetExtendsModifierValue(classNameOne string, classNameTwo st
 	return string(data)
 }
 
+// IsExtendsModifierFinal 判断是否是继承的修饰符，且不可被继承者修改
 func (o *ZmqObject) IsExtendsModifierFinal(classNameOne string, classNameTwo string, name string) string {
 	cmd := "isExtendsModifierFinal(" + classNameOne + "," + classNameTwo + "," + name + ")"
 	data, _ := o.SendExpressionNoParsed(cmd)
@@ -580,6 +556,7 @@ func (o *ZmqObject) IsExtendsModifierFinal(classNameOne string, classNameTwo str
 	return string(data)
 }
 
+// SetComponentModifierValue 设置组件修饰符的值
 func (o *ZmqObject) SetComponentModifierValue(className string, parameter string, value string) string {
 	code := "=" + value + ""
 	if value == "" {
@@ -591,7 +568,7 @@ func (o *ZmqObject) SetComponentModifierValue(className string, parameter string
 	return string(data)
 }
 
-// 此函数不返回正确与错误，不报错均视为执行成功
+// RenameComponentInClass 重新修改模型组件的名称。 此函数不返回正确与错误，不报错均视为执行成功
 func (o *ZmqObject) RenameComponentInClass(className string, oldComponentName string, newComponentName string) bool {
 	cmd := "renameComponentInClass(" + className + "," + oldComponentName + ", " + newComponentName + ")"
 	result, ok := o.SendExpressionNoParsed(cmd)
@@ -602,6 +579,7 @@ func (o *ZmqObject) RenameComponentInClass(className string, oldComponentName st
 	return false
 }
 
+// SetComponentProperties 设置模型组件的属性
 func (o *ZmqObject) SetComponentProperties(className string, newComponentName string, final string, protected string, replaceable string, variability string, inner string, outer string, causality string) bool {
 	// setComponentProperties(PID_Controller,PI,{true,false,true,false}, {""}, {false,false}, {""})
 	cmdParameterList := []string{className, ",", newComponentName, ",{", final, ",false,", protected, ",", replaceable,
@@ -615,6 +593,7 @@ func (o *ZmqObject) SetComponentProperties(className string, newComponentName st
 	return false
 }
 
+// ExistClass 判断模型名称是否已经存在
 func (o *ZmqObject) ExistClass(className string) bool {
 	cmd := "existClass(" + className + ")"
 	result, _ := o.SendExpressionNoParsed(cmd)
@@ -625,6 +604,7 @@ func (o *ZmqObject) ExistClass(className string) bool {
 	return true
 }
 
+// GetClassInformation 获取模型的基本信息
 func (o *ZmqObject) GetClassInformation(className string) []interface{} {
 	cmd := "getClassInformation(" + className + ")"
 	data, ok := o.SendExpression(cmd)
@@ -634,6 +614,7 @@ func (o *ZmqObject) GetClassInformation(className string) []interface{} {
 	return nil
 }
 
+// CopyClass 复制模型
 func (o *ZmqObject) CopyClass(className string, copiedClassName string, parentName string) bool {
 	cmd := "copyClass(" + className + ",\"" + copiedClassName + "\"," + parentName + ")"
 	result, ok := o.SendExpressionNoParsed(cmd)
@@ -643,6 +624,7 @@ func (o *ZmqObject) CopyClass(className string, copiedClassName string, parentNa
 	return true
 }
 
+// DeleteClass 删除模型
 func (o *ZmqObject) DeleteClass(className string) bool {
 	cmd := "deleteClass(" + className + ")"
 	result, ok := o.SendExpressionNoParsed(cmd)
@@ -652,6 +634,7 @@ func (o *ZmqObject) DeleteClass(className string) bool {
 	return true
 }
 
+// AddComponent 新增模型组件
 func (o *ZmqObject) AddComponent(newComponentName, oldComponentName, className, origin, rotation string, extent []string) bool {
 	annotate := "annotate=Placement(visible=true, transformation=transformation(origin={" + origin + "}, extent={{" + extent[0] + "},{" + extent[1] + "}}, rotation=" + rotation + "))"
 	cmd := "addComponent(" + newComponentName + "," + oldComponentName + "," + className + "," + annotate + ")"
@@ -663,6 +646,7 @@ func (o *ZmqObject) AddComponent(newComponentName, oldComponentName, className, 
 	return true
 }
 
+// AddInterfacesComponent 新增connector类型的模型组件
 func (o *ZmqObject) AddInterfacesComponent(newComponentName, oldComponentName, className, origin, rotation string, extent []string) bool {
 	// addComponent(Modelica.Blocks.Interfaces.RealInput,t,realinput,annotate=Placement(visible=true, transformation=transformation(origin={168.94117431640626,-87.15294189453125}, extent={{-10,-10},{10,10}}, rotation=0,iconTransformation=transformation(origin={168.94117431640626,-87.15294189453125}, extent={{-10,-10},{10,10}}, rotation=0))))
 	//addComponent(y, Modelica.Blocks.Interfaces.RealVectorOutput,q,annotate=Placement(visible=true, transformation=transformation(origin={-36,-22}, extent={{-20,-20},{20,20}}, rotation=0), iconTransformation=transformation(origin={-36,-22}, extent={{-20,-20},{20,20}}, rotation=0))) 09:42:19:196
@@ -676,6 +660,7 @@ func (o *ZmqObject) AddInterfacesComponent(newComponentName, oldComponentName, c
 	return true
 }
 
+// DeleteComponent  删除模型组件
 func (o *ZmqObject) DeleteComponent(componentName, className string) bool {
 	cmd := "deleteComponent(" + componentName + "," + className + ")"
 	result, ok := o.SendExpressionNoParsed(cmd)
@@ -686,6 +671,7 @@ func (o *ZmqObject) DeleteComponent(componentName, className string) bool {
 	return true
 }
 
+// UpdateComponent  更新模型组件
 func (o *ZmqObject) UpdateComponent(newComponentName, oldComponentName, className, origin, rotation string, extent []string) bool {
 	annotate := "annotate=Placement(visible=true, transformation=transformation(origin={" + origin + "}, extent={{" + extent[0] + "},{" + extent[1] + "}}, rotation=" + rotation + "))"
 	cmd := "updateComponent(" + newComponentName + "," + oldComponentName + "," + className + "," + annotate + ")"
@@ -699,6 +685,7 @@ func (o *ZmqObject) UpdateComponent(newComponentName, oldComponentName, classNam
 	return false
 }
 
+// UpdateInterfacesComponent  更新connector类型的模型组件
 func (o *ZmqObject) UpdateInterfacesComponent(newComponentName, oldComponentName, className, origin, rotation string, extent []string) bool {
 	// updateComponent(y,Modelica.Blocks.Interfaces.RealVectorOutput,q,        annotate=Placement(visible=true, transformation=transformation(origin={-60,-20}, extent={{-20,-20},{20,20}}, rotation=0),         iconTransformation=transformation(origin={-36,-22}, extent={{-20,-20},{20,20}}, rotation=0)))
 	// updateComponent(u2,Modelica.Blocks.Interfaces.IntegerInput,FullRobot_ng,annotate=Placement(visible=true, transformation=transformation(origin={84,-56}, extent={{-20.0,-20.0},{20.0,20.0}}, rotation=0.0),iconTransformation=transformation(origin={84,-56}, extent={{-20.0,-20.0},{20.0,20.0}}, rotation=0.0)))
@@ -712,6 +699,7 @@ func (o *ZmqObject) UpdateInterfacesComponent(newComponentName, oldComponentName
 	return false
 }
 
+// AddConnection  新增模型组件之间的连线
 func (o *ZmqObject) AddConnection(classNameAll, connectStart, connectEnd, color string, linePoints []string) bool {
 	var linePointsList []string
 	for _, point := range linePoints {
@@ -728,6 +716,7 @@ func (o *ZmqObject) AddConnection(classNameAll, connectStart, connectEnd, color 
 	return false
 }
 
+// DeleteConnection  删除模型组件之间的连线
 func (o *ZmqObject) DeleteConnection(classNameAll, connectStart, connectEnd string) bool {
 	cmd := "deleteConnection(" + connectStart + "," + connectEnd + "," + classNameAll + ")"
 	result, ok := o.SendExpressionNoParsed(cmd)
@@ -738,6 +727,7 @@ func (o *ZmqObject) DeleteConnection(classNameAll, connectStart, connectEnd stri
 	return false
 }
 
+// UpdateConnectionNames  更新模型组件之间的连线的名称
 func (o *ZmqObject) UpdateConnectionNames(classNameAll, fromName, toName, fromNameNew, toNameNew string) bool {
 	cmd := "updateConnectionNames(\"" + classNameAll + "\",\"" + fromName + "\",\"" + toName + "\",\"" + fromNameNew + "\",\"" + toNameNew + "\")"
 	result, ok := o.SendExpressionNoParsed(cmd)
@@ -748,6 +738,7 @@ func (o *ZmqObject) UpdateConnectionNames(classNameAll, fromName, toName, fromNa
 	return false
 }
 
+// UpdateConnectionAnnotation  更新模型组件之间的连线相关属性
 func (o *ZmqObject) UpdateConnectionAnnotation(classNameAll, connectStart, connectEnd, color string, linePoints []string) bool {
 	var linePointsList []string
 	for _, point := range linePoints {
@@ -764,6 +755,7 @@ func (o *ZmqObject) UpdateConnectionAnnotation(classNameAll, connectStart, conne
 	return false
 }
 
+// CheckModel  检查模型
 func (o *ZmqObject) CheckModel(className string) string {
 	cmd := "checkModel(" + className + ")"
 	data, ok := o.SendExpressionNoParsed(cmd)
@@ -774,6 +766,7 @@ func (o *ZmqObject) CheckModel(className string) string {
 	return ""
 }
 
+// GetMessagesStringInternal  获取消息文字字符串，所有类型，包含正常消息，警告，错误
 func (o *ZmqObject) GetMessagesStringInternal() string {
 	cmd := "getMessagesStringInternal()"
 	data, ok := o.SendExpressionNoParsed(cmd)
@@ -783,6 +776,7 @@ func (o *ZmqObject) GetMessagesStringInternal() string {
 	return ""
 }
 
+// GetDocumentationAnnotation 获取模型文档注释
 func (o *ZmqObject) GetDocumentationAnnotation(className string) []string {
 	var docList = []string{"", "", ""}
 	cmd := "getDocumentationAnnotation(" + className + ")"
@@ -807,6 +801,7 @@ func (o *ZmqObject) GetDocumentationAnnotation(className string) []string {
 	return docList
 }
 
+// SetDocumentationAnnotation 更新模型文档注释
 func (o *ZmqObject) SetDocumentationAnnotation(className, info, revisions string) bool {
 	info = strings.ReplaceAll(info, "\"", "\\\"")
 	cmd := "setDocumentationAnnotation(" + className + ",\"" + info + "\",\"" + revisions + "\")"
@@ -818,6 +813,7 @@ func (o *ZmqObject) SetDocumentationAnnotation(className, info, revisions string
 	return false
 }
 
+// UriToFilename 将ModelicaUri转换成本机资源路径
 func (o *ZmqObject) UriToFilename(uri string) string {
 	cmd := "uriToFilename(\"" + uri + "\")"
 	data, ok := o.SendExpressionNoParsed(cmd)
@@ -829,12 +825,14 @@ func (o *ZmqObject) UriToFilename(uri string) string {
 	return ""
 }
 
+// ConvertUnits 单位转换
 func (o *ZmqObject) ConvertUnits(s1, s2 string) []interface{} {
 	cmd := "convertUnits(\"" + s1 + "\",\"" + s2 + "\")"
 	data, _ := o.SendExpression(cmd)
 	return data
 }
 
+// GetSimulationOptions 获取模型仿真设置
 func (o *ZmqObject) GetSimulationOptions(className string) []string {
 	var dataList = []string{"", "", "", "", ""}
 	cmd := "getSimulationOptions(" + className + ")"
@@ -849,6 +847,7 @@ func (o *ZmqObject) GetSimulationOptions(className string) []string {
 	return dataList
 }
 
+// AddClassAnnotation 新增模型注释
 func (o *ZmqObject) AddClassAnnotation(className, annotate string) bool {
 	cmd := "addClassAnnotation(" + className + ", annotate=" + annotate + ")"
 	result, ok := o.SendExpressionNoParsed(cmd)
@@ -859,6 +858,7 @@ func (o *ZmqObject) AddClassAnnotation(className, annotate string) bool {
 	return false
 }
 
+// ReadSimulationResult 读取仿真结果，给定需要读取的变量列表与结果文件路径，返回二维列表
 func (o *ZmqObject) ReadSimulationResult(varNameList []string, path string) ([][]float64, bool) {
 	// readSimulationResult("result_res.mat", {time,Bessel.a[1]}, 0)
 	varNameStr := "time," + strings.Join(varNameList, ",")
@@ -887,6 +887,7 @@ func (o *ZmqObject) ReadSimulationResult(varNameList []string, path string) ([][
 	return dataList, true
 }
 
+// ParseFile 解析mo文件
 func (o *ZmqObject) ParseFile(path string) (string, bool) {
 	pwd, _ := os.Getwd()
 	cmd := "parseFile(\"" + pwd + "/" + path + "\",\"UTF-8\")"
@@ -899,6 +900,7 @@ func (o *ZmqObject) ParseFile(path string) (string, bool) {
 	return "", false
 }
 
+// LoadFile 加载mo文件
 func (o *ZmqObject) LoadFile(path string) bool {
 	pwd, _ := os.Getwd()
 	cmd := "loadFile(\"" + pwd + "/" + path + "\",\"UTF-8\")"
@@ -910,6 +912,7 @@ func (o *ZmqObject) LoadFile(path string) bool {
 	return false
 }
 
+// ParseString 解析Modelica字符串
 func (o *ZmqObject) ParseString(code, path string) (string, bool) {
 	jsonCode, _ := json.Marshal(code)
 	jsonCode = bytes.ReplaceAll(jsonCode, []byte("\\u003c"), []byte("<"))
@@ -928,6 +931,7 @@ func (o *ZmqObject) ParseString(code, path string) (string, bool) {
 	return resultStr, false
 }
 
+// LoadString 加载Modelica字符串
 func (o *ZmqObject) LoadString(code, path string) bool {
 	pwd, _ := os.Getwd()
 	jsonCode, _ := json.Marshal(code)
@@ -945,6 +949,7 @@ func (o *ZmqObject) LoadString(code, path string) bool {
 	return false
 }
 
+// CopyLoadString 加载复制后的Modelica字符串
 func (o *ZmqObject) CopyLoadString(code, modelName string) bool {
 	cmd := "loadString(" + code + ",\"" + modelName + "\",\"UTF-8\",false)"
 	result, ok := o.SendExpressionNoParsed(cmd)
@@ -955,8 +960,8 @@ func (o *ZmqObject) CopyLoadString(code, modelName string) bool {
 	return false
 }
 
+// GetClassRestriction 获取给定模型名称的类型
 func (o *ZmqObject) GetClassRestriction(className string) string {
-
 	cmd := "getClassRestriction(" + className + ")"
 	result, ok := o.SendExpressionNoParsed(cmd)
 	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
@@ -967,6 +972,7 @@ func (o *ZmqObject) GetClassRestriction(className string) string {
 	return ""
 }
 
+// GetModelInstance 获取给定模型名称的实例化json数据字符串
 func (o *ZmqObject) GetModelInstance(className string) string {
 	cmd := "getModelInstance(" + className + ")"
 	result, ok := o.SendExpressionNoParsed(cmd)
@@ -978,6 +984,7 @@ func (o *ZmqObject) GetModelInstance(className string) string {
 	return ""
 }
 
+// SaveModel 保存模型源码到指定文件
 func (o *ZmqObject) SaveModel(fileName, className string) bool {
 	cmd := "saveModel(\"" + fileName + "\"," + className + ")"
 	result, ok := o.SendExpressionNoParsed(cmd)
@@ -998,6 +1005,7 @@ func (o *ZmqObject) GetAvailableLibraries() []interface{} {
 	return nil
 }
 
+// GetAllSubtypeOf 获取模板数据
 func (o *ZmqObject) GetAllSubtypeOf(baseClassName, className string) []interface{} {
 	cmd := "getAllSubtypeOf(" + baseClassName + "," + className + ",false,false,false)"
 	result, ok := o.SendExpression(cmd)
@@ -1007,6 +1015,7 @@ func (o *ZmqObject) GetAllSubtypeOf(baseClassName, className string) []interface
 	return make([]interface{}, 1)
 }
 
+// GcSetMaxHeapSize 设置使用的最大内存上限
 func (o *ZmqObject) GcSetMaxHeapSize(size string) []interface{} {
 	cmd := "GC_set_max_heap_size(" + size + ")"
 	result, ok := o.SendExpression(cmd)
@@ -1016,6 +1025,7 @@ func (o *ZmqObject) GcSetMaxHeapSize(size string) []interface{} {
 	return make([]interface{}, 1)
 }
 
+// IsPackage 判断是否是包类型
 func (o *ZmqObject) IsPackage(packageName string) bool {
 	cmd := "isPackage(" + packageName + ")"
 	result, ok := o.SendExpressionNoParsed(cmd)
@@ -1026,6 +1036,7 @@ func (o *ZmqObject) IsPackage(packageName string) bool {
 	return false
 }
 
+// BuildModelFMU 构建FMU文件
 func (o *ZmqObject) BuildModelFMU(className string, fmuFileNameId string) string {
 	//fileNamePrefix := "/home/xuqingda/GolandProjects/YssimGoService/"
 	//(Modelica.Blocks.Examples.PID_Controller,"2.0","me_cs","<default>",{"static"},false)
@@ -1038,6 +1049,7 @@ func (o *ZmqObject) BuildModelFMU(className string, fmuFileNameId string) string
 	return ""
 }
 
+// ModelInstance 将模型实例化后解析到给定的指针地址变量
 func (o *ZmqObject) ModelInstance(modelName string, ModelInstance *serviceType.ModelInstance) bool {
 	cmd := "getModelInstance(" + modelName + ")"
 	result, ok := o.SendExpressionNoParsed(cmd)
