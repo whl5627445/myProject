@@ -13,13 +13,14 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0crouter.proto\"\x9c\x02\n\x14\x46muSimulationRequest\x12\x0c\n\x04uuid\x18\x01 \x01(\t\x12\x0e\n\x06moPath\x18\x02 \x01(\t\x12\x11\n\tclassName\x18\x03 \x01(\t\x12\x10\n\x08userName\x18\x04 \x01(\t\x12\x11\n\tstartTime\x18\x05 \x01(\x02\x12\x10\n\x08stopTime\x18\x06 \x01(\x02\x12\x0f\n\x07resPath\x18\x07 \x01(\t\x12\x31\n\x06params\x18\x08 \x03(\x0b\x32!.FmuSimulationRequest.ParamsEntry\x12\x16\n\x0eoutputInterval\x18\t \x01(\x02\x12\x11\n\ttolerance\x18\n \x01(\x02\x1a-\n\x0bParamsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"!\n\x12\x46muSimulationReply\x12\x0b\n\x03log\x18\x01 \x01(\t\"\'\n\x17GetProcessStatusRequest\x12\x0c\n\x04uuid\x18\x01 \x01(\t\"\x9b\x01\n\x15GetProcessStatusReply\x12\x0b\n\x03log\x18\x01 \x01(\t\x12\x11\n\texception\x18\x02 \x01(\x05\x12\x10\n\x08progress\x18\x03 \x01(\x05\x12\x18\n\x10processStartTime\x18\x04 \x01(\t\x12\r\n\x05state\x18\x05 \x01(\t\x12\x16\n\x0eprocessRunTime\x18\x06 \x01(\t\x12\x0f\n\x07resPath\x18\x07 \x01(\t\"\x1c\n\x1aGetAllProcessNumberRequest\"h\n\x18GetAllProcessNumberReply\x12\x12\n\ntotalTasks\x18\x01 \x01(\x05\x12\x1b\n\x13numOfRunningProcess\x18\x02 \x01(\x05\x12\x1b\n\x13numOfPendingProcess\x18\x03 \x01(\x05\"2\n\x10GetResultRequest\x12\x0c\n\x04uuid\x18\x01 \x01(\t\x12\x10\n\x08variable\x18\x02 \x01(\t\"+\n\x0eGetResultReply\x12\x0b\n\x03log\x18\x01 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x02 \x03(\x02\">\n\x17ProcessOperationRequest\x12\x0c\n\x04uuid\x18\x01 \x01(\t\x12\x15\n\roperationName\x18\x02 \x01(\t\"$\n\x15ProcessOperationReply\x12\x0b\n\x03msg\x18\x01 \x01(\t2\xdc\x02\n\x07Greeter\x12=\n\rFmuSimulation\x12\x15.FmuSimulationRequest\x1a\x13.FmuSimulationReply\"\x00\x12\x46\n\x10GetProcessStatus\x12\x18.GetProcessStatusRequest\x1a\x16.GetProcessStatusReply\"\x00\x12O\n\x13GetAllProcessNumber\x12\x1b.GetAllProcessNumberRequest\x1a\x19.GetAllProcessNumberReply\"\x00\x12\x31\n\tGetResult\x12\x11.GetResultRequest\x1a\x0f.GetResultReply\"\x00\x12\x46\n\x10ProcessOperation\x12\x18.ProcessOperationRequest\x1a\x16.ProcessOperationReply\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0crouter.proto\"\x9c\x02\n\x14\x46muSimulationRequest\x12\x0c\n\x04uuid\x18\x01 \x01(\t\x12\x0e\n\x06moPath\x18\x02 \x01(\t\x12\x11\n\tclassName\x18\x03 \x01(\t\x12\x10\n\x08userName\x18\x04 \x01(\t\x12\x11\n\tstartTime\x18\x05 \x01(\x02\x12\x10\n\x08stopTime\x18\x06 \x01(\x02\x12\x0f\n\x07resPath\x18\x07 \x01(\t\x12\x31\n\x06params\x18\x08 \x03(\x0b\x32!.FmuSimulationRequest.ParamsEntry\x12\x16\n\x0eoutputInterval\x18\t \x01(\x02\x12\x11\n\ttolerance\x18\n \x01(\x02\x1a-\n\x0bParamsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"!\n\x12\x46muSimulationReply\x12\x0b\n\x03log\x18\x01 \x01(\t\"\'\n\x17GetProcessStatusRequest\x12\x0c\n\x04uuid\x18\x01 \x01(\t\"\x9b\x01\n\x15GetProcessStatusReply\x12\x0b\n\x03log\x18\x01 \x01(\t\x12\x11\n\texception\x18\x02 \x01(\x05\x12\x10\n\x08progress\x18\x03 \x01(\x05\x12\x18\n\x10processStartTime\x18\x04 \x01(\t\x12\r\n\x05state\x18\x05 \x01(\t\x12\x16\n\x0eprocessRunTime\x18\x06 \x01(\t\x12\x0f\n\x07resPath\x18\x07 \x01(\t\"\x1c\n\x1aGetAllProcessNumberRequest\"h\n\x18GetAllProcessNumberReply\x12\x12\n\ntotalTasks\x18\x01 \x01(\x05\x12\x1b\n\x13numOfRunningProcess\x18\x02 \x01(\x05\x12\x1b\n\x13numOfPendingProcess\x18\x03 \x01(\x05\"2\n\x10GetResultRequest\x12\x0c\n\x04uuid\x18\x01 \x01(\t\x12\x10\n\x08variable\x18\x02 \x01(\t\"+\n\x0eGetResultReply\x12\x0b\n\x03log\x18\x01 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x02 \x03(\x02\">\n\x17ProcessOperationRequest\x12\x0c\n\x04uuid\x18\x01 \x01(\t\x12\x15\n\roperationName\x18\x02 \x01(\t\"$\n\x15ProcessOperationReply\x12\x0b\n\x03msg\x18\x01 \x01(\t\"U\n\x1cSaveFilterResultToCsvRequest\x12\x0c\n\x04Vars\x18\x01 \x03(\t\x12\x12\n\nresultPath\x18\x02 \x01(\t\x12\x13\n\x0bnewFileName\x18\x03 \x01(\t\"(\n\x1aSaveFilterResultToCsvReply\x12\n\n\x02ok\x18\x01 \x01(\x08\x32\xb3\x03\n\x07Greeter\x12=\n\rFmuSimulation\x12\x15.FmuSimulationRequest\x1a\x13.FmuSimulationReply\"\x00\x12\x46\n\x10GetProcessStatus\x12\x18.GetProcessStatusRequest\x1a\x16.GetProcessStatusReply\"\x00\x12O\n\x13GetAllProcessNumber\x12\x1b.GetAllProcessNumberRequest\x1a\x19.GetAllProcessNumberReply\"\x00\x12\x31\n\tGetResult\x12\x11.GetResultRequest\x1a\x0f.GetResultReply\"\x00\x12\x46\n\x10ProcessOperation\x12\x18.ProcessOperationRequest\x1a\x16.ProcessOperationReply\"\x00\x12U\n\x15SaveFilterResultToCsv\x12\x1d.SaveFilterResultToCsvRequest\x1a\x1b.SaveFilterResultToCsvReply\"\x00\x42\nZ\x08./grpcPbb\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'router_pb2', globals())
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
+  DESCRIPTOR._serialized_options = b'Z\010./grpcPb'
   _FMUSIMULATIONREQUEST_PARAMSENTRY._options = None
   _FMUSIMULATIONREQUEST_PARAMSENTRY._serialized_options = b'8\001'
   _FMUSIMULATIONREQUEST._serialized_start=17
@@ -44,6 +45,10 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _PROCESSOPERATIONREQUEST._serialized_end=832
   _PROCESSOPERATIONREPLY._serialized_start=834
   _PROCESSOPERATIONREPLY._serialized_end=870
-  _GREETER._serialized_start=873
-  _GREETER._serialized_end=1221
+  _SAVEFILTERRESULTTOCSVREQUEST._serialized_start=872
+  _SAVEFILTERRESULTTOCSVREQUEST._serialized_end=957
+  _SAVEFILTERRESULTTOCSVREPLY._serialized_start=959
+  _SAVEFILTERRESULTTOCSVREPLY._serialized_end=999
+  _GREETER._serialized_start=1002
+  _GREETER._serialized_end=1437
 # @@protoc_insertion_point(module_scope)
