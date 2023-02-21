@@ -32,8 +32,5 @@ func GetModelChild(modelName string) []map[string]interface{} {
 
 func GetModelHasChild(modelName string) bool {
 	childList := omc.OMC.GetClassNames(modelName, false)
-	if len(childList) > 0 {
-		return true
-	}
-	return false
+	return len(childList) > 0
 }

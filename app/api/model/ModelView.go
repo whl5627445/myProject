@@ -389,7 +389,7 @@ func DeletePackageAndModelView(c *gin.Context) {
 	}
 	var res responseData
 	var packageModel DataBaseModel.YssimModels
-	err = DB.Where("id = ? AND sys_or_user = ? AND userspace_id = ?", item.PackageId, username, userSpaceId).First(&packageModel).Error
+	DB.Where("id = ? AND sys_or_user = ? AND userspace_id = ?", item.PackageId, username, userSpaceId).First(&packageModel)
 	if packageModel.ID == "" {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
@@ -822,8 +822,8 @@ func ConvertUnitsView(c *gin.Context) {
 	}
 	result := service.ConvertUnits(item.S1, item.S2)
 	unitsCompatible, _ := strconv.ParseBool(result[0])
-	scaleFactor, _ := strconv.ParseFloat(result[1], 3)
-	offset, _ := strconv.ParseFloat(result[2], 3)
+	scaleFactor, _ := strconv.ParseFloat(result[1], 32)
+	offset, _ := strconv.ParseFloat(result[2], 32)
 	res.Data = map[string]interface{}{
 		"units_compatible": unitsCompatible,
 		"scale_factor":     scaleFactor,

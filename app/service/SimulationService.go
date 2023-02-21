@@ -46,7 +46,7 @@ func openModelica(task *SimulateTask, resultFilePath string, SimulationPraData m
 			//log.Println("err: ", err)
 			log.Println("仿真执行失败")
 		}
-		if strings.Index(simulateResultStr, "successfully") != -1 {
+		if strings.Contains(simulateResultStr, "successfully") {
 			res = true
 		} else {
 			task.SRecord.SimulateStatus = "3"
@@ -74,7 +74,7 @@ func dymolaSimulate(task *SimulateTask, resultFilePath string, SimulationPraData
 		files := url.NewFiles()
 		files.SetFile("file", packageFileName, simulateFilePath, "")
 		req.Files = files
-		uploadFileRes, err := requests.Post(config.DymolaSimutalionConnect+"/file/upload", req)
+		uploadFileRes, _ := requests.Post(config.DymolaSimutalionConnect+"/file/upload", req)
 		uploadRes, err := uploadFileRes.Json()
 		if uploadRes["code"].(float64) == 200 {
 			uploadResult = true
@@ -128,7 +128,7 @@ func dymolaSimulate(task *SimulateTask, resultFilePath string, SimulationPraData
 				"finalNames": "",
 			}
 			req.Json = simulateReqData
-			simulateRes, err := requests.Post(config.DymolaSimutalionConnect+"/dymola/simulate", req)
+			simulateRes, _ := requests.Post(config.DymolaSimutalionConnect+"/dymola/simulate", req)
 			simulateResData, err := simulateRes.Json()
 			simulateResDataCode, ok := simulateResData["code"]
 			log.Println("dymola仿真结果：", simulateResData)
@@ -169,14 +169,14 @@ func jModelicaSimulate(task *SimulateTask, resultFilePath string, SimulationPraD
 	if task.Package.FilePath == "" {
 		moFilePath = "/omlibrary/" + task.Package.PackageName + " " + task.Package.Version
 	}
-	finalTime, err := strconv.ParseFloat(SimulationPraData["stopTime"], 64)
-	startTime, err := strconv.ParseFloat(SimulationPraData["startTime"], 64)
-	numberOfIntervals, err := strconv.Atoi(SimulationPraData["numberOfIntervals"])
-	tolerance, err := strconv.ParseFloat(SimulationPraData["tolerance"], 64)
-	if err != nil {
-		log.Printf("数据转换失败: %s", err)
-		return false
-	}
+	finalTime, _ := strconv.ParseFloat(SimulationPraData["stopTime"], 64)
+	startTime, _ := strconv.ParseFloat(SimulationPraData["startTime"], 64)
+	numberOfIntervals, _ := strconv.Atoi(SimulationPraData["numberOfIntervals"])
+	tolerance, _ := strconv.ParseFloat(SimulationPraData["tolerance"], 64)
+	//if err != nil {
+	//	log.Printf("数据转换失败: %s", err)
+	//	return false
+	//}
 	data := map[string]interface{}{
 		"start_time":       startTime,
 		"final_time":       finalTime,
@@ -191,7 +191,12 @@ func jModelicaSimulate(task *SimulateTask, resultFilePath string, SimulationPraD
 		//"initialValues":    initialValues,
 	}
 	dial, err := net.Dial("tcp", config.JmodelicaConnect)
-	defer dial.Close()
+	defer func(dial net.Conn) {
+		err = dial.Close()
+		if err != nil {
+			log.Println("关闭连接失败，错误： ", err)
+		}
+	}(dial)
 	if err != nil {
 		log.Printf("连接JModelica服务失败: %s", err)
 		return false
@@ -219,7 +224,12 @@ func jModelicaSimulate(task *SimulateTask, resultFilePath string, SimulationPraD
 		data["modelname"] = modelName_
 		dataJson, _ = json.Marshal(data)
 		dialRes, err := net.Dial("tcp", config.JmodelicaConnect)
-		defer dialRes.Close()
+		defer func(dialRes net.Conn) {
+			err = dialRes.Close()
+			if err != nil {
+				log.Println("关闭连接失败，错误：", err)
+			}
+		}(dialRes)
 		_, err = dialRes.Write(dataJson)
 		log.Printf("发送仿真数据: %s", data)
 		if err != nil {
@@ -235,8 +245,14 @@ func jModelicaSimulate(task *SimulateTask, resultFilePath string, SimulationPraD
 			return false
 		}
 		if string(simulateRes[:n]) == "ok" {
-			os.Rename(resultFilePath+modelName_+".fmu", resultFilePath+modelName_+".fmu.zip")
-			fileOperation.UnZip(resultFilePath+modelName_+".fmu.zip", resultFilePath)
+			err = os.Rename(resultFilePath+modelName_+".fmu", resultFilePath+modelName_+".fmu.zip")
+			if err != nil {
+				return false
+			}
+			err = fileOperation.UnZip(resultFilePath+modelName_+".fmu.zip", resultFilePath)
+			if err != nil {
+				return false
+			}
 			err = os.Rename(resultFilePath+"modelDescription.xml", resultFilePath+"result_init.xml")
 			task.SRecord.SimulateResultStr = "JM"
 			return true
@@ -247,14 +263,14 @@ func jModelicaSimulate(task *SimulateTask, resultFilePath string, SimulationPraD
 
 func fmpySimulate(task *SimulateTask, resultFilePath string, SimulationPraData map[string]string) bool {
 
-	finalTime, err := strconv.ParseFloat(SimulationPraData["stopTime"], 64)
-	startTime, err := strconv.ParseFloat(SimulationPraData["startTime"], 64)
-	numberOfIntervals, err := strconv.Atoi(SimulationPraData["numberOfIntervals"])
-	tolerance, err := strconv.ParseFloat(SimulationPraData["tolerance"], 64)
-	if err != nil {
-		log.Printf("数据转换失败: %s", err)
-		return false
-	}
+	finalTime, _ := strconv.ParseFloat(SimulationPraData["stopTime"], 64)
+	startTime, _ := strconv.ParseFloat(SimulationPraData["startTime"], 64)
+	numberOfIntervals, _ := strconv.Atoi(SimulationPraData["numberOfIntervals"])
+	tolerance, _ := strconv.ParseFloat(SimulationPraData["tolerance"], 64)
+	//if err != nil {
+	//	log.Printf("数据转换失败: %s", err)
+	//	return false
+	//}
 	FmuSimulationRequestTest := &grpcPb.FmuSimulationRequest{
 		Uuid:           task.SRecord.ID,
 		MoPath:         task.Package.FilePath,
@@ -273,10 +289,7 @@ func fmpySimulate(task *SimulateTask, resultFilePath string, SimulationPraData m
 		return false
 	}
 	fmt.Println("仿真提交任务:", FmuSimulationRes.Log)
-	if FmuSimulationRes.Log == "Task submitted successfully." {
-		return true
-	}
-	return false
+	return FmuSimulationRes.Log == "Task submitted successfully."
 
 }
 

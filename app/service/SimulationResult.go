@@ -142,9 +142,9 @@ func SimulationResultTree(path, parent, keyWords string) []map[string]interface{
 	id := 0
 	for _, variable := range scalarVariableList {
 		name := variable.Name
-		splitName := []string{}
+		var splitName []string
 		trimPrefixName := strings.TrimPrefix(name, parent+".")
-		if strings.HasPrefix(name, parentName) && strings.Index(strings.ToLower(name), strings.ToLower(keyWords)) != -1 {
+		if strings.HasPrefix(name, parentName) && strings.Contains(strings.ToLower(name), strings.ToLower(keyWords)) {
 			scalarVariableMap[name] = variable
 			if !strings.HasPrefix(name, "der(") && !strings.HasPrefix(name, "$") {
 				splitName = strings.Split(trimPrefixName, ".")
@@ -152,7 +152,7 @@ func SimulationResultTree(path, parent, keyWords string) []map[string]interface{
 				continue
 			}
 
-			if !nameMap[splitName[0]] && scalarVariableMap[name].HideResult == false && scalarVariableMap[name].IsProtected == false {
+			if !nameMap[splitName[0]] && !scalarVariableMap[name].HideResult && !scalarVariableMap[name].IsProtected {
 				data := map[string]interface{}{
 					"variables":    splitName[0],
 					"description":  scalarVariableMap[name].Description,

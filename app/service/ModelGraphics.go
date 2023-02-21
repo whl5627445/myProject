@@ -79,19 +79,6 @@ func GetGraphicsData(modelName string) [][]map[string]interface{} {
 	return g.data
 }
 
-func getElementsAndModelName(nameList []string) [][]interface{} {
-	var data [][]interface{}
-	for _, name := range nameList {
-		componentsData := omc.OMC.GetElements(name)
-		for _, c := range componentsData {
-			component := c.([]interface{})
-			component = append(component, name)
-			data = append(data, component)
-		}
-	}
-	return data
-}
-
 func GetComponentGraphicsData(modelName string, componentName string) [][]map[string]interface{} {
 	var g = graphicsData{}
 	g.data = [][]map[string]interface{}{{}, {}}
@@ -117,6 +104,19 @@ func GetComponentGraphicsData(modelName string, componentName string) [][]map[st
 	}
 	g.data[1] = append(g.data[1], data2...)
 	return g.data
+}
+
+func getElementsAndModelName(nameList []string) [][]interface{} {
+	var data [][]interface{}
+	for _, name := range nameList {
+		componentsData := omc.OMC.GetElements(name)
+		for _, c := range componentsData {
+			component := c.([]interface{})
+			component = append(component, name)
+			data = append(data, component)
+		}
+	}
+	return data
 }
 
 func oneDimensionalProcessing(Data interface{}) string {
@@ -163,7 +163,7 @@ func twoDimensionalProcessing(drawingData []interface{}) []string {
 				}
 				data = append(data, strings.Join(piList, ","))
 			}
-			break
+			//break
 		}
 		return data
 	}
@@ -265,7 +265,7 @@ func (g *graphicsData) data01(cData []interface{}, className, component, modelNa
 			} else {
 				originalTextString := drawingDataList[9].(string)
 				data["textType"] = "var"
-				if strings.Index(originalTextString, "%") == -1 {
+				if strings.Contains(originalTextString, "%") {
 					data["textType"] = "text"
 				}
 				textList := stringOperation.PluralSplit(originalTextString, []string{"/", ",", "\t", "\n", "\r", " "})
@@ -304,7 +304,7 @@ func (g *graphicsData) data01(cData []interface{}, className, component, modelNa
 									}
 								}
 
-								if len(varValue) > 30 && strings.Index(varValue, ".") != -1 && strings.Index(varValue, " ") == -1 {
+								if len(varValue) > 30 && strings.Contains(varValue, ".") && strings.Contains(varValue, " ") {
 									varValueList := strings.Split(varValue, ".") // 某些值是模型全称的需要取最后一部分。所以分割一下
 									varValue = varValueList[len(varValueList)-1]
 								}
@@ -378,7 +378,7 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 		}
 		return len(cData)
 	}()
-	if isIcon == true && cData != nil && caData != nil {
+	if isIcon && cData != nil && caData != nil {
 		for i := 0; i < dataLen; i++ {
 			nameType := omc.OMC.GetClassRestriction(cData[i][2].(string))
 			if nameType == "connector" || nameType == "expandable connector" {
@@ -440,7 +440,7 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 			data := map[string]interface{}{"type": "Transformation"}
 
 			data["graphType"] = func() string {
-				if isIcon == true {
+				if isIcon {
 					return "connecter"
 				} else {
 					nameType := omc.OMC.GetClassRestriction(classname)
@@ -530,7 +530,8 @@ func (g *graphicsData) getnthconnectionData() {
 func getElementAnnotations(nameList []string) [][]interface{} {
 	var data [][]interface{}
 	for _, name := range nameList {
-		var result []interface{}
+
+		//var result []interface{}
 		//nameType := omc.OMC.GetClassRestriction(name)
 		//if nameType == "connector" || nameType == "expandable connector" && isIcon == false {
 		//	result = omc.OMC.GetDiagramAnnotation(name)
@@ -540,7 +541,7 @@ func getElementAnnotations(nameList []string) [][]interface{} {
 		//} else {
 		//	result = omc.OMC.GetElementAnnotations(name)
 		//}
-		result = omc.OMC.GetElementAnnotations(name)
+		result := omc.OMC.GetElementAnnotations(name)
 		for _, i := range result {
 			data = append(data, i.([]interface{}))
 		}
@@ -553,7 +554,7 @@ func getIconAndDiagramAnnotations(nameList []string, isIcon bool) []interface{} 
 	for _, name := range nameList {
 		var result []interface{}
 		nameType := omc.OMC.GetClassRestriction(name)
-		if (nameType == "connector" || nameType == "expandable connector") && isIcon == false {
+		if (nameType == "connector" || nameType == "expandable connector") && !isIcon {
 			result = omc.OMC.GetDiagramAnnotation(name)
 			if len(result) > 8 {
 				result = result[8].([]interface{})
@@ -563,10 +564,7 @@ func getIconAndDiagramAnnotations(nameList []string, isIcon bool) []interface{} 
 		} else {
 			result = omc.OMC.GetIconAnnotationLineData(name)
 		}
-		for _, p := range result {
-			data = append(data, p)
-		}
-
+		data = append(data, result...)
 	}
 	return data
 }

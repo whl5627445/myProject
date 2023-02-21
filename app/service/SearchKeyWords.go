@@ -6,8 +6,8 @@ import (
 )
 
 func SearchModel(keyWords, parentNode string) []interface{} {
-	modelNameList := []interface{}{}
-	nodeNames := []string{}
+	var modelNameList []interface{}
+	var nodeNames []string
 	searchModelMap := map[string]bool{}
 	words := strings.ToLower(keyWords)
 	parentNodePackageList := strings.Split(parentNode, ".")
@@ -33,8 +33,7 @@ func SearchModel(keyWords, parentNode string) []interface{} {
 				if !ok {
 					searchModelMap[nameParent] = true
 
-					classInformation := GetClassInformation(nameParent)
-					modelType := strings.TrimSpace(classInformation[0].(string))
+					modelType := omc.OMC.GetClassRestriction(nameParent)
 					data := map[string]interface{}{
 						"name":       shortName,
 						"model_name": nameParent,

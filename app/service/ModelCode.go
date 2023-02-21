@@ -24,11 +24,17 @@ func GetModelCode(modelName string) string {
 func SaveModelCode(modelName, path string) bool {
 	filesList, _ := ioutil.ReadDir("./")
 	num := strconv.Itoa(len(filesList))
-	os.Rename(path, path+".old"+num)
+	err := os.Rename(path, path+".old"+num)
+	if err != nil {
+		return false
+	}
 	codeData := GetModelCode(modelName)
 	ok := fileOperation.WriteFile(path, codeData)
 	if !ok {
-		os.Rename(path+".old"+num, path)
+		err := os.Rename(path+".old"+num, path)
+		if err != nil {
+			return false
+		}
 		return false
 	}
 	return true
@@ -37,10 +43,7 @@ func SaveModelCode(modelName, path string) bool {
 // SaveModelToFile 用omc提供的API将模型源码保存的到对应文件， 并发安全
 func SaveModelToFile(modelName, path string) bool {
 	ok := omc.OMC.SaveModel(path, modelName)
-	if !ok {
-		return false
-	}
-	return true
+	return ok
 }
 
 func PackageFileParse(fileName, saveFilePath, zipPackagePath string, file io.Reader) (string, bool) {
@@ -52,7 +55,10 @@ func PackageFileParse(fileName, saveFilePath, zipPackagePath string, file io.Rea
 	if strings.HasSuffix(fileName, ".mo") {
 		packagePath = zipPackagePath
 	} else {
-		fileOperation.UnZip(zipPackagePath, saveFilePath)
+		err := fileOperation.UnZip(zipPackagePath, saveFilePath)
+		if err != nil {
+			return "", false
+		}
 		saveFilePath, _ = fileOperation.FindFile("package.mo", saveFilePath)
 		packagePath = saveFilePath + "/package.mo"
 	}

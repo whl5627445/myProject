@@ -22,9 +22,9 @@ func GetMessagesStringInternal() []map[string]string {
 		for j := 0; j < len(dl); j++ {
 			jl := strings.TrimSpace(dl[j])
 			switch true {
-			case strings.Index(jl, "MODELICAPATH") != -1 || strings.Index(jl, "installPackage") != -1 || strings.Index(jl, "Downloaded") != -1:
+			case strings.Contains(jl, "MODELICAPATH") || strings.Contains(jl, "installPackage") || strings.Contains(jl, "Downloaded"):
 				continue
-			case strings.Index(jl, "Automatically ") != -1 || strings.Index(jl, "Lexer ") != -1:
+			case strings.Contains(jl, "Automatically ") || strings.Contains(jl, "Lexer "):
 				continue
 			case strings.HasPrefix(jl, "message"):
 				mes := strings.ReplaceAll(jl, "message = ", "")

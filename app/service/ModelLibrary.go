@@ -48,7 +48,7 @@ func ModelLibraryInitialization(packageModel []DataBaseModel.YssimModels) {
 
 func setOptions() {
 	commandLineOptions := omc.OMC.GetCommandLineOptions()
-	if strings.Index(commandLineOptions, "nfAPI") == -1 {
+	if strings.Contains(commandLineOptions, "nfAPI") {
 		omc.OMC.Clear()
 	}
 }
@@ -74,17 +74,17 @@ func modelCache(packageModel string) {
 }
 
 // 暂时不用，参数接口速度并不慢
-func parametersCache(packageModel string) {
-	modelsALL := omc.OMC.GetClassNames(packageModel, true)
-
-	omc.OMC.CacheRefreshSet(true)
-	for p := 0; p < len(modelsALL); p++ {
-		e := omc.OMC.GetElements(modelsALL[p])
-		for ee := 0; ee < len(e); ee++ {
-			log.Println("正在缓存：", modelsALL[p], " 的参数数据")
-			GetGraphicsData(modelsALL[p])
-		}
-
-	}
-	omc.OMC.CacheRefreshSet(false)
-}
+//func parametersCache(packageModel string) {
+//	modelsALL := omc.OMC.GetClassNames(packageModel, true)
+//
+//	omc.OMC.CacheRefreshSet(true)
+//	for p := 0; p < len(modelsALL); p++ {
+//		e := omc.OMC.GetElements(modelsALL[p])
+//		for ee := 0; ee < len(e); ee++ {
+//			log.Println("正在缓存：", modelsALL[p], " 的参数数据")
+//			GetGraphicsData(modelsALL[p])
+//		}
+//
+//	}
+//	omc.OMC.CacheRefreshSet(false)
+//}

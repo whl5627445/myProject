@@ -25,8 +25,8 @@ func GetElements(className, componentName string) []interface{} {
 		cData := componentsData[i].([]interface{})
 		switch {
 		case componentName != "" && cData[3] == componentName:
-			componentData = cData
-			break
+			return cData
+			//break
 		//case !(cData[5] == "protected" || cData[6] == "true" || len(annotationsData[i].([]interface{})) == 0 || annotationsData[i].([]interface{})[0].(string) != "Placement") && componentName == "":
 		case !(cData[6] == "true" || len(annotationsData[i].([]interface{})) == 0 || annotationsData[i].([]interface{})[0].(string) != "Placement") && componentName == "":
 			componentData = append(componentData, cData)

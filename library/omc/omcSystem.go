@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"log"
 	"sync"
+	"yssim-go/app/serviceType"
 	"yssim-go/config"
 
 	"github.com/go-zeromq/zmq4"
@@ -933,6 +934,16 @@ func (o *ZmqObject) LoadString(code, path string) bool {
 	return false
 }
 
+func (o *ZmqObject) CopyLoadString(code, modelName string) bool {
+	cmd := "loadString(" + code + ",\"" + modelName + "\",\"UTF-8\",false)"
+	result, ok := o.SendExpressionNoParsed(cmd)
+	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
+	if ok && string(result) == "true" {
+		return true
+	}
+	return false
+}
+
 func (o *ZmqObject) GetClassRestriction(className string) string {
 
 	cmd := "getClassRestriction(" + className + ")"
@@ -1016,15 +1027,18 @@ func (o *ZmqObject) BuildModelFMU(className string, fmuFileNameId string) string
 	return ""
 }
 
-//func (o *ZmqObject) ModelInstance(modelName string, ModelInstance *serviceType.ModelInstance) bool {
-//	cmd := "getModelInstance(" + modelName + ")"
-//	result, ok := o.SendExpressionNoParsed(cmd)
-//	if ok && len(result) > 1 {
-//		result = bytes.ReplaceAll(result, []byte("\\\""), []byte("\""))
-//		result = bytes.ReplaceAll(result, []byte("\\\\"), []byte("\\"))
-//		result = result[1 : len(result)-2]
-//		_ = json.Unmarshal(result, ModelInstance)
-//		return true
-//	}
-//	return false
-//}
+func (o *ZmqObject) ModelInstance(modelName string, ModelInstance *serviceType.ModelInstance) bool {
+	cmd := "getModelInstance(" + modelName + ")"
+	result, ok := o.SendExpressionNoParsed(cmd)
+	if ok && len(result) > 1 {
+		result = bytes.ReplaceAll(result, []byte("\\\""), []byte("\""))
+		result = bytes.ReplaceAll(result, []byte("\\\\"), []byte("\\"))
+		result = result[1 : len(result)-2]
+		err := json.Unmarshal(result, ModelInstance)
+		if err != nil {
+			log.Println(err)
+		}
+		return true
+	}
+	return false
+}
