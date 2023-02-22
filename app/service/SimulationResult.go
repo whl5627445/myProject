@@ -3,10 +3,12 @@ package service
 import (
 	"encoding/csv"
 	"encoding/xml"
+	"fmt"
 	"log"
 	"os"
 	"strconv"
 	"strings"
+	"yssim-go/grpc/grpcPb"
 	"yssim-go/library/fileOperation"
 	"yssim-go/library/omc"
 	"yssim-go/library/xmlOperation"
@@ -16,6 +18,39 @@ func ReadSimulationResult(varNameList []string, path string) ([][]float64, bool)
 	pwd, _ := os.Getwd()
 	data, ok := omc.OMC.ReadSimulationResult(varNameList, pwd+"/"+path)
 	return data, ok
+}
+func ReadSimulationResultFromGrpc(recordId string, varName string) ([][]float64, bool) {
+	var data [][]float64
+	GetResultRequestTime := &grpcPb.GetResultRequest{
+		Uuid:     recordId,
+		Variable: "time",
+	}
+	GetResultRequestVar := &grpcPb.GetResultRequest{
+		Uuid:     recordId,
+		Variable: varName,
+	}
+	replyTime, err2 := grpcPb.Client.GetResult(grpcPb.Ctx, GetResultRequestTime)
+	replyVar, err2 := grpcPb.Client.GetResult(grpcPb.Ctx, GetResultRequestVar)
+	if err2 != nil {
+		fmt.Println("调用grpc服务(FmuSimulation)出错：", err2)
+		return nil, false
+	}
+	if replyVar.Log == "true" {
+		reply1Data := make([]float64, len(replyTime.Data))
+		for i, v := range replyTime.Data {
+			reply1Data[i] = v
+		}
+		reply2Data := make([]float64, len(replyVar.Data))
+		for i, v := range replyVar.Data {
+			reply2Data[i] = v
+		}
+		data = append(data, reply1Data)
+		data = append(data, reply2Data)
+		return data, true
+	} else {
+		fmt.Println(replyVar.Log)
+		return nil, false
+	}
 }
 
 func FilterSimulationResult(varNameList []string, path, newFileName string) bool {

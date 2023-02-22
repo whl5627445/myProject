@@ -1,12 +1,10 @@
 package API
 
 import (
-	"fmt"
 	"math"
 	"net/http"
 	"strconv"
 	"time"
-	"yssim-go/grpc/grpcPb"
 	"yssim-go/library/timeConvert"
 
 	"github.com/gin-gonic/gin"
@@ -193,37 +191,7 @@ func SimulateResultGraphicsView(c *gin.Context) {
 		var data [][]float64
 		var ok bool
 		if recordDict[recordIdList[i]].SimulateType == "FmPy" {
-			GetResultRequestTime := &grpcPb.GetResultRequest{
-				Uuid:     recordIdList[i],
-				Variable: "time",
-			}
-			GetResultRequestVar := &grpcPb.GetResultRequest{
-				Uuid:     recordIdList[i],
-				Variable: item.Variable,
-			}
-			replyTime, err2 := grpcPb.Client.GetResult(grpcPb.Ctx, GetResultRequestTime)
-			replyVar, err2 := grpcPb.Client.GetResult(grpcPb.Ctx, GetResultRequestVar)
-			if err2 != nil {
-				fmt.Println("调用grpc服务(FmuSimulation)出错：", err2)
-				return
-			}
-			if replyVar.Log == "true" {
-				ok = true
-				reply1Data := make([]float64, len(replyTime.Data))
-				for i, v := range replyTime.Data {
-					reply1Data[i] = float64(v)
-				}
-				reply2Data := make([]float64, len(replyVar.Data))
-				for i, v := range replyVar.Data {
-					reply2Data[i] = float64(v)
-				}
-				data = append(data, reply1Data)
-				data = append(data, reply2Data)
-			} else {
-				fmt.Println(replyVar.Log)
-				c.JSON(http.StatusBadRequest, replyVar.Log)
-				return
-			}
+			data, ok = service.ReadSimulationResultFromGrpc(recordIdList[i], item.Variable)
 		} else {
 			data, ok = service.ReadSimulationResult([]string{item.Variable}, recordDict[recordIdList[i]].SimulateModelResultPath+"result_res.mat")
 		}

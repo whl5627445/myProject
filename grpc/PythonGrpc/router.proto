@@ -53,7 +53,7 @@ message GetResultRequest{
 }
 message GetResultReply{
     string log = 1;
-    repeated float data=2;
+    repeated double data=2;
 
 }
 
