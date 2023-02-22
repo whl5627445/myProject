@@ -1,7 +1,6 @@
 package API
 
 import (
-	"encoding/json"
 	"fmt"
 	"math"
 	"net/http"
@@ -615,30 +614,7 @@ func ExperimentParametersView(c *gin.Context) {
 	var record DataBaseModel.YssimExperimentRecord
 	DB.Where("id =?", experimentId).First(&record)
 
-	var componentValue map[string]interface{}
-	var parametersData []map[string]interface{}
-	jData, _ := record.ModelVarData.MarshalJSON()
-	json.Unmarshal(jData, &componentValue)
-	finalAttributesStr, ok := componentValue["final_attributes_str"]
-	if ok {
-		for k, v := range finalAttributesStr.(map[string]interface{}) {
-			typeArray, ok := v.([]interface{})
-			if ok {
-				data := map[string]interface{}{
-					"name":         k,
-					"defaultvalue": typeArray[0].(string),
-				}
-				parametersData = append(parametersData, data)
-			} else {
-				data := map[string]interface{}{
-					"name":         k,
-					"defaultvalue": v,
-				}
-				parametersData = append(parametersData, data)
-			}
-		}
-	}
 	var res responseData
-	res.Data = map[string]interface{}{"parameters": parametersData}
+	res.Data = record.ModelVarData
 	c.JSON(http.StatusOK, res)
 }
