@@ -320,7 +320,7 @@ func ModelSimulate(task *SimulateTask) {
 			log.Println("json2map filed!")
 		}
 	}
-	FilePath := "public/tmp/simulateModelFile" + strconv.FormatInt(time.Now().Unix(), 10) + ".mo"
+	FilePath := "public/tmp/simulateModelFile/" + task.SRecord.Username + "/" + time.Now().Local().Format("20060102150405") + "/" + task.SRecord.SimulateModelName + ".mo"
 
 	MessageNotice(map[string]string{"message": task.SRecord.SimulateModelName + " 模型开始编译"})
 	sResult := true

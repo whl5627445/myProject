@@ -3,6 +3,7 @@ package service
 import (
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -32,11 +33,16 @@ func GetModelCode(modelName string) string {
 
 // SaveModelCode 手动写入文件的形式将模型源码保存的到对应文件，并发不安全
 func SaveModelCode(modelName, path string) bool {
-	filesList, _ := ioutil.ReadDir("./")
+	pathList := strings.Split(path, "/")
+	numPath := strings.Join(pathList[:len(pathList)-1], "/")
+	filesList, _ := ioutil.ReadDir(numPath)
 	num := strconv.Itoa(len(filesList))
-	err := os.Rename(path, path+".old"+num)
-	if err != nil {
-		return false
+	if len(filesList) != 0 {
+		err := os.Rename(path, path+".old"+num)
+		if err != nil {
+			log.Println("重命名文件结果", err)
+			return false
+		}
 	}
 	codeData := GetModelCode(modelName)
 	ok := fileOperation.WriteFile(path, codeData)
