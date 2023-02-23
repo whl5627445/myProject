@@ -196,7 +196,7 @@ if __name__ == '__main__':
     # 启动 rpc 服务
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     router_pb2_grpc.add_GreeterServicer_to_server(Greeter(), server)
-    server.add_insecure_port('0.0.0.0:4444')
+    server.add_insecure_port('0.0.0.0:50051')
     initOmc()
     print("服务开启成功！")
     server.start()
