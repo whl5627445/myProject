@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	address = "grpc:4444"
+	address = "fmpy_grpc:50051"
 )
 
 func StartGrpc() (GreeterClient, context.Context) {
