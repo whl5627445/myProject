@@ -137,6 +137,10 @@ if __name__ == '__main__':
                 for i in request.Vars:
                     resDict[i] = res[i].tolist()
                 df = pd.DataFrame(resDict)
+                dirnamePath = os.path.dirname(adsPath+request.newFileName)
+                if not os.path.exists(dirnamePath):
+                    print("创建csv路径", dirnamePath)
+                    os.makedirs(dirnamePath)
                 df.to_csv(adsPath+request.newFileName, index=False, encoding='utf-8')
                 return router_pb2.SaveFilterResultToCsvReply(ok=True)
             else:
