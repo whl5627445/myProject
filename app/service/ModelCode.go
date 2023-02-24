@@ -75,7 +75,10 @@ func PackageFileParse(fileName, saveFilePath, zipPackagePath string, file io.Rea
 		if err != nil {
 			return "", false
 		}
-		saveFilePath, _ = fileOperation.FindFile("package.mo", saveFilePath)
+		saveFilePath, err = fileOperation.FindFile("package.mo", saveFilePath)
+		if err != nil {
+			return "", false
+		}
 		packagePath = saveFilePath + "/package.mo"
 	}
 	packageName, ok := omc.OMC.ParseFile(packagePath)

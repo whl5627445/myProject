@@ -2,23 +2,28 @@ package service
 
 import (
 	"strings"
+	"yssim-go/app/DataBaseModel"
 	"yssim-go/library/omc"
 )
 
-func SearchModel(keyWords, parentNode string) []interface{} {
-	var modelNameList []interface{}
+func SearchModel(model DataBaseModel.YssimModels, keyWords, parentNode string) []map[string]interface{} {
+	var modelNameList []map[string]interface{}
 	var nodeNames []string
 	searchModelMap := map[string]bool{}
 	words := strings.ToLower(keyWords)
 	parentNodePackageList := strings.Split(parentNode, ".")
 
 	if parentNode == "" {
-		nodeNames = omc.OMC.GetPackages()
+		nodeNames = append(nodeNames, model.PackageName)
 	} else {
 		nodeNames = omc.OMC.GetClassNames(parentNode, false)
 	}
 	for i := 0; i < len(nodeNames); i++ {
-		modelNames := omc.OMC.GetClassNames(parentNode+"."+nodeNames[i], true)
+		n := nodeNames[i]
+		if parentNode != "" {
+			n = parentNode + "." + nodeNames[i]
+		}
+		modelNames := omc.OMC.GetClassNames(n, true)
 		for _, name := range modelNames {
 			wordsIndex := strings.Index(strings.ToLower(name), words)
 			if wordsIndex != -1 {
@@ -32,14 +37,15 @@ func SearchModel(keyWords, parentNode string) []interface{} {
 				_, ok := searchModelMap[nameParent]
 				if !ok {
 					searchModelMap[nameParent] = true
-
 					modelType := omc.OMC.GetClassRestriction(nameParent)
 					data := map[string]interface{}{
-						"name":       shortName,
-						"model_name": nameParent,
-						"haschild":   false,
-						"type":       modelType,
-						"image":      "",
+						"name":         shortName,
+						"model_name":   nameParent,
+						"haschild":     false,
+						"type":         modelType,
+						"image":        "",
+						"package_id":   model.ID,
+						"package_name": model.PackageName,
 					}
 					childList := omc.OMC.GetClassNames(nameParent, false)
 					if len(childList) > 0 {

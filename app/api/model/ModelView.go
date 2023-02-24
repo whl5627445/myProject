@@ -952,13 +952,25 @@ func SearchModelView(c *gin.Context) {
 	/*
 		# 搜索模型
 	*/
-
+	username := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
 	keywords := c.Query("keywords")
 	parent := c.Query("parent")
 	var res responseData
-	modelNameList := service.SearchModel(keywords, parent)
-	res.Data = modelNameList
-
+	var data []map[string]interface{}
+	var packageModel []DataBaseModel.YssimModels
+	if parent != "" {
+		namesList := strings.Split(parent, ".")
+		packageName := namesList[0]
+		DB.Where("package_name = ? AND sys_or_user IN ? AND userspace_id IN ?", packageName, []string{"sys", username}, []string{"0", userSpaceId}).Find(&packageModel)
+	} else {
+		DB.Where("sys_or_user IN ? AND userspace_id IN ?", []string{"sys", username}, []string{"0", userSpaceId}).Find(&packageModel)
+	}
+	for _, model := range packageModel {
+		modelNameList := service.SearchModel(model, keywords, parent)
+		data = append(data, modelNameList...)
+	}
+	res.Data = data
 	c.JSON(http.StatusOK, res)
 }
 

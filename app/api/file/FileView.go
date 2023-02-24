@@ -90,7 +90,7 @@ func UploadModelPackageView(c *gin.Context) {
 		}
 	}
 	service.DeleteLibrary(packageName)
-	res.Err = "模型包解析失败,存在语法错误，请检查后重新上传"
+	res.Err = "模型包解析失败, 压缩包只适用于多层级package，单文件请上传mo文件。"
 	res.Status = 2
 	c.JSON(http.StatusOK, res)
 
