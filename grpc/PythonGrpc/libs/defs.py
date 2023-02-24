@@ -14,11 +14,11 @@ def buildFMU(moPath, className, userName, resPath):
     #     return False
     adsPath = "/home/simtek/code/"
     fileNamePrefix = userName + time.strftime('%H%M%S', time.localtime(time.time()))
-
+    print(moPath, className, userName, resPath)
     if moPath == "":  # 如果是系统模型,直接导出fmu
         fmuPath = omc.buildModelFmu(className=className, fileNamePrefix=fileNamePrefix)
         if fmuPath == "":
-            print("导出fmu" + className + "失败！")
+            print("moPath为空被判定为系统模型，导出fmu" + className + "失败！")
             return False
     else:             # 如果不是系统模型，先判断mo文件是否存在，再加载mo文件，导出fmu，卸载模型
         if os.path.exists(adsPath + moPath):
@@ -32,7 +32,7 @@ def buildFMU(moPath, className, userName, resPath):
         fmuPath = omc.buildModelFmu(className=className, fileNamePrefix=fileNamePrefix)
         print("fmupath:", fmuPath)
         if fmuPath == "":
-            print("导出fmu" + className + "失败！")
+            print("moPath不为空被判定为用户模型，导出fmu" + className + "失败！")
             return False
         if not omc.deleteClass(className):
             print("卸载" + className + "失败！")
