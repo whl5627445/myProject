@@ -1,27 +1,16 @@
 import time
 from fmpy.fmi2 import fmi2Warning
-from db_config.config import Session, YssimSimulateRecords
+from config.db_config import Session, YssimSimulateRecords
 from fmpy import *
 import zarr
 from multiprocessing import Process
+from config.redis_config import R
+import json
 
 
 def TimeStampToTime(timestamp):
     timeStruct = time.localtime(timestamp)
     return time.strftime('%Y-%m-%d %H:%M:%S', timeStruct)
-
-
-# def updateDb(uuid, log, state, processStartTime, processRunTime):
-#     with Session() as session:
-#         processDetails = session.query(YssimSimulateRecords).filter(YssimSimulateRecords.uuid == uuid).first()
-#         if processDetails:
-#             # processDetails.progress = progress
-#             # processDetails.exception = exception
-#             processDetails.simulate_result_str = log
-#             processDetails.simulate_status = state
-#             processDetails.simulate_start_time = processStartTime
-#             processDetails.simulate_end_time = processRunTime
-#             session.commit()
 
 
 def saveZarr(path, ojb):
@@ -40,10 +29,7 @@ class MyProcess(Process):
         self.progress1 = 0
         self.simulateRes = None
         self.managerResDict = managerResDict
-
         self.resPath = request.resPath+"zarr_res.zarr"
-        # updateDb(uuid=self.uuid, progress=self.progress1, exception=0, log=self.AllLogTxt,
-        #          state="初始化", processStartTime=None, processRunTime=None)
         with Session() as session:
             processDetails = session.query(YssimSimulateRecords).filter(YssimSimulateRecords.id == self.uuid).first()
             if processDetails:
@@ -53,22 +39,9 @@ class MyProcess(Process):
     def stepFinished(self, running_time, recorder):
         self.simulateRes = recorder.result()
         self.managerResDict[self.uuid] = recorder.result()
-        # saveZarr(os.path.join(self.resFilePath, "result_res.zarr"), self.simulateRes)
-
         progress2 = int((running_time / self.request.stopTime) * 100)
-
         if progress2 > self.progress1:
             self.progress1 = progress2
-            # with open("log.txt", "a+") as f:
-            #     f.write(str(self.progress1) + "%" + '\t')
-            #     if progress2 == 100:
-            #         f.write('\n')
-
-        # if self.progress1 == 100:
-        #     stateString = "运行结束"
-        # else:
-        #     stateString = "正在运行"
-
         return True
 
     # 信息日志输出
@@ -83,21 +56,18 @@ class MyProcess(Process):
         else:
             level = '(info)'
         logTxt = level + "  " + message.decode('utf-8')
-        # with open("log.txt", "a+") as ff:
-        #     ff.write(logTxt)
         self.AllLogTxt += logTxt
 
     def run(self):
         self.processStartTime = time.time()
         try:
             print("开始仿真")
+            json_data = {"message": self.request.className + " 开始仿真"}
+            R.lpush(self.request.userName+"_"+"notification", json.dumps(json_data))
             time1 = time.time()
             self.outputs = [v.name for v in read_model_description(self.newFmuPath).modelVariables]
             time2 = time.time()
             print("读取变量耗时：", time2 - time1)
-            # updateDb(uuid=self.uuid, progress=self.progress1, exception=0, log=self.AllLogTxt,
-            #          state="正在运行", processStartTime=TimeStampToTime(self.processStartTime),
-            #          processRunTime=TimeStampToTime(time.time()))
             with Session() as session:
                 processDetails = session.query(YssimSimulateRecords).filter(
                     YssimSimulateRecords.id == self.uuid).first()
@@ -121,10 +91,8 @@ class MyProcess(Process):
         except Exception as e:
             log = "(error)" + str(e)
             print(log)
-            # updateDb(uuid=self.uuid, progress=self.progress1, exception=1, log=self.AllLogTxt + log,
-            #          state="运行结束", processStartTime=TimeStampToTime(self.processStartTime),
-            #          processRunTime=TimeStampToTime(time.time()))
-
+            json_data = {"message": self.request.className + log}
+            R.lpush(self.request.userName+"_"+"notification", json.dumps(json_data))
             with Session() as session:
                 processDetails = session.query(YssimSimulateRecords).filter(
                     YssimSimulateRecords.id == self.uuid).first()
@@ -137,10 +105,9 @@ class MyProcess(Process):
                     session.commit()
 
         else:
-            # updateDb(uuid=self.uuid, progress=self.progress1, exception=0, log=self.AllLogTxt,
-            #          state="运行结束", processStartTime=TimeStampToTime(self.processStartTime),
-            #          processRunTime=TimeStampToTime(time.time()))
             print("运行正常结束。")
+            json_data = {"message": self.request.className + " 模型仿真完成"}
+            R.lpush(self.request.userName+"_"+"notification", json.dumps(json_data))
             with Session() as session:
                 processDetails = session.query(YssimSimulateRecords).filter(
                     YssimSimulateRecords.id == self.uuid).first()

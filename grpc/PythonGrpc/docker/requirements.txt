@@ -12,3 +12,4 @@ pyparsing
 zmq
 dymat
 scipy
+redis

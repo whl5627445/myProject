@@ -6,7 +6,7 @@ from libs.defs import getSate, suspendProcess, resumeProcess, killProcess, initO
 from libs.FmpySimulation import MyProcess
 import threading
 import zarr
-from db_config.config import Session, YssimSimulateRecords
+from config.db_config import Session, YssimSimulateRecords
 import time
 import grpc
 import router_pb2

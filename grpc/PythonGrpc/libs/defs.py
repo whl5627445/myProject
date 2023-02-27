@@ -5,8 +5,8 @@ import psutil
 import zipfile
 import os
 
-from db_config.omc import omc
-from db_config.config import Session, YssimSimulateRecords
+from config.omc import omc
+from config.db_config import Session, YssimSimulateRecords
 
 
 def buildFMU(moPath, className, userName, resPath):
