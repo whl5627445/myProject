@@ -128,6 +128,7 @@ func ModelSimulateView(c *gin.Context) {
 		NumberOfIntervals: item.NumberOfIntervals,
 		Tolerance:         item.Tolerance,
 		ExperimentId:      item.ExperimentId,
+		Intervals:         item.Interval,
 	}
 	err = DB.Create(&record).Error
 	if err != nil {

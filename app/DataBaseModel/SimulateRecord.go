@@ -26,6 +26,7 @@ type YssimSimulateRecord struct {
 	Method                  string         `gorm:"column:method;default:\"\""`
 	SimulateType            string         `gorm:"column:simulate_type;default:\"\""`
 	NumberOfIntervals       string         `gorm:"column:number_intervals;default:\"\""`
+	Intervals               string         `gorm:"column:intervals;default:\"\""`
 	StepSize                string         `gorm:"column:step_size;default:\"\""`
 	Tolerance               string         `gorm:"column:tolerance;default:\"\""`
 	Solver                  string         `gorm:"column:solver;default:\"\""`

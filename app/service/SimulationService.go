@@ -265,8 +265,8 @@ func fmpySimulate(task *SimulateTask, resultFilePath string, SimulationPraData m
 
 	finalTime, _ := strconv.ParseFloat(SimulationPraData["stopTime"], 64)
 	startTime, _ := strconv.ParseFloat(SimulationPraData["startTime"], 64)
-	numberOfIntervals, _ := strconv.Atoi(SimulationPraData["numberOfIntervals"])
 	tolerance, _ := strconv.ParseFloat(SimulationPraData["tolerance"], 64)
+	interval, _ := strconv.ParseFloat(task.SRecord.Intervals, 64)
 	//if err != nil {
 	//	log.Printf("数据转换失败: %s", err)
 	//	return false
@@ -276,11 +276,11 @@ func fmpySimulate(task *SimulateTask, resultFilePath string, SimulationPraData m
 		MoPath:         task.Package.FilePath,
 		ClassName:      task.SRecord.SimulateModelName,
 		UserName:       task.SRecord.Username,
-		StartTime:      float32(startTime),
-		StopTime:       float32(finalTime),
+		StartTime:      startTime,
+		StopTime:       finalTime,
 		ResPath:        resultFilePath,
-		OutputInterval: float32(finalTime / float64(numberOfIntervals)),
-		Tolerance:      float32(tolerance),
+		OutputInterval: interval,
+		Tolerance:      tolerance,
 	} // 构造请求体
 	FmuSimulationRes, err := grpcPb.Client.FmuSimulation(grpcPb.Ctx, FmuSimulationRequestTest) // 调用grpc服务
 
