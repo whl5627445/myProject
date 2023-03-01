@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"encoding/xml"
 	"fmt"
+	"github.com/beevik/etree"
 	"log"
 	"os"
 	"strconv"
@@ -209,6 +210,100 @@ func SimulationResultTree(path, parent, keyWords string) []map[string]interface{
 
 			}
 
+		}
+	}
+	return dataList
+}
+
+func getVarXml(orderedVariables *etree.Element, parent string, keyWords string, id int, nameMap map[string]bool) ([]map[string]interface{}, int, map[string]bool) {
+	var dataList []map[string]interface{}
+	parentName := ""
+	if parent != "" {
+		parentName = parent + "."
+	}
+	if orderedVariables != nil {
+		for _, variable := range orderedVariables.SelectElements("variable") {
+			//if variable.SelectAttrValue("type", "") != "Real" {
+			//	continue
+			//}
+			name := variable.SelectAttrValue("name", "")
+			var splitName []string
+			trimPrefixName := strings.TrimPrefix(name, parent+".")
+			if strings.HasPrefix(name, parentName) && strings.Contains(strings.ToLower(name), strings.ToLower(keyWords)) {
+				if !strings.HasPrefix(name, "der(") && !strings.HasPrefix(name, "$") {
+					splitName = strings.Split(trimPrefixName, ".")
+				} else {
+					continue
+				}
+				displayUnitString := ""
+				unitString := ""
+				startString := ""
+				if attributesValues := variable.SelectElement("attributesValues"); attributesValues != nil {
+					if displayUnit := attributesValues.SelectElement("displayUnit"); displayUnit != nil {
+						displayUnitString = displayUnit.SelectAttrValue("string", "")
+					}
+					if unit := attributesValues.SelectElement("unit"); unit != nil {
+						unitString = unit.SelectAttrValue("string", "")
+					}
+				}
+				if bindExpression := variable.SelectElement("bindExpression"); bindExpression != nil {
+					startString = bindExpression.SelectAttrValue("string", "")
+				}
+				if !nameMap[splitName[0]] {
+					data := map[string]interface{}{
+						"variables":    splitName[0],
+						"description":  variable.SelectAttrValue("comment", ""),
+						"display_unit": displayUnitString,
+						"has_child":    false,
+						"id":           id,
+						"start":        startString,
+						"unit":         unitString,
+					}
+					if len(splitName) > 1 {
+						data["has_child"] = true
+						data["unit"] = ""
+						data["display_unit"] = ""
+					}
+					id += 1
+					nameMap[splitName[0]] = true
+					dataList = append(dataList, data)
+				}
+			}
+		}
+	}
+	return dataList, id, nameMap
+}
+
+func FmpySimulationResultTree(path, parent, keyWords string) []map[string]interface{} {
+	doc := etree.NewDocument()
+	if err := doc.ReadFromFile(path); err != nil {
+		log.Printf("解析%v失败, Error------>%v", path, err)
+		return nil
+	}
+	id := 0
+	var dataList []map[string]interface{}
+	nameMap := map[string]bool{}
+	variables := doc.SelectElement("dae").SelectElement("variables")
+	if orderedVariables := variables.SelectElement("orderedVariables"); orderedVariables != nil {
+		if variablesList := orderedVariables.SelectElement("variablesList"); variablesList != nil {
+			dataList1, id1, nameMap1 := getVarXml(variablesList, parent, keyWords, id, nameMap)
+			dataList = append(dataList, dataList1...)
+			id = id1
+			nameMap = nameMap1
+		}
+	}
+	if knownVariables := variables.SelectElement("knownVariables"); knownVariables != nil {
+		if variablesList := knownVariables.SelectElement("variablesList"); variablesList != nil {
+			dataList2, id2, nameMap2 := getVarXml(variablesList, parent, keyWords, id, nameMap)
+			dataList = append(dataList, dataList2...)
+			id = id2
+			nameMap = nameMap2
+		}
+	}
+	if aliasVariables := variables.SelectElement("aliasVariables"); aliasVariables != nil {
+		if variablesList := aliasVariables.SelectElement("variablesList"); variablesList != nil {
+			dataList3, _, _ := getVarXml(variablesList, parent, keyWords, id, nameMap)
+			dataList = append(dataList, dataList3...)
 		}
 	}
 	return dataList

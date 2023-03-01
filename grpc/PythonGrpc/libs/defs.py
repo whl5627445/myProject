@@ -20,7 +20,7 @@ def buildFMU(moPath, className, userName, resPath):
         if fmuPath == "":
             print("moPath为空被判定为系统模型，导出fmu" + className + "失败！")
             return False
-    else:             # 如果不是系统模型，先判断mo文件是否存在，再加载mo文件，导出fmu，卸载模型
+    else:  # 如果不是系统模型，先判断mo文件是否存在，再加载mo文件，导出fmu，卸载模型
         if os.path.exists(adsPath + moPath):
             print("mo文件存在:", adsPath + moPath)
         else:
@@ -39,18 +39,19 @@ def buildFMU(moPath, className, userName, resPath):
             return False
     try:
         newFmuPath = adsPath + resPath + className.replace(".", "_") + ".fmu"
-        copyPath = shutil.copy(fmuPath, newFmuPath)
-        movePath = shutil.move(fmuPath, newFmuPath + ".zip")
-        zip_file = zipfile.ZipFile(movePath)
-        zip_file.extractall(adsPath + resPath)
-        zip_file.close()
-        os.rename(adsPath + resPath + "modelDescription.xml", adsPath + resPath + "result_init.xml")
+        shutil.move(fmuPath, newFmuPath)
+        # copyPath = shutil.copy(fmuPath, newFmuPath)
+        # movePath = shutil.move(fmuPath, newFmuPath + ".zip")
+        # zip_file = zipfile.ZipFile(movePath)
+        # zip_file.extractall(adsPath + resPath)
+        # zip_file.close()
+        # os.rename(adsPath + resPath + "modelDescription.xml", adsPath + resPath + "result_init.xml")
         dirname = os.path.dirname(fmuPath)
         for filename in os.listdir(dirname):
             if filename.startswith(fileNamePrefix):
-                os.remove(os.path.join(dirname, filename))
-                print("删除文件：", filename)
-    except:
+                shutil.move(os.path.join(dirname, filename), adsPath + resPath + filename)
+                print("移动文件：", filename)
+    except Exception as e:
         return False
     return newFmuPath
 
@@ -63,12 +64,13 @@ def initOmc():
     print("SolarPower初始化:", omc.sendExpression("loadModel(SolarPower, {\"\"},true,\"\",false)"))
     print("WindPowerSystem初始化:", omc.sendExpression("loadModel(WindPowerSystem, {\"\"},true,\"\",false)"))
     fmuPath = omc.buildModelFmu(className="Modelica.Blocks.Examples.PID_Controller", fileNamePrefix="xxx")
-    print("testBuildFMU:",fmuPath )
+    print("testBuildFMU:", fmuPath)
     dirname = os.path.dirname(fmuPath)
     for filename in os.listdir(dirname):
         if filename.startswith("xxx"):
             os.remove(os.path.join(dirname, filename))
             print("删除文件：", filename)
+
 
 # def TimeStampToTime(timestamp):
 #     timeStruct = time.localtime(timestamp)

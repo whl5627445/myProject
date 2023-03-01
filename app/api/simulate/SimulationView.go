@@ -3,8 +3,10 @@ package API
 import (
 	"math"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
+	"yssim-go/library/omc"
 	"yssim-go/library/timeConvert"
 
 	"github.com/gin-gonic/gin"
@@ -391,8 +393,20 @@ func SimulateResultTreeView(c *gin.Context) {
 
 	var res responseData
 	if record.SimulateModelResultPath != "" && record.SimulateStart == false {
-		result := service.SimulationResultTree(record.SimulateModelResultPath+"result_init.xml", parentNode, keyWords)
-		res.Data = result
+		if record.SimulateType == "FmPy" {
+			_, err := os.Stat(record.SimulateModelResultPath + "result_init_fmpy.xml")
+			if os.IsNotExist(err) {
+				if res := omc.OMC.DumpXMLDAE(record.SimulateModelName); res[0].(string) == "true" {
+					os.Rename(res[1].(string), record.SimulateModelResultPath+"result_init_fmpy.xml")
+				}
+			}
+			result := service.FmpySimulationResultTree(record.SimulateModelResultPath+"result_init_fmpy.xml", parentNode, keyWords)
+			res.Data = result
+		} else {
+			result := service.SimulationResultTree(record.SimulateModelResultPath+"result_init.xml", parentNode, keyWords)
+			res.Data = result
+		}
+
 	} else {
 		res.Err = "查询失败"
 		res.Status = 2
