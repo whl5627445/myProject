@@ -350,6 +350,7 @@ func CopyClassView(c *gin.Context) {
 	result, msg := service.SaveModel(item.ModelName, item.CopiedClassName, item.ParentName, packageName, "copy", filePath)
 	if result {
 		res.Msg = msg
+		data := map[string]string{}
 		if item.ParentName == "" {
 			model := DataBaseModel.YssimModels{
 				ID:          uuid.New().String(),
@@ -363,12 +364,14 @@ func CopyClassView(c *gin.Context) {
 				log.Println("err：", err)
 				log.Println("复制模型失败")
 			}
-			data := map[string]string{}
-			data["id"] = model.ID
-			data["model_name"] = model.PackageName
-			res.Data = data
-		}
 
+			data["id"] = model.ID
+			data["model_name"] = item.ModelName
+		} else {
+			data["id"] = packageModel.ID
+			data["model_name"] = item.ParentName + "." + item.ModelName
+		}
+		res.Data = data
 	} else {
 		res.Msg = msg
 		res.Status = 2

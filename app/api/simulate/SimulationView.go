@@ -1,7 +1,6 @@
 package API
 
 import (
-	"log"
 	"math"
 	"net/http"
 	"os"
@@ -200,7 +199,6 @@ func SimulateResultGraphicsView(c *gin.Context) {
 			data, ok = service.ReadSimulationResult([]string{item.Variable}, recordDict[recordIdList[i]].SimulateModelResultPath+"result_res.mat")
 		}
 		unitsData := service.ConvertUnits(item.S2, item.S1)
-		log.Print("unitsData", unitsData)
 		if ok {
 			ordinate := data[1]
 			abscissa := data[0]
@@ -213,7 +211,7 @@ func SimulateResultGraphicsView(c *gin.Context) {
 					a := []float64{}
 					for s := 0; s < len(ordinate); s++ {
 						index := s * step
-						if index >= len(ordinate) {
+						if index >= 1000 {
 							break
 						}
 						o = append(o, data[1][index])
