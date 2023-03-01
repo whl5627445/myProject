@@ -240,10 +240,10 @@ func getVarXml(orderedVariables *etree.Element, parent string, keyWords string, 
 				startString := ""
 				if attributesValues := variable.SelectElement("attributesValues"); attributesValues != nil {
 					if displayUnit := attributesValues.SelectElement("displayUnit"); displayUnit != nil {
-						displayUnitString = displayUnit.SelectAttrValue("string", "")
+						displayUnitString = strings.Replace(displayUnit.SelectAttrValue("string", ""), "\"", "", -1)
 					}
 					if unit := attributesValues.SelectElement("unit"); unit != nil {
-						unitString = unit.SelectAttrValue("string", "")
+						unitString = strings.Replace(unit.SelectAttrValue("string", ""), "\"", "", -1)
 					}
 				}
 				if bindExpression := variable.SelectElement("bindExpression"); bindExpression != nil {
