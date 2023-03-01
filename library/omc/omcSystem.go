@@ -107,8 +107,8 @@ func (o *ZmqObject) BuildModel(className, fileNamePrefix string, simulateParamet
 	return false
 }
 
-// Clear 清空加载的模型库， 设置OMC的命令行选项
-func (o *ZmqObject) Clear() {
+// SetOptions 清空加载的模型库， 设置OMC的命令行选项
+func (o *ZmqObject) SetOptions() {
 	//o.SendExpressionNoParsed("clearCommandLineOptions()")
 	//o.SendExpressionNoParsed("clear()")
 	//o.SendExpressionNoParsed("clearVariables()")
@@ -827,7 +827,7 @@ func (o *ZmqObject) UriToFilename(uri string) string {
 
 // ConvertUnits 单位转换
 func (o *ZmqObject) ConvertUnits(s1, s2 string) []interface{} {
-	cmd := "convertUnits(\"" + s1 + "\",\"" + s2 + "\")"
+	cmd := "convertUnits(" + s1 + "," + s2 + ")"
 	data, _ := o.SendExpression(cmd)
 	return data
 }

@@ -358,12 +358,17 @@ func CopyClassView(c *gin.Context) {
 				FilePath:    filePath,
 				UserSpaceId: userSpaceId,
 			}
-			err := DB.Create(&model).Error
+			err = DB.Create(&model).Error
 			if err != nil {
 				log.Println("err：", err)
 				log.Println("复制模型失败")
 			}
+			data := map[string]string{}
+			data["id"] = model.ID
+			data["model_name"] = model.PackageName
+			res.Data = data
 		}
+
 	} else {
 		res.Msg = msg
 		res.Status = 2
@@ -466,7 +471,6 @@ func AddModelComponentView(c *gin.Context) {
 		res.Err = msg
 		res.Status = 2
 	} else {
-		go service.SaveModelToFile(modelPackage.PackageName, modelPackage.FilePath)
 		res.Msg = "新增组件成功"
 	}
 	c.JSON(http.StatusOK, res)
@@ -595,7 +599,7 @@ func CreateConnectionAnnotationView(c *gin.Context) {
 
 func UpdateConnectionNamesView(c *gin.Context) {
 	/*
-		# 创建模型当中的组件连线
+		# 更新模型当中的组件连线
 		## package_id： 包id
 		## model_name：在哪个模型修改，模型全称
 		## from_name：连线起点， 输出点， 例如"sum1.y"
