@@ -36,7 +36,7 @@ func inheritanceModelNameFixes(copiedClassName, className string) {
 		modelNameAll := omc.OMC.GetClassNames(parentName, true)
 		for _, name := range modelNameAll {
 			for c := 0; c < len(inheritedClasses); c++ {
-				if strings.HasSuffix(name, inheritedClasses[c]) && name != inheritedClasses[c] {
+				if strings.HasSuffix(name, "."+inheritedClasses[c]) && name != inheritedClasses[c] {
 					inheritedFixesMap[inheritedClasses[c]] = map[string]string{"name": name}
 					inheritedFixesMap[inheritedClasses[c]]["type"] = ""
 					inheritedClasses = append(inheritedClasses[:c], inheritedClasses[c+1:]...)
@@ -58,7 +58,7 @@ func inheritanceModelNameFixes(copiedClassName, className string) {
 		for _, name := range modelNameAll {
 			for k, fixesModelData := range componentNameFixesMap {
 				fixesName := fixesModelData[2].(string)
-				if strings.HasSuffix(name, fixesName) && name != k {
+				if strings.HasSuffix(name, "."+fixesName) && name != k {
 					componentFixesMap[fixesName] = map[string]string{"name": name}
 					componentFixesMap[fixesName]["type"] = fixesModelData[10].(string)
 					delete(componentNameFixesMap, k)
