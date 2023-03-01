@@ -1065,3 +1065,14 @@ func (o *ZmqObject) ModelInstance(modelName string, ModelInstance *serviceType.M
 	}
 	return false
 }
+
+// DumpXMLDAE  生成result_init.xml文件
+func (o *ZmqObject) DumpXMLDAE(className string) []interface{} {
+	cmd := "dumpXMLDAE(" + className + ")"
+	result, ok := o.SendExpression(cmd)
+	if ok {
+		return result
+	}
+	return make([]interface{}, 2)
+
+}
