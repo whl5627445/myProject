@@ -77,7 +77,7 @@ func UploadModelPackageView(c *gin.Context) {
 				FilePath:    packagePathNew,
 				UserSpaceId: userSpaceId,
 			}
-			err := DB.Create(&packageRecord).Error
+			err = DB.Create(&packageRecord).Error
 			if err != nil {
 				res.Err = "上传失败，请重试"
 				res.Status = 2
@@ -90,7 +90,7 @@ func UploadModelPackageView(c *gin.Context) {
 		}
 	}
 	service.DeleteLibrary(packageName)
-	res.Err = "模型包解析失败, 压缩包只适用于多层级package，单文件请上传mo文件。"
+	res.Err = "未解析到模型库的“package.mo”文件, 压缩包只适用于多层级package，单文件请上传mo后缀的单文件。"
 	res.Status = 2
 	c.JSON(http.StatusOK, res)
 
@@ -226,7 +226,7 @@ func CreateModelPackageView(c *gin.Context) {
 			}
 			res.Msg = "创建成功"
 			res.Data = map[string]string{
-				"model_str": "",
+				"model_name": newPackage.PackageName,
 				//"model_str": service.GetModelCode(createPackageName),
 				"id": newPackage.ID,
 			}
@@ -338,6 +338,7 @@ func GetPackageFileView(c *gin.Context) {
 	DB.Where("id = ? AND sys_or_user = ?", item.PackageId, username).First(&packageRecord)
 	//c.JSON(http.StatusOK, res)
 	c.Header("content-disposition", `attachment; filename=`+packageRecord.PackageName+".mo")
+	service.SaveModelToFile(packageRecord.PackageName, packageRecord.FilePath)
 	c.File(packageRecord.FilePath)
 }
 
