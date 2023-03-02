@@ -16,7 +16,7 @@ type setSimulationOptionsData struct {
 	ModelName         string `json:"model_name" binding:"required"`
 	StartTime         string `json:"startTime" binding:"required"`
 	StopTime          string `json:"stopTime" binding:"required"`
-	Tolerance         string `json:"tolerance" binding:"required"`
+	Tolerance         string `json:"tolerance" binding:""`
 	NumberOfIntervals string `json:"numberOfIntervals" binding:"required"`
 	Interval          string `json:"interval" binding:"required"`
 }
