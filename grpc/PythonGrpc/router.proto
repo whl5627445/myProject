@@ -9,6 +9,7 @@ service Greeter {
   rpc SaveFilterResultToCsv(SaveFilterResultToCsvRequest) returns (SaveFilterResultToCsvReply) {}
   rpc MatToCsv(MatToCsvRequest) returns (MatToCsvReply) {}
   rpc ZarrToCsv(ZarrToCsvRequest) returns (ZarrToCsvReply) {}
+  rpc CheckVarExist(CheckVarExistRequest) returns (CheckVarExistReply) {}
 }
 
 message FmuSimulationRequest {
@@ -86,4 +87,12 @@ message ZarrToCsvRequest{
 }
 message ZarrToCsvReply{
   bool ok = 1;
+}
+
+message CheckVarExistRequest{
+  repeated string Names=1;
+  string Path=2;
+}
+message CheckVarExistReply{
+  map<string, bool> Res = 2;
 }

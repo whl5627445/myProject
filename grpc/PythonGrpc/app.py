@@ -182,6 +182,30 @@ if __name__ == '__main__':
             else:
                 return router_pb2.ZarrToCsvReply(ok=True)
 
+        def CheckVarExist(self,request, context):
+            time1 = time.time()
+            print("CheckVarExist被调用")
+            resMap = {}
+            zarrPath = os.path.dirname(adsPath+request.Path)+"/zarr_res.zarr"
+
+            if os.path.exists(zarrPath):
+                d = zarr.load(zarrPath)
+
+                if d is not None:
+                    for i in request.Names:
+                        if i in d.dtype.names:
+                            resMap[i] = True
+                        else:
+                            resMap[i] = False
+            else:
+                for i in request.Names:
+                    resMap[i] = True
+            time2 = time.time()
+            print("CheckVarExist耗时", time2-time1)
+            return router_pb2.CheckVarExistReply(Res=resMap)
+
+
+
     def action():
         while True:
             time.sleep(1)

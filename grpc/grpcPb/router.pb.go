@@ -939,6 +939,108 @@ func (x *ZarrToCsvReply) GetOk() bool {
 	return false
 }
 
+type CheckVarExistRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Names []string `protobuf:"bytes,1,rep,name=Names,proto3" json:"Names,omitempty"`
+	Path  string   `protobuf:"bytes,2,opt,name=Path,proto3" json:"Path,omitempty"`
+}
+
+func (x *CheckVarExistRequest) Reset() {
+	*x = CheckVarExistRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_router_proto_msgTypes[16]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *CheckVarExistRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CheckVarExistRequest) ProtoMessage() {}
+
+func (x *CheckVarExistRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_router_proto_msgTypes[16]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CheckVarExistRequest.ProtoReflect.Descriptor instead.
+func (*CheckVarExistRequest) Descriptor() ([]byte, []int) {
+	return file_router_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *CheckVarExistRequest) GetNames() []string {
+	if x != nil {
+		return x.Names
+	}
+	return nil
+}
+
+func (x *CheckVarExistRequest) GetPath() string {
+	if x != nil {
+		return x.Path
+	}
+	return ""
+}
+
+type CheckVarExistReply struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Res map[string]bool `protobuf:"bytes,2,rep,name=Res,proto3" json:"Res,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
+}
+
+func (x *CheckVarExistReply) Reset() {
+	*x = CheckVarExistReply{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_router_proto_msgTypes[17]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *CheckVarExistReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CheckVarExistReply) ProtoMessage() {}
+
+func (x *CheckVarExistReply) ProtoReflect() protoreflect.Message {
+	mi := &file_router_proto_msgTypes[17]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CheckVarExistReply.ProtoReflect.Descriptor instead.
+func (*CheckVarExistReply) Descriptor() ([]byte, []int) {
+	return file_router_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *CheckVarExistReply) GetRes() map[string]bool {
+	if x != nil {
+		return x.Res
+	}
+	return nil
+}
+
 var File_router_proto protoreflect.FileDescriptor
 
 var file_router_proto_rawDesc = []byte{
@@ -1035,7 +1137,19 @@ var file_router_proto_rawDesc = []byte{
 	0x1a, 0x0a, 0x08, 0x7a, 0x61, 0x72, 0x72, 0x50, 0x61, 0x74, 0x68, 0x18, 0x01, 0x20, 0x01, 0x28,
 	0x09, 0x52, 0x08, 0x7a, 0x61, 0x72, 0x72, 0x50, 0x61, 0x74, 0x68, 0x22, 0x20, 0x0a, 0x0e, 0x5a,
 	0x61, 0x72, 0x72, 0x54, 0x6f, 0x43, 0x73, 0x76, 0x52, 0x65, 0x70, 0x6c, 0x79, 0x12, 0x0e, 0x0a,
-	0x02, 0x6f, 0x6b, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x02, 0x6f, 0x6b, 0x32, 0x96, 0x04,
+	0x02, 0x6f, 0x6b, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x02, 0x6f, 0x6b, 0x22, 0x40, 0x0a,
+	0x14, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x56, 0x61, 0x72, 0x45, 0x78, 0x69, 0x73, 0x74, 0x52, 0x65,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x4e, 0x61, 0x6d, 0x65, 0x73, 0x18, 0x01,
+	0x20, 0x03, 0x28, 0x09, 0x52, 0x05, 0x4e, 0x61, 0x6d, 0x65, 0x73, 0x12, 0x12, 0x0a, 0x04, 0x50,
+	0x61, 0x74, 0x68, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x50, 0x61, 0x74, 0x68, 0x22,
+	0x7c, 0x0a, 0x12, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x56, 0x61, 0x72, 0x45, 0x78, 0x69, 0x73, 0x74,
+	0x52, 0x65, 0x70, 0x6c, 0x79, 0x12, 0x2e, 0x0a, 0x03, 0x52, 0x65, 0x73, 0x18, 0x02, 0x20, 0x03,
+	0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x56, 0x61, 0x72, 0x45, 0x78, 0x69,
+	0x73, 0x74, 0x52, 0x65, 0x70, 0x6c, 0x79, 0x2e, 0x52, 0x65, 0x73, 0x45, 0x6e, 0x74, 0x72, 0x79,
+	0x52, 0x03, 0x52, 0x65, 0x73, 0x1a, 0x36, 0x0a, 0x08, 0x52, 0x65, 0x73, 0x45, 0x6e, 0x74, 0x72,
+	0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03,
+	0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x08, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x32, 0xd5, 0x04,
 	0x0a, 0x07, 0x47, 0x72, 0x65, 0x65, 0x74, 0x65, 0x72, 0x12, 0x3d, 0x0a, 0x0d, 0x46, 0x6d, 0x75,
 	0x53, 0x69, 0x6d, 0x75, 0x6c, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x15, 0x2e, 0x46, 0x6d, 0x75,
 	0x53, 0x69, 0x6d, 0x75, 0x6c, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
@@ -1069,8 +1183,12 @@ var file_router_proto_rawDesc = []byte{
 	0x79, 0x22, 0x00, 0x12, 0x31, 0x0a, 0x09, 0x5a, 0x61, 0x72, 0x72, 0x54, 0x6f, 0x43, 0x73, 0x76,
 	0x12, 0x11, 0x2e, 0x5a, 0x61, 0x72, 0x72, 0x54, 0x6f, 0x43, 0x73, 0x76, 0x52, 0x65, 0x71, 0x75,
 	0x65, 0x73, 0x74, 0x1a, 0x0f, 0x2e, 0x5a, 0x61, 0x72, 0x72, 0x54, 0x6f, 0x43, 0x73, 0x76, 0x52,
-	0x65, 0x70, 0x6c, 0x79, 0x22, 0x00, 0x42, 0x0a, 0x5a, 0x08, 0x2e, 0x2f, 0x67, 0x72, 0x70, 0x63,
-	0x50, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x65, 0x70, 0x6c, 0x79, 0x22, 0x00, 0x12, 0x3d, 0x0a, 0x0d, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x56,
+	0x61, 0x72, 0x45, 0x78, 0x69, 0x73, 0x74, 0x12, 0x15, 0x2e, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x56,
+	0x61, 0x72, 0x45, 0x78, 0x69, 0x73, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x13,
+	0x2e, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x56, 0x61, 0x72, 0x45, 0x78, 0x69, 0x73, 0x74, 0x52, 0x65,
+	0x70, 0x6c, 0x79, 0x22, 0x00, 0x42, 0x0a, 0x5a, 0x08, 0x2e, 0x2f, 0x67, 0x72, 0x70, 0x63, 0x50,
+	0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1085,7 +1203,7 @@ func file_router_proto_rawDescGZIP() []byte {
 	return file_router_proto_rawDescData
 }
 
-var file_router_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
+var file_router_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
 var file_router_proto_goTypes = []interface{}{
 	(*FmuSimulationRequest)(nil),         // 0: FmuSimulationRequest
 	(*FmuSimulationReply)(nil),           // 1: FmuSimulationReply
@@ -1103,31 +1221,37 @@ var file_router_proto_goTypes = []interface{}{
 	(*MatToCsvReply)(nil),                // 13: MatToCsvReply
 	(*ZarrToCsvRequest)(nil),             // 14: ZarrToCsvRequest
 	(*ZarrToCsvReply)(nil),               // 15: ZarrToCsvReply
-	nil,                                  // 16: FmuSimulationRequest.ParamsEntry
+	(*CheckVarExistRequest)(nil),         // 16: CheckVarExistRequest
+	(*CheckVarExistReply)(nil),           // 17: CheckVarExistReply
+	nil,                                  // 18: FmuSimulationRequest.ParamsEntry
+	nil,                                  // 19: CheckVarExistReply.ResEntry
 }
 var file_router_proto_depIdxs = []int32{
-	16, // 0: FmuSimulationRequest.params:type_name -> FmuSimulationRequest.ParamsEntry
-	0,  // 1: Greeter.FmuSimulation:input_type -> FmuSimulationRequest
-	2,  // 2: Greeter.GetProcessStatus:input_type -> GetProcessStatusRequest
-	4,  // 3: Greeter.GetAllProcessNumber:input_type -> GetAllProcessNumberRequest
-	6,  // 4: Greeter.GetResult:input_type -> GetResultRequest
-	8,  // 5: Greeter.ProcessOperation:input_type -> ProcessOperationRequest
-	10, // 6: Greeter.SaveFilterResultToCsv:input_type -> SaveFilterResultToCsvRequest
-	12, // 7: Greeter.MatToCsv:input_type -> MatToCsvRequest
-	14, // 8: Greeter.ZarrToCsv:input_type -> ZarrToCsvRequest
-	1,  // 9: Greeter.FmuSimulation:output_type -> FmuSimulationReply
-	3,  // 10: Greeter.GetProcessStatus:output_type -> GetProcessStatusReply
-	5,  // 11: Greeter.GetAllProcessNumber:output_type -> GetAllProcessNumberReply
-	7,  // 12: Greeter.GetResult:output_type -> GetResultReply
-	9,  // 13: Greeter.ProcessOperation:output_type -> ProcessOperationReply
-	11, // 14: Greeter.SaveFilterResultToCsv:output_type -> SaveFilterResultToCsvReply
-	13, // 15: Greeter.MatToCsv:output_type -> MatToCsvReply
-	15, // 16: Greeter.ZarrToCsv:output_type -> ZarrToCsvReply
-	9,  // [9:17] is the sub-list for method output_type
-	1,  // [1:9] is the sub-list for method input_type
-	1,  // [1:1] is the sub-list for extension type_name
-	1,  // [1:1] is the sub-list for extension extendee
-	0,  // [0:1] is the sub-list for field type_name
+	18, // 0: FmuSimulationRequest.params:type_name -> FmuSimulationRequest.ParamsEntry
+	19, // 1: CheckVarExistReply.Res:type_name -> CheckVarExistReply.ResEntry
+	0,  // 2: Greeter.FmuSimulation:input_type -> FmuSimulationRequest
+	2,  // 3: Greeter.GetProcessStatus:input_type -> GetProcessStatusRequest
+	4,  // 4: Greeter.GetAllProcessNumber:input_type -> GetAllProcessNumberRequest
+	6,  // 5: Greeter.GetResult:input_type -> GetResultRequest
+	8,  // 6: Greeter.ProcessOperation:input_type -> ProcessOperationRequest
+	10, // 7: Greeter.SaveFilterResultToCsv:input_type -> SaveFilterResultToCsvRequest
+	12, // 8: Greeter.MatToCsv:input_type -> MatToCsvRequest
+	14, // 9: Greeter.ZarrToCsv:input_type -> ZarrToCsvRequest
+	16, // 10: Greeter.CheckVarExist:input_type -> CheckVarExistRequest
+	1,  // 11: Greeter.FmuSimulation:output_type -> FmuSimulationReply
+	3,  // 12: Greeter.GetProcessStatus:output_type -> GetProcessStatusReply
+	5,  // 13: Greeter.GetAllProcessNumber:output_type -> GetAllProcessNumberReply
+	7,  // 14: Greeter.GetResult:output_type -> GetResultReply
+	9,  // 15: Greeter.ProcessOperation:output_type -> ProcessOperationReply
+	11, // 16: Greeter.SaveFilterResultToCsv:output_type -> SaveFilterResultToCsvReply
+	13, // 17: Greeter.MatToCsv:output_type -> MatToCsvReply
+	15, // 18: Greeter.ZarrToCsv:output_type -> ZarrToCsvReply
+	17, // 19: Greeter.CheckVarExist:output_type -> CheckVarExistReply
+	11, // [11:20] is the sub-list for method output_type
+	2,  // [2:11] is the sub-list for method input_type
+	2,  // [2:2] is the sub-list for extension type_name
+	2,  // [2:2] is the sub-list for extension extendee
+	0,  // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_router_proto_init() }
@@ -1328,6 +1452,30 @@ func file_router_proto_init() {
 				return nil
 			}
 		}
+		file_router_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*CheckVarExistRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_router_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*CheckVarExistReply); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -1335,7 +1483,7 @@ func file_router_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_router_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   17,
+			NumMessages:   20,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

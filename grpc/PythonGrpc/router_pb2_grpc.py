@@ -54,6 +54,11 @@ class GreeterStub(object):
                 request_serializer=router__pb2.ZarrToCsvRequest.SerializeToString,
                 response_deserializer=router__pb2.ZarrToCsvReply.FromString,
                 )
+        self.CheckVarExist = channel.unary_unary(
+                '/Greeter/CheckVarExist',
+                request_serializer=router__pb2.CheckVarExistRequest.SerializeToString,
+                response_deserializer=router__pb2.CheckVarExistReply.FromString,
+                )
 
 
 class GreeterServicer(object):
@@ -107,6 +112,12 @@ class GreeterServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def CheckVarExist(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_GreeterServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -149,6 +160,11 @@ def add_GreeterServicer_to_server(servicer, server):
                     servicer.ZarrToCsv,
                     request_deserializer=router__pb2.ZarrToCsvRequest.FromString,
                     response_serializer=router__pb2.ZarrToCsvReply.SerializeToString,
+            ),
+            'CheckVarExist': grpc.unary_unary_rpc_method_handler(
+                    servicer.CheckVarExist,
+                    request_deserializer=router__pb2.CheckVarExistRequest.FromString,
+                    response_serializer=router__pb2.CheckVarExistReply.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -293,5 +309,22 @@ class Greeter(object):
         return grpc.experimental.unary_unary(request, target, '/Greeter/ZarrToCsv',
             router__pb2.ZarrToCsvRequest.SerializeToString,
             router__pb2.ZarrToCsvReply.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def CheckVarExist(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/Greeter/CheckVarExist',
+            router__pb2.CheckVarExistRequest.SerializeToString,
+            router__pb2.CheckVarExistReply.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

@@ -284,6 +284,7 @@ func FmpySimulationResultTree(path, parent, keyWords string) []map[string]interf
 	var dataList []map[string]interface{}
 	nameMap := map[string]bool{}
 	variables := doc.SelectElement("dae").SelectElement("variables")
+	//解析orderedVariables节点
 	if orderedVariables := variables.SelectElement("orderedVariables"); orderedVariables != nil {
 		if variablesList := orderedVariables.SelectElement("variablesList"); variablesList != nil {
 			dataList1, id1, nameMap1 := getVarXml(variablesList, parent, keyWords, id, nameMap)
@@ -292,6 +293,7 @@ func FmpySimulationResultTree(path, parent, keyWords string) []map[string]interf
 			nameMap = nameMap1
 		}
 	}
+	//解析knownVariables节点
 	if knownVariables := variables.SelectElement("knownVariables"); knownVariables != nil {
 		if variablesList := knownVariables.SelectElement("variablesList"); variablesList != nil {
 			dataList2, id2, nameMap2 := getVarXml(variablesList, parent, keyWords, id, nameMap)
@@ -300,11 +302,39 @@ func FmpySimulationResultTree(path, parent, keyWords string) []map[string]interf
 			nameMap = nameMap2
 		}
 	}
+	//解析aliasVariables节点
 	if aliasVariables := variables.SelectElement("aliasVariables"); aliasVariables != nil {
 		if variablesList := aliasVariables.SelectElement("variablesList"); variablesList != nil {
 			dataList3, _, _ := getVarXml(variablesList, parent, keyWords, id, nameMap)
 			dataList = append(dataList, dataList3...)
 		}
 	}
-	return dataList
+	//获取没有子节点的变量名
+	var dataList2 []map[string]interface{}
+	var dataNameList []string
+	for i := 0; i < len(dataList); i++ {
+		if dataList[i]["has_child"] == false {
+			dataNameList = append(dataNameList, parent+"."+dataList[i]["variables"].(string))
+		}
+	}
+	//调用grpc判断变量名（list）是否存在值
+	CheckVarExistRequestTest := &grpcPb.CheckVarExistRequest{
+		Path:  path,
+		Names: dataNameList,
+	}
+	replyTest, err2 := grpcPb.Client.CheckVarExist(grpcPb.Ctx, CheckVarExistRequestTest)
+	if err2 != nil {
+		fmt.Println("调用grpc服务(CheckVarExist)出错：", err2)
+	}
+	//dataList去掉不存在值的元素
+	for i := 0; i < len(dataList); i++ {
+		if dataList[i]["has_child"] == false {
+			if !replyTest.Res[parent+"."+dataList[i]["variables"].(string)] {
+				continue
+			}
+		}
+		dataList2 = append(dataList2, dataList[i])
+	}
+
+	return dataList2
 }

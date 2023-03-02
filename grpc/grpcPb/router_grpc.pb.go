@@ -30,6 +30,7 @@ type GreeterClient interface {
 	SaveFilterResultToCsv(ctx context.Context, in *SaveFilterResultToCsvRequest, opts ...grpc.CallOption) (*SaveFilterResultToCsvReply, error)
 	MatToCsv(ctx context.Context, in *MatToCsvRequest, opts ...grpc.CallOption) (*MatToCsvReply, error)
 	ZarrToCsv(ctx context.Context, in *ZarrToCsvRequest, opts ...grpc.CallOption) (*ZarrToCsvReply, error)
+	CheckVarExist(ctx context.Context, in *CheckVarExistRequest, opts ...grpc.CallOption) (*CheckVarExistReply, error)
 }
 
 type greeterClient struct {
@@ -112,6 +113,15 @@ func (c *greeterClient) ZarrToCsv(ctx context.Context, in *ZarrToCsvRequest, opt
 	return out, nil
 }
 
+func (c *greeterClient) CheckVarExist(ctx context.Context, in *CheckVarExistRequest, opts ...grpc.CallOption) (*CheckVarExistReply, error) {
+	out := new(CheckVarExistReply)
+	err := c.cc.Invoke(ctx, "/Greeter/CheckVarExist", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GreeterServer is the server API for Greeter service.
 // All implementations must embed UnimplementedGreeterServer
 // for forward compatibility
@@ -124,6 +134,7 @@ type GreeterServer interface {
 	SaveFilterResultToCsv(context.Context, *SaveFilterResultToCsvRequest) (*SaveFilterResultToCsvReply, error)
 	MatToCsv(context.Context, *MatToCsvRequest) (*MatToCsvReply, error)
 	ZarrToCsv(context.Context, *ZarrToCsvRequest) (*ZarrToCsvReply, error)
+	CheckVarExist(context.Context, *CheckVarExistRequest) (*CheckVarExistReply, error)
 	mustEmbedUnimplementedGreeterServer()
 }
 
@@ -154,6 +165,9 @@ func (UnimplementedGreeterServer) MatToCsv(context.Context, *MatToCsvRequest) (*
 }
 func (UnimplementedGreeterServer) ZarrToCsv(context.Context, *ZarrToCsvRequest) (*ZarrToCsvReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ZarrToCsv not implemented")
+}
+func (UnimplementedGreeterServer) CheckVarExist(context.Context, *CheckVarExistRequest) (*CheckVarExistReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CheckVarExist not implemented")
 }
 func (UnimplementedGreeterServer) mustEmbedUnimplementedGreeterServer() {}
 
@@ -312,6 +326,24 @@ func _Greeter_ZarrToCsv_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Greeter_CheckVarExist_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckVarExistRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GreeterServer).CheckVarExist(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Greeter/CheckVarExist",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GreeterServer).CheckVarExist(ctx, req.(*CheckVarExistRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Greeter_ServiceDesc is the grpc.ServiceDesc for Greeter service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -350,6 +382,10 @@ var Greeter_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ZarrToCsv",
 			Handler:    _Greeter_ZarrToCsv_Handler,
+		},
+		{
+			MethodName: "CheckVarExist",
+			Handler:    _Greeter_CheckVarExist_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
