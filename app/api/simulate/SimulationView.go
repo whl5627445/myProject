@@ -48,7 +48,7 @@ func SetSimulationOptionsView(c *gin.Context) {
 		return
 	}
 	var res responseData
-	result := service.SetSimulationOptions(item.ModelName, item.StartTime, item.StopTime, item.Tolerance, item.Interval)
+	result := service.SetSimulationOptions(item.ModelName, item.StartTime, item.StopTime, item.Interval)
 	if !result {
 		res.Err = "设置失败，请稍后再试"
 		res.Status = 2
@@ -198,36 +198,36 @@ func SimulateResultGraphicsView(c *gin.Context) {
 		} else {
 			data, ok = service.ReadSimulationResult([]string{item.Variable}, recordDict[recordIdList[i]].SimulateModelResultPath+"result_res.mat")
 		}
-		unitsData := service.ConvertUnits(item.S2, item.S1)
+		//unitsData := service.ConvertUnits(item.S2, item.S1)
 		if ok {
 			ordinate := data[1]
 			abscissa := data[0]
-			if unitsData[0] == "true" {
-				scaleFactor, _ := strconv.ParseFloat(unitsData[1], 64)
-				offset, _ := strconv.ParseFloat(unitsData[2], 64)
-				if len(ordinate) > 1000 {
-					step := len(ordinate) / 1000
-					o := []float64{}
-					a := []float64{}
-					for s := 0; s < len(ordinate); s++ {
-						index := s * step
-						if index >= 1000 {
-							break
-						}
-						o = append(o, data[1][index])
-						a = append(a, data[0][index])
-					}
-					if len(ordinate)%1000 != 0 {
-						o = append(o, data[1][len(ordinate)-1])
-						a = append(a, data[0][len(ordinate)-1])
-					}
-					ordinate = o
-					abscissa = a
-				}
-				for p := 0; p < len(ordinate); p++ {
-					ordinate[p] = ordinate[p]*scaleFactor + offset
-				}
-			}
+			//if unitsData[0] == "true" {
+			//	scaleFactor, _ := strconv.ParseFloat(unitsData[1], 64)
+			//	offset, _ := strconv.ParseFloat(unitsData[2], 64)
+			//	if len(ordinate) > 1000 {
+			//		step := len(ordinate) / 1000
+			//		o := []float64{}
+			//		a := []float64{}
+			//		for s := 0; s < len(ordinate); s++ {
+			//			index := s * step
+			//			if index >= 1000 {
+			//				break
+			//			}
+			//			o = append(o, data[1][index])
+			//			a = append(a, data[0][index])
+			//		}
+			//		if len(ordinate)%1000 != 0 {
+			//			o = append(o, data[1][len(ordinate)-1])
+			//			a = append(a, data[0][len(ordinate)-1])
+			//		}
+			//		ordinate = o
+			//		abscissa = a
+			//	}
+			//	for p := 0; p < len(ordinate); p++ {
+			//		ordinate[p] = ordinate[p]*scaleFactor + offset
+			//	}
+			//}
 			oneData := map[string]interface{}{
 				"id":        recordDict[recordIdList[i]].ID,
 				"abscissa":  abscissa,

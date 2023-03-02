@@ -15,8 +15,8 @@ func GetSimulationOptions(modelName string) map[string]string {
 	}
 }
 
-func SetSimulationOptions(modelName, startTime, stopTime, tolerance, interval string) bool {
-	annotate := "experiment(StartTime=" + startTime + ",StopTime=" + stopTime + ",Tolerance=" + tolerance + ",Interval=" + interval + ")"
+func SetSimulationOptions(modelName, startTime, stopTime, interval string) bool {
+	annotate := "experiment(StartTime=" + startTime + ",StopTime=" + stopTime + ",Interval=" + interval + ")"
 	data := omc.OMC.AddClassAnnotation(modelName, annotate)
 	return data
 }

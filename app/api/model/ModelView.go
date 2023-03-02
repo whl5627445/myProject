@@ -1,14 +1,13 @@
 package API
 
 import (
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/service"
 	"yssim-go/library/omc"
@@ -116,17 +115,13 @@ func GetGraphicsDataView(c *gin.Context) {
 	}
 	var res responseData
 	var graphicsData [][]map[string]interface{}
+	//var graphicsData [][]interface{}
 	if item.ComponentName == "" {
-		graphicsData = service.GetGraphicsData(item.ModelName)
-		if packageModel.SysUser == "sys" {
-			for _, dataList := range graphicsData {
-				for _, d := range dataList {
-					d["mobility"] = false
-				}
-			}
-		}
+		//graphicsData = service.GetGraphicsData(item.ModelName)
+		graphicsData = service.GetGraphicsData(item.ModelName, packageModel.SysUser)
 	} else {
-		graphicsData = service.GetComponentGraphicsData(item.ModelName, item.ComponentName)
+		//graphicsData = service.GetComponentGraphicsData(item.ModelName, item.ComponentName)
+		graphicsData = service.GetComponentGraphicsData(item.ModelName, item.ComponentName, packageModel.SysUser)
 	}
 	res.Data = graphicsData
 	c.JSON(http.StatusOK, res)

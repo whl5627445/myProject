@@ -18,6 +18,7 @@ require (
 )
 
 require (
+	github.com/beevik/etree v1.1.0
 	github.com/go-zeromq/zmq4 v0.15.0
 	github.com/nacos-group/nacos-sdk-go v1.1.2
 	google.golang.org/grpc v1.53.0

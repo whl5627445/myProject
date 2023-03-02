@@ -101,14 +101,20 @@ func LoginUserSpaceView(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	username := c.GetHeader("username")
-	var packageModel []DataBaseModel.YssimModels
-	var spaceModel DataBaseModel.YssimUserSpace
-	DB.Where("sys_or_user IN ? AND userspace_id IN ?", []string{"sys", username}, []string{"0", item.SpaceId}).Find(&packageModel)
-	DB.Where("id = ? AND username = ?", item.SpaceId, username).First(&spaceModel)
-	service.ModelLibraryInitialization(packageModel)
-	spaceModel.LastLoginTime = time.Now().Local().Unix()
-	DB.Save(&spaceModel)
+	userName := c.GetHeader("username")
+	spaceId := c.GetHeader("space_id")
+	var oldPackageModel []DataBaseModel.YssimModels
+	var newPackageModel []DataBaseModel.YssimModels
+	var space DataBaseModel.YssimUserSpace
+	DB.Where("sys_or_user = ? AND userspace_id = ?", userName, spaceId).Find(&oldPackageModel)
+	DB.Where("sys_or_user IN ? AND userspace_id IN ?", []string{"sys", userName}, []string{"0", item.SpaceId}).Find(&newPackageModel)
+	DB.Where("id = ? AND username = ?", item.SpaceId, userName).First(&space)
+	for _, models := range oldPackageModel {
+		service.SaveModelToFile(models.PackageName, models.FilePath)
+	}
+	service.ModelLibraryInitialization(newPackageModel)
+	space.LastLoginTime = time.Now().Local().Unix()
+	DB.Save(&space)
 	res.Msg = "初始化完成"
 	c.JSON(http.StatusOK, res)
 }

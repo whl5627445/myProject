@@ -7,9 +7,9 @@ import (
 )
 
 type modelParameters struct {
-	name                 string
-	componentClassName   string
-	packageName          string
+	name               string
+	componentClassName string
+	//packageName          string
 	className            string
 	modelName            string
 	classAll             []string
@@ -20,15 +20,6 @@ type modelParameters struct {
 
 func (m modelParameters) getParameterValue(name string) string {
 	data := ""
-	for i := 0; i < len(m.classAll); i++ {
-		data = omc.OMC.GetParameterValue(m.classAll[i], name)
-		if data != "" {
-			data = strings.ReplaceAll(data, "\"", "")
-			data = strings.ReplaceAll(data, "\n", "")
-			return data
-		}
-	}
-
 	return data
 }
 
@@ -67,18 +58,6 @@ func getUnit(modelName, componentClassName, varName string) []string {
 
 func (m modelParameters) getElementModifierStartValue(name string, showStartAttribute bool) string {
 	data := ""
-	if showStartAttribute {
-		data = omc.OMC.GetElementModifierValue(m.modelName, name)
-	} else {
-		for i := 0; i < len(m.classAll); i++ {
-			data = omc.OMC.GetElementModifierValue(m.classAll[i], name)
-			if data != "" {
-				break
-			}
-		}
-	}
-	data = strings.ReplaceAll(data, "\"", "")
-	data = strings.ReplaceAll(data, "\n", "")
 	return data
 }
 
@@ -86,23 +65,6 @@ func (m modelParameters) getExtendsModifierNameAndValue() ([]string, []string, [
 	var dataNameList []string
 	var dataValueList []string
 	var dataFinalList []string
-	n := 0
-	f := n + 1
-	for i := 0; i < len(m.classAll)-1; i++ {
-		nameData := omc.OMC.GetExtendsModifierNames(m.classAll[n], m.classAll[f])
-		if len(nameData) > 0 {
-			dataNameList = append(dataNameList, nameData...)
-			valueData := omc.OMC.GetExtendsModifierValue(m.classAll[n], m.classAll[f], nameData[0])
-			dataValueList = append(dataValueList, valueData)
-			finalData := omc.OMC.IsExtendsModifierFinal(m.classAll[n], m.classAll[f], strings.Split(nameData[0], ".")[0])
-			dataFinalList = append(dataFinalList, finalData)
-		}
-		f += 1
-		if f == len(m.classAll) {
-			n += 1
-			f = n + 1
-		}
-	}
 	return dataNameList, dataValueList, dataFinalList
 }
 
@@ -240,7 +202,7 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 			continue
 		}
 
-		if p[10] == "parameter" || dataDefault["group"] != "Parameters" || DialogIndexOk == true {
+		if p[10] == "parameter" || dataDefault["group"] != "Parameters" || DialogIndexOk {
 			componentModifierValue := omc.OMC.GetElementModifierValue(m.modelName, componentName+"."+dataDefault["name"].(string))
 			dataDefault["value"] = componentModifierValue
 			if componentModifierValue == "" {

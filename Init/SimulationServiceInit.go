@@ -29,6 +29,5 @@ func simulationService() {
 	for {
 		task := <-service.SimulateTaskChan
 		service.ModelSimulate(task)
-		log.Printf("仿真任务执行完成： %s \n", task.SRecord.ID)
 	}
 }

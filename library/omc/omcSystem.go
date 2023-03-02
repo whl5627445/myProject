@@ -64,6 +64,7 @@ func (o *ZmqObject) SendExpressionNoParsed(cmd string) ([]byte, bool) {
 	o.Lock()
 	defer o.Unlock()
 	var msg []byte
+	//s := time.Now().UnixNano() / 1e6
 	ctx := context.Background()
 	msg, err := allModelCache.HGet(ctx, "yssim-GraphicsData", cmd).Bytes()
 	if err != nil {
@@ -1074,5 +1075,37 @@ func (o *ZmqObject) DumpXMLDAE(className string) []interface{} {
 		return result
 	}
 	return make([]interface{}, 2)
+
+}
+
+func (o *ZmqObject) GetComponentIconAndDiagramAnnotationsALl(classNameList []string, isIcon bool) []interface{} {
+	var data []interface{}
+	ctx := context.Background()
+	msg, _ := allModelCache.HGet(ctx, "yssim-componentGraphicsData", classNameList[len(classNameList)-1]).Bytes()
+	if len(msg) > 0 {
+		err := json.Unmarshal(msg, &data)
+		if err != nil {
+			return nil
+		}
+	} else {
+		for _, name := range classNameList {
+			nameType := o.GetClassRestriction(name)
+			var result []interface{}
+			if (nameType == "connector" || nameType == "expandable connector") && !isIcon {
+				result = o.GetDiagramAnnotation(name)
+				if len(result) > 8 {
+					result = result[8].([]interface{})
+				} else {
+					result = o.GetIconAnnotationLineData(name)
+				}
+			} else {
+				result = o.GetIconAnnotationLineData(name)
+			}
+			data = append(data, result...)
+		}
+		setData, _ := json.Marshal(data)
+		allModelCache.HSet(ctx, "yssim-componentGraphicsData", classNameList[len(classNameList)-1], setData)
+	}
+	return data
 
 }
