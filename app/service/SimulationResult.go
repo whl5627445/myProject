@@ -314,7 +314,12 @@ func FmpySimulationResultTree(path, parent, keyWords string) []map[string]interf
 	var dataNameList []string
 	for i := 0; i < len(dataList); i++ {
 		if dataList[i]["has_child"] == false {
-			dataNameList = append(dataNameList, parent+"."+dataList[i]["variables"].(string))
+			if parent == "" {
+				dataNameList = append(dataNameList, dataList[i]["variables"].(string))
+			} else {
+				dataNameList = append(dataNameList, parent+"."+dataList[i]["variables"].(string))
+			}
+
 		}
 	}
 	//调用grpc判断变量名（list）是否存在值
@@ -329,9 +334,16 @@ func FmpySimulationResultTree(path, parent, keyWords string) []map[string]interf
 	//dataList去掉不存在值的元素
 	for i := 0; i < len(dataList); i++ {
 		if dataList[i]["has_child"] == false {
-			if !replyTest.Res[parent+"."+dataList[i]["variables"].(string)] {
-				continue
+			if parent == "" {
+				if !replyTest.Res[dataList[i]["variables"].(string)] {
+					continue
+				}
+			} else {
+				if !replyTest.Res[parent+"."+dataList[i]["variables"].(string)] {
+					continue
+				}
 			}
+
 		}
 		dataList2 = append(dataList2, dataList[i])
 	}
