@@ -225,11 +225,20 @@ func CreateModelPackageView(c *gin.Context) {
 				DB.Create(&newPackage)
 			}
 			res.Msg = "创建成功"
-			res.Data = map[string]string{
-				"model_name": newPackage.PackageName,
-				//"model_str": service.GetModelCode(createPackageName),
-				"id": newPackage.ID,
+			if item.PackageId == "" {
+				res.Data = map[string]string{
+					"model_name": newPackage.PackageName,
+					//"model_str": service.GetModelCode(createPackageName),
+					"id": newPackage.ID,
+				}
+			} else {
+				res.Data = map[string]string{
+					"model_name": newPackage.PackageName + "." + item.Name,
+					//"model_str": service.GetModelCode(createPackageName),
+					"id": newPackage.ID,
+				}
 			}
+
 		}
 	} else {
 		res.Err = "创建失败，请稍后再试"

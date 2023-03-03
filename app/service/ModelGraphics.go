@@ -19,6 +19,7 @@ type graphicsData struct {
 	data          [][]map[string]interface{}
 	modelName     string
 	modelNameList []string
+	permissions   string
 }
 
 var allModelCache = config.R
@@ -27,6 +28,7 @@ func GetGraphicsData(modelName, permissions string) [][]map[string]interface{} {
 	var g = graphicsData{}
 	g.data = [][]map[string]interface{}{{}, {}}
 	ctx := context.Background()
+	g.permissions = permissions
 	if permissions == "sys" {
 		msg, _ := allModelCache.HGet(ctx, "yssim-modelGraphicsData", modelName).Bytes()
 		if len(msg) > 0 {
@@ -91,7 +93,7 @@ func (g *graphicsData) getData02() {
 	for i := len(modelName) - 1; i >= 0; i-- {
 		var data2 []map[string]interface{}
 		mobility := false
-		if i == len(modelName)-1 {
+		if i == len(modelName)-1 && g.permissions != "sys" {
 			mobility = true
 		}
 		componentsData := getElementsAndModelName([]string{modelName[i]})
@@ -253,6 +255,7 @@ func (g *graphicsData) data01(cData []interface{}, className, component, modelNa
 			continue
 		}
 		dataType := cData[i]
+		data["type"] = dataType
 		data["type"] = dataType
 		data["visible"] = drawingDataList[0]
 		data["originalPoint"] = oneDimensionalProcessing(drawingDataList[1])
@@ -527,7 +530,7 @@ func (g *graphicsData) getnthconnectionData() {
 			if len(ncData) != 0 && len(ncaData) != 0 && len(d1Data) != 0 {
 				for _, daData := range d1Data {
 					if daData["type"] == "Line" {
-						if i == len(g.modelNameList)-1 { // i==0的时候，表示目前遍历的是模型自身的组件，模型自身的组件可以移动，设在"mobility"为true
+						if i == len(g.modelNameList)-1 && g.permissions != "sys" { // i==0的时候，表示目前遍历的是模型自身的组件，模型自身的组件可以移动，设在"mobility"为true
 							daData["mobility"] = true
 						} else {
 							daData["mobility"] = false
@@ -602,7 +605,11 @@ func (g *graphicsData) getDiagramAnnotationData() {
 			dData := modelNameDiagramAnnotationData[len(modelNameDiagramAnnotationData)-1]
 			data1 := g.data01(dData.([]interface{}), g.modelName, g.modelName, g.modelName)
 			for _, d := range data1 {
-				d["mobility"] = true
+				if g.permissions != "sys" {
+					d["mobility"] = true
+				} else {
+					d["mobility"] = false
+				}
 				d["diagram"] = true
 				g.data[0] = append(g.data[0], d)
 			}

@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"regexp"
 	"sync"
 	"yssim-go/app/serviceType"
 	"yssim-go/config"
@@ -286,6 +287,15 @@ func (o *ZmqObject) GetElements(className string) []interface{} {
 	components = bytes.ReplaceAll(components, []byte("}"), []byte("]"))
 	components = bytes.TrimSuffix(components, []byte("\n"))
 	components = bytes.ReplaceAll(components, []byte("\n"), []byte("\\n"))
+	re, _ := regexp.Compile(`"\$Any","\[.*"],\["`)
+	rResultList := re.FindAll(components, -1)
+	for _, r := range rResultList {
+		noSuffixAndPrefix := bytes.TrimSuffix(r, []byte("\"],[\""))
+		noSuffixAndPrefix = bytes.TrimPrefix(noSuffixAndPrefix, []byte("\"$Any\",\"["))
+		noSuffixAndPrefix = bytes.Replace(noSuffixAndPrefix, []byte("\""), []byte("\\\""), -1)
+		newStr := bytes.Join([][]byte{[]byte("\"$Any\",\"["), noSuffixAndPrefix, []byte("\"],[\"")}, []byte(""))
+		components = bytes.Replace(components, r, newStr, -1)
+	}
 	var resData []interface{}
 	if string(components) != "Error" && len(components) > 0 {
 		err := json.Unmarshal(components, &resData)
@@ -311,6 +321,15 @@ func (o *ZmqObject) GetElementsList(classNameList []string) [][]interface{} {
 		components = bytes.ReplaceAll(components, []byte("{"), []byte("["))
 		components = bytes.ReplaceAll(components, []byte("}"), []byte("]"))
 		components = bytes.TrimSuffix(components, []byte("\n"))
+		re, _ := regexp.Compile(`"\$Any","\[.*"],\["`)
+		rResultList := re.FindAll(components, -1)
+		for _, r := range rResultList {
+			noSuffixAndPrefix := bytes.TrimSuffix(r, []byte("\"],[\""))
+			noSuffixAndPrefix = bytes.TrimPrefix(noSuffixAndPrefix, []byte("\"$Any\",\"["))
+			noSuffixAndPrefix = bytes.Replace(noSuffixAndPrefix, []byte("\""), []byte("\\\""), -1)
+			newStr := bytes.Join([][]byte{[]byte("\"$Any\",\"["), noSuffixAndPrefix, []byte("\"],[\"")}, []byte(""))
+			components = bytes.Replace(components, r, newStr, -1)
+		}
 		var resData []interface{}
 		err := json.Unmarshal(components, &resData)
 		if err != nil {

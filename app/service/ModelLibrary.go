@@ -33,7 +33,7 @@ func ModelLibraryInitialization(packageModel []DataBaseModel.YssimModels) {
 		if ok {
 			//cacheStatus, _ := config.R.HGet(context.Background(), "yssim-GraphicsData", "status").Result() // 1是已缓存完成
 			//if models.SysUser == "sys" && cacheStatus != "1" {
-			modelCache(models.PackageName, models.SysUser)
+			//modelCache(models.PackageName, models.SysUser)
 			//}
 			log.Printf("初始化模型库：%s %s  %t \n", models.SysUser, models.PackageName, ok)
 		} else {
@@ -58,15 +58,12 @@ func modelCache(packageModel, permissions string) {
 	modelsALL := omc.OMC.GetClassNames(packageModel, true)
 	omc.OMC.CacheRefreshSet(true)
 	for p := 0; p < len(modelsALL); p++ {
-		//e := omc.OMC.GetClassInformation(modelsALL[p])
-		//if len(e) > 1 && e[0].(string) == "model" {
-		//if len(e) > 1 {
-		//log.Println("正在缓存：", modelsALL[p], " 的图形数据")
-		GetGraphicsData(modelsALL[p], permissions)
+		if permissions == "sys" {
+			log.Println("正在缓存：", modelsALL[p], " 的图形数据")
+			GetGraphicsData(modelsALL[p], permissions)
+		}
 		//GetGraphicsData(modelsALL[p])
-		//} else {
-		//	log.Println(modelsALL[p], " 不是model类型，跳过")
-		//}
+
 	}
 	omc.OMC.CacheRefreshSet(false)
 }
