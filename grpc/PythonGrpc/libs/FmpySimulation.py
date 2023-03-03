@@ -62,7 +62,7 @@ class MyProcess(Process):
         self.processStartTime = time.time()
         try:
             print("开始仿真")
-            json_data = {"message": self.request.className + " 开始仿真"}
+            json_data = {"message": self.request.className + " FmPy开始仿真"}
             R.lpush(self.request.userName+"_"+"notification", json.dumps(json_data))
             time1 = time.time()
             self.outputs = [v.name for v in read_model_description(self.newFmuPath).modelVariables]
@@ -106,7 +106,7 @@ class MyProcess(Process):
 
         else:
             print("运行正常结束。")
-            json_data = {"message": self.request.className + " 模型仿真完成"}
+            json_data = {"message": self.request.className + " FmPy模型仿真完成"}
             R.lpush(self.request.userName+"_"+"notification", json.dumps(json_data))
             with Session() as session:
                 processDetails = session.query(YssimSimulateRecords).filter(

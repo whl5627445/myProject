@@ -370,11 +370,11 @@ func ModelSimulate(task *SimulateTask) {
 		task.SRecord.SimulateStatus = "3"
 		MessageNotice(map[string]string{"message": task.SRecord.SimulateModelName + " 模型仿真失败"})
 	}
+	task.SRecord.SimulateEndTime = time.Now().Unix()
+	task.SRecord.SimulateStart = false
+	config.DB.Save(&task.SRecord)
 	err := os.Remove(FilePath)
 	if err != nil {
 		return
 	}
-	task.SRecord.SimulateEndTime = time.Now().Unix()
-	task.SRecord.SimulateStart = false
-	config.DB.Save(&task.SRecord)
 }
