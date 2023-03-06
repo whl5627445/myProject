@@ -1,4 +1,14 @@
+docker build -t python_grpc .
+
+
+124
 docker run -it -d --name=fmpy_grpc --network=yssim-net -p 50051:50051 \
 -v /home/yssim-1.0/yssimProject/yssim/yssim-go:/home/simtek/code \
 -v  /home/yssim-1.0/yssimProject/yssim/yssim-go/omlibrary:/usr/lib/omlibrary  \
+python_grpc  ./start.sh
+
+119
+docker run -it -d --name=fmpy_grpc --network=yssim-net -p 50051:50051 \
+-v /home/yssim-1.0/yssimProject/simtek/yssim-go:/home/simtek/code \
+-v  /home/yssim-1.0/yssimProject/simtek/yssim-go/omlibrary:/usr/lib/omlibrary  \
 python_grpc  ./start.sh

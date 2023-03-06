@@ -37,11 +37,12 @@ class MyProcess(Process):
                 session.commit()
 
     def stepFinished(self, running_time, recorder):
-        self.simulateRes = recorder.result()
-        self.managerResDict[self.uuid] = recorder.result()
         progress2 = int((running_time / self.request.stopTime) * 100)
         if progress2 > self.progress1:
+            self.simulateRes = recorder.result()
+            self.managerResDict[self.uuid] = recorder.result()
             self.progress1 = progress2
+            print(self.progress1, r"%", end=" ")
         return True
 
     # 信息日志输出
@@ -61,7 +62,7 @@ class MyProcess(Process):
     def run(self):
         self.processStartTime = time.time()
         try:
-            print("开始仿真")
+            print("开始仿真,仿真结束时间{}，仿真间隔{}".format(self.request.stopTime, self.request.outputInterval))
             json_data = {"message": self.request.className + " FmPy开始仿真"}
             R.lpush(self.request.userName+"_"+"notification", json.dumps(json_data))
             time1 = time.time()
@@ -89,9 +90,9 @@ class MyProcess(Process):
                          )
 
         except Exception as e:
-            log = "(error)" + str(e)
+            log = "(Exception)" + str(e)
             print(log)
-            json_data = {"message": self.request.className + log}
+            json_data = {"message": self.request.className + self.AllLogTxt+log}
             R.lpush(self.request.userName+"_"+"notification", json.dumps(json_data))
             with Session() as session:
                 processDetails = session.query(YssimSimulateRecords).filter(

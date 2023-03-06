@@ -23,7 +23,6 @@ if __name__ == '__main__':
     # 进程列表，用于保存每个进程对象
     processList = []
 
-
     # 实现 proto 文件中定义的 GreeterServicer
     class Greeter(router_pb2_grpc.GreeterServicer):
         # 实现 proto 文件中定义的 rpc 调用
@@ -131,17 +130,17 @@ if __name__ == '__main__':
 
         def SaveFilterResultToCsv(self, request, context):
             print("SaveFilterResultToCsv被调用。")
-            res = zarr.load(adsPath+request.resultPath)
+            res = zarr.load(adsPath + request.resultPath)
             resDict = {"time": res["time"].tolist()}
             if res is not None:
                 for i in request.Vars:
                     resDict[i] = res[i].tolist()
                 df = pd.DataFrame(resDict)
-                dirnamePath = os.path.dirname(adsPath+request.newFileName)
+                dirnamePath = os.path.dirname(adsPath + request.newFileName)
                 if not os.path.exists(dirnamePath):
                     print("创建csv路径", dirnamePath)
                     os.makedirs(dirnamePath)
-                df.to_csv(adsPath+request.newFileName, index=False, encoding='utf-8')
+                df.to_csv(adsPath + request.newFileName, index=False, encoding='utf-8')
                 return router_pb2.SaveFilterResultToCsvReply(ok=True)
             else:
                 return router_pb2.SaveFilterResultToCsvReply(ok=False)
@@ -149,7 +148,7 @@ if __name__ == '__main__':
         def MatToCsv(self, request, context):
             print("MatToCsv被调用。")
             try:
-                d = DyMat.DyMatFile(adsPath+request.matPath)
+                d = DyMat.DyMatFile(adsPath + request.matPath)
                 namesList = list(d.names())
                 dictCsv = {"time1": list(d.abscissa("2", True)),
                            "time2": list(d.abscissa("1", True))
@@ -161,8 +160,9 @@ if __name__ == '__main__':
                 else:
                     for i in namesList:
                         dictCsv[i] = list(d.data(i))
-                df = pd.DataFrame(pd.DataFrame.from_dict(dictCsv, orient='index').values.T, columns=list(dictCsv.keys()))
-                df.to_csv(os.path.dirname(adsPath+request.matPath)+"/result_res.csv", index=False, encoding='utf-8')
+                df = pd.DataFrame(pd.DataFrame.from_dict(dictCsv, orient='index').values.T,
+                                  columns=list(dictCsv.keys()))
+                df.to_csv(os.path.dirname(adsPath + request.matPath) + "/result_res.csv", index=False, encoding='utf-8')
             except Exception as e:
                 print(e)
                 return router_pb2.MatToCsvReply(ok=False)
@@ -172,21 +172,20 @@ if __name__ == '__main__':
         def ZarrToCsv(self, request, context):
             print("ZarrToCsv被调用")
             try:
-                d = zarr.load(adsPath+request.zarrPath)
+                d = zarr.load(adsPath + request.zarrPath)
                 if d.shape[0] > 1000:
                     d = d[:1000]
-                write_csv(os.path.dirname(adsPath+request.zarrPath)+"/result_res.csv", d)
+                write_csv(os.path.dirname(adsPath + request.zarrPath) + "/result_res.csv", d)
             except Exception as e:
                 print(e)
                 return router_pb2.ZarrToCsvReply(ok=False)
             else:
                 return router_pb2.ZarrToCsvReply(ok=True)
 
-        def CheckVarExist(self,request, context):
-            time1 = time.time()
+        def CheckVarExist(self, request, context):
             print("CheckVarExist被调用")
             resMap = {}
-            zarrPath = os.path.dirname(adsPath+request.Path)+"/zarr_res.zarr"
+            zarrPath = os.path.dirname(adsPath + request.Path) + "/zarr_res.zarr"
 
             if os.path.exists(zarrPath):
                 d = zarr.load(zarrPath)
@@ -200,10 +199,7 @@ if __name__ == '__main__':
             else:
                 for i in request.Names:
                     resMap[i] = True
-            time2 = time.time()
-            print("CheckVarExist耗时", time2-time1)
             return router_pb2.CheckVarExistReply(Res=resMap)
-
 
 
     def action():
