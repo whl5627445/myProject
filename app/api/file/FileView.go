@@ -225,7 +225,7 @@ func CreateModelPackageView(c *gin.Context) {
 				DB.Create(&newPackage)
 			}
 			res.Msg = "创建成功"
-			if item.PackageId == "" {
+			if item.Vars.InsertTo == "" {
 				res.Data = map[string]string{
 					"model_name": newPackage.PackageName,
 					//"model_str": service.GetModelCode(createPackageName),
@@ -233,7 +233,7 @@ func CreateModelPackageView(c *gin.Context) {
 				}
 			} else {
 				res.Data = map[string]string{
-					"model_name": newPackage.PackageName + "." + item.Name,
+					"model_name": item.Vars.InsertTo + "." + item.Name,
 					//"model_str": service.GetModelCode(createPackageName),
 					"id": newPackage.ID,
 				}
@@ -245,7 +245,6 @@ func CreateModelPackageView(c *gin.Context) {
 		res.Status = 2
 	}
 	c.JSON(http.StatusOK, res)
-
 }
 
 func UploadModelIconView(c *gin.Context) {
