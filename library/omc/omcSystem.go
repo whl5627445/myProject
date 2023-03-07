@@ -10,10 +10,11 @@ import (
 	"yssim-go/app/serviceType"
 	"yssim-go/config"
 
-	"github.com/go-zeromq/zmq4"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/go-zeromq/zmq4"
 )
 
 type ZmqObject struct {
@@ -1094,6 +1095,41 @@ func (o *ZmqObject) DumpXMLDAE(className string) []interface{} {
 		return result
 	}
 	return make([]interface{}, 2)
+
+}
+
+// AddComponentParameter 新建一个以varType为类型的组件
+func (o *ZmqObject) AddComponentParameter(varName, varType, className string) bool {
+	addComponentParameterCmd := "addComponent(" + varName + "," + varType + "," + className + ")"
+	// addComponent(varName, varType,className)
+	// 将className的varName组件设置成参数类型，通过修改属性实现
+	// setComponentProperties(className,varName,{false,false,false,false}, {"parameter"}, {false,false}, {""})
+	// 删除全局变量参数
+	// deleteComponent(varName,className)
+	resultAdd, ok := o.SendExpressionNoParsed(addComponentParameterCmd)
+	resultAdd = bytes.ReplaceAll(resultAdd, []byte("\n"), []byte(""))
+	if ok && string(resultAdd) == "true" {
+		setComponentPropertiesCmd := "setComponentProperties(" + className + "," + varName + ",{false,false,false,false}, {\"parameter\"}, {false,false}, {\"\"})"
+		result, ok := o.SendExpressionNoParsed(setComponentPropertiesCmd)
+		result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
+		if ok && string(result) == "Ok" {
+			return true
+		}
+	}
+	cmd := "deleteComponent(" + varName + "," + className + ")"
+	_, _ = o.SendExpressionNoParsed(cmd)
+	return false
+}
+
+// DumpXMLDAE  生成result_init.xml文件
+func (o *ZmqObject) DeleteComponentParameter(varName, className string) bool {
+	cmd := "deleteComponent(" + varName + "," + className + ")"
+	result, ok := o.SendExpressionNoParsed(cmd)
+	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
+	if ok && string(result) == "false" {
+		return false
+	}
+	return true
 
 }
 
