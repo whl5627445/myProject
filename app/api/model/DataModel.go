@@ -19,6 +19,18 @@ type setComponentModifierValueData struct {
 	ParameterValue map[string]string `json:"parameter_value" binding:"required"`
 }
 
+type addComponentParametersData struct {
+	PackageId     string `json:"package_id" binding:"required"`
+	ModelName     string `json:"model_name" binding:"required"`
+	ParameterName string `json:"parameter_name" binding:"required"`
+}
+
+type deleteComponentParametersData struct {
+	PackageId     string `json:"package_id" binding:"required"`
+	ModelName     string `json:"model_name" binding:"required"`
+	ParameterName string `json:"parameter_name" binding:"required"`
+}
+
 type setComponentPropertiesData struct {
 	PackageId        string `json:"package_id" binding:"required"`
 	ModelName        string `json:"model_name" binding:"required"`

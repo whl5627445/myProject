@@ -351,3 +351,11 @@ func SetComponentModifierValue(className string, parameterValue map[string]strin
 	}
 	return true
 }
+
+func AddComponentParameters(varName, varType, className string) bool {
+	return omc.OMC.AddComponentParameter(varName, varType, className)
+}
+
+func DeleteComponentParameters(varName, className string) bool {
+	return omc.OMC.DeleteComponentParameter(varName, className)
+}

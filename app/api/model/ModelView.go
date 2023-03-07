@@ -1,8 +1,6 @@
 package API
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"log"
 	"net/http"
 	"strconv"
@@ -11,6 +9,9 @@ import (
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/service"
 	"yssim-go/library/omc"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 
 	"yssim-go/config"
 )
@@ -214,6 +215,79 @@ func SetModelParametersView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+func AddModelParametersView(c *gin.Context) {
+	/*
+		# 创建模型的全局参数
+		## package_id: 模型包的id
+		## model_name: 需要设置参数的模型名称，全称，例如“ENN.Examples.Scenario1_Status”
+		## parameter_name: 参数名称
+	*/
+	var item addComponentParametersData
+	err := c.BindJSON(&item)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+
+	var res responseData
+	nameList := strings.Split(item.ModelName, ".")
+	packageName := nameList[0]
+	var modelPackage DataBaseModel.YssimModels
+	DB.Where("package_name = ?", packageName).First(&modelPackage)
+	if modelPackage.SysUser == "sys" || modelPackage.ID == "" {
+		res.Err = "该模型不允许此操作"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	result := service.AddComponentParameters(item.ParameterName, "Real", item.ModelName)
+	if result {
+		res.Msg = "设置完成"
+	} else {
+		res.Err = "设置失败: 请检查参数是否正确"
+		res.Status = 2
+	}
+
+	c.JSON(http.StatusOK, res)
+}
+
+func DeleteModelParametersView(c *gin.Context) {
+	/*
+		# 删除模型的全局参数
+		## package_id: 模型包的id
+		## model_name: 需要设置参数的模型名称，全称，例如“ENN.Examples.Scenario1_Status”
+		## parameter_name: 参数名称
+	*/
+	var item deleteComponentParametersData
+	err := c.BindJSON(&item)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+
+	var res responseData
+	nameList := strings.Split(item.ModelName, ".")
+	packageName := nameList[0]
+	var modelPackage DataBaseModel.YssimModels
+	DB.Where("package_name = ?", packageName).First(&modelPackage)
+	if modelPackage.SysUser == "sys" || modelPackage.ID == "" {
+		res.Err = "该模型不允许此操作"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	result := service.DeleteComponentParameters(item.ParameterName, item.ModelName)
+	if result {
+		res.Msg = "参数已删除"
+	} else {
+		res.Err = "删除失败"
+		res.Status = 2
+	}
+	c.JSON(http.StatusOK, res)
+}
+
 func GetComponentPropertiesView(c *gin.Context) {
 	/*
 		# 获取模型组件的属性数据，一次性返回
@@ -295,6 +369,8 @@ func SetComponentPropertiesView(c *gin.Context) {
 		res.Err = msg
 		res.Status = 2
 	}
+	data := make([]string, 0, 1)
+	res.Data = data
 	c.JSON(http.StatusOK, res)
 }
 

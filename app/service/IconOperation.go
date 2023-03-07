@@ -2,7 +2,10 @@ package service
 
 import (
 	"encoding/base64"
+	"io/ioutil"
+	"log"
 	"os"
+	"strings"
 	"yssim-go/library/omc"
 )
 
@@ -17,6 +20,17 @@ func GetIcon(modelName, packageName, version string) string {
 				imageData := bitmapData[i]
 				if imageData == "Bitmap" {
 					image := bitmapData[i+1].([]interface{})[5].(string)
+					imageUri := bitmapData[i+1].([]interface{})[4].(string)
+					if strings.HasPrefix(imageUri, "modelica://") {
+						imageFile := omc.OMC.UriToFilename(imageUri)
+						file, err := ioutil.ReadFile(imageFile)
+						if err != nil {
+							log.Println("获取模型图表文件信息失败")
+							return ""
+						}
+						fileBase64Str := base64.StdEncoding.EncodeToString(file)
+						return "data:image/png;base64," + fileBase64Str
+					}
 					return "data:image/png;base64," + image
 				}
 			}
