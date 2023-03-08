@@ -1,6 +1,7 @@
 package API
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -1079,5 +1080,152 @@ func Test1(c *gin.Context) {
 	data := service.GetGraphicsDataNew(cmd)
 	var res responseData
 	res.Data = data
+	c.JSON(http.StatusOK, res)
+}
+
+func CreateSnapshotView(c *gin.Context) {
+	/*
+		#创建试图(快照)接口
+	*/
+	var res responseData
+	var item snapshotCreatData
+	var snapshotRecord DataBaseModel.YssimSnapshots
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	username := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
+	DB.Where("snapshot_name = ? AND username =? AND space_id =?", item.SnapshotName, username, userSpaceId).First(&snapshotRecord)
+	if snapshotRecord.SnapshotName != "" {
+		res.Msg = "视图名称已存在，请更换。"
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	snapshot := DataBaseModel.YssimSnapshots{
+		ID:                uuid.New().String(),
+		SpaceId:           userSpaceId,
+		UserName:          username,
+		SnapshotName:      item.SnapshotName,
+		ModelName:         item.ModelName,
+		PackageId:         item.PackageId,
+		ComponentName:     item.ComponentName,
+		ModelVarData:      item.ModelVarData,
+		ExperimentId:      item.ExperimentId,
+		SimulateVarData:   item.SimulateVarData,
+		SimulateResultId:  item.SimulateResultId,
+		SimulateResultObj: item.SimulateResultObj,
+	}
+	err = DB.Create(&snapshot).Error
+	if err != nil {
+		res.Err = "创建失败，请稍后再试"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	//item.SimulateVarData["id"] = experimentRecord.ID
+	// item.SimulateVarData["ModelVarData"] = item.ModelVarData
+	res.Data = snapshot.ID
+	res.Msg = "实验记录创建成功"
+	c.JSON(http.StatusOK, res)
+
+}
+
+func DeleteSnapshotView(c *gin.Context) {
+	/*
+	   # 删除试图接口
+	*/
+	var res responseData
+	var item snapshotDeleteData
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	username := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
+	var record DataBaseModel.YssimSnapshots
+	DB.Where("id =? AND space_id = ? AND username = ?", item.SnapshotId, userSpaceId, username).First(&record)
+	DB.Delete(&record)
+	res.Msg = "删除成功"
+	c.JSON(http.StatusOK, res)
+}
+
+func EditSnapshotView(c *gin.Context) {
+	/*
+	   # 修改试图接口
+	*/
+	var res responseData
+	var item snapshotEditData
+	err := c.BindJSON(&item)
+	fmt.Println(item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	var recordName DataBaseModel.YssimSnapshots
+	DB.Where("id != ? AND snapshot_name =? ", item.SnapshotId, item.SnapshotName).First(&recordName)
+	if recordName.SnapshotName != "" {
+		res.Msg = "试图记录名称已存在，请更换。"
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	var editRecord DataBaseModel.YssimSnapshots
+	err = DB.Model(&editRecord).Omit("snapshot_id").Where("id = ? ", item.SnapshotId).Updates(item).Error
+	if err != nil {
+		res.Err = "更新失败，请稍后再试"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	res.Msg = "试图记录已更新"
+	c.JSON(http.StatusOK, res)
+
+}
+
+func SnapshotGetListView(c *gin.Context) {
+	/*
+	   # 获取试图列表接口
+	*/
+
+	username := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
+	modelName := c.Query("model_name")
+
+	var snapshotList []DataBaseModel.YssimSnapshots
+	DB.Where("space_id = ? AND username = ? AND model_name = ?", userSpaceId, username, modelName).Find(&snapshotList)
+	var dataList []map[string]interface{}
+	for _, record := range snapshotList {
+		data := make(map[string]interface{})
+		if record.SimulateResultId != "" {
+			var simulateResultRecord DataBaseModel.YssimSimulateRecord
+			DB.Where("id =? AND userspace_id = ? AND username = ?", record.SimulateResultId, userSpaceId, username).First(&simulateResultRecord)
+			if simulateResultRecord.SimulateModelResultPath == "" {
+				record.SimulateResultId = ""
+			}
+		}
+		if record.ExperimentId != "" {
+			var experimentRecord DataBaseModel.YssimExperimentRecord
+			DB.Where("id =? AND userspace_id = ? AND username = ?", record.ExperimentId, userSpaceId, username).First(&experimentRecord)
+			if experimentRecord.ExperimentName == "" {
+				record.ExperimentId = ""
+			}
+		}
+		data["id"] = record.ID
+		data["snapshot_name"] = record.SnapshotName
+		data["updated_time"] = record.UpdatedAt.Format("2006-01-02") // .Format("2006-01-02 15:04:05")
+		data["component_name"] = record.ComponentName
+		data["modelVar_data"] = record.ModelVarData
+		data["experiment_id"] = record.ExperimentId
+		data["simulateVar_data"] = record.SimulateVarData
+		data["simulateResult_id"] = record.SimulateResultId
+		data["simulateResult_obj"] = record.SimulateResultObj
+		dataList = append(dataList, data)
+	}
+
+	var res responseData
+	res.Data = dataList
 	c.JSON(http.StatusOK, res)
 }
