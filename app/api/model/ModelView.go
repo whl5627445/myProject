@@ -1,9 +1,11 @@
 package API
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -1097,7 +1099,8 @@ func CreateSnapshotView(c *gin.Context) {
 	}
 	username := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
-	DB.Where("snapshot_name = ? AND username =? AND space_id =?", item.SnapshotName, username, userSpaceId).First(&snapshotRecord)
+	DB.Where("snapshot_name = ? AND username =? AND space_id =? AND model_name =?", item.SnapshotName, username, userSpaceId, item.ModelName).First(&snapshotRecord)
+
 	if snapshotRecord.SnapshotName != "" {
 		res.Msg = "视图名称已存在，请更换。"
 		c.JSON(http.StatusOK, res)
@@ -1120,6 +1123,7 @@ func CreateSnapshotView(c *gin.Context) {
 	}
 	err = DB.Create(&snapshot).Error
 	if err != nil {
+		fmt.Println("DB Create err:", err)
 		res.Err = "创建失败，请稍后再试"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
@@ -1128,7 +1132,7 @@ func CreateSnapshotView(c *gin.Context) {
 	//item.SimulateVarData["id"] = experimentRecord.ID
 	// item.SimulateVarData["ModelVarData"] = item.ModelVarData
 	res.Data = snapshot.ID
-	res.Msg = "实验记录创建成功"
+	res.Msg = "视图创建成功"
 	c.JSON(http.StatusOK, res)
 
 }
@@ -1157,24 +1161,32 @@ func EditSnapshotView(c *gin.Context) {
 	/*
 	   # 修改试图接口
 	*/
+	username := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
 	var res responseData
-	var item snapshotEditData
-	err := c.BindJSON(&item)
-	fmt.Println(item)
+	jsonMp := make(map[string]interface{})
+	err := c.BindJSON(&jsonMp)
+	for key, value := range jsonMp {
+		if reflect.TypeOf(value).Kind() == reflect.Map {
+			jsonMp[key], _ = json.Marshal(value)
+		}
+	}
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
+
 	var recordName DataBaseModel.YssimSnapshots
-	DB.Where("id != ? AND snapshot_name =? ", item.SnapshotId, item.SnapshotName).First(&recordName)
+	DB.Where("id != ? AND snapshot_name =? AND username =? AND space_id =? AND model_name =?", jsonMp["snapshot_id"], jsonMp["snapshot_name"], username, userSpaceId, jsonMp["model_name"]).First(&recordName)
 	if recordName.SnapshotName != "" {
 		res.Msg = "试图记录名称已存在，请更换。"
 		c.JSON(http.StatusOK, res)
 		return
 	}
 	var editRecord DataBaseModel.YssimSnapshots
-	err = DB.Model(&editRecord).Omit("snapshot_id").Where("id = ? ", item.SnapshotId).Updates(item).Error
+	err = DB.Model(&editRecord).Omit("snapshot_id").Where("id = ? ", jsonMp["snapshot_id"]).Updates(jsonMp).Error
 	if err != nil {
+		fmt.Println("DB Model Updates err", err)
 		res.Err = "更新失败，请稍后再试"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
@@ -1215,7 +1227,7 @@ func SnapshotGetListView(c *gin.Context) {
 		}
 		data["id"] = record.ID
 		data["snapshot_name"] = record.SnapshotName
-		data["updated_time"] = record.UpdatedAt.Format("2006-01-02") // .Format("2006-01-02 15:04:05")
+		data["updated_time"] = record.UpdatedAt.Format("2006-01-02 15:04:05") // .Format("2006-01-02 15:04:05")
 		data["component_name"] = record.ComponentName
 		data["modelVar_data"] = record.ModelVarData
 		data["experiment_id"] = record.ExperimentId

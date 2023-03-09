@@ -136,14 +136,15 @@ type modelCollectionData struct {
 	ModelName string `json:"model_name" binding:"required"`
 }
 type snapshotCreatData struct {
-	SnapshotName      string         `json:"snapshot_name" binding:"required"`
-	ModelName         string         `json:"model_name" binding:"required"`
-	ComponentName     string         `json:"component_name" binding:""`
-	PackageId         string         `json:"package_id" binding:"required"`
+	SnapshotName     string `json:"snapshot_name" binding:"required"`
+	ModelName        string `json:"model_name" binding:"required"`
+	PackageId        string `json:"package_id" binding:"required"`
+	ComponentName    string `json:"component_name" binding:""`
+	SimulateResultId string `json:"simulate_result_id" binding:""`
+	ExperimentId     string `json:"experiment_id" binding:""`
+
 	ModelVarData      datatypes.JSON `json:"model_var_data" binding:""`
-	ExperimentId      string         `json:"experiment_id" binding:""`
 	SimulateVarData   datatypes.JSON `json:"simulate_var_data" binding:""`
-	SimulateResultId  string         `json:"simulate_result_id" binding:""`
 	SimulateResultObj datatypes.JSON `json:"simulate_result_obj" binding:""`
 }
 
@@ -151,15 +152,16 @@ type snapshotDeleteData struct {
 	SnapshotId string `json:"snapshot_id" binding:"required"`
 }
 
-type snapshotEditData struct {
-	SnapshotId        string         `json:"snapshot_id" binding:"required"`
-	SnapshotName      string         `json:"snapshot_name" binding:"required"`
-	ModelName         string         `json:"model_name"  binding:"required"`
-	ComponentName     string         `json:"component_name" binding:""`
-	PackageId         string         `json:"package_id" binding:"required"`
-	ModelVarData      datatypes.JSON `json:"model_var_data" binding:""`
-	ExperimentId      string         `json:"experiment_id" binding:""`
-	SimulateVarData   datatypes.JSON `json:"simulate_var_data" binding:""`
-	SimulateResultId  string         `json:"simulate_result_id" binding:""`
-	SimulateResultObj datatypes.JSON `json:"simulate_result_obj" binding:""`
-}
+//type snapshotEditData struct {
+//	SnapshotId       string `json:"snapshot_id" binding:"required"`
+//	SnapshotName     string `json:"snapshot_name" binding:"required"`
+//	ModelName        string `json:"model_name"  binding:"required"`
+//	ComponentName    string `json:"component_name" binding:""`
+//	PackageId        string `json:"package_id" binding:"required"`
+//	ExperimentId     string `json:"experiment_id" binding:""`
+//	SimulateResultId string `json:"simulate_result_id" binding:""`
+//
+//	ModelVarData      datatypes.JSON `json:"model_var_data" binding:""`
+//	SimulateResultObj datatypes.JSON `json:"simulate_result_obj" binding:""`
+//	SimulateVarData   datatypes.JSON `json:"simulate_var_data" binding:""`
+//}
