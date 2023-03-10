@@ -132,7 +132,6 @@ func GetICList(name string) []string {
 		dataList = append(data, dataList...)
 		nameList = data
 	}
-	//dataList := omc.OMC.GetInheritedClassesListAll(nameList)
 	// dataList去重
 	var datalistLen = len(dataList)
 	for i := 0; i < datalistLen; i++ {

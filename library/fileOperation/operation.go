@@ -3,13 +3,14 @@ package fileOperation
 import (
 	"container/list"
 	"errors"
-	"github.com/mholt/archiver/v3"
 	"io"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/mholt/archiver/v3"
 )
 
 func CreateFilePath(filePath string) bool {
@@ -23,7 +24,11 @@ func CreateFilePath(filePath string) bool {
 func CreateFile(filePath string) (io.ReadWriteCloser, bool) {
 	filePathList := strings.Split(filePath, "/")
 	path := strings.Join(filePathList[:len(filePathList)-1], "/")
-	os.MkdirAll(path, 0755)
+	err := os.MkdirAll(path, 0755)
+	if err != nil {
+		panic(err)
+		return nil, false
+	}
 
 	nfs, err := os.Create(filePath)
 	if err != nil {

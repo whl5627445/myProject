@@ -1,11 +1,19 @@
 package service
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log"
+	"strings"
 	"yssim-go/app/DataBaseModel"
+	"yssim-go/app/serviceType"
+	"yssim-go/config"
 	"yssim-go/library/omc"
 )
+
+var r = config.R
+var redisKey = config.RedisCacheKey
 
 func ModelLibraryInitialization(packageModel []DataBaseModel.YssimModels) {
 	setOptions()
@@ -35,7 +43,7 @@ func ModelLibraryInitialization(packageModel []DataBaseModel.YssimModels) {
 			//if models.SysUser == "sys" && cacheStatus != "1" {
 			//modelCache(models.PackageName, models.SysUser)
 			//}
-			log.Printf("初始化模型库：%s %s  %t \n", models.SysUser, models.PackageName, ok)
+			log.Printf("初始化模型库：%s %s  %s %t \n", models.SysUser, models.PackageName, models.Version, ok)
 		} else {
 			log.Println("模型库：" + models.PackageName + "  初始化失败")
 		}
@@ -43,15 +51,54 @@ func ModelLibraryInitialization(packageModel []DataBaseModel.YssimModels) {
 	//config.R.HSet(context.Background(), "yssim-GraphicsData", map[string]string{"status": "1"})
 }
 
+func ModelLibraryInitializationNew(packageModel []DataBaseModel.YssimModels) {
+	setOptions()
+	ctx := context.Background()
+	r.HDel(ctx, config.USERNAME+"-yssim-componentGraphicsData")
+	r.HDel(ctx, config.USERNAME+"-yssim-modelGraphicsData")
+	packageAll := omc.OMC.GetPackages()
+	for _, p := range packageAll {
+		DeleteLibrary(p)
+	}
+
+	for _, models := range packageModel {
+		ok := false
+		if models.FilePath == "" {
+			//cmd := fmt.Sprintf("loadModel(%s, {\"%s\"},true,\"\",false)", models.PackageName, models.Version)
+			ok = omc.OMC.LoadModel(models.PackageName, models.Version)
+		} else {
+			ok = omc.OMC.LoadFile(models.FilePath)
+			_, err := GetLoadPackageConflict(models.PackageName)
+			if err != nil {
+				deleteModel(models.PackageName)
+				ok = false
+			}
+		}
+		if ok {
+			//cacheStatus, _ := config.R.HGet(context.Background(), config.USERNAME+"-yssim-GraphicsData", "status").Result() // 1是已缓存完成
+			//if models.SysUser == "sys" && cacheStatus != "1" {
+			//	modelCache(models.PackageName, models.SysUser)
+			//}
+			packageCacheKeys := r.HKeys(ctx, models.PackageName+"-"+models.Version+"-GraphicsData").Val()
+			packageCacheValues := r.HVals(ctx, models.PackageName+"-"+models.Version+"-GraphicsData").Val()
+			NewKeyValues := []string{}
+			for i := 0; i < len(packageCacheKeys); i++ {
+				NewKeyValues = append(NewKeyValues, packageCacheKeys[i])
+				NewKeyValues = append(NewKeyValues, packageCacheValues[i])
+			}
+			r.HSet(ctx, redisKey, NewKeyValues)
+			log.Printf("初始化模型库：%s %s  %s %t \n", models.SysUser, models.PackageName, models.Version, ok)
+		} else {
+			log.Printf("初始化模型库：%s %s %s 失败 \n", models.SysUser, models.PackageName, models.Version)
+		}
+	}
+	//config.R.HSet(context.Background(), "yssim-GraphicsData", map[string]string{"status": "1"})
+}
 func setOptions() {
 	//commandLineOptions := omc.OMC.GetCommandLineOptions()
 	//if strings.Contains(commandLineOptions, "nfAPI") {
 	omc.OMC.SetOptions()
 	//}
-}
-
-func DeleteLibrary(deletePackage string) {
-	omc.OMC.DeleteClass(deletePackage)
 }
 
 func modelCache(packageModel, permissions string) {
@@ -68,18 +115,122 @@ func modelCache(packageModel, permissions string) {
 	omc.OMC.CacheRefreshSet(false)
 }
 
-// 暂时不用，参数接口速度并不慢
-//func parametersCache(packageModel string) {
-//	modelsALL := omc.OMC.GetClassNames(packageModel, true)
-//
-//	omc.OMC.CacheRefreshSet(true)
-//	for p := 0; p < len(modelsALL); p++ {
-//		e := omc.OMC.GetElements(modelsALL[p])
-//		for ee := 0; ee < len(e); ee++ {
-//			log.Println("正在缓存：", modelsALL[p], " 的参数数据")
-//			GetGraphicsData(modelsALL[p])
-//		}
-//
-//	}
-//	omc.OMC.CacheRefreshSet(false)
-//}
+func GetLibraryAndVersions() map[string]string {
+	// 获取库和版本
+	data := map[string]string{}
+	loadedLibraries := GetLoadedLibraries()
+	for _, library := range loadedLibraries {
+		libraryVersion := omc.OMC.GetClassInformation(library)[14].(string)
+		data[library] = libraryVersion
+	}
+	return data
+}
+
+func GetVersion(packageName string) string {
+	libraryVersion := omc.OMC.GetClassInformation(packageName)[14].(string)
+	return libraryVersion
+}
+
+func GetPackageUses(packageName string) [][]string {
+	// 获取包用到的包版本
+	return omc.OMC.GetUses(packageName)
+}
+
+func GetLoadedLibraries() []string {
+	// 获取已加载库
+	return omc.OMC.GetLoadedLibraries()
+}
+
+func GetAvailableLibraryVersions(packageName string) []string {
+	// 获取库的可用版本
+	return omc.OMC.GetAvailableLibraryVersions(packageName)
+}
+
+func CheckPackageUsesLibrary(packageUses [][]string, loadedLibraries []string) []serviceType.CheckPackageUsesLibrary {
+	var data []serviceType.CheckPackageUsesLibrary
+	for i := 0; i < len(packageUses); i++ {
+		for p := len(loadedLibraries) - 1; p >= 0; p-- {
+			library := loadedLibraries[p]
+			libraryVersion := omc.OMC.GetClassInformation(library)[14].(string)
+			loadedLibrariesUses := GetPackageUses(library)
+			librariesUsesConflict := false
+			for l := 0; l < len(loadedLibrariesUses); l++ {
+				if loadedLibrariesUses[l][0] == packageUses[i][0] && packageUses[i][1] != loadedLibrariesUses[l][1] {
+					librariesUsesConflict = true
+					break
+				}
+			}
+			switch {
+			case packageUses[i][0] == library && packageUses[i][1] != libraryVersion:
+				availableLibraryVersions := GetAvailableLibraryVersions(library)
+				for _, version := range availableLibraryVersions {
+					if packageUses[i][1] == version {
+						//var loadLibrary serviceType.CheckPackageUsesLibrary
+						//loadLibrary.Name = packageUses[i][0]
+						//loadLibrary.Version = packageUses[i][1]
+						//loadLibrary.LoadOrUnload = "load"
+						//data = append(data, loadLibrary)
+						var unloadLibrary serviceType.CheckPackageUsesLibrary
+						unloadLibrary.Name = library
+						unloadLibrary.Version = libraryVersion
+						//unloadLibrary.LoadOrUnload = "unload"
+						data = append(data, unloadLibrary)
+						loadedLibraries = append(loadedLibraries[:p], loadedLibraries[p+1:]...)
+						break
+					}
+				}
+			case librariesUsesConflict:
+				var unloadLibrary serviceType.CheckPackageUsesLibrary
+				unloadLibrary.Name = library
+				unloadLibrary.Version = libraryVersion
+				//unloadLibrary.LoadOrUnload = "unload"
+				data = append(data, unloadLibrary)
+				loadedLibraries = append(loadedLibraries[:p], loadedLibraries[p+1:]...)
+			}
+		}
+	}
+	return data
+}
+
+func LoadPackage(packageName, version, path string) bool {
+	// 加载相应的库与版本
+	if path == "" {
+		return omc.OMC.LoadModel(packageName, version)
+	}
+	return omc.OMC.LoadFile(path)
+}
+
+func DeleteLibrary(packageName string) bool {
+	return omc.OMC.DeleteClass(packageName)
+}
+
+func GetLoadPackageConflict(packageName string) ([]serviceType.CheckPackageUsesLibrary, error) {
+	packageUses := GetPackageUses(packageName)
+	loadedLibraries := GetLoadedLibraries()
+	unloadPackageList := CheckPackageUsesLibrary(packageUses, loadedLibraries)
+	if len(unloadPackageList) > 0 {
+		DeleteLibrary(packageName)
+		var unloadPackageNameList []string
+		for _, library := range unloadPackageList {
+			//if library.LoadOrUnload == "unload" {
+			unloadPackageNameList = append(unloadPackageNameList, library.Name)
+			//}
+		}
+		errStr := fmt.Sprintf("加载 %s 模型库需要先卸载 %s 模型库", packageName, strings.Join(unloadPackageNameList, ", "))
+		return unloadPackageList, errors.New(errStr)
+	}
+	return nil, nil
+}
+
+func LoadAndDeleteLibrary(packageName, version, path, loadOrUnload string) error {
+	result := false
+	if loadOrUnload == "unload" {
+		result = DeleteLibrary(packageName)
+	} else {
+		result = LoadPackage(packageName, version, path)
+	}
+	if !result {
+		return errors.New(fmt.Sprintf("操作模型库 %s %s 时出错，请联系管理员", packageName, version))
+	}
+	return nil
+}

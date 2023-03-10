@@ -9,11 +9,12 @@ import (
 	"yssim-go/library/omc"
 	"yssim-go/library/timeConvert"
 
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/service"
 	"yssim-go/config"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 var DB = config.DB
@@ -321,7 +322,10 @@ func SimulateResultListView(c *gin.Context) {
 	for i := 0; i < len(recordList); i++ {
 		simulateStartTime := time.Unix(recordList[i].SimulateStartTime, 0)
 		simulateEndTime := time.Unix(recordList[i].SimulateEndTime, 0)
-
+		simulateRunTime := timeConvert.UseTimeFormat(int(simulateStartTime.Unix()), int(simulateEndTime.Unix()))
+		if recordList[i].SimulateStartTime == 0 {
+			simulateRunTime = "0"
+		}
 		data := map[string]interface{}{
 			"index":               i + 1,
 			"id":                  recordList[i].ID,
@@ -330,7 +334,7 @@ func SimulateResultListView(c *gin.Context) {
 			"simulate_start_time": simulateStartTime.Format("2006-01-02 15:04:05"),
 			"simulate_end_time":   simulateEndTime.Format("2006-01-02 15:04:05"),
 			"simulate_model_name": recordList[i].SimulateModelName,
-			"simulate_run_time":   timeConvert.UseTimeFormat(int(simulateStartTime.Unix()), int(simulateEndTime.Unix())),
+			"simulate_run_time":   simulateRunTime,
 		}
 		dataList = append(dataList, data)
 	}

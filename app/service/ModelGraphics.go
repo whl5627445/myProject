@@ -30,7 +30,7 @@ func GetGraphicsData(modelName, permissions string) [][]map[string]interface{} {
 	ctx := context.Background()
 	g.permissions = permissions
 	if permissions == "sys" {
-		msg, _ := allModelCache.HGet(ctx, "yssim-modelGraphicsData", modelName).Bytes()
+		msg, _ := allModelCache.HGet(ctx, config.USERNAME+"-yssim-modelGraphicsData", modelName).Bytes()
 		if len(msg) > 0 {
 			err := json.Unmarshal(msg, &g.data)
 			if err != nil {
@@ -82,7 +82,7 @@ func GetGraphicsData(modelName, permissions string) [][]map[string]interface{} {
 	}
 	if permissions == "sys" {
 		redisData, _ := json.Marshal(g.data)
-		allModelCache.HSet(ctx, "yssim-modelGraphicsData", modelName, redisData)
+		allModelCache.HSet(ctx, config.USERNAME+"-yssim-modelGraphicsData", modelName, redisData)
 	}
 	return g.data
 }

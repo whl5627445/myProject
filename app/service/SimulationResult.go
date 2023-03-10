@@ -4,7 +4,6 @@ import (
 	"encoding/csv"
 	"encoding/xml"
 	"fmt"
-	"github.com/beevik/etree"
 	"log"
 	"os"
 	"strconv"
@@ -13,6 +12,8 @@ import (
 	"yssim-go/library/fileOperation"
 	"yssim-go/library/omc"
 	"yssim-go/library/xmlOperation"
+
+	"github.com/beevik/etree"
 )
 
 func ReadSimulationResult(varNameList []string, path string) ([][]float64, bool) {
@@ -187,7 +188,6 @@ func SimulationResultTree(path, parent, keyWords string) []map[string]interface{
 			} else {
 				continue
 			}
-
 			if !nameMap[splitName[0]] && !scalarVariableMap[name].HideResult && !scalarVariableMap[name].IsProtected {
 				data := map[string]interface{}{
 					"variables":    splitName[0],

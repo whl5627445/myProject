@@ -3,11 +3,10 @@ package API
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -15,6 +14,10 @@ import (
 	"yssim-go/app/service"
 	"yssim-go/config"
 	"yssim-go/grpc/grpcPb"
+	"yssim-go/library/fileOperation"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 var DB = config.DB
@@ -62,6 +65,7 @@ func UploadModelPackageView(c *gin.Context) {
 		var packageModel DataBaseModel.YssimModels
 		DB.Where("sys_or_user = ? AND userspace_id = ? AND package_name = ?", username, userSpaceId, packageName).First(&packageModel)
 		if packageModel.PackageName != "" {
+			service.DeleteLibrary(packageName)
 			res.Err = packageName + "， 已存在相同名字的包，请重新检查后上传"
 			res.Status = 2
 			c.JSON(http.StatusOK, res)
@@ -76,6 +80,7 @@ func UploadModelPackageView(c *gin.Context) {
 				SysUser:     username,
 				FilePath:    packagePathNew,
 				UserSpaceId: userSpaceId,
+				Version:     service.GetVersion(packageName),
 			}
 			err = DB.Create(&packageRecord).Error
 			if err != nil {
@@ -83,6 +88,17 @@ func UploadModelPackageView(c *gin.Context) {
 				res.Status = 2
 				service.DeleteLibrary(packageName)
 			} else {
+				conflict, err := service.GetLoadPackageConflict(packageName)
+				if err != nil {
+					service.DeleteLibrary(packageName)
+					data := map[string]interface{}{}
+					data["package_id"] = packageRecord.ID
+					data["conflict"] = conflict
+					res.Data = data
+					res.Msg = err.Error()
+					c.JSON(http.StatusOK, res)
+					return
+				}
 				res.Msg = packageName + " 包已上传成功"
 			}
 			c.JSON(http.StatusOK, res)
@@ -519,5 +535,39 @@ func ModelCodeSaveView(c *gin.Context) {
 		res.Err = "保存模型失败"
 		res.Status = 2
 	}
+	c.JSON(http.StatusOK, res)
+}
+
+func UploadModelVarFileView(c *gin.Context) {
+	/*
+		# 用户上传文件接口
+		## file: 文件数据，bytes形式的文件流
+		## model_name: 模型名称
+		## package_id: 包id
+	*/
+	var res responseData
+	username := c.GetHeader("username")
+	modelName := c.PostForm("model_name")
+	componentName := c.PostForm("component_name")
+	varFile, err := c.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	varFileName := varFile.Filename
+
+	file, _ := varFile.Open()
+	fileData, _ := io.ReadAll(file)
+	pwd, _ := os.Getwd()
+	fileSavePath := pwd + "/public/model_var_file/" + username + "/" + modelName + "/" + componentName + "/" + varFileName
+	result := fileOperation.WriteFileByte(fileSavePath, fileData)
+	if result {
+		res.Msg = "文件上传成功"
+		res.Data = []string{fileSavePath}
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	res.Err = "上传失败，请重新上传"
+	res.Status = 2
 	c.JSON(http.StatusOK, res)
 }

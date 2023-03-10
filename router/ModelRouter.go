@@ -1,8 +1,9 @@
 package router
 
 import (
-	"github.com/gin-gonic/gin"
 	ModelAPI "yssim-go/app/api/model"
+
+	"github.com/gin-gonic/gin"
 )
 
 func ModelRouter(g *gin.Engine) {
@@ -21,6 +22,8 @@ func ModelRouter(g *gin.Engine) {
 		Models.POST("/properties/set", ModelAPI.SetComponentPropertiesView)
 		Models.POST("/class/copy", ModelAPI.CopyClassView)
 		Models.POST("/package/delete", ModelAPI.DeletePackageAndModelView)
+		Models.POST("/package/load", ModelAPI.LoadModelView)
+		Models.GET("/package/get/all", ModelAPI.GetPackageAndVersionView)
 		Models.GET("/component/name", ModelAPI.GetComponentNameView)
 		Models.POST("/component/add", ModelAPI.AddModelComponentView)
 		Models.POST("/component/delete", ModelAPI.DeleteModelComponentView)

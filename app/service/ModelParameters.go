@@ -154,6 +154,11 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 				dataDefault["tab"] = tab.(string)
 				dataDefault["group"] = group.(string)
 				showStartAttribute = dListTab[3].(string)
+				if dListTab[5].(string) != "-" {
+					dataDefault["type"] = "file"
+					dataDefault["caption"] = dListTab[6].(string)
+					dataDefault["filter"] = strings.Split(dListTab[5].(string), ";;")
+				}
 			}
 		}
 		if showStartAttribute == "true" {
@@ -344,8 +349,7 @@ func (m modelParameters) getStartAndFixedValue(name, varName, varType string) st
 func SetComponentModifierValue(className string, parameterValue map[string]string) bool {
 	for k, v := range parameterValue {
 		result := omc.OMC.SetComponentModifierValue(className, k, v)
-
-		if result != "Ok" {
+		if !result {
 			return false
 		}
 	}
@@ -353,7 +357,16 @@ func SetComponentModifierValue(className string, parameterValue map[string]strin
 }
 
 func AddComponentParameters(varName, varType, className string) bool {
-	return omc.OMC.AddComponentParameter(varName, varType, className)
+	var defaultValue string
+	switch {
+	case varType == "Boolean":
+		defaultValue = "false"
+	case varType == "Real":
+		defaultValue = ""
+	case varType == "Integer":
+		defaultValue = "0"
+	}
+	return omc.OMC.AddComponentParameter(varName, varType, className, defaultValue)
 }
 
 func DeleteComponentParameters(varName, className string) bool {

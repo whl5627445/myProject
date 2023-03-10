@@ -29,16 +29,20 @@ func GetSysRootModelView(c *gin.Context) {
 	var modelData []map[string]interface{}
 	var packageModel []DataBaseModel.YssimModels
 	DB.Where("sys_or_user =  ? AND userspace_id = ?", "sys", "0").Find(&packageModel)
+	libraryAndVersions := service.GetLibraryAndVersions()
 	for i := 0; i < len(packageModel); i++ {
-		data := map[string]interface{}{
-			"package_id":   packageModel[i].ID,
-			"package_name": packageModel[i].PackageName,
-			"model_name":   packageModel[i].PackageName,
-			"haschild":     service.GetModelHasChild(packageModel[i].PackageName),
-			"image":        service.GetIcon(packageModel[i].PackageName, packageModel[i].PackageName, packageModel[i].Version),
-			"type":         service.GetModelType(packageModel[i].PackageName),
+		if libraryAndVersions[packageModel[i].PackageName] == packageModel[i].Version {
+			data := map[string]interface{}{
+				"package_id":      packageModel[i].ID,
+				"package_name":    packageModel[i].PackageName,
+				"package_version": packageModel[i].Version,
+				"model_name":      packageModel[i].PackageName,
+				"haschild":        service.GetModelHasChild(packageModel[i].PackageName),
+				"image":           service.GetIcon(packageModel[i].PackageName, packageModel[i].PackageName, packageModel[i].Version),
+				"type":            service.GetModelType(packageModel[i].PackageName),
+			}
+			modelData = append(modelData, data)
 		}
-		modelData = append(modelData, data)
 	}
 	res.Data = modelData
 	c.JSON(http.StatusOK, res)
@@ -55,16 +59,21 @@ func GetUserRootModelView(c *gin.Context) {
 	var modelData []map[string]interface{}
 	var packageModel []DataBaseModel.YssimModels
 	DB.Where("sys_or_user = ? AND userspace_id = ?", username, userSpaceId).Find(&packageModel)
+	libraryAndVersions := service.GetLibraryAndVersions()
 	for i := 0; i < len(packageModel); i++ {
-		data := map[string]interface{}{
-			"package_id":   packageModel[i].ID,
-			"package_name": packageModel[i].PackageName,
-			"model_name":   packageModel[i].PackageName,
-			"haschild":     service.GetModelHasChild(packageModel[i].PackageName),
-			"image":        service.GetIcon(packageModel[i].PackageName, packageModel[i].PackageName, packageModel[i].Version),
-			"type":         service.GetModelType(packageModel[i].PackageName),
+		loadVersions, ok := libraryAndVersions[packageModel[i].PackageName]
+		if ok && loadVersions == packageModel[i].Version {
+			data := map[string]interface{}{
+				"package_id":      packageModel[i].ID,
+				"package_name":    packageModel[i].PackageName,
+				"package_version": packageModel[i].Version,
+				"model_name":      packageModel[i].PackageName,
+				"haschild":        service.GetModelHasChild(packageModel[i].PackageName),
+				"image":           service.GetIcon(packageModel[i].PackageName, packageModel[i].PackageName, packageModel[i].Version),
+				"type":            service.GetModelType(packageModel[i].PackageName),
+			}
+			modelData = append(modelData, data)
 		}
-		modelData = append(modelData, data)
 	}
 	res.Data = modelData
 	c.JSON(http.StatusOK, res)
@@ -244,7 +253,7 @@ func AddModelParametersView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	result := service.AddComponentParameters(item.ParameterName, "Real", item.ModelName)
+	result := service.AddComponentParameters(item.ParameterName, item.VarType, item.ModelName)
 	if result {
 		res.Msg = "设置完成"
 	} else {
@@ -1012,6 +1021,7 @@ func GetCollectionModelView(c *gin.Context) {
 func DeleteCollectionModelView(c *gin.Context) {
 	/*
 		# 删除收藏的模型
+		## id： 需要删除的收藏模型id
 	*/
 	//username := c.GetHeader("username")
 	//userSpaceId := c.GetHeader("space_id")
@@ -1032,6 +1042,8 @@ func DeleteCollectionModelView(c *gin.Context) {
 func SearchModelView(c *gin.Context) {
 	/*
 		# 搜索模型
+		## keywords: 需要搜索的关键字
+		## parent: 需要搜索的关键字的父节点
 	*/
 	username := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
@@ -1050,6 +1062,76 @@ func SearchModelView(c *gin.Context) {
 	for _, model := range packageModel {
 		modelNameList := service.SearchModel(model, keywords, parent)
 		data = append(data, modelNameList...)
+	}
+	res.Data = data
+	c.JSON(http.StatusOK, res)
+}
+
+func LoadModelView(c *gin.Context) {
+	/*
+		# 加载模型
+	*/
+	username := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
+	var res responseData
+	var loadPackage loadPackageData
+	var packageModel DataBaseModel.YssimModels
+	err := c.BindJSON(&loadPackage)
+	if err != nil {
+		log.Println(err)
+	}
+	DB.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", loadPackage.PackageId, []string{"sys", username}, []string{"0", userSpaceId}).First(&packageModel)
+	if err != nil || packageModel.ID == "" {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	loadResult := service.LoadPackage(packageModel.PackageName, packageModel.Version, packageModel.FilePath)
+	if loadResult {
+		if len(loadPackage.LoadPackageConflict) == 0 {
+			conflict, err := service.GetLoadPackageConflict(packageModel.PackageName)
+			if err != nil {
+				service.DeleteLibrary(packageModel.PackageName)
+				res.Data = conflict
+				res.Msg = err.Error()
+				c.JSON(http.StatusOK, res)
+				return
+			}
+		} else {
+			for _, conflict := range loadPackage.LoadPackageConflict {
+				service.LoadAndDeleteLibrary(conflict.Name, conflict.Version, "", "unload")
+				err = service.LoadAndDeleteLibrary(packageModel.PackageName, packageModel.Version, packageModel.FilePath, "load")
+				if err != nil {
+					res.Err = err.Error()
+					res.Status = 2
+					c.JSON(http.StatusOK, res)
+					return
+				}
+
+			}
+		}
+	}
+	res.Msg = "加载成功"
+	c.JSON(http.StatusOK, res)
+}
+
+func GetPackageAndVersionView(c *gin.Context) {
+	/*
+		# 获取模型库和版本
+	*/
+	username := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
+	var packageModel []DataBaseModel.YssimModels
+	DB.Where("sys_or_user IN ? AND userspace_id IN ?", []string{"sys", username}, []string{"0", userSpaceId}).Find(&packageModel)
+	var res responseData
+	var data []map[string]string
+	for i := 0; i < len(packageModel); i++ {
+		d := map[string]string{
+			"package_id":   packageModel[i].ID,
+			"package_name": packageModel[i].PackageName,
+			"version":      packageModel[i].Version,
+			"sys_user":     packageModel[i].SysUser,
+		}
+		data = append(data, d)
 	}
 	res.Data = data
 	c.JSON(http.StatusOK, res)

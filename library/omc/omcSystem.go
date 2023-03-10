@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"regexp"
 	"sync"
@@ -23,6 +24,8 @@ type ZmqObject struct {
 }
 
 var cacheRefresh = false
+var redisCacheKey = &config.RedisCacheKey
+var userName = config.USERNAME
 
 //var AllModelCache = make(map[string][]byte, 1000)
 
@@ -36,13 +39,13 @@ func (o *ZmqObject) SendExpression(cmd string) ([]interface{}, bool) {
 	var msg []byte
 
 	ctx := context.Background()
-	msg, err := allModelCache.HGet(ctx, "yssim-GraphicsData", cmd).Bytes()
+	msg, err := allModelCache.HGet(ctx, *redisCacheKey, cmd).Bytes()
 	if err != nil {
 		_ = o.Send(zmq4.NewMsgString(cmd))
 		data, _ := o.Recv()
 		msg = data.Bytes()
 		if cacheRefresh && len(msg) > 0 {
-			allModelCache.HSet(ctx, "yssim-GraphicsData", cmd, msg)
+			allModelCache.HSet(ctx, *redisCacheKey, cmd, msg)
 		}
 	}
 	parseData, err := dataToGo(msg)
@@ -68,13 +71,13 @@ func (o *ZmqObject) SendExpressionNoParsed(cmd string) ([]byte, bool) {
 	var msg []byte
 	//s := time.Now().UnixNano() / 1e6
 	ctx := context.Background()
-	msg, err := allModelCache.HGet(ctx, "yssim-GraphicsData", cmd).Bytes()
-	if err != nil {
+	msg, _ = allModelCache.HGet(ctx, *redisCacheKey, cmd).Bytes()
+	if msg == nil {
 		_ = o.Send(zmq4.NewMsgString(cmd))
 		data, _ := o.Recv()
 		msg = data.Bytes()
 		if cacheRefresh && len(msg) > 0 {
-			allModelCache.HSet(ctx, "yssim-GraphicsData", cmd, msg)
+			allModelCache.HSet(ctx, *redisCacheKey, cmd, msg)
 		}
 	}
 	msg = bytes.ReplaceAll(msg, []byte("\"\"\n"), []byte(""))
@@ -87,7 +90,6 @@ func (o *ZmqObject) SendExpressionNoParsed(cmd string) ([]byte, bool) {
 	//	log.Println("cmd: ", cmd)
 	//log.Println("消耗时间: ", time.Now().UnixNano()/1e6-s)
 	//}
-
 	return msg, true
 }
 
@@ -578,15 +580,18 @@ func (o *ZmqObject) IsExtendsModifierFinal(classNameOne string, classNameTwo str
 }
 
 // SetComponentModifierValue 设置组件修饰符的值
-func (o *ZmqObject) SetComponentModifierValue(className string, parameter string, value string) string {
+func (o *ZmqObject) SetComponentModifierValue(className string, parameter string, value string) bool {
 	code := "=" + value + ""
 	if value == "" {
 		code = "()"
 	}
 	cmd := "setComponentModifierValue(" + className + ", " + parameter + ", $Code(" + code + "))"
-	data, _ := o.SendExpressionNoParsed(cmd)
+	data, ok := o.SendExpressionNoParsed(cmd)
 	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
-	return string(data)
+	if ok && string(data) == "Ok" {
+		return true
+	}
+	return false
 }
 
 // RenameComponentInClass 重新修改模型组件的名称。 此函数不返回正确与错误，不报错均视为执行成功
@@ -924,7 +929,7 @@ func (o *ZmqObject) ParseFile(path string) (string, bool) {
 // LoadFile 加载mo文件
 func (o *ZmqObject) LoadFile(path string) bool {
 	pwd, _ := os.Getwd()
-	cmd := "loadFile(\"" + pwd + "/" + path + "\",\"UTF-8\")"
+	cmd := "loadFile(\"" + pwd + "/" + path + "\")"
 	result, ok := o.SendExpressionNoParsed(cmd)
 	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
 	if ok && string(result) == "true" {
@@ -962,6 +967,17 @@ func (o *ZmqObject) LoadString(code, path string) bool {
 	jsonCode = bytes.ReplaceAll(jsonCode, []byte("\\u2028"), []byte("U+2028"))
 	jsonCode = bytes.ReplaceAll(jsonCode, []byte("\\u2029"), []byte("U+2029"))
 	cmd := "loadString(" + string(jsonCode) + ",\"" + pwd + "/" + path + "\",\"UTF-8\")"
+	result, ok := o.SendExpressionNoParsed(cmd)
+	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
+	if ok && string(result) == "true" {
+		return true
+	}
+	return false
+}
+
+func (o *ZmqObject) LoadModel(modelName, version string) bool {
+
+	cmd := fmt.Sprintf("loadModel(%s, {\"%s\"},true,\"\",false)", modelName, version)
 	result, ok := o.SendExpressionNoParsed(cmd)
 	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
 	if ok && string(result) == "true" {
@@ -1022,6 +1038,52 @@ func (o *ZmqObject) GetAvailableLibraries() []interface{} {
 	result, ok := o.SendExpression(cmd)
 	if ok {
 		return result
+	}
+	return nil
+}
+
+// GetAvailableLibraryVersions 获取可用库版本
+func (o *ZmqObject) GetAvailableLibraryVersions(packageName string) []string {
+	cmd := fmt.Sprintf("getAvailableLibraryVersions(%s)", packageName)
+	result, ok := o.SendExpression(cmd)
+	if ok {
+		var data []string
+		for i := 0; i < len(result); i++ {
+			data = append(data, result[i].(string))
+		}
+		return data
+	}
+	return nil
+}
+
+// GetLoadedLibraries 获取已加载库
+func (o *ZmqObject) GetLoadedLibraries() []string {
+	cmd := "getLoadedLibraries()"
+	result, ok := o.SendExpression(cmd)
+	if ok {
+		var data []string
+		for i := 0; i < len(result); i++ {
+			data = append(data, result[i].([]interface{})[0].(string))
+		}
+		return data
+	}
+	return nil
+}
+
+// GetUses 获取库使用了哪些依赖
+func (o *ZmqObject) GetUses(packageName string) [][]string {
+	cmd := fmt.Sprintf("getUses(%s)", packageName)
+	result, ok := o.SendExpression(cmd)
+	if ok {
+		var data [][]string
+		for i := 0; i < len(result); i++ {
+			var d []string
+			for _, dd := range result[i].([]interface{}) {
+				d = append(d, dd.(string))
+			}
+			data = append(data, d)
+		}
+		return data
 	}
 	return nil
 }
@@ -1099,7 +1161,7 @@ func (o *ZmqObject) DumpXMLDAE(className string) []interface{} {
 }
 
 // AddComponentParameter 新建一个以varType为类型的组件
-func (o *ZmqObject) AddComponentParameter(varName, varType, className string) bool {
+func (o *ZmqObject) AddComponentParameter(varName, varType, className, defaultValue string) bool {
 	addComponentParameterCmd := "addComponent(" + varName + "," + varType + "," + className + ")"
 	// addComponent(varName, varType,className)
 	// 将className的varName组件设置成参数类型，通过修改属性实现
@@ -1113,7 +1175,10 @@ func (o *ZmqObject) AddComponentParameter(varName, varType, className string) bo
 		result, ok := o.SendExpressionNoParsed(setComponentPropertiesCmd)
 		result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
 		if ok && string(result) == "Ok" {
-			return true
+			ok = o.SetComponentModifierValue(className, varName, defaultValue)
+			if ok {
+				return true
+			}
 		}
 	}
 	cmd := "deleteComponent(" + varName + "," + className + ")"
@@ -1130,13 +1195,12 @@ func (o *ZmqObject) DeleteComponentParameter(varName, className string) bool {
 		return false
 	}
 	return true
-
 }
 
 func (o *ZmqObject) GetComponentIconAndDiagramAnnotationsALl(classNameList []string, isIcon bool) []interface{} {
 	var data []interface{}
 	ctx := context.Background()
-	msg, _ := allModelCache.HGet(ctx, "yssim-componentGraphicsData", classNameList[len(classNameList)-1]).Bytes()
+	msg, _ := allModelCache.HGet(ctx, userName+"-yssim-componentGraphicsData", classNameList[len(classNameList)-1]).Bytes()
 	if len(msg) > 0 {
 		err := json.Unmarshal(msg, &data)
 		if err != nil {
@@ -1159,8 +1223,7 @@ func (o *ZmqObject) GetComponentIconAndDiagramAnnotationsALl(classNameList []str
 			data = append(data, result...)
 		}
 		setData, _ := json.Marshal(data)
-		allModelCache.HSet(ctx, "yssim-componentGraphicsData", classNameList[len(classNameList)-1], setData)
+		allModelCache.HSet(ctx, userName+"-yssim-componentGraphicsData", classNameList[len(classNameList)-1], setData)
 	}
 	return data
-
 }

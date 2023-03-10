@@ -1,8 +1,9 @@
 package router
 
 import (
-	"github.com/gin-gonic/gin"
 	FileAPI "yssim-go/app/api/file"
+
+	"github.com/gin-gonic/gin"
 )
 
 func FileRouter(g *gin.Engine) {
@@ -18,5 +19,6 @@ func FileRouter(g *gin.Engine) {
 		Models.POST("/result/filter/get", FileAPI.GetFilterResultFileView)
 		Models.POST("/fmu/export", FileAPI.FmuExportModelView)
 		Models.POST("/code/save", FileAPI.ModelCodeSaveView)
+		Models.POST("/upload/var", FileAPI.UploadModelVarFileView)
 	}
 }
