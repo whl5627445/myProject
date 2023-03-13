@@ -1,12 +1,10 @@
 package API
 
 import (
-	"encoding/json"
 	"fmt"
 	"math"
 	"net/http"
 	"os"
-	"reflect"
 	"strconv"
 	"time"
 	"yssim-go/library/omc"
@@ -612,7 +610,7 @@ func ExperimentParametersView(c *gin.Context) {
 }
 func CreateSnapshotView(c *gin.Context) {
 	/*
-		#创建试图(快照)接口
+		#xqd#创建试图(快照)接口
 	*/
 	var res responseData
 	var item snapshotCreatData
@@ -664,7 +662,7 @@ func CreateSnapshotView(c *gin.Context) {
 
 func DeleteSnapshotView(c *gin.Context) {
 	/*
-	   # 删除试图接口
+	   #xqd# 删除试图接口
 	*/
 	var res responseData
 	var item snapshotDeleteData
@@ -684,34 +682,33 @@ func DeleteSnapshotView(c *gin.Context) {
 
 func EditSnapshotView(c *gin.Context) {
 	/*
-	   # 修改试图接口
+	   #xqd# 修改试图接口
+	   #grom bug记录：snapshotEditData的字段数和名称必须和数据库模型YssimSnapshots一致。
 	*/
 	username := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
 	var res responseData
-	jsonMp := make(map[string]interface{})
-	err := c.BindJSON(&jsonMp)
-	for key, value := range jsonMp {
-		if reflect.TypeOf(value).Kind() == reflect.Map {
-			jsonMp[key], _ = json.Marshal(value)
-		}
-	}
+	var item snapshotEditData
+
+	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
-
+	//判断名称是否存在
 	var recordName DataBaseModel.YssimSnapshots
-	DB.Where("id != ? AND snapshot_name =? AND username =? AND space_id =? AND model_name =?", jsonMp["snapshot_id"], jsonMp["snapshot_name"], username, userSpaceId, jsonMp["model_name"]).First(&recordName)
+	DB.Where("id != ? AND snapshot_name =? AND username =? AND space_id =? AND model_name =? AND package_id=?", item.ID, item.SnapshotName, username, userSpaceId, item.ModelName, item.PackageId).First(&recordName)
 	if recordName.SnapshotName != "" {
 		res.Msg = "试图记录名称已存在，请更换。"
 		c.JSON(http.StatusOK, res)
 		return
 	}
+	//更新数据库
 	var editRecord DataBaseModel.YssimSnapshots
-	err = DB.Model(&editRecord).Omit("snapshot_id").Where("id = ? ", jsonMp["snapshot_id"]).Updates(jsonMp).Error
-	if err != nil {
-		fmt.Println("DB Model Updates err", err)
+	result := DB.Model(&editRecord).Omit("ID", "SpaceId", "UserName", "ModelName", "PackageId").Where("id = ? ", item.ID).Updates(item).Error
+
+	if result != nil {
+		fmt.Println("DB Model Updates err", result)
 		res.Err = "更新失败，请稍后再试"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
@@ -724,7 +721,7 @@ func EditSnapshotView(c *gin.Context) {
 
 func SnapshotGetListView(c *gin.Context) {
 	/*
-	   # 获取试图列表接口
+	   #xqd# 获取试图列表接口
 	*/
 
 	username := c.GetHeader("username")

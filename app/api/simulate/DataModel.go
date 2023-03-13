@@ -87,3 +87,19 @@ type snapshotCreatData struct {
 type snapshotDeleteData struct {
 	SnapshotId string `json:"snapshot_id" binding:"required"`
 }
+
+// snapshotEditData的字段数和名称必须和数据库模型YssimSnapshots一致
+type snapshotEditData struct {
+	ID                string         `json:"snapshot_id"  binding:"required"`
+	SpaceId           string         `json:"space_id"  binding:""`
+	SnapshotName      string         `json:"snapshot_name" binding:"required"`
+	UserName          string         `json:"user_name"  binding:""`
+	ModelName         string         `json:"model_name" binding:"required"`
+	PackageId         string         `json:"package_id" binding:"required"`
+	ComponentName     string         `json:"component_name" binding:""`
+	ExperimentId      string         `json:"experiment_id" binding:""`
+	SimulateResultId  string         `json:"simulate_result_id" binding:""`
+	SimulateResultObj datatypes.JSON `json:"simulate_result_obj" binding:""`
+	SimulateVarData   datatypes.JSON `json:"simulate_var_data" binding:""`
+	ModelVarData      datatypes.JSON `json:"model_var_data" binding:""`
+}
