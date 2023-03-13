@@ -24,5 +24,10 @@ func SimulateRouter(g *gin.Engine) {
 		Models.GET("/experiment/list", SimulationAPI.ExperimentGetView)
 		Models.GET("/experiment/parameters", SimulationAPI.ExperimentParametersView)
 
+		Models.POST("/snapshot/create", SimulationAPI.CreateSnapshotView)
+		Models.POST("/snapshot/delete", SimulationAPI.DeleteSnapshotView)
+		Models.POST("/snapshot/edit", SimulationAPI.EditSnapshotView)
+		Models.GET("/snapshot/list", SimulationAPI.SnapshotGetListView)
+
 	}
 }
