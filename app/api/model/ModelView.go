@@ -401,12 +401,14 @@ func CopyClassView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
-	packageName := strings.Split(item.ParentName+"."+item.ModelName, ".")[0]
+	packageName := item.ModelName
+	if item.PackageId != "" {
+		packageName = strings.Split(item.ParentName, ".")[0]
+	}
 	filePath := ""
 	var res responseData
 	var packageModel DataBaseModel.YssimModels
 	DB.Where("package_name = ? AND userspace_id = ?", packageName, "0").Or("sys_or_user = ? AND userspace_id = ? AND package_name = ?", username, userSpaceId, packageName).First(&packageModel)
-
 	if packageModel.SysUser == "sys" {
 		res.Msg = "标准库不允许插入模型"
 		res.Status = 2
@@ -415,6 +417,7 @@ func CopyClassView(c *gin.Context) {
 	}
 	if packageModel.PackageName == item.ModelName {
 		res.Msg = "模型名称已存在"
+
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
@@ -426,25 +429,23 @@ func CopyClassView(c *gin.Context) {
 		packageName = item.ModelName
 		filePath = "public/UserFiles/UploadFile/" + username + "/" + packageName + "/" + time.Now().Local().Format("20060102150405") + "/" + item.ModelName + ".mo"
 	}
-
+	model := DataBaseModel.YssimModels{
+		ID:          uuid.New().String(),
+		PackageName: packageName,
+		SysUser:     username,
+		FilePath:    filePath,
+		UserSpaceId: userSpaceId,
+	}
+	err = DB.Create(&model).Error
 	result, msg := service.SaveModel(item.ModelName, item.CopiedClassName, item.ParentName, packageName, "copy", filePath)
 	if result {
 		res.Msg = msg
 		data := map[string]string{}
 		if item.ParentName == "" {
-			model := DataBaseModel.YssimModels{
-				ID:          uuid.New().String(),
-				PackageName: packageName,
-				SysUser:     username,
-				FilePath:    filePath,
-				UserSpaceId: userSpaceId,
-			}
-			err = DB.Create(&model).Error
 			if err != nil {
 				log.Println("err：", err)
 				log.Println("复制模型失败")
 			}
-
 			data["id"] = model.ID
 			data["model_name"] = item.ModelName
 		} else {
@@ -1082,31 +1083,30 @@ func LoadModelView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
-	loadResult := service.LoadPackage(packageModel.PackageName, packageModel.Version, packageModel.FilePath)
-	if loadResult {
-		if len(loadPackage.LoadPackageConflict) == 0 {
-			conflict, err := service.GetLoadPackageConflict(packageModel.PackageName, packageModel.Version, packageModel.FilePath)
+	//loadResult := service.LoadPackage(packageModel.PackageName, packageModel.Version, packageModel.FilePath)
+	//if loadResult {
+	if len(loadPackage.LoadPackageConflict) == 0 {
+		conflict, err := service.GetLoadPackageConflict(packageModel.PackageName, packageModel.Version, packageModel.FilePath)
+		if err != nil {
+			//service.DeleteLibrary(packageModel.PackageName)
+			res.Data = conflict
+			res.Msg = err.Error()
+			c.JSON(http.StatusOK, res)
+			return
+		}
+	} else {
+		for _, conflict := range loadPackage.LoadPackageConflict {
+			service.LoadAndDeleteLibrary(conflict.Name, conflict.Version, "", "unload")
+			err = service.LoadAndDeleteLibrary(packageModel.PackageName, packageModel.Version, packageModel.FilePath, "load")
 			if err != nil {
-				service.DeleteLibrary(packageModel.PackageName)
-				res.Data = conflict
-				res.Msg = err.Error()
+				res.Err = err.Error()
+				res.Status = 2
 				c.JSON(http.StatusOK, res)
 				return
 			}
-		} else {
-			for _, conflict := range loadPackage.LoadPackageConflict {
-				service.LoadAndDeleteLibrary(conflict.Name, conflict.Version, "", "unload")
-				err = service.LoadAndDeleteLibrary(packageModel.PackageName, packageModel.Version, packageModel.FilePath, "load")
-				if err != nil {
-					res.Err = err.Error()
-					res.Status = 2
-					c.JSON(http.StatusOK, res)
-					return
-				}
-
-			}
 		}
 	}
+	//}
 	res.Msg = "加载成功"
 	c.JSON(http.StatusOK, res)
 }
