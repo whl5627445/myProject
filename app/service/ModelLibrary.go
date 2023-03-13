@@ -138,9 +138,16 @@ func GetPackageUses(packageName string) [][]string {
 	return omc.OMC.GetUses(packageName)
 }
 
-func GetLoadedLibraries() []string {
+func GetLoadedLibraries() [][]string {
 	// 获取已加载库
-	return omc.OMC.GetLoadedLibraries()
+	lList := [][]string{}
+	loadedLibraries := omc.OMC.GetLoadedLibraries()
+	for i := 0; i < len(loadedLibraries); i++ {
+		name := loadedLibraries[i]
+		version := GetVersion(name)
+		lList = append(lList, []string{name, version})
+	}
+	return lList
 }
 
 func GetAvailableLibraryVersions(packageName string) []string {
@@ -212,29 +219,21 @@ func DeleteLibrary(packageName string) bool {
 	return omc.OMC.DeleteClass(packageName)
 }
 
-func GetLoadPackageConflict(packageName, version, path string) ([]serviceType.CheckPackageUsesLibrary, error) {
-	packageNameAndVersion := [][]string{{packageName, version}}
-	if path != "" {
-		LoadPackage(packageName, version, path)
-	}
-	uses := GetPackageUses(packageName)
-	packageNameAndVersion = append(packageNameAndVersion, uses...)
-	if path != "" {
+func GetLoadPackageConflict(packageName, version, path string) ([]map[string]string, error) {
+	//var unloadList []serviceType.CheckPackageUsesLibrary
+	var unloadList []map[string]string
+	unloadPackageNameList := checkLibraryInterdependenceNoLoad(packageName, version)
+	if len(unloadPackageNameList) > 0 {
 		deleteModel(packageName)
-	}
-	var unloadPackageNameList []string
-	var unloadList []serviceType.CheckPackageUsesLibrary
-	for i := 0; i < len(packageNameAndVersion); i++ {
-		unloadPackageList := CheckPackageConflict(packageNameAndVersion[i][0], packageNameAndVersion[i][1])
-		if len(unloadPackageList) > 0 {
-			for _, library := range unloadPackageList {
-				unloadPackageNameList = append(unloadPackageNameList, library.Name)
-			}
-		}
-		unloadList = append(unloadList, unloadPackageList...)
+	} else {
+		LoadPackage(packageName, version, path)
+		unloadPackageNameList = checkLibraryInterdependenceIsLoad(packageName, version)
 	}
 	if len(unloadPackageNameList) > 0 {
 		errStr := fmt.Sprintf("加载 %s 模型库需要先卸载 %s 模型库", packageName, strings.Join(unloadPackageNameList, ", "))
+		for i := 0; i < len(unloadPackageNameList); i++ {
+			unloadList = append(unloadList, map[string]string{"name": unloadPackageNameList[i]})
+		}
 		return unloadList, errors.New(errStr)
 	}
 	return nil, nil
@@ -251,4 +250,70 @@ func LoadAndDeleteLibrary(packageName, version, path, loadOrUnload string) error
 		return errors.New(fmt.Sprintf("操作模型库 %s %s 时出错，请联系管理员", packageName, version))
 	}
 	return nil
+}
+
+func checkLibraryInterdependenceNoLoad(packageName, version string) []string {
+	var unloadPackageNameList []string
+	unloadMap := map[string]bool{}
+	LoadPackageList := GetLoadedLibraries()
+	for _, l := range LoadPackageList {
+		if l[0] == packageName {
+			if l[1] == version {
+				return nil
+			} else {
+				unloadMap[l[0]] = true
+			}
+		}
+	}
+	unloadMap = getInterdependence(unloadMap, LoadPackageList)
+	for k, _ := range unloadMap {
+		unloadPackageNameList = append(unloadPackageNameList, k)
+	}
+	return unloadPackageNameList
+}
+
+func checkLibraryInterdependenceIsLoad(packageName, version string) []string {
+	var unloadPackageNameList []string
+	unloadMap := map[string]bool{}
+	LoadPackageList := GetLoadedLibraries()
+	uses := GetPackageUses(packageName)
+	for i := 0; i < len(LoadPackageList); i++ {
+		if LoadPackageList[i][0] == packageName {
+			LoadPackageList = append(LoadPackageList[:i], LoadPackageList[i+1:]...)
+		}
+	}
+	// 查看需要被卸载的库用到哪些其他库
+	for _, u := range uses { // 循环被卸载库的依赖项有没有被加载
+		for _, l := range LoadPackageList {
+			//lUses := GetPackageUses(l[0]) // 查看已加载的库的依赖项
+			if l[0] == u[0] && l[1] != u[1] { //  查看被加载库的依赖项是否被加载
+				unloadMap[l[0]] = true
+			}
+		}
+	}
+	unloadMap = getInterdependence(unloadMap, LoadPackageList)
+	for k, _ := range unloadMap {
+		unloadPackageNameList = append(unloadPackageNameList, k)
+	}
+	return unloadPackageNameList
+}
+
+func getInterdependence(unloadMap map[string]bool, LoadPackageList [][]string) map[string]bool {
+	for un, _ := range unloadMap {
+		uses := GetPackageUses(un) // 查看需要被卸载的库用到哪些其他库
+		for _, u := range uses {   // 循环被卸载库的依赖项有没有被加载
+			for _, l := range LoadPackageList {
+				lUses := GetPackageUses(l[0]) // 查看已加载的库的依赖项
+				if l[0] == u[0] {             //  查看被加载库的依赖项是否被加载
+					unloadMap[l[0]] = true
+				}
+				for _, use := range lUses { //查看已加载的库是否依赖需要被卸载的库
+					if use[0] == un {
+						unloadMap[l[0]] = true
+					}
+				}
+			}
+		}
+	}
+	return unloadMap
 }
