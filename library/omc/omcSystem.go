@@ -434,7 +434,7 @@ func (o *ZmqObject) GetIconAnnotationList(classNameList []string) []interface{} 
 	return dataList
 }
 
-// GetPackages 获取可用的包名称列表
+// GetPackages 获取已加载的的包名称列表
 func (o *ZmqObject) GetPackages() []string {
 	var dataList []string
 	cmd := "getClassNames()"

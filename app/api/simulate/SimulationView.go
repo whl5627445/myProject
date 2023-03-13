@@ -324,7 +324,7 @@ func SimulateResultListView(c *gin.Context) {
 		simulateEndTime := time.Unix(recordList[i].SimulateEndTime, 0)
 		simulateRunTime := timeConvert.UseTimeFormat(int(simulateStartTime.Unix()), int(simulateEndTime.Unix()))
 		if recordList[i].SimulateStartTime == 0 {
-			simulateRunTime = "0"
+			simulateRunTime = "-"
 		}
 		data := map[string]interface{}{
 			"index":               i + 1,

@@ -1,6 +1,7 @@
 package API
 
 import (
+	"log"
 	"net/http"
 	"time"
 	"yssim-go/app/DataBaseModel"
@@ -105,10 +106,7 @@ func LoginUserSpaceView(c *gin.Context) {
 	userName := c.GetHeader("username")
 	spaceId := c.GetHeader("space_id")
 
-	var spaceLast DataBaseModel.YssimUserSpace
-	DB.Where("id = ? AND username = ?", spaceId, userName).First(&spaceLast)
-	DB.Where("username = ?", userName).Order("last_login_time desc").First(&spaceLast)
-	if spaceLast.ID == spaceId {
+	if item.SpaceId == spaceId {
 		res.Msg = "初始化完成"
 		c.JSON(http.StatusOK, res)
 		return
@@ -123,22 +121,13 @@ func LoginUserSpaceView(c *gin.Context) {
 	}
 	var sysPackageModelAll []DataBaseModel.YssimModels
 	var userPackageModelAll []DataBaseModel.YssimModels
-	config.DB.Where("sys_or_user = ? AND userspace_id = ? AND default_version = ?", "sys", "0", true).Find(&sysPackageModelAll)
-	config.DB.Where("sys_or_user = ? AND userspace_id = ?", userName, spaceId).Find(&userPackageModelAll)
+	config.DB.Where("sys_or_user = ?  AND default_version = ?", "sys", true).Find(&sysPackageModelAll)
+	config.DB.Where("sys_or_user = ? AND userspace_id = ?", userName, item.SpaceId).Find(&userPackageModelAll)
 	packageModelAll := append(sysPackageModelAll, userPackageModelAll...)
 	service.ModelLibraryInitialization(packageModelAll)
 	space.LastLoginTime = time.Now().Local().Unix()
 	DB.Save(&space)
 	res.Msg = "初始化完成"
-	c.JSON(http.StatusOK, res)
-}
-
-func ExamplesView(c *gin.Context) {
-	/*
-		# 获取示例
-	*/
-	var res responseData
-	res.Data = config.EXAMPLES
 	c.JSON(http.StatusOK, res)
 }
 
@@ -155,5 +144,39 @@ func GetUserRecentlyOpenedView(c *gin.Context) {
 		modelData = append(modelData, map[string]string{"id": space.ID, "name": space.SpaceName})
 	}
 	res.Data = modelData
+	c.JSON(http.StatusOK, res)
+}
+
+func ExamplesView(c *gin.Context) {
+	/*
+		# 获取示例
+	*/
+	var res responseData
+	res.Data = config.EXAMPLES
+	c.JSON(http.StatusOK, res)
+}
+
+func GetUserSettingsView(c *gin.Context) {
+	/*
+		# 获取用户配置
+	*/
+	var res responseData
+	var setting DataBaseModel.YssimUserSettings
+	res.Data = setting
+	c.JSON(http.StatusOK, res)
+}
+
+func SetUserSettingsView(c *gin.Context) {
+	/*
+		# 设置用户配置
+	*/
+	var res responseData
+	var setting userSettingsModel
+
+	err := DB.UpdateColumns(setting).Error
+	if err != nil {
+		log.Println(err)
+	}
+	res.Data = setting
 	c.JSON(http.StatusOK, res)
 }

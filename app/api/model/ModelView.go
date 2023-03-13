@@ -1088,7 +1088,7 @@ func LoadModelView(c *gin.Context) {
 	loadResult := service.LoadPackage(packageModel.PackageName, packageModel.Version, packageModel.FilePath)
 	if loadResult {
 		if len(loadPackage.LoadPackageConflict) == 0 {
-			conflict, err := service.GetLoadPackageConflict(packageModel.PackageName)
+			conflict, err := service.GetLoadPackageConflict(packageModel.PackageName, packageModel.Version, packageModel.FilePath)
 			if err != nil {
 				service.DeleteLibrary(packageModel.PackageName)
 				res.Data = conflict

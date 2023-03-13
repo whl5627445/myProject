@@ -11,3 +11,8 @@ type userSpaceModel struct {
 	SpaceId   string `json:"space_id"`
 	SpaceName string `json:"space_name"`
 }
+
+type userSettingsModel struct {
+	UserName    string `json:"username"  binding:"required"`
+	GridDisplay string `json:"grid_display" binding:""`
+}

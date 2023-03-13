@@ -88,7 +88,7 @@ func UploadModelPackageView(c *gin.Context) {
 				res.Status = 2
 				service.DeleteLibrary(packageName)
 			} else {
-				conflict, err := service.GetLoadPackageConflict(packageName)
+				conflict, err := service.GetLoadPackageConflict(packageName, packageRecord.Version, packagePathNew)
 				if err != nil {
 					service.DeleteLibrary(packageName)
 					data := map[string]interface{}{}

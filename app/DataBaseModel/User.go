@@ -1,8 +1,9 @@
 package DataBaseModel
 
 import (
-	"gorm.io/gorm"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type YssimUserSpace struct {
@@ -13,4 +14,12 @@ type YssimUserSpace struct {
 	UpdatedAt     *time.Time     `gorm:"column:update_time"`
 	LastLoginTime int64          `gorm:"column:last_login_time"`
 	Deleted       gorm.DeletedAt `gorm:"column:deleted_at"`
+}
+
+type YssimUserSettings struct {
+	ID          string     `gorm:"primaryKey"`
+	UserName    string     `gorm:"column:username"`
+	GridDisplay bool       `gorm:"column:grid_display" json:"grid_display" binding:"required"`
+	CreatedAt   *time.Time `gorm:"column:create_time;autoCreateTime"`
+	UpdatedAt   *time.Time `gorm:"column:update_time"`
 }

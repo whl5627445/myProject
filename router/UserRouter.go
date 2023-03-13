@@ -1,8 +1,9 @@
 package router
 
 import (
-	"github.com/gin-gonic/gin"
 	UserAPI "yssim-go/app/api/user"
+
+	"github.com/gin-gonic/gin"
 )
 
 func UserRouter(g *gin.Engine) {
@@ -13,7 +14,8 @@ func UserRouter(g *gin.Engine) {
 		Models.POST("/userspace/delete", UserAPI.DeleteUserSpaceView)
 		Models.POST("/userspace/login", UserAPI.LoginUserSpaceView)
 		Models.GET("/examples", UserAPI.ExamplesView)
-
 		Models.GET("/userspace/recent", UserAPI.GetUserRecentlyOpenedView)
+		Models.GET("/settings/get", UserAPI.GetUserSettingsView)
+		Models.GET("/settings/edit", UserAPI.SetUserSettingsView)
 	}
 }

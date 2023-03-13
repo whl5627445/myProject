@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 	"yssim-go/library/omc"
@@ -371,4 +372,15 @@ func AddComponentParameters(varName, varType, className string) bool {
 
 func DeleteComponentParameters(varName, className string) bool {
 	return omc.OMC.DeleteComponentParameter(varName, className)
+}
+
+func CheckComponentParameter(className, varName string) error {
+	components := omc.OMC.GetComponents(className)
+	for i := 0; i < len(components); i++ {
+		name := components[i].([]interface{})[1]
+		if name == varName {
+			return errors.New("参数名已存在")
+		}
+	}
+	return nil
 }

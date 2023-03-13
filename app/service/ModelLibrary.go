@@ -23,7 +23,8 @@ func ModelLibraryInitialization(packageModel []DataBaseModel.YssimModels) {
 	}
 	packageAll := omc.OMC.GetPackages()
 	for _, p := range packageAll {
-		if _, ok := packageModelMap[p]; ok && packageModelMap[p].SysUser == "sys" {
+		version := GetVersion(p)
+		if _, ok := packageModelMap[p]; ok && packageModelMap[p].SysUser == "sys" && packageModelMap[p].Version == version {
 			delete(packageModelMap, p)
 		} else {
 			DeleteLibrary(p)
@@ -68,7 +69,7 @@ func ModelLibraryInitializationNew(packageModel []DataBaseModel.YssimModels) {
 			ok = omc.OMC.LoadModel(models.PackageName, models.Version)
 		} else {
 			ok = omc.OMC.LoadFile(models.FilePath)
-			_, err := GetLoadPackageConflict(models.PackageName)
+			_, err := GetLoadPackageConflict(models.PackageName, models.Version, models.FilePath)
 			if err != nil {
 				deleteModel(models.PackageName)
 				ok = false
@@ -94,6 +95,7 @@ func ModelLibraryInitializationNew(packageModel []DataBaseModel.YssimModels) {
 	}
 	//config.R.HSet(context.Background(), "yssim-GraphicsData", map[string]string{"status": "1"})
 }
+
 func setOptions() {
 	//commandLineOptions := omc.OMC.GetCommandLineOptions()
 	//if strings.Contains(commandLineOptions, "nfAPI") {
@@ -118,7 +120,7 @@ func modelCache(packageModel, permissions string) {
 func GetLibraryAndVersions() map[string]string {
 	// 获取库和版本
 	data := map[string]string{}
-	loadedLibraries := GetLoadedLibraries()
+	loadedLibraries := omc.OMC.GetPackages()
 	for _, library := range loadedLibraries {
 		libraryVersion := omc.OMC.GetClassInformation(library)[14].(string)
 		data[library] = libraryVersion
@@ -132,7 +134,7 @@ func GetVersion(packageName string) string {
 }
 
 func GetPackageUses(packageName string) [][]string {
-	// 获取包用到的包版本
+	// 获取包用到的包
 	return omc.OMC.GetUses(packageName)
 }
 
@@ -146,46 +148,52 @@ func GetAvailableLibraryVersions(packageName string) []string {
 	return omc.OMC.GetAvailableLibraryVersions(packageName)
 }
 
-func CheckPackageUsesLibrary(packageUses [][]string, loadedLibraries []string) []serviceType.CheckPackageUsesLibrary {
+func CheckPackageConflict(packageName, version string) []serviceType.CheckPackageUsesLibrary {
 	var data []serviceType.CheckPackageUsesLibrary
-	for i := 0; i < len(packageUses); i++ {
-		for p := len(loadedLibraries) - 1; p >= 0; p-- {
-			library := loadedLibraries[p]
-			libraryVersion := omc.OMC.GetClassInformation(library)[14].(string)
-			loadedLibrariesUses := GetPackageUses(library)
-			librariesUsesConflict := false
-			for l := 0; l < len(loadedLibrariesUses); l++ {
-				if loadedLibrariesUses[l][0] == packageUses[i][0] && packageUses[i][1] != loadedLibrariesUses[l][1] {
-					librariesUsesConflict = true
-					break
-				}
-			}
-			switch {
-			case packageUses[i][0] == library && packageUses[i][1] != libraryVersion:
-				availableLibraryVersions := GetAvailableLibraryVersions(library)
-				for _, version := range availableLibraryVersions {
-					if packageUses[i][1] == version {
-						//var loadLibrary serviceType.CheckPackageUsesLibrary
-						//loadLibrary.Name = packageUses[i][0]
-						//loadLibrary.Version = packageUses[i][1]
-						//loadLibrary.LoadOrUnload = "load"
-						//data = append(data, loadLibrary)
-						var unloadLibrary serviceType.CheckPackageUsesLibrary
-						unloadLibrary.Name = library
-						unloadLibrary.Version = libraryVersion
-						//unloadLibrary.LoadOrUnload = "unload"
-						data = append(data, unloadLibrary)
-						loadedLibraries = append(loadedLibraries[:p], loadedLibraries[p+1:]...)
-						break
+	packageVersion := version
+	packages := omc.OMC.GetPackages()
+
+	for p := len(packages) - 1; p >= 0; p-- {
+		pName := packages[p]
+		pVersion := GetVersion(pName)
+		switch {
+		case pName == packageName && packageVersion == pVersion:
+			return nil
+		case pName == packageName && packageVersion != pVersion:
+			var unloadLibrary serviceType.CheckPackageUsesLibrary
+			unloadLibrary.Name = pName
+			unloadLibrary.Version = pVersion
+			data = append(data, unloadLibrary)
+			packages = append(packages[:p], packages[p+1:]...)
+			for s := len(packages) - 1; s >= 0; s-- {
+				sUsePackageList := GetPackageUses(packages[s])
+				for _, nameVersion := range sUsePackageList {
+					n := nameVersion[0]
+					v := nameVersion[1]
+					sName := packages[s]
+					sVersion := GetVersion(packages[s])
+					if n == pName && v == pVersion {
+						var l serviceType.CheckPackageUsesLibrary
+						l.Name = sName
+						l.Version = sVersion
+						data = append(data, l)
+						packages = append(packages[:s], packages[s+1:]...)
+						p = s
 					}
 				}
-			case librariesUsesConflict:
-				var unloadLibrary serviceType.CheckPackageUsesLibrary
-				unloadLibrary.Name = library
-				unloadLibrary.Version = libraryVersion
-				//unloadLibrary.LoadOrUnload = "unload"
-				data = append(data, unloadLibrary)
-				loadedLibraries = append(loadedLibraries[:p], loadedLibraries[p+1:]...)
+			}
+		default:
+			packageUses := GetPackageUses(packages[p])
+			for _, pUses := range packageUses {
+				pUsesName := pUses[0]
+				pUsesVersion := pUses[1]
+				if pUsesName == packageName && version != pUsesVersion {
+					var unloadLibrary serviceType.CheckPackageUsesLibrary
+					unloadLibrary.Name = pName
+					unloadLibrary.Version = pVersion
+					data = append(data, unloadLibrary)
+					packages = append(packages[:p], packages[p+1:]...)
+				}
 			}
 		}
 	}
@@ -204,20 +212,30 @@ func DeleteLibrary(packageName string) bool {
 	return omc.OMC.DeleteClass(packageName)
 }
 
-func GetLoadPackageConflict(packageName string) ([]serviceType.CheckPackageUsesLibrary, error) {
-	packageUses := GetPackageUses(packageName)
-	loadedLibraries := GetLoadedLibraries()
-	unloadPackageList := CheckPackageUsesLibrary(packageUses, loadedLibraries)
-	if len(unloadPackageList) > 0 {
-		DeleteLibrary(packageName)
-		var unloadPackageNameList []string
-		for _, library := range unloadPackageList {
-			//if library.LoadOrUnload == "unload" {
-			unloadPackageNameList = append(unloadPackageNameList, library.Name)
-			//}
+func GetLoadPackageConflict(packageName, version, path string) ([]serviceType.CheckPackageUsesLibrary, error) {
+	packageNameAndVersion := [][]string{{packageName, version}}
+	if path != "" {
+		LoadPackage(packageName, version, path)
+	}
+	uses := GetPackageUses(packageName)
+	packageNameAndVersion = append(packageNameAndVersion, uses...)
+	if path != "" {
+		deleteModel(packageName)
+	}
+	var unloadPackageNameList []string
+	var unloadList []serviceType.CheckPackageUsesLibrary
+	for i := 0; i < len(packageNameAndVersion); i++ {
+		unloadPackageList := CheckPackageConflict(packageNameAndVersion[i][0], packageNameAndVersion[i][1])
+		if len(unloadPackageList) > 0 {
+			for _, library := range unloadPackageList {
+				unloadPackageNameList = append(unloadPackageNameList, library.Name)
+			}
 		}
+		unloadList = append(unloadList, unloadPackageList...)
+	}
+	if len(unloadPackageNameList) > 0 {
 		errStr := fmt.Sprintf("加载 %s 模型库需要先卸载 %s 模型库", packageName, strings.Join(unloadPackageNameList, ", "))
-		return unloadPackageList, errors.New(errStr)
+		return unloadList, errors.New(errStr)
 	}
 	return nil, nil
 }
