@@ -7,7 +7,6 @@ import (
 	"log"
 	"strings"
 	"yssim-go/app/DataBaseModel"
-	"yssim-go/app/serviceType"
 	"yssim-go/config"
 	"yssim-go/library/omc"
 )
@@ -17,46 +16,6 @@ var redisKey = config.RedisCacheKey
 
 func ModelLibraryInitialization(packageModel []DataBaseModel.YssimModels) {
 	setOptions()
-	packageModelMap := map[string]DataBaseModel.YssimModels{}
-	for _, models := range packageModel {
-		packageModelMap[models.PackageName] = models
-	}
-	packageAll := omc.OMC.GetPackages()
-	for _, p := range packageAll {
-		version := GetVersion(p)
-		if _, ok := packageModelMap[p]; ok && packageModelMap[p].SysUser == "sys" && packageModelMap[p].Version == version {
-			delete(packageModelMap, p)
-		} else {
-			DeleteLibrary(p)
-		}
-	}
-	for _, models := range packageModelMap {
-		ok := false
-		if models.FilePath == "" {
-			cmd := fmt.Sprintf("loadModel(%s, {\"%s\"},true,\"\",false)", models.PackageName, models.Version)
-			_, ok = omc.OMC.SendExpressionNoParsed(cmd)
-
-		} else {
-			ok = omc.OMC.LoadFile(models.FilePath)
-		}
-		if ok {
-			//cacheStatus, _ := config.R.HGet(context.Background(), "yssim-GraphicsData", "status").Result() // 1是已缓存完成
-			//if models.SysUser == "sys" && cacheStatus != "1" {
-			//modelCache(models.PackageName, models.SysUser)
-			//}
-			log.Printf("初始化模型库：%s %s  %s %t \n", models.SysUser, models.PackageName, models.Version, ok)
-		} else {
-			log.Println("模型库：" + models.PackageName + "  初始化失败")
-		}
-	}
-	//config.R.HSet(context.Background(), "yssim-GraphicsData", map[string]string{"status": "1"})
-}
-
-func ModelLibraryInitializationNew(packageModel []DataBaseModel.YssimModels) {
-	setOptions()
-	ctx := context.Background()
-	r.HDel(ctx, config.USERNAME+"-yssim-componentGraphicsData")
-	r.HDel(ctx, config.USERNAME+"-yssim-modelGraphicsData")
 	packageAll := omc.OMC.GetPackages()
 	for _, p := range packageAll {
 		DeleteLibrary(p)
@@ -65,7 +24,6 @@ func ModelLibraryInitializationNew(packageModel []DataBaseModel.YssimModels) {
 	for _, models := range packageModel {
 		ok := false
 		if models.FilePath == "" {
-			//cmd := fmt.Sprintf("loadModel(%s, {\"%s\"},true,\"\",false)", models.PackageName, models.Version)
 			ok = omc.OMC.LoadModel(models.PackageName, models.Version)
 		} else {
 			ok = omc.OMC.LoadFile(models.FilePath)
@@ -76,31 +34,17 @@ func ModelLibraryInitializationNew(packageModel []DataBaseModel.YssimModels) {
 			}
 		}
 		if ok {
-			//cacheStatus, _ := config.R.HGet(context.Background(), config.USERNAME+"-yssim-GraphicsData", "status").Result() // 1是已缓存完成
-			//if models.SysUser == "sys" && cacheStatus != "1" {
-			//	modelCache(models.PackageName, models.SysUser)
-			//}
-			packageCacheKeys := r.HKeys(ctx, models.PackageName+"-"+models.Version+"-GraphicsData").Val()
-			packageCacheValues := r.HVals(ctx, models.PackageName+"-"+models.Version+"-GraphicsData").Val()
-			NewKeyValues := []string{}
-			for i := 0; i < len(packageCacheKeys); i++ {
-				NewKeyValues = append(NewKeyValues, packageCacheKeys[i])
-				NewKeyValues = append(NewKeyValues, packageCacheValues[i])
-			}
-			r.HSet(ctx, redisKey, NewKeyValues)
 			log.Printf("初始化模型库：%s %s  %s %t \n", models.SysUser, models.PackageName, models.Version, ok)
 		} else {
 			log.Printf("初始化模型库：%s %s %s 失败 \n", models.SysUser, models.PackageName, models.Version)
 		}
 	}
-	//config.R.HSet(context.Background(), "yssim-GraphicsData", map[string]string{"status": "1"})
+	lPackage := GetLibraryAndVersions()
+	refreshCache(lPackage)
 }
 
 func setOptions() {
-	//commandLineOptions := omc.OMC.GetCommandLineOptions()
-	//if strings.Contains(commandLineOptions, "nfAPI") {
 	omc.OMC.SetOptions()
-	//}
 }
 
 func modelCache(packageModel, permissions string) {
@@ -155,58 +99,6 @@ func GetAvailableLibraryVersions(packageName string) []string {
 	return omc.OMC.GetAvailableLibraryVersions(packageName)
 }
 
-func CheckPackageConflict(packageName, version string) []serviceType.CheckPackageUsesLibrary {
-	var data []serviceType.CheckPackageUsesLibrary
-	packageVersion := version
-	packages := omc.OMC.GetPackages()
-
-	for p := len(packages) - 1; p >= 0; p-- {
-		pName := packages[p]
-		pVersion := GetVersion(pName)
-		switch {
-		case pName == packageName && packageVersion == pVersion:
-			return nil
-		case pName == packageName && packageVersion != pVersion:
-			var unloadLibrary serviceType.CheckPackageUsesLibrary
-			unloadLibrary.Name = pName
-			unloadLibrary.Version = pVersion
-			data = append(data, unloadLibrary)
-			packages = append(packages[:p], packages[p+1:]...)
-			for s := len(packages) - 1; s >= 0; s-- {
-				sUsePackageList := GetPackageUses(packages[s])
-				for _, nameVersion := range sUsePackageList {
-					n := nameVersion[0]
-					v := nameVersion[1]
-					sName := packages[s]
-					sVersion := GetVersion(packages[s])
-					if n == pName && v == pVersion {
-						var l serviceType.CheckPackageUsesLibrary
-						l.Name = sName
-						l.Version = sVersion
-						data = append(data, l)
-						packages = append(packages[:s], packages[s+1:]...)
-						p = s
-					}
-				}
-			}
-		default:
-			packageUses := GetPackageUses(packages[p])
-			for _, pUses := range packageUses {
-				pUsesName := pUses[0]
-				pUsesVersion := pUses[1]
-				if pUsesName == packageName && version != pUsesVersion {
-					var unloadLibrary serviceType.CheckPackageUsesLibrary
-					unloadLibrary.Name = pName
-					unloadLibrary.Version = pVersion
-					data = append(data, unloadLibrary)
-					packages = append(packages[:p], packages[p+1:]...)
-				}
-			}
-		}
-	}
-	return data
-}
-
 func LoadPackage(packageName, version, path string) bool {
 	// 加载相应的库与版本
 	if path == "" {
@@ -250,6 +142,8 @@ func LoadAndDeleteLibrary(packageName, version, path, loadOrUnload string) error
 		result = DeleteLibrary(packageName)
 	} else {
 		result = LoadPackage(packageName, version, path)
+		lPackage := GetLibraryAndVersions()
+		refreshCache(lPackage)
 	}
 	if !result {
 		return errors.New(fmt.Sprintf("操作模型库 %s %s 时出错，请联系管理员", packageName, version))
@@ -321,4 +215,21 @@ func getInterdependence(unloadMap map[string]bool, LoadPackageList [][]string) m
 		}
 	}
 	return unloadMap
+}
+
+func refreshCache(packageAndVersion map[string]string) {
+	ctx := context.Background()
+	r.HDel(ctx, config.USERNAME+"-yssim-componentGraphicsData")
+	r.HDel(ctx, config.USERNAME+"-yssim-GraphicsData")
+	r.HDel(ctx, config.USERNAME+"-yssim-modelGraphicsData")
+	for k, v := range packageAndVersion {
+		packageCacheKeys := r.HKeys(ctx, k+"-"+v+"-GraphicsData").Val()
+		packageCacheValues := r.HVals(ctx, k+"-"+v+"-GraphicsData").Val()
+		NewKeyValues := []string{}
+		for i := 0; i < len(packageCacheKeys); i++ {
+			NewKeyValues = append(NewKeyValues, packageCacheKeys[i])
+			NewKeyValues = append(NewKeyValues, packageCacheValues[i])
+		}
+		r.HSet(ctx, redisKey, NewKeyValues)
+	}
 }

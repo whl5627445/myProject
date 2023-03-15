@@ -19,6 +19,6 @@ func ModelLibraryInit() {
 	//config.DB.Where("sys_or_user = ? AND userspace_id = ?", username, userSpace.ID).Find(&userPackageModelAll)
 	log.Println("初始化模型库...")
 	packageModelAll := append(sysPackageModelAll, userPackageModelAll...)
-	service.ModelLibraryInitializationNew(packageModelAll)
+	service.ModelLibraryInitialization(packageModelAll)
 	log.Println("模型库初始化完成")
 }
