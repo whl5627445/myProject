@@ -103,7 +103,13 @@ func AddComponent(componentName, componentClassName, modelNameAll, origin, rotat
 }
 
 func DeleteComponent(componentName, modelNameAll string) bool {
-	result := omc.OMC.DeleteComponent(componentName, modelNameAll)
+	result := false
+	components := omc.OMC.GetComponents(modelNameAll)
+	for _, component := range components {
+		if componentName == component.([]interface{})[1].(string) {
+			result = omc.OMC.DeleteComponent(componentName, modelNameAll)
+		}
+	}
 	return result
 }
 

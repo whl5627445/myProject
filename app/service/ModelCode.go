@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"yssim-go/app/DataBaseModel"
 	"yssim-go/library/fileOperation"
 	"yssim-go/library/omc"
 )
@@ -31,7 +32,7 @@ func GetModelCode(modelName string) string {
 	return codeData
 }
 
-// SaveModelCode 手动写入文件的形式将模型源码保存的到对应文件，并发不安全
+// SaveModelCode  保存模型，备份旧文件
 func SaveModelCode(modelName, path string) bool {
 	pathList := strings.Split(path, "/")
 	numPath := strings.Join(pathList[:len(pathList)-1], "/")
@@ -44,9 +45,12 @@ func SaveModelCode(modelName, path string) bool {
 			return false
 		}
 	}
-	codeData := GetModelCode(modelName)
-	ok := fileOperation.WriteFile(path, codeData)
+	_, ok := fileOperation.CreateFile(path)
+	if ok {
+		ok = SaveModelToFile(modelName, path)
+	}
 	if !ok {
+		os.Remove(path)
 		err := os.Rename(path+".old"+num, path)
 		if err != nil {
 			return false
@@ -129,4 +133,14 @@ func CreateModelAndPackage(createPackageName, insertTo, expand, strType, createP
 		return true
 	}
 	return false
+}
+
+func SaveModelToFileALL(packageModel []DataBaseModel.YssimModels) {
+	libraryAndVersions := GetLibraryAndVersions()
+	for i := 0; i < len(packageModel); i++ {
+		p, ok := libraryAndVersions[packageModel[i].PackageName]
+		if ok && p == packageModel[i].Version {
+			SaveModelToFile(packageModel[i].PackageName, packageModel[i].FilePath)
+		}
+	}
 }

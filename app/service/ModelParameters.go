@@ -357,7 +357,11 @@ func SetComponentModifierValue(className string, parameterValue map[string]strin
 	return true
 }
 
-func AddComponentParameters(varName, varType, className string) bool {
+func AddComponentParameters(varName, varType, className string) (bool, error) {
+	check := checkComponentParameter(className, varName)
+	if check != nil {
+		return false, check
+	}
 	var defaultValue string
 	switch {
 	case varType == "Boolean":
@@ -367,14 +371,14 @@ func AddComponentParameters(varName, varType, className string) bool {
 	case varType == "Integer":
 		defaultValue = "0"
 	}
-	return omc.OMC.AddComponentParameter(varName, varType, className, defaultValue)
+	return omc.OMC.AddComponentParameter(varName, varType, className, defaultValue), nil
 }
 
 func DeleteComponentParameters(varName, className string) bool {
 	return omc.OMC.DeleteComponentParameter(varName, className)
 }
 
-func CheckComponentParameter(className, varName string) error {
+func checkComponentParameter(className, varName string) error {
 	components := omc.OMC.GetComponents(className)
 	for i := 0; i < len(components); i++ {
 		name := components[i].([]interface{})[1]

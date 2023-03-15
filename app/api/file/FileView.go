@@ -6,8 +6,8 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 	"yssim-go/app/DataBaseModel"
@@ -63,7 +63,8 @@ func UploadModelPackageView(c *gin.Context) {
 
 	if ok {
 		var packageModel DataBaseModel.YssimModels
-		DB.Where("sys_or_user = ? AND userspace_id = ? AND package_name = ?", username, userSpaceId, packageName).First(&packageModel)
+		DB.Where("sys_or_user IN ? AND userspace_id IN ? AND package_name = ?", []string{"sys", username}, []string{"0", userSpaceId}, packageName).First(&packageModel)
+
 		if packageModel.PackageName != "" {
 			service.DeleteLibrary(packageName)
 			res.Err = packageName + "， 已存在相同名字的包，请重新检查后上传"
@@ -71,7 +72,7 @@ func UploadModelPackageView(c *gin.Context) {
 			c.JSON(http.StatusOK, res)
 			return
 		}
-		packagePathNew := "public/UserFiles/UploadFile/" + username + "/" + packageName + "/" + time.Now().Local().Format("20060102150405") + "/" + packageName + ".mo"
+		packagePathNew := "public/UserFiles/UploadFile/" + username + "/" + packageName + "/" + strconv.Itoa(int(time.Now().Unix())) + "/" + packageName + ".mo"
 		result := service.SaveModelCode(packageName, packagePathNew)
 		if result {
 			packageRecord := DataBaseModel.YssimModels{
@@ -89,7 +90,7 @@ func UploadModelPackageView(c *gin.Context) {
 				service.DeleteLibrary(packageName)
 			} else {
 				conflict, err := service.GetLoadPackageConflict(packageName, packageRecord.Version, packagePathNew)
-				if err != nil {
+				if len(conflict) > 0 && err != nil {
 					service.DeleteLibrary(packageName)
 					data := map[string]interface{}{}
 					data["package_id"] = packageRecord.ID
@@ -255,6 +256,9 @@ func CreateModelPackageView(c *gin.Context) {
 				}
 			}
 
+		} else {
+			res.Err = "创建失败，请稍后再试"
+			res.Status = 2
 		}
 	} else {
 		res.Err = "创建失败，请稍后再试"
@@ -558,8 +562,7 @@ func UploadModelVarFileView(c *gin.Context) {
 
 	file, _ := varFile.Open()
 	fileData, _ := io.ReadAll(file)
-	pwd, _ := os.Getwd()
-	fileSavePath := pwd + "/public/model_var_file/" + username + "/" + modelName + "/" + componentName + "/" + varFileName
+	fileSavePath := "/ModelVarFile/" + username + "/" + modelName + "/" + componentName + "/" + varFileName
 	result := fileOperation.WriteFileByte(fileSavePath, fileData)
 	if result {
 		res.Msg = "文件上传成功"

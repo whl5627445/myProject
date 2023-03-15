@@ -104,25 +104,23 @@ func LoginUserSpaceView(c *gin.Context) {
 		return
 	}
 	userName := c.GetHeader("username")
-	spaceId := c.GetHeader("space_id")
-
-	if item.SpaceId == spaceId {
+	var spaceLast DataBaseModel.YssimUserSpace
+	DB.Where("username = ?", userName).Order("last_login_time desc").First(&spaceLast)
+	if item.SpaceId == spaceLast.ID {
 		res.Msg = "初始化完成"
 		c.JSON(http.StatusOK, res)
 		return
 	}
 
-	var oldPackageModel []DataBaseModel.YssimModels
+	var packageModelList []DataBaseModel.YssimModels
 	var space DataBaseModel.YssimUserSpace
-	DB.Where("sys_or_user = ? AND userspace_id = ?", userName, spaceId).Find(&oldPackageModel)
+	DB.Where("sys_or_user = ? ", userName).Find(&packageModelList)
 	DB.Where("id = ? AND username = ?", item.SpaceId, userName).First(&space)
-	for _, models := range oldPackageModel {
-		service.SaveModelToFile(models.PackageName, models.FilePath)
-	}
+	service.SaveModelToFileALL(packageModelList)
 	var sysPackageModelAll []DataBaseModel.YssimModels
 	var userPackageModelAll []DataBaseModel.YssimModels
 	config.DB.Where("sys_or_user = ?  AND default_version = ?", "sys", true).Find(&sysPackageModelAll)
-	config.DB.Where("sys_or_user = ? AND userspace_id = ?", userName, item.SpaceId).Find(&userPackageModelAll)
+	//config.DB.Where("sys_or_user = ? AND userspace_id = ?", userName, item.SpaceId).Find(&userPackageModelAll)
 	packageModelAll := append(sysPackageModelAll, userPackageModelAll...)
 	service.ModelLibraryInitialization(packageModelAll)
 	space.LastLoginTime = time.Now().Local().Unix()

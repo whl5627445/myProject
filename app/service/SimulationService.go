@@ -3,8 +3,6 @@ package service
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/wangluozhe/requests"
-	"github.com/wangluozhe/requests/url"
 	"log"
 	"net"
 	"os"
@@ -18,6 +16,9 @@ import (
 	"yssim-go/library/fileOperation"
 	"yssim-go/library/mapProcessing"
 	"yssim-go/library/omc"
+
+	"github.com/wangluozhe/requests"
+	"github.com/wangluozhe/requests/url"
 )
 
 type SimulateTask struct {
@@ -30,7 +31,7 @@ type modelVarData struct {
 	FinalAttributesStr map[string]interface{} `json:"final_attributes_str"`
 }
 
-var SimulateTaskChan = make(chan *SimulateTask, 100)
+var SimulateTaskChan = make(chan *SimulateTask, 1000)
 
 func openModelica(task *SimulateTask, resultFilePath string, SimulationPraData map[string]string) bool {
 	res := false

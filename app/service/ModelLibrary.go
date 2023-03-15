@@ -220,23 +220,28 @@ func DeleteLibrary(packageName string) bool {
 }
 
 func GetLoadPackageConflict(packageName, version, path string) ([]map[string]string, error) {
-	//var unloadList []serviceType.CheckPackageUsesLibrary
 	var unloadList []map[string]string
+	whiteList := map[string]bool{"Complex": true, "ModelicaServices": true}
 	unloadPackageNameList := checkLibraryInterdependenceNoLoad(packageName, version)
-	if len(unloadPackageNameList) > 0 {
-		deleteModel(packageName)
-	} else {
-		LoadPackage(packageName, version, path)
+	if len(unloadPackageNameList) == 0 {
+		_ = LoadPackage(packageName, version, path)
 		unloadPackageNameList = checkLibraryInterdependenceIsLoad(packageName, version)
-	}
-	if len(unloadPackageNameList) > 0 {
-		errStr := fmt.Sprintf("加载 %s 模型库需要先卸载 %s 模型库", packageName, strings.Join(unloadPackageNameList, ", "))
-		for i := 0; i < len(unloadPackageNameList); i++ {
-			unloadList = append(unloadList, map[string]string{"name": unloadPackageNameList[i]})
+		if len(unloadPackageNameList) > 0 {
+			deleteModel(packageName)
+		} else {
+			return nil, nil
 		}
-		return unloadList, errors.New(errStr)
 	}
-	return nil, nil
+	errStrNameList := []string{}
+	for i := len(unloadPackageNameList) - 1; i >= 0; i-- {
+		if !whiteList[unloadPackageNameList[i]] {
+			unloadList = append(unloadList, map[string]string{"name": unloadPackageNameList[i]})
+			errStrNameList = append(errStrNameList, unloadPackageNameList[i])
+		}
+	}
+	errStr := fmt.Sprintf("加载 %s 模型库需要先卸载 %s 模型库", packageName, strings.Join(errStrNameList, ","))
+	return unloadList, errors.New(errStr)
+
 }
 
 func LoadAndDeleteLibrary(packageName, version, path, loadOrUnload string) error {

@@ -115,7 +115,8 @@ func (o *ZmqObject) BuildModel(className, fileNamePrefix string, simulateParamet
 // SetOptions 清空加载的模型库， 设置OMC的命令行选项
 func (o *ZmqObject) SetOptions() {
 	//o.SendExpressionNoParsed("clearCommandLineOptions()")
-	//o.SendExpressionNoParsed("clear()")
+	o.SendExpressionNoParsed("clearMessages()")
+	o.SendExpressionNoParsed("clear()")
 	//o.SendExpressionNoParsed("clearVariables()")
 	//o.SendExpressionNoParsed("clearProgram()")
 	//o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nfAPI,execstat,rml,nfAPIDynamicSelect=false\")")
