@@ -1,161 +1,110 @@
 package main
 
-//func main() {
-//
-//	//pprof.StartCPUProfile(os.Stdout)
-//	//defer pprof.StopCPUProfile()
-//	//for i := 0; i < 3000; i++ {
-//	//	inputReader := bufio.NewReader(os.Stdin)
-//	//	input, _ := inputReader.ReadString("\\n") // 读取用户输入
-//	//	inputInfo := strings.Trim(input, "\\n")
-//	//	if strings.ToUpper(inputInfo) == "Q" { // 如果输入q就退出
-//	//		return
-//	//	}
-//	//	//nameList := []string{"Modelica.Blocks.Examples.PID_Controller"}
-//	//	s := time.Now().UnixNano()
-//	//	//dataList := service.GetGraphicsData(nameList)
-//	//	dataList := service.GetGraphicsData(inputInfo)
-//	//	_, _ = json.Marshal(dataList)
-//	//	log.Println("总耗时： ", time.Now().UnixNano()/1e6-s/1e6)
-//	//
-//	//}
-//
-//	//s := time.Now().UnixNano()
-//	//n := 0
-//	//for i := 0; i < 100000000; i++ {
-//	//	n += 1
-//	//}
-//	//log.Println(time.Now().UnixNano()/1e6 - s/1e6)
-//	//log.Println(n)
-//	// Applications.Examples.ElectricGrid
-//	// Modelica.Blocks.Examples.Filter
-//	// Modelica.Blocks.Examples.PID_Controller
-//	// Buildings.Applications.DataCenters.ChillerCooled.Examples.IntegratedPrimaryLoadSideEconomizer
-//	// b := "({\\"BFSB\\",\\"DFSB\\",\\"MC21A\\",\\"PF\\",\\"PFPlus\\",\\"HK\\",\\"HKDW\\",\\"ABMP\\",\\"PR\\",\\"DFSBExt\\",\\"BFSBExt\\",\\"MC21AExt\\",\\"PFExt\\",\\"PFPlusExt\\",\\"HKExt\\",\\"HKDWExt\\",\\"ABMPExt\\",\\"PRExt\\",\\"BB\\"},{\\"Breadth First Search based algorithm.\\",\\"Depth First Search based algorithm.\\",\\"Depth First Search based algorithm with look ahead feature.\\",\\"Depth First Search based algorithm with look ahead feature.\\",\\"Depth First Search based algorithm with look ahead feature and fair row traversal.\\",\\"Combined BFS and DFS algorithm.\\",\\"Combined BFS and DFS algorithm.\\",\\"Combined BFS and DFS algorithm.\\",\\"Matching algorithm using push relabel mechanism.\\",\\"Depth First Search based Algorithm external c implementation.\\",\\"Breadth First Search based Algorithm external c implementation.\\",\\"Depth First Search based Algorithm with look ahead feature external c implementation.\\",\\"Depth First Search based Algorithm with look ahead feature external c implementation.\\",\\"Depth First Search based Algorithm with look ahead feature and fair row traversal external c implementation.\\",\\"Combined BFS and DFS algorithm external c implementation.\\",\\"Combined BFS and DFS algorithm external c implementation.\\",\\"Combined BFS and DFS algorithm external c implementation.\\",\\"Matching algorithm using push relabel mechanism external c implementation.\\",\\"BBs try.\\"})"
-//	// b := "({\\"none\\",\\"uode\\",\\"dynamicStateSelection\\",\\"dummyDerivatives\\"},{\\"Skip index reduction\\",\\"Use the underlying ODE without the constraints.\\",\\"Simple index reduction method, select (dynamic) dummy states based on analysis of the system.\\",\\"Simple index reduction method, select (static) dummy states based on heuristic.\\"}) "
-//	// b := "{record OpenModelica.Scripting.ErrorMessage\\n    info = record OpenModelica.Scripting.SourceInfo\\n    filename = \\"\\",\\n    readonly = false,\\n    lineStart = 0,\\n    columnStart = 0,\\n    lineEnd = 0,\\n    columnEnd = 0\\nend OpenModelica.Scripting.SourceInfo;,\\n    message = \\"Automatically loaded package ModelicaServices 3.2.3 due to uses annotation.\\",\\n    kind = .OpenModelica.Scripting.ErrorKind.scripting,\\n    level = .OpenModelica.Scripting.ErrorLevel.notification,\\n    id = 223\\nend OpenModelica.Scripting.ErrorMessage;,record OpenModelica.Scripting.ErrorMessage\\n    info = record OpenModelica.Scripting.SourceInfo\\n    filename = \\"\\",\\n    readonly = false,\\n    lineStart = 0,\\n    columnStart = 0,\\n    lineEnd = 0,\\n    columnEnd = 0\\nend OpenModelica.Scripting.SourceInfo;,\\n    message = \\"Automatically loaded package Complex 3.2.3 due to uses annotation.\\",\\n    kind = .OpenModelica.Scripting.ErrorKind.scripting,\\n    level = .OpenModelica.Scripting.ErrorLevel.notification,\\n    id = 223\\nend OpenModelica.Scripting.ErrorMessage;}"
-//	// b := "{ModelicaReference,ModelicaServices,Complex,Modelica}"
-//	// b := "(\\"package\\",\\"OpenModelica internal definitions and scripting functions\\",false,false,true,\\"D:/OpenModelica/lib/omc/NFModelicaBuiltin.mo\\",false,961,1,5399,17,{},false,false,\\"\\",\\"text\\",false,\\"\\")"
-//	// b := "{Line(true, {0.0, 0.0}, 0, {{-39, 50}, {-22, 50}}, {0, 0, 127}, LinePattern.Solid, 0.25, {Arrow.None, Arrow.None}, 3, Smooth.None)}"
-//	// b := "{-,-,-,-,false,-,-,}"
-//	// b := "{{unassignedMessage=\\"An electrical potential cannot be uniquely calculated.\\nThe reason could be that\\n- a ground object is missing (Modelica.Electrical.Analog.Basic.Ground)\\n  to define the zero potential of the electrical circuit,or\\n- a connector of an electrical component is not connected.\\"},{unassignedMessage=\\"An electrical current cannot be uniquely calculated.\\nThe reason could be that\\n- a ground object is missing (Modelica.Electrical.Analog.Basic.Ground)\\n  to define the zero potential of the electrical circuit,or\\n- a connector of an electrical component is not connected.\\"}}"
-//	// b := "{{unassignedMessage=\\"An electrical potential cannot be uniquely calculated.\\nThe reason could be that\\n- a ground object is missing (Modelica.Electrical.Analog.Basic.Ground)\\n  to define the zero potential of the electrical circuit, or\\n- a connector of an electrical component is not connected.\\"},{unassignedMessage=\\"An electrical current cannot be uniquely calculated.\\nThe reason could be that\\n- a ground object is missing (Modelica.Electrical.Analog.Basic.Ground)\\n  to define the zero potential of the electrical circuit, or\\n- a connector of an electrical component is not connected.\\"}}"
-//	// log.Println(omc.DataToGo(b))
-//
-//	//htmlStr := "<html>\\n\\n<p>\\nThis is a simple drive train controlled by a PID controller:\\n</p>\\n\\n<ul>\\n<li> The two blocks \\\"kinematic_PTP\\\" and \\\"integrator\\\" are used to generate\\n   the reference speed (= constant acceleration phase, constant speed phase,\\n   constant deceleration phase until inertia is at rest). To check\\n   whether the system starts in steady state, the reference speed is\\n   zero until time = 0.5 s and then follows the sketched trajectory.</li>\\n\\n<li> The block \\\"PI\\\" is an instance of \\\"Blocks.Continuous.LimPID\\\" which is\\n   a PID controller where several practical important aspects, such as\\n   anti-windup-compensation has been added. In this case, the control block\\n   is used as PI controller.</li>\\n\\n<li> The output of the controller is a torque that drives a motor inertia\\n   \\\"inertia1\\\". Via a compliant spring/damper component, the load\\n   inertia \\\"inertia2\\\" is attached. A constant external torque of 10 Nm\\n   is acting on the load inertia.</li>\\n</ul>\\n\\n<p>\\nThe PI controller settings included \\\"limitAtInit=false\\\", in order that\\nthe controller output limits of 12 Nm are removed from the initialization\\nproblem.\\n</p>\\n\\n<p>\\nThe PI controller is initialized in steady state (initType=SteadyState)\\nand the drive shall also be initialized in steady state.\\nHowever, it is not possible to initialize \\\"inertia1\\\" in SteadyState, because\\n\\\"der(inertia1.phi)=inertia1.w=0\\\" is an input to the PI controller that\\ndefines that the derivative of the integrator state is zero (= the same\\ncondition that was already defined by option SteadyState of the PI controller).\\nFurthermore, one initial condition is missing, because the absolute position\\nof inertia1 or inertia2 is not defined. The solution shown in this examples is\\nto initialize the angle and the angular acceleration of \\\"inertia1\\\".\\n</p>\\n\\n<p>\\nIn the following figure, results of a typical simulation are shown:\\n</p>\\n\\n<img src=\\\"modelica://Modelica/Resources/Images/Blocks/PID_controller.png\\\"\\n   alt=\\\"PID_controller.png\\\"><br>\\n\\n<img src=\\\"modelica://Modelica/Resources/Images/Blocks/PID_controller2.png\\\"\\n   alt=\\\"PID_controller2.png\\\">\\n\\n<p>\\nIn the upper figure the reference speed (= integrator.y) and\\nthe actual speed (= inertia1.w) are shown. As can be seen,\\nthe system initializes in steady state, since no transients\\nare present. The inertia follows the reference speed quite good\\nuntil the end of the constant speed phase. Then there is a deviation.\\nIn the lower figure the reason can be seen: The output of the\\ncontroller (PI.y) is in its limits. The anti-windup compensation\\nworks reasonably, since the input to the limiter (PI.limiter.u)\\nis forced back to its limit after a transient phase.\\n</p>\\n\\n</html>\\""
-//	//htmlIo := strings.NewReader(htmlStr)
-//	//doc, err := goquery.NewDocumentFromReader(htmlIo)
-//	//if err != nil {
-//	//	log.Println(err)
-//	//}
-//	//doc.Find("img").Each(func(i int, selection *goquery.Selection) {
-//	//	log.Println(selection.Attr("src"))
-//	//	//for _, node := range selection.Nodes {
-//	//	//	//log.Println(node.Attr)
-//	//	//	for _, attribute := range node.Attr {
-//	//	//		//log.Println(attribute.Val)
-//	//	//		attribute.Val = "test"
-//	//	//	}
-//	//	//	log.Println(node.Attr)
-//	//	//}
-//	//	selection.SetAttr("src", "test")
-//	//	log.Println(selection.Attr("src"))
-//	//})
-//
-//	//a := "{{unassignedMessage=\\"An electrical potential cannot be uniquely calculated.\\nThe reason could be that\\n- a ground object is missing (Modelica.Electrical.Analog.Basic.Ground)\\n  to define the zero potential of the electrical circuit, or\\n- a connector of an electrical component is not connected.\\"},{unassignedMessage=\\"An electrical current cannot be uniquely calculated.\\nThe reason could be that\\n- a ground object is missing (Modelica.Electrical.Analog.Basic.Ground)\\n  to define the zero potential of the electrical circuit, or\\n- a connector of an electrical component is not connected.\\"}}"
-//	//a := "{{},{choices(false,false,{\\"\\\"Y\\\"\\", \\"\\\"D\\\"\\"})},{Placement(true,-,-,50.0,-50.0,70.0,-70.0,-,-,-,50.0,-50.0,70.0,-70.0,)},{Placement(true,-,-,-70.0,-50.0,-50.0,-70.0,-,-,-,-70.0,-50.0,-50.0,-70.0,)},{Placement(true,-70.0,-80.0,-10.0,10.0,10.0,-10.0,180.0,-,-,-,-,-,-,)},{Placement(true,-,-,-20.0,-70.0,-40.0,-50.0,-,-,-,-,-,-,-,)},{Placement(true,-,-,-10.0,-30.0,10.0,-50.0,-,-,-,-10.0,-30.0,10.0,-50.0,)},{Placement(true,-,-,-110.0,-50.0,-90.0,-30.0,-,-,-,-110.0,-50.0,-90.0,-30.0,)}}"
-//	//b := ParseStringTest([]byte(a))
-//	//log.Println(b)
-//	//log.Println(a)
-//
-//}
+import (
+	"context"
 
-func main() {
-	//a := "{-100.0,-100.0,100.0,100.0,true,0.16,2.0,2.0,{Line(true, {0.0, 0.0}, 0.0, {{-80.0, 68.0}, {-80.0, -80.0}}, {192, 192, 192}, LinePattern.Solid, 0.25, {Arrow.None, Arrow.None}, 3.0, Smooth.None), Polygon(true, {0.0, 0.0}, 0.0, {192, 192, 192}, {192, 192, 192}, LinePattern.Solid, FillPattern.Solid, 0.25, {{-80.0, 90.0}, {-88.0, 68.0}, {-72.0, 68.0}, {-80.0, 90.0}}, Smooth.None), Line(true, {0.0, 0.0}, 0.0, {{-90.0, -70.0}, {82.0, -70.0}}, {192, 192, 192}, LinePattern.Solid, 0.25, {Arrow.None, Arrow.None}, 3.0, Smooth.None), Polygon(true, {0.0, 0.0}, 0.0, {192, 192, 192}, {192, 192, 192}, LinePattern.Solid, FillPattern.Solid, 0.25, {{90.0, -70.0}, {68.0, -62.0}, {68.0, -78.0}, {90.0, -70.0}}, Smooth.None), Line(true, {0.0, 0.0}, 0.0, {{-80.0, -70.0}, {0.0, -70.0}, {0.0, 50.0}, {80.0, 50.0}}, {0, 0, 0}, LinePattern.Solid, 0.25, {Arrow.None, Arrow.None}, 3.0, Smooth.None), Text(true, {0.0, 0.0}, 0.0, {0, 0, 0}, {0, 0, 0}, LinePattern.Solid, FillPattern.None, 0.25, {{-150.0, -150.0}, {150.0, -110.0}}, \"startTime=%startTime\", 0.0, {-1, -1, -1}, \"\", {}, TextAlignment.Center)}}"
-	//regexCoordsys := regexp.MustCompile(
-	//	"(" + expFloat + "),(" + expFloat + "),(" + expFloat + "),(" + expFloat + "),(\\w+),(" + expFloat + "),(" + expFloat + "),(" + expFloat + "),")
-	//data1 := regexCoordsys.FindString(a)
-	//fmt.Println(data1)
-	//b := "Rectangle(true, {14.0, 53.0}, 0.0, {64, 64, 64}, {192, 192, 192}, LinePattern.Solid, FillPattern.Sphere, 0.25, BorderPattern.None, {{-81.0, -65.0}, {-8.0, -22.0}}, 0.0), Line(true, {14.0, 53.0}, 0.0, {{-8.0, -43.0}, {-1.0, -43.0}, {6.0, -64.0}, {17.0, -23.0}, {29.0, -65.0}, {40.0, -23.0}, {50.0, -44.0}, {61.0, -44.0}}, {0, 0, 0}, LinePattern.Solid, 0.25, {Arrow.None, Arrow.None}, 3.0, Smooth.None)"
-	//regexRectangle := regexp.MustCompile(
-	//	"Rectangle\\(([\\w ]+), {(" + expFloat + "), (" + expFloat + ")}, (" + expFloat + "), {(\\d+), (\\d+), (\\d+)}, {(\\d+), (\\d+), (\\d+)}, (\\w+.\\w+), (\\w+.\\w+), (" + expFloat + "), (\\w+.\\w+), {{(" + expFloat + "), (" + expFloat + ")}, {(" + expFloat + "), (" + expFloat + ")}}, (" + expFloat + ")")
-	//data2 := regexRectangle.FindString(b)
-	//fmt.Println(data2)
-	//c := "Line(true, {14.0, 53.0}, 0.0, {{-84.0, -73.0}, {66.0, -73.0}}, {0, 0, 0}, LinePattern.Solid, 0.25, {Arrow.None, Arrow.None}, 3.0, Smooth.None)"
-	//regexLine := regexp.MustCompile(
-	//	"Line\\(([\\w ]+), {(" + expFloat + "), (" + expFloat + ")}, (" + expFloat + "), ({{" + expFloat + ", " + expFloat + "}(?:, {" + expFloat + ", " + expFloat + "})*}), {(\\d+), (\\d+), (\\d+)}, (\\w+.\\w+), (" + expFloat + "), {(\\w+.\\w+), (\\w+.\\w+)}, (" + expFloat + "), (\\w+.\\w+)")
-	//data3 := regexLine.FindString(c)
-	//fmt.Println(data3)
-	//d := "Ellipse(true, {0.0, -30.0}, 0.0, {0, 0, 0}, {255, 255, 255}, LinePattern.Solid, FillPattern.None, 0.25, {{-90.0, -90.0}, {90.0, 90.0}}, 20.0, 160.0, EllipseClosure.Radial)"
-	//regexEllipse := regexp.MustCompile(
-	//	"Ellipse\\(([\\w ]+), {(" + expFloat + "), (" + expFloat + ")}, (" + expFloat + "), {(\\d+), (\\d+), (\\d+)}, {(\\d+), (\\d+), (\\d+)}, (\\w+.\\w+), (\\w+.\\w+), (" + expFloat + "), {{(" + expFloat + "), (" + expFloat + ")}, {(" + expFloat + "), (" + expFloat + ")}}, (" + expFloat + "), (" + expFloat + ")")
-	//data4 := regexEllipse.FindString(d)
-	//fmt.Println(data4)
-	//e := "Text(true, {0.0, 0.0}, 0.0, {0, 0, 255}, {0, 0, 0}, LinePattern.Solid, FillPattern.None, 0.25, {{-150.0, 110.0}, {150.0, 150.0}}, \"%name\", 0.0, {-1, -1, -1}, \"\", {}, TextAlignment.Center)"
-	//regexText := regexp.MustCompile(
-	//	"Text\\(([\\w ]+), {(" + expFloat + "), (" + expFloat + ")}, (" + expFloat + "), {(\\d+), (\\d+), (\\d+)}, {(\\d+), (\\d+), (\\d+)}, (\\w+.\\w+), (\\w+.\\w+), (" + expFloat + "), {{(" + expFloat + "), (" + expFloat + ")}, {(" + expFloat + "), (" + expFloat + ")}}, (\"[^\"]*\"), (" + expFloat + "), {([+-]?\\d+), ([+-]?\\d+), ([+-]?\\d+)}, (\"[^\"]*\"), {([^}]*)}, (\\w+.\\w+)")
-	//data5 := regexText.FindString(e)
-	//fmt.Println(data5)
-	//f := "Text(true, {0.0, 0.0}, 0, {0, 0, 255}, {0, 0, 0}, LinePattern.Solid, FillPattern.None, 0.25, {{-150, 110}, {150, 70}}, {\"%name\", y, 0}, 0, {-1, -1, -1}, \"fontName\", {TextStyle.Bold, TextStyle.Italic, TextStyle.UnderLine}, TextAlignment.Center"
-	//regexText2 := regexp.MustCompile(
-	//	"Text\\(([\\w ]+), {(" + expFloat + "), (" + expFloat + ")}, (" + expFloat + "), {(\\d+), (\\d+), (\\d+)}, {(\\d+), (\\d+), (\\d+)}, (\\w+.\\w+), (\\w+.\\w+), (" + expFloat + "), {{(" + expFloat + "), (" + expFloat + ")}, {(" + expFloat + "), (" + expFloat + ")}}, {(\"[^\"]*\"), [+-, \\w\\d]*}, (" + expFloat + "), {([+-]?\\d+), ([+-]?\\d+), ([+-]?\\d+)}, (\"[^\"]*\"), {([^}]*)}, (\\w+.\\w+)")
-	//data6 := regexText2.FindString(f)
-	//fmt.Println(data6)
-	//g := "Polygon(true, {0.0, 0.0}, 0.0, {0, 128, 255}, {0, 128, 255}, LinePattern.Solid, FillPattern.Solid, 0.25, {{20.0, -70.0}, {60.0, -85.0}, {20.0, -100.0}, {20.0, -70.0}}, Smooth.None)"
-	//gg := "Polygon(true, {0.0, 0.0}, 0.0, {0, 0, 0}, {255, 255, 255}, LinePattern.Solid, FillPattern.Solid, 0.25, {{-100.0, 50.0}, {100.0, -50.0}, {100.0, 50.0}, {0.0, 0.0}, {-100.0, -50.0}, {-100.0, 50.0}}, Smooth.None)"
-	////ggg := "Polygon(true, {0.0, 0.0}, 0.0, {255, 255, 255}, {0, 255, 0}, LinePattern.Solid, FillPattern.Solid, 0.25, DynamicSelect({{-100, 0}, {100, 0}, {100, 0}, {0, 0}, {-100, 0}, {-100, 0}}, {{-100.0, 50.0 * opening_actual}, {-100.0, 50.0 * opening_actual}, {100.0, -50.0 * opening}, {100.0, 50.0 * opening_actual}, {0.0, 0.0}, {-100.0, -50.0 * opening_actual}, {-100.0, 50.0 * opening}}), Smooth.None)"
-	//regexPolygon := regexp.MustCompile(
-	//	"Polygon\\(([\\w ]+), {(" + expFloat + "), (" + expFloat + ")}, (" + expFloat + "), {(\\d+), (\\d+), (\\d+)}, {(\\d+), (\\d+), (\\d+)}, (\\w+.\\w+), (\\w+.\\w+), (" + expFloat + "), ({{" + expFloat + "(?:e[+-]?\\d+)?, " + expFloat + "(?:e[+-]?\\d+)?}(?:, {" + expFloat + ", " + expFloat + "})*}), (\\w+.\\w+)")
-	//data7 := regexPolygon.FindString(g)
-	//fmt.Println(data7)
-	//data77 := regexPolygon.FindString(gg)
-	//fmt.Println(data77)
+	"github.com/go-redis/redis/v8"
+)
 
-	//g := "DynamicSelect({{-100, 0}, {100, 0}, {100, 0}, {0, 0}, {-100, 0}, {-100, 0}}, {{-100.0, 50.0 * opening_actual}, {-100.0, 50.0 * opening_actual}, {100.0, -50.0 * opening}, {100.0, 50.0 * opening_actual}, {0.0, 0.0}, {-100.0, -50.0 * opening_actual}, {-100.0, 50.0 * opening}})"
-	//g := "DynamicSelect(\"m_flow\", String(m_flow_in, 3, 0, false)),"
-	//g := "DynamicSelect(568, String(m_flow_in, 3, 0, false))"
-	//fmt.Printf("rune(char):%x\n", []rune("("))
-	//fmt.Printf("rune(hex):%x\n", []rune(")"))
-	//fmt.Printf("rune(hex):% x\n", []rune("/"))
+func openRedis() *redis.Client {
 
+	rdb := redis.NewClient(&redis.Options{
+		//Addr:     "119.3.155.11:6379",
+		Addr:     "124.70.211.127:6379",
+		Password: "", // no password set
+		DB:       0,  // use default DB
+	})
+	return rdb
 }
 
-// getElements(EnergySystems.Machines.Pump.Pump_supplyBoiler01, useQuotes = true) 17:45:55:855
-// {{"co", "-", "EnergySystems.Media.Medium", "medium", "Medium in the component", "public", "false", "false", "false", "false", "parameter", "none", "unspecified", "$Any", "{}"},
+var R = openRedis()
+
+func main() {
+	//ctx := context.Background()
+	//a := R.HGetAll(ctx, "yssim-GraphicsData")
+	//b := R.HVals(ctx, "yssim-GraphicsData")
+	//c := R.HKeys(ctx, "yssim-GraphicsData")
+	//d := R.HLen(ctx, "yssim-GraphicsData")
+	//fmt.Println(len(a.Val()))
+	//R.HSet()
+	//key := c.Val()
+	//value := b.Val()
+	//s := time.Now().UnixNano() / 1e6
+	//NewKeyValues := []string{}
+	//for i := 0; i < len(key); i++ {
+	//	NewKeyValues = append(NewKeyValues, key[i])
+	//	NewKeyValues = append(NewKeyValues, value[i])
+	//}
+	//fmt.Println(time.Now().UnixNano()/1e6 - s)
+	rdb1 := redis.NewClient(&redis.Options{
+		//Addr:     "119.3.155.11:6379",
+		Addr:     "124.70.211.127:6379",
+		Password: "", // no password set
+		DB:       0,  // use default DB
+	})
+	rdb2 := redis.NewClient(&redis.Options{
+		//Addr:     "119.3.155.11:6379",
+		Addr:     "119.3.155.11:6379",
+		Password: "", // no password set
+		DB:       0,  // use default DB
+	})
+	ctx := context.Background()
+	keyList := []string{"Buildings-8.0.0-GraphicsData", "Buildings-9.1.0-GraphicsData", "Modelica-3.2.3-GraphicsData", "Modelica-4.0.0-GraphicsData"}
+	for _, key := range keyList {
+		packageCacheKeys := rdb1.HKeys(ctx, key).Val()
+		packageCacheValues := rdb1.HVals(ctx, key).Val()
+		NewKeyValues := []string{}
+		for i := 0; i < len(packageCacheKeys); i++ {
+			NewKeyValues = append(NewKeyValues, packageCacheKeys[i])
+			NewKeyValues = append(NewKeyValues, packageCacheValues[i])
+		}
+		rdb2.HSet(ctx, key, NewKeyValues)
+	}
+	//fmt.Println(len(b.Val()))
+	//fmt.Println(len(c.Val()))
+	//fmt.Println(d.Val())
+}
+
+//{
+//	{"Boolean", "tableOnFile", "= true, if table is defined on file or in function usertab", "public", "false", "false", "false", "false", "parameter", "none", "unspecified", "{}"},
+//	{"Real", "table", "Table matrix (time = first column; e.g., table=[0, 0; 1, 1; 2, 4])", "public", "false", "false", "false", "false", "parameter", "none", "unspecified", "{:,:}"},
+//	{"String", "tableName", "Table name on file or in function usertab (see docu)", "public", "false", "false", "false", "false", "parameter", "none", "unspecified", "{}"},
+//	{"String", "fileName", "File where matrix is stored", "public", "false", "false", "false", "false", "parameter", "none", "unspecified", "{}"},
+//	{"Boolean", "verboseRead", "= true, if info message that file is loading is to be printed", "public", "false", "false", "false", "false", "parameter", "none", "unspecified", "{}"},
+//	{"Integer", "columns", "Columns of table to be interpolated", "public", "false", "false", "false", "false", "parameter", "none", "unspecified", "{:}"},
+//	{"Modelica.Blocks.Types.Smoothness", "smoothness", "Smoothness of table interpolation", "public", "false", "false", "false", "false", "parameter", "none", "unspecified", "{}"},
+//	{"Modelica.Blocks.Types.Extrapolation", "extrapolation", "Extrapolation of data outside the definition range", "public", "false", "false", "false", "false", "parameter", "none", "unspecified", "{}"},
+//	{"Modelica.Units.SI.Time", "timeScale", "Time scale of first table column", "public", "false", "false", "false", "false", "parameter", "none", "unspecified", "{}"},
+//	{"Real", "offset", "Offsets of output signals", "public", "false", "false", "false", "false", "parameter", "none", "unspecified", "{:}"},
+//	{"Modelica.Units.SI.Time", "startTime", "Output = offset for time < startTime", "public", "false", "false", "false", "false", "parameter", "none", "unspecified", "{}"},
+//	{"Modelica.Units.SI.Time", "shiftTime", "Shift time of first table column", "public", "false", "false", "false", "false", "parameter", "none", "unspecified", "{}"},
+//	{"Modelica.Blocks.Types.TimeEvents", "timeEvents", "Time event handling of table interpolation", "public", "false", "false", "false", "false", "parameter", "none", "unspecified", "{}"},
+//	{"Boolean", "verboseExtrapolation", "= true, if warning messages are to be printed if time is outside the table definition range", "public", "false", "false", "false", "false", "parameter", "none", "unspecified", "{}"},
+//	{"Modelica.Units.SI.Time", "t_min", "Minimum abscissa value defined in table", "public", "true", "false", "false", "false", "parameter", "none", "unspecified", "{}"},
+//	{"Modelica.Units.SI.Time", "t_max", "Maximum abscissa value defined in table", "public", "true", "false", "false", "false", "parameter", "none", "unspecified", "{}"},
+//	{"Real", "t_minScaled", "Minimum (scaled) abscissa value defined in table", "public", "true", "false", "false", "false", "parameter", "none", "unspecified", "{}"},
+//	{"Real", "t_maxScaled", "Maximum (scaled) abscissa value defined in table", "public", "true", "false", "false", "false", "parameter", "none", "unspecified", "{}"},
+//	{"Real", "p_offset", "Offsets of output signals", "protected", "true", "false", "false", "false", "parameter", "none", "unspecified", "{nout}"},
+//	{"Modelica.Blocks.Types.ExternalCombiTimeTable", "tableID", "External table object", "protected", "false", "false", "false", "false", "parameter", "none", "unspecified", "{}"},
+//	{"Modelica.Units.SI.Time", "nextTimeEvent", "Next time event instant", "protected", "false", "false", "false", "false", "discrete", "none", "unspecified", "{}"},
+//	{"Real", "nextTimeEventScaled", "Next scaled time event instant", "protected", "false", "false", "false", "false", "discrete", "none", "unspecified", "{}"},
+//	{"Real", "timeScaled", "Scaled time", "protected", "false", "false", "false", "false", "unspecified", "none", "unspecified", "{}"}
+//}
 //
-//	{"co", "-", "Modelica.SIunits.Temperature", "TAmb", "Ambient temperature", "public", "false", "false", "false", "false", "parameter", "none", "unspecified", "$Any", "{}"},
-//	{"co", "-", "Real", "WP_out", "累计势能", "public", "false", "false", "false", "false", "unspecified", "none", "unspecified", "$Any", "{}"},
-//	{"co", "-", "Real", "Q_out", "累计耗电", "public", "false", "false", "false", "false", "unspecified", "none", "unspecified", "$Any", "{}"},
-//	{"co", "-", "Real", "W_water", "累计冷水热量", "public", "false", "false", "false", "false", "unspecified", "none", "unspecified", "$Any", "{}"},
-//	{"co", "-", "Real", "ele_factor", "加权平均后的电碳排放因子", "public", "false", "false", "false", "false", "unspecified", "none", "input", "$Any", "{}"},
-//	{"co", "-", "Real", "SCOP2_ele", "SCOP2_电_水泵累计量", "public", "false", "false", "false", "false", "unspecified", "none", "unspecified", "$Any", "{}"},
-//	{"co", "-", "Real", "SCOP2", "SCOP2合计", "public", "false", "false", "false", "false", "unspecified", "none", "unspecified", "$Any", "{}"},
-//	{"co", "-", "Real", "price", "水泵单位造价", "public", "false", "false", "false", "false", "parameter", "none", "unspecified", "$Any", "{}"},
-//	{"co", "-", "Real", "Calc_installed_capacity", "计算装机规模", "public", "false", "false", "false", "false", "parameter", "none", "unspecified", "$Any", "{}"},
-//	{"co", "-", "Real", "cost", "水泵造价", "public", "false", "false", "false", "false", "unspecified", "none", "unspecified", "$Any", "{}"},
-//	{"co", "-", "Modelica.Mechanics.Rotational.Sources.Speed", "speed", "", "public", "false", "false", "false", "false", "unspecified", "none", "unspecified", "$Any", "{}"},
-//	{"co", "-", "Modelica.Blocks.Interfaces.RealInput", "f", "Reference angular velocity of flange with respect to support as input signal", "public", "false", "false", "false", "false", "unspecified", "none", "unspecified", "$Any", "{}"},{"co", "-", "Modelica.Blocks.Math.Gain", "gain", "", "public", "false", "false", "false", "false", "unspecified", "none", "unspecified", "$Any", "{}"},{"co", "-", "EnergySystems.Interfaces.Water_media.Port_a", "port_a", "", "public", "false", "false", "false", "false", "unspecified", "none", "unspecified", "$Any", "{}"},{"co", "-", "EnergySystems.Interfaces.Water_media.Port_b", "port_b", "", "public", "false", "false", "false", "false", "unspecified", "none", "unspecified", "$Any", "{}"},{"co", "-", "EnergySystems.Machines.Pump.Base.IdealPump", "idealPump", "", "public", "false", "false", "false", "true", "unspecified", "none", "unspecified", "EnergySystems.Machines.Pump.Base.IdealPump", "{}"},{"co", "-", "Modelica.SIunits.Acceleration", "g", "", "public", "false", "false", "false", "false", "constant", "none", "unspecified", "$Any", "{}"},{"co", "-", "Real", "eta", "efficient ratio", "public", "false", "false", "false", "false", "parameter", "none", "unspecified", "$Any", "{}"},{"co", "-", "Modelica.SIunits.Height", "head", "", "public", "false", "false", "false", "false", "unspecified", "none", "unspecified", "$Any", "{}"},{"co", "-", "Modelica.SIunits.Power", "pwr0", "", "public", "false", "false", "false", "false", "unspecified", "none", "unspecified", "$Any", "{}"},{"co", "-", "Modelica.Thermal.FluidHeatFlow.Sensors.PressureSensor", "pressureSensor", "", "public", "false", "false", "false", "false", "unspecified", "none", "unspecified", "$Any", "{}"},{"co", "-", "Modelica.Blocks.Sources.RealExpression", "realExpression", "", "public", "false", "false", "false", "false", "unspecified", "none", "unspecified", "$Any", "{}"},{"co", "-", "EnergySystems.Sources.ElectricalSource", "electricalSource", "", "public", "false", "false", "false", "false", "unspecified", "none", "unspecified", "$Any", "{}"},{"co", "-", "EnergySystems.Interfaces.Electrical.Pin_AC", "pin", "", "public", "false", "false", "false", "false", "unspecified", "none", "unspecified", "$Any", "{}"},{"co", "-", "EnergySystems.Interfaces.Potential.potential_out", "potential_out", "", "public", "false", "false", "false", "false", "unspecified", "none", "unspecified", "$Any", "{}"}} 17:45:55:856
-//
-// getElementAnnotations(EnergySystems.Machines.Pump.Pump_supplyBoiler01) 17:45:55:856
-// {{},
-//
-//	{},
-//	{},
-//	{},
-//	{},
-//	{Dialog("General","SCOP计算",true,false,false,-,-,-,-,"",false)},
-//	{},
-//	{},
-//	{Dialog("General","投资计算",true,false,false,-,-,-,-,"",false)},
-//	{Dialog("General","投资计算",true,false,false,-,-,-,-,"",false)},
-//	{Dialog("General","投资计算",true,false,false,-,-,-,-,"",false)},
-//	{Placement(true,-,-,-40.0,50.0,-20.0,70.0,-,-,-,-,-,-,-,)},
-//	{Placement(true,-,-,-140.0,40.0,-100.0,80.0,-,0.0,120.0,-20.0,-20.0,20.0,20.0,-90.0)},
-//	{Placement(true,-,-,-80.0,50.0,-60.0,70.0,-,-,-,-,-,-,-,)},{Placement(true,-,-,-110.0,-10.0,-90.0,10.0,-,-,-,-,-,-,-,)},{Placement(true,-,-,90.0,-10.0,110.0,10.0,-,-,-,-,-,-,-,)},{Placement(true,-,-,-10.0,10.0,10.0,-10.0,-,-,-,-,-,-,-,)},{},{Dialog("General","能效计算",true,false,false,-,-,-,-,"",false)},{},{},{Placement(true,60.0,18.0,10.0,-10.0,-10.0,10.0,-90.0,-,-,-,-,-,-,)},{Placement(true,-,-,-60.0,-50.0,-40.0,-30.0,-,-,-,-,-,-,-,)},{Placement(true,-,-,-20.0,-50.0,0.0,-30.0,-,-,-,-,-,-,-,)},{Placement(true,-,-,-10.0,-110.0,10.0,-90.0,-,-,-,-,-,-,-,)},{Placement(true,-,-,90.0,-50.0,110.0,-30.0,-,-,-,-,-,-,-,)}} 17:45:55:858
-//
-// 2023/02/09 14:14:24 Str:   [["co","-","Integer","nSam","Number of intervals in a day for which baseline is computed","public","false","false","false","false","parameter","none","unspecified","$Any",[]],["co","-","Integer","nPre","Number of intervals for which future load need to be predicted (set to one to only predict current time,or to nSam to predict one day)","public","false","false","false","false","parameter","none","unspecified","$Any",[]],["co","-","Integer","nHis","Number of history terms to be stored","public","false","false","false","false","parameter","none","unspecified","$Any",[]],["co","-","Buildings.Controls.Predictors.Types.PredictionModel","predictionModel","Load prediction model","public","false","false","false","false","parameter","none","unspecified","$Any",[]],["co","-","Boolean","use_dayOfAdj","if true,use the day of adjustment","public","false","false","false","false","parameter","none","unspecified","$Any",[]],["co","-","Modelica.Units.SI.Time","dayOfAdj_start","Number of hours prior to current time when day of adjustment starts","public","false","false","false","false","parameter","none","unspecified","$Any",[]],["co","-","Modelica.Units.SI.Time","dayOfAdj_end","Number of hours prior to current time when day of adjustment ends","public","false","false","false","false","parameter","none","unspecified","$Any",[]],["co","-","Real","minAdjFac","Minimum adjustment factor","public","false","false","false","false","parameter","none","unspecified","$Any",[]],["co","-","Real","maxAdjFac","Maximum adjustment factor","public","false","false","false","false","parameter","none","unspecified","$Any",[]],["co","-","Modelica.Blocks.Interfaces.RealInput","TOut","Outside air temperature","public","false","false","false","false","unspecified","none","unspecified","$Any",[]],["co","-","Modelica.Blocks.Interfaces.RealInput","TOutFut","Future outside air temperatures","public","false","false","false","false","unspecified","none","unspecified","$Any",["nPre - 1"]],["co","-","Modelica.Blocks.Interfaces.RealInput","ECon","Consumed electrical energy","public","false","false","false","false","unspecified","none","unspecified","$Any",[]],["co","-","Modelica.Blocks.Interfaces.RealOutput","PPre","Predicted power consumptions (first element is for current time","public","false","false","false","false","discrete","none","unspecified","$Any",["nPre"]],["co","-","Buildings.Controls.Interfaces.DayTypeInput","typeOfDay","Type of day for the current and the future days for which a prediction is to be made.\n    Typically,this has dimension 2 for predictions up to and including 24 hours,and 2+n for any additional day","public","false","false","false","false","unspecified","none","unspecified","$Any",["integer",["",["nPre - 1nSam, + 2"]],["co","-","Modelica.Blocks.Interfaces.BooleanInput","storeHistory","If false,history terms are no longer stored for the remainder of the day","public","false","false","false","false","unspecified","none","unspecified","$Any",[]],["co","-","Real","adj","Load adjustment factor","public","false","false","false","false","discrete","none","unspecified","$Any",[]],["co","-","Modelica.Units.SI.Time","samplePeriod","Sample period of the component","protected","false","false","false","false","parameter","none","unspecified","$Any",[]],["co","-","Modelica.Units.SI.Time","samStart","Time when the first sampling starts","protected","false","false","false","false","parameter","none","unspecified","$Any",[]],["co","-","Integer","iDayOf_start","Counter where day of look up begins","protected","false","false","false","false","parameter","none","unspecified","$Any",[]],["co","-","Integer","iDayOf_end","Counter where day of look up ends","protected","false","false","false","false","parameter","none","unspecified","$Any",[]],["co","-","Integer","nDayOf","Number of samples used for the day of adjustment","protected","false","false","false","false","parameter","none","unspecified","$Any",[]],["co","-","Modelica.Units.SI.Time","dt","Length of one sampling interval","protected","false","false","false","false","parameter","none","unspecified","$Any",[]],["co","-","Modelica.Units.SI.Power","PAve","Average power over the past interval","protected","false","false","false","false","discrete","none","unspecified","$Any",[]],["co","-","Boolean","sampleTrigger","True,if sample time instant","protected","false","false","false","false","unspecified","none","unspecified","$Any",[]],["co","-","Modelica.Units.SI.Energy","ELast","Energy at the last sample","protected","false","false","false","false","discrete","none","output","$Any",[]],["co","-","Modelica.Units.SI.Time","tLast","Time at which last sample occurred","protected","false","false","false","false","discrete","none","output","$Any",[]],["co","-","Integer","iSam","Index for power of the current sampling interval","protected","false","false","false","false","unspecified","none","output","$Any",["nPre"]],["co","-","Modelica.Units.SI.Power","P","Baseline power consumption","protected","false","false","false","false","discrete","none","output","$Any",["Buildings.Controls.Types.nDayTypes","nSam","nHis"]],["co","-","Modelica.Units.SI.Temperature","T","Temperature history","protected","false","false","false","false","discrete","none","output","$Any",["if predictionModel == Types.PredictionModel.WeatherRegression then Buildings.Controls.Types.nDayTypes else 0","if predictionModel == Types.PredictionModel.WeatherRegression then nSam else 0","if predictionModel == Types.PredictionModel.WeatherRegression then nHis else 0"]],["co","-","Integer","_typeOfDay","Type of day for each time interval for which prediction is to be made","protected","false","false","false","false","unspecified","none","unspecified","$Any",["nPre"]],["co","-","Integer","iHis","Index for power of the current sampling history,for the currrent time interval","protected","false","false","false","false","unspecified","none","unspecified","$Any",["Buildings.Controls.Types.nDayTypes","nSam"]],["co","-","Boolean","historyComplete","Flage,set to true when all history terms are built up for the given day type and given time interval","protected","false","false","false","false","unspecified","none","unspecified","$Any",["Buildings.Controls.Types.nDayTypes","nSam"]],["co","-","Boolean","_storeHistory","Flag,switched to false when block gets an storeHistory=false signal,and remaining false until midnight","protected","false","false","false","false","unspecified","none","unspecified","$Any",[]],["co","-","Modelica.Units.SI.Energy","EActAve","Actual energy over the day off period","protected","false","false","false","false","discrete","none","unspecified","$Any",[]],["co","-","Modelica.Units.SI.Energy","EHisAve","Actual load over the day off period,summed over all time intervals","protected","false","false","false","false","discrete","none","unspecified","$Any",[]],["co","-","Modelica.Units.SI.Power","PPreHis","Predicted power consumptions for all day off time intervals","protected","false","false","false","false","discrete","none","unspecified","$Any",["Buildings.Controls.Types.nDayTypes","nSam"]],["co","-","Boolean","PPreHisSet","Flag,true if a value in PPreHis has been set for that element","protected","false","false","false","false","unspecified","none","unspecified","$Any",["Buildings.Controls.Types.nDayTypes","nSam"]],["co","-","Real","intTOut","Time integral of outside temperature","protected","false","false","false","false","unspecified","none","unspecified","$Any",[]],["co","-","Real","intTOutLast","Last sampled value of time integral of outside temperature","protected","false","false","false","false","discrete","none","unspecified","$Any",[]],["co","-","Integer","idxSam","Index to access iSam[1]","protected","false","false","false","false","unspecified","none","unspecified","$Any",[]],["co","-","Modelica.Blocks.Interfaces.RealInput","TOut_in_internal","Needed to connect to conditional connector","protected","false","false","false","false","unspecified","none","unspecified","$Any",[]],["co","-","Modelica.Blocks.Interfaces.RealInput","TOutFut_in_internal","Needed to connect to conditional connector","protected","false","false","false","false","unspecified","none","unspecified","$Any",["nPre - 1"]]]
-// 2023/02/09 14:37:17 Str:   [["co","-","Real","C","","public","false","false","false","false","unspecified","none","input","$Any",[":",":"]],["co","-","Real","A","","public","false","false","false","false","unspecified","none","input","$Any",[":",":"]],["co","-","Real","tau","","public","false","false","false","false","unspecified","none","input","$Any",[":"]],["co","-","String","side","","public","false","false","false","false","unspecified","none","input","$Any",[]],["co","-","String","trans","","public","false","false","false","false","unspecified","none","input","$Any",[]],["co","-","Real","Cout","Contains Q*C or Q**T*C or C*Q**T or C*Q","public","false","false","false","false","unspecified","none","output","$Any",["size",["C","1"],"size",["C","2"]]],["co","-","Integer","info","","public","false","false","false","false","unspecified","none","output","$Any",[]],["co","-","Integer","m","","protected","false","false","false","false","unspecified","none","unspecified","$Any",[]],["co","-","Integer","n","","protected","false","false","false","false","unspecified","none","unspecified","$Any",[]],["co","-","Integer","k","","protected","false","false","false","false","unspecified","none","unspecified","$Any",[]],["co","-","Integer","lda","","protected","false","false","false","false","unspecified","none","unspecified","$Any",[]],["co","-","Integer","ldc","","protected","false","false","false","false","unspecified","none","unspecified","$Any",[]],["co","-","Integer","lwork","","protected","false","false","false","false","unspecified","none","unspecified","$Any",[]],["co","-","Real","work","","protected","false","false","false","false","unspecified","none","unspecified","$Any",["if side == \"L\" then max",["1","size",["C","2"]], "else max",["1","size",["C","1"]]]]]
-// 2023/02/09 14:37:17 data:   {{"co", "-", Real, C, "", "public", false, false, false, false, "unspecified", "none", "input", $Any, {:,:}},{"co", "-", Real, A, "", "public", false, false, false, false, "unspecified", "none", "input", $Any, {:,:}},{"co", "-", Real, tau, "", "public", false, false, false, false, "unspecified", "none", "input", $Any, {:}},{"co", "-", String, side, "", "public", false, false, false, false, "unspecified", "none", "input", $Any, {}},{"co", "-", String, trans, "", "public", false, false, false, false, "unspecified", "none", "input", $Any, {}},{"co", "-", Real, Cout, "Contains Q*C or Q**T*C or C*Q**T or C*Q", "public", false, false, false, false, "unspecified", "none", "output", $Any, {size(C, 1),size(C, 2)}},{"co", "-", Integer, info, "", "public", false, false, false, false, "unspecified", "none", "output", $Any, {}},{"co", "-", Integer, m, "", "protected", false, false, false, false, "unspecified", "none", "unspecified", $Any, {}},{"co", "-", Integer, n, "", "protected", false, false, false, false, "unspecified", "none", "unspecified", $Any, {}},{"co", "-", Integer, k, "", "protected", false, false, false, false, "unspecified", "none", "unspecified", $Any, {}},{"co", "-", Integer, lda, "", "protected", false, false, false, false, "unspecified", "none", "unspecified", $Any, {}},{"co", "-", Integer, ldc, "", "protected", false, false, false, false, "unspecified", "none", "unspecified", $Any, {}},{"co", "-", Integer, lwork, "", "protected", false, false, false, false, "unspecified", "none", "unspecified", $Any, {}},{"co", "-", Real, work, "", "protected", false, false, false, false, "unspecified", "none", "unspecified", $Any, {if side == "L" then max(1, size(C, 2)) else max(1, size(C, 1))}}}
-//getElements err:  invalid character 'L' after array element
-//2023/02/09 20:53:37 components:  [["co", "-", "Real", "C", "", "public", false, false, false, false, "unspecified", "none", "input", "$Any", "[:,:]"],["co", "-", "Real", "A", "", "public", false, false, false, false, "unspecified", "none", "input", "$Any", "[:,:]"],["co", "-", "Real", "tau", "", "public", false, false, false, false, "unspecified", "none", "input", "$Any", "[if side == "L" then size(C, 2) - 1 else size(C, 1) - 1]"],["co", "-", "String", "side", "", "public", false, false, false, false, "unspecified", "none", "input", "$Any", "[]"],["co", "-", "String", "trans", "", "public", false, false, false, false, "unspecified", "none", "input", "$Any", "[]"],["co", "-", "Integer", "ilo", "Lowest index where the original matrix is not in upper triangular form", "public", false, false, false, false, "unspecified", "none", "input", "$Any", "[]"],["co", "-", "Integer", "ihi", "Highest index where the original matrix is not in upper triangular form", "public", false, false, false, false, "unspecified", "none", "input", "$Any", "[]"],["co", "-", "Real", "Cout", "Contains the Hessenberg form in the upper triangle and the first subdiagonal and below the first subdiagonal it contains the elementary reflectors which represents (with array tau) as a product the orthogonal matrix Q", "public", false, false, false, false, "unspecified", "none", "output", "$Any", "[size(C, 1),size(C, 2)]"],["co", "-", "Integer", "info", "", "public", false, false, false, false, "unspecified", "none", "output", "$Any", "[]"],["co", "-", "Integer", "m", "", "protected", false, false, false, false, "unspecified", "none", "unspecified", "$Any", "[]"],["co", "-", "Integer", "n", "", "protected", false, false, false, false, "unspecified", "none", "unspecified", "$Any", "[]"],["co", "-", "Integer", "lda", "", "protected", false, false, false, false, "unspecified", "none", "unspecified", "$Any", "[]"],["co", "-", "Integer", "ldc", "", "protected", false, false, false, false, "unspecified", "none", "unspecified", "$Any", "[]"],["co", "-", "Integer", "lwork", "", "protected", false, false, false, false, "unspecified", "none", "unspecified", "$Any", "[]"],["co", "-", "Real", "work", "", "protected", false, false, false, false, "unspecified", "none", "unspecified", "$Any", "[max(1, 2*size(A, 2))]"]]
-//2023/02/09 20:53:37 cmd:  getElements(Modelica.Math.Matrices.LAPACK.dormhr, useQuotes = true)
+//{
+//	{Dialog("General","Table data definition",true,false,false,-,-,-,-,"",false)},
+//	{Dialog("General","Table data definition",not tableOnFile,false,false,-,-,-,-,"",false)},
+//	{Dialog("General","Table data definition",tableOnFile,false,false,-,-,-,-,"",false)},
+//	{Dialog("General","Table data definition",tableOnFile,false,false,"Text files (*.txt);;MATLAB MAT-files (*.mat)","Open file in which table is present",-,-,"",false)},
+//	{Dialog("General","Table data definition",tableOnFile,false,false,-,-,-,-,"",false)},
+//	{Dialog("General","Table data interpretation",true,false,false,-,-,-,-,"modelica://Modelica/Resources/Images/Blocks/Sources/CombiTimeTable.png",false)},
+//	{Dialog("General","Table data interpretation",true,false,false,-,-,-,-,"",false)},
+//	{Dialog("General","Table data interpretation",true,false,false,-,-,-,-,"",false)},
+//	{Dialog("General","Table data interpretation",true,false,false,-,-,-,-,"",false), Evaluate=true},
+//	{Dialog("General","Table data interpretation",true,false,false,-,-,-,-,"",false)},
+//	{Dialog("General","Table data interpretation",true,false,false,-,-,-,-,"",false)},
+//	{Dialog("General","Table data interpretation",true,false,false,-,-,-,-,"",false)},
+//	{Dialog("General","Table data interpretation",smoothness == Modelica.Blocks.Types.Smoothness.LinearSegments,false,false,-,-,-,-,"",false)},
+//	{Dialog("General","Table data interpretation",extrapolation == Modelica.Blocks.Types.Extrapolation.LastTwoPoints or extrapolation == Modelica.Blocks.Types.Extrapolation.HoldLastPoint,false,false,-,-,-,-,"",false)}
+//	,{},{},{},{},{},{},{},{},{}
+//}

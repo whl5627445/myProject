@@ -43,47 +43,76 @@ func GetGraphicsData(modelName, permissions string) [][]map[string]interface{} {
 	g.modelName = modelName
 	nameType := omc.OMC.GetClassRestriction(modelName)
 	if nameType == "connector" || nameType == "expandable connector" {
-		interfaceDiagramAnnotationData := omc.OMC.GetDiagramAnnotation(modelName)
-		if len(interfaceDiagramAnnotationData) > 8 {
-			interfaceGraphicsData := interfaceDiagramAnnotationData[8].([]interface{})
-			data := make(map[string]interface{}, 0)
-			data["ID"] = "0"
-			data["classname"] = modelName
-			data["extent1Diagram"] = strings.Replace(interfaceDiagramAnnotationData[0].(string)+","+interfaceDiagramAnnotationData[1].(string), "-,-", "-100.0,-100.0", 1)
-			data["extent2Diagram"] = strings.Replace(interfaceDiagramAnnotationData[2].(string)+","+interfaceDiagramAnnotationData[3].(string), "-,-", "100.0,100.0", 1)
-			data["graphType"] = "model"
-			data["mobility"] = false
-			data["name"] = ""
-			data["originDiagram"] = "0.0,0.0"
-			data["original_name"] = ""
-			data["output_type"] = "[]"
-			data["parent"] = ""
-			data["rotateAngle"] = "0.0"
-			data["rotation"] = "0.0"
-			data["type"] = "Transformation"
-			data["visible"] = "true"
-			data["inputOutputs"] = make([]map[string]interface{}, 0, 1)
-			data["subShapes"] = make([]map[string]interface{}, 0, 1)
-			data1 := g.data01(interfaceGraphicsData, modelName, modelName, modelName)
-			data["subShapes"] = data1
-			g.data[1] = append(g.data[1], data)
-		}
-		return g.data
-	}
-
-	g.modelNameList = g.getICList(modelName)
-	g.getDiagramAnnotationData()
-	g.getnthconnectionData()
-	g.getData02()
-	for i := 0; i < len(g.data[1]); i++ {
-		if len(g.data[1][i]["subShapes"].([]map[string]interface{})) == 0 {
-			g.data[1][i]["subShapes"] = append(g.data[1][i]["subShapes"].([]map[string]interface{}), rectangleDefault)
+		g.data = g.getConnectorModelDiagram(modelName)
+	} else {
+		g.modelNameList = g.getICList(modelName)
+		g.getDiagramAnnotationData()
+		g.getnthconnectionData()
+		g.getData02()
+		for i := 0; i < len(g.data[1]); i++ {
+			if len(g.data[1][i]["subShapes"].([]map[string]interface{})) == 0 {
+				g.data[1][i]["subShapes"] = append(g.data[1][i]["subShapes"].([]map[string]interface{}), rectangleDefault)
+			}
 		}
 	}
 	if permissions == "sys" {
 		redisData, _ := json.Marshal(g.data)
 		allModelCache.HSet(ctx, config.USERNAME+"-yssim-modelGraphicsData", modelName, redisData)
 	}
+	return g.data
+}
+
+func GetComponentGraphicsData(modelName, componentName string) [][]map[string]interface{} {
+	var g = graphicsData{}
+	g.data = [][]map[string]interface{}{{}, {}}
+	g.modelName = modelName
+	components := getElementsAndModelName([]string{modelName})
+	componentAnnotations := getElementAnnotations([]string{modelName})
+	var componentsData [][]interface{}
+	var componentAnnotationsData [][]interface{}
+	for i := 0; i < len(components); i++ {
+		if components[i] != nil {
+			if components[i][3] == componentName {
+				nameType := omc.OMC.GetClassRestriction(components[i][2].(string))
+				if nameType == "connector" || nameType == "expandable connector" {
+					data := g.getConnectorComponentDiagram(components[i], componentAnnotations[i])
+					return data
+				}
+				componentsData = append(componentsData, components[i])
+				componentAnnotationsData = append(componentAnnotationsData, componentAnnotations[i])
+				break
+			}
+		}
+	}
+	data2 := g.data02(componentsData, componentAnnotationsData, false, "", true)
+	for i := 0; i < len(data2); i++ {
+		if len(data2[i]["subShapes"].([]map[string]interface{})) == 0 {
+			data2[i]["subShapes"] = append(data2[i]["subShapes"].([]map[string]interface{}), rectangleDefault)
+		}
+	}
+	g.data[1] = append(g.data[1], data2...)
+	return g.data
+}
+
+func GetIconGraphicsData(modelName string) [][]map[string]interface{} {
+	var g = graphicsData{}
+	g.data = [][]map[string]interface{}{{}, {}}
+
+	nameType := omc.OMC.GetClassRestriction(modelName)
+	if nameType == "connector" || nameType == "expandable connector" {
+		data := getIconAndDiagramAnnotations([]string{modelName}, true)
+		g.data[1] = append(g.data[1], data...)
+		return g.data
+	}
+	components := getElementsAndModelName([]string{modelName})
+	componentAnnotations := getElementAnnotations([]string{modelName})
+	data2 := g.data02(components, componentAnnotations, false, "", true)
+	for i := 0; i < len(data2); i++ {
+		if len(data2[i]["subShapes"].([]map[string]interface{})) == 0 {
+			data2[i]["subShapes"] = append(data2[i]["subShapes"].([]map[string]interface{}), rectangleDefault)
+		}
+	}
+	g.data[1] = append(g.data[1], data2...)
 	return g.data
 }
 
@@ -103,32 +132,6 @@ func (g *graphicsData) getData02() {
 		g.data[1] = append(g.data[1], data2...)
 	}
 
-}
-
-func GetComponentGraphicsData(modelName string, componentName, permissions string) [][]map[string]interface{} {
-	var g = graphicsData{}
-	g.data = [][]map[string]interface{}{{}, {}}
-	g.modelName = modelName
-	components := getElementsAndModelName([]string{modelName})
-	componentAnnotations := getElementAnnotations([]string{modelName})
-	var componentsData [][]interface{}
-	var componentAnnotationsData [][]interface{}
-	for i := 0; i < len(components); i++ {
-		if components[i] != nil {
-			if components[i][3] == componentName {
-				componentsData = append(componentsData, components[i])
-				componentAnnotationsData = append(componentAnnotationsData, componentAnnotations[i])
-			}
-		}
-	}
-	data2 := g.data02(componentsData, componentAnnotationsData, false, "", true)
-	for i := 0; i < len(data2); i++ {
-		if len(data2[i]["subShapes"].([]map[string]interface{})) == 0 {
-			data2[i]["subShapes"] = append(data2[i]["subShapes"].([]map[string]interface{}), rectangleDefault)
-		}
-	}
-	g.data[1] = append(g.data[1], data2...)
-	return g.data
 }
 
 func getElementsAndModelName(nameList []string) [][]interface{} {
@@ -578,26 +581,6 @@ func getIconAndDiagramAnnotations(nameList []string, isIcon bool) []interface{} 
 	return res
 }
 
-//func getIconAndDiagramAnnotations(nameList []string, isIcon bool) []interface{} {
-//	var data []interface{}
-//	for _, name := range nameList {
-//		var result []interface{}
-//		nameType := omc.OMC.GetClassRestriction(name)
-//		if (nameType == "connector" || nameType == "expandable connector") && !isIcon {
-//			result = omc.OMC.GetDiagramAnnotation(name)
-//			if len(result) > 8 {
-//				result = result[8].([]interface{})
-//			} else {
-//				result = omc.OMC.GetIconAnnotationLineData(name)
-//			}
-//		} else {
-//			result = omc.OMC.GetIconAnnotationLineData(name)
-//		}
-//		data = append(data, result...)
-//	}
-//	return data
-//}
-
 func (g *graphicsData) getDiagramAnnotationData() {
 	for _, name := range g.modelNameList {
 		modelNameDiagramAnnotationData := omc.OMC.GetDiagramAnnotation(name)
@@ -615,6 +598,66 @@ func (g *graphicsData) getDiagramAnnotationData() {
 			}
 		}
 	}
+}
+
+func (g *graphicsData) getConnectorComponentDiagram(components, componentAnnotationsData []interface{}) [][]map[string]interface{} {
+	className := components[2].(string)
+	componentName := components[3].(string)
+	if componentAnnotationsData[0] == "Placement" {
+		interfaceGraphicsData := getIconAndDiagramAnnotations([]string{className}, false)
+		caf := componentAnnotationsData[1].([]interface{})
+		data := make(map[string]interface{}, 0)
+		data["ID"] = "0"
+		data["classname"] = className
+		data["extent1Diagram"] = strings.Replace(caf[3].(string)+","+caf[4].(string), "-,-", "-100.0,-100.0", 1)
+		data["extent2Diagram"] = strings.Replace(caf[5].(string)+","+caf[6].(string), "-,-", "100.0,100.0", 1)
+		data["graphType"] = "connector"
+		data["mobility"] = true
+		data["name"] = componentName
+		data["originDiagram"] = strings.Join([]string{caf[1].(string), caf[2].(string)}, ",")
+		data["original_name"] = componentName
+		data["output_type"] = "[]"
+		data["parent"] = ""
+		data["rotateAngle"] = "0.0"
+		data["rotation"] = "0.0"
+		data["type"] = "Transformation"
+		data["visible"] = "true"
+		data["inputOutputs"] = make([]map[string]interface{}, 0, 1)
+		data["subShapes"] = g.data01(interfaceGraphicsData, className, className, className)
+		g.data[1] = append(g.data[1], data)
+		return g.data
+	}
+	return nil
+
+}
+
+func (g *graphicsData) getConnectorModelDiagram(modelName string) [][]map[string]interface{} {
+	interfaceDiagramAnnotationData := omc.OMC.GetDiagramAnnotation(modelName)
+	if len(interfaceDiagramAnnotationData) > 8 {
+		interfaceGraphicsData := interfaceDiagramAnnotationData[8].([]interface{})
+		data := make(map[string]interface{}, 0)
+		data["ID"] = "0"
+		data["classname"] = modelName
+		data["extent1Diagram"] = strings.Replace(interfaceDiagramAnnotationData[0].(string)+","+interfaceDiagramAnnotationData[1].(string), "-,-", "-100.0,-100.0", 1)
+		data["extent2Diagram"] = strings.Replace(interfaceDiagramAnnotationData[2].(string)+","+interfaceDiagramAnnotationData[3].(string), "-,-", "100.0,100.0", 1)
+		data["graphType"] = "model"
+		data["mobility"] = false
+		data["name"] = ""
+		data["originDiagram"] = "0.0,0.0"
+		data["original_name"] = ""
+		data["output_type"] = "[]"
+		data["parent"] = ""
+		data["rotateAngle"] = "0.0"
+		data["rotation"] = "0.0"
+		data["type"] = "Transformation"
+		data["visible"] = "true"
+		data["inputOutputs"] = make([]map[string]interface{}, 0, 1)
+		data["subShapes"] = make([]map[string]interface{}, 0, 1)
+		data1 := g.data01(interfaceGraphicsData, modelName, modelName, modelName)
+		data["subShapes"] = data1
+		g.data[1] = append(g.data[1], data)
+	}
+	return g.data
 }
 
 var rectangleDefault = map[string]interface{}{"borderPattern": "BorderPattern.None", "color": "0,0,127", "extentsPoints": []string{"-100.0,-100.0", "100.0,100.0"},
