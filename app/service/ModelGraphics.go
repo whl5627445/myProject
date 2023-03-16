@@ -94,28 +94,6 @@ func GetComponentGraphicsData(modelName, componentName string) [][]map[string]in
 	return g.data
 }
 
-func GetIconGraphicsData(modelName string) [][]map[string]interface{} {
-	var g = graphicsData{}
-	g.data = [][]map[string]interface{}{{}, {}}
-
-	nameType := omc.OMC.GetClassRestriction(modelName)
-	if nameType == "connector" || nameType == "expandable connector" {
-		data := getIconAndDiagramAnnotations([]string{modelName}, true)
-		g.data[1] = append(g.data[1], data...)
-		return g.data
-	}
-	components := getElementsAndModelName([]string{modelName})
-	componentAnnotations := getElementAnnotations([]string{modelName})
-	data2 := g.data02(components, componentAnnotations, false, "", true)
-	for i := 0; i < len(data2); i++ {
-		if len(data2[i]["subShapes"].([]map[string]interface{})) == 0 {
-			data2[i]["subShapes"] = append(data2[i]["subShapes"].([]map[string]interface{}), rectangleDefault)
-		}
-	}
-	g.data[1] = append(g.data[1], data2...)
-	return g.data
-}
-
 func (g *graphicsData) getData02() {
 	// nameList第一个名字是模型自身的名字，之后是继承的模型名字
 	modelName := g.modelNameList
@@ -131,7 +109,6 @@ func (g *graphicsData) getData02() {
 		data2 = append(data2, data...)
 		g.data[1] = append(g.data[1], data2...)
 	}
-
 }
 
 func getElementsAndModelName(nameList []string) [][]interface{} {
