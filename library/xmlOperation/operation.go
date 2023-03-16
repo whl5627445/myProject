@@ -3,8 +3,10 @@ package xmlOperation
 import (
 	"encoding/xml"
 	"errors"
+	"github.com/beevik/etree"
 	"io/ioutil"
 	"os"
+	"strings"
 )
 
 func ParseXML(path string, obj interface{}) error {
@@ -19,4 +21,63 @@ func ParseXML(path string, obj interface{}) error {
 	}
 	err = xml.Unmarshal(data, obj)
 	return nil
+}
+
+func GetVarXml(orderedVariables *etree.Element, parent string, keyWords string, id int, nameMap map[string]bool) ([]map[string]interface{}, int, map[string]bool) {
+	var dataList []map[string]interface{}
+	parentName := ""
+	if parent != "" {
+		parentName = parent + "."
+	}
+	if orderedVariables != nil {
+		for _, variable := range orderedVariables.SelectElements("variable") {
+			//if variable.SelectAttrValue("type", "") != "Real" {
+			//	continue
+			//}
+			name := variable.SelectAttrValue("name", "")
+			var splitName []string
+			trimPrefixName := strings.TrimPrefix(name, parent+".")
+			if strings.HasPrefix(name, parentName) && strings.Contains(strings.ToLower(name), strings.ToLower(keyWords)) {
+				if !strings.HasPrefix(name, "der(") && !strings.HasPrefix(name, "$") {
+					splitName = strings.Split(trimPrefixName, ".")
+				} else {
+					continue
+				}
+				displayUnitString := ""
+				unitString := ""
+				startString := ""
+				if attributesValues := variable.SelectElement("attributesValues"); attributesValues != nil {
+					if displayUnit := attributesValues.SelectElement("displayUnit"); displayUnit != nil {
+						displayUnitString = strings.Replace(displayUnit.SelectAttrValue("string", ""), "\"", "", -1)
+					}
+					if unit := attributesValues.SelectElement("unit"); unit != nil {
+						unitString = strings.Replace(unit.SelectAttrValue("string", ""), "\"", "", -1)
+					}
+				}
+				if bindExpression := variable.SelectElement("bindExpression"); bindExpression != nil {
+					startString = bindExpression.SelectAttrValue("string", "")
+				}
+				if !nameMap[splitName[0]] {
+					data := map[string]interface{}{
+						"variables":    splitName[0],
+						"description":  variable.SelectAttrValue("comment", ""),
+						"display_unit": displayUnitString,
+						"has_child":    false,
+						"id":           id,
+						"start":        startString,
+						"unit":         unitString,
+					}
+					if len(splitName) > 1 {
+						data["has_child"] = true
+						data["unit"] = ""
+						data["display_unit"] = ""
+					}
+					id += 1
+					nameMap[splitName[0]] = true
+					dataList = append(dataList, data)
+				}
+			}
+		}
+	}
+	return dataList, id, nameMap
 }

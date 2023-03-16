@@ -4,10 +4,8 @@ import (
 	"fmt"
 	"math"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
-	"yssim-go/library/omc"
 	"yssim-go/library/timeConvert"
 
 	"yssim-go/app/DataBaseModel"
@@ -399,15 +397,15 @@ func SimulateResultTreeView(c *gin.Context) {
 	var res responseData
 	if record.SimulateModelResultPath != "" && record.SimulateStart == false {
 		if record.SimulateType == "FmPy" {
-			_, err := os.Stat(record.SimulateModelResultPath + "result_init_fmpy.xml")
-			if os.IsNotExist(err) {
-				if res := omc.OMC.DumpXMLDAE(record.SimulateModelName); res[0].(string) == "true" {
-					os.Rename(res[1].(string), record.SimulateModelResultPath+"result_init_fmpy.xml")
-				}
-			}
-			result := service.FmpySimulationResultTree(record.SimulateModelResultPath+"result_init_fmpy.xml", parentNode, keyWords)
+			//FmPy的结果树用的xml是用omc的DumpXMLDAE方法生成的xml，入参record.SimulateModelName用于输出指定模型的xml文件
+			result := service.FmpySimulationResultTree(record.SimulateModelName, record.SimulateModelResultPath+"result_init_fmpy.xml", parentNode, keyWords)
+			res.Data = result
+		} else if record.SimulateType == "DM" {
+			//DM生成的fmu解压后的xml文件
+			result := service.DymolaSimulationResultTree(record.SimulateModelResultPath+"result_init.xml", parentNode, keyWords)
 			res.Data = result
 		} else {
+			//OMC仿真完输出的xml文件
 			result := service.SimulationResultTree(record.SimulateModelResultPath+"result_init.xml", parentNode, keyWords)
 			res.Data = result
 		}

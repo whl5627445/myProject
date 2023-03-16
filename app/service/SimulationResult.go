@@ -99,12 +99,13 @@ func FilterSimulationResult(varNameList []string, path, newFileName string) bool
 }
 
 type realType struct {
-	XMLName     xml.Name `xml:"Real"`
-	Start       string   `xml:"start,attr"`
-	Fixed       string   `xml:"fixed,attr"`
-	UseNominal  string   `xml:"useNominal,attr"`
-	Unit        string   `xml:"unit,attr"`
-	DisplayUnit string   `xml:"displayUnit,attr"`
+	XMLName      xml.Name `xml:"Real"`
+	Start        string   `xml:"start,attr"`
+	Fixed        string   `xml:"fixed,attr"`
+	UseNominal   string   `xml:"useNominal,attr"`
+	Unit         string   `xml:"unit,attr"`
+	DisplayUnit  string   `xml:"displayUnit,attr"`
+	DeclaredType string   `xml:"declaredType,attr"` //DeclaredType只对dymola的xml生效
 }
 
 type booleanType struct {
@@ -155,10 +156,28 @@ type modelVariables struct {
 	ScalarVariable []scalarVariable `xml:"ScalarVariable"`
 }
 
+type dmRealType struct {
+	//只对dymola的xml生效
+	XMLName     xml.Name `xml:"RealType"`
+	Unit        string   `xml:"unit,attr"`
+	DisplayUnit string   `xml:"displayUnit,attr"`
+}
+type DmType struct {
+	//只对dymola的xml生效
+	XMLName  xml.Name   `xml:"Type"`
+	Name     string     `xml:"name,attr"`
+	RealType dmRealType `xml:"RealType,omitempty"`
+}
+type typeDefinitions struct {
+	//只对dymola的xml生效
+	XMLName xml.Name `xml:"TypeDefinitions"`
+	Type    []DmType `xml:"Type"`
+}
 type xmlInit struct {
 	XMLName           xml.Name          `xml:"fmiModelDescription"`
 	ModelVariables    modelVariables    `xml:"ModelVariables"`
 	DefaultExperiment defaultExperiment `xml:"DefaultExperiment"`
+	TypeDefinitions   typeDefinitions   `xml:"TypeDefinitions"` //TypeDefinitions只对dymola的xml生效
 }
 
 func SimulationResultTree(path, parent, keyWords string) []map[string]interface{} {
@@ -215,66 +234,83 @@ func SimulationResultTree(path, parent, keyWords string) []map[string]interface{
 	return dataList
 }
 
-func getVarXml(orderedVariables *etree.Element, parent string, keyWords string, id int, nameMap map[string]bool) ([]map[string]interface{}, int, map[string]bool) {
-	var dataList []map[string]interface{}
+func DymolaSimulationResultTree(path, parent, keyWords string) []map[string]interface{} {
+	// 读取xml文件
+	v := xmlInit{}
+	err := xmlOperation.ParseXML(path, &v)
+	if err != nil {
+		log.Println(err)
+	}
 	parentName := ""
 	if parent != "" {
 		parentName = parent + "."
 	}
-	if orderedVariables != nil {
-		for _, variable := range orderedVariables.SelectElements("variable") {
-			//if variable.SelectAttrValue("type", "") != "Real" {
-			//	continue
-			//}
-			name := variable.SelectAttrValue("name", "")
-			var splitName []string
-			trimPrefixName := strings.TrimPrefix(name, parent+".")
-			if strings.HasPrefix(name, parentName) && strings.Contains(strings.ToLower(name), strings.ToLower(keyWords)) {
-				if !strings.HasPrefix(name, "der(") && !strings.HasPrefix(name, "$") {
-					splitName = strings.Split(trimPrefixName, ".")
-				} else {
-					continue
-				}
-				displayUnitString := ""
-				unitString := ""
-				startString := ""
-				if attributesValues := variable.SelectElement("attributesValues"); attributesValues != nil {
-					if displayUnit := attributesValues.SelectElement("displayUnit"); displayUnit != nil {
-						displayUnitString = strings.Replace(displayUnit.SelectAttrValue("string", ""), "\"", "", -1)
-					}
-					if unit := attributesValues.SelectElement("unit"); unit != nil {
-						unitString = strings.Replace(unit.SelectAttrValue("string", ""), "\"", "", -1)
-					}
-				}
-				if bindExpression := variable.SelectElement("bindExpression"); bindExpression != nil {
-					startString = bindExpression.SelectAttrValue("string", "")
-				}
-				if !nameMap[splitName[0]] {
-					data := map[string]interface{}{
-						"variables":    splitName[0],
-						"description":  variable.SelectAttrValue("comment", ""),
-						"display_unit": displayUnitString,
-						"has_child":    false,
-						"id":           id,
-						"start":        startString,
-						"unit":         unitString,
-					}
-					if len(splitName) > 1 {
-						data["has_child"] = true
-						data["unit"] = ""
-						data["display_unit"] = ""
-					}
-					id += 1
-					nameMap[splitName[0]] = true
-					dataList = append(dataList, data)
-				}
+	// 将所有的单位类型保存为typeDefinitionsMap
+	typeDefinitionsList := v.TypeDefinitions.Type
+	typeDefinitionsMap := make(map[string]DmType, 0)
+	for _, variable := range typeDefinitionsList {
+		name := variable.Name
+		typeDefinitionsMap[name] = variable
+	}
+
+	scalarVariableList := v.ModelVariables.ScalarVariable
+	scalarVariableMap := make(map[string]scalarVariable, 0)
+	var dataList []map[string]interface{}
+	nameMap := map[string]bool{}
+	id := 0
+	for _, variable := range scalarVariableList {
+		name := variable.Name
+		var splitName []string
+		trimPrefixName := strings.TrimPrefix(name, parent+".")
+		if strings.HasPrefix(name, parentName) && strings.Contains(strings.ToLower(name), strings.ToLower(keyWords)) {
+			scalarVariableMap[name] = variable
+			if !strings.HasPrefix(name, "der(") && !strings.HasPrefix(name, "$") {
+				splitName = strings.Split(trimPrefixName, ".")
+			} else {
+				continue
 			}
+			if !nameMap[splitName[0]] && !scalarVariableMap[name].HideResult && !scalarVariableMap[name].IsProtected {
+				unit := scalarVariableMap[name].Real.Unit
+				displayUnit := scalarVariableMap[name].Real.DisplayUnit
+				declaredTypeName := scalarVariableMap[name].Real.DeclaredType
+
+				//如果scalarVariable节点中的单位不存在并且DeclaredType存在，则从typeDefinitionsMap中获取Unit和DisplayUnit
+				if unit == "" && declaredTypeName != "" {
+					unit = typeDefinitionsMap[declaredTypeName].RealType.Unit
+					displayUnit = typeDefinitionsMap[declaredTypeName].RealType.DisplayUnit
+				}
+				data := map[string]interface{}{
+					"variables":    splitName[0],
+					"description":  scalarVariableMap[name].Description,
+					"display_unit": displayUnit,
+					"has_child":    false,
+					"id":           id,
+					"start":        scalarVariableMap[name].Real.Start,
+					"unit":         unit,
+				}
+				if len(splitName) > 1 {
+					data["has_child"] = true
+					data["unit"] = ""
+					data["display_unit"] = ""
+				}
+				id += 1
+				nameMap[splitName[0]] = true
+				dataList = append(dataList, data)
+
+			}
+
 		}
 	}
-	return dataList, id, nameMap
+	return dataList
 }
 
-func FmpySimulationResultTree(path, parent, keyWords string) []map[string]interface{} {
+func FmpySimulationResultTree(modelName, path, parent, keyWords string) []map[string]interface{} {
+	_, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		if res := omc.OMC.DumpXMLDAE(modelName); res[0].(string) == "true" {
+			os.Rename(res[1].(string), path)
+		}
+	}
 	doc := etree.NewDocument()
 	if err := doc.ReadFromFile(path); err != nil {
 		log.Printf("解析%v失败, Error------>%v", path, err)
@@ -287,7 +323,7 @@ func FmpySimulationResultTree(path, parent, keyWords string) []map[string]interf
 	//解析orderedVariables节点
 	if orderedVariables := variables.SelectElement("orderedVariables"); orderedVariables != nil {
 		if variablesList := orderedVariables.SelectElement("variablesList"); variablesList != nil {
-			dataList1, id1, nameMap1 := getVarXml(variablesList, parent, keyWords, id, nameMap)
+			dataList1, id1, nameMap1 := xmlOperation.GetVarXml(variablesList, parent, keyWords, id, nameMap)
 			dataList = append(dataList, dataList1...)
 			id = id1
 			nameMap = nameMap1
@@ -296,7 +332,7 @@ func FmpySimulationResultTree(path, parent, keyWords string) []map[string]interf
 	//解析knownVariables节点
 	if knownVariables := variables.SelectElement("knownVariables"); knownVariables != nil {
 		if variablesList := knownVariables.SelectElement("variablesList"); variablesList != nil {
-			dataList2, id2, nameMap2 := getVarXml(variablesList, parent, keyWords, id, nameMap)
+			dataList2, id2, nameMap2 := xmlOperation.GetVarXml(variablesList, parent, keyWords, id, nameMap)
 			dataList = append(dataList, dataList2...)
 			id = id2
 			nameMap = nameMap2
@@ -305,7 +341,7 @@ func FmpySimulationResultTree(path, parent, keyWords string) []map[string]interf
 	//解析aliasVariables节点
 	if aliasVariables := variables.SelectElement("aliasVariables"); aliasVariables != nil {
 		if variablesList := aliasVariables.SelectElement("variablesList"); variablesList != nil {
-			dataList3, _, _ := getVarXml(variablesList, parent, keyWords, id, nameMap)
+			dataList3, _, _ := xmlOperation.GetVarXml(variablesList, parent, keyWords, id, nameMap)
 			dataList = append(dataList, dataList3...)
 		}
 	}
