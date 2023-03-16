@@ -37,7 +37,6 @@ func (o *ZmqObject) SendExpression(cmd string) ([]interface{}, bool) {
 	o.Lock()
 	defer o.Unlock()
 	var msg []byte
-
 	ctx := context.Background()
 	msg, err := allModelCache.HGet(ctx, *redisCacheKey, cmd).Bytes()
 	if err != nil {
@@ -212,13 +211,12 @@ func (o *ZmqObject) GetDiagramAnnotationList(classNameList []string) []interface
 
 // GetDiagramAnnotation 获取模型的diagram注释信息
 func (o *ZmqObject) GetDiagramAnnotation(className string) []interface{} {
-	var dataList []interface{}
 	cmd := "getDiagramAnnotation(" + className + ")"
 	diagramAnnotationData, ok := o.SendExpression(cmd)
 	if ok {
 		return diagramAnnotationData
 	}
-	return dataList
+	return nil
 }
 
 // GetConnectionCountList 获取切片给定模型当中有多少个连接线，一个数字，有多少个模型名称，就返回多少个数字
@@ -278,6 +276,17 @@ func (o *ZmqObject) GetComponentsList(classNameList []string) [][]interface{} {
 		}
 	}
 	return dataList
+}
+
+// GetDefaultComponentName 获取指定模型名称的默认组件名， 可能为空
+func (o *ZmqObject) GetDefaultComponentName(className string) string {
+	cmd := "getDefaultComponentName(" + className + ")"
+	name, ok := o.SendExpressionNoParsed(cmd)
+	if ok {
+		name = name[1 : len(name)-2]
+		return string(name)
+	}
+	return ""
 }
 
 // GetElements 获取给定模型的组成部分，包含组件信息,新API

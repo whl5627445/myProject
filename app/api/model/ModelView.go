@@ -108,7 +108,6 @@ func GetGraphicsDataView(c *gin.Context) {
 		## modelname: 需要查询的模型名称，全称， 例如“Modelica.Blocks.Examples.PID_Controller”
 		## component_name: 模型的组件名称，用于获取单个组件时传入
 	*/
-
 	var item modelGraphicsData
 	err := c.BindJSON(&item)
 	if err != nil {
@@ -126,13 +125,10 @@ func GetGraphicsDataView(c *gin.Context) {
 	}
 	var res responseData
 	var graphicsData [][]map[string]interface{}
-	//var graphicsData [][]interface{}
 	if item.ComponentName == "" {
-		//graphicsData = service.GetGraphicsData(item.ModelName)
 		graphicsData = service.GetGraphicsData(item.ModelName, packageModel.SysUser)
 	} else {
-		//graphicsData = service.GetComponentGraphicsData(item.ModelName, item.ComponentName)
-		graphicsData = service.GetComponentGraphicsData(item.ModelName, item.ComponentName, packageModel.SysUser)
+		graphicsData = service.GetComponentGraphicsData(item.ModelName, item.ComponentName)
 	}
 	res.Data = graphicsData
 	c.JSON(http.StatusOK, res)

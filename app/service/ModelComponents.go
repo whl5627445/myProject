@@ -1,6 +1,9 @@
 package service
 
 import (
+	"context"
+	"encoding/json"
+	"log"
 	"strconv"
 	"strings"
 
@@ -26,22 +29,29 @@ func GetElements(className, componentName string) []interface{} {
 		switch {
 		case componentName != "" && cData[3] == componentName:
 			return cData
-			//break
-		//case !(cData[5] == "protected" || cData[6] == "true" || len(annotationsData[i].([]interface{})) == 0 || annotationsData[i].([]interface{})[0].(string) != "Placement") && componentName == "":
 		case !(cData[6] == "true" || len(annotationsData[i].([]interface{})) == 0 || annotationsData[i].([]interface{})[0].(string) != "Placement") && componentName == "":
 			componentData = append(componentData, cData)
 		}
 	}
 
-	// componentData = append(componentData, icnamelist)
 	return componentData
 }
 
+func getDefaultComponentName(className string) string {
+	return omc.OMC.GetDefaultComponentName(className)
+}
+
 func GetComponentName(modelName, className string) string {
+	defaultComponentName := getDefaultComponentName(className)
+	name := ""
+	if defaultComponentName != "" {
+		name = defaultComponentName
+	} else {
+		nameList := strings.Split(className, ".")
+		name = strings.ToLower(nameList[len(nameList)-1])
+	}
 	modelNameList := GetICList(modelName)
 	componentsData := omc.OMC.GetElementsList(modelNameList)
-	nameList := strings.Split(className, ".")
-	name := strings.ToLower(nameList[len(nameList)-1])
 	nameNum := 0
 	nameMap := map[string]bool{}
 	if _, ok := config.ModelicaKeywords[name]; ok {
