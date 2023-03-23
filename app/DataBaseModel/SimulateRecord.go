@@ -12,7 +12,7 @@ type YssimSimulateRecord struct {
 	PackageId               string         `gorm:"column:package_id"`
 	UserspaceId             string         `gorm:"column:userspace_id"`
 	ExperimentId            string         `gorm:"column:experiment_id"`
-	Username                string         `gorm:"column:username"`
+	UserName                string         `gorm:"column:username"`
 	SimulateModelName       string         `gorm:"column:simulate_model_name"`
 	SimulateModelResultPath string         `gorm:"column:simulate_model_result_path"`
 	SimulateResultStr       string         `gorm:"column:simulate_result_str"`
@@ -42,7 +42,7 @@ type YssimExperimentRecord struct {
 	ID                string         `gorm:"primaryKey"`
 	PackageId         string         `gorm:"column:package_id"`
 	UserspaceId       string         `gorm:"column:userspace_id"`
-	Username          string         `gorm:"column:username"`
+	UserName          string         `gorm:"column:username"`
 	ExperimentName    string         `gorm:"column:experiment_name"`
 	ModelName         string         `gorm:"column:model_name"`
 	ModelVarData      datatypes.JSON `gorm:"column:model_var_data;TYPE:json"`

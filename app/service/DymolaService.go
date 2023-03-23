@@ -1,18 +1,19 @@
 package service
 
 import (
-	"github.com/wangluozhe/requests"
 	"log"
 	"strings"
 	"time"
 	"yssim-go/config"
 
+	"github.com/wangluozhe/requests"
+
 	"github.com/wangluozhe/requests/url"
 )
 
-func DymolaFmuExport(fmuPar map[string]interface{}, token, username, fmuName, packageName, modelName, fileName, filePath string) (resultFmuFileData []byte, res bool) {
+func DymolaFmuExport(fmuPar map[string]interface{}, token, userName, fmuName, packageName, modelName, fileName, filePath string) (resultFmuFileData []byte, res bool) {
 	data := map[string]interface{}{
-		"username":    username,
+		"username":    userName,
 		"fmuPar":      fmuPar,
 		"modelName":   fmuName,
 		"fileName":    "",
@@ -22,7 +23,7 @@ func DymolaFmuExport(fmuPar map[string]interface{}, token, username, fmuName, pa
 	urlStr := packageName + "/" + strings.ReplaceAll(modelName, ".", "-") + "/" + time.Now().Local().Format("20060102150405")
 	req := url.NewRequest()
 	params := url.NewParams()
-	params.Set("url", username+"/"+urlStr)
+	params.Set("url", userName+"/"+urlStr)
 	req.Params = params
 	Headers := url.NewHeaders()
 	Headers.Set("Authorization", token)

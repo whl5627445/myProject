@@ -19,11 +19,11 @@ func GetUserSpaceView(c *gin.Context) {
 	/*
 		# 获取用户所有的用户空间条目
 	*/
-	username := c.GetHeader("username")
+	userName := c.GetHeader("username")
 	var res responseData
 	var modelData []map[string]string
 	var userSpace []DataBaseModel.YssimUserSpace
-	_ = DB.Where("username = ?", username).Find(&userSpace)
+	_ = DB.Where("username = ?", userName).Find(&userSpace)
 	for _, space := range userSpace {
 		modelData = append(modelData, map[string]string{"id": space.ID, "name": space.SpaceName})
 	}
@@ -37,7 +37,7 @@ func CreateUserSpaceView(c *gin.Context) {
 		# 创建用户空间
 		## space_name: 用户空间名称
 	*/
-	username := c.GetHeader("username")
+	userName := c.GetHeader("username")
 	var res responseData
 	var item userSpaceModel
 	err := c.BindJSON(&item)
@@ -46,8 +46,8 @@ func CreateUserSpaceView(c *gin.Context) {
 	}
 	var oneSpace DataBaseModel.YssimUserSpace
 	var allSpace []DataBaseModel.YssimUserSpace
-	_ = DB.Where("username = ? AND space_name = ?", username, item.SpaceName).First(&oneSpace).Error
-	_ = DB.Where("username = ?", username).Find(&allSpace).Error
+	_ = DB.Where("username = ? AND space_name = ?", userName, item.SpaceName).First(&oneSpace).Error
+	_ = DB.Where("username = ?", userName).Find(&allSpace).Error
 	if oneSpace.ID != "" || len(allSpace) >= 5 {
 		res.Err = "空间名称已存在或数量超过5个"
 		res.Status = 2
@@ -57,7 +57,7 @@ func CreateUserSpaceView(c *gin.Context) {
 	space := DataBaseModel.YssimUserSpace{
 		ID:        uuid.New().String(),
 		SpaceName: item.SpaceName,
-		UserName:  username,
+		UserName:  userName,
 	}
 	err = DB.Create(&space).Error
 	if err != nil {
@@ -79,7 +79,7 @@ func DeleteUserSpaceView(c *gin.Context) {
 		# 删除用户空间
 		## space_id: 用户空间id
 	*/
-	username := c.GetHeader("username")
+	userName := c.GetHeader("username")
 	var res responseData
 	var item userSpaceModel
 	err := c.BindJSON(&item)
@@ -87,7 +87,7 @@ func DeleteUserSpaceView(c *gin.Context) {
 		return
 	}
 	var space DataBaseModel.YssimUserSpace
-	DB.Where("id = ? AND username = ?", item.SpaceId, username).Delete(&space)
+	DB.Where("id = ? AND username = ?", item.SpaceId, userName).Delete(&space)
 	res.Msg = "删除成功"
 	c.JSON(http.StatusOK, res)
 
@@ -134,11 +134,11 @@ func GetUserRecentlyOpenedView(c *gin.Context) {
 	/*
 		#获取用户空间的最近打开
 	*/
-	username := c.GetHeader("username")
+	userName := c.GetHeader("username")
 	var res responseData
 	var modelData []map[string]string
 	var userSpace []DataBaseModel.YssimUserSpace
-	DB.Where("username = ?", username).Order("last_login_time desc").Find(&userSpace)
+	DB.Where("username = ?", userName).Order("last_login_time desc").Find(&userSpace)
 	for _, space := range userSpace {
 		modelData = append(modelData, map[string]string{"id": space.ID, "name": space.SpaceName})
 	}

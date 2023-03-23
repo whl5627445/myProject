@@ -51,12 +51,12 @@ func GetUserRootModelView(c *gin.Context) {
 	/*
 		# 获取左侧模型列表接口， 此接口获取系统模型和用户上传模型的根节点列表，暂时没有图标信息
 	*/
-	username := c.GetHeader("username")
+	userName := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
 	var res responseData
 	var modelData []map[string]interface{}
 	var packageModel []DataBaseModel.YssimModels
-	DB.Where("sys_or_user = ? AND userspace_id = ?", username, userSpaceId).Find(&packageModel)
+	DB.Where("sys_or_user = ? AND userspace_id = ?", userName, userSpaceId).Find(&packageModel)
 	libraryAndVersions := service.GetLibraryAndVersions()
 	for i := 0; i < len(packageModel); i++ {
 		loadVersions, ok := libraryAndVersions[packageModel[i].PackageName]
@@ -114,11 +114,11 @@ func GetGraphicsDataView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
-	username := c.GetHeader("username")
+	userName := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
 	var packageModel DataBaseModel.YssimModels
 	packageName := strings.Split(item.ModelName, ".")[0]
-	err = DB.Where("package_name = ? AND sys_or_user IN ? AND userspace_id IN ?", packageName, []string{"sys", username}, []string{"0", userSpaceId}).First(&packageModel).Error
+	err = DB.Where("package_name = ? AND sys_or_user IN ? AND userspace_id IN ?", packageName, []string{"sys", userName}, []string{"0", userSpaceId}).First(&packageModel).Error
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
@@ -347,10 +347,10 @@ func SetComponentPropertiesView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, res)
 		return
 	}
-	username := c.GetHeader("username")
+	userName := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
 	var packageModel DataBaseModel.YssimModels
-	err = DB.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", item.PackageId, []string{"sys", username}, []string{"0", userSpaceId}).First(&packageModel).Error
+	err = DB.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", item.PackageId, []string{"sys", userName}, []string{"0", userSpaceId}).First(&packageModel).Error
 	if err != nil || packageModel.SysUser == "sys" {
 		res.Status = 2
 		res.Err = "设置失败"
@@ -388,7 +388,7 @@ func CopyClassView(c *gin.Context) {
 		## class_name: 复制之后的模型名称，例如“Scenario1_Status_test”
 		## copied_class_name: 被复制的模型全称，例如“ENN.Examples.Scenario1_Status”
 	*/
-	username := c.GetHeader("username")
+	userName := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
 	var item copyClassData
 	var res responseData
@@ -413,7 +413,7 @@ func CopyClassView(c *gin.Context) {
 	filePath := ""
 
 	var packageModel DataBaseModel.YssimModels
-	DB.Where("package_name = ? AND userspace_id = ?", packageName, "0").Or("sys_or_user = ? AND userspace_id = ? AND package_name = ?", username, userSpaceId, packageName).First(&packageModel)
+	DB.Where("package_name = ? AND userspace_id = ?", packageName, "0").Or("sys_or_user = ? AND userspace_id = ? AND package_name = ?", userName, userSpaceId, packageName).First(&packageModel)
 	if packageModel.SysUser == "sys" {
 		res.Msg = "标准库不允许插入模型"
 		res.Status = 2
@@ -432,12 +432,12 @@ func CopyClassView(c *gin.Context) {
 		filePath = packageModel.FilePath
 	} else {
 		packageName = item.ModelName
-		filePath = "public/UserFiles/UploadFile/" + username + "/" + packageName + "/" + time.Now().Local().Format("20060102150405") + "/" + item.ModelName + ".mo"
+		filePath = "public/UserFiles/UploadFile/" + userName + "/" + packageName + "/" + time.Now().Local().Format("20060102150405") + "/" + item.ModelName + ".mo"
 	}
 	model := DataBaseModel.YssimModels{
 		ID:          uuid.New().String(),
 		PackageName: packageName,
-		SysUser:     username,
+		SysUser:     userName,
 		FilePath:    filePath,
 		UserSpaceId: userSpaceId,
 	}
@@ -472,7 +472,7 @@ func DeletePackageAndModelView(c *gin.Context) {
 		## package_name: 被删除的模型在哪个包之下，例如“Modelica”，如果删除的是包，则就是包的名字，
 		## class_name: 被删除的的模型名称，例如“Filter”
 	*/
-	username := c.GetHeader("username")
+	userName := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
 	var item deleteClassData
 	err := c.BindJSON(&item)
@@ -483,7 +483,7 @@ func DeletePackageAndModelView(c *gin.Context) {
 	}
 	var res responseData
 	var packageModel DataBaseModel.YssimModels
-	DB.Where("id = ? AND sys_or_user = ? AND userspace_id = ?", item.PackageId, username, userSpaceId).First(&packageModel)
+	DB.Where("id = ? AND sys_or_user = ? AND userspace_id = ?", item.PackageId, userName, userSpaceId).First(&packageModel)
 	if packageModel.ID == "" {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
@@ -493,7 +493,7 @@ func DeletePackageAndModelView(c *gin.Context) {
 		res.Msg = msg
 		if item.ParentName == "" {
 			var simulateRecord []DataBaseModel.YssimSimulateRecord
-			DB.Where("package_id = ? AND username = ? AND userspace_id = ?", item.PackageId, username, userSpaceId).Find(&simulateRecord)
+			DB.Where("package_id = ? AND username = ? AND userspace_id = ?", item.PackageId, userName, userSpaceId).Find(&simulateRecord)
 			DB.Delete(&packageModel)
 		}
 		var modelCollection []DataBaseModel.YssimModelsCollection
@@ -1113,6 +1113,9 @@ func LoadModelView(c *gin.Context) {
 			service.LoadAndDeleteLibrary(conflict.Name, conflict.Version, "", "unload")
 		}
 	}
+	var packageModelList []DataBaseModel.YssimModels
+	DB.Where("sys_or_user = ? ", username).Find(&packageModelList)
+	service.SaveModelToFileALL(packageModelList)
 	err = service.LoadAndDeleteLibrary(packageModel.PackageName, packageModel.Version, packageModel.FilePath, "load")
 	if err != nil {
 		res.Err = err.Error()
@@ -1172,6 +1175,7 @@ func Test1(c *gin.Context) {
 	*/
 	cmd := c.Query("cmd")
 	data := service.GetGraphicsDataNew(cmd)
+	//_ = omc.OMC.GetModelInstance(cmd)
 	var res responseData
 	res.Data = data
 	c.JSON(http.StatusOK, res)

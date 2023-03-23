@@ -49,11 +49,7 @@ func GetGraphicsData(modelName, permissions string) [][]map[string]interface{} {
 		g.getDiagramAnnotationData()
 		g.getnthconnectionData()
 		g.getData02()
-		for i := 0; i < len(g.data[1]); i++ {
-			if len(g.data[1][i]["subShapes"].([]map[string]interface{})) == 0 {
-				g.data[1][i]["subShapes"] = append(g.data[1][i]["subShapes"].([]map[string]interface{}), rectangleDefault)
-			}
-		}
+
 	}
 	if permissions == "sys" {
 		redisData, _ := json.Marshal(g.data)
@@ -108,6 +104,11 @@ func (g *graphicsData) getData02() {
 		data := g.data02(componentsData, componentAnnotationsData, false, "", mobility)
 		data2 = append(data2, data...)
 		g.data[1] = append(g.data[1], data2...)
+	}
+	for i := 0; i < len(g.data[1]); i++ {
+		if len(g.data[1][i]["subShapes"].([]map[string]interface{})) == 0 {
+			g.data[1][i]["subShapes"] = append(g.data[1][i]["subShapes"].([]map[string]interface{}), rectangleDefault)
+		}
 	}
 }
 
@@ -534,17 +535,6 @@ func (g *graphicsData) getnthconnectionData() {
 func getElementAnnotations(nameList []string) [][]interface{} {
 	var data [][]interface{}
 	for _, name := range nameList {
-
-		//var result []interface{}
-		//nameType := omc.OMC.GetClassRestriction(name)
-		//if nameType == "connector" || nameType == "expandable connector" && isIcon == false {
-		//	result = omc.OMC.GetDiagramAnnotation(name)
-		//	if len(result) > 8 {
-		//		result = result[8].([]interface{})
-		//	}
-		//} else {
-		//	result = omc.OMC.GetElementAnnotations(name)
-		//}
 		result := omc.OMC.GetElementAnnotations(name)
 		for _, i := range result {
 			data = append(data, i.([]interface{}))
@@ -605,7 +595,6 @@ func (g *graphicsData) getConnectorComponentDiagram(components, componentAnnotat
 		return g.data
 	}
 	return nil
-
 }
 
 func (g *graphicsData) getConnectorModelDiagram(modelName string) [][]map[string]interface{} {

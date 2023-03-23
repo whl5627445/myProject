@@ -67,12 +67,12 @@ func GetModelStateView(c *gin.Context) {
 	   ## package_id: 模型所在包的id
 	*/
 
-	username := c.GetHeader("username")
+	userName := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
 	packageId := c.Query("package_id")
 	modelName := c.Query("model_name")
 	var modelRecord DataBaseModel.YssimSimulateRecord
-	DB.Where("package_id = ? AND username = ? AND simulate_model_name = ? AND simulate_start = ? AND userspace_id = ?", packageId, username, modelName, true, userSpaceId).First(&modelRecord)
+	DB.Where("package_id = ? AND username = ? AND simulate_model_name = ? AND simulate_start = ? AND userspace_id = ?", packageId, userName, modelName, true, userSpaceId).First(&modelRecord)
 	var res responseData
 	if modelRecord.ID != "" {
 		res.Data = 2
@@ -93,7 +93,7 @@ func ModelSimulateView(c *gin.Context) {
 		## number_of_intervals: 仿真参数， 间隔设置当中的间隔数。 与间隔参数是计算关系，
 		## method: 仿真参数， 选择求解方法，默认参数是dassl(Openmodelica使用，dymola使用Dassl)。
 	*/
-	username := c.GetHeader("username")
+	userName := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
 	var item modelSimulateData
 	err := c.BindJSON(&item)
@@ -111,7 +111,7 @@ func ModelSimulateView(c *gin.Context) {
 	DB.Where("id = ? ", item.ExperimentId).First(&experimentRecord)
 
 	var packageModel DataBaseModel.YssimModels
-	err = DB.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", item.PackageId, []string{"sys", username}, []string{"0", userSpaceId}).First(&packageModel).Error
+	err = DB.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", item.PackageId, []string{"sys", userName}, []string{"0", userSpaceId}).First(&packageModel).Error
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
@@ -120,7 +120,7 @@ func ModelSimulateView(c *gin.Context) {
 		ID:                uuid.New().String(),
 		PackageId:         item.PackageId,
 		UserspaceId:       userSpaceId,
-		Username:          username,
+		UserName:          userName,
 		SimulateModelName: item.ModelName,
 		SimulateStatus:    "1",
 		StartTime:         item.StartTime,
@@ -151,14 +151,14 @@ func ModelSimulateView(c *gin.Context) {
 
 func SimulateResultGraphicsView(c *gin.Context) {
 	/*
-		# 仿真结果获取接口， 可一次获取多条, 单个变量
+		# 仿真结果获取接口， 可一次获取多条
 		## variable: 模型变量名字，
 		## id: 仿真记录id值，在/simulate/record/list接口获取，
 		## s1: 单位转换使用，固定为初始单位
 		## s2: 位单位转换使用，需要转换为什么单位
 	*/
 
-	username := c.GetHeader("username")
+	userName := c.GetHeader("username")
 
 	var item modelSimulateResultData
 	err := c.BindJSON(&item)
@@ -173,7 +173,7 @@ func SimulateResultGraphicsView(c *gin.Context) {
 	// 判断记录是否存在，有一条不存在就返回"not found"
 	recordIdList := item.RecordId
 	var recordList []DataBaseModel.YssimSimulateRecord
-	err = DB.Where("id IN ? AND username = ?", recordIdList, username).Order("").Find(&recordList).Error
+	err = DB.Where("id IN ? AND username = ?", recordIdList, userName).Order("").Find(&recordList).Error
 	for i := 0; i < len(recordList); i++ {
 		if err != nil || recordList[i].SimulateStatus != "4" {
 			c.JSON(http.StatusBadRequest, "not found")
@@ -244,92 +244,52 @@ func SimulateResultGraphicsView(c *gin.Context) {
 
 func SimulateResultSingularView(c *gin.Context) {
 	/*
-		# 仿真结果获取接口,多条记录，每条记录对应多个不同的变量
+		# 仿真结果获取接口,单数
 		## variable: 模型变量名字，
 		## id: 仿真记录id值，在/simulate/record/list接口获取，
 		## s1: 单位转换使用，固定为初始单位
 		## s2: 位单位转换使用，需要转换为什么单位
 	*/
 
-	username := c.GetHeader("username")
-	var items []modelSimulateResultSingularData
-	err := c.BindJSON(&items)
+	userName := c.GetHeader("username")
+	var item modelSimulateResultSingularData
+	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
 
 	var res responseData
-	// 遍历获取所有recordId
-	var recordIdList []string
-	for i := 0; i < len(items); i++ {
-		recordIdList = append(recordIdList, items[i].RecordId)
-	}
 	// 判断记录是否存在，有一条不存在就返回"not found"
-	var recordList []DataBaseModel.YssimSimulateRecord
-	err = DB.Where("id IN ? AND username = ?", recordIdList, username).Find(&recordList).Error
-	for i := 0; i < len(recordList); i++ {
-		if err != nil || recordList[i].SimulateStatus != "4" {
-			c.JSON(http.StatusBadRequest, "not found")
-			return
-		}
+	recordIdList := item.RecordId
+	var record DataBaseModel.YssimSimulateRecord
+	err = DB.Where("id = ? AND userName = ?", recordIdList, userName).First(&record).Error
+	if err != nil || record.SimulateStatus != "4" {
+		c.JSON(http.StatusBadRequest, "not found")
+		return
 	}
-	// 构建key为id，val为SimulateModelResultPath的健值对,降低时间复杂度
-	recordDict := map[string]DataBaseModel.YssimSimulateRecord{}
-	for _, record := range recordList {
-		recordDict[record.ID] = record
-	}
-	// 遍历items，依次获取变量结果
-	var resData []map[string]interface{}
-	for i := 0; i < len(items); i++ { //遍历items的每条记录，如果与数据库查询结果中的一条能对得上，则读取对应变量结果
-		var data [][]float64
-		var ok bool
-		if recordDict[items[i].RecordId].SimulateType == "FmPy" {
-			data, ok = service.ReadSimulationResultFromGrpc(items[i].RecordId, items[i].Variable)
-		} else {
-			data, ok = service.ReadSimulationResult([]string{items[i].Variable}, recordDict[items[i].RecordId].SimulateModelResultPath+"result_res.mat")
-		}
-		unitsData := service.ConvertUnits(items[i].S2, items[i].S1)
-		if ok {
-			ordinate := data[1]
-			abscissa := data[0]
-			if unitsData[0] == "true" {
-				scaleFactor, _ := strconv.ParseFloat(unitsData[1], 64)
-				offset, _ := strconv.ParseFloat(unitsData[2], 64)
-				if len(ordinate) > 1000 {
-					step := len(ordinate) / 1000
-					o := []float64{}
-					a := []float64{}
-					for s := 0; s < len(ordinate); s++ {
-						index := s * step
-						if index >= 1000 {
-							break
-						}
-						o = append(o, data[1][index])
-						a = append(a, data[0][index])
-					}
-					if len(ordinate)%1000 != 0 {
-						o = append(o, data[1][len(ordinate)-1])
-						a = append(a, data[0][len(ordinate)-1])
-					}
-					ordinate = o
-					abscissa = a
-				}
-				for p := 0; p < len(ordinate); p++ {
-					ordinate[p] = ordinate[p]*scaleFactor + offset
-				}
+
+	data, ok := service.ReadSimulationResult([]string{item.Variable}, record.SimulateModelResultPath+"result_res.mat")
+	unitsData := service.ConvertUnits(item.S2, item.S1)
+	if ok {
+		scaleFactor, _ := strconv.ParseFloat(unitsData[1], 64)
+		offset, _ := strconv.ParseFloat(unitsData[2], 64)
+		ordinate := data[1]
+		if unitsData[0] == "true" {
+			for i := 0; i < len(ordinate); i++ {
+				ordinate[i] = ordinate[i]*scaleFactor + offset
 			}
-			oneData := map[string]interface{}{
-				"id":        recordDict[items[i].RecordId].ID,
-				"variable":  items[i].Variable,
-				"abscissa":  abscissa,
-				"ordinate":  ordinate,
-				"startTime": recordDict[items[i].RecordId].StartTime,
-				"stopTime":  recordDict[items[i].RecordId].StopTime,
-			}
-			resData = append(resData, oneData)
-			res.Data = resData
 		}
+		res.Data = map[string]interface{}{
+			"ordinate":  ordinate,
+			"startTime": record.StartTime,
+			"stopTime":  record.StopTime,
+		}
+	} else {
+		res.Err = "结果不存在"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
 	}
 	c.JSON(http.StatusOK, res)
 }
@@ -503,7 +463,7 @@ func ExperimentCreateView(c *gin.Context) {
 		ID:                uuid.New().String(),
 		PackageId:         item.PackageId,
 		UserspaceId:       userSpaceId,
-		Username:          username,
+		UserName:          username,
 		ExperimentName:    item.ExperimentName,
 		ModelName:         item.ModelName,
 		StartTime:         item.SimulateVarData["startTime"],

@@ -11,6 +11,8 @@ import (
 	"yssim-go/app/serviceType"
 	"yssim-go/config"
 
+	"github.com/bytedance/sonic"
+
 	"os"
 	"strconv"
 	"strings"
@@ -57,7 +59,7 @@ func (o *ZmqObject) SendExpression(cmd string) ([]interface{}, bool) {
 	}
 
 	//if time.Now().UnixNano()/1e6-s > 20 {
-	//	log.Println("cmd: ", cmd)
+	//log.Println("cmd: ", cmd)
 	//	log.Println("消耗时间: ", time.Now().UnixNano()/1e6-s)
 	//}
 	return parseData, true
@@ -86,7 +88,7 @@ func (o *ZmqObject) SendExpressionNoParsed(cmd string) ([]byte, bool) {
 		return nil, false
 	}
 	//if time.Now().UnixNano()/1e6-s > 1 {
-	//	log.Println("cmd: ", cmd)
+	//log.Println("cmd: ", cmd)
 	//log.Println("消耗时间: ", time.Now().UnixNano()/1e6-s)
 	//}
 	return msg, true
@@ -1150,7 +1152,7 @@ func (o *ZmqObject) ModelInstance(modelName string, ModelInstance *serviceType.M
 		result = bytes.ReplaceAll(result, []byte("\\\""), []byte("\""))
 		result = bytes.ReplaceAll(result, []byte("\\\\"), []byte("\\"))
 		result = result[1 : len(result)-2]
-		err := json.Unmarshal(result, ModelInstance)
+		err := sonic.Unmarshal(result, ModelInstance)
 		if err != nil {
 			log.Println(err)
 		}
@@ -1210,7 +1212,11 @@ func (o *ZmqObject) DeleteComponentParameter(varName, className string) bool {
 func (o *ZmqObject) GetComponentIconAndDiagramAnnotationsALl(classNameList []string, isIcon bool) []interface{} {
 	var data []interface{}
 	ctx := context.Background()
-	msg, _ := allModelCache.HGet(ctx, userName+"-yssim-componentGraphicsData", classNameList[len(classNameList)-1]).Bytes()
+	var msg []byte
+	nType := o.GetClassRestriction(classNameList[len(classNameList)-1])
+	if nType != "connector" && nType != "expandable connector" {
+		msg, _ = allModelCache.HGet(ctx, userName+"-yssim-componentGraphicsData", classNameList[len(classNameList)-1]).Bytes()
+	}
 	if len(msg) > 0 {
 		err := json.Unmarshal(msg, &data)
 		if err != nil {
