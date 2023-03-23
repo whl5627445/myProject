@@ -2,7 +2,6 @@ package API
 
 import (
 	"encoding/base64"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -13,7 +12,6 @@ import (
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/service"
 	"yssim-go/config"
-	"yssim-go/grpc/grpcPb"
 	"yssim-go/library/fileOperation"
 
 	"github.com/gin-gonic/gin"
@@ -388,15 +386,8 @@ func GetResultFileView(c *gin.Context) {
 	DB.Where("id = ? AND username = ? AND userspace_id = ? ", item.RecordId, username, userSpaceId).First(&resultRecord)
 	//c.Header("content-disposition", `attachment; filename=`+time.Now().Local().Format("20060102150405")+".mat")
 	if resultRecord.SimulateType == "FmPy" {
-		ZarrToCsvRequestTest := &grpcPb.ZarrToCsvRequest{
-			ZarrPath: resultRecord.SimulateModelResultPath + "zarr_res.zarr",
-		} // 构造请求体
-		ZarrToCsvRes, err3 := grpcPb.Client.ZarrToCsv(grpcPb.Ctx, ZarrToCsvRequestTest) // 调用grpc服务
-		if err3 != nil {
-			fmt.Println("调用grpc服务(ZarrToCsv)出错：", err3)
-			return
-		}
-		if ZarrToCsvRes.Ok {
+		ok := service.GrpcZarrToCsv(resultRecord.SimulateModelResultPath)
+		if ok {
 			c.Header("content-disposition", `attachment; filename=`+resultRecord.SimulateModelName+".csv")
 			//c.Data(http.StatusOK, "application/octet-stream", resDy)
 			c.File(resultRecord.SimulateModelResultPath + "result_res.csv")
@@ -405,15 +396,8 @@ func GetResultFileView(c *gin.Context) {
 			return
 		}
 	} else {
-		MatToCsvRequestTest := &grpcPb.MatToCsvRequest{
-			MatPath: resultRecord.SimulateModelResultPath + "result_res.mat",
-		} // 构造请求体
-		MatToCsvRes, err4 := grpcPb.Client.MatToCsv(grpcPb.Ctx, MatToCsvRequestTest) // 调用grpc服务
-		if err4 != nil {
-			fmt.Println("调用grpc服务(MatToCsv)出错：", err4)
-			return
-		}
-		if MatToCsvRes.Ok {
+		ok := service.GrpcMatToCsv(resultRecord.SimulateModelResultPath)
+		if ok {
 			c.Header("content-disposition", `attachment; filename=`+resultRecord.SimulateModelName+".csv")
 			//c.Data(http.StatusOK, "application/octet-stream", resDy)
 			c.File(resultRecord.SimulateModelResultPath + "result_res.csv")
@@ -430,36 +414,48 @@ func GetFilterResultFileView(c *gin.Context) {
 	   # 用户筛选仿真结果文件下载
 	*/
 	username := c.GetHeader("username")
-	userSpaceId := c.GetHeader("space_id")
-	var item filterResultFileData
-	err := c.BindJSON(&item)
+	//userSpaceId := c.GetHeader("space_id")
+	var items []filterResultFileData
+	err := c.BindJSON(&items)
 	if err != nil {
 		log.Println(err)
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
-	var resultRecord DataBaseModel.YssimSimulateRecord
-	var ok bool
-	DB.Where("id = ? AND username = ? AND userspace_id = ? ", item.RecordId, username, userSpaceId).First(&resultRecord)
-	newFileName := "public/tmp/" + username + "/" + strings.ReplaceAll(resultRecord.SimulateModelName, ".", "-") + "/" + time.Now().Local().Format("20060102150405") + ".csv"
-	if resultRecord.SimulateType == "FmPy" {
-		SaveFilterResultTest := &grpcPb.SaveFilterResultToCsvRequest{ // 构造请求体
-			Vars:        item.VarList,
-			ResultPath:  resultRecord.SimulateModelResultPath + "zarr_res.zarr",
-			NewFileName: newFileName,
-		}
-		reply, err2 := grpcPb.Client.SaveFilterResultToCsv(grpcPb.Ctx, SaveFilterResultTest) // 调用grpc服务
-		ok = reply.Ok
-		if err2 != nil {
-			fmt.Println("调用grpc服务(FmuSimulation)出错：", err2)
+
+	// 遍历获取所有recordId,用于查询数据库
+	itemsMap := map[string][]string{}
+	var recordIdList []string
+	for i := 0; i < len(items); i++ {
+		recordIdList = append(recordIdList, items[i].RecordId)
+		itemsMap[items[i].RecordId] = items[i].VarList
+	}
+	// 判断记录是否存在，有一条不存在就返回"not found"
+	var recordList []DataBaseModel.YssimSimulateRecord
+	err = DB.Where("id IN ? AND username = ?", recordIdList, username).Find(&recordList).Error
+	for i := 0; i < len(recordList); i++ {
+		if err != nil || recordList[i].SimulateStatus != "4" {
+			c.JSON(http.StatusBadRequest, "not found")
 			return
 		}
-	} else {
-		ok = service.FilterSimulationResult(item.VarList, resultRecord.SimulateModelResultPath+"result_res.mat", newFileName)
 	}
+	//判断输入的id数和数据库查询的id数是否一致
+	if len(recordList) != len(recordIdList) {
+		c.JSON(http.StatusBadRequest, "判断输入的id数和数据库查询的id数是否一致")
+		return
+	}
+	// 构建key为id，val为SimulateModelResultPath的健值对,降低时间复杂度
+	recordDict := map[string]DataBaseModel.YssimSimulateRecord{}
+	for _, record := range recordList {
+		recordDict[record.ID] = record
+	}
+	var ok bool
+	// newFileName保存为csv的文件名
+	newFileName := "public/tmp/" + username + "/" + strings.ReplaceAll(recordList[0].SimulateModelName, ".", "-") + "/" + time.Now().Local().Format("20060102150405") + ".csv"
 
+	ok = service.FilterSimulationResult(itemsMap, recordDict, newFileName)
 	if ok {
-		c.Header("content-disposition", `attachment; filename=`+resultRecord.SimulateModelName+".csv")
+		c.Header("content-disposition", `attachment; filename=`+recordList[0].SimulateModelName+".csv")
 		c.File(newFileName)
 		return
 	}

@@ -14,5 +14,5 @@ type userSpaceModel struct {
 
 type userSettingsModel struct {
 	UserName    string `json:"username"  binding:"required"`
-	GridDisplay string `json:"grid_display" binding:""`
+	GridDisplay bool   `json:"grid_display" binding:""`
 }

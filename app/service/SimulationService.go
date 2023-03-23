@@ -12,10 +12,10 @@ import (
 	"time"
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/config"
-	"yssim-go/grpc/grpcPb"
 	"yssim-go/library/fileOperation"
 	"yssim-go/library/mapProcessing"
 	"yssim-go/library/omc"
+	"yssim-go/library/stringOperation"
 
 	"github.com/wangluozhe/requests"
 	"github.com/wangluozhe/requests/url"
@@ -268,23 +268,9 @@ func fmpySimulate(task *SimulateTask, resultFilePath string, SimulationPraData m
 	startTime, _ := strconv.ParseFloat(SimulationPraData["startTime"], 64)
 	tolerance, _ := strconv.ParseFloat(SimulationPraData["tolerance"], 64)
 	interval, _ := strconv.ParseFloat(task.SRecord.Intervals, 64)
-	//if err != nil {
-	//	log.Printf("数据转换失败: %s", err)
-	//	return false
-	//}
-	FmuSimulationRequestTest := &grpcPb.FmuSimulationRequest{
-		Uuid:           task.SRecord.ID,
-		MoPath:         task.Package.FilePath,
-		ClassName:      task.SRecord.SimulateModelName,
-		UserName:       task.SRecord.Username,
-		StartTime:      startTime,
-		StopTime:       finalTime,
-		ResPath:        resultFilePath,
-		OutputInterval: interval,
-		Tolerance:      tolerance,
-	} // 构造请求体
-	FmuSimulationRes, err := grpcPb.Client.FmuSimulation(grpcPb.Ctx, FmuSimulationRequestTest) // 调用grpc服务
 
+	FmuSimulationRes, err := GrpcFmuSimulation(task.SRecord.ID, task.Package.FilePath, task.SRecord.SimulateModelName,
+		task.SRecord.Username, resultFilePath, startTime, finalTime, interval, tolerance)
 	if err != nil {
 		fmt.Println("调用grpc服务(FmuSimulation)出错：", err)
 		return false
@@ -366,6 +352,7 @@ func ModelSimulate(task *SimulateTask) {
 	if sResult {
 		task.SRecord.SimulateModelResultPath = resultFilePath
 		task.SRecord.SimulateStatus = "4"
+		task.SRecord.AnotherName = stringOperation.NewAnotherName(task.SRecord.Username, task.SRecord.SimulateModelName, task.SRecord.UserspaceId)
 		MessageNotice(map[string]string{"message": task.SRecord.SimulateModelName + " 模型仿真完成"})
 	} else {
 		task.SRecord.SimulateStatus = "3"

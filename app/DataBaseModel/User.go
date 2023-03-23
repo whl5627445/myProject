@@ -17,7 +17,7 @@ type YssimUserSpace struct {
 }
 
 type YssimUserSettings struct {
-	ID          string     `gorm:"primaryKey"`
+	//ID          string     `gorm:"AUTO_INCREMENT"`   坑，创建记录的时候自增失败
 	UserName    string     `gorm:"column:username"`
 	GridDisplay bool       `gorm:"column:grid_display" json:"grid_display" binding:"required"`
 	CreatedAt   *time.Time `gorm:"column:create_time;autoCreateTime"`
