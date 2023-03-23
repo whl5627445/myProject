@@ -8,7 +8,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"yssim-go/grpc/grpcPb"
+	"yssim-go/app/DataBaseModel"
 	"yssim-go/library/fileOperation"
 	"yssim-go/library/omc"
 	"yssim-go/library/xmlOperation"
@@ -16,25 +16,49 @@ import (
 	"github.com/beevik/etree"
 )
 
+// mergeArrays 合并两个二维数组
+func mergeArrays(arr1, arr2 [][]string) [][]string {
+	var merged [][]string
+
+	maxLen := len(arr1)
+	if len(arr2) > maxLen {
+		maxLen = len(arr2)
+	}
+
+	for i := 0; i < maxLen; i++ {
+		var subArr []string
+
+		if i < len(arr1) {
+			subArr = append(subArr, arr1[i]...)
+		} else {
+			subArr = append(subArr, make([]string, len(arr1[0]))...)
+		}
+
+		if i < len(arr2) {
+			subArr = append(subArr, arr2[i]...)
+		} else {
+			subArr = append(subArr, make([]string, len(arr2[0]))...)
+		}
+
+		merged = append(merged, subArr)
+	}
+
+	return merged
+}
+
 func ReadSimulationResult(varNameList []string, path string) ([][]float64, bool) {
 	pwd, _ := os.Getwd()
 	data, ok := omc.OMC.ReadSimulationResult(varNameList, pwd+"/"+path)
 	return data, ok
 }
+
+// ReadSimulationResultFromGrpc 读取单个id单个变量
 func ReadSimulationResultFromGrpc(recordId string, varName string) ([][]float64, bool) {
 	var data [][]float64
-	GetResultRequestTime := &grpcPb.GetResultRequest{
-		Uuid:     recordId,
-		Variable: "time",
-	}
-	GetResultRequestVar := &grpcPb.GetResultRequest{
-		Uuid:     recordId,
-		Variable: varName,
-	}
-	replyTime, err2 := grpcPb.Client.GetResult(grpcPb.Ctx, GetResultRequestTime)
-	replyVar, err2 := grpcPb.Client.GetResult(grpcPb.Ctx, GetResultRequestVar)
-	if err2 != nil {
-		fmt.Println("调用grpc服务(FmuSimulation)出错：", err2)
+	replyTime, err := GrpcGetResult(recordId, "time")
+	replyVar, err := GrpcGetResult(recordId, varName)
+	if err != nil {
+		fmt.Println("调用grpc服务(GrpcGetResult)出错：", err)
 		return nil, false
 	}
 	if replyVar.Log == "true" {
@@ -55,46 +79,59 @@ func ReadSimulationResultFromGrpc(recordId string, varName string) ([][]float64,
 	}
 }
 
-func FilterSimulationResult(varNameList []string, path, newFileName string) bool {
-	result, ok := ReadSimulationResult(varNameList, path)
-	if ok {
-		var csvData [][]string
-		//for _, f := range result {
-		//	var fData []string
-		//	for _, s := range f {
-		//		floatToStr := strconv.FormatFloat(s, 'f', -1, 64)
-		//		fData = append(fData, floatToStr)
-		//	}
-		//	csvData = append(csvData, fData)
-		//}
-		for i := 0; i < len(result[0]); i++ {
+// FilterSimulationResult 保存多个记录多个过滤变量到csv文件
+func FilterSimulationResult(items map[string][]string, recordDict map[string]DataBaseModel.YssimSimulateRecord, newFileName string) bool {
+
+	var csvData [][]string
+	headFlag := 1
+	for key, value := range items {
+		var ok bool
+		var result [][]float64
+		// 定义csv的第一行
+		headFlagName := recordDict[key].AnotherName + "." //标记
+		headRow := []string{headFlagName + "time"}
+		for i := 0; i < len(value); i++ {
+			headRow = append(headRow, headFlagName+value[i])
+		}
+		// 获取结果数据
+		result, ok = ReadSimulationResult(value, recordDict[key].SimulateModelResultPath+"result_res.mat")
+
+		if !ok {
+			return false
+		}
+		var csvDataOne [][]string
+		csvDataOne = append(csvDataOne, headRow) //先写入第一行变量名
+		for i := 0; i < len(result[0]); i++ {    //逐行写入
 			var fData []string
 			for _, s := range result {
 				floatToStr := strconv.FormatFloat(s[i], 'f', -1, 64)
 				fData = append(fData, floatToStr)
 			}
-			csvData = append(csvData, fData)
+			csvDataOne = append(csvDataOne, fData)
 		}
-		nfs, ok := fileOperation.CreateFile(newFileName)
-		if ok {
-			defer nfs.Close()
-			w := csv.NewWriter(nfs)
-			w.Comma = ','
-			w.UseCRLF = true
-			row := append([]string{"time"}, varNameList...)
-			err := w.Write(row)
-			if err != nil {
-				return false
-			}
-			w.Flush()
-			err = w.WriteAll(csvData)
-			if err != nil {
-				return false
-			}
-			w.Flush()
-			return true
+		if headFlag == 1 {
+			csvData = csvDataOne
+		} else {
+			csvData = mergeArrays(csvData, csvDataOne)
 		}
+		headFlag++
 	}
+	//将最后生成的csvData保存为csv文件
+	nfs, ok := fileOperation.CreateFile(newFileName)
+	if ok {
+		defer nfs.Close()
+		w := csv.NewWriter(nfs)
+		//w.Write([]string{string([]byte{0xEF, 0xBB, 0xBF})}) // 写入 UTF-8 BOM
+		w.Comma = ','
+		w.UseCRLF = true
+		err := w.WriteAll(csvData)
+		if err != nil {
+			return false
+		}
+		w.Flush()
+		return true
+	}
+
 	return false
 }
 
@@ -359,30 +396,21 @@ func FmpySimulationResultTree(modelName, path, parent, keyWords string) []map[st
 		}
 	}
 	//调用grpc判断变量名（list）是否存在值
-	CheckVarExistRequestTest := &grpcPb.CheckVarExistRequest{
-		Path:  path,
-		Names: dataNameList,
-	}
-	replyTest, err2 := grpcPb.Client.CheckVarExist(grpcPb.Ctx, CheckVarExistRequestTest)
-	if err2 != nil {
-		fmt.Println("调用grpc服务(CheckVarExist)出错：", err2)
-	}
+	GrpcCheckVarExistRes := GrpcCheckVarExist(path, dataNameList)
 	//dataList去掉不存在值的元素
 	for i := 0; i < len(dataList); i++ {
 		if dataList[i]["has_child"] == false {
 			if parent == "" {
-				if !replyTest.Res[dataList[i]["variables"].(string)] {
+				if !GrpcCheckVarExistRes[dataList[i]["variables"].(string)] {
 					continue
 				}
 			} else {
-				if !replyTest.Res[parent+"."+dataList[i]["variables"].(string)] {
+				if !GrpcCheckVarExistRes[parent+"."+dataList[i]["variables"].(string)] {
 					continue
 				}
 			}
-
 		}
 		dataList2 = append(dataList2, dataList[i])
 	}
-
 	return dataList2
 }

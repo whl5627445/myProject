@@ -1,6 +1,7 @@
 package API
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -160,7 +161,12 @@ func GetUserSettingsView(c *gin.Context) {
 	*/
 	var res responseData
 	var setting DataBaseModel.YssimUserSettings
-	res.Data = setting
+	username := c.GetHeader("username")
+	DB.Where("username =? ", username).First(&setting)
+	oneData := map[string]interface{}{
+		"grid_display": setting.GridDisplay,
+	}
+	res.Data = oneData
 	c.JSON(http.StatusOK, res)
 }
 
@@ -170,11 +176,39 @@ func SetUserSettingsView(c *gin.Context) {
 	*/
 	var res responseData
 	var setting userSettingsModel
-
-	err := DB.UpdateColumns(setting).Error
+	var settingRecord DataBaseModel.YssimUserSettings
+	err := c.BindJSON(&setting)
 	if err != nil {
-		log.Println(err)
+		c.JSON(http.StatusBadRequest, "")
+		return
 	}
-	res.Data = setting
+	res.Data = true
+	DB.Where("username =? ", setting.UserName).First(&settingRecord)
+	if settingRecord.UserName != "" { //存在则修改
+		fmt.Println("存在则修改")
+		res.Msg = "修改成功。"
+		settingRecord.GridDisplay = setting.GridDisplay
+		err := DB.Where("username =? ", setting.UserName).Save(&settingRecord).Error
+		if err != nil {
+			log.Println("err:", err)
+			res.Data = false
+			res.Msg = "修改失败。"
+		}
+
+	} else { //不存在则创建
+		settingNew := DataBaseModel.YssimUserSettings{
+			UserName:    setting.UserName,
+			GridDisplay: setting.GridDisplay,
+		}
+		fmt.Println("不存在则创建")
+		res.Msg = "创建成功。"
+		err := DB.Create(&settingNew).Error
+		if err != nil {
+			log.Println("errr", err)
+			res.Data = false
+			res.Msg = "创建失败。"
+		}
+	}
+
 	c.JSON(http.StatusOK, res)
 }
