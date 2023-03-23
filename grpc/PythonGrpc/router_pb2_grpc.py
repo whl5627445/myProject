@@ -39,10 +39,10 @@ class GreeterStub(object):
                 request_serializer=router__pb2.ProcessOperationRequest.SerializeToString,
                 response_deserializer=router__pb2.ProcessOperationReply.FromString,
                 )
-        self.SaveFilterResultToCsv = channel.unary_unary(
-                '/Greeter/SaveFilterResultToCsv',
-                request_serializer=router__pb2.SaveFilterResultToCsvRequest.SerializeToString,
-                response_deserializer=router__pb2.SaveFilterResultToCsvReply.FromString,
+        self.ReadSimulationResult = channel.unary_unary(
+                '/Greeter/ReadSimulationResult',
+                request_serializer=router__pb2.ReadSimulationResultRequest.SerializeToString,
+                response_deserializer=router__pb2.ReadSimulationResultReply.FromString,
                 )
         self.MatToCsv = channel.unary_unary(
                 '/Greeter/MatToCsv',
@@ -94,7 +94,7 @@ class GreeterServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def SaveFilterResultToCsv(self, request, context):
+    def ReadSimulationResult(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -146,10 +146,10 @@ def add_GreeterServicer_to_server(servicer, server):
                     request_deserializer=router__pb2.ProcessOperationRequest.FromString,
                     response_serializer=router__pb2.ProcessOperationReply.SerializeToString,
             ),
-            'SaveFilterResultToCsv': grpc.unary_unary_rpc_method_handler(
-                    servicer.SaveFilterResultToCsv,
-                    request_deserializer=router__pb2.SaveFilterResultToCsvRequest.FromString,
-                    response_serializer=router__pb2.SaveFilterResultToCsvReply.SerializeToString,
+            'ReadSimulationResult': grpc.unary_unary_rpc_method_handler(
+                    servicer.ReadSimulationResult,
+                    request_deserializer=router__pb2.ReadSimulationResultRequest.FromString,
+                    response_serializer=router__pb2.ReadSimulationResultReply.SerializeToString,
             ),
             'MatToCsv': grpc.unary_unary_rpc_method_handler(
                     servicer.MatToCsv,
@@ -262,7 +262,7 @@ class Greeter(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def SaveFilterResultToCsv(request,
+    def ReadSimulationResult(request,
             target,
             options=(),
             channel_credentials=None,
@@ -272,9 +272,9 @@ class Greeter(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Greeter/SaveFilterResultToCsv',
-            router__pb2.SaveFilterResultToCsvRequest.SerializeToString,
-            router__pb2.SaveFilterResultToCsvReply.FromString,
+        return grpc.experimental.unary_unary(request, target, '/Greeter/ReadSimulationResult',
+            router__pb2.ReadSimulationResultRequest.SerializeToString,
+            router__pb2.ReadSimulationResultReply.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

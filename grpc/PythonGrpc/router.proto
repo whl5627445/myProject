@@ -6,7 +6,7 @@ service Greeter {
   rpc GetAllProcessNumber(GetAllProcessNumberRequest) returns (GetAllProcessNumberReply) {}
   rpc GetResult(GetResultRequest) returns (GetResultReply) {}
   rpc ProcessOperation(ProcessOperationRequest) returns (ProcessOperationReply) {}
-  rpc SaveFilterResultToCsv(SaveFilterResultToCsvRequest) returns (SaveFilterResultToCsvReply) {}
+  rpc ReadSimulationResult(ReadSimulationResultRequest) returns (ReadSimulationResultReply) {}
   rpc MatToCsv(MatToCsvRequest) returns (MatToCsvReply) {}
   rpc ZarrToCsv(ZarrToCsvRequest) returns (ZarrToCsvReply) {}
   rpc CheckVarExist(CheckVarExistRequest) returns (CheckVarExistReply) {}
@@ -14,6 +14,7 @@ service Greeter {
 
 message FmuSimulationRequest {
   string uuid = 1;
+  string userSpaceId = 11;
   string moPath = 2;
   string className = 3;
   string userName = 4;
@@ -66,13 +67,17 @@ message ProcessOperationReply{
   string msg =1;
 }
 
-message SaveFilterResultToCsvRequest{
+message ReadSimulationResultRequest{
   repeated string Vars=1;
   string  resultPath = 2;
-  string newFileName = 3;
+
 }
-message SaveFilterResultToCsvReply{
+message ReadSimulationResultReply{
   bool ok = 1;
+  message ele {
+    repeated double row=3;
+  }
+  repeated ele data=2;
 }
 
 message MatToCsvRequest{

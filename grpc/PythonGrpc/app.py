@@ -15,6 +15,7 @@ import DyMat
 from fmpy import write_csv
 
 adsPath = "/home/simtek/code/"
+# adsPath = "/home/xuqingda/GolandProjects/YssimGoService/"
 
 if __name__ == '__main__':
     # 进程通信，用于保存每个进程的仿真结果
@@ -81,7 +82,7 @@ if __name__ == '__main__':
                                                        numOfPendingProcess=pending_num
                                                        )
 
-        # 获取变量结果
+        # 获取变量结果 单个记录单个变量
         def GetResult(self, request, context):
             print("GetResult被调用。")
             with Session() as session:
@@ -128,20 +129,24 @@ if __name__ == '__main__':
                 return router_pb2.ProcessOperationReply(msg=resumeProcessReply["msg"])
             return router_pb2.ProcessOperationReply(msg="Unknown operation!")
 
-        def SaveFilterResultToCsv(self, request, context):
-            print("SaveFilterResultToCsv被调用。")
+        # 单个记录，多个变量
+        def ReadSimulationResult(self, request, context):
+            print("ReadSimulationResult被调用。")
+            print(adsPath, request.resultPath)
             res = zarr.load(adsPath + request.resultPath)
-            resDict = {"time": res["time"].tolist()}
             if res is not None:
+                resList = [res["time"].tolist()]
                 for i in request.Vars:
-                    resDict[i] = res[i].tolist()
-                df = pd.DataFrame(resDict)
-                dirnamePath = os.path.dirname(adsPath + request.newFileName)
-                if not os.path.exists(dirnamePath):
-                    print("创建csv路径", dirnamePath)
-                    os.makedirs(dirnamePath)
-                df.to_csv(adsPath + request.newFileName, index=False, encoding='utf-8')
-                return router_pb2.SaveFilterResultToCsvReply(ok=True)
+                    resList.append(res[i].tolist())
+                merged_list = list(zip(*resList))
+                result_list = [list(item) for item in merged_list]
+                sim_result = router_pb2.ReadSimulationResultReply()
+                for row_data in result_list:
+                    row = router_pb2.ReadSimulationResultReply.ele()
+                    row.row.extend(row_data)
+                    sim_result.data.append(row)
+                sim_result.ok = True
+                return sim_result  # 返回 protobuf 消息对象
             else:
                 return router_pb2.SaveFilterResultToCsvReply(ok=False)
 

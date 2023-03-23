@@ -5,20 +5,26 @@ import (
 	"yssim-go/grpc/grpcPb"
 )
 
-func GrpcSaveFilterResultToCsv(VarList []string, SimulateModelResultPath string, newFileName string) bool {
-	SaveFilterResultTest := &grpcPb.SaveFilterResultToCsvRequest{ // 构造请求体
-		Vars:        VarList,
-		ResultPath:  SimulateModelResultPath + "zarr_res.zarr",
-		NewFileName: newFileName,
+func GrpcReadSimulationResult(VarList []string, SimulateModelResultPath string) ([][]float64, bool) {
+
+	SaveFilterResultTest := &grpcPb.ReadSimulationResultRequest{ // 构造请求体
+		Vars:       VarList,
+		ResultPath: SimulateModelResultPath,
 	}
-	reply, err := grpcPb.Client.SaveFilterResultToCsv(grpcPb.Ctx, SaveFilterResultTest) // 调用grpc服务
+	reply, err := grpcPb.Client.ReadSimulationResult(grpcPb.Ctx, SaveFilterResultTest) // 调用grpc服务
+	data := reply.Data
+	var result [][]float64
+	for i := 0; i < len(data); i++ {
+		result = append(result, data[i].Row)
+	}
 	var ok bool
 	ok = reply.Ok
 	if err != nil {
 		fmt.Println("调用grpc服务(SaveFilterResultToCsv)出错：", err)
-		return false
+		return result, false
 	}
-	return ok
+	return result, ok
+
 }
 
 func GrpcZarrToCsv(SimulateModelResultPath string) bool {
@@ -69,9 +75,10 @@ func GrpcGetResult(recordId string, varName string) (*grpcPb.GetResultReply, err
 	return replyVar, err
 }
 
-func GrpcFmuSimulation(ID, FilePath, SimulateModelName, Username, resultFilePath string, startTime, finalTime, interval, tolerance float64) (*grpcPb.FmuSimulationReply, error) {
+func GrpcFmuSimulation(ID, userSpaceId, FilePath, SimulateModelName, Username, resultFilePath string, startTime, finalTime, interval, tolerance float64) (*grpcPb.FmuSimulationReply, error) {
 	FmuSimulationRequestTest := &grpcPb.FmuSimulationRequest{
 		Uuid:           ID,
+		UserSpaceId:    userSpaceId,
 		MoPath:         FilePath,
 		ClassName:      SimulateModelName,
 		UserName:       Username,

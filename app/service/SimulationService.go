@@ -69,7 +69,7 @@ func dymolaSimulate(task *SimulateTask, resultFilePath string, SimulationPraData
 	if task.Package.FilePath != "" {
 		req := url.NewRequest()
 		params := url.NewParams()
-		params.Set("url", task.SRecord.Username+"/"+path)
+		params.Set("url", task.SRecord.UserName+"/"+path)
 		req.Params = params
 		req.Timeout = 600 * time.Second
 		files := url.NewFiles()
@@ -91,7 +91,7 @@ func dymolaSimulate(task *SimulateTask, resultFilePath string, SimulationPraData
 			fileName = uploadFilePath
 		}
 		compileReqData := map[string]interface{}{
-			"userName":  task.SRecord.Username,
+			"userName":  task.SRecord.UserName,
 			"fileName":  fileName,
 			"modelName": task.SRecord.SimulateModelName,
 		}
@@ -113,7 +113,7 @@ func dymolaSimulate(task *SimulateTask, resultFilePath string, SimulationPraData
 				"id":                0,
 				"fileName":          fileName,
 				"modelName":         task.SRecord.SimulateModelName,
-				"userName":          task.SRecord.Username,
+				"userName":          task.SRecord.UserName,
 				"startTime":         SimulationPraData["startTime"],
 				"stopTime":          SimulationPraData["stopTime"],
 				"numberOfIntervals": SimulationPraData["numberOfIntervals"],
@@ -269,8 +269,8 @@ func fmpySimulate(task *SimulateTask, resultFilePath string, SimulationPraData m
 	tolerance, _ := strconv.ParseFloat(SimulationPraData["tolerance"], 64)
 	interval, _ := strconv.ParseFloat(task.SRecord.Intervals, 64)
 
-	FmuSimulationRes, err := GrpcFmuSimulation(task.SRecord.ID, task.Package.FilePath, task.SRecord.SimulateModelName,
-		task.SRecord.Username, resultFilePath, startTime, finalTime, interval, tolerance)
+	FmuSimulationRes, err := GrpcFmuSimulation(task.SRecord.ID, task.SRecord.UserspaceId, task.Package.FilePath, task.SRecord.SimulateModelName,
+		task.SRecord.UserName, resultFilePath, startTime, finalTime, interval, tolerance)
 	if err != nil {
 		fmt.Println("调用grpc服务(FmuSimulation)出错：", err)
 		return false
@@ -281,7 +281,7 @@ func fmpySimulate(task *SimulateTask, resultFilePath string, SimulationPraData m
 }
 
 func ModelSimulate(task *SimulateTask) {
-	resultFilePath := "public/UserFiles/ModelResult/" + task.SRecord.Username + "/" + strings.ReplaceAll(task.SRecord.SimulateModelName, ".", "-") + "/" + time.Now().Local().Format("20060102150405") + "/"
+	resultFilePath := "public/UserFiles/ModelResult/" + task.SRecord.UserName + "/" + strings.ReplaceAll(task.SRecord.SimulateModelName, ".", "-") + "/" + time.Now().Local().Format("20060102150405") + "/"
 	fileOperation.CreateFilePath(resultFilePath)
 	task.SRecord.SimulateStartTime = time.Now().Unix()
 	task.SRecord.SimulateStart = true
@@ -307,7 +307,7 @@ func ModelSimulate(task *SimulateTask) {
 			log.Println("json2map filed!")
 		}
 	}
-	FilePath := "public/tmp/simulateModelFile/" + task.SRecord.Username + "/" + time.Now().Local().Format("20060102150405") + "/" + task.SRecord.SimulateModelName + ".mo"
+	FilePath := "public/tmp/simulateModelFile/" + task.SRecord.UserName + "/" + time.Now().Local().Format("20060102150405") + "/" + task.SRecord.SimulateModelName + ".mo"
 
 	MessageNotice(map[string]string{"message": task.SRecord.SimulateModelName + " 模型开始编译"})
 	sResult := true
@@ -352,7 +352,7 @@ func ModelSimulate(task *SimulateTask) {
 	if sResult {
 		task.SRecord.SimulateModelResultPath = resultFilePath
 		task.SRecord.SimulateStatus = "4"
-		task.SRecord.AnotherName = stringOperation.NewAnotherName(task.SRecord.Username, task.SRecord.SimulateModelName, task.SRecord.UserspaceId)
+		task.SRecord.AnotherName = stringOperation.NewAnotherName(task.SRecord.UserName, task.SRecord.SimulateModelName, task.SRecord.UserspaceId)
 		MessageNotice(map[string]string{"message": task.SRecord.SimulateModelName + " 模型仿真完成"})
 	} else {
 		task.SRecord.SimulateStatus = "3"

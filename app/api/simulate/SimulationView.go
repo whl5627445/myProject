@@ -298,6 +298,7 @@ func SimulateResultListView(c *gin.Context) {
 	/*
 	   # 仿真记录列表获取接口
 	   # 模型名为空的时候查所有模型，只有查所有模型的时候才会分页。
+	   # 模型名不为空时,不分页，最多返回10条数据。
 	   ## return: 返回对应用户的所有仿真记录
 	*/
 
@@ -334,6 +335,7 @@ func SimulateResultListView(c *gin.Context) {
 			"simulate_end_time":   simulateEndTime.Format("2006-01-02 15:04:05"),
 			"simulate_model_name": recordList[i].SimulateModelName,
 			"simulate_run_time":   simulateRunTime,
+			"another_name":        recordList[i].AnotherName,
 		}
 		dataList = append(dataList, data)
 	}

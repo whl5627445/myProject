@@ -1,7 +1,6 @@
 package API
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -175,6 +174,7 @@ func SetUserSettingsView(c *gin.Context) {
 		# 设置用户配置
 	*/
 	var res responseData
+	username := c.GetHeader("username")
 	var setting userSettingsModel
 	var settingRecord DataBaseModel.YssimUserSettings
 	err := c.BindJSON(&setting)
@@ -183,12 +183,11 @@ func SetUserSettingsView(c *gin.Context) {
 		return
 	}
 	res.Data = true
-	DB.Where("username =? ", setting.UserName).First(&settingRecord)
+	DB.Where("username =? ", username).First(&settingRecord)
 	if settingRecord.UserName != "" { //存在则修改
-		fmt.Println("存在则修改")
 		res.Msg = "修改成功。"
 		settingRecord.GridDisplay = setting.GridDisplay
-		err := DB.Where("username =? ", setting.UserName).Save(&settingRecord).Error
+		err := DB.Where("username =? ", username).Save(&settingRecord).Error
 		if err != nil {
 			log.Println("err:", err)
 			res.Data = false
@@ -197,10 +196,9 @@ func SetUserSettingsView(c *gin.Context) {
 
 	} else { //不存在则创建
 		settingNew := DataBaseModel.YssimUserSettings{
-			UserName:    setting.UserName,
+			UserName:    username,
 			GridDisplay: setting.GridDisplay,
 		}
-		fmt.Println("不存在则创建")
 		res.Msg = "创建成功。"
 		err := DB.Create(&settingNew).Error
 		if err != nil {

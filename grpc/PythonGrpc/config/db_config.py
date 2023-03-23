@@ -66,6 +66,7 @@ class YssimSimulateRecords(Base):
     userspace_id = Column(String)
     simulate_start = Column(String)
     method = Column(String)
+    another_name = Column(String)
     number_intervals = Column(String)
     simulate_type = Column(String)
     deleted_at = Column(DateTime)

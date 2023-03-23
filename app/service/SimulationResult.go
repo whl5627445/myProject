@@ -94,8 +94,12 @@ func FilterSimulationResult(items map[string][]string, recordDict map[string]Dat
 			headRow = append(headRow, headFlagName+value[i])
 		}
 		// 获取结果数据
-		result, ok = ReadSimulationResult(value, recordDict[key].SimulateModelResultPath+"result_res.mat")
+		if recordDict[key].SimulateType == "FmPy" {
+			result, ok = GrpcReadSimulationResult(value, recordDict[key].SimulateModelResultPath+"zarr_res.zarr")
 
+		} else {
+			result, ok = ReadSimulationResult(value, recordDict[key].SimulateModelResultPath+"result_res.mat")
+		}
 		if !ok {
 			return false
 		}
