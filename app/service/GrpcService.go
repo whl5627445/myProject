@@ -13,10 +13,23 @@ func GrpcReadSimulationResult(VarList []string, SimulateModelResultPath string) 
 	}
 	reply, err := grpcPb.Client.ReadSimulationResult(grpcPb.Ctx, SaveFilterResultTest) // 调用grpc服务
 	data := reply.Data
-	var result [][]float64
+	var replyData [][]float64
 	for i := 0; i < len(data); i++ {
-		result = append(result, data[i].Row)
+		replyData = append(replyData, data[i].Row)
 	}
+
+	// 二维数组转置
+	rows, cols := len(replyData), len(replyData[0])
+	result := make([][]float64, cols)
+	for i := range result {
+		result[i] = make([]float64, rows)
+	}
+	for i := 0; i < rows; i++ {
+		for j := 0; j < cols; j++ {
+			result[j][i] = replyData[i][j]
+		}
+	}
+
 	var ok bool
 	ok = reply.Ok
 	if err != nil {
