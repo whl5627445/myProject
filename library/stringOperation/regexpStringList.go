@@ -15,16 +15,16 @@ func NewAnotherName(Username, SimulateModelName, UserspaceId string) string {
 		anotherNameList = append(anotherNameList, recordList[i].AnotherName)
 	}
 	var maxSuffix int
-	re := regexp.MustCompile(`\d+$`)
+	re := regexp.MustCompile(`\s(\d+)\s*$`)
 	for _, s := range anotherNameList {
 		matches := re.FindStringSubmatch(s)
-		if len(matches) > 0 {
-			suffix, _ := strconv.Atoi(matches[0])
+		if len(matches) > 1 {
+			suffix, _ := strconv.Atoi(matches[1])
 			if suffix > maxSuffix {
 				maxSuffix = suffix
 			}
 		}
 	}
-	return "Result" + strconv.Itoa(maxSuffix+1)
+	return "结果 " + strconv.Itoa(maxSuffix+1)
 
 }

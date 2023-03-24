@@ -15,13 +15,14 @@ def new_another_name(username: str, simulate_model_name: str, userspace_id: str)
             YssimSimulateRecords.username == username,
             YssimSimulateRecords.simulate_model_name == simulate_model_name,
             YssimSimulateRecords.userspace_id == userspace_id,
-            YssimSimulateRecords.simulate_status == "4"
-            ).all()
+            YssimSimulateRecords.simulate_status == "4",
+            YssimSimulateRecords.deleted_at.is_(None),
+        ).all()
 
     for record in record_list:
         another_name_list.append(record.another_name)
     max_suffix = 0
-    suffix_pattern = re.compile(r"\d+$")
+    suffix_pattern = re.compile(r"\s(\d+)\s*$")
     for another_name in another_name_list:
         matches = suffix_pattern.findall(another_name)
         if len(matches) > 0:
@@ -29,7 +30,7 @@ def new_another_name(username: str, simulate_model_name: str, userspace_id: str)
             if suffix > max_suffix:
                 max_suffix = suffix
 
-    return "Result"+str(max_suffix+1)
+    return "结果 " + str(max_suffix + 1)
 
 
 def TimeStampToTime(timestamp):
