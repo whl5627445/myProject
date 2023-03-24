@@ -47,6 +47,10 @@ func setOptions() {
 	omc.OMC.SetOptions()
 }
 
+func Clear() {
+	omc.OMC.SendExpressionNoParsed("clear()")
+}
+
 func modelCache(packageModel, permissions string) {
 	modelsALL := omc.OMC.GetClassNames(packageModel, true)
 	omc.OMC.CacheRefreshSet(true)

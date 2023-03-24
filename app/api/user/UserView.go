@@ -86,7 +86,13 @@ func DeleteUserSpaceView(c *gin.Context) {
 		return
 	}
 	var space DataBaseModel.YssimUserSpace
+	var spaceLast DataBaseModel.YssimUserSpace
+	DB.Where("username = ?", userName).Order("last_login_time desc").First(&spaceLast)
+	if item.SpaceId == spaceLast.ID {
+		service.Clear()
+	}
 	DB.Where("id = ? AND username = ?", item.SpaceId, userName).Delete(&space)
+
 	res.Msg = "删除成功"
 	c.JSON(http.StatusOK, res)
 
