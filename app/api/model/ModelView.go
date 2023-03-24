@@ -422,7 +422,6 @@ func CopyClassView(c *gin.Context) {
 	}
 	if packageModel.PackageName == item.ModelName {
 		res.Msg = "模型名称已存在"
-
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
@@ -441,16 +440,22 @@ func CopyClassView(c *gin.Context) {
 		FilePath:    filePath,
 		UserSpaceId: userSpaceId,
 	}
-	err = DB.Create(&model).Error
+	if item.ParentName == "" {
+		err = DB.Create(&model).Error
+		if err != nil {
+			log.Println("复制模型失败 err：", err)
+			res.Msg = "复制模型失败"
+			res.Status = 2
+			c.JSON(http.StatusOK, res)
+			return
+		}
+	}
 	result, msg := service.SaveModel(item.ModelName, item.CopiedClassName, item.ParentName, packageName, "copy", filePath)
 	if result {
 		res.Msg = msg
 		data := map[string]string{}
 		if item.ParentName == "" {
-			if err != nil {
-				log.Println("err：", err)
-				log.Println("复制模型失败")
-			}
+
 			data["id"] = model.ID
 			data["model_name"] = item.ModelName
 		} else {
