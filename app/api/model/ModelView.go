@@ -1114,7 +1114,7 @@ func LoadModelView(c *gin.Context) {
 		}
 	}
 	var packageModelList []DataBaseModel.YssimModels
-	DB.Where("sys_or_user = ? ", username).Find(&packageModelList)
+	DB.Where("sys_or_user = ? AND userspace_id = ?", username, userSpaceId).Find(&packageModelList)
 	service.SaveModelToFileALL(packageModelList)
 	err = service.LoadAndDeleteLibrary(packageModel.PackageName, packageModel.Version, packageModel.FilePath, "load")
 	if err != nil {

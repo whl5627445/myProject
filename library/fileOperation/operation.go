@@ -24,7 +24,7 @@ func CreateFilePath(filePath string) bool {
 func CreateFile(filePath string) (io.ReadWriteCloser, bool) {
 	filePathList := strings.Split(filePath, "/")
 	path := strings.Join(filePathList[:len(filePathList)-1], "/")
-	err := os.MkdirAll(path, 0755)
+	err := os.MkdirAll(path, 0777)
 	if err != nil {
 		panic(err)
 		return nil, false
@@ -34,7 +34,10 @@ func CreateFile(filePath string) (io.ReadWriteCloser, bool) {
 	if err != nil {
 		panic(err)
 	}
-
+	err = os.Chmod(filePath, 0777)
+	if err != nil {
+		return nil, false
+	}
 	return nfs, true
 }
 

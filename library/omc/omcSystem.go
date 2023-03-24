@@ -1035,7 +1035,8 @@ func (o *ZmqObject) GetModelInstance(className string) string {
 
 // SaveModel 保存模型源码到指定文件
 func (o *ZmqObject) SaveModel(fileName, className string) bool {
-	cmd := "saveModel(\"" + fileName + "\"," + className + ")"
+	pwd, _ := os.Getwd()
+	cmd := "saveModel(\"" + pwd + "/" + fileName + "\"," + className + ")"
 	result, ok := o.SendExpressionNoParsed(cmd)
 	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
 	if ok && string(result) == "true" {

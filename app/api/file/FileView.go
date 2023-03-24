@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 	"yssim-go/app/DataBaseModel"
@@ -57,8 +56,7 @@ func UploadModelPackageView(c *gin.Context) {
 	removeSuffix := strings.Split(modelFile.Filename, ".")[0]
 	saveFilePath := "public/UserFiles/UploadFile/" + username + "/" + removeSuffix + "/" + time.Now().Local().Format("20060102150405") + "/"
 	zipPackagePath := saveFilePath + fileName
-	packageName, ok := service.PackageFileParse(fileName, saveFilePath, zipPackagePath, file)
-
+	packageName, packagePath, ok := service.PackageFileParse(fileName, saveFilePath, zipPackagePath, file)
 	if ok {
 		var packageModel DataBaseModel.YssimModels
 		DB.Where("sys_or_user IN ? AND userspace_id IN ? AND package_name = ?", []string{"sys", username}, []string{"0", userSpaceId}, packageName).First(&packageModel)
@@ -70,39 +68,35 @@ func UploadModelPackageView(c *gin.Context) {
 			c.JSON(http.StatusOK, res)
 			return
 		}
-		packagePathNew := "public/UserFiles/UploadFile/" + username + "/" + packageName + "/" + strconv.Itoa(int(time.Now().Unix())) + "/" + packageName + ".mo"
-		result := service.SaveModelCode(packageName, packagePathNew)
-		if result {
-			packageRecord := DataBaseModel.YssimModels{
-				ID:          uuid.New().String(),
-				PackageName: packageName,
-				SysUser:     username,
-				FilePath:    packagePathNew,
-				UserSpaceId: userSpaceId,
-				Version:     service.GetVersion(packageName),
-			}
-			err = DB.Create(&packageRecord).Error
-			if err != nil {
-				res.Err = "上传失败，请重试"
-				res.Status = 2
-				service.DeleteLibrary(packageName)
-			} else {
-				conflict, err := service.GetLoadPackageConflict(packageName, packageRecord.Version, packagePathNew)
-				if len(conflict) > 0 && err != nil {
-					service.DeleteLibrary(packageName)
-					data := map[string]interface{}{}
-					data["package_id"] = packageRecord.ID
-					data["conflict"] = conflict
-					res.Data = data
-					res.Msg = err.Error()
-					c.JSON(http.StatusOK, res)
-					return
-				}
-				res.Msg = packageName + " 包已上传成功"
-			}
-			c.JSON(http.StatusOK, res)
-			return
+		packageRecord := DataBaseModel.YssimModels{
+			ID:          uuid.New().String(),
+			PackageName: packageName,
+			SysUser:     username,
+			FilePath:    packagePath,
+			UserSpaceId: userSpaceId,
+			Version:     service.GetVersion(packageName),
 		}
+		err = DB.Create(&packageRecord).Error
+		if err != nil {
+			res.Err = "上传失败，请重试"
+			res.Status = 2
+			service.DeleteLibrary(packageName)
+		} else {
+			conflict, err := service.GetLoadPackageConflict(packageName, packageRecord.Version, packagePath)
+			if len(conflict) > 0 && err != nil {
+				service.DeleteLibrary(packageName)
+				data := map[string]interface{}{}
+				data["package_id"] = packageRecord.ID
+				data["conflict"] = conflict
+				res.Data = data
+				res.Msg = err.Error()
+				c.JSON(http.StatusOK, res)
+				return
+			}
+			res.Msg = packageName + " 包已上传成功"
+		}
+		c.JSON(http.StatusOK, res)
+		return
 	}
 	service.DeleteLibrary(packageName)
 	res.Err = "未解析到模型库的“package.mo”文件, 压缩包只适用于多层级package，单文件请上传mo后缀的单文件。"

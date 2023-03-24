@@ -4,8 +4,6 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-	"os"
-	"strconv"
 	"strings"
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/library/fileOperation"
@@ -32,33 +30,17 @@ func GetModelCode(modelName string) string {
 	return codeData
 }
 
-// SaveModelCode  保存模型，备份旧文件
+// SaveModelCode  保存模型
 func SaveModelCode(modelName, path string) bool {
 	pathList := strings.Split(path, "/")
 	numPath := strings.Join(pathList[:len(pathList)-1], "/")
 	filesList, _ := ioutil.ReadDir(numPath)
-	num := strconv.Itoa(len(filesList))
-	if len(filesList) != 0 {
-		err := os.Rename(path, path+".old"+num)
-		if err != nil {
-			log.Println("重命名文件结果", err)
-			return false
-		}
+	ok := false
+	if len(filesList) == 0 {
+		_, ok = fileOperation.CreateFile(path)
 	}
-	_, ok := fileOperation.CreateFile(path)
-	if ok {
-		pwd, _ := os.Getwd()
-		ok = SaveModelToFile(modelName, pwd+"/"+path)
-	}
-	if !ok {
-		os.Remove(path)
-		err := os.Rename(path+".old"+num, path)
-		if err != nil {
-			return false
-		}
-		return false
-	}
-	return true
+	ok = SaveModelToFile(modelName, path)
+	return ok
 }
 
 // SaveModelToFile 用omc提供的API将模型源码保存的到对应文件， 并发安全
@@ -67,7 +49,7 @@ func SaveModelToFile(modelName, path string) bool {
 	return ok
 }
 
-func PackageFileParse(fileName, saveFilePath, zipPackagePath string, file io.Reader) (string, bool) {
+func PackageFileParse(fileName, saveFilePath, zipPackagePath string, file io.Reader) (string, string, bool) {
 	fileOperation.CreateFilePath(saveFilePath)
 	fileData, _ := ioutil.ReadAll(file)
 	fileOperation.WriteFile(zipPackagePath, string(fileData))
@@ -78,11 +60,13 @@ func PackageFileParse(fileName, saveFilePath, zipPackagePath string, file io.Rea
 	} else {
 		err := fileOperation.UnZip(zipPackagePath, saveFilePath)
 		if err != nil {
-			return "", false
+			log.Println("UnZip err", err)
+			return "", "", false
 		}
 		packageFilePath, err := fileOperation.FindFile("package.mo", saveFilePath)
 		if err != nil {
-			return "", false
+			log.Println("FindFile err", err)
+			return "", "", false
 		}
 		packagePath = packageFilePath + "/package.mo"
 	}
@@ -90,7 +74,7 @@ func PackageFileParse(fileName, saveFilePath, zipPackagePath string, file io.Rea
 	if ok {
 		ok = omc.OMC.LoadFile(packagePath)
 	}
-	return packageName, ok
+	return packageName, packagePath, ok
 }
 
 func ParseCodeString(code, path string) (string, bool) {
@@ -138,10 +122,11 @@ func CreateModelAndPackage(createPackageName, insertTo, expand, strType, createP
 
 func SaveModelToFileALL(packageModel []DataBaseModel.YssimModels) {
 	libraryAndVersions := GetLibraryAndVersions()
+
 	for i := 0; i < len(packageModel); i++ {
 		p, ok := libraryAndVersions[packageModel[i].PackageName]
 		if ok && p == packageModel[i].Version {
-			SaveModelToFile(packageModel[i].PackageName, packageModel[i].FilePath)
+			ok = SaveModelToFile(packageModel[i].PackageName, packageModel[i].FilePath)
 		}
 	}
 }
