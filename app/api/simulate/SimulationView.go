@@ -151,7 +151,7 @@ func ModelSimulateView(c *gin.Context) {
 
 func SimulateResultGraphicsView(c *gin.Context) {
 	/*
-		# 仿真结果获取接口， 可一次获取多条
+		# 仿真结果获取接口， 可一次获取多条, 单个变量
 		## variable: 模型变量名字，
 		## id: 仿真记录id值，在/simulate/record/list接口获取，
 		## s1: 单位转换使用，固定为初始单位
@@ -244,52 +244,92 @@ func SimulateResultGraphicsView(c *gin.Context) {
 
 func SimulateResultSingularView(c *gin.Context) {
 	/*
-		# 仿真结果获取接口,单数
+		# 仿真结果获取接口,多条记录，每条记录对应多个不同的变量
 		## variable: 模型变量名字，
 		## id: 仿真记录id值，在/simulate/record/list接口获取，
 		## s1: 单位转换使用，固定为初始单位
 		## s2: 位单位转换使用，需要转换为什么单位
 	*/
 
-	userName := c.GetHeader("username")
-	var item modelSimulateResultSingularData
-	err := c.BindJSON(&item)
+	username := c.GetHeader("username")
+	var items []modelSimulateResultSingularData
+	err := c.BindJSON(&items)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
 
 	var res responseData
-	// 判断记录是否存在，有一条不存在就返回"not found"
-	recordIdList := item.RecordId
-	var record DataBaseModel.YssimSimulateRecord
-	err = DB.Where("id = ? AND userName = ?", recordIdList, userName).First(&record).Error
-	if err != nil || record.SimulateStatus != "4" {
-		c.JSON(http.StatusBadRequest, "not found")
-		return
+	// 遍历获取所有recordId
+	var recordIdList []string
+	for i := 0; i < len(items); i++ {
+		recordIdList = append(recordIdList, items[i].RecordId)
 	}
-
-	data, ok := service.ReadSimulationResult([]string{item.Variable}, record.SimulateModelResultPath+"result_res.mat")
-	unitsData := service.ConvertUnits(item.S2, item.S1)
-	if ok {
-		scaleFactor, _ := strconv.ParseFloat(unitsData[1], 64)
-		offset, _ := strconv.ParseFloat(unitsData[2], 64)
-		ordinate := data[1]
-		if unitsData[0] == "true" {
-			for i := 0; i < len(ordinate); i++ {
-				ordinate[i] = ordinate[i]*scaleFactor + offset
+	// 判断记录是否存在，有一条不存在就返回"not found"
+	var recordList []DataBaseModel.YssimSimulateRecord
+	err = DB.Where("id IN ? AND username = ?", recordIdList, username).Find(&recordList).Error
+	for i := 0; i < len(recordList); i++ {
+		if err != nil || recordList[i].SimulateStatus != "4" {
+			c.JSON(http.StatusBadRequest, "not found")
+			return
+		}
+	}
+	// 构建key为id，val为SimulateModelResultPath的健值对,降低时间复杂度
+	recordDict := map[string]DataBaseModel.YssimSimulateRecord{}
+	for _, record := range recordList {
+		recordDict[record.ID] = record
+	}
+	// 遍历items，依次获取变量结果
+	var resData []map[string]interface{}
+	for i := 0; i < len(items); i++ { //遍历items的每条记录，如果与数据库查询结果中的一条能对得上，则读取对应变量结果
+		var data [][]float64
+		var ok bool
+		if recordDict[items[i].RecordId].SimulateType == "FmPy" {
+			data, ok = service.ReadSimulationResultFromGrpc(items[i].RecordId, items[i].Variable)
+		} else {
+			data, ok = service.ReadSimulationResult([]string{items[i].Variable}, recordDict[items[i].RecordId].SimulateModelResultPath+"result_res.mat")
+		}
+		unitsData := service.ConvertUnits(items[i].S2, items[i].S1)
+		if ok {
+			ordinate := data[1]
+			abscissa := data[0]
+			if unitsData[0] == "true" {
+				scaleFactor, _ := strconv.ParseFloat(unitsData[1], 64)
+				offset, _ := strconv.ParseFloat(unitsData[2], 64)
+				if len(ordinate) > 1000 {
+					step := len(ordinate) / 1000
+					o := []float64{}
+					a := []float64{}
+					for s := 0; s < len(ordinate); s++ {
+						index := s * step
+						if index >= 1000 {
+							break
+						}
+						o = append(o, data[1][index])
+						a = append(a, data[0][index])
+					}
+					if len(ordinate)%1000 != 0 {
+						o = append(o, data[1][len(ordinate)-1])
+						a = append(a, data[0][len(ordinate)-1])
+					}
+					ordinate = o
+					abscissa = a
+				}
+				for p := 0; p < len(ordinate); p++ {
+					ordinate[p] = ordinate[p]*scaleFactor + offset
+				}
 			}
+			oneData := map[string]interface{}{
+				"id":        recordDict[items[i].RecordId].ID,
+				"variable":  items[i].Variable,
+				"abscissa":  abscissa,
+				"ordinate":  ordinate,
+				"startTime": recordDict[items[i].RecordId].StartTime,
+				"stopTime":  recordDict[items[i].RecordId].StopTime,
+			}
+			resData = append(resData, oneData)
+			res.Data = resData
 		}
-		res.Data = map[string]interface{}{
-			"ordinate":  ordinate,
-			"startTime": record.StartTime,
-			"stopTime":  record.StopTime,
-		}
-	} else {
-		res.Err = "结果不存在"
-		res.Status = 2
-		c.JSON(http.StatusOK, res)
-		return
 	}
 	c.JSON(http.StatusOK, res)
 }

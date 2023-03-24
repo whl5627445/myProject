@@ -16,6 +16,6 @@ func UserRouter(g *gin.Engine) {
 		Models.GET("/examples", UserAPI.ExamplesView)
 		Models.GET("/userspace/recent", UserAPI.GetUserRecentlyOpenedView)
 		Models.GET("/settings/get", UserAPI.GetUserSettingsView)
-		Models.POST("/settings/edit", UserAPI.SetUserSettingsView)
+		Models.POST("/settings/set", UserAPI.SetUserSettingsView)
 	}
 }
