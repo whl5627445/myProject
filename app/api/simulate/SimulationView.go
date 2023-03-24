@@ -326,6 +326,8 @@ func SimulateResultSingularView(c *gin.Context) {
 				"ordinate":  ordinate,
 				"startTime": recordDict[items[i].RecordId].StartTime,
 				"stopTime":  recordDict[items[i].RecordId].StopTime,
+				"s1":        items[i].S1,
+				"s2":        items[i].S2,
 			}
 			resData = append(resData, oneData)
 			res.Data = resData
