@@ -931,8 +931,8 @@ func (o *ZmqObject) ParseFile(path string) (string, bool) {
 	cmd := "parseFile(\"" + pwd + "/" + path + "\",\"UTF-8\")"
 	result, ok := o.SendExpressionNoParsed(cmd)
 	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
-	result = result[1 : len(result)-1]
 	if ok && len(result) > 0 {
+		result = result[1 : len(result)-1]
 		return string(result), true
 	}
 	return "", false
@@ -1154,6 +1154,7 @@ func (o *ZmqObject) ModelInstance(modelName string, ModelInstance *serviceType.M
 		result = bytes.ReplaceAll(result, []byte("\\\\"), []byte("\\"))
 		result = result[1 : len(result)-2]
 		err := sonic.Unmarshal(result, ModelInstance)
+
 		if err != nil {
 			log.Println(err)
 		}

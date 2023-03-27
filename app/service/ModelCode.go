@@ -49,7 +49,7 @@ func SaveModelToFile(modelName, path string) bool {
 	return ok
 }
 
-func PackageFileParse(fileName, saveFilePath, zipPackagePath string, file io.Reader) (string, string, bool) {
+func PackageFileParse(fileName, saveFilePath, zipPackagePath string, file io.Reader) (string, string, string, bool) {
 	fileOperation.CreateFilePath(saveFilePath)
 	fileData, _ := ioutil.ReadAll(file)
 	fileOperation.WriteFile(zipPackagePath, string(fileData))
@@ -61,20 +61,25 @@ func PackageFileParse(fileName, saveFilePath, zipPackagePath string, file io.Rea
 		err := fileOperation.UnZip(zipPackagePath, saveFilePath)
 		if err != nil {
 			log.Println("UnZip err", err)
-			return "", "", false
+			return "", "", "", false
 		}
 		packageFilePath, err := fileOperation.FindFile("package.mo", saveFilePath)
 		if err != nil {
 			log.Println("FindFile err", err)
-			return "", "", false
+			return "", "", "未到package", false
 		}
 		packagePath = packageFilePath + "/package.mo"
 	}
 	packageName, ok := omc.OMC.ParseFile(packagePath)
+	msg := ""
 	if ok {
 		ok = omc.OMC.LoadFile(packagePath)
+
 	}
-	return packageName, packagePath, ok
+	if !ok {
+		msg = "语法错误，请重新检查后上传"
+	}
+	return packageName, packagePath, msg, ok
 }
 
 func ParseCodeString(code, path string) (string, bool) {
@@ -111,13 +116,10 @@ func CreateModelAndPackage(createPackageName, insertTo, expand, strType, createP
 	res := omc.OMC.LoadString(modelStr, createPackageName)
 	if state {
 		omc.OMC.AddClassAnnotation(createPackageNameAll, "Icon(graphics={Text(extent={{-100,100},{100,-100}},textString=\"%name\")})")
-		omc.OMC.AddClassAnnotation(createPackageNameAll, "annotate=__Dymola_state(true)")
+		//omc.OMC.AddClassAnnotation(createPackageNameAll, "annotate=__Dymola_state(true)")
 		omc.OMC.AddClassAnnotation(createPackageNameAll, "singleInstance(true)")
 	}
-	if res {
-		return true
-	}
-	return false
+	return res
 }
 
 func SaveModelToFileALL(packageModel []DataBaseModel.YssimModels) {

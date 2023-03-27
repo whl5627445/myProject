@@ -14,7 +14,7 @@ import (
 )
 
 func CreateFilePath(filePath string) bool {
-	err := os.MkdirAll(filePath, 0755)
+	err := os.MkdirAll(filePath, 0777)
 	if err != nil {
 		panic(err)
 	}
@@ -24,9 +24,8 @@ func CreateFilePath(filePath string) bool {
 func CreateFile(filePath string) (io.ReadWriteCloser, bool) {
 	filePathList := strings.Split(filePath, "/")
 	path := strings.Join(filePathList[:len(filePathList)-1], "/")
-	err := os.MkdirAll(path, 0777)
-	if err != nil {
-		panic(err)
+	ok := CreateFilePath(path)
+	if !ok {
 		return nil, false
 	}
 

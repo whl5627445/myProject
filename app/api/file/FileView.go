@@ -56,7 +56,7 @@ func UploadModelPackageView(c *gin.Context) {
 	removeSuffix := strings.Split(modelFile.Filename, ".")[0]
 	saveFilePath := "public/UserFiles/UploadFile/" + username + "/" + removeSuffix + "/" + time.Now().Local().Format("20060102150405") + "/"
 	zipPackagePath := saveFilePath + fileName
-	packageName, packagePath, ok := service.PackageFileParse(fileName, saveFilePath, zipPackagePath, file)
+	packageName, packagePath, msg, ok := service.PackageFileParse(fileName, saveFilePath, zipPackagePath, file)
 	if ok {
 		var packageModel DataBaseModel.YssimModels
 		DB.Where("sys_or_user IN ? AND userspace_id IN ? AND package_name = ?", []string{"sys", username}, []string{"0", userSpaceId}, packageName).First(&packageModel)
@@ -93,13 +93,13 @@ func UploadModelPackageView(c *gin.Context) {
 				c.JSON(http.StatusOK, res)
 				return
 			}
-			res.Msg = packageName + " 包已上传成功"
+			res.Msg = packageName + " 上传成功"
 		}
 		c.JSON(http.StatusOK, res)
 		return
 	}
 	service.DeleteLibrary(packageName)
-	res.Err = "未解析到模型库的“package.mo”文件, 压缩包只适用于多层级package，单文件请上传mo后缀的单文件。"
+	res.Err = msg + ", 压缩包只适用于多层级package，单文件请上传mo后缀的单文件。"
 	res.Status = 2
 	c.JSON(http.StatusOK, res)
 

@@ -16,5 +16,5 @@ type YssimModels struct {
 	UpdatedAt   *time.Time     `gorm:"column:update_time"`
 	UserSpaceId string         `gorm:"column:userspace_id;default:\"1000\""`
 	Deleted     gorm.DeletedAt `gorm:"column:deleted_at"`
-	Default     *bool          `gorm:"column:default_version"`
+	Default     bool           `gorm:"column:default_version;default:0"`
 }

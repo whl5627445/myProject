@@ -347,6 +347,7 @@ func SimulateResultListView(c *gin.Context) {
 	username := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
 	modelName := c.Query("model_name")
+	packageId := c.Query("package_id")
 	pageNumStr := c.Query("page_num") //页码
 	pageNumInt, _ := strconv.Atoi(pageNumStr)
 	var totle int64 //总条数
@@ -355,7 +356,7 @@ func SimulateResultListView(c *gin.Context) {
 	resData = make(map[string]interface{})
 	var dataList []map[string]interface{}
 	if modelName != "" {
-		DB.Limit(10).Where("username = ? AND simulate_model_name = ? AND userspace_id = ? AND simulate_status = ?", username, modelName, userSpaceId, "4").Order("create_time desc").Find(&recordList)
+		DB.Limit(10).Where("username = ? AND simulate_model_name = ? AND userspace_id = ? AND simulate_status = ?  AND package_id = ?", username, modelName, userSpaceId, "4", packageId).Order("create_time desc").Find(&recordList)
 	} else {
 		DB.Where("username = ? AND userspace_id = ?", username, userSpaceId).Find(&recordList).Count(&totle)
 		DB.Limit(10).Offset((pageNumInt-1)*10).Where("username = ? AND userspace_id = ?", username, userSpaceId).Order("create_time desc").Find(&recordList)

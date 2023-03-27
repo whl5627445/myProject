@@ -45,8 +45,8 @@ func CreateUserSpaceView(c *gin.Context) {
 	}
 	var oneSpace DataBaseModel.YssimUserSpace
 	var allSpace []DataBaseModel.YssimUserSpace
-	_ = DB.Where("username = ? AND space_name = ?", userName, item.SpaceName).First(&oneSpace).Error
-	_ = DB.Where("username = ?", userName).Find(&allSpace).Error
+	DB.Where("username = ? AND space_name = ?", userName, item.SpaceName).First(&oneSpace)
+	DB.Where("username = ?", userName).Find(&allSpace)
 	if oneSpace.ID != "" || len(allSpace) >= 5 {
 		res.Err = "空间名称已存在或数量超过5个"
 		res.Status = 2
@@ -58,16 +58,29 @@ func CreateUserSpaceView(c *gin.Context) {
 		SpaceName: item.SpaceName,
 		UserName:  userName,
 	}
-	err = DB.Create(&space).Error
-	if err != nil {
+
+	res.Data = map[string]string{
+		"id":   space.ID,
+		"name": space.SpaceName,
+	}
+	FilePath, ok := service.CreatWorkSpace(userName, space.SpaceName)
+	if ok {
+		defaultWorkSpacePackage := DataBaseModel.YssimModels{
+			ID:          uuid.New().String(),
+			PackageName: "WorkSpace",
+			SysUser:     userName,
+			FilePath:    FilePath,
+			UserSpaceId: space.ID,
+			Default:     true,
+		}
+		err = DB.Create(&space).Error
+		err = DB.Create(&defaultWorkSpacePackage).Error
+	}
+	if err != nil || !ok {
 		res.Err = "创建失败，请稍后再试"
 		res.Status = 1
 		c.JSON(http.StatusOK, res)
 		return
-	}
-	res.Data = map[string]string{
-		"id":   space.ID,
-		"name": space.SpaceName,
 	}
 	res.Msg = "创建成功"
 	c.JSON(http.StatusOK, res)
@@ -110,24 +123,21 @@ func LoginUserSpaceView(c *gin.Context) {
 		return
 	}
 	userName := c.GetHeader("username")
-	var spaceLast DataBaseModel.YssimUserSpace
-	DB.Where("username = ?", userName).Order("last_login_time desc").First(&spaceLast)
-	if item.SpaceId == spaceLast.ID {
-		res.Msg = "初始化完成"
-		c.JSON(http.StatusOK, res)
-		return
-	}
+	//var spaceLast DataBaseModel.YssimUserSpace
+	//DB.Where("username = ?", userName).Order("last_login_time desc").First(&spaceLast)
+	//if spaceLast.ID == item.SpaceId {
+	//	res.Msg = "初始化完成"
+	//	c.JSON(http.StatusOK, res)
+	//	return
+	//}
 
 	var packageModelList []DataBaseModel.YssimModels
 	var space DataBaseModel.YssimUserSpace
-	DB.Where("sys_or_user = ? ", userName).Find(&packageModelList)
 	DB.Where("id = ? AND username = ?", item.SpaceId, userName).First(&space)
+	DB.Where("sys_or_user = ? AND userspace_id = ?", userName, space.ID).Find(&packageModelList)
 	service.SaveModelToFileALL(packageModelList)
-	var sysPackageModelAll []DataBaseModel.YssimModels
-	var userPackageModelAll []DataBaseModel.YssimModels
-	config.DB.Where("sys_or_user = ?  AND default_version = ?", "sys", true).Find(&sysPackageModelAll)
-	//config.DB.Where("sys_or_user = ? AND userspace_id = ?", userName, item.SpaceId).Find(&userPackageModelAll)
-	packageModelAll := append(sysPackageModelAll, userPackageModelAll...)
+	var packageModelAll []DataBaseModel.YssimModels
+	config.DB.Where("sys_or_user IN ?  AND default_version = ? AND userspace_id IN ?", []string{"sys", userName}, true, []string{"0", space.ID}).Find(&packageModelAll)
 	service.ModelLibraryInitialization(packageModelAll)
 	space.LastLoginTime = time.Now().Local().Unix()
 	DB.Save(&space)

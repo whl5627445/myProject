@@ -11,14 +11,12 @@ func ModelLibraryInit() {
 	userName := config.USERNAME
 
 	var userSpace DataBaseModel.YssimUserSpace
-	var sysPackageModelAll []DataBaseModel.YssimModels
-	var userPackageModelAll []DataBaseModel.YssimModels
+	var packageModelAll []DataBaseModel.YssimModels
 
 	config.DB.Where("username = ?", userName).Order("last_login_time desc").First(&userSpace)
-	config.DB.Where("sys_or_user = ? AND userspace_id = ? AND default_version = ?", "sys", "0", true).Find(&sysPackageModelAll)
-	//config.DB.Where("sys_or_user = ? AND userspace_id = ?", username, userSpace.ID).Find(&userPackageModelAll)
+	config.DB.Where("sys_or_user IN ? AND userspace_id IN ? AND default_version = ?", []string{"sys", userName}, []string{"0", userSpace.ID}, true).Find(&packageModelAll)
+
 	log.Println("初始化模型库...")
-	packageModelAll := append(sysPackageModelAll, userPackageModelAll...)
 	service.ModelLibraryInitialization(packageModelAll)
 	log.Println("模型库初始化完成")
 }
