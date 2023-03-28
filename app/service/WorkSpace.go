@@ -1,6 +1,7 @@
 package service
 
 import (
+	"yssim-go/config"
 	"yssim-go/library/fileOperation"
 )
 
@@ -15,4 +16,20 @@ func CreatWorkSpace(userName, SpaceName string) (string, bool) {
 		return FilePath, ok
 	}
 	return "", ok
+}
+
+func SetWorkSpaceId(spaceId *string) bool {
+	result := GetWorkSpaceId(spaceId)
+	if !result {
+		config.UserSpaceId = *spaceId
+	}
+	return result
+}
+
+func GetWorkSpaceId(spaceId *string) bool {
+	userSpaceId := config.UserSpaceId
+	if *spaceId == userSpaceId {
+		return true
+	}
+	return false
 }

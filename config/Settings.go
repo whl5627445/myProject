@@ -51,3 +51,4 @@ var DEBUG = os.Getenv("debug")
 var Solver = map[string]string{"OM": "默认", "DM": "dymola", "JM": "第三方"}
 
 var RedisCacheKey = USERNAME + "-yssim-GraphicsData"
+var UserSpaceId = ""

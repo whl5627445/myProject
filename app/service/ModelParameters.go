@@ -155,7 +155,9 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 				dataDefault["tab"] = tab.(string)
 				dataDefault["group"] = group.(string)
 				showStartAttribute = dListTab[3].(string)
-				if dListTab[5].(string) != "-" {
+				modelNameList := strings.Split(modelName, ".")
+				isPackage := omc.OMC.IsPackage(modelNameList[0])
+				if dListTab[5].(string) != "-" && isPackage {
 					dataDefault["type"] = "file"
 					dataDefault["caption"] = dListTab[6].(string)
 					dataDefault["filter"] = strings.Split(dListTab[5].(string), ";;")

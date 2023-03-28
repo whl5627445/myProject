@@ -16,12 +16,15 @@ var redisKey = config.RedisCacheKey
 
 func ModelLibraryInitialization(packageModel []DataBaseModel.YssimModels) {
 	setOptions()
-	packageAll := omc.OMC.GetPackages()
-	for _, p := range packageAll {
-		DeleteLibrary(p)
-	}
+	packageAll := GetLibraryAndVersions()
 
 	for _, models := range packageModel {
+		if models.SysUser == "sys" {
+			version, ok := packageAll[models.PackageName]
+			if ok && version == models.Version {
+				continue
+			}
+		}
 		ok := false
 		if models.FilePath == "" {
 			ok = omc.OMC.LoadModel(models.PackageName, models.Version)
@@ -41,6 +44,7 @@ func ModelLibraryInitialization(packageModel []DataBaseModel.YssimModels) {
 	}
 	lPackage := GetLibraryAndVersions()
 	refreshCache(lPackage)
+
 }
 
 func setOptions() {

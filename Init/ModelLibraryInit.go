@@ -18,5 +18,6 @@ func ModelLibraryInit() {
 
 	log.Println("初始化模型库...")
 	service.ModelLibraryInitialization(packageModelAll)
+	service.SetWorkSpaceId(&userSpace.ID)
 	log.Println("模型库初始化完成")
 }

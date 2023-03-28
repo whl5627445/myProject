@@ -99,13 +99,11 @@ func DeleteUserSpaceView(c *gin.Context) {
 		return
 	}
 	var space DataBaseModel.YssimUserSpace
-	var spaceLast DataBaseModel.YssimUserSpace
-	DB.Where("username = ?", userName).Order("last_login_time desc").First(&spaceLast)
-	if item.SpaceId == spaceLast.ID {
+	result := service.GetWorkSpaceId(&item.SpaceId)
+	if result {
 		service.Clear()
 	}
 	DB.Where("id = ? AND username = ?", item.SpaceId, userName).Delete(&space)
-
 	res.Msg = "删除成功"
 	c.JSON(http.StatusOK, res)
 
@@ -123,22 +121,23 @@ func LoginUserSpaceView(c *gin.Context) {
 		return
 	}
 	userName := c.GetHeader("username")
-	//var spaceLast DataBaseModel.YssimUserSpace
-	//DB.Where("username = ?", userName).Order("last_login_time desc").First(&spaceLast)
-	//if spaceLast.ID == item.SpaceId {
-	//	res.Msg = "初始化完成"
-	//	c.JSON(http.StatusOK, res)
-	//	return
-	//}
+	result := service.SetWorkSpaceId(&item.SpaceId)
+	if result {
+		res.Msg = "初始化完成"
+		c.JSON(http.StatusOK, res)
+		return
+	}
 
 	var packageModelList []DataBaseModel.YssimModels
 	var space DataBaseModel.YssimUserSpace
 	DB.Where("id = ? AND username = ?", item.SpaceId, userName).First(&space)
 	DB.Where("sys_or_user = ? AND userspace_id = ?", userName, space.ID).Find(&packageModelList)
 	service.SaveModelToFileALL(packageModelList)
+
 	var packageModelAll []DataBaseModel.YssimModels
 	config.DB.Where("sys_or_user IN ?  AND default_version = ? AND userspace_id IN ?", []string{"sys", userName}, true, []string{"0", space.ID}).Find(&packageModelAll)
 	service.ModelLibraryInitialization(packageModelAll)
+
 	space.LastLoginTime = time.Now().Local().Unix()
 	DB.Save(&space)
 	res.Msg = "初始化完成"

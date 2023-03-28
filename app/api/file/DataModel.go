@@ -55,3 +55,9 @@ type modelCodeSaveData struct {
 	PackageId string `json:"package_id" binding:"required"`
 	//ModelName string `json:"model_name" binding:"required"`
 }
+
+type packageResourcesData struct {
+	PackageId string `json:"package_id" binding:"required"`
+	Parent    string `json:"parent" binding:""`
+	Path      string `json:"path" binding:""`
+}

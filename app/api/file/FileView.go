@@ -11,7 +11,6 @@ import (
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/service"
 	"yssim-go/config"
-	"yssim-go/library/fileOperation"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -24,12 +23,12 @@ func UploadModelPackageView(c *gin.Context) {
 		# 上传模型包文件，支持.mo与rar、zip两种压缩格式
 	*/
 	var res responseData
-	username := c.GetHeader("username")
+	userName := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
 
 	// 检查用户名和用户空间id是否存在
 	var userspaceRecord DataBaseModel.YssimUserSpace
-	DB.Where("username = ? AND id = ?", username, userSpaceId).First(&userspaceRecord)
+	DB.Where("username = ? AND id = ?", userName, userSpaceId).First(&userspaceRecord)
 	if userspaceRecord.ID == "" {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
@@ -54,12 +53,12 @@ func UploadModelPackageView(c *gin.Context) {
 		return
 	}
 	removeSuffix := strings.Split(modelFile.Filename, ".")[0]
-	saveFilePath := "public/UserFiles/UploadFile/" + username + "/" + removeSuffix + "/" + time.Now().Local().Format("20060102150405") + "/"
+	saveFilePath := "public/UserFiles/UploadFile/" + userName + "/" + removeSuffix + "/" + time.Now().Local().Format("20060102150405") + "/"
 	zipPackagePath := saveFilePath + fileName
 	packageName, packagePath, msg, ok := service.PackageFileParse(fileName, saveFilePath, zipPackagePath, file)
 	if ok {
 		var packageModel DataBaseModel.YssimModels
-		DB.Where("sys_or_user IN ? AND userspace_id IN ? AND package_name = ?", []string{"sys", username}, []string{"0", userSpaceId}, packageName).First(&packageModel)
+		DB.Where("sys_or_user IN ? AND userspace_id IN ? AND package_name = ?", []string{"sys", userName}, []string{"0", userSpaceId}, packageName).First(&packageModel)
 
 		if packageModel.PackageName != "" {
 			service.DeleteLibrary(packageName)
@@ -71,7 +70,7 @@ func UploadModelPackageView(c *gin.Context) {
 		packageRecord := DataBaseModel.YssimModels{
 			ID:          uuid.New().String(),
 			PackageName: packageName,
-			SysUser:     username,
+			SysUser:     userName,
 			FilePath:    packagePath,
 			UserSpaceId: userSpaceId,
 			Version:     service.GetVersion(packageName),
@@ -344,9 +343,7 @@ func GetPackageFileView(c *gin.Context) {
 	   # 用户mo文件下载
 	   ## return: 包id， 包名， 上传时间， 修改时间
 	*/
-	//var res ResponseData
 	username := c.GetHeader("username")
-	//userSpaceId := c.GetHeader("space_id")
 	var item packageFileData
 	err := c.BindJSON(&item)
 	if err != nil {
@@ -534,13 +531,15 @@ func ModelCodeSaveView(c *gin.Context) {
 
 func UploadModelVarFileView(c *gin.Context) {
 	/*
-		# 用户上传文件接口
+		# 用户上传参数文件的接口
 		## file: 文件数据，bytes形式的文件流
 		## model_name: 模型名称
 		## package_id: 包id
 	*/
 	var res responseData
-	username := c.GetHeader("username")
+	userName := c.GetHeader("username")
+	packageId := c.PostForm("package_id")
+	userSpaceId := c.GetHeader("space_id")
 	modelName := c.PostForm("model_name")
 	componentName := c.PostForm("component_name")
 	varFile, err := c.FormFile("file")
@@ -548,19 +547,186 @@ func UploadModelVarFileView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
-	varFileName := varFile.Filename
 
-	file, _ := varFile.Open()
-	fileData, _ := io.ReadAll(file)
-	fileSavePath := "/ModelVarFile/" + username + "/" + modelName + "/" + componentName + "/" + varFileName
-	result := fileOperation.WriteFileByte(fileSavePath, fileData)
+	var packageModel DataBaseModel.YssimModels
+	DB.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", packageId, []string{"sys", userName}, []string{"0", userSpaceId}).First(&packageModel)
+	if packageModel.ID == "" {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+	result := service.UploadResourcesFile(packageModel.PackageName, modelName+"/"+componentName, varFile)
 	if result {
 		res.Msg = "文件上传成功"
-		res.Data = []string{fileSavePath}
+		res.Data = []string{"Modelica.Utilities.Files.loadResource(\"modelica://" + packageModel.PackageName + "/Resources/" + modelName + "/" + componentName + "/" + varFile.Filename + "\")"}
 		c.JSON(http.StatusOK, res)
 		return
 	}
 	res.Err = "上传失败，请重新上传"
 	res.Status = 2
 	c.JSON(http.StatusOK, res)
+}
+
+func GetPackageResourcesList(c *gin.Context) {
+	/*
+		# 模型库的静态资源文件夹下资源查找
+		## package_id: 包id
+	*/
+	var item packageResourcesData
+	err := c.BindJSON(&item)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	userName := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
+	var packageModel DataBaseModel.YssimModels
+	DB.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", item.PackageId, []string{"sys", userName}, []string{"0", userSpaceId}).First(&packageModel)
+	if packageModel.ID == "" {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+	data := service.GetResourcesList(packageModel.PackageName, item.Parent)
+	var res responseData
+	res.Data = data
+	c.JSON(http.StatusOK, res)
+}
+
+func UploadResourcesFileView(c *gin.Context) {
+	/*
+		# 用户上传静态资源文件接口
+		## file: 文件数据，bytes形式的文件流
+		## model_name: 模型名称
+		## parent: 保存文件的父节点
+	*/
+	var res responseData
+	userName := c.GetHeader("username")
+	packageId := c.PostForm("package_id")
+	parent := c.PostForm("parent")
+	userSpaceId := c.GetHeader("space_id")
+	varFile, err := c.FormFile("file")
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	if !strings.HasSuffix(varFile.Filename, ".txt") && !strings.HasSuffix(varFile.Filename, ".csv") && !strings.HasSuffix(varFile.Filename, ".png") {
+		res.Err = "暂时只支持*.txt、*.csv、*.png格式文件上传"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	var packageModel DataBaseModel.YssimModels
+	DB.Where("id = ? AND sys_or_user = ? AND userspace_id = ?", packageId, userName, userSpaceId).First(&packageModel)
+	if packageModel.ID == "" {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+	result := service.UploadResourcesFile(packageModel.PackageName, parent, varFile)
+	if result {
+		res.Msg = "文件上传成功"
+		res.Data = []string{varFile.Filename}
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	res.Err = "上传失败，请重新上传"
+	res.Status = 2
+	c.JSON(http.StatusOK, res)
+}
+
+func CreateResourcesDirView(c *gin.Context) {
+	/*
+		# 静态资源文件夹创建子级文件夹接口
+		## package_id: 包id
+		## parent: 创建文件夹的父节点
+	*/
+	var res responseData
+	userName := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
+	var item packageResourcesData
+	err := c.BindJSON(&item)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+
+	var packageModel DataBaseModel.YssimModels
+	DB.Where("id = ? AND sys_or_user = ? AND userspace_id = ?", item.PackageId, userName, userSpaceId).First(&packageModel)
+	if packageModel.ID == "" {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+	result, err := service.CreateResourcesDir(packageModel.PackageName, item.Path, item.Parent)
+	if result {
+		res.Msg = "文件夹创建成功"
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	res.Err = err.Error()
+	res.Status = 2
+	c.JSON(http.StatusOK, res)
+}
+
+func DeleteResourcesDirAndFileView(c *gin.Context) {
+	/*
+		# 静态资源文件夹删除子级文件夹与文件接口
+		## package_id: 包id
+	*/
+	var res responseData
+	userName := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
+	var item packageResourcesData
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+	var packageModel DataBaseModel.YssimModels
+	DB.Where("id = ? AND sys_or_user = ? AND userspace_id = ?", item.PackageId, userName, userSpaceId).First(&packageModel)
+	if packageModel.ID == "" {
+		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+	result := service.DeleteResourcesDirAndFile(packageModel.PackageName, item.Path)
+	if result {
+		res.Msg = "删除成功"
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	res.Err = err.Error()
+	res.Status = 2
+	c.JSON(http.StatusOK, res)
+}
+
+func DownloadResourcesFileView(c *gin.Context) {
+	/*
+		# 静态资源文件的下载
+		## package_id: 包id
+	*/
+	userName := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
+	var item packageResourcesData
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+	var packageModel DataBaseModel.YssimModels
+	DB.Where("id = ? AND sys_or_user = ? AND userspace_id = ?", item.PackageId, userName, userSpaceId).First(&packageModel)
+	if packageModel.ID == "" {
+		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+
+	pathList := strings.Split(item.Path, "/")
+	fileName := pathList[len(pathList)-1]
+	filePath := service.GetResourcesFile(packageModel.PackageName, item.Path)
+	c.Header("content-disposition", `attachment; filename=`+fileName)
+	c.Data(http.StatusOK, "application/octet-stream", filePath)
+
 }

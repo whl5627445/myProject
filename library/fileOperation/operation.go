@@ -13,28 +13,80 @@ import (
 	"github.com/mholt/archiver/v3"
 )
 
-func CreateFilePath(filePath string) bool {
+// 判断所给路径文件/文件夹是否存在
+func Exists(path string) bool {
+	_, err := os.Stat(path) //os.Stat获取文件信息
+	if err != nil {
+		if os.IsExist(err) {
+			return true
+		}
+		return false
+	}
+	return true
+}
+
+// IsDir 判断所给路径是否为文件夹
+func IsDir(path string) bool {
+	s, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	return s.IsDir()
+}
+
+func DeletePathAndFile(path string) bool {
+	exists := Exists(path)
+	if !exists {
+		return true
+	}
+	isDir := IsDir(path)
+	if isDir {
+		err := os.RemoveAll(path)
+		if err != nil {
+			log.Println("删除文件夹出错， err: ", err)
+			return false
+		}
+	} else {
+		err := os.Remove(path)
+		if err != nil {
+			log.Println("删除文件出错， err: ", err)
+			return false
+		}
+	}
+	return true
+}
+
+func CreateFilePath(filePath string) (bool, error) {
+	exists := Exists(filePath)
+	isDir := IsDir(filePath)
+	if exists && isDir {
+		return false, errors.New("文件夹已存在")
+	}
 	err := os.MkdirAll(filePath, 0777)
 	if err != nil {
 		panic(err)
 	}
-	return true
+	return true, nil
 }
 
 func CreateFile(filePath string) (io.ReadWriteCloser, bool) {
 	filePathList := strings.Split(filePath, "/")
 	path := strings.Join(filePathList[:len(filePathList)-1], "/")
-	ok := CreateFilePath(path)
-	if !ok {
-		return nil, false
+	exists := Exists(path)
+	if !exists {
+		ok, err := CreateFilePath(path)
+		if !ok {
+			log.Println("err: ", err)
+			return nil, false
+		}
 	}
-
 	nfs, err := os.Create(filePath)
 	if err != nil {
 		panic(err)
 	}
 	err = os.Chmod(filePath, 0777)
 	if err != nil {
+		log.Println("err: ", err)
 		return nil, false
 	}
 	return nfs, true
@@ -55,12 +107,18 @@ func WriteFile(fileName string, data string) bool {
 func WriteFileByte(fileName string, data []byte) bool {
 	nfs, ok := CreateFile(fileName)
 	if ok {
-		err := os.WriteFile(fileName, data, 0755)
+		err := os.WriteFile(fileName, data, 0777)
 		if err != nil {
 			return false
 		}
 	}
-	nfs.Close()
+	err := nfs.Close()
+	if err != nil {
+
+		log.Println("fileName: ", fileName)
+		log.Println("err: ", err)
+		return false
+	}
 	return true
 }
 
@@ -97,4 +155,32 @@ func FindFile(fileName, rootPath string) (string, error) {
 		queue.Remove(queue.Front())
 	}
 	return "", errors.New("文件不存在")
+}
+
+func GetDirChild(rootPath string) ([]map[string]interface{}, error) {
+	//rootPath = strings.ReplaceAll(rootPath, " ", "\\ ")
+	_, err := os.Lstat(rootPath)
+	//既不是文件，也不是文件夹
+	if err != nil {
+		log.Println("err", err)
+		return nil, err
+	}
+	//文件夹添加到队列里
+	dataList := make([]map[string]interface{}, 0, 1)
+	queue := list.New()
+	queue.PushBack(rootPath)
+	for queue.Len() > 0 {
+
+		name := queue.Front().Value.(string)
+		files, _ := ioutil.ReadDir(name)
+		for _, file := range files {
+			if file.IsDir() {
+				dataList = append(dataList, map[string]interface{}{"name": file.Name(), "type": "dir"})
+			} else {
+				dataList = append(dataList, map[string]interface{}{"name": file.Name(), "type": "file"})
+			}
+		}
+		queue.Remove(queue.Front())
+	}
+	return dataList, nil
 }

@@ -117,7 +117,7 @@ func (o *ZmqObject) BuildModel(className, fileNamePrefix string, simulateParamet
 func (o *ZmqObject) SetOptions() {
 	//o.SendExpressionNoParsed("clearCommandLineOptions()")
 	o.SendExpressionNoParsed("clearMessages()")
-	o.SendExpressionNoParsed("clear()")
+	//o.SendExpressionNoParsed("clear()")
 	//o.SendExpressionNoParsed("clearVariables()")
 	//o.SendExpressionNoParsed("clearProgram()")
 	//o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nfAPI,execstat,rml,nfAPIDynamicSelect=false\")")
@@ -1130,6 +1130,17 @@ func (o *ZmqObject) IsPackage(packageName string) bool {
 		return true
 	}
 	return false
+}
+
+// IsPackage 判断是否是包类型
+func (o *ZmqObject) GetSourceFile(packageName string) string {
+	cmd := "getSourceFile(" + packageName + ")"
+	result, ok := o.SendExpressionNoParsed(cmd)
+	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
+	if ok && len(result) > 1 {
+		return string(result)[1 : len(result)-1]
+	}
+	return ""
 }
 
 // BuildModelFMU 构建FMU文件

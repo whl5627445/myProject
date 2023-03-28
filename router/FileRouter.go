@@ -20,5 +20,12 @@ func FileRouter(g *gin.Engine) {
 		Models.POST("/fmu/export", FileAPI.FmuExportModelView)
 		Models.POST("/code/save", FileAPI.ModelCodeSaveView)
 		Models.POST("/upload/var", FileAPI.UploadModelVarFileView)
+
+		Models.POST("/package/resources/download/", FileAPI.DownloadResourcesFileView)
+		Models.POST("/package/resources/get", FileAPI.GetPackageResourcesList)
+		Models.POST("/package/resources/upload", FileAPI.UploadResourcesFileView)
+		Models.POST("/package/resources/dir/create", FileAPI.CreateResourcesDirView)
+		Models.POST("/package/resources/dir/delete", FileAPI.DeleteResourcesDirAndFileView)
+
 	}
 }
