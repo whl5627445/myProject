@@ -599,7 +599,7 @@ func GetPackageResourcesList(c *gin.Context) {
 		}
 		if d["type"] == "file" {
 			pathList = append(pathList, d["name"])
-			basePath = "modelica://" + packageModel.PackageName + "/Resources/" + strings.Join(pathList, "/") + ""
+			basePath = "modelica://" + packageModel.PackageName + "/Resources/" + strings.Join(pathList, "/")
 		}
 		d["path"] = basePath
 	}
@@ -642,7 +642,13 @@ func UploadResourcesFileView(c *gin.Context) {
 	result := service.UploadResourcesFile(packageModel.PackageName, parent, varFile)
 	if result {
 		res.Msg = "文件上传成功"
-		res.Data = []string{varFile.Filename}
+		pathList := []string{}
+		if parent != "" {
+			pathList = append(pathList, parent)
+			pathList = append(pathList, varFile.Filename)
+		}
+		basePath := "modelica://" + packageModel.PackageName + "/Resources/" + strings.Join(pathList, "/")
+		res.Data = []string{basePath}
 		c.JSON(http.StatusOK, res)
 		return
 	}
