@@ -647,8 +647,11 @@ func UploadResourcesFileView(c *gin.Context) {
 			pathList = append(pathList, parent)
 			pathList = append(pathList, varFile.Filename)
 		}
-		basePath := "modelica://" + packageModel.PackageName + "/Resources/" + strings.Join(pathList, "/")
-		res.Data = []string{basePath}
+		data := map[string]string{
+			"path": "modelica://" + packageModel.PackageName + "/Resources/" + strings.Join(pathList, "/"),
+			"name": varFile.Filename,
+		}
+		res.Data = data
 		c.JSON(http.StatusOK, res)
 		return
 	}
@@ -712,7 +715,7 @@ func DeleteResourcesDirAndFileView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
-	result := service.DeleteResourcesDirAndFile(packageModel.PackageName, item.Path)
+	result := service.DeleteResourcesDirAndFile(packageModel.PackageName, item.Parent+"/"+item.Path)
 	if result {
 		res.Msg = "删除成功"
 		c.JSON(http.StatusOK, res)

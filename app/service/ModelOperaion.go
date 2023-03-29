@@ -8,74 +8,65 @@ import (
 func inheritanceModelNameFixes(copiedClassName, className string) {
 	classInformation := omc.OMC.GetClassRestriction(copiedClassName)
 	classStrOld := omc.OMC.List(className)
+	classStrNew := classStrOld
 	if classInformation != "model" {
 		return
 	}
-	classNamList := strings.Split(copiedClassName, ".")
-	packageName := classNamList[0]
+	classNameList := strings.Split(copiedClassName, ".")
+	packageName := classNameList[0]
 	components := omc.OMC.GetElements(className)
-	inheritedClasses := omc.OMC.GetInheritedClasses(className)
+	inheritedClasses := omc.OMC.GetInheritedClasses(className) // 找到父类的第一层， 只需修复这一层即可
 	var inheritedNameFixesList []string
-	componentNameFixesMap := map[string][]interface{}{}
 	for i := 0; i < len(inheritedClasses); i++ {
-		if !strings.HasPrefix(inheritedClasses[i], packageName) {
+		if !strings.HasPrefix(inheritedClasses[i], packageName) && !strings.HasPrefix(inheritedClasses[i], "modelica") { // 查看父类的名称是否以包名开始， 不是，则安排修复
 			inheritedNameFixesList = append(inheritedNameFixesList, inheritedClasses[i])
 		}
 	}
+	componentNameFixesMap := map[string][]interface{}{} // 组件名称修复Map，防止重复
 	for c := 0; c < len(components); c++ {
 		component := components[c].([]interface{})
 		cname := component[2].(string)
-		if !strings.HasPrefix(cname, packageName) {
-			componentNameFixesMap[cname] = component
+		if !strings.HasPrefix(cname, packageName) && !strings.HasPrefix(cname, "modelica") {
+			componentNameFixesMap[cname] = component // 查看组件名称是否以包名开始， 不是，则安排修复
 		}
 	}
-	classStrNew := classStrOld
-	inheritedFixesMap := make(map[string]map[string]string, 0)
-	for n := len(classNamList) - 1; n > 0; n-- {
-		parentName := strings.Join(classNamList[:n], ".")
+
+	for n := len(classNameList) - 1; n > 0; n-- {
+		parentName := strings.Join(classNameList[:n], ".") // 以切割出来的模型名称为层级，逐级向上扩大查找
 		modelNameAll := omc.OMC.GetClassNames(parentName, true)
 		for _, name := range modelNameAll {
-			for c := 0; c < len(inheritedClasses); c++ {
-				if strings.HasSuffix(name, "."+inheritedClasses[c]) && name != inheritedClasses[c] {
-					inheritedFixesMap[inheritedClasses[c]] = map[string]string{"name": name}
-					inheritedFixesMap[inheritedClasses[c]]["type"] = ""
-					inheritedClasses = append(inheritedClasses[:c], inheritedClasses[c+1:]...)
+			for c := 0; c < len(inheritedNameFixesList); c++ {
+				if strings.HasSuffix(name, "."+inheritedNameFixesList[c]) && name != inheritedNameFixesList[c] { // 如果name是以被修复的名称结尾，且不等于被修复名称自身，则被视为找到带前缀的名称
+					classStrNew = strings.ReplaceAll(classStrOld, "extends "+"."+inheritedNameFixesList[c]+";", "extends "+name+";") // 查找成功，进行替换
+					inheritedNameFixesList = append(inheritedNameFixesList[:c], inheritedNameFixesList[c+1:]...)                     // 替换完成，将被替换的名字移除
 				}
 			}
 		}
-		if len(inheritedFixesMap) == len(inheritedClasses) {
+		if len(inheritedNameFixesList) == 0 {
 			break
 		}
 	}
-	for k, v := range inheritedFixesMap {
-		classStrNew = strings.ReplaceAll(classStrOld, "extends "+k+";", "extends "+v["name"]+";")
-	}
-
-	componentFixesMap := make(map[string]map[string]string, 0)
-	for n := len(classNamList) - 1; n > 0; n-- {
-		parentName := strings.Join(classNamList[:n], ".")
+	for n := len(classNameList) - 1; n > 0; n-- {
+		parentName := strings.Join(classNameList[:n], ".")
 		modelNameAll := omc.OMC.GetClassNames(parentName, true)
 		for _, name := range modelNameAll {
 			for k, fixesModelData := range componentNameFixesMap {
-				fixesName := fixesModelData[2].(string)
+				fixesName := k
 				if strings.HasSuffix(name, "."+fixesName) && name != k {
-					componentFixesMap[fixesName] = map[string]string{"name": name}
-					componentFixesMap[fixesName]["type"] = fixesModelData[10].(string)
+					switch {
+					case fixesModelData[10].(string) == "parameter": // 替换参数组件
+						classStrNew = strings.ReplaceAll(classStrNew, "parameter "+k+" ", "parameter "+name+" ")
+					case fixesModelData[9].(bool) == true: // 替换replaceable组件
+						classStrNew = strings.ReplaceAll(classStrNew, "replaceable "+k+" ", "replaceable "+name+" ")
+					default: // 替换普通组件
+						classStrNew = strings.ReplaceAll(classStrNew, ";\n  "+k+" ", ";\n  "+name+" ")
+					}
 					delete(componentNameFixesMap, k)
 				}
 			}
 		}
 		if len(componentNameFixesMap) == 0 {
 			break
-		}
-	}
-	for k, v := range componentFixesMap {
-		if v["type"] != "parameter" {
-			classStrNew = strings.ReplaceAll(classStrNew, ";\n  "+k+" ", ";\n  "+v["name"]+" ")
-
-		} else {
-			classStrNew = strings.ReplaceAll(classStrNew, "parameter "+k+" ", "parameter "+v["name"]+" ")
-
 		}
 	}
 	result := omc.OMC.CopyLoadString(classStrNew, className)

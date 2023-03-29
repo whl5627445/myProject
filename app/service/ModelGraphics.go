@@ -49,7 +49,6 @@ func GetGraphicsData(modelName, permissions string) [][]map[string]interface{} {
 		g.getDiagramAnnotationData()
 		g.getnthconnectionData()
 		g.getData02()
-
 	}
 	if permissions == "sys" {
 		redisData, _ := json.Marshal(g.data)
