@@ -51,6 +51,8 @@ func ModelRouter(g *gin.Engine) {
 		Models.GET("/collection/delete", ModelAPI.DeleteCollectionModelView)
 		Models.GET("/search", ModelAPI.SearchModelView)
 
+		Models.POST("/reference/resources", ModelAPI.GetModelResourcesReferenceView)
+
 	}
 	g.POST("/test", ModelAPI.Test)
 	g.POST("/test1", ModelAPI.Test1)

@@ -70,9 +70,14 @@ func GetUserRootModelView(c *gin.Context) {
 				"image":           service.GetIcon(packageModel[i].PackageName, packageModel[i].PackageName, packageModel[i].Version),
 				"type":            service.GetModelType(packageModel[i].PackageName),
 			}
+			if service.GetModelType(packageModel[i].PackageName) == "package" {
+				data["haschild"] = true
+			}
 			modelData = append(modelData, data)
 		}
+
 	}
+
 	res.Data = modelData
 	c.JSON(http.StatusOK, res)
 
@@ -96,6 +101,14 @@ func GetListModelView(c *gin.Context) {
 	for i := 0; i < len(modelChildList); i++ {
 		modelChildList[i]["image"] = service.GetIcon(modelName+"."+modelChildList[i]["name"].(string), packageModel.PackageName, packageModel.Version)
 		modelChildListNew = append(modelChildListNew, modelChildList[i])
+	}
+	// 如果父节点是包名称的话，追加静态资源管理文件夹节点
+	if modelName == packageModel.PackageName {
+		modelChildListNew = append(modelChildListNew, map[string]interface{}{
+			"name":     "Resources",
+			"haschild": true,
+			"type":     "static",
+		})
 	}
 	res.Data = modelChildListNew
 	c.JSON(http.StatusOK, res)
@@ -144,6 +157,47 @@ func GetModelCodeView(c *gin.Context) {
 	var res responseData
 	modelCode := service.GetModelFileCode(modelName)
 	res.Data = modelCode
+	c.JSON(http.StatusOK, res)
+}
+
+func GetModelResourcesReferenceView(c *gin.Context) {
+	/*
+		# 获取包级别的静态资源，以Reference的形式返回
+		## package_id: 包id
+		## parent: 需要查询的节点父级路径
+		## path: 被查询节点
+	*/
+	var item packageResourcesData
+	err := c.BindJSON(&item)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	userName := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
+	var packageModel DataBaseModel.YssimModels
+	DB.Where("id = ? AND sys_or_user = ? AND userspace_id = ?", item.PackageId, userName, userSpaceId).First(&packageModel)
+	if packageModel.ID == "" {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+	data := service.GetResourcesList(packageModel.PackageName, item.Parent)
+	for _, d := range data {
+		basePath := ""
+		pathList := []string{}
+		if item.Parent != "" {
+			pathList = append(pathList, item.Parent)
+		}
+		if d["type"] == "file" {
+			pathList = append(pathList, d["name"])
+			basePath = "Modelica.Utilities.Files.loadResource(\"modelica://" + packageModel.PackageName + "/Resources/" + strings.Join(pathList, "/") + "\")"
+		}
+		d["path"] = basePath
+	}
+	var res responseData
+	res.Data = data
 	c.JSON(http.StatusOK, res)
 }
 
@@ -1115,7 +1169,8 @@ func LoadModelView(c *gin.Context) {
 		}
 	} else {
 		for _, conflict := range loadPackage.LoadPackageConflict {
-			service.LoadAndDeleteLibrary(conflict.Name, conflict.Version, "", "unload")
+			err = service.LoadAndDeleteLibrary(conflict.Name, conflict.Version, "", "unload")
+
 		}
 	}
 	var packageModelList []DataBaseModel.YssimModels

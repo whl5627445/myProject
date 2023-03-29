@@ -157,8 +157,7 @@ func FindFile(fileName, rootPath string) (string, error) {
 	return "", errors.New("文件不存在")
 }
 
-func GetDirChild(rootPath string) ([]map[string]interface{}, error) {
-	//rootPath = strings.ReplaceAll(rootPath, " ", "\\ ")
+func GetDirChild(rootPath string) ([]map[string]string, error) {
 	_, err := os.Lstat(rootPath)
 	//既不是文件，也不是文件夹
 	if err != nil {
@@ -166,7 +165,7 @@ func GetDirChild(rootPath string) ([]map[string]interface{}, error) {
 		return nil, err
 	}
 	//文件夹添加到队列里
-	dataList := make([]map[string]interface{}, 0, 1)
+	dataList := make([]map[string]string, 0, 1)
 	queue := list.New()
 	queue.PushBack(rootPath)
 	for queue.Len() > 0 {
@@ -175,9 +174,9 @@ func GetDirChild(rootPath string) ([]map[string]interface{}, error) {
 		files, _ := ioutil.ReadDir(name)
 		for _, file := range files {
 			if file.IsDir() {
-				dataList = append(dataList, map[string]interface{}{"name": file.Name(), "type": "dir"})
+				dataList = append(dataList, map[string]string{"name": file.Name(), "type": "dir"})
 			} else {
-				dataList = append(dataList, map[string]interface{}{"name": file.Name(), "type": "file"})
+				dataList = append(dataList, map[string]string{"name": file.Name(), "type": "file"})
 			}
 		}
 		queue.Remove(queue.Front())

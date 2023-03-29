@@ -571,6 +571,8 @@ func GetPackageResourcesList(c *gin.Context) {
 	/*
 		# 模型库的静态资源文件夹下资源查找
 		## package_id: 包id
+		## parent: 需要查询的节点父级路径
+		## path: 被查询节点
 	*/
 	var item packageResourcesData
 	err := c.BindJSON(&item)
@@ -589,6 +591,18 @@ func GetPackageResourcesList(c *gin.Context) {
 		return
 	}
 	data := service.GetResourcesList(packageModel.PackageName, item.Parent)
+	for _, d := range data {
+		basePath := ""
+		pathList := []string{}
+		if item.Parent != "" {
+			pathList = append(pathList, item.Parent)
+		}
+		if d["type"] == "file" {
+			pathList = append(pathList, d["name"])
+			basePath = "modelica://" + packageModel.PackageName + "/Resources/" + strings.Join(pathList, "/") + ""
+		}
+		d["path"] = basePath
+	}
 	var res responseData
 	res.Data = data
 	c.JSON(http.StatusOK, res)

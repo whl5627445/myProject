@@ -10,7 +10,7 @@ import (
 	"yssim-go/library/omc"
 )
 
-func GetResourcesList(packageName, parent string) []map[string]interface{} {
+func GetResourcesList(packageName, parent string) []map[string]string {
 	resourcesPath := resourcesDir(packageName, parent)
 	data, err := fileOperation.GetDirChild(resourcesPath)
 	if err != nil {

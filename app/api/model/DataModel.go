@@ -145,3 +145,9 @@ type loadPackageConflict struct {
 	Version string `json:"version,omitempty"`
 	//LoadOrUnload string `json:"type,omitempty"`
 }
+
+type packageResourcesData struct {
+	PackageId string `json:"package_id" binding:"required"`
+	Parent    string `json:"parent" binding:""`
+	Path      string `json:"path" binding:""`
+}
