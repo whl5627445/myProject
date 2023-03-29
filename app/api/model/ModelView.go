@@ -95,6 +95,10 @@ func GetListModelView(c *gin.Context) {
 	userSpaceId := c.GetHeader("space_id")
 	var packageModel DataBaseModel.YssimModels
 	DB.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", packageId, []string{"sys", userName}, []string{"0", userSpaceId}).First(&packageModel)
+	if packageModel.ID == "" {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
 	var res responseData
 	modelChildList := service.GetModelChild(modelName)
 	var modelChildListNew []map[string]interface{}
