@@ -8,7 +8,6 @@ import (
 	"log"
 	"regexp"
 	"sync"
-	"time"
 	"yssim-go/app/serviceType"
 	"yssim-go/config"
 
@@ -1254,7 +1253,6 @@ func (o *ZmqObject) GetComponentIconAndDiagramAnnotationsALl(classNameList []str
 		}
 		setData, _ := json.Marshal(data)
 		allModelCache.HSet(ctx, userName+"-yssim-componentGraphicsData", classNameList[len(classNameList)-1], setData)
-		allModelCache.Expire(ctx, userName+"-yssim-componentGraphicsData", 60*time.Minute)
 	}
 	return data
 }
