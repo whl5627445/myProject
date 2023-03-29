@@ -748,7 +748,7 @@ func DownloadResourcesFileView(c *gin.Context) {
 
 	pathList := strings.Split(item.Path, "/")
 	fileName := pathList[len(pathList)-1]
-	filePath := service.GetResourcesFile(packageModel.PackageName, item.Path)
+	filePath := service.GetResourcesFile(packageModel.PackageName, item.Parent+"/"+item.Path)
 	c.Header("content-disposition", `attachment; filename=`+fileName)
 	c.Data(http.StatusOK, "application/octet-stream", filePath)
 
