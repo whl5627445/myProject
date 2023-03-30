@@ -465,7 +465,7 @@ func CopyClassView(c *gin.Context) {
 		return
 	}
 	packageName := item.ModelName
-	if item.PackageId != "" {
+	if item.ParentName != "" {
 		packageName = strings.Split(item.ParentName, ".")[0]
 	}
 	filePath := ""

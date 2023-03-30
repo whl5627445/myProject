@@ -62,9 +62,9 @@ func DeleteResourcesDirAndFile(packageName, name string) bool {
 	return ok
 }
 
-func GetResourcesFile(packageName, parent string) []byte {
-	path := resourcesDir(packageName, parent)
-	file, err := os.ReadFile(path)
+func GetResourcesFile(packageName, path string) []byte {
+	pathAll := resourcesDir(packageName, path)
+	file, err := os.ReadFile(pathAll)
 	if err != nil {
 		log.Println(err)
 	}

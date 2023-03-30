@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strings"
 	"time"
@@ -645,8 +646,8 @@ func UploadResourcesFileView(c *gin.Context) {
 		pathList := []string{}
 		if parent != "" {
 			pathList = append(pathList, parent)
-			pathList = append(pathList, varFile.Filename)
 		}
+		pathList = append(pathList, varFile.Filename)
 		data := map[string]string{
 			"path": "modelica://" + packageModel.PackageName + "/Resources/" + strings.Join(pathList, "/"),
 			"name": varFile.Filename,
@@ -715,7 +716,7 @@ func DeleteResourcesDirAndFileView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
-	result := service.DeleteResourcesDirAndFile(packageModel.PackageName, item.Parent+"/"+item.Path)
+	result := service.DeleteResourcesDirAndFile(packageModel.PackageName, item.Path)
 	if result {
 		res.Msg = "删除成功"
 		c.JSON(http.StatusOK, res)
@@ -745,11 +746,13 @@ func DownloadResourcesFileView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
-
-	pathList := strings.Split(item.Path, "/")
-	fileName := pathList[len(pathList)-1]
-	filePath := service.GetResourcesFile(packageModel.PackageName, item.Parent+"/"+item.Path)
-	c.Header("content-disposition", `attachment; filename=`+fileName)
-	c.Data(http.StatusOK, "application/octet-stream", filePath)
-
+	filePath := ""
+	if item.Parent != "" {
+		filePath = item.Parent + "/" + item.Path
+	} else {
+		filePath = item.Path
+	}
+	fileData := service.GetResourcesFile(packageModel.PackageName, filePath)
+	c.Header("content-disposition", `attachment;filename=`+url.QueryEscape(item.Path))
+	c.Data(http.StatusOK, "application/octet-stream", fileData)
 }

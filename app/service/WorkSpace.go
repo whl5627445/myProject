@@ -1,12 +1,13 @@
 package service
 
 import (
+	"time"
 	"yssim-go/config"
 	"yssim-go/library/fileOperation"
 )
 
 func CreatWorkSpace(userName, SpaceName string) (string, bool) {
-	path := "public/UserFiles/UploadFile/" + userName + "/WorkSpace/" + SpaceName
+	path := "public/UserFiles/UploadFile/" + userName + "/WorkSpace/" + time.Now().Local().Format(time.RFC3339) + "/" + SpaceName
 	fileOperation.CreateFilePath(path + "/Resources")
 	FilePath := path + "/WorkSpace.mo"
 	fileOperation.CreateFile(FilePath)

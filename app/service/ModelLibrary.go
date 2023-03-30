@@ -19,13 +19,13 @@ func ModelLibraryInitialization(packageModel []DataBaseModel.YssimModels) {
 	packageAll := GetLibraryAndVersions()
 
 	for _, models := range packageModel {
-		if models.SysUser == "sys" {
-			version, ok := packageAll[models.PackageName]
-			if ok && version == models.Version {
-				continue
-			}
+		version, ok := packageAll[models.PackageName]
+		switch {
+		case ok && version == models.Version && models.SysUser == "sys":
+			delete(packageAll, models.PackageName)
+			continue
 		}
-		ok := false
+		ok = false
 		if models.FilePath == "" {
 			ok = omc.OMC.LoadModel(models.PackageName, models.Version)
 		} else {
@@ -41,6 +41,10 @@ func ModelLibraryInitialization(packageModel []DataBaseModel.YssimModels) {
 		} else {
 			log.Printf("初始化模型库：%s %s %s 失败 \n", models.SysUser, models.PackageName, models.Version)
 		}
+		delete(packageAll, models.PackageName)
+	}
+	for k, _ := range packageAll {
+		deleteModel(k)
 	}
 	lPackage := GetLibraryAndVersions()
 	refreshCache(lPackage)
