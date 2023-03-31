@@ -7,13 +7,13 @@ import (
 )
 
 func CreatWorkSpace(userName, SpaceName string) (string, bool) {
-	path := "public/UserFiles/UploadFile/" + userName + "/WorkSpace/" + time.Now().Local().Format(time.RFC3339) + "/" + SpaceName
+	path := "public/UserFiles/UploadFile/" + userName + "/Workspace/" + time.Now().Local().Format(time.RFC3339) + "/" + SpaceName
 	fileOperation.CreateFilePath(path + "/Resources")
-	FilePath := path + "/WorkSpace.mo"
+	FilePath := path + "/Workspace.mo"
 	fileOperation.CreateFile(FilePath)
-	ok := CreateModelAndPackage("WorkSpace", "", "", "package", "", "", false, false, false)
+	ok := CreateModelAndPackage("Workspace", "", "", "package", "", "", false, false, false)
 	if ok {
-		ok = SaveModelToFile("WorkSpace", FilePath)
+		ok = SaveModelToFile("Workspace", FilePath)
 		return FilePath, ok
 	}
 	return "", ok

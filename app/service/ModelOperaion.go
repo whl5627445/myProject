@@ -7,7 +7,7 @@ import (
 
 func inheritanceModelNameFixes(copiedClassName, className string) {
 	classInformation := omc.OMC.GetClassRestriction(copiedClassName)
-	classStrOld := omc.OMC.List(className)
+	classStrOld := omc.OMC.ListFile(className)
 	classStrNew := classStrOld
 	if classInformation != "model" {
 		return
@@ -51,8 +51,7 @@ func inheritanceModelNameFixes(copiedClassName, className string) {
 		modelNameAll := omc.OMC.GetClassNames(parentName, true)
 		for _, name := range modelNameAll {
 			for k, fixesModelData := range componentNameFixesMap {
-				fixesName := k
-				if strings.HasSuffix(name, "."+fixesName) && name != k {
+				if strings.HasSuffix(name, "."+k) && name != k {
 					switch {
 					case fixesModelData[10].(string) == "parameter": // 替换参数组件
 						classStrNew = strings.ReplaceAll(classStrNew, "parameter "+k+" ", "parameter "+name+" ")
@@ -94,7 +93,7 @@ func copyModel(copiedClassName, className, parentName string) (bool, string) {
 	}
 	copyResult := omc.OMC.CopyClass(copiedClassName, className, parentName)
 	if copyResult {
-		inheritanceModelNameFixes(copiedClassName, className)
+		inheritanceModelNameFixes(copiedClassName, classNameAll)
 		return true, "模型复制成功"
 	} else {
 		return false, "模型复制失败"

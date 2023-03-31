@@ -67,7 +67,7 @@ func CreateUserSpaceView(c *gin.Context) {
 	if ok {
 		defaultWorkSpacePackage := DataBaseModel.YssimModels{
 			ID:          uuid.New().String(),
-			PackageName: "WorkSpace",
+			PackageName: "Workspace",
 			SysUser:     userName,
 			FilePath:    FilePath,
 			UserSpaceId: space.ID,

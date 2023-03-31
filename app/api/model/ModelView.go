@@ -489,7 +489,7 @@ func CopyClassView(c *gin.Context) {
 		filePath = packageModel.FilePath
 	} else {
 		packageName = item.ModelName
-		filePath = "public/UserFiles/UploadFile/" + userName + "/" + packageName + "/" + time.Now().Local().Format("20060102150405") + "/" + item.ModelName + ".mo"
+		filePath = "public/UserFiles/UploadFile/" + userName + "/" + packageName + "/" + time.Now().Local().Format(time.RFC3339) + "/" + item.ModelName + ".mo"
 	}
 	model := DataBaseModel.YssimModels{
 		ID:          uuid.New().String(),
@@ -1165,7 +1165,6 @@ func LoadModelView(c *gin.Context) {
 	if len(loadPackage.LoadPackageConflict) == 0 {
 		conflict, err := service.GetLoadPackageConflict(packageModel.PackageName, packageModel.Version, packageModel.FilePath)
 		if len(conflict) > 0 && err != nil {
-			//service.DeleteLibrary(packageModel.PackageName)
 			res.Data = conflict
 			res.Msg = err.Error()
 			c.JSON(http.StatusOK, res)

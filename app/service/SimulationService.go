@@ -44,7 +44,7 @@ func openModelica(task *SimulateTask, resultFilePath string, SimulationPraData m
 		out, err := cmd.Output()
 		simulateResultStr := string(out)
 		if err != nil {
-			//log.Println("err: ", err)
+			log.Println("err: ", err)
 			log.Println("仿真执行失败")
 		}
 		if strings.Contains(simulateResultStr, "successfully") {
@@ -52,23 +52,24 @@ func openModelica(task *SimulateTask, resultFilePath string, SimulationPraData m
 		} else {
 			task.SRecord.SimulateStatus = "3"
 		}
-		//task.SRecord.SimulateResultStr = simulateResultStr
+		task.SRecord.SimulateResultStr = simulateResultStr
 	} else {
 		task.SRecord.SimulateStatus = "3"
-		//task.SRecord.SimulateResultStr = "编译失败"
+		task.SRecord.SimulateResultStr = "编译失败"
 	}
 	config.DB.Save(&task.SRecord)
 	return res
 }
 
 func dymolaSimulate(task *SimulateTask, resultFilePath string, SimulationPraData map[string]string, simulateFilePath string) bool {
-	path := task.Package.PackageName + "/" + strings.ReplaceAll(task.SRecord.SimulateModelName, ".", "-") + "/" + time.Now().Local().Format("20060102150405")
+	path := task.Package.PackageName
 	packageFileName := task.Package.PackageName + ".mo"
 	uploadResult := false
 	uploadFilePath := ""
 	if task.Package.FilePath != "" {
 		req := url.NewRequest()
 		params := url.NewParams()
+		req.Timeout = 10 * time.Minute
 		params.Set("url", task.SRecord.UserName+"/"+path)
 		req.Params = params
 		req.Timeout = 600 * time.Second
@@ -97,8 +98,11 @@ func dymolaSimulate(task *SimulateTask, resultFilePath string, SimulationPraData
 		}
 		req := url.NewRequest()
 		req.Json = compileReqData
+		req.Timeout = 10 * time.Minute
+		s := time.Now().UnixNano()
 		compileRes, err := requests.Post(config.DymolaSimutalionConnect+"/dymola/translate", req)
 		if err != nil {
+			log.Println((time.Now().UnixNano() - s) / 1e6)
 			log.Println("dymola服务编译错误： ", err)
 			return false
 		}
@@ -336,8 +340,8 @@ func ModelSimulate(task *SimulateTask) {
 		sResult = openModelica(task, resultFilePath, SimulationPraData)
 	case "DM":
 		sResult = dymolaSimulate(task, resultFilePath, SimulationPraData, FilePath)
-	case "JM":
-		sResult = jModelicaSimulate(task, resultFilePath, SimulationPraData, FilePath)
+	//case "JM":
+	//	sResult = jModelicaSimulate(task, resultFilePath, SimulationPraData, FilePath)
 	case "FmPy":
 		sResult = fmpySimulate(task, resultFilePath, SimulationPraData)
 		if !sResult {

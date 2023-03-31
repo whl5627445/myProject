@@ -142,7 +142,7 @@ func FindFile(fileName, rootPath string) (string, error) {
 	queue := list.New()
 	queue.PushBack(rootPath)
 	for queue.Len() > 0 {
-		files, _ := ioutil.ReadDir(queue.Front().Value.(string))
+		files, _ := os.ReadDir(queue.Front().Value.(string))
 		for _, file := range files {
 			if file.IsDir() {
 				queue.PushBack(filepath.Join(rootPath, file.Name()))

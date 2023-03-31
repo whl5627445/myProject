@@ -8,6 +8,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/library/fileOperation"
 	"yssim-go/library/omc"
@@ -221,12 +222,28 @@ type xmlInit struct {
 	TypeDefinitions   typeDefinitions   `xml:"TypeDefinitions"` //TypeDefinitions只对dymola的xml生效
 }
 
-func SimulationResultTree(path, parent, keyWords string) []map[string]interface{} {
+var treeCache = map[string]xmlInit{}
 
-	v := xmlInit{}
-	err := xmlOperation.ParseXML(path, &v)
-	if err != nil {
-		log.Println(err)
+func init() {
+	go clearTreeCache()
+}
+
+func clearTreeCache() {
+	for {
+		time.Sleep(time.Second * 300) // 每300秒清空一次tree缓存
+		treeCache = map[string]xmlInit{}
+	}
+}
+
+func SimulationResultTree(path, parent, keyWords string) []map[string]interface{} {
+	v, ok := treeCache[path]
+	if !ok {
+		v = xmlInit{}
+		err := xmlOperation.ParseXML(path, &v)
+		treeCache[path] = v
+		if err != nil {
+			log.Println(err)
+		}
 	}
 	parentName := ""
 	if parent != "" {

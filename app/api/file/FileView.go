@@ -54,7 +54,7 @@ func UploadModelPackageView(c *gin.Context) {
 		return
 	}
 	removeSuffix := strings.Split(modelFile.Filename, ".")[0]
-	saveFilePath := "public/UserFiles/UploadFile/" + userName + "/" + removeSuffix + "/" + time.Now().Local().Format("20060102150405") + "/"
+	saveFilePath := "public/UserFiles/UploadFile/" + userName + "/" + removeSuffix + "/" + time.Now().Local().Format(time.RFC3339) + "/"
 	zipPackagePath := saveFilePath + fileName
 	packageName, packagePath, msg, ok := service.PackageFileParse(fileName, saveFilePath, zipPackagePath, file)
 	if ok {
@@ -201,7 +201,7 @@ func CreateModelPackageView(c *gin.Context) {
 		ID:          uuid.New().String(),
 		PackageName: createPackageName,
 		SysUser:     username,
-		FilePath:    "public/UserFiles/UploadFile/" + username + "/" + createPackageName + "/" + time.Now().Local().Format("20060102150405") + "/" + createPackageName + ".mo",
+		FilePath:    "public/UserFiles/UploadFile/" + username + "/" + createPackageName + "/" + time.Now().Local().Format(time.RFC3339) + "/" + createPackageName + ".mo",
 		UserSpaceId: userSpaceId,
 	}
 	DB.Where("package_name = ? AND sys_or_user IN ? AND userspace_id IN ?", item.Name, []string{"sys", username}, []string{"0", userSpaceId}).First(&packageRecord)
@@ -342,7 +342,6 @@ func GetPackageFileListView(c *gin.Context) {
 func GetPackageFileView(c *gin.Context) {
 	/*
 	   # 用户mo文件下载
-	   ## return: 包id， 包名， 上传时间， 修改时间
 	*/
 	username := c.GetHeader("username")
 	var item packageFileData

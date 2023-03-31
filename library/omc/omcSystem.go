@@ -1033,6 +1033,17 @@ func (o *ZmqObject) GetModelInstance(className string) string {
 	return ""
 }
 
+// Save 保存模型源码到文件，文件路径由omc查找
+func (o *ZmqObject) Save(className string) bool {
+	cmd := "save(" + className + ")"
+	result, ok := o.SendExpressionNoParsed(cmd)
+	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
+	if ok && string(result) == "true" {
+		return true
+	}
+	return false
+}
+
 // SaveModel 保存模型源码到指定文件
 func (o *ZmqObject) SaveModel(fileName, className string) bool {
 	pwd, _ := os.Getwd()

@@ -51,7 +51,7 @@ func SaveModelToFile(modelName, path string) bool {
 
 func PackageFileParse(fileName, saveFilePath, zipPackagePath string, file io.Reader) (string, string, string, bool) {
 	fileOperation.CreateFilePath(saveFilePath)
-	fileData, _ := ioutil.ReadAll(file)
+	fileData, _ := io.ReadAll(file)
 	fileOperation.WriteFile(zipPackagePath, string(fileData))
 
 	packagePath := ""
@@ -66,7 +66,7 @@ func PackageFileParse(fileName, saveFilePath, zipPackagePath string, file io.Rea
 		packageFilePath, err := fileOperation.FindFile("package.mo", saveFilePath)
 		if err != nil {
 			log.Println("FindFile err", err)
-			return "", "", "未到package", false
+			return "", "", "未找到package", false
 		}
 		packagePath = packageFilePath + "/package.mo"
 	}

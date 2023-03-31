@@ -2,7 +2,6 @@ package service
 
 import (
 	"encoding/base64"
-	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -23,9 +22,9 @@ func GetIcon(modelName, packageName, version string) string {
 					imageUri := bitmapData[i+1].([]interface{})[4].(string)
 					if strings.HasPrefix(imageUri, "modelica://") {
 						imageFile := omc.OMC.UriToFilename(imageUri)
-						file, err := ioutil.ReadFile(imageFile)
+						file, err := os.ReadFile(imageFile)
 						if err != nil {
-							log.Println("获取模型图表文件信息失败")
+							log.Println("获取模型图表文件信息失败: ", err)
 							return ""
 						}
 						fileBase64Str := base64.StdEncoding.EncodeToString(file)
