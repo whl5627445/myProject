@@ -2,10 +2,11 @@ package service
 
 import (
 	"encoding/base64"
-	"github.com/PuerkitoBio/goquery"
 	"io/ioutil"
 	"strings"
 	"yssim-go/library/omc"
+
+	"github.com/PuerkitoBio/goquery"
 )
 
 func GetModelDocument(modelName string) []string {
@@ -42,5 +43,6 @@ func GetModelDocument(modelName string) []string {
 
 func SetModelDocument(modelName, docData, revisions string) bool {
 	result := omc.OMC.SetDocumentationAnnotation(modelName, docData, revisions)
+	omc.OMC.Save(modelName)
 	return result
 }

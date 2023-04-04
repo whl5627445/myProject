@@ -1,11 +1,13 @@
 package service
 
 import (
+	"errors"
 	"io"
 	"io/ioutil"
 	"log"
+	"os"
 	"strings"
-	"yssim-go/app/DataBaseModel"
+	"time"
 	"yssim-go/library/fileOperation"
 	"yssim-go/library/omc"
 )
@@ -30,7 +32,7 @@ func GetModelCode(modelName string) string {
 	return codeData
 }
 
-// SaveModelCode  保存模型
+// SaveModelCode  保存模型到指定文件
 func SaveModelCode(modelName, path string) bool {
 	pathList := strings.Split(path, "/")
 	numPath := strings.Join(pathList[:len(pathList)-1], "/")
@@ -45,7 +47,9 @@ func SaveModelCode(modelName, path string) bool {
 
 // SaveModelToFile 用omc提供的API将模型源码保存的到对应文件， 并发安全
 func SaveModelToFile(modelName, path string) bool {
-	ok := omc.OMC.SaveModel(path, modelName)
+	ok := omc.OMC.SetSourceFile(modelName, path)
+	ok = omc.OMC.Save(modelName)
+	//ok := omc.OMC.SaveModel(path, modelName)
 	return ok
 }
 
@@ -122,13 +126,26 @@ func CreateModelAndPackage(createPackageName, insertTo, expand, strType, createP
 	return res
 }
 
-func SaveModelToFileALL(packageModel []DataBaseModel.YssimModels) {
-	libraryAndVersions := GetLibraryAndVersions()
-
-	for i := 0; i < len(packageModel); i++ {
-		p, ok := libraryAndVersions[packageModel[i].PackageName]
-		if ok && p == packageModel[i].Version {
-			ok = SaveModelToFile(packageModel[i].PackageName, packageModel[i].FilePath)
-		}
+func ZipPackage(packageName, path string) (string, error) {
+	tmpPath := "public/tmp/" + time.Now().Local().Format("20060102150405") + "/" + packageName + ".zip"
+	packagePathList := strings.Split(path, "/")
+	packagePath := strings.Join(packagePathList[:len(packagePathList)-1], "/")
+	err := fileOperation.Zip(packagePath, tmpPath)
+	if err != nil {
+		return "", errors.New("模型包压缩失败，错误为：" + err.Error())
 	}
+	return tmpPath, nil
+}
+
+func ZipPackageStream(packageName, path string) ([]byte, error) {
+	tmpPath, err := ZipPackage(packageName, path)
+	if err != nil {
+		return nil, errors.New("压缩文件包失败，错误为：" + err.Error())
+	}
+	data, err := os.ReadFile(tmpPath)
+	if err != nil {
+		return nil, errors.New("读取文件失败，错误为：" + err.Error())
+	}
+	os.Remove(tmpPath)
+	return data, nil
 }

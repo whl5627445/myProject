@@ -128,11 +128,8 @@ func LoginUserSpaceView(c *gin.Context) {
 		return
 	}
 
-	var packageModelList []DataBaseModel.YssimModels
 	var space DataBaseModel.YssimUserSpace
 	DB.Where("id = ? AND username = ?", item.SpaceId, userName).First(&space)
-	DB.Where("sys_or_user = ? AND userspace_id = ?", userName, space.ID).Find(&packageModelList)
-	service.SaveModelToFileALL(packageModelList)
 
 	var packageModelAll []DataBaseModel.YssimModels
 	config.DB.Where("sys_or_user IN ?  AND default_version = ? AND userspace_id IN ?", []string{"sys", userName}, true, []string{"0", space.ID}).Find(&packageModelAll)

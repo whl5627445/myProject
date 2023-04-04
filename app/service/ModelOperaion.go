@@ -114,7 +114,7 @@ func deleteModel(className string) (bool, string) {
 	}
 }
 
-func SaveModel(className, copiedClassName, parentName, packageName, copeOrDelete, fileName string) (bool, string) {
+func SaveModel(className, copiedClassName, parentName, copeOrDelete, fileName string) (bool, string) {
 	result := false
 	msg := ""
 	switch {
@@ -129,9 +129,11 @@ func SaveModel(className, copiedClassName, parentName, packageName, copeOrDelete
 	if result {
 		switch {
 		case parentName != "":
-			go SaveModelToFile(packageName, fileName)
+			path := omc.OMC.GetSourceFile(parentName)
+			omc.OMC.SetSourceFile(parentName+"."+className, path)
+			omc.OMC.Save(parentName)
 		default:
-			go SaveModelCode(className, fileName)
+			SaveModelCode(className, fileName)
 		}
 	}
 	return result, msg

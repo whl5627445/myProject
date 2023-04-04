@@ -131,6 +131,20 @@ func UnZip(filePath string, toPath string) error {
 	return nil
 }
 
+func Zip(filePath string, toPath string) error {
+	filePathList := []string{}
+	file, _ := os.ReadDir(filePath)
+	for _, name := range file {
+		filePathList = append(filePathList, filePath+"/"+name.Name())
+	}
+	err := archiver.Archive(filePathList, toPath)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	return nil
+}
+
 func FindFile(fileName, rootPath string) (string, error) {
 	_, err := os.Lstat(rootPath)
 	//既不是文件，也不是文件夹

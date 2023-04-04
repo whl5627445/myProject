@@ -489,7 +489,7 @@ func CopyClassView(c *gin.Context) {
 		filePath = packageModel.FilePath
 	} else {
 		packageName = item.ModelName
-		filePath = "public/UserFiles/UploadFile/" + userName + "/" + packageName + "/" + time.Now().Local().Format(time.RFC3339) + "/" + item.ModelName + ".mo"
+		filePath = "public/UserFiles/UploadFile/" + userName + "/" + packageName + "/" + time.Now().Local().Format("20060102150405") + "/" + item.ModelName + ".mo"
 	}
 	model := DataBaseModel.YssimModels{
 		ID:          uuid.New().String(),
@@ -508,7 +508,7 @@ func CopyClassView(c *gin.Context) {
 			return
 		}
 	}
-	result, msg := service.SaveModel(item.ModelName, item.CopiedClassName, item.ParentName, packageName, "copy", filePath)
+	result, msg := service.SaveModel(item.ModelName, item.CopiedClassName, item.ParentName, "copy", filePath)
 	if result {
 		res.Msg = msg
 		data := map[string]string{}
@@ -551,7 +551,7 @@ func DeletePackageAndModelView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
-	result, msg := service.SaveModel(item.ModelName, "", item.ParentName, packageModel.PackageName, "delete", packageModel.FilePath)
+	result, msg := service.SaveModel(item.ModelName, "", item.ParentName, "delete", packageModel.FilePath)
 	if result {
 		res.Msg = msg
 		if item.ParentName == "" {
@@ -1176,9 +1176,6 @@ func LoadModelView(c *gin.Context) {
 
 		}
 	}
-	var packageModelList []DataBaseModel.YssimModels
-	DB.Where("sys_or_user = ? AND userspace_id = ?", username, userSpaceId).Find(&packageModelList)
-	service.SaveModelToFileALL(packageModelList)
 	err = service.LoadAndDeleteLibrary(packageModel.PackageName, packageModel.Version, packageModel.FilePath, "load")
 	if err != nil {
 		res.Err = err.Error()

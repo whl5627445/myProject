@@ -1143,7 +1143,7 @@ func (o *ZmqObject) IsPackage(packageName string) bool {
 	return false
 }
 
-// IsPackage 判断是否是包类型
+// GetSourceFile 获取给定包或者模型的源文件
 func (o *ZmqObject) GetSourceFile(packageName string) string {
 	cmd := "getSourceFile(" + packageName + ")"
 	result, ok := o.SendExpressionNoParsed(cmd)
@@ -1152,6 +1152,16 @@ func (o *ZmqObject) GetSourceFile(packageName string) string {
 		return string(result)[1 : len(result)-1]
 	}
 	return ""
+}
+
+func (o *ZmqObject) SetSourceFile(packageName, path string) bool {
+	cmd := "setSourceFile(" + packageName + ",\"" + path + "\")"
+	result, ok := o.SendExpressionNoParsed(cmd)
+	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
+	if ok && string(result) == "true" {
+		return true
+	}
+	return false
 }
 
 // BuildModelFMU 构建FMU文件

@@ -54,7 +54,7 @@ func UploadModelPackageView(c *gin.Context) {
 		return
 	}
 	removeSuffix := strings.Split(modelFile.Filename, ".")[0]
-	saveFilePath := "public/UserFiles/UploadFile/" + userName + "/" + removeSuffix + "/" + time.Now().Local().Format(time.RFC3339) + "/"
+	saveFilePath := "public/UserFiles/UploadFile/" + userName + "/" + removeSuffix + "/" + time.Now().Local().Format("20060102150405") + "/"
 	zipPackagePath := saveFilePath + fileName
 	packageName, packagePath, msg, ok := service.PackageFileParse(fileName, saveFilePath, zipPackagePath, file)
 	if ok {
@@ -201,7 +201,7 @@ func CreateModelPackageView(c *gin.Context) {
 		ID:          uuid.New().String(),
 		PackageName: createPackageName,
 		SysUser:     username,
-		FilePath:    "public/UserFiles/UploadFile/" + username + "/" + createPackageName + "/" + time.Now().Local().Format(time.RFC3339) + "/" + createPackageName + ".mo",
+		FilePath:    "public/UserFiles/UploadFile/" + username + "/" + createPackageName + "/" + time.Now().Local().Format("20060102150405") + "/" + createPackageName + ".mo",
 		UserSpaceId: userSpaceId,
 	}
 	DB.Where("package_name = ? AND sys_or_user IN ? AND userspace_id IN ?", item.Name, []string{"sys", username}, []string{"0", userSpaceId}).First(&packageRecord)
@@ -319,9 +319,9 @@ func GetPackageFileListView(c *gin.Context) {
 	*/
 	var res responseData
 	username := c.GetHeader("username")
-	//userSpaceId := c.GetHeader("space_id")
+	userSpaceId := c.GetHeader("space_id")
 	var packageRecord []map[string]interface{}
-	DB.Raw("select m.id, m.package_name, m.create_time, m.update_time, s.space_name from yssim_models as m, yssim_user_spaces as s where m.sys_or_user = ? AND m.userspace_id = s.id AND m.deleted_at IS NULL AND s.deleted_at IS NULL;", username).Find(&packageRecord)
+	DB.Raw("select m.id, m.package_name, m.create_time, m.update_time, s.space_name from yssim_models as m, yssim_user_spaces as s where m.sys_or_user = ? AND m.userspace_id = s.id AND m.deleted_at IS NULL AND s.deleted_at IS NULL AND s.id = ? ORDER BY create_time desc;", username, userSpaceId).Find(&packageRecord)
 	var dataList []map[string]interface{}
 	for id, models := range packageRecord {
 		data := map[string]interface{}{
@@ -354,9 +354,18 @@ func GetPackageFileView(c *gin.Context) {
 	var packageRecord DataBaseModel.YssimModels
 	DB.Where("id = ? AND sys_or_user = ?", item.PackageId, username).First(&packageRecord)
 	//c.JSON(http.StatusOK, res)
-	c.Header("content-disposition", `attachment; filename=`+packageRecord.PackageName+".mo")
-	service.SaveModelToFile(packageRecord.PackageName, packageRecord.FilePath)
-	c.File(packageRecord.FilePath)
+	//c.Header("content-disposition", `attachment; filename=`+packageRecord.PackageName+".mo")
+	//service.SaveModelToFile(packageRecord.PackageName, packageRecord.FilePath)
+	//c.File(packageRecord.FilePath)
+	fileData, err := service.ZipPackageStream(packageRecord.PackageName, packageRecord.FilePath)
+	if err != nil {
+		var res responseData
+		res.Err = "导出模型库失败，请稍后再试"
+		res.Status = 1
+		c.JSON(http.StatusInternalServerError, res)
+	}
+	c.Header("content-disposition", `attachment;filename=`+url.QueryEscape(packageRecord.PackageName+".zip"))
+	c.Data(http.StatusOK, "application/octet-stream", fileData)
 }
 
 func GetResultFileView(c *gin.Context) {

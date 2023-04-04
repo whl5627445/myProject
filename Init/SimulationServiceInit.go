@@ -11,7 +11,7 @@ import (
 func simulationService() {
 	userName := config.USERNAME
 	var undoneRecordAll []DataBaseModel.YssimSimulateRecord
-	err := config.DB.Where("username = ? ", userName).Not("simulate_status = 4").Not("simulate_status = 3").Find(&undoneRecordAll).Error
+	err := config.DB.Where("username = ? ", userName).Where("simulate_status = 1").Where("simulate_status = 2").Find(&undoneRecordAll).Error
 	if err != nil {
 		panic(err)
 	}
