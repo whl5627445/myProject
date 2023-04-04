@@ -51,6 +51,7 @@ func DymolaFmuExport(fmuPar map[string]interface{}, token, userName, fmuName, pa
 	req = url.NewRequest()
 	req.Json = data
 	req.Headers = Headers
+	req.Timeout = time.Minute * 10
 	exportFmuRes, err := requests.Post(config.DymolaSimutalionConnect+"/dymola/translateModelFMU", req)
 	if err != nil {
 		log.Println(err)
@@ -64,6 +65,7 @@ func DymolaFmuExport(fmuPar map[string]interface{}, token, userName, fmuName, pa
 	}
 	req = url.NewRequest()
 	req.Headers = Headers
+	req.Timeout = time.Minute * 10
 	fmuFileUrl := config.DymolaSimutalionConnect + "/file/download?fileName=" + exportResult["msg"].(string)
 	fmuFileRes, err := requests.Get(fmuFileUrl, req)
 	if err != nil {
