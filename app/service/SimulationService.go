@@ -367,7 +367,7 @@ func ModelSimulate(task *SimulateTask) {
 		"tolerance":         task.SRecord.Tolerance,
 	}
 	if task.Package.FilePath != "" && (task.SRecord.SimulateType == "DM" || task.SRecord.SimulateType == "JM") {
-		sResult = SaveModelCode(task.Package.PackageName, FilePath)
+		sResult = SaveModelToFile(task.Package.PackageName, FilePath)
 		if !sResult {
 			task.SRecord.SimulateStatus = "3"
 			MessageNotice(map[string]string{"message": task.SRecord.SimulateModelName + " 出现错误，请联系管理员"})
