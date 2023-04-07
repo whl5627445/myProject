@@ -138,9 +138,9 @@ func ModelSimulateView(c *gin.Context) {
 		return
 	}
 	SData := service.SimulateTask{
-		SRecord:          record,
-		Package:          packageModel,
-		ExperimentRecord: experimentRecord,
+		SRecord:          &record,
+		Package:          &packageModel,
+		ExperimentRecord: &experimentRecord,
 	}
 	service.SimulateTaskChan <- &SData
 	var res responseData
@@ -472,8 +472,14 @@ func SimulateResultDeleteView(c *gin.Context) {
 	var resultRecord DataBaseModel.YssimSimulateRecord
 	DB.Where("id = ? AND username = ? AND userspace_id = ? ", recordId, username, userSpaceId).First(&resultRecord)
 	var res responseData
-	service.DeleteSimulateTask(recordId)
-	//DB.Delete(&resultRecord)
+	if resultRecord.SimulateStatus == "4" {
+		res.Msg = "仿真已完成，未进行删除，如需删除请重试"
+		c.JSON(http.StatusOK, res)
+	}
+	resultRecord.SimulateStatus = "5"
+	config.DB.Save(&resultRecord)
+	service.DeleteSimulateTask(recordId, resultRecord.SimulateType)
+	config.DB.Delete(&resultRecord)
 	DB.Delete(&DataBaseModel.YssimSnapshots{}, "simulate_result_id = ?", recordId) //删除相关的快照
 	res.Msg = "删除成功"
 	c.JSON(http.StatusOK, res)

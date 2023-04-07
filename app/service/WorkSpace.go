@@ -13,7 +13,7 @@ func CreatWorkSpace(userName, SpaceName string) (string, bool) {
 	fileOperation.CreateFile(FilePath)
 	ok := CreateModelAndPackage("Workspace", "", "", "package", "", "", false, false, false)
 	if ok {
-		ok = SaveModelToFile("Workspace", FilePath)
+		ok = SaveModelSource("Workspace", FilePath)
 		return FilePath, ok
 	}
 	return "", ok
