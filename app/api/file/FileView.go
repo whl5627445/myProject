@@ -54,7 +54,7 @@ func UploadModelPackageView(c *gin.Context) {
 		return
 	}
 	removeSuffix := strings.Split(modelFile.Filename, ".")[0]
-	saveFilePath := "public/UserFiles/UploadFile/" + userName + "/" + removeSuffix + "/" + time.Now().Local().Format(time.RFC3339) + "/"
+	saveFilePath := "public/UserFiles/UploadFile/" + userName + "/" + removeSuffix + "/" + time.Now().Local().Format("20060102150405") + "/"
 	zipPackagePath := saveFilePath + fileName
 	packageName, packagePath, msg, ok := service.PackageFileParse(fileName, saveFilePath, zipPackagePath, file)
 	if ok {
@@ -139,7 +139,7 @@ func UpdateModelPackageView(c *gin.Context) {
 	if ok && len(parseResult) > 0 {
 		loadResult := service.LoadCodeString(modelStr, packageRecord.PackageName)
 		if loadResult {
-			saveResult := service.SaveModelToFile(packageRecord.PackageName, packageRecord.FilePath)
+			saveResult := service.SaveModelSource(packageRecord.PackageName, packageRecord.FilePath)
 			if saveResult {
 				res.Data = map[string]string{
 					"id":        packageRecord.ID,
@@ -201,7 +201,7 @@ func CreateModelPackageView(c *gin.Context) {
 		ID:          uuid.New().String(),
 		PackageName: createPackageName,
 		SysUser:     username,
-		FilePath:    "public/UserFiles/UploadFile/" + username + "/" + createPackageName + "/" + time.Now().Local().Format(time.RFC3339) + "/" + createPackageName + ".mo",
+		FilePath:    "public/UserFiles/UploadFile/" + username + "/" + createPackageName + "/" + time.Now().Local().Format("20060102150405") + "/" + createPackageName + ".mo",
 		UserSpaceId: userSpaceId,
 	}
 	DB.Where("package_name = ? AND sys_or_user IN ? AND userspace_id IN ?", item.Name, []string{"sys", username}, []string{"0", userSpaceId}).First(&packageRecord)
@@ -228,7 +228,7 @@ func CreateModelPackageView(c *gin.Context) {
 	}
 	result := service.CreateModelAndPackage(createPackageName, item.Vars.InsertTo, item.Vars.Expand, item.StrType, createPackageNameALL, item.Comment, item.Vars.Partial, item.Vars.Encapsulated, item.Vars.State)
 	if result {
-		saveResult := service.SaveModelCode(newPackage.PackageName, newPackage.FilePath)
+		saveResult := service.SaveModelCode(createPackageNameALL, newPackage.FilePath)
 		if saveResult {
 			if item.Vars.InsertTo == "" {
 				DB.Create(&newPackage)
@@ -297,9 +297,9 @@ func UploadModelIconView(c *gin.Context) {
 	file, _ := iconFile.Open()
 	iconData, _ := io.ReadAll(file)
 	fileBase64Str := base64.StdEncoding.EncodeToString(iconData)
-	result := service.UploadIcon(modelName, fileBase64Str)
+	result := service.SetIcon(modelName, fileBase64Str)
 	if result {
-		saveResult := service.SaveModelToFile(packageRecord.PackageName, packageRecord.FilePath)
+		saveResult := service.SaveModelSource(packageRecord.PackageName, packageRecord.FilePath)
 		if saveResult {
 			res.Msg = "图标上传成功"
 			c.JSON(http.StatusOK, res)
@@ -319,9 +319,9 @@ func GetPackageFileListView(c *gin.Context) {
 	*/
 	var res responseData
 	username := c.GetHeader("username")
-	//userSpaceId := c.GetHeader("space_id")
+	userSpaceId := c.GetHeader("space_id")
 	var packageRecord []map[string]interface{}
-	DB.Raw("select m.id, m.package_name, m.create_time, m.update_time, s.space_name from yssim_models as m, yssim_user_spaces as s where m.sys_or_user = ? AND m.userspace_id = s.id AND m.deleted_at IS NULL AND s.deleted_at IS NULL;", username).Find(&packageRecord)
+	DB.Raw("select m.id, m.package_name, m.create_time, m.update_time, s.space_name from yssim_models as m, yssim_user_spaces as s where m.sys_or_user = ? AND m.userspace_id = s.id AND m.deleted_at IS NULL AND s.deleted_at IS NULL AND s.id = ? ORDER BY create_time desc;", username, userSpaceId).Find(&packageRecord)
 	var dataList []map[string]interface{}
 	for id, models := range packageRecord {
 		data := map[string]interface{}{
@@ -354,9 +354,18 @@ func GetPackageFileView(c *gin.Context) {
 	var packageRecord DataBaseModel.YssimModels
 	DB.Where("id = ? AND sys_or_user = ?", item.PackageId, username).First(&packageRecord)
 	//c.JSON(http.StatusOK, res)
-	c.Header("content-disposition", `attachment; filename=`+packageRecord.PackageName+".mo")
-	service.SaveModelToFile(packageRecord.PackageName, packageRecord.FilePath)
-	c.File(packageRecord.FilePath)
+	//c.Header("content-disposition", `attachment; filename=`+packageRecord.PackageName+".mo")
+	//service.SaveModelSource(packageRecord.PackageName, packageRecord.FilePath)
+	//c.File(packageRecord.FilePath)
+	fileData, err := service.ZipPackageStream(packageRecord.PackageName, packageRecord.FilePath)
+	if err != nil {
+		var res responseData
+		res.Err = "导出模型库失败，请稍后再试"
+		res.Status = 1
+		c.JSON(http.StatusInternalServerError, res)
+	}
+	c.Header("content-disposition", `attachment;filename=`+url.QueryEscape(packageRecord.PackageName+".zip"))
+	c.Data(http.StatusOK, "application/octet-stream", fileData)
 }
 
 func GetResultFileView(c *gin.Context) {
@@ -519,7 +528,7 @@ func ModelCodeSaveView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
-	result := service.SaveModelToFile(packageModel.PackageName, packageModel.FilePath)
+	result := service.SaveModelSource(packageModel.PackageName, packageModel.FilePath)
 	if result {
 		res.Msg = "模型已保存"
 	} else {
@@ -621,6 +630,12 @@ func UploadResourcesFileView(c *gin.Context) {
 	parent := c.PostForm("parent")
 	userSpaceId := c.GetHeader("space_id")
 	varFile, err := c.FormFile("file")
+	if varFile.Size > 1500000 {
+		res.Err = "上传文件过大，请上传小于1.5M的文件"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
 	if err != nil {
 		log.Println(err)
 		c.JSON(http.StatusBadRequest, "")
@@ -754,4 +769,97 @@ func DownloadResourcesFileView(c *gin.Context) {
 	fileData := service.GetResourcesFile(packageModel.PackageName, filePath)
 	c.Header("content-disposition", `attachment;filename=`+url.QueryEscape(item.Path))
 	c.Data(http.StatusOK, "application/octet-stream", fileData)
+}
+
+func ResourcesImagesPathGetView(c *gin.Context) {
+	/*
+		# 静态资源文件png图片的路径获取
+		## package_id: 包id
+		## keyWord: 筛选关键字
+	*/
+	var res responseData
+	userName := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
+	var item resourcesImagesPathData
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+	var packageModel DataBaseModel.YssimModels
+	DB.Where("id = ? AND sys_or_user = ? AND userspace_id = ?", item.PackageId, userName, userSpaceId).First(&packageModel)
+	if packageModel.ID == "" {
+		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+	data := service.GetResourcesImagesPath(packageModel.PackageName, item.KeyWord)
+	res.Data = data
+	c.JSON(http.StatusOK, res)
+}
+
+func ResourcesImagesGetView(c *gin.Context) {
+	/*
+		# 静态资源文件png图片的获取
+		## path: 文件相对路径
+	*/
+	//var item getResourcesImagesData
+	path := c.Query("path")
+	//err := c.BindJSON(&item)
+	//if err != nil {
+	//	c.JSON(http.StatusBadRequest, "not found")
+	//	return
+	//}
+	fileData := service.GetResourcesImages(path)
+	c.Header("content-disposition", `attachment;filename=`+url.QueryEscape("image.png"))
+	c.Data(http.StatusOK, "application/octet-stream", fileData)
+}
+
+func ModelIconSetView(c *gin.Context) {
+	/*
+		# 用户设置模型图标接口
+		## path: 文件相对路径
+		## model_name: 模型名称
+		## package_id: 包id
+	*/
+	var res responseData
+	username := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
+	var item setResourcesImagesIconData
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+	var packageRecord DataBaseModel.YssimModels
+	DB.Where("id = ? AND sys_or_user = ? AND userspace_id = ? ", item.PackageId, username, userSpaceId).First(&packageRecord)
+	if packageRecord.ID == "" {
+		res.Err = "暂只支持更新用户区图标"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	iconFileNameList := strings.Split(item.Path, ".")
+	iconFileNameSuffix := iconFileNameList[len(iconFileNameList)-1]
+	iconType := map[string]bool{"png": true}
+	file := service.GetResourcesImages(item.Path)
+	if !iconType[iconFileNameSuffix] || len(file) == 0 {
+		res.Err = ""
+		res.Status = 2
+		c.JSON(http.StatusBadRequest, res)
+		return
+	}
+	result := service.SetIconPath(item.ModelName, file)
+	if result {
+		saveResult := service.ModelSave(packageRecord.PackageName)
+		if saveResult {
+			res.Msg = "图标设置成功"
+			c.JSON(http.StatusOK, res)
+			return
+		}
+	}
+	res.Err = "设置失败，请重新上传"
+	res.Status = 2
+	c.JSON(http.StatusOK, res)
+
 }

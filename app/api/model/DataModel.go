@@ -140,6 +140,10 @@ type loadPackageData struct {
 	LoadPackageConflict []loadPackageConflict `json:"conflict" binding:""`
 }
 
+type unLoadPackageData struct {
+	PackageId string `json:"package_id" binding:"required"`
+}
+
 type loadPackageConflict struct {
 	Name    string `json:"name,omitempty"`
 	Version string `json:"version,omitempty"`
@@ -147,7 +151,7 @@ type loadPackageConflict struct {
 }
 
 type packageResourcesData struct {
-	PackageId string `json:"package_id" binding:"required"`
+	PackageId string `json:"package_id" binding:""`
 	Parent    string `json:"parent" binding:""`
 	Path      string `json:"path" binding:""`
 }

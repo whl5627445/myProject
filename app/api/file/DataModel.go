@@ -61,3 +61,18 @@ type packageResourcesData struct {
 	Parent    string `json:"parent" binding:""`
 	Path      string `json:"path" binding:""`
 }
+
+type resourcesImagesPathData struct {
+	PackageId string `json:"package_id" binding:"required"`
+	KeyWord   string `json:"key_word" binding:""`
+}
+
+type getResourcesImagesData struct {
+	Path string `json:"path" binding:"required"`
+}
+
+type setResourcesImagesIconData struct {
+	PackageId string `json:"package_id" binding:"required"`
+	ModelName string `json:"model_name" binding:"required"`
+	Path      string `json:"path" binding:"required"`
+}

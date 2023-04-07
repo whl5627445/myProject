@@ -64,7 +64,7 @@ func CreateFilePath(filePath string) (bool, error) {
 	}
 	err := os.MkdirAll(filePath, 0777)
 	if err != nil {
-		panic(err)
+		log.Println(err)
 	}
 	return true, nil
 }
@@ -124,6 +124,20 @@ func WriteFileByte(fileName string, data []byte) bool {
 
 func UnZip(filePath string, toPath string) error {
 	err := archiver.Unarchive(filePath, toPath)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	return nil
+}
+
+func Zip(filePath string, toPath string) error {
+	filePathList := []string{}
+	file, _ := os.ReadDir(filePath)
+	for _, name := range file {
+		filePathList = append(filePathList, filePath+"/"+name.Name())
+	}
+	err := archiver.Archive(filePathList, toPath)
 	if err != nil {
 		log.Println(err)
 		return err

@@ -6,6 +6,8 @@ import (
 	"time"
 	"yssim-go/config"
 
+	"github.com/google/uuid"
+
 	"github.com/wangluozhe/requests"
 
 	"github.com/wangluozhe/requests/url"
@@ -19,6 +21,7 @@ func DymolaFmuExport(fmuPar map[string]interface{}, token, userName, fmuName, pa
 		"fileName":    "",
 		"modelToOpen": modelName,
 		"token":       token,
+		"taskId":      uuid.New().String(),
 	}
 	urlStr := packageName + "/" + strings.ReplaceAll(modelName, ".", "-") + "/" + time.Now().Local().Format("20060102150405")
 	req := url.NewRequest()

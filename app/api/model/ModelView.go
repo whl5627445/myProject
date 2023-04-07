@@ -83,6 +83,32 @@ func GetUserRootModelView(c *gin.Context) {
 
 }
 
+func GetUserPackageView(c *gin.Context) {
+	/*
+		# 获取已加载package列表接口
+	*/
+	userName := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
+	var res responseData
+	var modelData []map[string]interface{}
+	var packageModel []DataBaseModel.YssimModels
+	DB.Where("sys_or_user = ? AND userspace_id = ?", userName, userSpaceId).Find(&packageModel)
+	libraryAndVersions := service.GetLibraryAndVersions()
+	for i := 0; i < len(packageModel); i++ {
+		loadVersions, ok := libraryAndVersions[packageModel[i].PackageName]
+		if ok && loadVersions == packageModel[i].Version && service.GetModelType(packageModel[i].PackageName) == "package" {
+			data := map[string]interface{}{
+				"package_id":   packageModel[i].ID,
+				"package_name": packageModel[i].PackageName,
+			}
+			modelData = append(modelData, data)
+		}
+	}
+	res.Data = modelData
+	c.JSON(http.StatusOK, res)
+
+}
+
 func GetListModelView(c *gin.Context) {
 	/*
 		# 获取左侧模型列表接口， 此接口获取系统模型和用户上传模型的子节点节点列表(需用传入父节点名称，返回子节点列表)，暂时没有图标信息
@@ -107,7 +133,8 @@ func GetListModelView(c *gin.Context) {
 		modelChildListNew = append(modelChildListNew, modelChildList[i])
 	}
 	// 如果父节点是包名称的话，追加静态资源管理文件夹节点
-	if modelName == packageModel.PackageName && packageModel.SysUser != "sys" {
+	nameType := service.GetModelType(modelName)
+	if modelName == packageModel.PackageName && packageModel.SysUser != "sys" && nameType == "package" {
 		modelChildListNew = append(modelChildListNew, map[string]interface{}{
 			"name":     "Resources",
 			"haschild": true,
@@ -178,30 +205,47 @@ func GetModelResourcesReferenceView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
+	var res responseData
+
 	userName := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
-	var packageModel DataBaseModel.YssimModels
-	DB.Where("id = ? AND sys_or_user = ? AND userspace_id = ?", item.PackageId, userName, userSpaceId).First(&packageModel)
-	if packageModel.ID == "" {
-		log.Println(err)
-		c.JSON(http.StatusBadRequest, "not found")
-		return
-	}
-	data := service.GetResourcesList(packageModel.PackageName, item.Parent)
-	for _, d := range data {
-		basePath := ""
-		pathList := []string{}
-		if item.Parent != "" {
-			pathList = append(pathList, item.Parent)
+	if item.PackageId != "" {
+		var packageModel DataBaseModel.YssimModels
+		DB.Where("id = ? AND sys_or_user = ? AND userspace_id = ?", item.PackageId, userName, userSpaceId).First(&packageModel)
+		if packageModel.ID == "" {
+			log.Println(err)
+			c.JSON(http.StatusBadRequest, "not found")
+			return
 		}
-		if d["type"] == "file" {
-			pathList = append(pathList, d["name"])
-			basePath = "Modelica.Utilities.Files.loadResource(\"modelica://" + packageModel.PackageName + "/Resources/" + strings.Join(pathList, "/") + "\")"
+
+		data := service.GetResourcesList(packageModel.PackageName, item.Parent)
+		for _, d := range data {
+			basePath := ""
+			pathList := []string{}
+			if item.Parent != "" {
+				pathList = append(pathList, item.Parent)
+			}
+			if d["type"] == "file" {
+				pathList = append(pathList, d["name"])
+				basePath = "Modelica.Utilities.Files.loadResource(\"modelica://" + packageModel.PackageName + "/Resources/" + strings.Join(pathList, "/") + "\")"
+			}
+			d["path"] = basePath
+
 		}
-		d["path"] = basePath
+		res.Data = data
+	} else {
+		var packageModelList []DataBaseModel.YssimModels
+		DB.Where("sys_or_user = ? AND userspace_id = ?", userName, userSpaceId).Find(&packageModelList)
+		var data []map[string]interface{}
+		for _, model := range packageModelList {
+			information := service.GetClassInformation(model.PackageName)
+			if len(information) > 0 && information[0] == "package" {
+				data = append(data, map[string]interface{}{"name": model.PackageName + ".Resources", "package_id": model.ID, "type": "dir"})
+			}
+		}
+		res.Data = data
 	}
-	var res responseData
-	res.Data = data
+
 	c.JSON(http.StatusOK, res)
 }
 
@@ -427,7 +471,7 @@ func SetComponentPropertiesView(c *gin.Context) {
 		strconv.FormatBool(item.Outer),
 		item.Causality)
 	if result {
-		go service.SaveModelToFile(packageModel.PackageName, packageModel.FilePath)
+		go service.SaveModelSource(packageModel.PackageName, packageModel.FilePath)
 		res.Msg = "设置完成"
 	} else {
 		res.Err = msg
@@ -489,7 +533,7 @@ func CopyClassView(c *gin.Context) {
 		filePath = packageModel.FilePath
 	} else {
 		packageName = item.ModelName
-		filePath = "public/UserFiles/UploadFile/" + userName + "/" + packageName + "/" + time.Now().Local().Format(time.RFC3339) + "/" + item.ModelName + ".mo"
+		filePath = "public/UserFiles/UploadFile/" + userName + "/" + packageName + "/" + time.Now().Local().Format("20060102150405") + "/" + item.ModelName + ".mo"
 	}
 	model := DataBaseModel.YssimModels{
 		ID:          uuid.New().String(),
@@ -508,7 +552,7 @@ func CopyClassView(c *gin.Context) {
 			return
 		}
 	}
-	result, msg := service.SaveModel(item.ModelName, item.CopiedClassName, item.ParentName, packageName, "copy", filePath)
+	result, msg := service.SaveModel(item.ModelName, item.CopiedClassName, item.ParentName, "copy", filePath)
 	if result {
 		res.Msg = msg
 		data := map[string]string{}
@@ -551,7 +595,7 @@ func DeletePackageAndModelView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
-	result, msg := service.SaveModel(item.ModelName, "", item.ParentName, packageModel.PackageName, "delete", packageModel.FilePath)
+	result, msg := service.SaveModel(item.ModelName, "", item.ParentName, "delete", packageModel.FilePath)
 	if result {
 		res.Msg = msg
 		if item.ParentName == "" {
@@ -950,7 +994,7 @@ func SetModelDocumentView(c *gin.Context) {
 		var packageModel DataBaseModel.YssimModels
 		DB.Where("sys_or_user = ? AND userspace_id = ?", username, userSpaceId).First(&packageModel)
 		if packageModel.FilePath != "" {
-			go service.SaveModelToFile(packageModel.PackageName, packageModel.FilePath)
+			go service.SaveModelSource(packageModel.PackageName, packageModel.FilePath)
 			if result {
 				res.Msg = "修改成功"
 				c.JSON(http.StatusOK, res)
@@ -1176,9 +1220,6 @@ func LoadModelView(c *gin.Context) {
 
 		}
 	}
-	var packageModelList []DataBaseModel.YssimModels
-	DB.Where("sys_or_user = ? AND userspace_id = ?", username, userSpaceId).Find(&packageModelList)
-	service.SaveModelToFileALL(packageModelList)
 	err = service.LoadAndDeleteLibrary(packageModel.PackageName, packageModel.Version, packageModel.FilePath, "load")
 	if err != nil {
 		res.Err = err.Error()
@@ -1190,6 +1231,38 @@ func LoadModelView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+func UnLoadModelView(c *gin.Context) {
+	/*
+		# 卸载模型
+	*/
+	username := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
+	var res responseData
+	var unLoadPackage unLoadPackageData
+	var packageModel DataBaseModel.YssimModels
+	err := c.BindJSON(&unLoadPackage)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	DB.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", unLoadPackage.PackageId, []string{"sys", username}, []string{"0", userSpaceId}).First(&packageModel)
+	if err != nil || packageModel.ID == "" {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	err = service.LoadAndDeleteLibrary(packageModel.PackageName, packageModel.Version, "", "unload")
+	if err != nil {
+		res.Err = err.Error()
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	res.Msg = "卸载成功"
+	c.JSON(http.StatusOK, res)
+}
+
 func GetPackageAndVersionView(c *gin.Context) {
 	/*
 		# 获取模型库和版本
@@ -1197,7 +1270,7 @@ func GetPackageAndVersionView(c *gin.Context) {
 	username := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
 	var packageModel []DataBaseModel.YssimModels
-	DB.Where("sys_or_user IN ? AND userspace_id IN ?", []string{"sys", username}, []string{"0", userSpaceId}).Order("sys_or_user desc").Find(&packageModel)
+	DB.Where("sys_or_user IN ? AND userspace_id IN ?", []string{"sys", username}, []string{"0", userSpaceId}).Order("create_time desc").Find(&packageModel)
 	var res responseData
 	var data []map[string]string
 	for i := 0; i < len(packageModel); i++ {
@@ -1206,6 +1279,10 @@ func GetPackageAndVersionView(c *gin.Context) {
 			"package_name": packageModel[i].PackageName,
 			"version":      packageModel[i].Version,
 			"sys_user":     packageModel[i].SysUser,
+			"update_time":  packageModel[i].UpdatedAt.Format("06-01-02 15:04"),
+		}
+		if packageModel[i].SysUser == "sys" {
+			d["update_time"] = "-"
 		}
 		data = append(data, d)
 	}

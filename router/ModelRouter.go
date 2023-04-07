@@ -11,6 +11,7 @@ func ModelRouter(g *gin.Engine) {
 	{
 		Models.GET("/root_library/sys", ModelAPI.GetSysRootModelView)
 		Models.GET("/root_library/user", ModelAPI.GetUserRootModelView)
+		Models.GET("/user/get", ModelAPI.GetUserPackageView)
 		Models.GET("/list_library", ModelAPI.GetListModelView)
 
 		Models.POST("/graphics", ModelAPI.GetGraphicsDataView)
@@ -27,6 +28,7 @@ func ModelRouter(g *gin.Engine) {
 
 		Models.POST("/package/delete", ModelAPI.DeletePackageAndModelView)
 		Models.POST("/package/load", ModelAPI.LoadModelView)
+		Models.POST("/package/unload", ModelAPI.UnLoadModelView)
 		Models.GET("/package/get/all", ModelAPI.GetPackageAndVersionView)
 
 		Models.GET("/component/name", ModelAPI.GetComponentNameView)

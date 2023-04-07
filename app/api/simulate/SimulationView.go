@@ -472,7 +472,8 @@ func SimulateResultDeleteView(c *gin.Context) {
 	var resultRecord DataBaseModel.YssimSimulateRecord
 	DB.Where("id = ? AND username = ? AND userspace_id = ? ", recordId, username, userSpaceId).First(&resultRecord)
 	var res responseData
-	DB.Delete(&resultRecord)
+	service.DeleteSimulateTask(recordId)
+	//DB.Delete(&resultRecord)
 	DB.Delete(&DataBaseModel.YssimSnapshots{}, "simulate_result_id = ?", recordId) //删除相关的快照
 	res.Msg = "删除成功"
 	c.JSON(http.StatusOK, res)
