@@ -139,7 +139,7 @@ func UpdateModelPackageView(c *gin.Context) {
 	if ok && len(parseResult) > 0 {
 		loadResult := service.LoadCodeString(modelStr, packageRecord.PackageName)
 		if loadResult {
-			saveResult := service.SaveModelToFile(packageRecord.PackageName, packageRecord.FilePath)
+			saveResult := service.SaveModelSource(packageRecord.PackageName, packageRecord.FilePath)
 			if saveResult {
 				res.Data = map[string]string{
 					"id":        packageRecord.ID,
@@ -299,7 +299,7 @@ func UploadModelIconView(c *gin.Context) {
 	fileBase64Str := base64.StdEncoding.EncodeToString(iconData)
 	result := service.SetIcon(modelName, fileBase64Str)
 	if result {
-		saveResult := service.SaveModelToFile(packageRecord.PackageName, packageRecord.FilePath)
+		saveResult := service.SaveModelSource(packageRecord.PackageName, packageRecord.FilePath)
 		if saveResult {
 			res.Msg = "图标上传成功"
 			c.JSON(http.StatusOK, res)
@@ -355,7 +355,7 @@ func GetPackageFileView(c *gin.Context) {
 	DB.Where("id = ? AND sys_or_user = ?", item.PackageId, username).First(&packageRecord)
 	//c.JSON(http.StatusOK, res)
 	//c.Header("content-disposition", `attachment; filename=`+packageRecord.PackageName+".mo")
-	//service.SaveModelToFile(packageRecord.PackageName, packageRecord.FilePath)
+	//service.SaveModelSource(packageRecord.PackageName, packageRecord.FilePath)
 	//c.File(packageRecord.FilePath)
 	fileData, err := service.ZipPackageStream(packageRecord.PackageName, packageRecord.FilePath)
 	if err != nil {
@@ -528,7 +528,7 @@ func ModelCodeSaveView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
-	result := service.SaveModelToFile(packageModel.PackageName, packageModel.FilePath)
+	result := service.SaveModelSource(packageModel.PackageName, packageModel.FilePath)
 	if result {
 		res.Msg = "模型已保存"
 	} else {
@@ -630,6 +630,12 @@ func UploadResourcesFileView(c *gin.Context) {
 	parent := c.PostForm("parent")
 	userSpaceId := c.GetHeader("space_id")
 	varFile, err := c.FormFile("file")
+	if varFile.Size > 1500000 {
+		res.Err = "上传文件过大，请上传小于1.5M的文件"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
 	if err != nil {
 		log.Println(err)
 		c.JSON(http.StatusBadRequest, "")
@@ -796,13 +802,14 @@ func ResourcesImagesGetView(c *gin.Context) {
 		# 静态资源文件png图片的获取
 		## path: 文件相对路径
 	*/
-	var item getResourcesImagesData
-	err := c.BindJSON(&item)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, "not found")
-		return
-	}
-	fileData := service.GetResourcesImages(item.Path)
+	//var item getResourcesImagesData
+	path := c.Query("path")
+	//err := c.BindJSON(&item)
+	//if err != nil {
+	//	c.JSON(http.StatusBadRequest, "not found")
+	//	return
+	//}
+	fileData := service.GetResourcesImages(path)
 	c.Header("content-disposition", `attachment;filename=`+url.QueryEscape("image.png"))
 	c.Data(http.StatusOK, "application/octet-stream", fileData)
 }

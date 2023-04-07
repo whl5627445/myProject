@@ -20,9 +20,9 @@ import (
 )
 
 type SimulateTask struct {
-	SRecord          DataBaseModel.YssimSimulateRecord
-	Package          DataBaseModel.YssimModels
-	ExperimentRecord DataBaseModel.YssimExperimentRecord
+	SRecord          *DataBaseModel.YssimSimulateRecord
+	Package          *DataBaseModel.YssimModels
+	ExperimentRecord *DataBaseModel.YssimExperimentRecord
 	Cmd              *exec.Cmd
 }
 
@@ -44,16 +44,15 @@ func openModelica(task *SimulateTask, resultFilePath string, SimulationPraData m
 		cmd := exec.Command(resultFilePath + "result")
 		task.Cmd = cmd
 		SimulateTaskMap[task.SRecord.ID] = task
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		err := cmd.Run()
-		simulateResultStr := ""
+		combinedOutput, err := cmd.Output()
+		simulateResultStr := string(combinedOutput)
 		if err != nil {
 			simulateResultStr = err.Error()
 			log.Println("err: ", err.Error())
 			log.Println("仿真执行失败")
 			return false, errors.New("进程被Kill")
 		}
+
 		if strings.Contains(simulateResultStr, "successfully") {
 			res = true
 		} else {
@@ -90,6 +89,7 @@ func dymolaSimulateService(task *SimulateTask, simulateFilePath string, Simulati
 		req.Params = params
 		req.Timeout = 600 * time.Second
 		files := url.NewFiles()
+		SaveModelToFile(task.Package.PackageName, simulateFilePath)
 		files.SetFile("file", packageFileName, simulateFilePath, "")
 		req.Files = files
 		uploadFileRes, _ := requests.Post(config.DymolaSimutalionConnect+"/file/upload", req)
@@ -110,6 +110,7 @@ func dymolaSimulateService(task *SimulateTask, simulateFilePath string, Simulati
 			"userName":  task.SRecord.UserName,
 			"fileName":  fileName,
 			"modelName": task.SRecord.SimulateModelName,
+			"taskId":    task.SRecord.ID,
 		}
 		req := url.NewRequest()
 		req.Json = compileReqData
@@ -120,6 +121,7 @@ func dymolaSimulateService(task *SimulateTask, simulateFilePath string, Simulati
 			return false, nil
 		}
 		compileResData, err := compileRes.Json()
+		log.Println("dymola服务编译结果： ", compileResData)
 		if err != nil {
 			return false, nil
 		}
@@ -144,6 +146,7 @@ func dymolaSimulateService(task *SimulateTask, simulateFilePath string, Simulati
 				//"initialNames":      initialNames,
 				//"initialValues":     initialValues,
 				"finalNames": "",
+				"taskId":     task.SRecord.ID,
 			}
 			req.Json = simulateReqData
 			simulateRes, _ := requests.Post(config.DymolaSimutalionConnect+"/dymola/simulate", req)
@@ -180,6 +183,26 @@ func dymolaSimulateService(task *SimulateTask, simulateFilePath string, Simulati
 		}
 	}
 	return false, nil
+}
+
+func dymolaServiceStop(taskID string) error {
+	req := url.NewRequest()
+	req.Json = map[string]interface{}{"taskId": taskID}
+	req.Timeout = 10 * time.Minute
+	compileRes, err := requests.Post(config.DymolaSimutalionConnect+"/dymola/stopDymola", req)
+	if err != nil {
+		log.Println("dymola服务停止错误： ", err)
+		return err
+	}
+	d, err := compileRes.Json()
+	if err != nil {
+		return err
+	}
+	log.Println("暂停dymola任务结果：", d)
+	if d["code"].(float64) == 200 {
+		return nil
+	}
+	return errors.New("停止任务失败")
 }
 
 //func jModelicaSimulate(task *SimulateTask, resultFilePath string, SimulationPraData map[string]string, simulateFilePath string) bool {
@@ -330,7 +353,7 @@ func ModelSimulate(task *SimulateTask) {
 			}
 		}
 	}
-	FilePath := "public/tmp/simulateModelFile/" + task.SRecord.UserName + "/" + time.Now().Local().Format("20060102150405") + "/" + task.SRecord.SimulateModelName + ".mo"
+	FilePath := "public/tmp/simulateModelFile/" + task.SRecord.UserName + "/" + time.Now().Local().Format("20060102150405") + "/" + task.Package.PackageName + ".mo"
 
 	MessageNotice(map[string]string{"message": task.SRecord.SimulateModelName + " 模型开始编译"})
 	sResult := true
@@ -388,21 +411,30 @@ func ModelSimulate(task *SimulateTask) {
 	task.SRecord.SimulateEndTime = time.Now().Unix()
 	task.SRecord.SimulateStart = false
 	config.DB.Save(&task.SRecord)
-	err = os.Remove(FilePath)
+	basePath := strings.Join(strings.Split(FilePath, "/")[:2], "/")
+	err = os.RemoveAll(basePath)
 	if err != nil {
+		log.Println("basePath err", err)
 		return
 	}
 }
 
-func DeleteSimulateTask(taskID string) {
-	task, ok := SimulateTaskMap[taskID]
-	if ok {
-		err := task.Cmd.Process.Kill()
-		task.SRecord.SimulateStatus = "5"
-		config.DB.Save(&task.SRecord)
-		config.DB.Delete(task.SRecord)
-		if err != nil {
-			log.Println("删除仿真任务出错：", err)
+func DeleteSimulateTask(taskID, simulateType string) {
+	_, ok := SimulateTaskMap[taskID]
+	switch simulateType {
+	case "OM":
+		if ok {
+			//err := task.Cmd.Process.Kill()
+			//if err != nil {
+			//	log.Println("删除仿真任务出错：", err)
+			//}
+		}
+	case "DM":
+		if ok {
+			err := dymolaServiceStop(taskID)
+			if err != nil {
+				log.Println(err)
+			}
 		}
 	}
 }

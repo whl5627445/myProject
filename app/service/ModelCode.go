@@ -40,15 +40,28 @@ func SaveModelCode(modelName, path string) bool {
 	if len(filesList) == 0 {
 		_, ok = fileOperation.CreateFile(path)
 	}
-	ok = SaveModelToFile(modelName, path)
+	ok = SaveModelSource(modelName, path)
 	return ok
 }
 
-// SaveModelToFile 用omc提供的API将模型源码保存的到对应文件， 并发安全
-func SaveModelToFile(modelName, path string) bool {
+// SaveModelSource 用omc提供的API将模型源码保存的到对应文件， 并发安全
+func SaveModelSource(modelName, path string) bool {
 	ok := omc.OMC.SetSourceFile(modelName, path)
 	ok = omc.OMC.Save(modelName)
 	//ok := omc.OMC.SaveModel(path, modelName)
+	return ok
+}
+
+func SaveModelToFile(modelName, path string) bool {
+	pathList := strings.Split(path, "/")
+	numPath := strings.Join(pathList[:len(pathList)-1], "/")
+	filesList, _ := os.ReadDir(numPath)
+	ok := false
+	if len(filesList) == 0 {
+		_, ok = fileOperation.CreateFile(path)
+	}
+	code := GetModelCode(modelName)
+	ok = fileOperation.WriteFile(path, code)
 	return ok
 }
 
@@ -59,7 +72,10 @@ func ModelSave(modelName string) bool {
 }
 
 func PackageFileParse(fileName, saveFilePath, zipPackagePath string, file io.Reader) (string, string, string, bool) {
-	fileOperation.CreateFilePath(saveFilePath)
+	_, err := fileOperation.CreateFilePath(saveFilePath)
+	if err != nil {
+		return "", "", "", false
+	}
 	fileData, _ := io.ReadAll(file)
 	fileOperation.WriteFile(zipPackagePath, string(fileData))
 

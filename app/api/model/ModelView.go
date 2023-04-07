@@ -471,7 +471,7 @@ func SetComponentPropertiesView(c *gin.Context) {
 		strconv.FormatBool(item.Outer),
 		item.Causality)
 	if result {
-		go service.SaveModelToFile(packageModel.PackageName, packageModel.FilePath)
+		go service.SaveModelSource(packageModel.PackageName, packageModel.FilePath)
 		res.Msg = "设置完成"
 	} else {
 		res.Err = msg
@@ -994,7 +994,7 @@ func SetModelDocumentView(c *gin.Context) {
 		var packageModel DataBaseModel.YssimModels
 		DB.Where("sys_or_user = ? AND userspace_id = ?", username, userSpaceId).First(&packageModel)
 		if packageModel.FilePath != "" {
-			go service.SaveModelToFile(packageModel.PackageName, packageModel.FilePath)
+			go service.SaveModelSource(packageModel.PackageName, packageModel.FilePath)
 			if result {
 				res.Msg = "修改成功"
 				c.JSON(http.StatusOK, res)
@@ -1270,7 +1270,7 @@ func GetPackageAndVersionView(c *gin.Context) {
 	username := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
 	var packageModel []DataBaseModel.YssimModels
-	DB.Where("sys_or_user IN ? AND userspace_id IN ?", []string{"sys", username}, []string{"0", userSpaceId}).Order("sys_or_user desc").Find(&packageModel)
+	DB.Where("sys_or_user IN ? AND userspace_id IN ?", []string{"sys", username}, []string{"0", userSpaceId}).Order("create_time desc").Find(&packageModel)
 	var res responseData
 	var data []map[string]string
 	for i := 0; i < len(packageModel); i++ {

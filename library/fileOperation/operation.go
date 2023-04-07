@@ -64,7 +64,7 @@ func CreateFilePath(filePath string) (bool, error) {
 	}
 	err := os.MkdirAll(filePath, 0777)
 	if err != nil {
-		panic(err)
+		log.Println(err)
 	}
 	return true, nil
 }
