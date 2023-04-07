@@ -475,6 +475,7 @@ func SimulateResultDeleteView(c *gin.Context) {
 	if resultRecord.SimulateStatus == "4" {
 		res.Msg = "仿真已完成，未进行删除，如需删除请重试"
 		c.JSON(http.StatusOK, res)
+		return
 	}
 	resultRecord.SimulateStatus = "5"
 	config.DB.Save(&resultRecord)
@@ -483,7 +484,6 @@ func SimulateResultDeleteView(c *gin.Context) {
 	DB.Delete(&DataBaseModel.YssimSnapshots{}, "simulate_result_id = ?", recordId) //删除相关的快照
 	res.Msg = "删除成功"
 	c.JSON(http.StatusOK, res)
-
 }
 
 func ExperimentCreateView(c *gin.Context) {
