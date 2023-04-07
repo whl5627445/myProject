@@ -19,8 +19,8 @@ func simulationService() {
 		var packageModel DataBaseModel.YssimModels
 		config.DB.Where("ID = ?", record.PackageId).First(&packageModel)
 		task := service.SimulateTask{
-			SRecord: record,
-			Package: packageModel,
+			SRecord: &record,
+			Package: &packageModel,
 		}
 		service.SimulateTaskChan <- &task
 		log.Printf("未完成任务进入排队通道： %s \n", task.SRecord.ID)
