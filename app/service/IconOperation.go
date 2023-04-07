@@ -39,8 +39,14 @@ func GetIcon(modelName, packageName, version string) string {
 	return "data:image/svg+xml;base64," + base64.StdEncoding.EncodeToString(imageBytes)
 }
 
-func UploadIcon(modelName, iconData string) bool {
+func SetIcon(modelName, iconData string) bool {
 	annotateStr := "Icon(graphics = {Bitmap(origin = {0, 0}, extent = {{-100,100},{100,-100}}, imageSource = \"" + iconData + "\")})"
 	result := omc.OMC.AddClassAnnotation(modelName, annotateStr)
+	return result
+}
+
+func SetIconPath(modelName string, data []byte) bool {
+	fileBase64Str := base64.StdEncoding.EncodeToString(data)
+	result := SetIcon(modelName, fileBase64Str)
 	return result
 }

@@ -10,6 +10,53 @@ import (
 	"yssim-go/library/omc"
 )
 
+func GetResourcesImages(path string) []byte {
+	realPath := omc.OMC.UriToFilename(path)
+	file, err := os.ReadFile(realPath)
+	if err != nil {
+		log.Println(err)
+	}
+	return file
+}
+
+// GetResourcesImagesPath  递归获取所有文件和路径
+func GetResourcesImagesPath(packageName, keyWord string) []map[string]interface{} {
+	dirList := []string{""}
+	dataList := []map[string]interface{}{}
+	for i := 0; i < len(dirList); i++ {
+		parent := dirList[i]
+		resourcesPath := resourcesDir(packageName, parent)
+		data, err := fileOperation.GetDirChild(resourcesPath)
+		if err != nil {
+			log.Println("获取Resources子节点失败，错误： ", err)
+			return nil
+		}
+		d := []string{}
+		for _, p := range data {
+			path := ""
+			if i > 0 {
+				path = parent + "/" + p["name"]
+			} else {
+				path = p["name"]
+			}
+			if p["type"] == "dir" {
+				dirList = append(dirList, path)
+				continue
+			}
+			if strings.Contains(path, keyWord) && strings.HasSuffix(p["name"], ".png") {
+				d = append(d, "modelica://"+packageName+"/Resources/"+path)
+			}
+		}
+		if len(d) > 0 {
+			if parent == "" {
+				parent = "Resources"
+			}
+			dataList = append(dataList, map[string]interface{}{"images_path": d, "path_name": parent})
+		}
+	}
+	return dataList
+}
+
 func GetResourcesList(packageName, parent string) []map[string]string {
 	resourcesPath := resourcesDir(packageName, parent)
 	data, err := fileOperation.GetDirChild(resourcesPath)

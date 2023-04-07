@@ -3,7 +3,6 @@ package service
 import (
 	"errors"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -36,7 +35,7 @@ func GetModelCode(modelName string) string {
 func SaveModelCode(modelName, path string) bool {
 	pathList := strings.Split(path, "/")
 	numPath := strings.Join(pathList[:len(pathList)-1], "/")
-	filesList, _ := ioutil.ReadDir(numPath)
+	filesList, _ := os.ReadDir(numPath)
 	ok := false
 	if len(filesList) == 0 {
 		_, ok = fileOperation.CreateFile(path)
@@ -50,6 +49,12 @@ func SaveModelToFile(modelName, path string) bool {
 	ok := omc.OMC.SetSourceFile(modelName, path)
 	ok = omc.OMC.Save(modelName)
 	//ok := omc.OMC.SaveModel(path, modelName)
+	return ok
+}
+
+// ModelSave 用omc提供的API将模型源码保存的到对应文件， 并发安全
+func ModelSave(modelName string) bool {
+	ok := omc.OMC.Save(modelName)
 	return ok
 }
 

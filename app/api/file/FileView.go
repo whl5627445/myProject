@@ -228,7 +228,7 @@ func CreateModelPackageView(c *gin.Context) {
 	}
 	result := service.CreateModelAndPackage(createPackageName, item.Vars.InsertTo, item.Vars.Expand, item.StrType, createPackageNameALL, item.Comment, item.Vars.Partial, item.Vars.Encapsulated, item.Vars.State)
 	if result {
-		saveResult := service.SaveModelCode(newPackage.PackageName, newPackage.FilePath)
+		saveResult := service.SaveModelCode(createPackageNameALL, newPackage.FilePath)
 		if saveResult {
 			if item.Vars.InsertTo == "" {
 				DB.Create(&newPackage)
@@ -297,7 +297,7 @@ func UploadModelIconView(c *gin.Context) {
 	file, _ := iconFile.Open()
 	iconData, _ := io.ReadAll(file)
 	fileBase64Str := base64.StdEncoding.EncodeToString(iconData)
-	result := service.UploadIcon(modelName, fileBase64Str)
+	result := service.SetIcon(modelName, fileBase64Str)
 	if result {
 		saveResult := service.SaveModelToFile(packageRecord.PackageName, packageRecord.FilePath)
 		if saveResult {
@@ -763,4 +763,96 @@ func DownloadResourcesFileView(c *gin.Context) {
 	fileData := service.GetResourcesFile(packageModel.PackageName, filePath)
 	c.Header("content-disposition", `attachment;filename=`+url.QueryEscape(item.Path))
 	c.Data(http.StatusOK, "application/octet-stream", fileData)
+}
+
+func ResourcesImagesPathGetView(c *gin.Context) {
+	/*
+		# 静态资源文件png图片的路径获取
+		## package_id: 包id
+		## keyWord: 筛选关键字
+	*/
+	var res responseData
+	userName := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
+	var item resourcesImagesPathData
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+	var packageModel DataBaseModel.YssimModels
+	DB.Where("id = ? AND sys_or_user = ? AND userspace_id = ?", item.PackageId, userName, userSpaceId).First(&packageModel)
+	if packageModel.ID == "" {
+		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+	data := service.GetResourcesImagesPath(packageModel.PackageName, item.KeyWord)
+	res.Data = data
+	c.JSON(http.StatusOK, res)
+}
+
+func ResourcesImagesGetView(c *gin.Context) {
+	/*
+		# 静态资源文件png图片的获取
+		## path: 文件相对路径
+	*/
+	var item getResourcesImagesData
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+	fileData := service.GetResourcesImages(item.Path)
+	c.Header("content-disposition", `attachment;filename=`+url.QueryEscape("image.png"))
+	c.Data(http.StatusOK, "application/octet-stream", fileData)
+}
+
+func ModelIconSetView(c *gin.Context) {
+	/*
+		# 用户设置模型图标接口
+		## path: 文件相对路径
+		## model_name: 模型名称
+		## package_id: 包id
+	*/
+	var res responseData
+	username := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
+	var item setResourcesImagesIconData
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+	var packageRecord DataBaseModel.YssimModels
+	DB.Where("id = ? AND sys_or_user = ? AND userspace_id = ? ", item.PackageId, username, userSpaceId).First(&packageRecord)
+	if packageRecord.ID == "" {
+		res.Err = "暂只支持更新用户区图标"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	iconFileNameList := strings.Split(item.Path, ".")
+	iconFileNameSuffix := iconFileNameList[len(iconFileNameList)-1]
+	iconType := map[string]bool{"png": true}
+	file := service.GetResourcesImages(item.Path)
+	if !iconType[iconFileNameSuffix] || len(file) == 0 {
+		res.Err = ""
+		res.Status = 2
+		c.JSON(http.StatusBadRequest, res)
+		return
+	}
+	result := service.SetIconPath(item.ModelName, file)
+	if result {
+		saveResult := service.ModelSave(packageRecord.PackageName)
+		if saveResult {
+			res.Msg = "图标设置成功"
+			c.JSON(http.StatusOK, res)
+			return
+		}
+	}
+	res.Err = "设置失败，请重新上传"
+	res.Status = 2
+	c.JSON(http.StatusOK, res)
+
 }
