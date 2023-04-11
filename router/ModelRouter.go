@@ -15,6 +15,8 @@ func ModelRouter(g *gin.Engine) {
 		Models.GET("/list_library", ModelAPI.GetListModelView)
 
 		Models.POST("/graphics", ModelAPI.GetGraphicsDataView)
+		Models.POST("/icon/graphics", ModelAPI.GetGraphicsDataView)
+		Models.POST("/icon/graphics/new", ModelAPI.GetIconView)
 		Models.GET("/code", ModelAPI.GetModelCodeView)
 
 		Models.GET("/parameters/get", ModelAPI.GetModelParametersView)
