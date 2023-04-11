@@ -426,8 +426,7 @@ func (o *ZmqObject) GetIconAnnotationLineData(className string) []interface{} {
 	cmd := "getIconAnnotation(" + className + ")"
 	iconAnnotationData, ok := o.SendExpression(cmd)
 	if ok && len(iconAnnotationData) > 8 {
-		data := iconAnnotationData[8]
-		dataList = append(dataList, data.([]interface{})...)
+		dataList = iconAnnotationData
 	}
 	return dataList
 }
@@ -1232,7 +1231,7 @@ func (o *ZmqObject) AddComponentParameter(varName, varType, className, defaultVa
 	return false
 }
 
-// DumpXMLDAE  生成result_init.xml文件
+// DeleteComponentParameter  删除组件参数
 func (o *ZmqObject) DeleteComponentParameter(varName, className string) bool {
 	cmd := "deleteComponent(" + varName + "," + className + ")"
 	result, ok := o.SendExpressionNoParsed(cmd)
@@ -1247,33 +1246,60 @@ func (o *ZmqObject) GetComponentIconAndDiagramAnnotationsALl(classNameList []str
 	var data []interface{}
 	ctx := context.Background()
 	var msg []byte
-	nType := o.GetClassRestriction(classNameList[len(classNameList)-1])
-	if nType != "connector" && nType != "expandable connector" {
-		msg, _ = allModelCache.HGet(ctx, userName+"-yssim-componentGraphicsData", classNameList[len(classNameList)-1]).Bytes()
-	}
-	if len(msg) > 0 {
-		err := json.Unmarshal(msg, &data)
-		if err != nil {
-			return nil
+	for _, name := range classNameList {
+		nType := o.GetClassRestriction(classNameList[len(classNameList)-1])
+		if nType != "connector" && nType != "expandable connector" {
+			msg, _ = allModelCache.HGet(ctx, userName+"-yssim-componentGraphicsData", name).Bytes()
 		}
-	} else {
-		for _, name := range classNameList {
-			nameType := o.GetClassRestriction(name)
-			var result []interface{}
-			if (nameType == "connector" || nameType == "expandable connector") && !isIcon {
-				result = o.GetDiagramAnnotation(name)
-				if len(result) > 8 {
-					result = result[8].([]interface{})
-				} else {
-					result = o.GetIconAnnotationLineData(name)
-				}
+		if len(msg) > 0 && string(msg) != "null" {
+			err := json.Unmarshal(msg, &data)
+			if err != nil {
+				log.Println("err", err)
+				return nil
+			}
+		}
+		result := make([]interface{}, 0)
+		if (nType == "connector" || nType == "expandable connector") && !isIcon {
+			result = o.GetDiagramAnnotation(name)
+			if len(result) > 8 {
+				result = result[8].([]interface{})
 			} else {
 				result = o.GetIconAnnotationLineData(name)
 			}
-			data = append(data, result...)
+		} else {
+			result = o.GetIconAnnotationLineData(name)
+			setData, _ := json.Marshal(result)
+			allModelCache.HSet(ctx, userName+"-yssim-componentGraphicsData", name, setData)
 		}
+		data = append(data, result...)
+	}
+	return data
+}
+
+func (o *ZmqObject) GetIconAnnotations(className string) []interface{} {
+	var data []interface{}
+	ctx := context.Background()
+	var msg []byte
+	nType := o.GetClassRestriction(className)
+	if nType != "connector" && nType != "expandable connector" {
+		msg, _ = allModelCache.HGet(ctx, userName+"-yssim-IconGraphicsData", className).Bytes()
+	}
+	if len(msg) > 0 && string(msg) != "null" {
+		err := json.Unmarshal(msg, &data)
+		if err != nil {
+			log.Println("err", err)
+			return nil
+		}
+	}
+	if nType == "connector" || nType == "expandable connector" {
+		data = o.GetDiagramAnnotation(className)
+		if len(data) < 8 {
+			data = o.GetIconAnnotationLineData(className)
+		}
+	} else {
+		data = o.GetIconAnnotationLineData(className)
 		setData, _ := json.Marshal(data)
-		allModelCache.HSet(ctx, userName+"-yssim-componentGraphicsData", classNameList[len(classNameList)-1], setData)
+		allModelCache.HSet(ctx, userName+"-yssim-IconGraphicsData", className, setData)
 	}
 	return data
 }

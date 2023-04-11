@@ -1,0 +1,277 @@
+package service
+
+import (
+	"encoding/base64"
+	"log"
+	"os"
+	"strings"
+	"yssim-go/library/omc"
+)
+
+func GetIconNew(modelName string) map[string]interface{} {
+	data := map[string]interface{}{}
+	iconData := omc.OMC.GetIconAnnotation(modelName)
+	if len(iconData) > 8 {
+		bitmapData := iconData[8].([]interface{})
+		Bitmap := getBitmapImage(bitmapData)
+		if Bitmap != "" {
+			data = map[string]interface{}{
+				"type":     "base64",
+				"graphics": Bitmap,
+			}
+			return data
+		}
+	}
+	d := getIconAnnotationGraphics(modelName)
+	data = map[string]interface{}{
+		"type":     "graphics",
+		"graphics": d,
+	}
+	return data
+}
+
+func getIconAnnotationGraphics(modelName string) map[string]interface{} {
+	modelNameList := GetICList(modelName)
+	modelIconAnnotation := getAnnotation(modelNameList)
+
+	AnnotationConfig := []interface{}{}
+	data := map[string]interface{}{"extent1Diagram": "-,-", "extent2Diagram": "-,-"}
+	if len(modelIconAnnotation) > 8 {
+		AnnotationConfig = modelIconAnnotation[:8]
+		x1, y1, x2, y2 := AnnotationConfig[0], AnnotationConfig[1], AnnotationConfig[2], AnnotationConfig[3]
+		data["extent1Diagram"] = strings.Replace(strings.Join([]string{x1.(string), y1.(string)}, ","), "-,-", "-100.0,-100.0", 1)
+		data["extent2Diagram"] = strings.Replace(strings.Join([]string{x2.(string), y2.(string)}, ","), "-,-", "100.0,100.0", 1)
+	}
+	//data["graphType"] = "model"
+	data["name"] = modelName
+	data["parent"] = ""
+	data["visible"] = "true"
+	//data["mobility"] = false
+	//data["initialScale"] = initialScale
+	data["rotation"] = "0"
+	//data["output_type"] = ""
+	componentsData := getElementsAndModelName(modelNameList)
+	componentAnnotationsData := getElementAnnotations(modelNameList)
+	IconAnnotationData := getAnnotation(modelNameList)
+	data["inputOutputs"] = iconInputOutputs(componentsData, componentAnnotationsData, modelName)
+	data["subShapes"] = iconSubShapes(IconAnnotationData[8].([]interface{}))
+	return data
+}
+
+func iconSubShapes(cData []interface{}) []map[string]interface{} {
+	dataList := make([]map[string]interface{}, 0, 1)
+	for i := 0; i < len(cData); i += 2 {
+		data := map[string]interface{}{}
+		drawingDataList := cData[i+1].([]interface{})
+		if drawingDataList[0].(string) != "true" {
+			continue
+		}
+		DynamicSelect := find(drawingDataList, "DynamicSelect")
+		if DynamicSelect {
+			var drawingDataListFilter []interface{}
+			for _, i2 := range drawingDataList {
+				if i2 == "DynamicSelect" {
+					continue
+				}
+				drawingDataListFilter = append(drawingDataListFilter, i2)
+			}
+			drawingDataList = drawingDataListFilter
+		}
+		dataType := cData[i]
+		data["type"] = dataType
+		data["visible"] = drawingDataList[0]
+		data["originalPoint"] = oneDimensionalProcessing(drawingDataList[1])
+		data["rotation"] = drawingDataList[2]
+		data["color"] = oneDimensionalProcessing(drawingDataList[3])
+		data["fillColor"] = oneDimensionalProcessing(drawingDataList[4])
+		data["linePattern"] = drawingDataList[5]
+		data["fillPattern"] = drawingDataList[6]
+		data["lineThickness"] = drawingDataList[7]
+		switch dataType {
+		case "Polygon":
+			data["polygonPoints"] = twoDimensionalProcessing(drawingDataList[8].([]interface{}))
+			ppData := data["polygonPoints"].([]string)
+			if len(ppData) < 4 {
+				data["polygonPoints"] = append(ppData, ppData[0])
+			}
+			data["smooth"] = drawingDataList[9]
+		case "Line":
+			delete(data, "fillColor")
+			delete(data, "fillPattern")
+			data["points"] = twoDimensionalProcessing(drawingDataList[3].([]interface{}))
+			data["color"] = oneDimensionalProcessing(drawingDataList[4])
+			data["lineThickness"] = drawingDataList[6]
+			data["arrow"] = oneDimensionalProcessing(drawingDataList[7])
+			data["arrowSize"] = drawingDataList[8]
+			data["smooth"] = drawingDataList[9]
+		case "Text":
+			data["fillPattern"] = drawingDataList[6]
+			data["extentsPoints"] = twoDimensionalProcessing(drawingDataList[8].([]interface{}))
+			typeOriginalTextString, ok := drawingDataList[9].([]interface{})
+			if ok {
+				data["originalTextString"] = typeOriginalTextString[0]
+			} else {
+				originalTextString := drawingDataList[9].(string)
+				data["originalTextString"] = originalTextString
+			}
+			data["fontSize"] = drawingDataList[10]
+			data["textColor"] = oneDimensionalProcessing(drawingDataList[11])
+			data["fontName"] = drawingDataList[12]
+			data["textStyles"] = drawingDataList[13]
+			data["horizontalAlignment"] = drawingDataList[14]
+		case "Rectangle":
+			data["fillPattern"] = drawingDataList[6]
+			data["borderPattern"] = drawingDataList[8]
+			data["extentsPoints"] = twoDimensionalProcessing(drawingDataList[9].([]interface{}))
+			data["radius"] = drawingDataList[10]
+		case "Ellipse":
+			data["fillPattern"] = drawingDataList[6]
+			data["extentsPoints"] = twoDimensionalProcessing(drawingDataList[8].([]interface{}))
+			data["startAngle"] = drawingDataList[9]
+			data["endAngle"] = drawingDataList[10]
+		}
+		dataList = append(dataList, data)
+	}
+	return dataList
+}
+
+func iconInputOutputs(cData [][]interface{}, caData [][]interface{}, modelName string) []map[string]interface{} {
+	dataList := make([]map[string]interface{}, 0, 1)
+	var cDataFilter [][]interface{}
+	var caDataFilter [][]interface{}
+	dataLen := func() int {
+		if len(cData) > len(caData) {
+			return len(caData)
+		}
+		return len(cData)
+	}()
+	for i := 0; i < dataLen; i++ {
+		nameType := omc.OMC.GetClassRestriction(cData[i][2].(string))
+		if nameType == "connector" || nameType == "expandable connector" {
+			cDataFilter = append(cDataFilter, cData[i])
+			caDataFilter = append(caDataFilter, caData[i])
+		}
+	}
+
+	if cDataFilter == nil || caDataFilter == nil {
+		return dataList
+	}
+	dataLen2 := func() int {
+		if len(caDataFilter) > len(cDataFilter) {
+			return len(cDataFilter)
+		}
+		return len(caDataFilter)
+	}()
+	for i := 0; i < dataLen2; i++ {
+
+		classname := cDataFilter[i][2].(string)
+
+		DynamicSelect := find(caDataFilter[i], "DynamicSelect")
+		if DynamicSelect {
+			continue
+		}
+		placementIndex := func() int {
+			for index, p := range caDataFilter[i] {
+				if p == "Placement" {
+					return index
+				}
+			}
+			return -1
+		}()
+		if placementIndex != -1 {
+
+			//initialScale := "1"
+			//if len(modelIconAnnotationAll)>0 {
+			//	initialScale = modelIconAnnotationAll[5].(string)
+			//}
+			if len(caDataFilter[i]) < 1 {
+				continue
+			}
+			caf := caDataFilter[i][placementIndex+1].([]interface{})
+			if len(caf) < 7 || caf[0].(string) != "true" {
+				// 出现错误会使数据不可用， 长度小于预期，弃用
+				continue
+			}
+
+			data := map[string]interface{}{}
+
+			//data["graphType"] = "connecter"
+			//data["ID"] = strconv.Itoa(i)
+			data["classname"] = classname
+			data["name"] = cDataFilter[i][3]
+			//data["original_name"] = cDataFilter[i][3]
+			data["parent"] = modelName
+			//data["visible"] = caf[0]
+			//data["mobility"] = false
+			//data["initialScale"] = initialScale
+			rotateAngle := func() string {
+				if caf[14] != "" {
+					return caf[14].(string)
+				}
+				if caf[7] != "-" {
+					return caf[7].(string)
+				} else {
+					return "0"
+				}
+			}()
+			if caf[10].(string) != "-" {
+				extentX1, _ := caf[10].(string)
+				extentY1, _ := caf[11].(string)
+				extentX2, _ := caf[12].(string)
+				extentY2, _ := caf[13].(string)
+				data["originDiagram"] = strings.Join([]string{caf[8].(string), caf[9].(string)}, ",")
+				data["extent1Diagram"] = strings.Join([]string{extentX1, extentY1}, ",")
+				data["extent2Diagram"] = strings.Join([]string{extentX2, extentY2}, ",")
+			} else {
+				data["extent1Diagram"] = strings.Join([]string{caf[3].(string), caf[4].(string)}, ",")
+				data["extent2Diagram"] = strings.Join([]string{caf[5].(string), caf[6].(string)}, ",")
+				data["originDiagram"] = strings.Join([]string{caf[1].(string), caf[2].(string)}, ",")
+			}
+			data["extent1Diagram"] = strings.Replace(data["extent1Diagram"].(string), "-,-", "-100.0,-100.0", 1)
+			data["extent2Diagram"] = strings.Replace(data["extent2Diagram"].(string), "-,-", "100.0,100.0", 1)
+			data["rotateAngle"] = rotateAngle
+			data["rotation"] = rotateAngle
+			data["output_type"] = func() string {
+				t := cDataFilter[i][len(cDataFilter[i])-2].(string)
+				return t
+			}()
+			data["inputOutputs"] = make([]string, 0)
+			IconAnnotationData := getAnnotation([]string{classname})
+			data["subShapes"] = iconSubShapes(IconAnnotationData[8].([]interface{}))
+			dataList = append(dataList, data)
+		}
+	}
+	return dataList
+}
+
+func getBitmapImage(bitmapData []interface{}) string {
+	for i := 0; i < len(bitmapData); i += 2 {
+		imageData := bitmapData[i]
+		if imageData == "Bitmap" {
+			image := bitmapData[i+1].([]interface{})[5].(string)
+			imageUri := bitmapData[i+1].([]interface{})[4].(string)
+			if strings.HasPrefix(imageUri, "modelica://") {
+				imageFile := omc.OMC.UriToFilename(imageUri)
+				file, err := os.ReadFile(imageFile)
+				if err != nil {
+					log.Println("获取模型图表文件信息失败: ", err)
+					return ""
+				}
+				fileBase64Str := base64.StdEncoding.EncodeToString(file)
+				return "data:image/png;base64," + fileBase64Str
+			}
+			return "data:image/png;base64," + image
+		}
+	}
+	return ""
+}
+
+func getAnnotation(modelNameList []string) []interface{} {
+	for i := len(modelNameList) - 1; i >= 0; i-- {
+		modelIconAnnotation := omc.OMC.GetIconAnnotations(modelNameList[i])
+		if len(modelIconAnnotation) > 8 {
+			return modelIconAnnotation
+		}
+	}
+	return nil
+}

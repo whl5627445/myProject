@@ -1270,7 +1270,7 @@ func GetPackageAndVersionView(c *gin.Context) {
 	username := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
 	var packageModel []DataBaseModel.YssimModels
-	DB.Where("sys_or_user IN ? AND userspace_id IN ?", []string{"sys", username}, []string{"0", userSpaceId}).Order("create_time desc").Find(&packageModel)
+	DB.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", []string{"sys", username}, []string{"0", userSpaceId}).Order("create_time desc").Find(&packageModel)
 	var res responseData
 	var data []map[string]string
 	for i := 0; i < len(packageModel); i++ {
@@ -1286,6 +1286,27 @@ func GetPackageAndVersionView(c *gin.Context) {
 		}
 		data = append(data, d)
 	}
+	res.Data = data
+	c.JSON(http.StatusOK, res)
+}
+
+func GetIconView(c *gin.Context) {
+	/*
+		# 获取模型的图标信息
+	*/
+	//username := c.GetHeader("username")
+	//userSpaceId := c.GetHeader("space_id")
+	var item modelGraphicsData
+	err := c.BindJSON(&item)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	//var packageModel []DataBaseModel.YssimModels
+	//DB.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", item.PackageId, []string{"sys", username}, []string{"0", userSpaceId}).Order("create_time desc").Find(&packageModel)
+	var res responseData
+	data := service.GetIconNew(item.ModelName)
 	res.Data = data
 	c.JSON(http.StatusOK, res)
 }
