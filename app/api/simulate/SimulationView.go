@@ -116,6 +116,7 @@ func ModelSimulateView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
+	// SimulateStatus "1"初始(正在准备)  "2"执行  "3"失败(编译失败or仿真运行失败)  "4"成功结束  "5"关闭(killed)  "6"编译阶段
 	record := DataBaseModel.YssimSimulateRecord{
 		ID:                uuid.New().String(),
 		PackageId:         item.PackageId,
@@ -472,17 +473,36 @@ func SimulateResultDeleteView(c *gin.Context) {
 	var resultRecord DataBaseModel.YssimSimulateRecord
 	DB.Where("id = ? AND username = ? AND userspace_id = ? ", recordId, username, userSpaceId).First(&resultRecord)
 	var res responseData
-	if resultRecord.SimulateStatus == "4" {
-		res.Msg = "仿真已完成，未进行删除，如需删除请重试"
-		c.JSON(http.StatusOK, res)
-		return
-	}
+
 	resultRecord.SimulateStatus = "5"
 	config.DB.Save(&resultRecord)
 	service.DeleteSimulateTask(recordId, resultRecord.SimulateType)
 	config.DB.Delete(&resultRecord)
 	DB.Delete(&DataBaseModel.YssimSnapshots{}, "simulate_result_id = ?", recordId) //删除相关的快照
 	res.Msg = "删除成功"
+	c.JSON(http.StatusOK, res)
+}
+
+func SimulateResultRenameView(c *gin.Context) {
+	/*
+	   # 2023.04.11 徐庆达修改（新接口）：修改仿真结果的another_name（别名)
+	*/
+	//username := c.GetHeader("username")
+	//userSpaceId := c.GetHeader("space_id")
+	var item recordRenameData
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+
+	var res responseData
+	error := DB.Model(&DataBaseModel.YssimSimulateRecord{}).Where("id = ?", item.RecordId).Update("another_name", item.NewAnotherName).Error
+	if error != nil {
+		c.JSON(http.StatusBadRequest, "修改失败")
+		return
+	}
+	res.Msg = "修改成功"
 	c.JSON(http.StatusOK, res)
 }
 

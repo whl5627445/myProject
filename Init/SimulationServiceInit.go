@@ -28,6 +28,6 @@ func simulationService() {
 	log.Println("未完成任务排队完成，仿真任务线程启动")
 	for {
 		task := <-service.SimulateTaskChan
-		service.ModelSimulate(task)
+		go service.ModelSimulate(task)
 	}
 }

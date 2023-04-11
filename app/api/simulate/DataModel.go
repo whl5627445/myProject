@@ -103,3 +103,8 @@ type snapshotEditData struct {
 	SimulateVarData   datatypes.JSON `json:"simulate_var_data" binding:""`
 	ModelVarData      datatypes.JSON `json:"model_var_data" binding:""`
 }
+
+type recordRenameData struct {
+	RecordId       string `json:"record_id" binding:"required"`
+	NewAnotherName string `json:"new_another_name" binding:"required"`
+}

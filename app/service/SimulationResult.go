@@ -126,9 +126,9 @@ func FilterSimulationResult(items map[string][]string, recordDict map[string]Dat
 	if ok {
 		defer nfs.Close()
 		w := csv.NewWriter(nfs)
-		//w.Write([]string{string([]byte{0xEF, 0xBB, 0xBF})}) // 写入 UTF-8 BOM
 		w.Comma = ','
 		w.UseCRLF = true
+		w.Write([]string{string([]byte{0xEF, 0xBB, 0xBF})}) // 写入 UTF-8 BOM
 		err := w.WriteAll(csvData)
 		if err != nil {
 			return false

@@ -3,6 +3,8 @@ package service
 import (
 	"encoding/json"
 	"errors"
+	"github.com/wangluozhe/requests"
+	"github.com/wangluozhe/requests/url"
 	"log"
 	"os"
 	"os/exec"
@@ -14,9 +16,6 @@ import (
 	"yssim-go/library/mapProcessing"
 	"yssim-go/library/omc"
 	"yssim-go/library/stringOperation"
-
-	"github.com/wangluozhe/requests"
-	"github.com/wangluozhe/requests/url"
 )
 
 type SimulateTask struct {
@@ -39,8 +38,17 @@ func openModelica(task *SimulateTask, resultFilePath string, SimulationPraData m
 
 	pwd, _ := os.Getwd()
 	buildModelRes := omc.OMC.BuildModel(task.SRecord.SimulateModelName, pwd+"/"+resultFilePath, SimulationPraData)
+	var resultRecord DataBaseModel.YssimSimulateRecord
+	config.DB.Where("id = ? ", task.SRecord.ID).First(&resultRecord)
+	if resultRecord.ID == "" {
+		log.Println("编译完成-不执行仿真-进程被kill")
+		return false, errors.New("进程被Kill")
+	}
 	if buildModelRes {
 		MessageNotice(map[string]string{"message": task.SRecord.SimulateModelName + " 模型编译成功"})
+		// 更新状态为“2” 仿真执行中
+		task.SRecord.SimulateStatus = "2"
+		config.DB.Save(&task.SRecord)
 		cmd := exec.Command(resultFilePath + "result")
 		task.Cmd = cmd
 		SimulateTaskMap[task.SRecord.ID] = task
@@ -329,7 +337,8 @@ func ModelSimulate(task *SimulateTask) {
 	}
 	task.SRecord.SimulateStartTime = time.Now().Unix()
 	task.SRecord.SimulateStart = true
-	task.SRecord.SimulateStatus = "2"
+	// 模型开始编译 状态“6”
+	task.SRecord.SimulateStatus = "6"
 
 	config.DB.Save(&task.SRecord)
 	if task.Package.SysUser != "sys" {
@@ -396,7 +405,8 @@ func ModelSimulate(task *SimulateTask) {
 		//}
 		//return
 	}
-	if err != nil { // 仿真进程被杀掉后直接退出
+	if err != nil {
+		// 仿真进程被杀掉后直接退出
 		return
 	}
 	if sResult {
@@ -424,10 +434,10 @@ func DeleteSimulateTask(taskID, simulateType string) {
 	switch simulateType {
 	case "OM":
 		if ok {
-			//err := task.Cmd.Process.Kill()
-			//if err != nil {
-			//	log.Println("删除仿真任务出错：", err)
-			//}
+			err := SimulateTaskMap[taskID].Cmd.Process.Kill()
+			if err != nil {
+				log.Println("删除仿真任务出错：", err)
+			}
 		}
 	case "DM":
 		if ok {
