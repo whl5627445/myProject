@@ -191,6 +191,7 @@ func find(data []interface{}, str string) bool {
 
 func (g *graphicsData) data01(cData []interface{}, className, component, modelName string) []map[string]interface{} {
 	dataList := make([]map[string]interface{}, 0, 1)
+
 	for i := 0; i < len(cData); i += 2 {
 		data := map[string]interface{}{}
 		drawingDataList := cData[i+1].([]interface{})
@@ -589,7 +590,7 @@ func (g *graphicsData) getConnectorComponentDiagram(components, componentAnnotat
 		data["type"] = "Transformation"
 		data["visible"] = "true"
 		data["inputOutputs"] = make([]map[string]interface{}, 0, 1)
-		data["subShapes"] = g.data01(interfaceGraphicsData, className, className, className)
+		data["subShapes"] = g.data01(interfaceGraphicsData[len(interfaceGraphicsData)-1].([]interface{}), className, className, className)
 		g.data[1] = append(g.data[1], data)
 		return g.data
 	}

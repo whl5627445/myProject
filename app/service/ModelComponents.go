@@ -3,7 +3,6 @@ package service
 import (
 	"strconv"
 	"strings"
-
 	"yssim-go/config"
 	"yssim-go/library/omc"
 )
@@ -106,7 +105,6 @@ func AddComponent(componentName, componentClassName, modelNameAll, origin, rotat
 	if !result {
 		msg = "新增组件失败"
 	}
-	omc.OMC.Save(modelNameAll)
 	return result, msg
 }
 
@@ -116,7 +114,6 @@ func DeleteComponent(componentName, modelNameAll string) bool {
 	for _, component := range components {
 		if componentName == component.([]interface{})[1].(string) {
 			result = omc.OMC.DeleteComponent(componentName, modelNameAll)
-			omc.OMC.Save(modelNameAll)
 			break
 		}
 	}
@@ -130,7 +127,6 @@ func UpdateComponent(componentName, componentClassName, modelNameAll, origin, ro
 	} else {
 		result = omc.OMC.UpdateInterfacesComponent(componentName, componentClassName, modelNameAll, origin, rotation, extent)
 	}
-	omc.OMC.Save(modelNameAll)
 	return result
 }
 
@@ -161,9 +157,5 @@ func GetICList(name string) []string {
 			}
 		}
 	}
-	//var dataListNew []string
-	//for i := len(dataList) - 1; i >= 0; i-- {
-	//	dataListNew = append(dataListNew, dataList[i])
-	//}
 	return dataList
 }

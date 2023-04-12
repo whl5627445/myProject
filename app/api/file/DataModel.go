@@ -8,9 +8,9 @@ type responseData struct {
 }
 
 type updateModelPackageData struct {
-	PackageId  string `json:"package_id" binding:"required"`
-	UpdateName string `json:"package_name" binding:"required"`
-	ModelStr   string `json:"model_str" binding:"required"`
+	PackageId string `json:"package_id" binding:"required"`
+	ModelName string `json:"model_name" binding:"required"`
+	ModelStr  string `json:"model_str" binding:"required"`
 }
 
 type createModelPackageDataVars struct {

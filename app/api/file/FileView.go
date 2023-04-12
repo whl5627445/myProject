@@ -93,6 +93,7 @@ func UploadModelPackageView(c *gin.Context) {
 				c.JSON(http.StatusOK, res)
 				return
 			}
+
 			res.Msg = packageName + " 上传成功"
 		}
 		c.JSON(http.StatusOK, res)
@@ -129,30 +130,28 @@ func UpdateModelPackageView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
-	nameList := strings.Split(item.UpdateName, ".")
+	nameList := strings.Split(item.ModelName, ".")
 	if len(nameList) > 1 {
 		parentName = strings.Join(nameList[:len(nameList)-1], ".")
 		modelStr = "within " + parentName + ";" + item.ModelStr
 	}
-	oldCode := service.GetModelCode(packageRecord.PackageName)
-	parseResult, ok := service.ParseCodeString(modelStr, packageRecord.PackageName)
+	oldCode := service.GetModelCode(item.ModelName)
+	parseResult, ok := service.ParseCodeString(modelStr, item.ModelName)
 	if ok && len(parseResult) > 0 {
-		loadResult := service.LoadCodeString(modelStr, packageRecord.PackageName)
+		loadResult := service.LoadCodeString(modelStr, item.ModelName)
 		if loadResult {
-			saveResult := service.SaveModelSource(packageRecord.PackageName, packageRecord.FilePath)
-			if saveResult {
-				res.Data = map[string]string{
-					"id":        packageRecord.ID,
-					"model_str": modelStr,
-					"name":      parseResult,
-				}
-				res.Msg = "模型保存成功"
-				c.JSON(http.StatusOK, res)
-				return
+			go service.ModelSave(item.ModelName)
+			res.Data = map[string]string{
+				"id":        packageRecord.ID,
+				"model_str": modelStr,
+				"name":      parseResult,
 			}
-		} else {
-			service.LoadCodeString(oldCode, packageRecord.PackageName)
+			res.Msg = "模型保存成功"
+			c.JSON(http.StatusOK, res)
+			return
 		}
+	} else {
+		service.LoadCodeString(oldCode, packageRecord.PackageName)
 	}
 	res.Err = "语法错误，请重新检查"
 	res.Status = 2
@@ -299,12 +298,10 @@ func UploadModelIconView(c *gin.Context) {
 	fileBase64Str := base64.StdEncoding.EncodeToString(iconData)
 	result := service.SetIcon(modelName, fileBase64Str)
 	if result {
-		saveResult := service.SaveModelSource(packageRecord.PackageName, packageRecord.FilePath)
-		if saveResult {
-			res.Msg = "图标上传成功"
-			c.JSON(http.StatusOK, res)
-			return
-		}
+		go service.ModelSave(modelName)
+		res.Msg = "图标上传成功"
+		c.JSON(http.StatusOK, res)
+		return
 	}
 	res.Err = "上传失败，请重新上传"
 	res.Status = 2
@@ -353,10 +350,7 @@ func GetPackageFileView(c *gin.Context) {
 	}
 	var packageRecord DataBaseModel.YssimModels
 	DB.Where("id = ? AND sys_or_user = ?", item.PackageId, username).First(&packageRecord)
-	//c.JSON(http.StatusOK, res)
-	//c.Header("content-disposition", `attachment; filename=`+packageRecord.PackageName+".mo")
-	//service.SaveModelSource(packageRecord.PackageName, packageRecord.FilePath)
-	//c.File(packageRecord.FilePath)
+
 	fileData, err := service.ZipPackageStream(packageRecord.PackageName, packageRecord.FilePath)
 	if err != nil {
 		var res responseData
@@ -851,12 +845,10 @@ func ModelIconSetView(c *gin.Context) {
 	}
 	result := service.SetIconPath(item.ModelName, file)
 	if result {
-		saveResult := service.ModelSave(packageRecord.PackageName)
-		if saveResult {
-			res.Msg = "图标设置成功"
-			c.JSON(http.StatusOK, res)
-			return
-		}
+		go service.ModelSave(packageRecord.PackageName)
+		res.Msg = "图标设置成功"
+		c.JSON(http.StatusOK, res)
+		return
 	}
 	res.Err = "设置失败，请重新上传"
 	res.Status = 2

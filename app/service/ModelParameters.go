@@ -356,7 +356,6 @@ func SetComponentModifierValue(className string, parameterValue map[string]strin
 			return false
 		}
 	}
-	omc.OMC.Save(className)
 	return true
 }
 
@@ -376,7 +375,6 @@ func AddComponentParameters(varName, varType, className string) (bool, error) {
 	}
 	ok := omc.OMC.AddComponentParameter(varName, varType, className, defaultValue)
 	if ok {
-		omc.OMC.Save(className)
 		return true, nil
 	}
 	return false, errors.New("新增参数失败")
@@ -385,7 +383,6 @@ func AddComponentParameters(varName, varType, className string) (bool, error) {
 func DeleteComponentParameters(varName, className string) bool {
 	ok := omc.OMC.DeleteComponentParameter(varName, className)
 	if ok {
-		omc.OMC.Save(className)
 		return true
 	}
 	return false

@@ -47,8 +47,8 @@ func SaveModelCode(modelName, path string) bool {
 // SaveModelSource 用omc提供的API将模型源码保存的到对应文件， 并发安全
 func SaveModelSource(modelName, path string) bool {
 	ok := omc.OMC.SetSourceFile(modelName, path)
-	ok = omc.OMC.Save(modelName)
-	//ok := omc.OMC.SaveModel(path, modelName)
+	omc.OMC.Save(modelName)
+	//ok := go omc.OMC.SaveModel(path, modelName)
 	return ok
 }
 

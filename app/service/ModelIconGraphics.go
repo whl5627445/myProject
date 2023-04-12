@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 	"yssim-go/library/omc"
+	"yssim-go/library/stringOperation"
 )
 
 func GetIconNew(modelName string) map[string]interface{} {
@@ -33,32 +34,33 @@ func GetIconNew(modelName string) map[string]interface{} {
 func getIconAnnotationGraphics(modelName string) map[string]interface{} {
 	modelNameList := GetICList(modelName)
 	modelIconAnnotation := getAnnotation(modelNameList)
-
 	AnnotationConfig := []interface{}{}
-	data := map[string]interface{}{"extent1Diagram": "-,-", "extent2Diagram": "-,-"}
+	data := map[string]interface{}{"extent1Diagram": "-,-", "extent2Diagram": "-,-", "initialScale": "0.1"}
 	if len(modelIconAnnotation) > 8 {
 		AnnotationConfig = modelIconAnnotation[:8]
 		x1, y1, x2, y2 := AnnotationConfig[0], AnnotationConfig[1], AnnotationConfig[2], AnnotationConfig[3]
 		data["extent1Diagram"] = strings.Replace(strings.Join([]string{x1.(string), y1.(string)}, ","), "-,-", "-100.0,-100.0", 1)
 		data["extent2Diagram"] = strings.Replace(strings.Join([]string{x2.(string), y2.(string)}, ","), "-,-", "100.0,100.0", 1)
+		data["initialScale"] = AnnotationConfig[5].(string)
+
 	}
-	//data["graphType"] = "model"
+	data["output_type"] = ""
+	nameType := omc.OMC.GetClassRestriction(modelName)
+	data["graphType"] = nameType
 	data["name"] = modelName
 	data["parent"] = ""
 	data["visible"] = "true"
-	//data["mobility"] = false
-	//data["initialScale"] = initialScale
+	data["mobility"] = true
 	data["rotation"] = "0"
-	//data["output_type"] = ""
 	componentsData := getElementsAndModelName(modelNameList)
 	componentAnnotationsData := getElementAnnotations(modelNameList)
 	IconAnnotationData := getAnnotation(modelNameList)
 	data["inputOutputs"] = iconInputOutputs(componentsData, componentAnnotationsData, modelName)
-	data["subShapes"] = iconSubShapes(IconAnnotationData[8].([]interface{}))
+	data["subShapes"] = iconSubShapes(IconAnnotationData[8].([]interface{}), modelName)
 	return data
 }
 
-func iconSubShapes(cData []interface{}) []map[string]interface{} {
+func iconSubShapes(cData []interface{}, modelName string) []map[string]interface{} {
 	dataList := make([]map[string]interface{}, 0, 1)
 	for i := 0; i < len(cData); i += 2 {
 		data := map[string]interface{}{}
@@ -112,6 +114,65 @@ func iconSubShapes(cData []interface{}) []map[string]interface{} {
 				data["originalTextString"] = typeOriginalTextString[0]
 			} else {
 				originalTextString := drawingDataList[9].(string)
+				data["textType"] = "var"
+				if strings.Contains(originalTextString, "%") {
+					data["textType"] = "text"
+				}
+				textList := stringOperation.PluralSplit(originalTextString, []string{"/", ",", "\t", "\n", "\r", " "})
+				for _, t := range textList {
+					pSignIndex := strings.Index(t, "%")
+					if pSignIndex != -1 {
+						classNameAll := omc.OMC.GetInheritedClassesListAll([]string{modelName})
+						varName := t[pSignIndex+1:]
+						varValue := ""
+						if varName != "name" {
+							varName = strings.TrimSuffix(varName, "%")
+							for _, name := range classNameAll {
+								varValue = omc.OMC.GetParameterValue(name, varName)
+								if varValue != "" {
+									break
+								}
+
+								if varValue == "" {
+									varValue = varName
+								}
+
+								if len(varValue) > 20 && (strings.Contains(varValue, ".") || strings.Contains(varValue, " ")) {
+									varValueList := strings.Split(varValue, ".") // 某些值是模型全称的需要取最后一部分。所以分割一下
+									varValue = varValueList[len(varValueList)-1]
+								}
+							}
+							Unit := ""
+							classNameList := append(classNameAll, modelName)
+							for n := 0; n < len(classNameList); n++ {
+								Unit = omc.OMC.GetElementModifierValue(classNameList[n], varName+"."+"unit")
+								if Unit != "" {
+									Unit = " " + Unit
+									break
+								}
+							}
+							if Unit == "" {
+								for n := 0; n < len(classNameList); n++ {
+									classnameData := omc.OMC.GetElements(classNameList[n])
+									for p := 0; p < len(classnameData); p++ {
+										name := classnameData[p].([]interface{})[3].(string)
+										varClassName := classnameData[p].([]interface{})[2].(string)
+										if name != varName {
+											continue
+										}
+										Unit = " " + getDerivedClassModifierValueALL(varClassName)
+										break
+									}
+								}
+							}
+							oldVarName := "%" + varName
+							varValueUnit := varName + Unit
+
+							varValueUnit = strings.Replace(varValueUnit, varName, varValue, 1)
+							originalTextString = strings.Replace(originalTextString, oldVarName, varValueUnit, 1)
+						}
+					}
+				}
 				data["originalTextString"] = originalTextString
 			}
 			data["fontSize"] = drawingDataList[10]
@@ -181,7 +242,7 @@ func iconInputOutputs(cData [][]interface{}, caData [][]interface{}, modelName s
 		if placementIndex != -1 {
 
 			//initialScale := "1"
-			//if len(modelIconAnnotationAll)>0 {
+			//if len(modelIconAnnotationAll) > 0 {
 			//	initialScale = modelIconAnnotationAll[5].(string)
 			//}
 			if len(caDataFilter[i]) < 1 {
@@ -195,14 +256,14 @@ func iconInputOutputs(cData [][]interface{}, caData [][]interface{}, modelName s
 
 			data := map[string]interface{}{}
 
-			//data["graphType"] = "connecter"
+			data["graphType"] = "connecter"
 			//data["ID"] = strconv.Itoa(i)
 			data["classname"] = classname
 			data["name"] = cDataFilter[i][3]
 			//data["original_name"] = cDataFilter[i][3]
 			data["parent"] = modelName
-			//data["visible"] = caf[0]
-			//data["mobility"] = false
+			data["visible"] = caf[0]
+			data["mobility"] = false
 			//data["initialScale"] = initialScale
 			rotateAngle := func() string {
 				if caf[14] != "" {
@@ -237,7 +298,7 @@ func iconInputOutputs(cData [][]interface{}, caData [][]interface{}, modelName s
 			}()
 			data["inputOutputs"] = make([]string, 0)
 			IconAnnotationData := getAnnotation([]string{classname})
-			data["subShapes"] = iconSubShapes(IconAnnotationData[8].([]interface{}))
+			data["subShapes"] = iconSubShapes(IconAnnotationData[8].([]interface{}), modelName)
 			dataList = append(dataList, data)
 		}
 	}

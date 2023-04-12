@@ -29,7 +29,6 @@ func SetComponentProperties(className, newComponentName, oldComponentName, final
 	renameResult, msg := renameComponentInClass(className, oldComponentName, newComponentName)
 	ScpResult := omc.OMC.SetComponentProperties(className, newComponentName, final, protected, replaceable, variability, inner, outer, causality)
 	if ScpResult && renameResult {
-		omc.OMC.Save(className)
 		return true, msg
 	}
 	return false, msg

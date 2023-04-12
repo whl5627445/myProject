@@ -43,6 +43,5 @@ func GetModelDocument(modelName string) []string {
 
 func SetModelDocument(modelName, docData, revisions string) bool {
 	result := omc.OMC.SetDocumentationAnnotation(modelName, docData, revisions)
-	omc.OMC.Save(modelName)
 	return result
 }
