@@ -1242,7 +1242,7 @@ func (o *ZmqObject) DeleteComponentParameter(varName, className string) bool {
 	return true
 }
 
-func (o *ZmqObject) GetComponentIconAndDiagramAnnotationsALl(classNameList []string, isIcon bool) []interface{} {
+func (o *ZmqObject) GetIconAndDiagramAnnotations(classNameList []string, isIcon bool) []interface{} {
 	var data []interface{}
 	ctx := context.Background()
 	var msg []byte
@@ -1252,18 +1252,18 @@ func (o *ZmqObject) GetComponentIconAndDiagramAnnotationsALl(classNameList []str
 			msg, _ = allModelCache.HGet(ctx, userName+"-yssim-componentGraphicsData", name).Bytes()
 		}
 		if len(msg) > 0 && string(msg) != "null" {
-			err := json.Unmarshal(msg, &data)
+			var d []interface{}
+			err := json.Unmarshal(msg, &d)
 			if err != nil {
 				log.Println("err", err)
 				return nil
 			}
+			data = append(data, d[8].([]interface{})...)
 		}
 		result := make([]interface{}, 0)
 		if (nType == "connector" || nType == "expandable connector") && !isIcon {
 			result = o.GetDiagramAnnotation(name)
-			if len(result) > 8 {
-				result = result[8].([]interface{})
-			} else {
+			if len(result) < 8 {
 				result = o.GetIconAnnotationLineData(name)
 			}
 		} else {
@@ -1271,7 +1271,11 @@ func (o *ZmqObject) GetComponentIconAndDiagramAnnotationsALl(classNameList []str
 			setData, _ := json.Marshal(result)
 			allModelCache.HSet(ctx, userName+"-yssim-componentGraphicsData", name, setData)
 		}
-		data = append(data, result...)
+		if len(result) > 8 {
+			result = result[8].([]interface{})
+			data = append(data, result...)
+		}
+
 	}
 	return data
 }

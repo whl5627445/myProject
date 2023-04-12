@@ -544,7 +544,7 @@ func getElementAnnotations(nameList []string) [][]interface{} {
 }
 
 func getIconAndDiagramAnnotations(nameList []string, isIcon bool) []interface{} {
-	res := omc.OMC.GetComponentIconAndDiagramAnnotationsALl(nameList, isIcon)
+	res := omc.OMC.GetIconAndDiagramAnnotations(nameList, isIcon)
 	return res
 }
 
