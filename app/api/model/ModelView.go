@@ -669,14 +669,38 @@ func AddModelComponentView(c *gin.Context) {
 	}
 	rotation := strconv.Itoa(item.Rotation)
 	result, msg := service.AddComponent(item.NewComponentName, item.OldComponentName, item.ModelName, item.Origin, rotation, item.Extent)
-	data := service.GetIconNew(item.OldComponentName)
 	if !result {
 		res.Err = msg
 		res.Status = 2
 	} else {
-		s := time.Now().UnixNano() / 1e6
+		data := service.GetIconNew(item.OldComponentName, true)
+		graphics := data["graphics"].(map[string]interface{})
+		graphics["originDiagram"] = item.Origin
+		graphics["original_name"] = item.NewComponentName
+		graphics["name"] = item.NewComponentName
+		graphics["type"] = "Transformation"
+		graphics["ID"] = "0"
+		graphics["rotateAngle"] = graphics["rotation"]
+		log.Println("graphics", graphics)
+		if graphics["extent1Diagram"] != "-,-" && graphics["extent2Diagram"] != "-,-" && graphics["initialScale"] != "-" {
+			l1 := strings.Split(graphics["extent1Diagram"].(string), ",")
+			l2 := strings.Split(graphics["extent2Diagram"].(string), ",")
+			initialScale, _ := strconv.ParseFloat(graphics["initialScale"].(string), 64)
+			x1, _ := strconv.ParseFloat(l1[0], 64)
+			y1, _ := strconv.ParseFloat(l1[1], 64)
+			x2, _ := strconv.ParseFloat(l2[0], 64)
+			y2, _ := strconv.ParseFloat(l2[1], 64)
+			x1, y1, x2, y2 = x1*initialScale, y1*initialScale, x2*initialScale, y2*initialScale
+			x1Str := strconv.FormatFloat(x1, 'f', 1, 64)
+			y1Str := strconv.FormatFloat(y1, 'f', 1, 64)
+			x2Str := strconv.FormatFloat(x2, 'f', 1, 64)
+			y2Str := strconv.FormatFloat(y2, 'f', 1, 64)
+
+			graphics["extent1Diagram"] = strings.Join([]string{x1Str, y1Str}, ",")
+			graphics["extent2Diagram"] = strings.Join([]string{x2Str, y2Str}, ",")
+		}
+		data["graphics"] = graphics
 		service.ModelSave(item.ModelName)
-		log.Println("time", time.Now().UnixNano()/1e6-s)
 		res.Data = data
 		res.Msg = "新增组件成功"
 	}
@@ -1325,7 +1349,7 @@ func GetIconView(c *gin.Context) {
 	//var packageModel []DataBaseModel.YssimModels
 	//DB.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", item.PackageId, []string{"sys", username}, []string{"0", userSpaceId}).Order("create_time desc").Find(&packageModel)
 	var res responseData
-	data := service.GetIconNew(item.ModelName)
+	data := service.GetIconNew(item.ModelName, true)
 	res.Data = data
 	c.JSON(http.StatusOK, res)
 }

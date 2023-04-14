@@ -591,7 +591,7 @@ func (g *graphicsData) getConnectorComponentDiagram(components, componentAnnotat
 		data["type"] = "Transformation"
 		data["visible"] = "true"
 		data["inputOutputs"] = make([]map[string]interface{}, 0, 1)
-		data["subShapes"] = g.data01(interfaceGraphicsData[len(interfaceGraphicsData)-1].([]interface{}), className, className, className)
+		data["subShapes"] = g.data01(interfaceGraphicsData, className, className, className)
 		g.data[1] = append(g.data[1], data)
 		return g.data
 	}

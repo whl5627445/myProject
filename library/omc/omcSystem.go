@@ -1275,12 +1275,11 @@ func (o *ZmqObject) GetIconAndDiagramAnnotations(classNameList []string, isIcon 
 			result = result[8].([]interface{})
 			data = append(data, result...)
 		}
-
 	}
 	return data
 }
 
-func (o *ZmqObject) GetIconAnnotations(className string) []interface{} {
+func (o *ZmqObject) GetIconAnnotations(className string, icon bool) []interface{} {
 	var data []interface{}
 	ctx := context.Background()
 	var msg []byte
@@ -1295,7 +1294,7 @@ func (o *ZmqObject) GetIconAnnotations(className string) []interface{} {
 			return nil
 		}
 	}
-	if nType == "connector" || nType == "expandable connector" {
+	if nType == "connector" || nType == "expandable connector" && !icon {
 		data = o.GetDiagramAnnotation(className)
 		if len(data) < 8 {
 			data = o.GetIconAnnotationLineData(className)
