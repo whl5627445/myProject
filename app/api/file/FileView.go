@@ -224,14 +224,14 @@ func CreateModelPackageView(c *gin.Context) {
 			}
 		}
 		newPackage = insertPackageRecord
+	} else {
+		DB.Create(&newPackage)
 	}
 	result := service.CreateModelAndPackage(createPackageName, item.Vars.InsertTo, item.Vars.Expand, item.StrType, createPackageNameALL, item.Comment, item.Vars.Partial, item.Vars.Encapsulated, item.Vars.State)
 	if result {
 		saveResult := service.SaveModelCode(createPackageNameALL, newPackage.FilePath)
 		if saveResult {
-			if item.Vars.InsertTo == "" {
-				DB.Create(&newPackage)
-			}
+
 			res.Msg = "创建成功"
 			if item.Vars.InsertTo == "" {
 				res.Data = map[string]string{
@@ -248,6 +248,7 @@ func CreateModelPackageView(c *gin.Context) {
 			}
 
 		} else {
+			DB.Create(&newPackage)
 			res.Err = "创建失败，请稍后再试"
 			res.Status = 2
 		}

@@ -58,7 +58,7 @@ func CreateUserSpaceView(c *gin.Context) {
 		SpaceName: item.SpaceName,
 		UserName:  userName,
 	}
-
+	DB.Create(&space)
 	res.Data = map[string]string{
 		"id":   space.ID,
 		"name": space.SpaceName,
@@ -73,10 +73,10 @@ func CreateUserSpaceView(c *gin.Context) {
 			UserSpaceId: space.ID,
 			Default:     true,
 		}
-		err = DB.Create(&space).Error
 		err = DB.Create(&defaultWorkSpacePackage).Error
 	}
 	if err != nil || !ok {
+		DB.Delete(&space)
 		res.Err = "创建失败，请稍后再试"
 		res.Status = 1
 		c.JSON(http.StatusOK, res)

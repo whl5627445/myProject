@@ -1,11 +1,13 @@
 package service
 
 import (
-	"github.com/google/uuid"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 	"yssim-go/config"
+
+	"github.com/google/uuid"
 
 	"github.com/wangluozhe/requests"
 
@@ -22,7 +24,7 @@ func DymolaFmuExport(fmuPar map[string]interface{}, token, userName, fmuName, pa
 		"token":       token,
 		"taskId":      uuid.New().String(),
 	}
-	urlStr := packageName + "/" + strings.ReplaceAll(modelName, ".", "-") + "/" + time.Now().Local().Format("20060102150405")
+	urlStr := packageName + "/" + strings.ReplaceAll(modelName, ".", "-") + "/" + strconv.Itoa(int(time.Now().UnixNano()))
 	req := url.NewRequest()
 	params := url.NewParams()
 	params.Set("url", userName+"/"+urlStr)
