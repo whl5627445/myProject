@@ -90,6 +90,31 @@ func iconSubShapes(cData []interface{}, modelName string) []map[string]interface
 			drawingDataList = drawingDataListFilter
 		}
 		dataType := d[i]
+		if len(drawingDataList) < 9 {
+			if dataType == "Bitmap" {
+				data["type"] = dataType
+				data["visible"] = drawingDataList[0]
+				data["originalPoint"] = oneDimensionalProcessing(drawingDataList[1])
+				data["rotation"] = drawingDataList[2]
+				data["points"] = twoDimensionalProcessing(drawingDataList[3].([]interface{}))
+				dataImagePath := drawingDataList[4]
+				if drawingDataList[5] == "" {
+					imagePath := omc.OMC.UriToFilename(dataImagePath.(string))
+					bytes, err := os.ReadFile(imagePath)
+					if err != nil {
+						log.Println("dataImagePath 错误：", dataImagePath)
+						log.Println("err：", err)
+					}
+					data["imageBase64"] = base64.StdEncoding.EncodeToString(bytes)
+				} else {
+					data["imageBase64"] = drawingDataList[5]
+				}
+				dataList = append(dataList, data)
+				continue
+			}
+			continue
+		}
+
 		data["type"] = dataType
 		data["visible"] = drawingDataList[0]
 		data["originalPoint"] = oneDimensionalProcessing(drawingDataList[1])
