@@ -1,8 +1,6 @@
 package service
 
-import (
-	"yssim-go/library/omc"
-)
+import "yssim-go/library/omc"
 
 func GetSimulationOptions(modelName string) map[string]string {
 	data := omc.OMC.GetSimulationOptions(modelName)

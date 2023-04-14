@@ -2,11 +2,12 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"log"
 	"strings"
 	"yssim-go/config"
 	"yssim-go/library/omc"
+
+	"github.com/bytedance/sonic"
 )
 
 func GetMessagesStringInternal() []map[string]string {
@@ -42,7 +43,7 @@ func GetMessagesStringInternal() []map[string]string {
 }
 
 func MessageNotice(mes interface{}) bool {
-	mesJson, _ := json.Marshal(mes)
+	mesJson, _ := sonic.Marshal(mes)
 	userName := config.USERNAME
 	reply, err := config.R.LPush(context.Background(), userName+"_"+"notification", mesJson).Result()
 	if err != nil {

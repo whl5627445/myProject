@@ -1,8 +1,6 @@
 package service
 
-import (
-	"yssim-go/library/omc"
-)
+import "yssim-go/library/omc"
 
 func CheckModel(className string) []map[string]string {
 	message := omc.OMC.CheckModel(className)

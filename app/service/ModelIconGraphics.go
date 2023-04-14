@@ -10,7 +10,7 @@ import (
 )
 
 func GetIconNew(modelName string) map[string]interface{} {
-	data := map[string]interface{}{}
+	data := make(map[string]interface{}, 0)
 	iconData := omc.OMC.GetIconAnnotation(modelName)
 	if len(iconData) > 8 {
 		bitmapData := iconData[8].([]interface{})
@@ -36,13 +36,19 @@ func getIconAnnotationGraphics(modelName string) map[string]interface{} {
 	modelIconAnnotation := getAnnotation(modelNameList)
 	AnnotationConfig := []interface{}{}
 	data := map[string]interface{}{"extent1Diagram": "-,-", "extent2Diagram": "-,-", "initialScale": "0.1"}
+	componentsData := getElementsAndModelName(modelNameList)
+	componentAnnotationsData := getElementAnnotations(modelNameList)
+	subShapes := iconSubShapes(modelIconAnnotation, modelName)
+	inputOutputs := iconInputOutputs(componentsData, componentAnnotationsData, modelName)
+	if len(subShapes) == 0 && len(inputOutputs) == 0 && len(modelIconAnnotation) == 0 {
+		return make(map[string]interface{}, 0)
+	}
 	if len(modelIconAnnotation) > 8 {
 		AnnotationConfig = modelIconAnnotation[:8]
 		x1, y1, x2, y2 := AnnotationConfig[0], AnnotationConfig[1], AnnotationConfig[2], AnnotationConfig[3]
 		data["extent1Diagram"] = strings.Replace(strings.Join([]string{x1.(string), y1.(string)}, ","), "-,-", "-100.0,-100.0", 1)
 		data["extent2Diagram"] = strings.Replace(strings.Join([]string{x2.(string), y2.(string)}, ","), "-,-", "100.0,100.0", 1)
 		data["initialScale"] = AnnotationConfig[5].(string)
-
 	}
 	data["output_type"] = ""
 	nameType := omc.OMC.GetClassRestriction(modelName)
@@ -52,19 +58,21 @@ func getIconAnnotationGraphics(modelName string) map[string]interface{} {
 	data["visible"] = "true"
 	data["mobility"] = true
 	data["rotation"] = "0"
-	componentsData := getElementsAndModelName(modelNameList)
-	componentAnnotationsData := getElementAnnotations(modelNameList)
-	IconAnnotationData := getAnnotation(modelNameList)
-	data["inputOutputs"] = iconInputOutputs(componentsData, componentAnnotationsData, modelName)
-	data["subShapes"] = iconSubShapes(IconAnnotationData[8].([]interface{}), modelName)
+
+	data["inputOutputs"] = inputOutputs
+	data["subShapes"] = subShapes
 	return data
 }
 
 func iconSubShapes(cData []interface{}, modelName string) []map[string]interface{} {
 	dataList := make([]map[string]interface{}, 0, 1)
-	for i := 0; i < len(cData); i += 2 {
+	if len(cData) < 8 {
+		return dataList
+	}
+	d := cData[8].([]interface{})
+	for i := 0; i < len(d); i += 2 {
 		data := map[string]interface{}{}
-		drawingDataList := cData[i+1].([]interface{})
+		drawingDataList := d[i+1].([]interface{})
 		if drawingDataList[0].(string) != "true" {
 			continue
 		}
@@ -79,7 +87,7 @@ func iconSubShapes(cData []interface{}, modelName string) []map[string]interface
 			}
 			drawingDataList = drawingDataListFilter
 		}
-		dataType := cData[i]
+		dataType := d[i]
 		data["type"] = dataType
 		data["visible"] = drawingDataList[0]
 		data["originalPoint"] = oneDimensionalProcessing(drawingDataList[1])
@@ -298,7 +306,7 @@ func iconInputOutputs(cData [][]interface{}, caData [][]interface{}, modelName s
 			}()
 			data["inputOutputs"] = make([]string, 0)
 			IconAnnotationData := getAnnotation([]string{classname})
-			data["subShapes"] = iconSubShapes(IconAnnotationData[8].([]interface{}), modelName)
+			data["subShapes"] = iconSubShapes(IconAnnotationData, modelName)
 			dataList = append(dataList, data)
 		}
 	}
@@ -328,11 +336,16 @@ func getBitmapImage(bitmapData []interface{}) string {
 }
 
 func getAnnotation(modelNameList []string) []interface{} {
-	for i := len(modelNameList) - 1; i >= 0; i-- {
-		modelIconAnnotation := omc.OMC.GetIconAnnotations(modelNameList[i])
-		if len(modelIconAnnotation) > 8 {
-			return modelIconAnnotation
+	modelIconAnnotation := []interface{}{}
+	for i := 0; i < len(modelNameList); i++ {
+		IconAnnotation := omc.OMC.GetIconAnnotations(modelNameList[i])
+		if len(modelIconAnnotation) > 8 && len(IconAnnotation) > 8 {
+			for p := 0; p < len(IconAnnotation[8:]); p++ {
+				modelIconAnnotation[8] = append(modelIconAnnotation[8].([]interface{}), IconAnnotation[8:][p].([]interface{})...)
+			}
+		} else {
+			modelIconAnnotation = append(modelIconAnnotation, IconAnnotation...)
 		}
 	}
-	return nil
+	return modelIconAnnotation
 }

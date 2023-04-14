@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 	"time"
+	"yssim-go/config"
 	"yssim-go/library/fileOperation"
 	"yssim-go/library/omc"
 )
@@ -66,9 +67,9 @@ func SaveModelToFile(modelName, path string) bool {
 }
 
 // ModelSave 用omc提供的API将模型源码保存的到对应文件， 并发安全
-func ModelSave(modelName string) bool {
-	ok := omc.OMC.Save(modelName)
-	return ok
+func ModelSave(modelName string) {
+	//ok := omc.OMC.Save(modelName)
+	config.ModelCodeChan <- modelName
 }
 
 func PackageFileParse(fileName, saveFilePath, zipPackagePath string, file io.Reader) (string, string, string, bool) {

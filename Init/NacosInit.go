@@ -1,13 +1,14 @@
 package Init
 
 import (
-	"github.com/nacos-group/nacos-sdk-go/clients"
-	"github.com/nacos-group/nacos-sdk-go/common/constant"
-	"github.com/nacos-group/nacos-sdk-go/vo"
 	"log"
 	"strconv"
 	"time"
 	"yssim-go/config"
+
+	"github.com/nacos-group/nacos-sdk-go/clients"
+	"github.com/nacos-group/nacos-sdk-go/common/constant"
+	"github.com/nacos-group/nacos-sdk-go/vo"
 )
 
 var clientConfig = constant.ClientConfig{
@@ -23,7 +24,7 @@ var serverConfigs = []constant.ServerConfig{
 	},
 }
 
-func NacosRegister() {
+func Register() {
 	if config.DEBUG != "" {
 		return
 	}

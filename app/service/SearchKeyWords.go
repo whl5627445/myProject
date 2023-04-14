@@ -46,6 +46,7 @@ func SearchModel(model DataBaseModel.YssimModels, keyWords, parentNode string) [
 						"image":        "",
 						"package_id":   model.ID,
 						"package_name": model.PackageName,
+						"sys_user":     model.SysUser,
 					}
 					childList := omc.OMC.GetClassNames(nameParent, false)
 					if len(childList) > 0 {

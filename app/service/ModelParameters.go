@@ -380,21 +380,24 @@ func AddComponentParameters(varName, varType, className string) (bool, error) {
 	return false, errors.New("新增参数失败")
 }
 
-func DeleteComponentParameters(varName, className string) bool {
-	ok := omc.OMC.DeleteComponentParameter(varName, className)
-	if ok {
-		return true
-	}
-	return false
-}
-
-func checkComponentParameter(className, varName string) error {
+func DeleteComponentParameters(varName, className string) (bool, error) {
 	components := omc.OMC.GetComponents(className)
 	for i := 0; i < len(components); i++ {
 		name := components[i].([]interface{})[1]
 		if name == varName {
-			return errors.New("参数名已存在")
+			ok := omc.OMC.DeleteComponentParameter(varName, className)
+			if ok {
+				return true, nil
+			}
 		}
+	}
+	return false, errors.New("只能删除本模型下的参数")
+}
+
+func checkComponentParameter(className, varName string) error {
+	components := GetElements(className, varName)
+	if len(components) > 0 {
+		return errors.New("参数名已存在")
 	}
 	return nil
 }

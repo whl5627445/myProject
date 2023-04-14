@@ -4,7 +4,8 @@ func init() {
 	ModelLibraryInit()
 	LogInit()
 	go simulationService()
-	go NacosRegister()
+	go Register()
 	go OMCMessagesInit()
 	go checkOMC()
+	go ModelCodeAutoSave()
 }

@@ -315,7 +315,7 @@ func SetModelParametersView(c *gin.Context) {
 	}
 	result := service.SetComponentModifierValue(item.ModelName, item.ParameterValue)
 	if result {
-		go service.ModelSave(item.ModelName)
+		service.ModelSave(item.ModelName)
 		res.Msg = "设置完成"
 	} else {
 		res.Err = "设置失败: 请检查参数是否正确"
@@ -355,7 +355,7 @@ func AddModelParametersView(c *gin.Context) {
 		res.Err = err.Error()
 		res.Status = 2
 	} else {
-		go service.ModelSave(item.ModelName)
+		service.ModelSave(item.ModelName)
 		res.Msg = "设置完成"
 	}
 
@@ -388,12 +388,12 @@ func DeleteModelParametersView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	result := service.DeleteComponentParameters(item.ParameterName, item.ModelName)
+	result, err := service.DeleteComponentParameters(item.ParameterName, item.ModelName)
 	if result {
-		go service.ModelSave(item.ModelName)
+		service.ModelSave(item.ModelName)
 		res.Msg = "参数已删除"
 	} else {
-		res.Err = "删除失败"
+		res.Err = err.Error()
 		res.Status = 2
 	}
 	c.JSON(http.StatusOK, res)
@@ -474,7 +474,7 @@ func SetComponentPropertiesView(c *gin.Context) {
 		strconv.FormatBool(item.Outer),
 		item.Causality)
 	if result {
-		go service.ModelSave(item.ModelName)
+		service.ModelSave(item.ModelName)
 		res.Msg = "设置完成"
 	} else {
 		res.Err = msg
@@ -568,7 +568,7 @@ func CopyClassView(c *gin.Context) {
 			data["id"] = packageModel.ID
 			data["model_name"] = item.ParentName + "." + item.ModelName
 		}
-		go service.ModelSave(item.ModelName)
+		service.ModelSave(item.ModelName)
 		res.Data = data
 	} else {
 		res.Msg = msg
@@ -602,7 +602,7 @@ func DeletePackageAndModelView(c *gin.Context) {
 	}
 	result, msg := service.SaveModel(item.ModelName, "", item.ParentName, "delete", packageModel.FilePath)
 	if result {
-		go service.ModelSave(item.ParentName)
+		service.ModelSave(item.ParentName)
 		res.Msg = msg
 		if item.ParentName == "" {
 			var simulateRecord []DataBaseModel.YssimSimulateRecord
@@ -674,7 +674,9 @@ func AddModelComponentView(c *gin.Context) {
 		res.Err = msg
 		res.Status = 2
 	} else {
-		go service.ModelSave(item.ModelName)
+		s := time.Now().UnixNano() / 1e6
+		service.ModelSave(item.ModelName)
+		log.Println("time", time.Now().UnixNano()/1e6-s)
 		res.Data = data
 		res.Msg = "新增组件成功"
 	}
@@ -719,7 +721,7 @@ func DeleteModelComponentView(c *gin.Context) {
 			return
 		}
 	}
-	go service.ModelSave(modelName)
+	service.ModelSave(modelName)
 
 	res.Msg = "删除成功"
 	c.JSON(http.StatusOK, res)
@@ -764,7 +766,9 @@ func UpdateModelComponentView(c *gin.Context) {
 			service.UpdateConnection(item.ModelName, connect.ConnectStart, connect.ConnectEnd, connect.Color, connect.LinePoints)
 		}
 	}
-	go service.ModelSave(item.ModelName)
+	s := time.Now().UnixNano() / 1e6
+	service.ModelSave(item.ModelName)
+	log.Println("time", time.Now().UnixNano()/1e6-s)
 	res.Msg = "更新组件成功"
 	c.JSON(http.StatusOK, res)
 }
@@ -803,7 +807,7 @@ func CreateConnectionAnnotationView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	go service.ModelSave(item.ModelName)
+	service.ModelSave(item.ModelName)
 	res.Msg = "连接组件成功"
 	c.JSON(http.StatusOK, res)
 }
@@ -842,7 +846,7 @@ func UpdateConnectionNamesView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	go service.ModelSave(item.ModelName)
+	service.ModelSave(item.ModelName)
 	res.Msg = "更新连线成功"
 	c.JSON(http.StatusOK, res)
 }
@@ -879,7 +883,7 @@ func DeleteConnectionAnnotationView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	go service.ModelSave(item.ModelName)
+	service.ModelSave(item.ModelName)
 	res.Msg = "删除连线成功"
 	c.JSON(http.StatusOK, res)
 }
@@ -918,7 +922,7 @@ func UpdateConnectionAnnotationView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	go service.ModelSave(item.ModelName)
+	service.ModelSave(item.ModelName)
 	res.Msg = "更新连线成功"
 	c.JSON(http.StatusOK, res)
 }
@@ -1017,7 +1021,7 @@ func SetModelDocumentView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	go service.ModelSave(item.ModelName)
+	service.ModelSave(item.ModelName)
 	res.Msg = "修改成功"
 	c.JSON(http.StatusOK, res)
 }
@@ -1189,9 +1193,9 @@ func SearchModelView(c *gin.Context) {
 	if parent != "" {
 		namesList := strings.Split(parent, ".")
 		packageName := namesList[0]
-		DB.Where("package_name = ? AND sys_or_user IN ? AND userspace_id IN ?", packageName, []string{"sys", username}, []string{"0", userSpaceId}).Find(&packageModel)
+		DB.Where("package_name = ? AND sys_or_user IN ? AND userspace_id IN ?", packageName, []string{"sys", username}, []string{"0", userSpaceId}).Order("sys_or_user desc").Find(&packageModel)
 	} else {
-		DB.Where("sys_or_user IN ? AND userspace_id IN ?", []string{"sys", username}, []string{"0", userSpaceId}).Find(&packageModel)
+		DB.Where("sys_or_user IN ? AND userspace_id IN ?", []string{"sys", username}, []string{"0", userSpaceId}).Order("sys_or_user desc").Find(&packageModel)
 	}
 	for i := 0; i < len(packageModel); i++ {
 		if libraryAndVersions[packageModel[i].PackageName] == packageModel[i].Version {

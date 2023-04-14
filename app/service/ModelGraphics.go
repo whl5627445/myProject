@@ -3,16 +3,16 @@ package service
 import (
 	"context"
 	"encoding/base64"
-	"encoding/json"
 	"log"
 	"os"
 	"reflect"
 	"regexp"
 	"strings"
 	"yssim-go/config"
+	"yssim-go/library/omc"
 	"yssim-go/library/stringOperation"
 
-	"yssim-go/library/omc"
+	"github.com/bytedance/sonic"
 )
 
 type graphicsData struct {
@@ -31,8 +31,9 @@ func GetGraphicsData(modelName, permissions string) [][]map[string]interface{} {
 	g.permissions = permissions
 	if permissions == "sys" {
 		msg, _ := allModelCache.HGet(ctx, config.USERNAME+"-yssim-modelGraphicsData", modelName).Bytes()
+		//msg := []byte{}
 		if len(msg) > 0 {
-			err := json.Unmarshal(msg, &g.data)
+			err := sonic.Unmarshal(msg, &g.data)
 			if err != nil {
 				log.Println("GetGraphicsData 反序列化错误 err", err)
 				return nil
@@ -51,7 +52,7 @@ func GetGraphicsData(modelName, permissions string) [][]map[string]interface{} {
 		g.getData02()
 	}
 	if permissions == "sys" {
-		redisData, _ := json.Marshal(g.data)
+		redisData, _ := sonic.Marshal(g.data)
 		allModelCache.HSet(ctx, config.USERNAME+"-yssim-modelGraphicsData", modelName, redisData)
 	}
 	return g.data
