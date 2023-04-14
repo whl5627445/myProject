@@ -1254,11 +1254,9 @@ func (o *ZmqObject) GetIconAndDiagramAnnotations(classNameList []string, isIcon 
 		if len(msg) > 0 && string(msg) != "null" {
 			var d []interface{}
 			err := sonic.Unmarshal(msg, &d)
-			if err != nil {
-				log.Println("err", err)
-				return nil
+			if err == nil && len(d) > 8 {
+				data = append(data, d[8].([]interface{})...)
 			}
-			data = append(data, d[8].([]interface{})...)
 		}
 		result := make([]interface{}, 0)
 		if (nType == "connector" || nType == "expandable connector") && !isIcon {
@@ -1294,7 +1292,7 @@ func (o *ZmqObject) GetIconAnnotations(className string, icon bool) []interface{
 			return nil
 		}
 	}
-	if nType == "connector" || nType == "expandable connector" && !icon {
+	if (nType == "connector" || nType == "expandable connector") && !icon {
 		data = o.GetDiagramAnnotation(className)
 		if len(data) < 8 {
 			data = o.GetIconAnnotationLineData(className)
