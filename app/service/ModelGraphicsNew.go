@@ -10,7 +10,7 @@ func GetGraphicsDataNew(modelName string) interface{} {
 	ok := omc.OMC.ModelInstance(modelName, &m)
 	if ok {
 		//fmt.Println(m)
-		//data, _ := json.Marshal(m)
+		//data, _ := sonic.Marshal(m)
 		return m
 	}
 	return nil

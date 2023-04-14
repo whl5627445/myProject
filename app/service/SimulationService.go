@@ -1,10 +1,7 @@
 package service
 
 import (
-	"encoding/json"
 	"errors"
-	"github.com/wangluozhe/requests"
-	"github.com/wangluozhe/requests/url"
 	"log"
 	"os"
 	"os/exec"
@@ -16,6 +13,10 @@ import (
 	"yssim-go/library/mapProcessing"
 	"yssim-go/library/omc"
 	"yssim-go/library/stringOperation"
+
+	"github.com/bytedance/sonic"
+	"github.com/wangluozhe/requests"
+	"github.com/wangluozhe/requests/url"
 )
 
 type SimulateTask struct {
@@ -250,7 +251,7 @@ func dymolaServiceStop(taskID string) error {
 //		log.Printf("连接JModelica服务失败: %s", err)
 //		return false
 //	}
-//	dataJson, _ := json.Marshal(data)
+//	dataJson, _ := sonic.Marshal(data)
 //	_, err = dial.Write(dataJson)
 //
 //	if err != nil {
@@ -271,7 +272,7 @@ func dymolaServiceStop(taskID string) error {
 //		modelName_ := strings.ReplaceAll(task.SRecord.SimulateModelName, ".", "_")
 //		data["type"] = "simulate"
 //		data["modelname"] = modelName_
-//		dataJson, _ = json.Marshal(data)
+//		dataJson, _ = sonic.Marshal(data)
 //		dialRes, err := net.Dial("tcp", config.JmodelicaConnect)
 //		defer func(dialRes net.Conn) {
 //			err = dialRes.Close()
@@ -345,7 +346,7 @@ func ModelSimulate(task *SimulateTask) {
 		//YssimExperimentRecord表的json数据绑定到结构体
 		var componentValue modelVarData
 		if task.ExperimentRecord.ModelVarData.String() != "" {
-			err := json.Unmarshal(task.ExperimentRecord.ModelVarData, &componentValue)
+			err := sonic.Unmarshal(task.ExperimentRecord.ModelVarData, &componentValue)
 			if err == nil {
 				mapAttributesStr := mapProcessing.MapDataConversion(componentValue.FinalAttributesStr)
 				//设置组件参数
