@@ -46,8 +46,7 @@ func UploadModelPackageView(c *gin.Context) {
 		return
 	}
 	fileName := modelFile.Filename
-	nameList := strings.Split(modelFile.Filename, ".")
-	if len(nameList) < 2 || (nameList[1] != "rar" && nameList[1] != "mo" && nameList[1] != "zip") {
+	if !strings.HasSuffix(modelFile.Filename, ".rar") && !strings.HasSuffix(modelFile.Filename, ".mo") && !strings.HasSuffix(modelFile.Filename, ".zip") {
 		res.Msg = "请上传后缀为：mo与rar、zip三种格式的文件"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)

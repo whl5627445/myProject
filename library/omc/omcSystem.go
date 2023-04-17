@@ -28,8 +28,6 @@ var cacheRefresh = false
 var redisCacheKey = &config.RedisCacheKey
 var userName = config.USERNAME
 
-//var AllModelCache = make(map[string][]byte, 1000)
-
 var allModelCache = config.R
 
 // SendExpression 发送指令，获取数据
@@ -1277,30 +1275,21 @@ func (o *ZmqObject) GetIconAndDiagramAnnotations(classNameList []string, isIcon 
 	return data
 }
 
-func (o *ZmqObject) GetIconAnnotations(className string, icon bool) []interface{} {
+func (o *ZmqObject) GetIconAnnotations(className string) []interface{} {
 	var data []interface{}
 	ctx := context.Background()
 	var msg []byte
-	nType := o.GetClassRestriction(className)
-	if nType != "connector" && nType != "expandable connector" {
-		msg, _ = allModelCache.HGet(ctx, userName+"-yssim-IconGraphicsData", className).Bytes()
-	}
+	msg, _ = allModelCache.HGet(ctx, userName+"-yssim-IconGraphicsData", className).Bytes()
 	if len(msg) > 0 && string(msg) != "null" {
 		err := sonic.Unmarshal(msg, &data)
 		if err != nil {
 			log.Println("err", err)
 			return nil
 		}
+		return data
 	}
-	if (nType == "connector" || nType == "expandable connector") && !icon {
-		data = o.GetDiagramAnnotation(className)
-		if len(data) < 8 {
-			data = o.GetIconAnnotationLineData(className)
-		}
-	} else {
-		data = o.GetIconAnnotationLineData(className)
-		setData, _ := sonic.Marshal(data)
-		allModelCache.HSet(ctx, userName+"-yssim-IconGraphicsData", className, setData)
-	}
+	data = o.GetIconAnnotationLineData(className)
+	setData, _ := sonic.Marshal(data)
+	allModelCache.HSet(ctx, userName+"-yssim-IconGraphicsData", className, setData)
 	return data
 }

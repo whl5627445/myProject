@@ -9,7 +9,7 @@ import (
 	"yssim-go/library/stringOperation"
 )
 
-func GetIconNew(modelName string, icon bool) map[string]interface{} {
+func GetIconNew(modelName string) map[string]interface{} {
 	data := make(map[string]interface{}, 0)
 	iconData := omc.OMC.GetIconAnnotation(modelName)
 	if len(iconData) > 8 {
@@ -23,7 +23,7 @@ func GetIconNew(modelName string, icon bool) map[string]interface{} {
 			return data
 		}
 	}
-	d := getIconAnnotationGraphics(modelName, icon)
+	d := getIconAnnotationGraphics(modelName)
 	data = map[string]interface{}{
 		"type":     "graphics",
 		"graphics": d,
@@ -31,9 +31,9 @@ func GetIconNew(modelName string, icon bool) map[string]interface{} {
 	return data
 }
 
-func getIconAnnotationGraphics(modelName string, icon bool) map[string]interface{} {
+func getIconAnnotationGraphics(modelName string) map[string]interface{} {
 	modelNameList := GetICList(modelName)
-	modelIconAnnotation := getAnnotation(modelNameList, icon)
+	modelIconAnnotation := getAnnotation(modelNameList)
 	AnnotationConfig := []interface{}{}
 	data := map[string]interface{}{"extent1Diagram": "-,-", "extent2Diagram": "-,-", "initialScale": "0.1"}
 	componentsData := getElementsAndModelName(modelNameList)
@@ -48,10 +48,9 @@ func getIconAnnotationGraphics(modelName string, icon bool) map[string]interface
 		x1, y1, x2, y2 := AnnotationConfig[0], AnnotationConfig[1], AnnotationConfig[2], AnnotationConfig[3]
 		data["extent1Diagram"] = strings.Replace(strings.Join([]string{x1.(string), y1.(string)}, ","), "-,-", "-100.0,-100.0", 1)
 		data["extent2Diagram"] = strings.Replace(strings.Join([]string{x2.(string), y2.(string)}, ","), "-,-", "100.0,100.0", 1)
-
-	}
-	if AnnotationConfig[5].(string) != "-" {
-		data["initialScale"] = AnnotationConfig[5].(string)
+		if AnnotationConfig[5].(string) != "-" {
+			data["initialScale"] = AnnotationConfig[5].(string)
+		}
 	}
 	data["output_type"] = "[]"
 	nameType := omc.OMC.GetClassRestriction(modelName)
@@ -332,7 +331,7 @@ func iconInputOutputs(cData [][]interface{}, caData [][]interface{}, modelName s
 				return t
 			}()
 			data["inputOutputs"] = make([]string, 0)
-			IconAnnotationData := getAnnotation([]string{classname}, false)
+			IconAnnotationData := getAnnotation([]string{classname})
 			data["subShapes"] = iconSubShapes(IconAnnotationData, modelName)
 			dataList = append(dataList, data)
 		}
@@ -362,10 +361,10 @@ func getBitmapImage(bitmapData []interface{}) string {
 	return ""
 }
 
-func getAnnotation(modelNameList []string, icon bool) []interface{} {
+func getAnnotation(modelNameList []string) []interface{} {
 	modelIconAnnotation := []interface{}{}
 	for i := 0; i < len(modelNameList); i++ {
-		IconAnnotation := omc.OMC.GetIconAnnotations(modelNameList[i], icon)
+		IconAnnotation := omc.OMC.GetIconAnnotations(modelNameList[i])
 		if len(modelIconAnnotation) > 8 && len(IconAnnotation) > 8 {
 			for p := 0; p < len(IconAnnotation[8:]); p++ {
 				modelIconAnnotation[8] = append(modelIconAnnotation[8].([]interface{}), IconAnnotation[8:][p].([]interface{})...)

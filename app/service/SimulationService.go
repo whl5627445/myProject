@@ -431,7 +431,7 @@ func ModelSimulate(task *SimulateTask) {
 }
 
 func DeleteSimulateTask(taskID, simulateType string) {
-	_, ok := SimulateTaskMap[taskID]
+	task, ok := SimulateTaskMap[taskID]
 	switch simulateType {
 	case "OM":
 		if ok {
@@ -448,4 +448,5 @@ func DeleteSimulateTask(taskID, simulateType string) {
 			}
 		}
 	}
+	os.RemoveAll(task.SRecord.SimulateModelResultPath)
 }

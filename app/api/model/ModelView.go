@@ -673,7 +673,7 @@ func AddModelComponentView(c *gin.Context) {
 		res.Err = msg
 		res.Status = 2
 	} else {
-		data := service.GetIconNew(item.OldComponentName, true)
+		data := service.GetIconNew(item.OldComponentName)
 		graphics := data["graphics"].(map[string]interface{})
 		graphics["originDiagram"] = item.Origin
 		graphics["original_name"] = item.NewComponentName
@@ -681,7 +681,6 @@ func AddModelComponentView(c *gin.Context) {
 		graphics["type"] = "Transformation"
 		graphics["ID"] = "0"
 		graphics["rotateAngle"] = graphics["rotation"]
-		log.Println("graphics", graphics)
 		if graphics["extent1Diagram"] != "-,-" && graphics["extent2Diagram"] != "-,-" && graphics["initialScale"] != "-" {
 			l1 := strings.Split(graphics["extent1Diagram"].(string), ",")
 			l2 := strings.Split(graphics["extent2Diagram"].(string), ",")
@@ -790,9 +789,7 @@ func UpdateModelComponentView(c *gin.Context) {
 			service.UpdateConnection(item.ModelName, connect.ConnectStart, connect.ConnectEnd, connect.Color, connect.LinePoints)
 		}
 	}
-	s := time.Now().UnixNano() / 1e6
 	service.ModelSave(item.ModelName)
-	log.Println("time", time.Now().UnixNano()/1e6-s)
 	res.Msg = "更新组件成功"
 	c.JSON(http.StatusOK, res)
 }
@@ -1260,10 +1257,19 @@ func LoadModelView(c *gin.Context) {
 	} else {
 		for _, conflict := range loadPackage.LoadPackageConflict {
 			err = service.LoadAndDeleteLibrary(conflict.Name, conflict.Version, "", "unload")
-
 		}
 	}
 	err = service.LoadAndDeleteLibrary(packageModel.PackageName, packageModel.Version, packageModel.FilePath, "load")
+	dependentLibrary := service.GetPackageUses(packageModel.PackageName)
+	for i := 0; i < len(dependentLibrary); i++ {
+		var p DataBaseModel.YssimModels
+		DB.Where("package_name = ? AND version = ? AND sys_or_user = ? AND userspace_id = ?", dependentLibrary[i][0], dependentLibrary[i][1], username, userSpaceId).First(&p)
+		loadPackageMap := service.GetLibraryAndVersions()
+		l, ok := loadPackageMap[p.PackageName]
+		if p.ID != "" && (!ok || l != p.Version) {
+			service.LoadAndDeleteLibrary(p.PackageName, p.Version, p.FilePath, "load")
+		}
+	}
 	if err != nil {
 		res.Err = err.Error()
 		res.Status = 2
@@ -1349,7 +1355,7 @@ func GetIconView(c *gin.Context) {
 	//var packageModel []DataBaseModel.YssimModels
 	//DB.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", item.PackageId, []string{"sys", username}, []string{"0", userSpaceId}).Order("create_time desc").Find(&packageModel)
 	var res responseData
-	data := service.GetIconNew(item.ModelName, true)
+	data := service.GetIconNew(item.ModelName)
 	res.Data = data
 	c.JSON(http.StatusOK, res)
 }

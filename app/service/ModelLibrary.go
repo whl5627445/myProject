@@ -231,9 +231,9 @@ func getInterdependence(unloadMap map[string]bool, LoadPackageList [][]string) m
 
 func refreshCache(packageAndVersion map[string]string) {
 	ctx := context.Background()
-	r.HDel(ctx, config.USERNAME+"-yssim-componentGraphicsData")
-	r.HDel(ctx, config.USERNAME+"-yssim-GraphicsData")
-	r.HDel(ctx, config.USERNAME+"-yssim-modelGraphicsData")
+	r.Del(ctx, config.USERNAME+"-yssim-componentGraphicsData").Result()
+	r.Del(ctx, config.USERNAME+"-yssim-GraphicsData").Result()
+	r.Del(ctx, config.USERNAME+"-yssim-modelGraphicsData").Result()
 	for k, v := range packageAndVersion {
 		packageCacheKeys := r.HKeys(ctx, k+"-"+v+"-GraphicsData").Val()
 		packageCacheValues := r.HVals(ctx, k+"-"+v+"-GraphicsData").Val()
