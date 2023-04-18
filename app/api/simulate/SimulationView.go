@@ -214,9 +214,9 @@ func SimulateResultGraphicsView(c *gin.Context) {
 					a := []float64{}
 					for s := 0; s < length; s++ {
 						index := s * step
-						if index >= length || len(o) >= 999 {
-							o = append(o, data[1][len(ordinate)-1])
-							a = append(a, data[0][len(ordinate)-1])
+						if index > length || len(o) > 999 {
+							//o = append(o, data[1][len(ordinate)-1])
+							//a = append(a, data[0][len(ordinate)-1])
 							break
 						}
 						o = append(o, data[1][index])
@@ -303,16 +303,16 @@ func SimulateResultSingularView(c *gin.Context) {
 					a := []float64{}
 					for s := 0; s < len(ordinate); s++ {
 						index := s * step
-						if index >= 1000 {
+						if index > 1000 {
 							break
 						}
 						o = append(o, data[1][index])
 						a = append(a, data[0][index])
 					}
-					if len(ordinate)%1000 != 0 {
-						o = append(o, data[1][len(ordinate)-1])
-						a = append(a, data[0][len(ordinate)-1])
-					}
+					//if len(ordinate)%1000 != 0 {
+					//	o = append(o, data[1][len(ordinate)-1])
+					//	a = append(a, data[0][len(ordinate)-1])
+					//}
 					ordinate = o
 					abscissa = a
 				}

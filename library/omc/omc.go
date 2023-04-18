@@ -8,8 +8,3 @@ func OmcInit() ZmqObject {
 }
 
 var OMC = OmcInit()
-
-//var OMC = func() ZmqObject {
-//	omcInit, _ := Connect("127.0.0.1", "23456")
-//	return omcInit
-//}()

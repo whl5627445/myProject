@@ -46,7 +46,9 @@ func GetSysRootModelView(c *gin.Context) {
 					"type":            service.GetModelType(packageModel[i].PackageName),
 				}
 			}
-			modelData = append(modelData, data)
+			if data != nil {
+				modelData = append(modelData, data)
+			}
 		}
 	}
 	res.Data = modelData
@@ -86,7 +88,9 @@ func GetUserRootModelView(c *gin.Context) {
 			if service.GetModelType(packageModel[i].PackageName) == "package" && len(data) > 0 {
 				data["haschild"] = true
 			}
-			modelData = append(modelData, data)
+			if data != nil {
+				modelData = append(modelData, data)
+			}
 		}
 
 	}
