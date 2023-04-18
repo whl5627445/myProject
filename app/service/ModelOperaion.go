@@ -14,8 +14,8 @@ func inheritanceModelNameFixes(copiedClassName, className string) {
 	}
 	classNameList := strings.Split(copiedClassName, ".")
 	packageName := classNameList[0]
-	components := omc.OMC.GetElements(className)
-	inheritedClasses := omc.OMC.GetInheritedClasses(className) // 找到父类的第一层， 只需修复这一层即可
+	components := omc.OMC.GetElements(copiedClassName)
+	inheritedClasses := omc.OMC.GetInheritedClasses(copiedClassName) // 找到父类的第一层， 只需修复这一层即可
 	var inheritedNameFixesList []string
 	for i := 0; i < len(inheritedClasses); i++ {
 		if !strings.HasPrefix(inheritedClasses[i], packageName) && !strings.HasPrefix(inheritedClasses[i], "modelica") { // 查看父类的名称是否以包名开始， 不是，则安排修复
@@ -37,8 +37,8 @@ func inheritanceModelNameFixes(copiedClassName, className string) {
 		for _, name := range modelNameAll {
 			for c := 0; c < len(inheritedNameFixesList); c++ {
 				if strings.HasSuffix(name, "."+inheritedNameFixesList[c]) && name != inheritedNameFixesList[c] { // 如果name是以被修复的名称结尾，且不等于被修复名称自身，则被视为找到带前缀的名称
-					classStrNew = strings.ReplaceAll(classStrOld, "extends "+"."+inheritedNameFixesList[c]+";", "extends "+name+";") // 查找成功，进行替换
-					inheritedNameFixesList = append(inheritedNameFixesList[:c], inheritedNameFixesList[c+1:]...)                     // 替换完成，将被替换的名字移除
+					classStrNew = strings.ReplaceAll(classStrOld, "extends "+"."+inheritedNameFixesList[c], "extends "+name) // 查找成功，进行替换
+					inheritedNameFixesList = append(inheritedNameFixesList[:c], inheritedNameFixesList[c+1:]...)             // 替换完成，将被替换的名字移除
 				}
 			}
 		}

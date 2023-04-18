@@ -3,6 +3,7 @@ package API
 import (
 	"log"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -23,6 +24,7 @@ func GetSysRootModelView(c *gin.Context) {
 		# 获取左侧模型列表接口， 此接口获取系统模型和用户上传模型的根节点列表，暂时没有图标信息
 	*/
 	var res responseData
+	keywords := c.Query("keywords")
 	var modelData []map[string]interface{}
 	var packageModel []DataBaseModel.YssimModels
 	DB.Where("sys_or_user =  ? AND userspace_id = ?", "sys", "0").Find(&packageModel)
@@ -30,14 +32,19 @@ func GetSysRootModelView(c *gin.Context) {
 	for i := 0; i < len(packageModel); i++ {
 		p, ok := libraryAndVersions[packageModel[i].PackageName]
 		if ok && p == packageModel[i].Version {
-			data := map[string]interface{}{
-				"package_id":      packageModel[i].ID,
-				"package_name":    packageModel[i].PackageName,
-				"package_version": packageModel[i].Version,
-				"model_name":      packageModel[i].PackageName,
-				"haschild":        service.GetModelHasChild(packageModel[i].PackageName),
-				"image":           service.GetIcon(packageModel[i].PackageName, packageModel[i].PackageName, packageModel[i].Version),
-				"type":            service.GetModelType(packageModel[i].PackageName),
+			data := map[string]interface{}{}
+			if keywords != "" {
+				data = service.SearchPackage(packageModel[i], keywords)
+			} else {
+				data = map[string]interface{}{
+					"package_id":      packageModel[i].ID,
+					"package_name":    packageModel[i].PackageName,
+					"package_version": packageModel[i].Version,
+					"model_name":      packageModel[i].PackageName,
+					"haschild":        service.GetModelHasChild(packageModel[i].PackageName),
+					"image":           "",
+					"type":            service.GetModelType(packageModel[i].PackageName),
+				}
 			}
 			modelData = append(modelData, data)
 		}
@@ -53,6 +60,7 @@ func GetUserRootModelView(c *gin.Context) {
 	*/
 	userName := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
+	keywords := c.Query("keywords")
 	var res responseData
 	var modelData []map[string]interface{}
 	var packageModel []DataBaseModel.YssimModels
@@ -61,16 +69,21 @@ func GetUserRootModelView(c *gin.Context) {
 	for i := 0; i < len(packageModel); i++ {
 		loadVersions, ok := libraryAndVersions[packageModel[i].PackageName]
 		if ok && loadVersions == packageModel[i].Version {
-			data := map[string]interface{}{
-				"package_id":      packageModel[i].ID,
-				"package_name":    packageModel[i].PackageName,
-				"package_version": packageModel[i].Version,
-				"model_name":      packageModel[i].PackageName,
-				"haschild":        service.GetModelHasChild(packageModel[i].PackageName),
-				"image":           service.GetIcon(packageModel[i].PackageName, packageModel[i].PackageName, packageModel[i].Version),
-				"type":            service.GetModelType(packageModel[i].PackageName),
+			data := map[string]interface{}{}
+			if keywords != "" {
+				data = service.SearchPackage(packageModel[i], keywords)
+			} else {
+				data = map[string]interface{}{
+					"package_id":      packageModel[i].ID,
+					"package_name":    packageModel[i].PackageName,
+					"package_version": packageModel[i].Version,
+					"model_name":      packageModel[i].PackageName,
+					"haschild":        service.GetModelHasChild(packageModel[i].PackageName),
+					"image":           "",
+					"type":            service.GetModelType(packageModel[i].PackageName),
+				}
 			}
-			if service.GetModelType(packageModel[i].PackageName) == "package" {
+			if service.GetModelType(packageModel[i].PackageName) == "package" && len(data) > 0 {
 				data["haschild"] = true
 			}
 			modelData = append(modelData, data)
@@ -511,6 +524,14 @@ func CopyClassView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
+	re1, _ := regexp.Compile("^[a-zA-Z_]")
+	f := re1.Find([]byte(item.ModelName))
+	if f == nil {
+		res.Err = "名称请以子母和下划线开头"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
 	packageName := item.ModelName
 	if item.ParentName != "" {
 		packageName = strings.Split(item.ParentName, ".")[0]
@@ -778,6 +799,7 @@ func UpdateModelComponentView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
+	s := time.Now().UnixMilli()
 	result := service.UpdateComponent(item.ComponentName, item.ComponentClassName, item.ModelName, item.Origin, item.Rotation, item.Extent)
 	if !result {
 		res.Err = "更新组件失败"
@@ -789,6 +811,7 @@ func UpdateModelComponentView(c *gin.Context) {
 			service.UpdateConnection(item.ModelName, connect.ConnectStart, connect.ConnectEnd, connect.Color, connect.LinePoints)
 		}
 	}
+	log.Println("time", time.Now().UnixMilli()-s)
 	service.ModelSave(item.ModelName)
 	res.Msg = "更新组件成功"
 	c.JSON(http.StatusOK, res)

@@ -39,14 +39,15 @@ func SearchModel(model DataBaseModel.YssimModels, keyWords, parentNode string) [
 					searchModelMap[nameParent] = true
 					modelType := omc.OMC.GetClassRestriction(nameParent)
 					data := map[string]interface{}{
-						"name":         shortName,
-						"model_name":   nameParent,
-						"haschild":     false,
-						"type":         modelType,
-						"image":        "",
-						"package_id":   model.ID,
-						"package_name": model.PackageName,
-						"sys_user":     model.SysUser,
+						"name":            shortName,
+						"model_name":      nameParent,
+						"haschild":        false,
+						"type":            modelType,
+						"image":           "",
+						"package_id":      model.ID,
+						"package_name":    model.PackageName,
+						"sys_user":        model.SysUser,
+						"package_version": model.Version,
 					}
 					childList := omc.OMC.GetClassNames(nameParent, false)
 					if len(childList) > 0 {
@@ -59,4 +60,35 @@ func SearchModel(model DataBaseModel.YssimModels, keyWords, parentNode string) [
 		}
 	}
 	return modelNameList
+}
+
+func SearchPackage(model DataBaseModel.YssimModels, keyWords string) map[string]interface{} {
+	words := strings.ToLower(keyWords)
+	modelNames := omc.OMC.GetClassNames(model.PackageName, true)
+	for _, name := range modelNames {
+		wordsIndex := strings.Index(strings.ToLower(name), words)
+		if wordsIndex != -1 {
+			nameListAll := strings.Split(name, ".")
+			shortName := nameListAll[0]
+			nameParent := shortName
+			modelType := omc.OMC.GetClassRestriction(nameParent)
+			data := map[string]interface{}{
+				"name":            shortName,
+				"model_name":      nameParent,
+				"haschild":        false,
+				"type":            modelType,
+				"image":           "",
+				"package_id":      model.ID,
+				"package_name":    model.PackageName,
+				"sys_user":        model.SysUser,
+				"package_version": model.Version,
+			}
+			childList := omc.OMC.GetClassNames(nameParent, false)
+			if len(childList) > 0 {
+				data["haschild"] = true
+			}
+			return data
+		}
+	}
+	return nil
 }

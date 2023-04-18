@@ -1,8 +1,10 @@
 package service
 
 import (
+	"log"
 	"strconv"
 	"strings"
+	"time"
 	"yssim-go/config"
 	"yssim-go/library/omc"
 )
@@ -121,9 +123,11 @@ func DeleteComponent(componentName, modelNameAll string) bool {
 }
 
 func UpdateComponent(componentName, componentClassName, modelNameAll, origin, rotation string, extent []string) bool {
+	s := time.Now().UnixMilli()
 	result := false
 	if omc.OMC.GetClassRestriction(componentClassName) != "connector" {
 		result = omc.OMC.UpdateComponent(componentName, componentClassName, modelNameAll, origin, rotation, extent)
+		log.Println("uptime time", time.Now().UnixMilli()-s)
 	} else {
 		result = omc.OMC.UpdateInterfacesComponent(componentName, componentClassName, modelNameAll, origin, rotation, extent)
 	}
