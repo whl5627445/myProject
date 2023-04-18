@@ -10,11 +10,14 @@ func GetSimulationOptions(modelName string) map[string]string {
 		"tolerance":         data[2],
 		"numberOfIntervals": data[3],
 		"interval":          data[4],
+		"simulationFlags":   data[5],
 	}
 }
 
-func SetSimulationOptions(modelName, startTime, stopTime, interval string) bool {
-	annotate := "experiment(StartTime=" + startTime + ",StopTime=" + stopTime + ",Interval=" + interval + ")"
-	data := omc.OMC.AddClassAnnotation(modelName, annotate)
-	return data
+func SetSimulationOptions(modelName, startTime, stopTime, interval, simulationFlags string) bool {
+	annotate0 := "experiment(StartTime=" + startTime + ",StopTime=" + stopTime + ",Interval=" + interval + ")"
+	data0 := omc.OMC.AddClassAnnotation(modelName, annotate0)
+	annotate1 := "__OpenModelica_simulationFlags(solver=\"" + simulationFlags + "\")"
+	data1 := omc.OMC.AddClassAnnotation(modelName, annotate1)
+	return data0 && data1
 }

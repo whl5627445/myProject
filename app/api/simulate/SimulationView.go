@@ -48,7 +48,7 @@ func SetSimulationOptionsView(c *gin.Context) {
 		return
 	}
 	var res responseData
-	result := service.SetSimulationOptions(item.ModelName, item.StartTime, item.StopTime, item.Interval)
+	result := service.SetSimulationOptions(item.ModelName, item.StartTime, item.StopTime, item.Interval, item.SimulationFlags)
 	if !result {
 		res.Err = "设置失败，请稍后再试"
 		res.Status = 2

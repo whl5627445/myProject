@@ -869,7 +869,7 @@ func (o *ZmqObject) ConvertUnits(s1, s2 string) []interface{} {
 
 // GetSimulationOptions 获取模型仿真设置
 func (o *ZmqObject) GetSimulationOptions(className string) []string {
-	var dataList = []string{"", "", "", "", ""}
+	var dataList = []string{"", "", "", "", "", ""}
 	cmd := "getSimulationOptions(" + className + ")"
 	data, ok := o.SendExpression(cmd)
 	if ok && len(data) > 4 {
@@ -878,6 +878,14 @@ func (o *ZmqObject) GetSimulationOptions(className string) []string {
 		dataList[2] = data[2].(string)
 		dataList[3] = data[3].(string)
 		dataList[4] = data[4].(string)
+	}
+	// 获取仿真类型的注释
+	cmd = "getAnnotationModifierValue(" + className + ",\"__OpenModelica_simulationFlags\",\"solver\")"
+	result, ok := o.SendExpressionNoParsed(cmd)
+	result = bytes.ReplaceAll(result, []byte("\""), []byte(""))
+	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
+	if ok && string(result) != "" {
+		dataList[5] = string(result)
 	}
 	return dataList
 }
