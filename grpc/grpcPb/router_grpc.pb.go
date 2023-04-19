@@ -8,7 +8,6 @@ package grpcPb
 
 import (
 	context "context"
-
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -32,6 +31,7 @@ type GreeterClient interface {
 	MatToCsv(ctx context.Context, in *MatToCsvRequest, opts ...grpc.CallOption) (*MatToCsvReply, error)
 	ZarrToCsv(ctx context.Context, in *ZarrToCsvRequest, opts ...grpc.CallOption) (*ZarrToCsvReply, error)
 	CheckVarExist(ctx context.Context, in *CheckVarExistRequest, opts ...grpc.CallOption) (*CheckVarExistReply, error)
+	PyOmcSimulation(ctx context.Context, in *PyOmcSimulationRequest, opts ...grpc.CallOption) (*PyOmcSimulationReply, error)
 }
 
 type greeterClient struct {
@@ -123,6 +123,15 @@ func (c *greeterClient) CheckVarExist(ctx context.Context, in *CheckVarExistRequ
 	return out, nil
 }
 
+func (c *greeterClient) PyOmcSimulation(ctx context.Context, in *PyOmcSimulationRequest, opts ...grpc.CallOption) (*PyOmcSimulationReply, error) {
+	out := new(PyOmcSimulationReply)
+	err := c.cc.Invoke(ctx, "/Greeter/PyOmcSimulation", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GreeterServer is the server API for Greeter service.
 // All implementations must embed UnimplementedGreeterServer
 // for forward compatibility
@@ -136,6 +145,7 @@ type GreeterServer interface {
 	MatToCsv(context.Context, *MatToCsvRequest) (*MatToCsvReply, error)
 	ZarrToCsv(context.Context, *ZarrToCsvRequest) (*ZarrToCsvReply, error)
 	CheckVarExist(context.Context, *CheckVarExistRequest) (*CheckVarExistReply, error)
+	PyOmcSimulation(context.Context, *PyOmcSimulationRequest) (*PyOmcSimulationReply, error)
 	mustEmbedUnimplementedGreeterServer()
 }
 
@@ -169,6 +179,9 @@ func (UnimplementedGreeterServer) ZarrToCsv(context.Context, *ZarrToCsvRequest) 
 }
 func (UnimplementedGreeterServer) CheckVarExist(context.Context, *CheckVarExistRequest) (*CheckVarExistReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CheckVarExist not implemented")
+}
+func (UnimplementedGreeterServer) PyOmcSimulation(context.Context, *PyOmcSimulationRequest) (*PyOmcSimulationReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PyOmcSimulation not implemented")
 }
 func (UnimplementedGreeterServer) mustEmbedUnimplementedGreeterServer() {}
 
@@ -345,6 +358,24 @@ func _Greeter_CheckVarExist_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Greeter_PyOmcSimulation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PyOmcSimulationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GreeterServer).PyOmcSimulation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Greeter/PyOmcSimulation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GreeterServer).PyOmcSimulation(ctx, req.(*PyOmcSimulationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Greeter_ServiceDesc is the grpc.ServiceDesc for Greeter service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -387,6 +418,10 @@ var Greeter_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CheckVarExist",
 			Handler:    _Greeter_CheckVarExist_Handler,
+		},
+		{
+			MethodName: "PyOmcSimulation",
+			Handler:    _Greeter_PyOmcSimulation_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

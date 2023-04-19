@@ -2,8 +2,13 @@ package service
 
 import (
 	"fmt"
+	"log"
+	"yssim-go/app/DataBaseModel"
+	"yssim-go/config"
 	"yssim-go/grpc/grpcPb"
 )
+
+var DB = config.DB
 
 func GrpcReadSimulationResult(VarList []string, SimulateModelResultPath string) ([][]float64, bool) {
 
@@ -107,4 +112,56 @@ func GrpcFmuSimulation(ID, userSpaceId, FilePath, SimulateModelName, Username, r
 	}
 	return FmuSimulationRes, err
 
+}
+
+func GrpcPyOmcSimulation(uid, userSpaceId, userName, simulateModelName, resultFilePath, rePath string, simulationPraData map[string]string) (*grpcPb.PyOmcSimulationReply, error) {
+	// 获取需要加载的系统模型
+	sysModelData := make(map[string]string)
+	var packageModel []DataBaseModel.YssimModels
+	DB.Where("sys_or_user =  ? AND userspace_id = ?", "sys", "0").Find(&packageModel)
+	libraryAndVersions := GetLibraryAndVersions()
+	log.Println("libraryAndVersions:", libraryAndVersions)
+	log.Println("len(packageModel)", len(packageModel))
+	for i := 0; i < len(packageModel); i++ {
+		p, ok := libraryAndVersions[packageModel[i].PackageName]
+		if ok && p == packageModel[i].Version {
+			log.Println("packageModel[i].PackageName", packageModel[i].PackageName)
+			sysModelData[packageModel[i].PackageName] = packageModel[i].Version
+		}
+	}
+	// 获取需要加载的用户模型
+	userModelData := make(map[string]string)
+	DB.Where("sys_or_user = ? AND userspace_id = ?", userName, userSpaceId).Find(&packageModel)
+	libraryAndVersions = GetLibraryAndVersions()
+	for i := 0; i < len(packageModel); i++ {
+		loadVersions, ok := libraryAndVersions[packageModel[i].PackageName]
+		if ok && loadVersions == packageModel[i].Version {
+			userModelData[packageModel[i].PackageName] = packageModel[i].FilePath
+		}
+
+	}
+
+	GrpcBuildModelRequest := &grpcPb.PyOmcSimulationRequest{
+		Uuid:              uid,
+		UserSpaceId:       userSpaceId,
+		UserName:          userName,
+		SimulateModelName: simulateModelName,
+		ResultFilePath:    resultFilePath,
+		RelativePath:      rePath,
+		SimulationPraData: simulationPraData,
+		UserModel:         userModelData,
+		SysModel:          sysModelData,
+	}
+	replyTest, err := grpcPb.Client.PyOmcSimulation(grpcPb.Ctx, GrpcBuildModelRequest)
+	return replyTest, err
+
+}
+
+func GrpcPyOmcSimulationProcessOperation(uid, operation string) (*grpcPb.ProcessOperationReply, error) {
+	PyOmcSimProcessOperationRequest := &grpcPb.ProcessOperationRequest{
+		Uuid:          uid,
+		OperationName: operation,
+	}
+	replyTest, err := grpcPb.Client.ProcessOperation(grpcPb.Ctx, PyOmcSimProcessOperationRequest)
+	return replyTest, err
 }

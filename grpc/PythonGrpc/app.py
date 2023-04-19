@@ -1,9 +1,9 @@
 from concurrent import futures
 import os.path
 import pandas as pd
-from multiprocessing import Manager
-from libs.defs import getSate, suspendProcess, resumeProcess, killProcess, initOmc, buildFMU
-from libs.FmpySimulation import MyProcess
+from libs.PyOmcSimulationProcessOperation import kill_py_omc_process,suspend_process,resume_process
+from libs.PyOmcSimulationProcess import PyOmcSimulation
+from libs.FindPort import findPort
 import threading
 import zarr
 from config.db_config import Session, YssimSimulateRecords
@@ -13,37 +13,76 @@ import router_pb2
 import router_pb2_grpc
 import DyMat
 from fmpy import write_csv
+import asyncio
 
 adsPath = "/home/simtek/code/"
+# used_ports = []
 # adsPath = "/home/xuqingda/GolandProjects/YssimGoService/"
 
 if __name__ == '__main__':
-    # 进程通信，用于保存每个进程的仿真结果
-    managerResDict = Manager().dict()
-    managerLock = Manager().Lock()
     # 进程列表，用于保存每个进程对象
-    processList = []
+    PyOmcSimulationProcessList = []
 
     # 实现 proto 文件中定义的 GreeterServicer
     class Greeter(router_pb2_grpc.GreeterServicer):
         # 实现 proto 文件中定义的 rpc 调用
         # 仿真接口
-        def FmuSimulation(self, request, context):
-
-            if not os.path.exists(adsPath + request.moPath):
-                return router_pb2.FmuSimulationReply(log="No such file or directory!")
-                # 最大任务数
-            if not buildFMU(request.moPath, request.className, request.userName, request.resPath):
-                return router_pb2.FmuSimulationReply(log="buildFMU error!")
-            if len(processList) < 10:
-                processOne = MyProcess(request, managerResDict)
-                processList.append(processOne)
-                return router_pb2.FmuSimulationReply(log="Task submitted successfully.")
+        def PyOmcSimulation(self, request, context):
+            print("PyOmcSimulation被调用。")
+            for i in PyOmcSimulationProcessList:
+                if i.state == "stopped":
+                    PyOmcSimulationProcessList.remove(i)
+                    del i
+            if len(PyOmcSimulationProcessList) < 4:
+                # 找到空闲的端口号
+                port = findPort(23458)
+                print("端口号", port)
+                print("进程数量", len(PyOmcSimulationProcessList))
+                processOne = PyOmcSimulation(request, port=port)
+                PyOmcSimulationProcessList.append(processOne)
+                thread = threading.Thread(target=processOne.run)
+                thread.start()
+                return router_pb2.PyOmcSimulationReply(ok=True,
+                                                       msg="Task submitted successfully."
+                                                       )
             else:
-                return router_pb2.FmuSimulationReply(
-                    log="The total number of system tasks has exceeded 8. Please wait and request again!")
+                return router_pb2.PyOmcSimulationReply(ok=False,
+                                                       msg="The total number of system tasks has exceeded 8."
+                                                           " Please wait and request again!"
+                                                       )
+
+        def ProcessOperation(self, request, context):
+            print("ProcessOperation被调用。")
+            multiprocessing_id = request.uuid
+            operationName = request.operationName
+            if operationName == "kill":
+                killProcessReply = kill_py_omc_process(multiprocessing_id, PyOmcSimulationProcessList)
+                return router_pb2.ProcessOperationReply(msg=killProcessReply["msg"])
+            if operationName == "suspend":
+                suspendProcessReply = suspend_process(multiprocessing_id, PyOmcSimulationProcessList)
+                return router_pb2.ProcessOperationReply(msg=suspendProcessReply["msg"])
+            if operationName == "resume":
+                resumeProcessReply = resume_process(multiprocessing_id, PyOmcSimulationProcessList)
+                return router_pb2.ProcessOperationReply(msg=resumeProcessReply["msg"])
+            return router_pb2.ProcessOperationReply(msg="Unknown operation!")
+
+        # def FmuSimulation(self, request, context):
+        #
+        #     if not os.path.exists(adsPath + request.moPath):
+        #         return router_pb2.FmuSimulationReply(log="No such file or directory!")
+        #         # 最大任务数
+        #     if not buildFMU(request.moPath, request.className, request.userName, request.resPath):
+        #         return router_pb2.FmuSimulationReply(log="buildFMU error!")
+        #     if len(processList) < 10:
+        #         processOne = MyProcess(request, managerResDict)
+        #         processList.append(processOne)
+        #         return router_pb2.FmuSimulationReply(log="Task submitted successfully.")
+        #     else:
+        #         return router_pb2.FmuSimulationReply(
+        #             log="The total number of system tasks has exceeded 8. Please wait and request again!")
 
         # 获取某个进程状态信息
+
         def GetProcessStatus(self, request, context):
             uuid = request.uuid
             with Session() as session:
@@ -68,19 +107,19 @@ if __name__ == '__main__':
                                                         resPath="")
 
         # 获取所有进程的数量
-        def GerAllProcessNumber(self, request, context):
-            running_num = 0
-            pending_num = 0
-            for i in processList:
-                processState = getSate(i.__repr__())
-                if processState == 'initial':
-                    pending_num += 1
-                if processState == 'started':
-                    running_num += 1
-            return router_pb2.GerAllProcessNumberReply(totalTasks=len(processList),
-                                                       numOfRunningProcess=running_num,
-                                                       numOfPendingProcess=pending_num
-                                                       )
+        # def GerAllProcessNumber(self, request, context):
+        #     running_num = 0
+        #     pending_num = 0
+        #     for i in processList:
+        #         processState = getSate(i.__repr__())
+        #         if processState == 'initial':
+        #             pending_num += 1
+        #         if processState == 'started':
+        #             running_num += 1
+        #     return router_pb2.GerAllProcessNumberReply(totalTasks=len(processList),
+        #                                                numOfRunningProcess=running_num,
+        #                                                numOfPendingProcess=pending_num
+        #                                                )
 
         # 获取变量结果 单个记录单个变量
         def GetResult(self, request, context):
@@ -99,35 +138,8 @@ if __name__ == '__main__':
                         return router_pb2.GetResultReply(data=data, log="true")
                     else:
                         return router_pb2.GetResultReply(data=[], log="not found var(end)")
-                else:
-                    if request.uuid in managerResDict:
-                        zarr.save(zarrPath, managerResDict[request.uuid])
-                        res = zarr.load(zarrPath)
-                        if (res.size != 0) and (request.variable in res.dtype.names):
-                            data = res[request.variable].tolist()
-                            return router_pb2.GetResultReply(data=data, log="true")
-                        else:
-                            return router_pb2.GetResultReply(data=[], log="not found var(running)")
-                    else:
-                        return router_pb2.GetResultReply(data=[], log="not found dict in mana")
             else:
                 return router_pb2.GetResultReply(data=[], log="not found resPath")
-
-        # 进程操作
-        def ProcessOperation(self, request, context):
-            print("ProcessOperation被调用。")
-            multiprocessing_id = request.uuid
-            operationName = request.operationName
-            if operationName == "kill":
-                killProcessReply = killProcess(multiprocessing_id, processList, managerResDict)
-                return router_pb2.ProcessOperationReply(msg=killProcessReply["msg"])
-            if operationName == "suspend":
-                suspendProcessReply = suspendProcess(multiprocessing_id, processList)
-                return router_pb2.ProcessOperationReply(msg=suspendProcessReply["msg"])
-            if operationName == "resume":
-                resumeProcessReply = resumeProcess(multiprocessing_id, processList)
-                return router_pb2.ProcessOperationReply(msg=resumeProcessReply["msg"])
-            return router_pb2.ProcessOperationReply(msg="Unknown operation!")
 
         # 单个记录，多个变量
         def ReadSimulationResult(self, request, context):
@@ -207,30 +219,34 @@ if __name__ == '__main__':
             return router_pb2.CheckVarExistReply(Res=resMap)
 
 
-    def action():
-        while True:
-            time.sleep(1)
-            for i in processList:
-                processState = getSate(i.__repr__())
-                if processState in ["closed", "unknown", "stopped"]:
-                    processList.remove(i)
-            for i in processList[:8]:
-                if not i.is_alive():
-                    i.start()
-
-
-    startProcessList = threading.Thread(target=action)
-    startProcessList.start()
+    # def action():
+    #     while True:
+    #         time.sleep(1)
+    #         print(used_ports)
+    #         for i in PyOmcSimulationProcessList:
+    #             # processState = getSate(i.__repr__())
+    #             if i.state == "stopped":
+    #                 PyOmcSimulationProcessList.remove(i)
+    #                 used_ports.remove(i.omc_obj._interactivePort)
+    #                 del i
+    #         for i in PyOmcSimulationProcessList[:2]:
+    #             if i.state == "init":
+    #                 i.run()
+    #
+    #
+    # startProcessList = threading.Thread(target=action)
+    # startProcessList.start()
 
     # 启动 rpc 服务
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     router_pb2_grpc.add_GreeterServicer_to_server(Greeter(), server)
     server.add_insecure_port('0.0.0.0:50051')
-    initOmc()
-    print("服务开启成功！")
+
+    print("服务开启成功！0.0.0.0:50051")
     server.start()
     try:
         while True:
             time.sleep(24 * 3600)  # one day in seconds
+
     except KeyboardInterrupt:
         server.stop(0)

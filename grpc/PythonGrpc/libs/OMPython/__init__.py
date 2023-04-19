@@ -28,27 +28,24 @@ if sys.platform == 'darwin':
     sys.path.append('/opt/openmodelica/lib/python2.7/site-packages/')
 
 
-
-
-
 class DummyPopen():
-    def __init__ (self, pid):
+    def __init__(self, pid):
         self.pid = pid
         self.process = psutil.Process(pid)
         self.returncode = 0
 
-    def poll (self):
+    def poll(self):
         return None if self.process.is_running() else True
 
-    def kill (self):
+    def kill(self):
         return os.kill(self.pid, signal.SIGKILL)
 
-    def wait (self, timeout):
+    def wait(self, timeout):
         return self.process.wait(timeout=timeout)
 
 
 class OMCSessionHelper():
-    def __init__ (self):
+    def __init__(self):
         # Get the path to the OMC executable, if not installed this will be None
         omc_env_home = os.environ.get('OPENMODELICAHOME')
         if omc_env_home:
@@ -59,18 +56,18 @@ class OMCSessionHelper():
                 raise ValueError("Cannot find OpenModelica executable, please install from openmodelica.org")
             self.omhome = os.path.split(os.path.split(os.path.realpath(path_to_omc))[0])[0]
 
-    def _get_omc_path (self):
+    def _get_omc_path(self):
         try:
             return os.path.join(self.omhome, 'bin', 'omc')
         except BaseException:
             logging.error(
-                    "The OpenModelica compiler is missing in the System path (%s), please install it" % os.path.join(
-                            self.omhome, 'bin', 'omc'))
+                "The OpenModelica compiler is missing in the System path (%s), please install it" % os.path.join(
+                    self.omhome, 'bin', 'omc'))
             raise
 
 
 class OMCSessionBase(with_metaclass(abc.ABCMeta, object)):
-    def __init__ (self, readonly=False, interactivePort = None, random_string=None, name="simtek"):
+    def __init__(self, readonly=False, interactivePort=None, random_string=None, name="simtek"):
         self.readonly = readonly
         self.omc_cache = {}
         self._omc_process = None
@@ -80,6 +77,7 @@ class OMCSessionBase(with_metaclass(abc.ABCMeta, object)):
         self._serverIPAddress = "127.0.0.1"
         self._interactivePort = interactivePort
         self._name = name
+        print("执行OMCSessionBase初始化")
         # FIXME: this code is not well written... need to be refactored
         self._temp_dir = tempfile.gettempdir()
         print(self._temp_dir)
@@ -97,13 +95,13 @@ class OMCSessionBase(with_metaclass(abc.ABCMeta, object)):
             # We are running as a uid not existing in the password database... Pretend we are nobody
             self._currentUser = "nobody"
 
-    def __del__ (self):
+    def __del__(self):
         try:
-            pass
-            # self.sendExpression("quit()")
+            self.sendExpression("quit()")
         except:
             pass
         self._omc_log_file.close()
+        print("结束omc子进程：",self._omc_process.pid)
         if sys.version_info.major >= 3:
             try:
                 self._omc_process.wait(timeout=2.0)
@@ -118,7 +116,7 @@ class OMCSessionBase(with_metaclass(abc.ABCMeta, object)):
         # kill self._omc_process process if it is still running/exists
         if self._omc_process is not None and self._omc_process.returncode is None:
             print("OMC did not exit after being sent the quit() command; killing the process with pid=%s" % str(
-                    self._omc_process.pid))
+                self._omc_process.pid))
             if sys.platform == "win32":
                 self._omc_process.kill()
                 self._omc_process.wait()
@@ -127,80 +125,28 @@ class OMCSessionBase(with_metaclass(abc.ABCMeta, object)):
                 self._omc_process.kill()
                 self._omc_process.wait()
 
-    def _create_omc_log_file (self, suffix):
+    def _create_omc_log_file(self, suffix):
         if sys.platform == 'win32':
             self._omc_log_file = open(
-                    os.path.join(self._temp_dir, "openmodelica.{0}.{1}.log".format(suffix, self._random_string)), 'w')
+                os.path.join(self._temp_dir, "openmodelica.{0}.{1}.log".format(suffix, self._random_string)), 'w')
         else:
             # this file must be closed in the destructor
+            print("_omc_log_file",os.path.join(self._temp_dir,
+                                                   "openmodelica.{0}.{1}.{2}.log".format(self._currentUser, suffix,
+                                                                                         self._random_string)))
             self._omc_log_file = open(os.path.join(self._temp_dir,
                                                    "openmodelica.{0}.{1}.{2}.log".format(self._currentUser, suffix,
                                                                                          self._random_string)), 'w')
 
-    def _start_omc_process (self, timeout, sys_start=True):
-        if sys.platform == 'win32':
-            omhome_bin = os.path.join(self.omhome, 'bin').replace("\\", "/")
-            my_env = os.environ.copy()
-            my_env["PATH"] = omhome_bin + os.pathsep + my_env["PATH"]
-            self._omc_process = subprocess.Popen(self._omc_command, stdout=self._omc_log_file,
-                                                 stderr=self._omc_log_file, env=my_env)
-        else:
-            if sys_start:
-                for i in psutil.process_iter():
-                    if i.name() == "omc":
-                        i.kill()
-                        time.sleep(0.5)
-                        break
-            # Because we spawned a shell, and we need to be able to kill OMC, create a new process group for this
-            self._omc_process = subprocess.Popen(self._omc_command, shell=True, stdout=self._omc_log_file,
-                                                 stderr=self._omc_log_file, preexec_fn=os.setsid)
-        if self._docker:
-            for i in range(0, 40):
-                try:
-                    with open(self._dockerCidFile, "r") as fin:
-                        self._dockerCid = fin.read().strip()
-                except:
-                    pass
-                if self._dockerCid:
-                    break
-                time.sleep(timeout / 40.0)
-            try:
-                os.remove(self._dockerCidFile)
-            except:
-                pass
-            if self._dockerCid is None:
-                logging.error("Docker did not start. Log-file says:\n%s" % (open(self._omc_log_file.name).read()))
-                raise Exception(
-                        "Docker did not start (timeout=%f might be too short especially if you did not docker pull the image before this command)." % timeout)
-        if self._docker or self._dockerContainer:
-            if self._dockerNetwork == "separate":
-                self._serverIPAddress = \
-                    json.loads(subprocess.check_output(["docker", "inspect", self._dockerCid]).decode().strip())[0][
-                        "NetworkSettings"]["IPAddress"]
-            for i in range(0, 40):
-                if sys.platform == 'win32':
-                    break
-                dockerTop = subprocess.check_output(["sudo", "docker", "top", self._dockerCid]).decode().strip()
-                self._omc_process = None
-                for line in dockerTop.split("\n"):
-                    columns = line.split()
-                    if self._random_string in line:
-                        try:
-                            self._omc_process = DummyPopen(int(columns[1]))
-                        except psutil.NoSuchProcess:
-                            raise Exception(
-                                    "Could not find PID %d - is this a docker instance spawned without --pid=host?\nLog-file says:\n%s" % (
-                                        self._random_string, dockerTop, open(self._omc_log_file.name).read()))
-                        break
-                if self._omc_process is not None:
-                    break
-                time.sleep(timeout / 40.0)
-            if self._omc_process is None:
-                raise Exception("Docker top did not contain omc process %s:\n%s\nLog-file says:\n%s" % (
-                    self._random_string, dockerTop, open(self._omc_log_file.name).read()))
+    def _start_omc_process(self):
+
+        # Because we spawned a shell, and we need to be able to kill OMC, create a new process group for this
+        self._omc_process = subprocess.Popen(self._omc_command, shell=True, stdout=self._omc_log_file,
+                                             stderr=self._omc_log_file, preexec_fn=os.setsid)
+
         return self._omc_process
 
-    def _getuid (self):
+    def _getuid(self):
         """
         The uid to give to docker.
         On Windows, volumes are mapped with all files are chmod ugo+rwx,
@@ -208,7 +154,7 @@ class OMCSessionBase(with_metaclass(abc.ABCMeta, object)):
         """
         return 1000 if sys.platform == 'win32' else os.getuid()
 
-    def _set_omc_command (self, omc_path_and_args_list):
+    def _set_omc_command(self, omc_path_and_args_list):
         """Define the command that will be called by the subprocess module.
 
         On Windows, use the list input style of the subprocess module to
@@ -219,7 +165,7 @@ class OMCSessionBase(with_metaclass(abc.ABCMeta, object)):
             extraFlags = ["-d=zmqDangerousAcceptConnectionsFromAnywhere"]
             if not self._interactivePort:
                 raise Exception(
-                        "docker on Windows requires knowing which port to connect to. For dockerContainer=..., the container needs to have already manually exposed this port when it was started (-p 127.0.0.1:n:n) or you get an error later.")
+                    "docker on Windows requires knowing which port to connect to. For dockerContainer=..., the container needs to have already manually exposed this port when it was started (-p 127.0.0.1:n:n) or you get an error later.")
         else:
             extraFlags = []
         if self._docker:
@@ -254,23 +200,23 @@ class OMCSessionBase(with_metaclass(abc.ABCMeta, object)):
             self._omc_command = omc_path_and_args_list
         else:
             self._omc_command = ' '.join(
-                    [shlex.quote(a) if (sys.version_info > (3, 0)) else a for a in omc_path_and_args_list])
+                [shlex.quote(a) if (sys.version_info > (3, 0)) else a for a in omc_path_and_args_list])
 
         return self._omc_command
 
     @abc.abstractmethod
-    def _connect_to_omc (self, timeout):
+    def _connect_to_omc(self, timeout):
         pass
 
     @abc.abstractmethod
-    def execute (self, command):
+    def execute(self, command):
         pass
 
-    def clearOMParserResult (self):
+    def clearOMParserResult(self):
         OMParser.result = {}
 
     @abc.abstractmethod
-    def sendExpression (self, command, parsed=True):
+    def sendExpression(self, command, parsed=True):
         """
         Sends an expression to the OpenModelica. The return type is parsed as if the
         expression was part of the typed OpenModelica API (see ModelicaBuiltin.mo).
@@ -284,7 +230,7 @@ class OMCSessionBase(with_metaclass(abc.ABCMeta, object)):
         """
         pass
 
-    def ask (self, question, opt=None, parsed=True):
+    def ask(self, question, opt=None, parsed=True):
         p = (question, opt, parsed)
 
         if self.readonly and question != 'getErrorString':
@@ -314,12 +260,12 @@ class OMCSessionBase(with_metaclass(abc.ABCMeta, object)):
 
         return res
 
-    def loadFile (self, filename):
+    def loadFile(self, filename):
         cmd = 'loadFile(\"{0}\", \"UTF-8\",true,true,false)'.format(filename)
         return self.ask(cmd)
 
-    def simulate (self, className, fileNamePrefix, simulate_parameters_data):
-        cmd = className + ', fileNamePrefix = "' + fileNamePrefix  + 'result\"'
+    def simulate(self, className, fileNamePrefix, simulate_parameters_data):
+        cmd = className + ', fileNamePrefix = "' + fileNamePrefix + 'result\"'
         if simulate_parameters_data:
             simulate_parameters_list = []
             for k, v in simulate_parameters_data.items():
@@ -327,109 +273,111 @@ class OMCSessionBase(with_metaclass(abc.ABCMeta, object)):
                     simulate_parameters_list.append(str(k) + "=" + str(v))
             cmd = cmd + ", " + ", ".join(simulate_parameters_list)
         self.directoryExists(fileNamePrefix)
-        simulate_result =  self.ask('simulate', '{0}'.format(cmd))
+        simulate_result = self.ask('simulate', '{0}'.format(cmd))
         return simulate_result
 
-    def buildModel (self, className, fileNamePrefix, simulate_parameters_data):
-        cmd = className + ', fileNamePrefix = "' + fileNamePrefix  + 'result\"'
+    def buildModel(self, className, fileNamePrefix, simulate_parameters_data):
+        cmd = className + ', fileNamePrefix = "' + fileNamePrefix + 'result\"'
         if simulate_parameters_data:
             simulate_parameters_list = []
             for k, v in simulate_parameters_data.items():
                 if v:
                     simulate_parameters_list.append(str(k) + "=" + str(v))
             cmd = cmd + ", " + ", ".join(simulate_parameters_list)
-        self.directoryExists(fileNamePrefix)
-        simulate_result =  self.ask('buildModel', '{0}'.format(cmd))
+        # self.directoryExists(fileNamePrefix)
+        print("cmd",cmd)
+        simulate_result = self.ask('buildModel', '{0}'.format(cmd))
         return simulate_result
 
-    def cd (self, newWorkingDirectory):
+    def cd(self, newWorkingDirectory):
         return self.ask('cd', '"{0}"'.format(newWorkingDirectory))
 
-    def getSimulationOptions (self, className):
+    def getSimulationOptions(self, className):
         return self.ask('getSimulationOptions', className)
 
     @staticmethod
-    def directoryExists (directory: str):
+    def directoryExists(directory: str):
         path = './' + '/'.join(directory.split('/')[:-1])
+        print("directoryExists:",path)
         if not os.path.exists(path):
             os.makedirs(path)
         return
 
-    def loadModel (self, className):
+    def loadModel(self, className):
         return self.ask('loadModel', className)
 
-    def isModel (self, className):
+    def isModel(self, className):
         return self.ask('isModel', className)
 
-    def getErrorString (self):
+    def getErrorString(self):
         return self.ask('getErrorString')
 
-    def isPackage (self, className):
+    def isPackage(self, className):
         return self.ask('isPackage', className)
 
-    def isPrimitive (self, className):
+    def isPrimitive(self, className):
         return self.ask('isPrimitive', className)
 
-    def isConnector (self, className):
+    def isConnector(self, className):
         return self.ask('isConnector', className)
 
-    def isRecord (self, className):
+    def isRecord(self, className):
         return self.ask('isRecord', className)
 
-    def isBlock (self, className):
+    def isBlock(self, className):
         return self.ask('isBlock', className)
 
-    def isType (self, className):
+    def isType(self, className):
         return self.ask('isType', className)
 
-    def isFunction (self, className):
+    def isFunction(self, className):
         return self.ask('isFunction', className)
 
-    def isClass (self, className):
+    def isClass(self, className):
         return self.ask('isClass', className)
 
-    def isParameter (self, className):
+    def isParameter(self, className):
         return self.ask('isParameter', className)
 
-    def isConstant (self, className):
+    def isConstant(self, className):
         return self.ask('isConstant', className)
 
-    def isProtected (self, className):
+    def isProtected(self, className):
         return self.ask('isProtected', className)
 
-    def getPackages (self, className="AllLoadedClasses"):
+    def getPackages(self, className="AllLoadedClasses"):
         return self.ask('getPackages', className)
 
-    def getClassRestriction (self, className):
+    def getClassRestriction(self, className):
         return self.ask('getClassRestriction', className)
 
-    def typeNameStrings (self, className):
+    def typeNameStrings(self, className):
         return self.ask('typeNameStrings', className)
 
-    def getNthComponent (self, className, comp_id):
+    def getNthComponent(self, className, comp_id):
         """ returns with (type, name, description) """
         return self.ask('getNthComponent', '{0}, {1}'.format(className, comp_id))
 
-    def getNthComponentAnnotation (self, className, comp_id):
+    def getNthComponentAnnotation(self, className, comp_id):
         return self.ask('getNthComponentAnnotation', '{0}, {1}'.format(className, comp_id))
 
-    def getImportCount (self, className):
+    def getImportCount(self, className):
         return self.ask('getImportCount', className)
 
-    def getNthImport (self, className, importNumber):
+    def getNthImport(self, className, importNumber):
         # [Path, id, kind]
         return self.ask('getNthImport', '{0}, {1}'.format(className, importNumber))
 
-    def getInheritanceCount (self, className):
+    def getInheritanceCount(self, className):
         return self.ask('getInheritanceCount', className)
 
-    def getNthInheritedClass (self, className, inheritanceDepth):
+    def getNthInheritedClass(self, className, inheritanceDepth):
         return self.ask('getNthInheritedClass', '{0}, {1}'.format(className, inheritanceDepth))
 
-    def getExtendsModifierNames (self, className, componentName):
+    def getExtendsModifierNames(self, className, componentName):
         return self.ask('getExtendsModifierNames', '{0}, {1}'.format(className, componentName))
 
-    def getExtendsModifierValue (self, className, extendsName, modifierName):
+    def getExtendsModifierValue(self, className, extendsName, modifierName):
         try:
             return self.ask('getExtendsModifierValue', '{0}, {1}, {2}'.format(className, extendsName, modifierName))
         except pyparsing.ParseException as ex:
@@ -442,7 +390,7 @@ class OMCSessionBase(with_metaclass(abc.ABCMeta, object)):
                 logging.warning('OMParser error: {0}'.format(ex))
                 return result
 
-    def getNthComponentModification (self, className, comp_id):
+    def getNthComponentModification(self, className, comp_id):
         # get {$Code(....)} field
         # \{\$Code\((\S*\s*)*\)\}
         value = self.ask('getNthComponentModification', '{0}, {1}'.format(className, comp_id), parsed=False)
@@ -459,13 +407,13 @@ class OMCSessionBase(with_metaclass(abc.ABCMeta, object)):
     #   input Boolean showProtected = false "List also protected classes if true";
     #   output TypeName classNames[:];
     # end getClassNames;
-    def getClassNames (self, className=None, recursive=False, qualified=False, sort=False, builtin=False,
-                       showProtected=False):
+    def getClassNames(self, className=None, recursive=False, qualified=False, sort=False, builtin=False,
+                      showProtected=False):
         if className:
             value = self.ask('getClassNames',
                              '{0}, recursive={1}, qualified={2}, sort={3}, builtin={4}, showProtected={5}'.format(
-                                     className, str(recursive).lower(), str(qualified).lower(), str(sort).lower(),
-                                     str(builtin).lower(), str(showProtected).lower()))
+                                 className, str(recursive).lower(), str(qualified).lower(), str(sort).lower(),
+                                 str(builtin).lower(), str(showProtected).lower()))
         else:
             value = self.ask('getClassNames',
                              'recursive={1}, qualified={2}, sort={3}, builtin={4}, showProtected={5}'.format(className,
@@ -475,9 +423,3 @@ class OMCSessionBase(with_metaclass(abc.ABCMeta, object)):
                                                                                                              str(builtin).lower(),
                                                                                                              str(showProtected).lower()))
         return value
-
-
-
-
-
-
