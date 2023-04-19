@@ -14,8 +14,8 @@ func inheritanceModelNameFixes(copiedClassName, className string) {
 	}
 	classNameList := strings.Split(copiedClassName, ".")
 	packageName := classNameList[0]
-	components := omc.OMC.GetElements(copiedClassName)
-	inheritedClasses := omc.OMC.GetInheritedClasses(copiedClassName) // 找到父类的第一层， 只需修复这一层即可
+	components := omc.OMC.GetElements(className)
+	inheritedClasses := omc.OMC.GetInheritedClasses(className) // 找到父类的第一层， 只需修复这一层即可
 	var inheritedNameFixesList []string
 	for i := 0; i < len(inheritedClasses); i++ {
 		if !strings.HasPrefix(inheritedClasses[i], packageName) && !strings.HasPrefix(inheritedClasses[i], "modelica") { // 查看父类的名称是否以包名开始， 不是，则安排修复

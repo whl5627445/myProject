@@ -531,7 +531,7 @@ func CopyClassView(c *gin.Context) {
 	re1, _ := regexp.Compile("^[a-zA-Z_]")
 	f := re1.Find([]byte(item.ModelName))
 	if f == nil {
-		res.Err = "名称请以子母和下划线开头"
+		res.Err = "名称请以字母和下划线开头"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
