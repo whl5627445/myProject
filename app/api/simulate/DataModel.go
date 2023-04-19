@@ -19,7 +19,7 @@ type setSimulationOptionsData struct {
 	Tolerance         string `json:"tolerance" binding:""`
 	NumberOfIntervals string `json:"numberOfIntervals" binding:"required"`
 	Interval          string `json:"interval" binding:"required"`
-	SimulationFlags   string `json:"simulationFlags" binding:"required"`
+	SimulationFlags   string `json:"method" binding:"required"`
 }
 
 type modelSimulateData struct {

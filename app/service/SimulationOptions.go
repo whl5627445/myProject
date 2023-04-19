@@ -10,7 +10,7 @@ func GetSimulationOptions(modelName string) map[string]string {
 		"tolerance":         data[2],
 		"numberOfIntervals": data[3],
 		"interval":          data[4],
-		"simulationFlags":   data[5],
+		"method":            data[5],
 	}
 }
 
