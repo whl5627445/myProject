@@ -39,15 +39,15 @@ func SearchModel(model DataBaseModel.YssimModels, keyWords, parentNode string) [
 					searchModelMap[nameParent] = true
 					modelType := omc.OMC.GetClassRestriction(nameParent)
 					data := map[string]interface{}{
-						"name":            shortName,
-						"model_name":      nameParent,
-						"haschild":        false,
-						"type":            modelType,
-						"image":           "",
-						"package_id":      model.ID,
-						"package_name":    model.PackageName,
-						"sys_user":        model.SysUser,
-						"package_version": model.Version,
+						"name":         shortName,
+						"model_name":   nameParent,
+						"haschild":     false,
+						"type":         modelType,
+						"image":        "",
+						"package_id":   model.ID,
+						"package_name": model.PackageName,
+						"sys_user":     model.SysUser,
+						//"package_version": model.Version,
 					}
 					childList := omc.OMC.GetClassNames(nameParent, false)
 					if len(childList) > 0 {

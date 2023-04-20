@@ -242,7 +242,7 @@ func iconInputOutputs(cData [][]interface{}, caData [][]interface{}, modelName s
 	}()
 	for i := 0; i < dataLen; i++ {
 		nameType := omc.OMC.GetClassRestriction(cData[i][2].(string))
-		if nameType == "connector" || nameType == "expandable connector" {
+		if nameType == "connector" {
 			cDataFilter = append(cDataFilter, cData[i])
 			caDataFilter = append(caDataFilter, caData[i])
 		}

@@ -1,3 +1,5 @@
+import logging
+import threading
 from multiprocessing import Process
 from libs.OMPython.OMCSessionZMQ import OMCSessionZMQ
 from config.db_config import Session, YssimSimulateRecords
@@ -104,6 +106,11 @@ class PyOmcSimulation:
         print("进程开始时间:", self.processStartTime)
 
         # 编译
+        mes_obj = MessageThread(self.request.userName, self.state, self.omc_obj)
+        mes_obj.start()
+        print("消息推送线程启动")
+        json_data = {"message": self.request.simulateModelName + " 模型正在编译"}
+        R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
         print("resultFilePath:", self.request.resultFilePath)
         buildModelRes = self.omc_obj.buildModel(className=self.request.simulateModelName,
                                                 fileNamePrefix=self.request.resultFilePath,
@@ -117,9 +124,13 @@ class PyOmcSimulation:
         else:
             print("改数据库状态为3")
             update_records(uuid=self.uuid, simulate_status="3", simulate_result_str="编译失败")
+            json_data = {"message": self.request.simulateModelName + " 模编译失败"}
+            R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
             return
 
         # 仿真
+        json_data = {"message": self.request.simulateModelName + " 模型编译完成，准备仿真"}
+        R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
         self.state = "running"
         cmd = [self.request.resultFilePath + "result"]
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -141,7 +152,7 @@ class PyOmcSimulation:
             simulate_result_str = output.decode('utf-8')
             if "successfully" in simulate_result_str:
                 print("运行正常结束。")
-                json_data = {"message": self.request.simulateModelName + " PyOmc模型仿真完成"}
+                json_data = {"message": self.request.simulateModelName + " 模型仿真完成"}
                 R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
                 update_records(uuid=self.uuid,
                                simulate_model_result_path=self.request.relativePath,
@@ -166,3 +177,46 @@ class PyOmcSimulation:
 
         self.state = "stopped"
         print("进程结束")
+
+
+class MessageThread(threading.Thread):
+    def __init__(self, username, state, omc_obj):
+        threading.Thread.__init__(self)
+        self.username = username
+        self.state = state
+        self.omc_obj = omc_obj
+
+    def run(self):
+        while self.state != "stopped":
+            time.sleep(1)
+            message_list = self.getMessage()
+            for i in message_list:
+                self.message_notice(i)
+
+    def getMessage(self):
+        message_str = self.omc_obj.getMessagesStringInternal()
+        data_list = message_str.split(";,")
+        message_list = []
+        for i in data_list:
+            dl = i.strip().split(",\n")
+            message_dict = {}
+            for p in dl:
+                pl = p.strip()
+                if "MODELICAPATH" in pl or "installPackage" in pl or "Downloaded" in pl:
+                    continue
+                elif "Automatically " in pl or "Lexer " in pl:
+                    continue
+                elif pl.startswith("message"):
+                    mes = pl.replace("message = ", "", -1)
+                    message_dict["message"] = mes[1:-1]
+                    print("mes", mes)
+                elif pl.startswith("level"):
+                    level = pl.split(".")
+                    message_dict["type"] = level[-1]
+                    print("level", level)
+            if len(message_dict) > 1:
+                message_list.append(message_dict)
+        return message_list
+
+    def message_notice(self, mes):
+        R.lpush(self.username + "_" + "notification", json.dumps(mes))

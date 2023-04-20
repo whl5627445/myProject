@@ -1,5 +1,6 @@
 # -- coding: utf-8 --
 import logging
+import threading
 
 from libs.OMPython import OMCSessionHelper, OMCSessionBase
 import subprocess
@@ -15,6 +16,7 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
                  random_string="simtek",
                  sys_start=True):
         OMCSessionHelper.__init__(self)
+        self.lock = threading.Lock()
         print("执行OMCSessionZMQ初始化")
         OMCSessionBase.__init__(self, readonly, interactivePort=port, random_string=None)
         # Locating and using the IOR
@@ -95,6 +97,8 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
     def sendExpression(self, command, parsed=True):
         ## check for process is running
         attempts = 0
+        self.lock.acquire()
+        logging.info("上锁成功")
         while True:
             try:
                 self._omc.send_string(str(command), flags=zmq.NOBLOCK)
@@ -115,6 +119,8 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
             return None
         else:
             result = self._omc.recv_string()
+            self.lock.release()
+            logging.info("解锁成功")
             if parsed is True:
                 answer = CdataToPYdata(result)
                 return answer
