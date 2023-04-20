@@ -3,9 +3,6 @@ package service
 import (
 	"errors"
 	"fmt"
-	"github.com/bytedance/sonic"
-	"github.com/wangluozhe/requests"
-	"github.com/wangluozhe/requests/url"
 	"log"
 	"os"
 	"os/exec"
@@ -16,6 +13,10 @@ import (
 	"yssim-go/library/fileOperation"
 	"yssim-go/library/mapProcessing"
 	"yssim-go/library/stringOperation"
+
+	"github.com/bytedance/sonic"
+	"github.com/wangluozhe/requests"
+	"github.com/wangluozhe/requests/url"
 )
 
 type SimulateTask struct {
@@ -37,7 +38,7 @@ func openModelica(task *SimulateTask, resultFilePath string, SimulationPraData m
 	SimulateTaskMap[task.SRecord.ID] = task
 	pwd, _ := os.Getwd()
 	//pwd = "/home/xuqingda/GolandProjects/YssimGoService"
-	//resultFilePath = "public/UserFiles/ModelResult/"
+	//resultFilePath = "static/UserFiles/ModelResult/"
 	//buildModelRes := omc.OMC.BuildModel(task.SRecord.SimulateModelName, pwd+"/"+resultFilePath, SimulationPraData)
 	replyVar, err := GrpcPyOmcSimulation(
 		task.SRecord.ID,
@@ -346,7 +347,7 @@ func dymolaServiceStop(taskID string) error {
 //}
 
 func ModelSimulate(task *SimulateTask) {
-	resultFilePath := "public/UserFiles/ModelResult/" + task.SRecord.UserName + "/" + strings.ReplaceAll(task.SRecord.SimulateModelName, ".", "-") + "/" + time.Now().Local().Format("20060102150405") + "/"
+	resultFilePath := "static/UserFiles/ModelResult/" + task.SRecord.UserName + "/" + strings.ReplaceAll(task.SRecord.SimulateModelName, ".", "-") + "/" + time.Now().Local().Format("20060102150405") + "/"
 	_, err := fileOperation.CreateFilePath(resultFilePath)
 	if err != nil {
 		log.Println("仿真目录创建错误： ", err)
@@ -356,13 +357,14 @@ func ModelSimulate(task *SimulateTask) {
 	task.SRecord.SimulateStart = true
 	// 模型开始编译 状态“6”
 	task.SRecord.SimulateStatus = "6"
+	task.SRecord.SimulateModelResultPath = resultFilePath
 
 	config.DB.Save(&task.SRecord)
 	if task.Package.SysUser != "sys" {
 		//YssimExperimentRecord表的json数据绑定到结构体
 		var componentValue modelVarData
 		if task.ExperimentRecord.ModelVarData.String() != "" {
-			err := sonic.Unmarshal(task.ExperimentRecord.ModelVarData, &componentValue)
+			err = sonic.Unmarshal(task.ExperimentRecord.ModelVarData, &componentValue)
 			if err == nil {
 				mapAttributesStr := mapProcessing.MapDataConversion(componentValue.FinalAttributesStr)
 				//设置组件参数
@@ -379,7 +381,7 @@ func ModelSimulate(task *SimulateTask) {
 			}
 		}
 	}
-	FilePath := "public/tmp/simulateModelFile/" + task.SRecord.UserName + "/" + time.Now().Local().Format("20060102150405") + "/" + task.Package.PackageName + ".mo"
+	FilePath := "static/tmp/simulateModelFile/" + task.SRecord.UserName + "/" + time.Now().Local().Format("20060102150405") + "/" + task.Package.PackageName + ".mo"
 
 	MessageNotice(map[string]string{"message": task.SRecord.SimulateModelName + " 模型开始编译"})
 	sResult := true

@@ -10,7 +10,7 @@ from config.db_config import Session, YssimSimulateRecords
 
 
 def buildFMU(moPath, className, userName, resPath):
-    # if omc.loadFile("/yssim-go/public/UserFiles/UploadFile/xuqingda/ChillerStage/20230216111124/ChillerStage.mo"):
+    # if omc.loadFile("/yssim-go/static/UserFiles/UploadFile/xuqingda/ChillerStage/20230216111124/ChillerStage.mo"):
     #     return False
     adsPath = "/home/simtek/code/"
     fileNamePrefix = userName + time.strftime('%H%M%S', time.localtime(time.time()))

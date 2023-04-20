@@ -13,7 +13,7 @@ func main() {
 
 	g := gin.Default()
 	g.Use(middleware.Cors())
-
+	g.Static("/static", "./static")
 	{
 		router.ModelRouter(g)
 		router.SimulateRouter(g)

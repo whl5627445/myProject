@@ -149,7 +149,7 @@ func CreateModelAndPackage(createPackageName, insertTo, expand, strType, createP
 }
 
 func ZipPackage(packageName, path string) (string, error) {
-	tmpPath := "public/tmp/" + time.Now().Local().Format("20060102150405") + "/" + packageName + ".zip"
+	tmpPath := "static/tmp/" + time.Now().Local().Format("20060102150405") + "/" + packageName + ".zip"
 	packagePathList := strings.Split(path, "/")
 	packagePath := strings.Join(packagePathList[:len(packagePathList)-1], "/")
 	err := fileOperation.Zip(packagePath, tmpPath)
@@ -159,15 +159,15 @@ func ZipPackage(packageName, path string) (string, error) {
 	return tmpPath, nil
 }
 
-func ZipPackageStream(packageName, path string) ([]byte, error) {
+func ZipPackageStream(packageName, path string) (string, error) {
 	tmpPath, err := ZipPackage(packageName, path)
 	if err != nil {
-		return nil, errors.New("压缩文件包失败，错误为：" + err.Error())
+		return "", errors.New("压缩文件包失败，错误为：" + err.Error())
 	}
-	data, err := os.ReadFile(tmpPath)
+	//data, err := os.ReadFile(tmpPath)
 	if err != nil {
-		return nil, errors.New("读取文件失败，错误为：" + err.Error())
+		return "", errors.New("读取文件失败，错误为：" + err.Error())
 	}
-	os.Remove(tmpPath)
-	return data, nil
+	//os.Remove(tmpPath)
+	return tmpPath, nil
 }

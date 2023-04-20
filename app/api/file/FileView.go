@@ -53,7 +53,7 @@ func UploadModelPackageView(c *gin.Context) {
 		return
 	}
 	removeSuffix := strings.Split(modelFile.Filename, ".")[0]
-	saveFilePath := "public/UserFiles/UploadFile/" + userName + "/" + removeSuffix + "/" + time.Now().Local().Format("20060102150405") + "/"
+	saveFilePath := "static/UserFiles/UploadFile/" + userName + "/" + removeSuffix + "/" + time.Now().Local().Format("20060102150405") + "/"
 	zipPackagePath := saveFilePath + fileName
 	packageName, packagePath, msg, ok := service.PackageFileParse(fileName, saveFilePath, zipPackagePath, file)
 	if ok {
@@ -199,7 +199,7 @@ func CreateModelPackageView(c *gin.Context) {
 		ID:          uuid.New().String(),
 		PackageName: createPackageName,
 		SysUser:     username,
-		FilePath:    "public/UserFiles/UploadFile/" + username + "/" + createPackageName + "/" + time.Now().Local().Format("20060102150405") + "/" + createPackageName + ".mo",
+		FilePath:    "static/UserFiles/UploadFile/" + username + "/" + createPackageName + "/" + time.Now().Local().Format("20060102150405") + "/" + createPackageName + ".mo",
 		UserSpaceId: userSpaceId,
 	}
 	DB.Where("package_name = ? AND sys_or_user IN ? AND userspace_id IN ?", item.Name, []string{"sys", username}, []string{"0", userSpaceId}).First(&packageRecord)
@@ -340,6 +340,7 @@ func GetPackageFileView(c *gin.Context) {
 	/*
 	   # 用户mo文件下载
 	*/
+	var res responseData
 	username := c.GetHeader("username")
 	var item packageFileData
 	err := c.BindJSON(&item)
@@ -351,21 +352,21 @@ func GetPackageFileView(c *gin.Context) {
 	var packageRecord DataBaseModel.YssimModels
 	DB.Where("id = ? AND sys_or_user = ?", item.PackageId, username).First(&packageRecord)
 
-	fileData, err := service.ZipPackageStream(packageRecord.PackageName, packageRecord.FilePath)
+	filePath, err := service.ZipPackageStream(packageRecord.PackageName, packageRecord.FilePath)
 	if err != nil {
-		var res responseData
 		res.Err = "导出模型库失败，请稍后再试"
 		res.Status = 1
 		c.JSON(http.StatusInternalServerError, res)
 	}
-	c.Header("content-disposition", `attachment;filename=`+url.QueryEscape(packageRecord.PackageName+".zip"))
-	c.Data(http.StatusOK, "application/octet-stream", fileData)
+	res.Data = map[string]string{"url": filePath}
+	c.JSON(http.StatusOK, res)
 }
 
 func GetResultFileView(c *gin.Context) {
 	/*
 	   # 用户仿真结果文件下载
 	*/
+	var res responseData
 	username := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
 	var item resultFileData
@@ -378,35 +379,22 @@ func GetResultFileView(c *gin.Context) {
 	//recordId := c.Query("record_id")
 	var resultRecord DataBaseModel.YssimSimulateRecord
 	DB.Where("id = ? AND username = ? AND userspace_id = ? ", item.RecordId, username, userSpaceId).First(&resultRecord)
-	//c.Header("content-disposition", `attachment; filename=`+time.Now().Local().Format("20060102150405")+".mat")
-	if resultRecord.SimulateType == "FmPy" {
-		ok := service.GrpcZarrToCsv(resultRecord.SimulateModelResultPath)
-		if ok {
-			c.Header("content-disposition", `attachment; filename=`+resultRecord.SimulateModelName+".csv")
-			//c.Data(http.StatusOK, "application/octet-stream", resDy)
-			c.File(resultRecord.SimulateModelResultPath + "result_res.csv")
-		} else {
-			c.JSON(http.StatusBadRequest, "")
-			return
-		}
-	} else {
-		ok := service.GrpcMatToCsv(resultRecord.SimulateModelResultPath)
-		if ok {
-			c.Header("content-disposition", `attachment; filename=`+resultRecord.SimulateModelName+".csv")
-			//c.Data(http.StatusOK, "application/octet-stream", resDy)
-			c.File(resultRecord.SimulateModelResultPath + "result_res.csv")
-		} else {
-			c.JSON(http.StatusBadRequest, "")
-			return
-		}
-	}
+	ok := service.GrpcMatToCsv(resultRecord.SimulateModelResultPath)
+	if ok {
+		res.Data = map[string]string{"url": resultRecord.SimulateModelResultPath + "result_res.csv"}
 
+	} else {
+		res.Err = "下载失败，请稍后再试"
+		res.Status = 1
+	}
+	c.JSON(http.StatusOK, res)
 }
 
 func GetFilterResultFileView(c *gin.Context) {
 	/*
 	   # 用户筛选仿真结果文件下载
 	*/
+	var res responseData
 	username := c.GetHeader("username")
 	//userSpaceId := c.GetHeader("space_id")
 	var items []filterResultFileData
@@ -445,17 +433,18 @@ func GetFilterResultFileView(c *gin.Context) {
 	}
 	var ok bool
 	// newFileName保存为csv的文件名
-	newFileName := "public/tmp/" + username + "/" + strings.ReplaceAll(recordList[0].SimulateModelName, ".", "-") + "/" + time.Now().Local().Format("20060102150405") + ".csv"
+	newFileName := "static/tmp/" + username + "/" + strings.ReplaceAll(recordList[0].SimulateModelName, ".", "-") + "/" + time.Now().Local().Format("20060102150405") + ".csv"
 
 	ok = service.FilterSimulationResult(itemsMap, recordDict, newFileName)
 	if ok {
-		c.Header("content-disposition", `attachment; filename=`+recordList[0].SimulateModelName+".csv")
-		c.File(newFileName)
+		//c.Header("content-disposition", `attachment; filename=`+recordList[0].SimulateModelName+".csv")
+		//c.File(newFileName)
+		res.Data = map[string]string{"url": newFileName}
+		c.JSON(http.StatusOK, res)
 		return
 	}
-	var res responseData
 	res.Err = "下载失败，请稍后再试"
-	res.Status = 2
+	res.Status = 1
 	c.JSON(http.StatusOK, res)
 }
 
@@ -469,7 +458,7 @@ func FmuExportModelView(c *gin.Context) {
 	   ## fmu_par： fmu导出的参数
 	   ## download_local： 是否下载到本地
 	*/
-
+	var res responseData
 	var item fmuExportData
 	err := c.BindJSON(&item)
 	if err != nil {
@@ -488,13 +477,19 @@ func FmuExportModelView(c *gin.Context) {
 		filePath = packageModel.FilePath
 		fileName = packageModel.PackageName
 	}
-	resDy, ok := service.DymolaFmuExport(item.FmuPar, token, username, item.FmuName, item.PackageName, item.ModelName, fileName, filePath)
+	newFileName, ok := service.DymolaFmuExport(item.FmuPar, token, username, item.FmuName, item.PackageName, item.ModelName, fileName, filePath)
 	if ok {
-		c.Header("content-disposition", `attachment; filename=`+item.FmuName+".fmu")
-		c.Data(http.StatusOK, "application/octet-stream", resDy)
+		//c.Header("content-disposition", `attachment; filename=`+item.FmuName+".fmu")
+		//c.Data(http.StatusOK, "application/octet-stream", resDy)
+		if ok {
+			//c.Header("content-disposition", `attachment; filename=`+recordList[0].SimulateModelName+".csv")
+			//c.File(newFileName)
+			res.Data = map[string]string{"url": newFileName}
+			c.JSON(http.StatusOK, res)
+			return
+		}
 		return
 	}
-	var res responseData
 	res.Err = "下载失败，请稍后再试"
 	res.Status = 2
 	c.JSON(http.StatusOK, res)

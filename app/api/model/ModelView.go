@@ -561,7 +561,7 @@ func CopyClassView(c *gin.Context) {
 		filePath = packageModel.FilePath
 	} else {
 		packageName = item.ModelName
-		filePath = "public/UserFiles/UploadFile/" + userName + "/" + packageName + "/" + time.Now().Local().Format("20060102150405") + "/" + item.ModelName + ".mo"
+		filePath = "static/UserFiles/UploadFile/" + userName + "/" + packageName + "/" + time.Now().Local().Format("20060102150405") + "/" + item.ModelName + ".mo"
 	}
 	model := DataBaseModel.YssimModels{
 		ID:          uuid.New().String(),

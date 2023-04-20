@@ -7,7 +7,7 @@ import (
 )
 
 func CreatWorkSpace(userName, SpaceName string) (string, bool) {
-	path := "public/UserFiles/UploadFile/" + userName + "/Workspace/" + time.Now().Local().Format("20060102150405") + "/" + SpaceName
+	path := "static/UserFiles/UploadFile/" + userName + "/Workspace/" + time.Now().Local().Format("20060102150405") + "/" + SpaceName
 	fileOperation.CreateFilePath(path + "/Resources")
 	FilePath := path + "/Workspace.mo"
 	fileOperation.CreateFile(FilePath)

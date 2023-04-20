@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 	"yssim-go/config"
+	"yssim-go/library/fileOperation"
 
 	"github.com/google/uuid"
 
@@ -14,7 +15,7 @@ import (
 	"github.com/wangluozhe/requests/url"
 )
 
-func DymolaFmuExport(fmuPar map[string]interface{}, token, userName, fmuName, packageName, modelName, fileName, filePath string) (resultFmuFileData []byte, res bool) {
+func DymolaFmuExport(fmuPar map[string]interface{}, token, userName, fmuName, packageName, modelName, fileName, filePath string) (string, bool) {
 	data := map[string]interface{}{
 		"username":    userName,
 		"fmuPar":      fmuPar,
@@ -40,7 +41,7 @@ func DymolaFmuExport(fmuPar map[string]interface{}, token, userName, fmuName, pa
 		uploadFileRes, err := requests.Post(config.DymolaSimutalionConnect+"/file/upload", req)
 		if err != nil {
 			log.Println(err)
-			return resultFmuFileData, false
+			return "", false
 		}
 		uploadFileResJson, _ := uploadFileRes.Json()
 		log.Println("dymola服务上传文件结果：", uploadFileResJson)
@@ -48,7 +49,7 @@ func DymolaFmuExport(fmuPar map[string]interface{}, token, userName, fmuName, pa
 		if ok && uploadResultCode.(float64) == 200 {
 			data["fileName"] = urlStr + "/" + fileName + ".mo"
 		} else {
-			return resultFmuFileData, false
+			return "", false
 
 		}
 	}
@@ -59,13 +60,13 @@ func DymolaFmuExport(fmuPar map[string]interface{}, token, userName, fmuName, pa
 	exportFmuRes, err := requests.Post(config.DymolaSimutalionConnect+"/dymola/translateModelFMU", req)
 	if err != nil {
 		log.Println(err)
-		return resultFmuFileData, false
+		return "", false
 	}
 	exportResult, _ := exportFmuRes.Json()
 	log.Println("dymola服务编译FMU结果：", exportResult)
 	ResultCode, ok := exportResult["code"]
 	if err != nil || len(exportResult) == 0 || (ok && ResultCode.(float64) != 200) {
-		return resultFmuFileData, false
+		return "", false
 	}
 	req = url.NewRequest()
 	req.Headers = Headers
@@ -73,8 +74,10 @@ func DymolaFmuExport(fmuPar map[string]interface{}, token, userName, fmuName, pa
 	fmuFileUrl := config.DymolaSimutalionConnect + "/file/download?fileName=" + exportResult["msg"].(string)
 	fmuFileRes, err := requests.Get(fmuFileUrl, req)
 	if err != nil {
-		return resultFmuFileData, false
+		return "", false
 	}
-	resultFmuFileData = fmuFileRes.Content
-	return resultFmuFileData, true
+	resultFmuFileData := fmuFileRes.Content
+	newFilePath := "static/tmp/" + userName + "/" + strings.ReplaceAll(modelName, ".", "-") + "/" + time.Now().Local().Format("20060102150405") + "/" + fmuName + ".fmu"
+	fileOperation.WriteFileByte(newFilePath, resultFmuFileData)
+	return newFilePath, true
 }
