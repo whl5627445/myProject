@@ -356,7 +356,7 @@ func ModelSimulate(task *SimulateTask) {
 	task.SRecord.SimulateStartTime = time.Now().Unix()
 	task.SRecord.SimulateStart = true
 	// 模型开始编译 状态“6”
-	task.SRecord.SimulateStatus = "6"
+	//task.SRecord.SimulateStatus = "6"
 	task.SRecord.SimulateModelResultPath = resultFilePath
 
 	config.DB.Save(&task.SRecord)

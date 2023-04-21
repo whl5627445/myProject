@@ -69,11 +69,11 @@ def resume_process(multiprocessing_id, process_list):
 
 def kill_py_omc_process(multiprocessing_id, process_list):
     for i in process_list:
-
         if i.uuid == multiprocessing_id:
             i.state = "stopped"
             try:
-                os.kill(i.omc_obj._omc_process.pid, signal.SIGKILL)
+                os.kill(i.omc_obj.omc_process.pid, 9)
+                # i.omc_obj.sendExpression("quit()")
             except OSError as e:
                 print(f"Error: {e}")
             process_list.remove(i)

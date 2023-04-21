@@ -71,6 +71,7 @@ class OMCSessionBase(with_metaclass(abc.ABCMeta, object)):
         self.readonly = readonly
         self.omc_cache = {}
         self._omc_process = None
+        self.omc_process = None
         self._omc_command = None
         self._omc = None
         self._dockerCid = None
@@ -141,9 +142,10 @@ class OMCSessionBase(with_metaclass(abc.ABCMeta, object)):
     def _start_omc_process(self):
 
         # Because we spawned a shell, and we need to be able to kill OMC, create a new process group for this
-        self._omc_process = subprocess.Popen(self._omc_command, shell=True, stdout=self._omc_log_file,
-                                             stderr=self._omc_log_file, preexec_fn=os.setsid)
+        self._omc_process = subprocess.Popen(self._omc_command.split(), shell=False, stdout=self._omc_log_file,
+                                             stderr=self._omc_log_file)
 
+        self.omc_process = self._omc_process
         return self._omc_process
 
     def _getuid(self):

@@ -1,4 +1,5 @@
 import logging
+import signal
 import threading
 from multiprocessing import Process
 from libs.OMPython.OMCSessionZMQ import OMCSessionZMQ
@@ -6,6 +7,8 @@ from config.db_config import Session, YssimSimulateRecords
 import subprocess
 from config.redis_config import R
 import json, re, time, os
+
+from libs.PyOmcSimulationProcessOperation import isDelete
 
 
 def new_another_name(username: str, simulate_model_name: str, userspace_id: str) -> str:
@@ -67,7 +70,7 @@ def kill_process_by_port(port):
             print(f"Killed process with PID: {pid}")
 
 
-class PyOmcSimulation:
+class PyOmcSimulation(threading.Thread):
     def __init__(self, request, port):
         self.state = "init"
         self.port = port
@@ -75,8 +78,10 @@ class PyOmcSimulation:
         self.uuid = request.uuid
         self.request = request
         self.processStartTime = None
+        threading.Thread.__init__(self)
         # 生成omc实例，并初始化omc
-        self.omc_obj = OMCSessionZMQ(port=port)
+        if isDelete(self.uuid) != "3":
+            self.omc_obj = OMCSessionZMQ(port=port)
 
     def run(self):
         self.omc_obj.sendExpression('setCommandLineOptions("-d=nogen,noevalfunc,newInst,nfAPI")')
@@ -106,9 +111,12 @@ class PyOmcSimulation:
         print("进程开始时间:", self.processStartTime)
 
         # 编译
+        # if isDelete(self.uuid) != "3":
+        #     return
         mes_obj = MessageThread(self.request.userName, self.state, self.omc_obj)
         mes_obj.start()
         print("消息推送线程启动")
+        update_records(uuid=self.uuid, simulate_status="6")
         json_data = {"message": self.request.simulateModelName + " 模型正在编译"}
         R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
         print("resultFilePath:", self.request.resultFilePath)
@@ -117,6 +125,8 @@ class PyOmcSimulation:
                                                 simulate_parameters_data=self.request.simulationPraData
                                                 )
         print("buildModelRes:", buildModelRes)
+        json_data = {"message": self.request.simulateModelName + " 模型编译完成，准备仿真"}
+        R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
         if buildModelRes != ["", ""]:
             print("改数据库状态为2")
             print(self.uuid)
@@ -127,10 +137,11 @@ class PyOmcSimulation:
             json_data = {"message": self.request.simulateModelName + " 模编译失败"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
             return
-
+        # 编译完成，通知omc进程退出，杀死父进程
+        os.kill(self.omc_obj.omc_process.pid, 9)
+        # self.omc_obj.sendExpression("quit()")
         # 仿真
-        json_data = {"message": self.request.simulateModelName + " 模型编译完成，准备仿真"}
-        R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
+
         self.state = "running"
         cmd = [self.request.resultFilePath + "result"]
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -174,7 +185,6 @@ class PyOmcSimulation:
                                simulate_start_time=str(self.processStartTime),
                                simulate_end_time=str(time.time())
                                )
-
         self.state = "stopped"
         print("进程结束")
 
@@ -209,11 +219,11 @@ class MessageThread(threading.Thread):
                 elif pl.startswith("message"):
                     mes = pl.replace("message = ", "", -1)
                     message_dict["message"] = mes[1:-1]
-                    print("mes", mes)
+                    # print("mes", mes)
                 elif pl.startswith("level"):
                     level = pl.split(".")
                     message_dict["type"] = level[-1]
-                    print("level", level)
+                    # print("level", level)
             if len(message_dict) > 1:
                 message_list.append(message_dict)
         return message_list

@@ -379,10 +379,9 @@ func GetResultFileView(c *gin.Context) {
 	//recordId := c.Query("record_id")
 	var resultRecord DataBaseModel.YssimSimulateRecord
 	DB.Where("id = ? AND username = ? AND userspace_id = ? ", item.RecordId, username, userSpaceId).First(&resultRecord)
-	ok := service.GrpcMatToCsv(resultRecord.SimulateModelResultPath)
-	if ok {
-		res.Data = map[string]string{"url": resultRecord.SimulateModelResultPath + "result_res.csv"}
-
+	//ok := service.GrpcMatToCsv(resultRecord.SimulateModelResultPath)
+	if resultRecord.SimulateModelResultPath != "" {
+		res.Data = map[string]string{"url": resultRecord.SimulateModelResultPath + "result_res.mat"}
 	} else {
 		res.Err = "下载失败，请稍后再试"
 		res.Status = 1
