@@ -1130,8 +1130,9 @@ func CreateCollectionModelView(c *gin.Context) {
 	}
 	//检测数据库表中是否存在同名模型
 	modelType := service.GetModelType(item.ModelName)
+	//hasChild := service.GetModelChild(item.ModelName)
 	if modelType == "package" {
-		res.Err = "包类型暂不允许收藏，请选择其他类型"
+		res.Err = "包类型或有子类的模型暂不允许收藏，请选择其他类型"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
@@ -1191,7 +1192,7 @@ func GetCollectionModelView(c *gin.Context) {
 			"package_id":   modelCollections[i]["package_id"],
 			"package_name": modelCollections[i]["package_name"],
 			"model_name":   modelCollections[i]["model_name"],
-			"haschild":     service.GetModelHasChild(modelName),
+			"haschild":     false,
 			"image":        service.GetIcon(modelName, packageName, version),
 			"type":         service.GetModelType(modelName),
 			"sys_or_user":  sysOrUser,

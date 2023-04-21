@@ -550,13 +550,13 @@ func getIconAndDiagramAnnotations(nameList []string, isIcon bool) []interface{} 
 }
 
 func (g *graphicsData) getDiagramAnnotationData() {
-	for _, name := range g.modelNameList {
+	for index, name := range g.modelNameList {
 		modelNameDiagramAnnotationData := omc.OMC.GetDiagramAnnotation(name)
 		if len(modelNameDiagramAnnotationData) > 8 && modelNameDiagramAnnotationData[len(modelNameDiagramAnnotationData)-1] != "" {
 			dData := modelNameDiagramAnnotationData[len(modelNameDiagramAnnotationData)-1]
 			data1 := g.data01(dData.([]interface{}), g.modelName, g.modelName, g.modelName)
 			for _, d := range data1 {
-				if g.permissions != "sys" {
+				if g.permissions != "sys" && index == len(g.modelNameList)-1 {
 					d["mobility"] = true
 				} else {
 					d["mobility"] = false

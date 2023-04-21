@@ -718,7 +718,7 @@ func DeleteResourcesDirAndFileView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
-	result := service.DeleteResourcesDirAndFile(packageModel.PackageName, item.Path)
+	result := service.DeleteResourcesDirAndFile(packageModel.PackageName, item.Parent)
 	if result {
 		res.Msg = "删除成功"
 		c.JSON(http.StatusOK, res)
