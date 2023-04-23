@@ -113,10 +113,9 @@ class PyOmcSimulation(threading.Thread):
         # 编译
         # if isDelete(self.uuid) != "3":
         #     return
-        mes_obj = MessageThread(self.request.userName, self.state, self.omc_obj)
-        mes_obj.start()
-        print("消息推送线程启动")
-        update_records(uuid=self.uuid, simulate_status="6")
+        # mes_obj = MessageThread(self.request.userName, self.omc_obj)
+        # mes_obj.start()
+        update_records(uuid=self.uuid, simulate_status="6", simulate_start_time=time.time())
         json_data = {"message": self.request.simulateModelName + " 模型正在编译"}
         R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
         print("resultFilePath:", self.request.resultFilePath)
@@ -124,7 +123,9 @@ class PyOmcSimulation(threading.Thread):
                                                 fileNamePrefix=self.request.resultFilePath,
                                                 simulate_parameters_data=self.request.simulationPraData
                                                 )
-        print("buildModelRes:", buildModelRes)
+        # print("buildModelRes:", buildModelRes)
+        sendMessage(self.omc_obj, self.request.userName)
+        print("消息推送完成")
         json_data = {"message": self.request.simulateModelName + " 模型编译完成，准备仿真"}
         R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
         if buildModelRes != ["", ""]:
@@ -189,12 +190,12 @@ class PyOmcSimulation(threading.Thread):
         print("进程结束")
 
 
-class MessageThread(threading.Thread):
-    def __init__(self, username, state, omc_obj):
-        threading.Thread.__init__(self)
-        self.username = username
-        self.state = state
-        self.omc_obj = omc_obj
+# class MessageThread(threading.Thread):
+#     def __init__(self, username, omc_obj):
+#         threading.Thread.__init__(self)
+#         self.username = username
+#         self.kill = False
+#         self.omc_obj = omc_obj
 
     def run(self):
         while self.state != "stopped":
@@ -203,30 +204,33 @@ class MessageThread(threading.Thread):
             for i in message_list:
                 self.message_notice(i)
 
-    def getMessage(self):
-        message_str = self.omc_obj.getMessagesStringInternal()
-        data_list = message_str.split(";,")
-        message_list = []
-        for i in data_list:
-            dl = i.strip().split(",\n")
-            message_dict = {}
-            for p in dl:
-                pl = p.strip()
-                if "MODELICAPATH" in pl or "installPackage" in pl or "Downloaded" in pl:
-                    continue
-                elif "Automatically " in pl or "Lexer " in pl:
-                    continue
-                elif pl.startswith("message"):
-                    mes = pl.replace("message = ", "", -1)
-                    message_dict["message"] = mes[1:-1]
-                    # print("mes", mes)
-                elif pl.startswith("level"):
-                    level = pl.split(".")
-                    message_dict["type"] = level[-1]
-                    # print("level", level)
-            if len(message_dict) > 1:
-                message_list.append(message_dict)
-        return message_list
+def sendMessage(omc_obj, username):
+    message_str = omc_obj.getMessagesStringInternal()
+    data_list = message_str.split(";,")
+    message_list = []
+    for i in data_list:
+        dl = i.strip().split(",\n")
+        message_dict = {}
+        for p in dl:
+            pl = p.strip()
+            if "MODELICAPATH" in pl or "installPackage" in pl or "Downloaded" in pl:
+                continue
+            elif "Automatically " in pl or "Lexer " in pl:
+                continue
+            elif pl.startswith("message"):
+                mes = pl.replace("message = ", "", -1)
+                message_dict["message"] = mes[1:-1]
+                # print("mes", mes)
+            elif pl.startswith("level"):
+                level = pl.split(".")
+                message_dict["type"] = level[-1]
+                # print("level", level)
+        if len(message_dict) > 1:
+            message_list.append(message_dict)
+    for i in message_list:
+        message_notice(username, i)
+    return message_list
 
-    def message_notice(self, mes):
-        R.lpush(self.username + "_" + "notification", json.dumps(mes))
+
+def message_notice(username, mes):
+    R.lpush(username + "_" + "notification", json.dumps(mes))
