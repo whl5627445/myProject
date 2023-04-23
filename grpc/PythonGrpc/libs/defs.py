@@ -14,7 +14,7 @@ def buildFMU(moPath, className, userName, resPath):
     #     return False
     adsPath = "/home/simtek/code/"
     fileNamePrefix = userName + time.strftime('%H%M%S', time.localtime(time.time()))
-    print(moPath, className, userName, resPath)
+    # print(moPath, className, userName, resPath)
     if moPath == "":  # 如果是系统模型,直接导出fmu
         fmuPath = omc.buildModelFmu(className=className, fileNamePrefix=fileNamePrefix)
         if fmuPath == "":

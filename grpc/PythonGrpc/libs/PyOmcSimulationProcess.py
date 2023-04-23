@@ -8,7 +8,7 @@ import subprocess
 from config.redis_config import R
 import json, re, time, os
 
-from libs.PyOmcSimulationProcessOperation import isDelete
+
 
 
 def new_another_name(username: str, simulate_model_name: str, userspace_id: str) -> str:
@@ -79,28 +79,29 @@ class PyOmcSimulation(threading.Thread):
         self.request = request
         self.processStartTime = None
         threading.Thread.__init__(self)
-        # 生成omc实例，并初始化omc
-        if isDelete(self.uuid) != "3":
-            self.omc_obj = OMCSessionZMQ(port=port)
+        self.omc_obj = OMCSessionZMQ(port=port)
 
     def run(self):
+
         self.omc_obj.sendExpression('setCommandLineOptions("-d=nogen,noevalfunc,newInst,nfAPI")')
-        print("clearProgram:", self.omc_obj.sendExpression("clearProgram()"))
-        print("setModelicaPath:", self.omc_obj.sendExpression(
-            "setModelicaPath(\"/usr/lib/omlibrary\")"))
+        self.omc_obj.sendExpression(
+            "setModelicaPath(\"/usr/lib/omlibrary\")")
+        # print("clearProgram:", )
+        # print("setModelicaPath:", )
 
         # print("Buildings9.1.0初始化:", self.omc_obj.sendExpression("loadModel(Buildings, {\"9.1.0\"},true,\"\",false)"))
         # print("Modelica4.0.0初始化:", self.omc_obj.sendExpression("loadModel(Modelica, {\"4.0.0\"},true,\"\",false)"))
 
         # 初始化加载系统模型，key是名称，val是版本号
         for key, val in self.request.sysModel.items():
-            print(key + "初始化:",
-                  self.omc_obj.sendExpression("loadModel(" + key + ", {\"" + val + "\"},true,\"\",false)"))
+            self.omc_obj.sendExpression("loadModel(" + key + ", {\"" + val + "\"},true,\"\",false)")
+            # print(key + "初始化:",
+            #       self.omc_obj.sendExpression("loadModel(" + key + ", {\"" + val + "\"},true,\"\",false)"))
         # 初始化加载用户模型，key是名称，val是mo文件地址
         for key, val in self.request.userModel.items():
-            print(key, val)
-            print(key + "初始化:", self.omc_obj.loadFile("/home/simtek/code/" + val))
-
+            self.omc_obj.loadFile("/home/simtek/code/" + val)
+            # print(key, val)
+            # print(key + "初始化:", self.omc_obj.loadFile("/home/simtek/code/" + val))
         # # 测试omc buildModelFmu能不能用
         # fmuPath = self.omc_obj.buildModelFmu(className="Modelica.Blocks.Examples.PID_Controller", fileNamePrefix="xxx")
         # print("测试omc buildModelFmu能不能用PID_Controller:", fmuPath)
@@ -108,17 +109,13 @@ class PyOmcSimulation(threading.Thread):
 
         self.processStartTime = time.time()
         self.state = "compiling"  # 编译中
-        print("进程开始时间:", self.processStartTime)
+        # print("进程开始时间:", self.processStartTime)
 
         # 编译
-        # if isDelete(self.uuid) != "3":
-        #     return
-        # mes_obj = MessageThread(self.request.userName, self.omc_obj)
-        # mes_obj.start()
         update_records(uuid=self.uuid, simulate_status="6", simulate_start_time=time.time())
         json_data = {"message": self.request.simulateModelName + " 模型正在编译"}
         R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
-        print("resultFilePath:", self.request.resultFilePath)
+        # print("resultFilePath:", self.request.resultFilePath)
         buildModelRes = self.omc_obj.buildModel(className=self.request.simulateModelName,
                                                 fileNamePrefix=self.request.resultFilePath,
                                                 simulate_parameters_data=self.request.simulationPraData
@@ -129,18 +126,22 @@ class PyOmcSimulation(threading.Thread):
         json_data = {"message": self.request.simulateModelName + " 模型编译完成，准备仿真"}
         R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
         if buildModelRes != ["", ""]:
-            print("改数据库状态为2")
-            print(self.uuid)
-            update_records(uuid=self.uuid, simulate_status="2")
+            # print("改数据库状态为2")
+            update_records(uuid=self.uuid, simulate_status="2", simulate_start="1")
         else:
-            print("改数据库状态为3")
+            # print("改数据库状态为3")
             update_records(uuid=self.uuid, simulate_status="3", simulate_result_str="编译失败")
             json_data = {"message": self.request.simulateModelName + " 模编译失败"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
             return
         # 编译完成，通知omc进程退出，杀死父进程
+        print(self.omc_obj.omc_process.pid, "编译完成，杀死omc进程")
+        parent_proc = psutil.Process(self.omc_obj.omc_process.pid)
+        for child_proc in parent_proc.children(recursive=True):
+            print(child_proc.name)
+            print(child_proc.pid)
+            os.kill(child_proc.pid, 9)
         os.kill(self.omc_obj.omc_process.pid, 9)
-        # self.omc_obj.sendExpression("quit()")
         # 仿真
 
         self.state = "running"
@@ -150,8 +151,8 @@ class PyOmcSimulation(threading.Thread):
         # 获取命令行输出结果
         output, error = process.communicate()
         if error:
-            print("subprocess Popen Error（仿真运行错误）: ", error)
-            print("仿真进程被kill")
+            # print("subprocess Popen Error（仿真运行错误）: ", error)
+            # print("仿真进程被kill")
             update_records(uuid=self.uuid,
                            simulate_status="3",
                            simulate_result_str="编译失败",
@@ -163,7 +164,7 @@ class PyOmcSimulation(threading.Thread):
         else:
             simulate_result_str = output.decode('utf-8')
             if "successfully" in simulate_result_str:
-                print("运行正常结束。")
+                # print("运行正常结束。")
                 json_data = {"message": self.request.simulateModelName + " 模型仿真完成"}
                 R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
                 update_records(uuid=self.uuid,
@@ -187,22 +188,7 @@ class PyOmcSimulation(threading.Thread):
                                simulate_end_time=str(time.time())
                                )
         self.state = "stopped"
-        print("进程结束")
 
-
-# class MessageThread(threading.Thread):
-#     def __init__(self, username, omc_obj):
-#         threading.Thread.__init__(self)
-#         self.username = username
-#         self.kill = False
-#         self.omc_obj = omc_obj
-
-    def run(self):
-        while self.state != "stopped":
-            time.sleep(1)
-            message_list = self.getMessage()
-            for i in message_list:
-                self.message_notice(i)
 
 def sendMessage(omc_obj, username):
     message_str = omc_obj.getMessagesStringInternal()

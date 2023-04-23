@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -11,7 +12,6 @@ import (
 	"yssim-go/config"
 	"yssim-go/library/fileOperation"
 	"yssim-go/library/mapProcessing"
-	"yssim-go/library/omc"
 	"yssim-go/library/stringOperation"
 
 	"github.com/bytedance/sonic"
@@ -36,74 +36,74 @@ var SimulateTaskChan = make(chan *SimulateTask, 1000)
 
 func openModelica(task *SimulateTask, resultFilePath string, SimulationPraData map[string]string) bool {
 	SimulateTaskMap[task.SRecord.ID] = task
-	res := false
+	//res := false
 	pwd, _ := os.Getwd()
 	//pwd = "/home/xuqingda/GolandProjects/YssimGoService"
-	task.SRecord.SimulateStartTime = time.Now().Unix()
-	task.SRecord.SimulateStart = true
-	//模型开始编译 状态“6”
-	task.SRecord.SimulateStatus = "6"
-	config.DB.Save(&task.SRecord)
-	MessageNotice(map[string]string{"message": task.SRecord.SimulateModelName + " 模型开始编译"})
-	buildModelRes := omc.OMC.BuildModel(task.SRecord.SimulateModelName, pwd+"/"+resultFilePath, SimulationPraData)
-	//replyVar, err := GrpcPyOmcSimulation(
-	//	task.SRecord.ID,
-	//	task.SRecord.UserspaceId,
-	//	task.SRecord.UserName,
-	//	task.SRecord.SimulateModelName,
-	//	pwd+"/"+resultFilePath,
-	//	resultFilePath,
-	//	SimulationPraData)
-	//if err != nil {
-	//	fmt.Println("调用grpc服务(PyOmcSimulation)出错：", err)
-	//	return false
-	//}
-	//fmt.Println("仿真提交任务:", replyVar.Msg)
-	//return replyVar.Msg == "Task submitted successfully."
-	//
+	//task.SRecord.SimulateStartTime = time.Now().Unix()
+	//task.SRecord.SimulateStart = true
+	////模型开始编译 状态“6”
+	//task.SRecord.SimulateStatus = "6"
+	//config.DB.Save(&task.SRecord)
+	//MessageNotice(map[string]string{"message": task.SRecord.SimulateModelName + " 模型开始编译"})
+	//buildModelRes := omc.OMC.BuildModel(task.SRecord.SimulateModelName, pwd+"/"+resultFilePath, SimulationPraData)
 
-	var resultRecord DataBaseModel.YssimSimulateRecord
-	config.DB.Where("id = ? ", task.SRecord.ID).First(&resultRecord)
-	if resultRecord.SimulateStatus == "5" || resultRecord.ID == "" {
-		log.Println("编译完成-不执行仿真-进程被kill")
+	replyVar, err := GrpcPyOmcSimulation(
+		task.SRecord.ID,
+		task.SRecord.UserspaceId,
+		task.SRecord.UserName,
+		task.SRecord.SimulateModelName,
+		pwd+"/"+resultFilePath,
+		resultFilePath,
+		SimulationPraData)
+	if err != nil {
+		fmt.Println("调用grpc服务(PyOmcSimulation)出错：", err)
 		return false
 	}
+	fmt.Println("仿真提交任务:", replyVar.Msg)
+	return replyVar.Msg == "Task submitted successfully."
 
-	if buildModelRes {
-		MessageNotice(map[string]string{"message": task.SRecord.SimulateModelName + " 模型编译成功"})
-		// 更新状态为“2” 仿真执行中
-		task.SRecord.SimulateStatus = "2"
-		config.DB.Save(&task.SRecord)
-		cmd := exec.Command(resultFilePath + "result")
-		task.Cmd = cmd
-		SimulateTaskMap[task.SRecord.ID] = task
-		combinedOutput, err := cmd.Output()
-		simulateResultStr := string(combinedOutput)
-		//log.Println("仿真完成 ", err.Error())
-		if err != nil {
-			simulateResultStr = err.Error()
-			log.Println("err: ", err.Error())
-			log.Println("仿真执行失败")
-			return false
-		}
-
-		if strings.Contains(simulateResultStr, "successfully") {
-			MessageNotice(map[string]string{"message": task.SRecord.SimulateModelName + " 模型仿真成功"})
-			task.SRecord.SimulateStatus = "4"
-			res = true
-		} else {
-			task.SRecord.SimulateStatus = "3"
-		}
-		task.SRecord.SimulateResultStr = simulateResultStr
-	} else {
-		task.SRecord.SimulateStatus = "3"
-		task.SRecord.SimulateResultStr = "编译失败"
-	}
-	task.SRecord.SimulateStart = false
-	task.SRecord.SimulateEndTime = time.Now().Unix()
-	config.DB.Save(&task.SRecord)
-	delete(SimulateTaskMap, task.SRecord.ID)
-	return res
+	//var resultRecord DataBaseModel.YssimSimulateRecord
+	//config.DB.Where("id = ? ", task.SRecord.ID).First(&resultRecord)
+	//if resultRecord.SimulateStatus == "5" || resultRecord.ID == "" {
+	//	log.Println("编译完成-不执行仿真-进程被kill")
+	//	return false
+	//}
+	//
+	//if buildModelRes {
+	//	MessageNotice(map[string]string{"message": task.SRecord.SimulateModelName + " 模型编译成功"})
+	//	// 更新状态为“2” 仿真执行中
+	//	task.SRecord.SimulateStatus = "2"
+	//	config.DB.Save(&task.SRecord)
+	//	cmd := exec.Command(resultFilePath + "result")
+	//	task.Cmd = cmd
+	//	SimulateTaskMap[task.SRecord.ID] = task
+	//	combinedOutput, err := cmd.Output()
+	//	simulateResultStr := string(combinedOutput)
+	//	//log.Println("仿真完成 ", err.Error())
+	//	if err != nil {
+	//		simulateResultStr = err.Error()
+	//		log.Println("err: ", err.Error())
+	//		log.Println("仿真执行失败")
+	//		return false
+	//	}
+	//
+	//	if strings.Contains(simulateResultStr, "successfully") {
+	//		MessageNotice(map[string]string{"message": task.SRecord.SimulateModelName + " 模型仿真成功"})
+	//		task.SRecord.SimulateStatus = "4"
+	//		res = true
+	//	} else {
+	//		task.SRecord.SimulateStatus = "3"
+	//	}
+	//	task.SRecord.SimulateResultStr = simulateResultStr
+	//} else {
+	//	task.SRecord.SimulateStatus = "3"
+	//	task.SRecord.SimulateResultStr = "编译失败"
+	//}
+	//task.SRecord.SimulateStart = false
+	//task.SRecord.SimulateEndTime = time.Now().Unix()
+	//config.DB.Save(&task.SRecord)
+	//delete(SimulateTaskMap, task.SRecord.ID)
+	//return res
 }
 
 func dymolaSimulate(task *SimulateTask, resultFilePath string, SimulationPraData map[string]string, simulateFilePath string) (bool, error) {

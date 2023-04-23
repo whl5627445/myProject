@@ -16,19 +16,10 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
                  random_string="simtek",
                  sys_start=True):
         OMCSessionHelper.__init__(self)
-        self.lock = threading.Lock()
-        print("执行OMCSessionZMQ初始化")
         OMCSessionBase.__init__(self, readonly, interactivePort=port, random_string=None)
         # Locating and using the IOR
-        if sys.platform != 'win32' or docker or dockerContainer:
-            self._port_file = "openmodelica." + self._currentUser + ".port." + self._random_string
-        else:
-            self._port_file = "openmodelica.port." + self._random_string
-        self._docker = docker
-        self._dockerContainer = dockerContainer
-        self._dockerExtraArgs = dockerExtraArgs
-        self._dockerOpenModelicaPath = dockerOpenModelicaPath
-        self._dockerNetwork = dockerNetwork
+        self._port_file = "openmodelica.port." + self._random_string
+
         self._create_omc_log_file("port")
         self._timeout = timeout
         self._port_file = os.path.join("/tmp" if docker else self._temp_dir, self._port_file).replace("\\", "/")
@@ -47,34 +38,15 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
         # connect to the running omc instance using ZMQ
         self._connect_to_omc(timeout)
 
-    def __del__(self):
-        OMCSessionBase.__del__(self)
+    # def __del__(self):
+    #     OMCSessionBase.__del__(self)
 
     def _connect_to_omc(self, timeout):
         self._omc_zeromq_uri = "file:///" + self._port_file
         # See if the omc server is running
         attempts = 0
         self._port = None
-        while True:
-            if self._dockerCid:
-                try:
-                    self._port = subprocess.check_output(
-                        ["sudo", "docker", "exec", self._dockerCid, "cat", self._port_file],
-                        stderr=subprocess.DEVNULL if (sys.version_info > (
-                            3, 0)) else subprocess.STDOUT).decode().strip()
-                    break
-                except:
-                    pass
-            else:
-                self._port = "tcp://" + self._serverIPAddress + ":" + str(self._interactivePort)
-                break
-            attempts += 1
-            if attempts == 80.0:
-                name = self._omc_log_file.name
-                self._omc_log_file.close()
-                raise Exception(
-                    "OMC Server did not start (timeout=%f). Could not open file %s" % (timeout, self._port_file))
-            time.sleep(timeout / 80.0)
+        self._port = "tcp://" + self._serverIPAddress + ":" + str(self._interactivePort)
 
         self._port = self._port.replace("0.0.0.0", self._serverIPAddress)
         # logger.info(
@@ -97,37 +69,27 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
     def sendExpression(self, command, parsed=True):
         ## check for process is running
         attempts = 0
-        self.lock.acquire()
-        logging.info("上锁成功")
+
         while True:
             try:
                 self._omc.send_string(str(command), flags=zmq.NOBLOCK)
                 break
-            except zmq.error.Again:
+            except zmq.error.Again as e:
                 pass
             attempts += 1
             if attempts == 50.0:
                 name = self._omc_log_file.name
-                self._omc_log_file.close()
                 raise Exception(
                     "No connection with OMC (timeout=%f). Log-file says: \n%s" % (
                         self._timeout, open(name).read()))
             time.sleep(self._timeout / 50.0)
-        if command == "quit()":
-            self._omc.close()
-            self._omc = None
-            return None
+
+        result = self._omc.recv_string()
+        if parsed is True:
+            answer = CdataToPYdata(result)
+            return answer
         else:
-            result = self._omc.recv_string()
-            self.lock.release()
-            logging.info("解锁成功")
-            if parsed is True:
-                answer = CdataToPYdata(result)
-                return answer
-            else:
-                return result
-        # else:
-        #     raise Exception("Process Exited, No connection with OMC. Create a new instance of OMCSession")
+            return result
 
     def getComponents(self, class_name):
         return self.sendExpression("getComponents(" + class_name + ")")

@@ -365,18 +365,19 @@ func SimulateResultListView(c *gin.Context) {
 	pageCount := math.Ceil(float64(totle) / 10) //总页数
 	for i := 0; i < len(recordList); i++ {
 		simulateStartTime := time.Unix(recordList[i].SimulateStartTime, 0)
+		simulateStartTimeStr := simulateStartTime.Format("2006-01-02 15:04:05")
 		simulateEndTime := time.Unix(recordList[i].SimulateEndTime, 0)
 		simulateRunTime := timeConvert.UseTimeFormat(int(simulateStartTime.Unix()), int(simulateEndTime.Unix()))
 		if recordList[i].SimulateStartTime == 0 {
 			simulateRunTime = "-"
-			simulateStartTime = time.Unix(recordList[i].CreatedAt.Unix(), 0)
+			simulateStartTimeStr = "-"
 		}
 		data := map[string]interface{}{
 			"index":               i + 1,
 			"id":                  recordList[i].ID,
 			"create_time":         recordList[i].CreatedAt.Format("2006-01-02 15:04:05"),
 			"simulate_status":     config.MoldelSimutalionStatus[recordList[i].SimulateStatus],
-			"simulate_start_time": simulateStartTime.Format("2006-01-02 15:04:05"),
+			"simulate_start_time": simulateStartTimeStr,
 			"simulate_end_time":   simulateEndTime.Format("2006-01-02 15:04:05"),
 			"simulate_model_name": recordList[i].SimulateModelName,
 			"simulate_run_time":   simulateRunTime,

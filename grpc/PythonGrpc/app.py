@@ -1,3 +1,4 @@
+import copy
 from concurrent import futures
 import os.path
 import pandas as pd
@@ -13,7 +14,7 @@ import router_pb2
 import router_pb2_grpc
 import DyMat
 from fmpy import write_csv
-import asyncio
+
 
 adsPath = "/home/simtek/code/"
 # used_ports = []
@@ -31,39 +32,14 @@ if __name__ == '__main__':
         # 实现 proto 文件中定义的 rpc 调用
         # 仿真接口
         def PyOmcSimulation(self, request, context):
-            port = findPort(23458)
-            # print("端口号", port)
-            # print("进程数量", len(PyOmcSimulationProcessList))
+
             newRequest = copy.deepcopy(request)
-            date = [newRequest, port]
-            # PyOmcSimulationProcessList.append(processOne)
-            # thread = threading.Thread(target=processOne.run)
-            taskList.append(date)
-            # print("PyOmcSimulation被调用。")
+            data = newRequest
+
+            taskList.append(data)
             return router_pb2.PyOmcSimulationReply(ok=True,
                                                    msg="Task submitted successfully."
                                                    )
-            # for i in PyOmcSimulationProcessList:
-            #     if i.state == "stopped":
-            #         PyOmcSimulationProcessList.remove(i)
-            #         del i
-            # if len(PyOmcSimulationProcessList) < 4:
-            #     # 找到空闲的端口号
-            #     port = findPort(23458)
-            #     print("端口号", port)
-            #     print("进程数量", len(PyOmcSimulationProcessList))
-            #     processOne = PyOmcSimulation(request, port=port)
-            #     PyOmcSimulationProcessList.append(processOne)
-            #     thread = threading.Thread(target=processOne.run)
-            #     thread.start()
-            #     return router_pb2.PyOmcSimulationReply(ok=True,
-            #                                            msg="Task submitted successfully."
-            #                                            )
-            # else:
-            #     return router_pb2.PyOmcSimulationReply(ok=False,
-            #                                            msg="The total number of system tasks has exceeded 8."
-            #                                                " Please wait and request again!"
-            #                                            )
 
         def ProcessOperation(self, request, context):
             print("ProcessOperation被调用。")
@@ -236,24 +212,23 @@ if __name__ == '__main__':
     class SimulationThread(threading.Thread):
         def __int__(self):
             threading.Thread.__init__(self)
+            pass
 
         def run(self):
             print("仿真任务执行线程启动")
             while True:
+                time.sleep(1)
                 for i in PyOmcSimulationProcessList:
                     if i.state == "stopped":
                         PyOmcSimulationProcessList.remove(i)
-                        # del i
 
-                if len(PyOmcSimulationProcessList) < 2 and len(taskList) > 0:
+                if len(PyOmcSimulationProcessList) < 4 and len(taskList) > 0:
                     # 找到空闲的端口号
                     port = findPort(23458)
-                    date = taskList.pop(0)
-                    processOne = PyOmcSimulation(date[0], date[1])
-                    processOne.start()
-                    PyOmcSimulationProcessList.append(processOne)
-                    # processOne.join()
-                time.sleep(1)
+                    data = taskList.pop(0)
+                    process = PyOmcSimulation(data, port)
+                    process.start()
+                    PyOmcSimulationProcessList.append(process)
 
 
     # def action():

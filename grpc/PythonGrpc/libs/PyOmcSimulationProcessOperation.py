@@ -73,12 +73,10 @@ def kill_py_omc_process(multiprocessing_id, process_list):
             i.state = "stopped"
             try:
                 os.kill(i.omc_obj.omc_process.pid, 9)
-                # i.omc_obj.sendExpression("quit()")
             except OSError as e:
                 print(f"Error: {e}")
             process_list.remove(i)
             del i
-            print("杀死进程")
             with Session() as session:
                 processDetails = session.query(YssimSimulateRecords).filter(
                     YssimSimulateRecords.id == multiprocessing_id).first()
