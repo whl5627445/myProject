@@ -380,10 +380,10 @@ func GetResultFileView(c *gin.Context) {
 	var resultRecord DataBaseModel.YssimSimulateRecord
 	DB.Where("id = ? AND username = ? AND userspace_id = ? ", item.RecordId, username, userSpaceId).First(&resultRecord)
 	//ok := service.GrpcMatToCsv(resultRecord.SimulateModelResultPath)
-	if resultRecord.SimulateModelResultPath != "" {
+	if resultRecord.SimulateModelResultPath != "" && resultRecord.SimulateStatus == "4" {
 		res.Data = map[string]string{"url": resultRecord.SimulateModelResultPath + "result_res.mat"}
 	} else {
-		res.Err = "下载失败，请稍后再试"
+		res.Err = "下载失败"
 		res.Status = 1
 	}
 	c.JSON(http.StatusOK, res)
