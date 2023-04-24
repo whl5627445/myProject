@@ -470,19 +470,22 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 					return "0"
 				}
 			}()
-			if caf[10].(string) != "-" {
-				extentX1, _ := caf[10].(string)
-				extentY1, _ := caf[11].(string)
-				extentX2, _ := caf[12].(string)
-				extentY2, _ := caf[13].(string)
-				data["originDiagram"] = strings.Join([]string{caf[8].(string), caf[9].(string)}, ",")
-				data["extent1Diagram"] = strings.Join([]string{extentX1, extentY1}, ",")
-				data["extent2Diagram"] = strings.Join([]string{extentX2, extentY2}, ",")
-			} else {
-				data["extent1Diagram"] = strings.Join([]string{caf[3].(string), caf[4].(string)}, ",")
-				data["extent2Diagram"] = strings.Join([]string{caf[5].(string), caf[6].(string)}, ",")
-				data["originDiagram"] = strings.Join([]string{caf[1].(string), caf[2].(string)}, ",")
-			}
+			//if caf[10].(string) != "-" {
+			//	extentX1, _ := caf[10].(string)
+			//	extentY1, _ := caf[11].(string)
+			//	extentX2, _ := caf[12].(string)
+			//	extentY2, _ := caf[13].(string)
+			//	data["originDiagram"] = strings.Join([]string{caf[8].(string), caf[9].(string)}, ",")
+			//	data["extent1Diagram"] = strings.Join([]string{extentX1, extentY1}, ",")
+			//	data["extent2Diagram"] = strings.Join([]string{extentX2, extentY2}, ",")
+			//} else {
+			//	data["extent1Diagram"] = strings.Join([]string{caf[3].(string), caf[4].(string)}, ",")
+			//	data["extent2Diagram"] = strings.Join([]string{caf[5].(string), caf[6].(string)}, ",")
+			//	data["originDiagram"] = strings.Join([]string{caf[1].(string), caf[2].(string)}, ",")
+			//}
+			data["extent1Diagram"] = strings.Join([]string{caf[3].(string), caf[4].(string)}, ",")
+			data["extent2Diagram"] = strings.Join([]string{caf[5].(string), caf[6].(string)}, ",")
+			data["originDiagram"] = strings.Join([]string{caf[1].(string), caf[2].(string)}, ",")
 			data["extent1Diagram"] = strings.Replace(data["extent1Diagram"].(string), "-,-", "-100.0,-100.0", 1)
 			data["extent2Diagram"] = strings.Replace(data["extent2Diagram"].(string), "-,-", "100.0,100.0", 1)
 			data["rotateAngle"] = rotateAngle

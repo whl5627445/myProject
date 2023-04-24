@@ -309,6 +309,7 @@ func iconInputOutputs(cData [][]interface{}, caData [][]interface{}, modelName s
 					return "0"
 				}
 			}()
+
 			if caf[10].(string) != "-" {
 				extentX1, _ := caf[10].(string)
 				extentY1, _ := caf[11].(string)

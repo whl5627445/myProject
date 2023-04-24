@@ -40,10 +40,10 @@ func openModelica(task *SimulateTask, resultFilePath string, SimulationPraData m
 	pwd, _ := os.Getwd()
 	//pwd = "/home/xuqingda/GolandProjects/YssimGoService"
 	//task.SRecord.SimulateStartTime = time.Now().Unix()
-	//task.SRecord.SimulateStart = true
+	task.SRecord.SimulateStart = true
 	////模型开始编译 状态“6”
 	//task.SRecord.SimulateStatus = "6"
-	//config.DB.Save(&task.SRecord)
+	config.DB.Save(&task.SRecord)
 	//MessageNotice(map[string]string{"message": task.SRecord.SimulateModelName + " 模型开始编译"})
 	//buildModelRes := omc.OMC.BuildModel(task.SRecord.SimulateModelName, pwd+"/"+resultFilePath, SimulationPraData)
 
@@ -472,13 +472,13 @@ func DeleteSimulateTask(taskID, simulateType string) {
 		switch simulateType {
 		case "OM":
 
-			log.Println(task.SRecord.SimulateModelResultPath)
-			log.Println(task.SRecord)
-			//replyVar, err := GrpcPyOmcSimulationProcessOperation(taskID, "kill")
-			//if err != nil {
-			//	log.Println("调用grpc服务(GrpcPyOmcSimulationProcessOperation)出错：：", err)
-			//}
-			//log.Println(replyVar.Msg)
+			//log.Println(task.SRecord.SimulateModelResultPath)
+			//log.Println(task.SRecord)
+			replyVar, err := GrpcPyOmcSimulationProcessOperation(taskID, "kill")
+			if err != nil {
+				log.Println("调用grpc服务(GrpcPyOmcSimulationProcessOperation)出错：：", err)
+			}
+			log.Println(replyVar.Msg)
 		case "DM":
 			err := dymolaServiceStop(taskID)
 			if err != nil {
