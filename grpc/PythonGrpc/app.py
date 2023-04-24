@@ -218,9 +218,12 @@ if __name__ == '__main__':
             print("仿真任务执行线程启动")
             while True:
                 time.sleep(1)
+                print("执行任务队列剩余数量： ", len(PyOmcSimulationProcessList))
+                print("未任务队列剩余数量： ", len(taskList))
                 for i in PyOmcSimulationProcessList:
                     if i.state == "stopped":
                         PyOmcSimulationProcessList.remove(i)
+                        # del i
 
                 if len(PyOmcSimulationProcessList) < 4 and len(taskList) > 0:
                     # 找到空闲的端口号

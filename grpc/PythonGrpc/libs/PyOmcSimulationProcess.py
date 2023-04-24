@@ -125,23 +125,24 @@ class PyOmcSimulation(threading.Thread):
         print("消息推送完成")
         json_data = {"message": self.request.simulateModelName + " 模型编译完成，准备仿真"}
         R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
-        if buildModelRes != ["", ""]:
-            # print("改数据库状态为2")
-            update_records(uuid=self.uuid, simulate_status="2", simulate_start="1")
-        else:
-            # print("改数据库状态为3")
-            update_records(uuid=self.uuid, simulate_status="3", simulate_result_str="编译失败")
-            json_data = {"message": self.request.simulateModelName + " 模编译失败"}
-            R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
-            return
-        # 编译完成，通知omc进程退出，杀死父进程
-        print(self.omc_obj.omc_process.pid, "编译完成，杀死omc进程")
         parent_proc = psutil.Process(self.omc_obj.omc_process.pid)
         for child_proc in parent_proc.children(recursive=True):
             print(child_proc.name)
             print(child_proc.pid)
             os.kill(child_proc.pid, 9)
         os.kill(self.omc_obj.omc_process.pid, 9)
+        if buildModelRes != ["", ""]:
+            # print("改数据库状态为2")
+            update_records(uuid=self.uuid, simulate_status="2", simulate_start="1")
+        else:
+            # print("改数据库状态为3")
+            update_records(uuid=self.uuid, simulate_status="3", simulate_start="0", simulate_result_str="编译失败")
+            json_data = {"message": self.request.simulateModelName + " 模编译失败"}
+            R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
+            return
+        # 编译完成，通知omc进程退出，杀死父进程
+        print(self.omc_obj.omc_process.pid, "编译完成，杀死omc进程")
+
         # 仿真
 
         self.state = "running"
@@ -201,8 +202,8 @@ def sendMessage(omc_obj, username):
             pl = p.strip()
             if "MODELICAPATH" in pl or "installPackage" in pl or "Downloaded" in pl:
                 continue
-            elif "Automatically " in pl or "Lexer " in pl:
-                continue
+            # elif "Automatically " in pl or "Lexer " in pl:
+            #     continue
             elif pl.startswith("message"):
                 mes = pl.replace("message = ", "", -1)
                 message_dict["message"] = mes[1:-1]
