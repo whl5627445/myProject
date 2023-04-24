@@ -28,20 +28,20 @@ if sys.platform == 'darwin':
     sys.path.append('/opt/openmodelica/lib/python2.7/site-packages/')
 
 
-class DummyPopen():
-    def __init__(self, pid):
-        self.pid = pid
-        self.process = psutil.Process(pid)
-        self.returncode = 0
-
-    def poll(self):
-        return None if self.process.is_running() else True
-
-    def kill(self):
-        return os.kill(self.pid, signal.SIGKILL)
-
-    def wait(self, timeout):
-        return self.process.wait(timeout=timeout)
+# class DummyPopen():
+#     def __init__(self, pid):
+#         self.pid = pid
+#         self.process = psutil.Process(pid)
+#         self.returncode = 0
+#
+#     def poll(self):
+#         return None if self.process.is_running() else True
+#
+#     def kill(self):
+#         return os.kill(self.pid, signal.SIGKILL)
+#
+#     def wait(self, timeout):
+#         return self.process.wait(timeout=timeout)
 
 
 class OMCSessionHelper():
@@ -96,35 +96,35 @@ class OMCSessionBase(with_metaclass(abc.ABCMeta, object)):
             # We are running as a uid not existing in the password database... Pretend we are nobody
             self._currentUser = "nobody"
 
-    def __del__(self):
-        try:
-            self.sendExpression("quit()")
-        except:
-            pass
-        self._omc_log_file.close()
-        print("结束omc子进程：",self._omc_process.pid)
-        if sys.version_info.major >= 3:
-            try:
-                self._omc_process.wait(timeout=2.0)
-            except:
-                if self._omc_process:
-                    self._omc_process.kill()
-        else:
-            for i in range(0, 100):
-                time.sleep(0.02)
-                if self._omc_process and (self._omc_process.poll() is not None):
-                    break
-        # kill self._omc_process process if it is still running/exists
-        if self._omc_process is not None and self._omc_process.returncode is None:
-            print("OMC did not exit after being sent the quit() command; killing the process with pid=%s" % str(
-                self._omc_process.pid))
-            if sys.platform == "win32":
-                self._omc_process.kill()
-                self._omc_process.wait()
-            else:
-                os.killpg(os.getpgid(self._omc_process.pid), signal.SIGTERM)
-                self._omc_process.kill()
-                self._omc_process.wait()
+    # def __del__(self):
+        # try:
+        #     self.sendExpression("quit()")
+        # except:
+        #     pass
+        # self._omc_log_file.close()
+        # print("结束omc子进程：",self._omc_process.pid)
+        # if sys.version_info.major >= 3:
+        #     try:
+        #         self._omc_process.wait(timeout=2.0)
+        #     except:
+        #         if self._omc_process:
+        #             self._omc_process.kill()
+        # else:
+        #     for i in range(0, 100):
+        #         time.sleep(0.02)
+        #         if self._omc_process and (self._omc_process.poll() is not None):
+        #             break
+        # # kill self._omc_process process if it is still running/exists
+        # if self._omc_process is not None and self._omc_process.returncode is None:
+        #     print("OMC did not exit after being sent the quit() command; killing the process with pid=%s" % str(
+        #         self._omc_process.pid))
+        #     if sys.platform == "win32":
+        #         self._omc_process.kill()
+        #         self._omc_process.wait()
+        #     else:
+        #         os.killpg(os.getpgid(self._omc_process.pid), signal.SIGTERM)
+        #         self._omc_process.kill()
+        #         self._omc_process.wait()
 
     def _create_omc_log_file(self, suffix):
         if sys.platform == 'win32':
@@ -140,12 +140,13 @@ class OMCSessionBase(with_metaclass(abc.ABCMeta, object)):
                                                                                          self._random_string)), 'w')
 
     def _start_omc_process(self):
-
+        # self._omc_command.split()
         # Because we spawned a shell, and we need to be able to kill OMC, create a new process group for this
-        self._omc_process = subprocess.Popen(self._omc_command.split(), shell=False, stdout=self._omc_log_file,
-                                             stderr=self._omc_log_file)
+        self._omc_process = subprocess.Popen(self._omc_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
         self.omc_process = self._omc_process
+        # self.omc_process.communicate()
+        print("omc pid", self.omc_process.pid)
         return self._omc_process
 
     def _getuid(self):
@@ -163,36 +164,10 @@ class OMCSessionBase(with_metaclass(abc.ABCMeta, object)):
         avoid problems resulting from spaces in the path string.
         Linux, however, only works with the string version.
         """
-        if (self._docker or self._dockerContainer) and sys.platform == "win32":
-            extraFlags = ["-d=zmqDangerousAcceptConnectionsFromAnywhere"]
-            if not self._interactivePort:
-                raise Exception(
-                    "docker on Windows requires knowing which port to connect to. For dockerContainer=..., the container needs to have already manually exposed this port when it was started (-p 127.0.0.1:n:n) or you get an error later.")
-        else:
-            extraFlags = []
-        if self._docker:
-            if sys.platform == "win32":
-                p = int(self._interactivePort)
-                dockerNetworkStr = ["-p", "127.0.0.1:%d:%d" % (p, p)]
-            elif self._dockerNetwork == "host" or self._dockerNetwork is None:
-                dockerNetworkStr = ["--network=host"]
-            elif self._dockerNetwork == "separate":
-                dockerNetworkStr = []
-                extraFlags = ["-d=zmqDangerousAcceptConnectionsFromAnywhere"]
-            else:
-                raise Exception('dockerNetwork was set to %s, but only \"host\" or \"separate\" is allowed')
-            self._dockerCidFile = self._omc_log_file.name + ".docker.cid"
-            omcCommand = ["sudo", "docker", "run", "--cidfile", self._dockerCidFile, "--rm", "--env",
-                          "USER=%s" % self._currentUser, "--user",
-                          str(self._getuid())] + self._dockerExtraArgs + dockerNetworkStr + [self._docker,
-                                                                                             self._dockerOpenModelicaPath]
-        elif self._dockerContainer:
-            omcCommand = ["sudo", "docker", "exec", "--env", "USER=%s" % self._currentUser, "--user",
-                          str(self._getuid())] + self._dockerExtraArgs + [self._dockerContainer,
-                                                                          self._dockerOpenModelicaPath]
-            self._dockerCid = self._dockerContainer
-        else:
-            omcCommand = [self._get_omc_path()]
+
+        extraFlags = []
+
+        omcCommand = [self._get_omc_path()]
         if self._interactivePort:
             extraFlags = extraFlags + ["--interactivePort=%d" % int(self._interactivePort)]
 
@@ -287,7 +262,6 @@ class OMCSessionBase(with_metaclass(abc.ABCMeta, object)):
                     simulate_parameters_list.append(str(k) + "=" + str(v))
             cmd = cmd + ", " + ", ".join(simulate_parameters_list)
         # self.directoryExists(fileNamePrefix)
-        print("cmd",cmd)
         simulate_result = self.ask('buildModel', '{0}'.format(cmd))
         return simulate_result
 
