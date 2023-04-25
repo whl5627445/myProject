@@ -4,6 +4,9 @@ from sqlalchemy.orm import sessionmaker
 
 HOST = 'mysql'  # 127.0.0.1/localhost 124.70.211.127
 PORT = 3306
+#
+# HOST = '124.70.211.127'  # 127.0.0.1/localhost 124.70.211.127
+# PORT = 3307
 DATA_BASE = 'yssim'
 USER = 'root'
 PWD = 'simtek_cloud_sim'
@@ -71,3 +74,14 @@ class YssimSimulateRecords(Base):
     simulate_type = Column(String)
     deleted_at = Column(DateTime)
     create_time = Column(DateTime)
+
+
+class YssimModels(Base):
+    __tablename__ = 'yssim_models'
+    id = Column(String, primary_key=True)
+    userspace_id = Column(String)
+    package_name = Column(String)
+    version = Column(String)
+    sys_or_user = Column(String)
+    file_path = Column(String)
+    default_version = Column(Integer)

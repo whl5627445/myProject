@@ -1,142 +1,110 @@
-import shutil
-import time
-import zarr
-import psutil
-import zipfile
-import os
-
-from config.omc import omc
-from config.db_config import Session, YssimSimulateRecords
+import re
+from config.db_config import Session, YssimSimulateRecords, YssimModels
+import router_pb2
 
 
-def buildFMU(moPath, className, userName, resPath):
-    # if omc.loadFile("/yssim-go/static/UserFiles/UploadFile/xuqingda/ChillerStage/20230216111124/ChillerStage.mo"):
-    #     return False
-    adsPath = "/home/simtek/code/"
-    fileNamePrefix = userName + time.strftime('%H%M%S', time.localtime(time.time()))
-    # print(moPath, className, userName, resPath)
-    if moPath == "":  # 如果是系统模型,直接导出fmu
-        fmuPath = omc.buildModelFmu(className=className, fileNamePrefix=fileNamePrefix)
-        if fmuPath == "":
-            print("moPath为空被判定为系统模型，导出fmu" + className + "失败！")
-            return False
-    else:  # 如果不是系统模型，先判断mo文件是否存在，再加载mo文件，导出fmu，卸载模型
-        if os.path.exists(adsPath + moPath):
-            print("mo文件存在:", adsPath + moPath)
-        else:
-            print("mo文件不存在:", adsPath + moPath)
-            return False
-        if not omc.loadFile(adsPath + moPath):
-            print("加载" + moPath + "失败！")
-            return False
-        fmuPath = omc.buildModelFmu(className=className, fileNamePrefix=fileNamePrefix)
-        print("fmupath:", fmuPath)
-        if fmuPath == "":
-            print("moPath不为空被判定为用户模型，导出fmu" + className + "失败！")
-            return False
-        if not omc.deleteClass(className):
-            print("卸载" + className + "失败！")
-            return False
-    try:
-        newFmuPath = adsPath + resPath + className.replace(".", "_") + ".fmu"
-        shutil.move(fmuPath, newFmuPath)
-        # copyPath = shutil.copy(fmuPath, newFmuPath)
-        # movePath = shutil.move(fmuPath, newFmuPath + ".zip")
-        # zip_file = zipfile.ZipFile(movePath)
-        # zip_file.extractall(adsPath + resPath)
-        # zip_file.close()
-        # os.rename(adsPath + resPath + "modelDescription.xml", adsPath + resPath + "result_init.xml")
-        dirname = os.path.dirname(fmuPath)
-        for filename in os.listdir(dirname):
-            if filename.startswith(fileNamePrefix):
-                shutil.move(os.path.join(dirname, filename), adsPath + resPath + filename)
-                print("移动文件：", filename)
-    except Exception as e:
-        return False
-    return newFmuPath
-
-
-def initOmc():
-    print("clearProgram:", omc.sendExpression("clearProgram()"))
-    print("setModelicaPath:", omc.sendExpression("setModelicaPath(\"/usr/lib/omlibrary\")"))
-    print("Buildings9.1.0初始化:", omc.sendExpression("loadModel(Buildings, {\"9.1.0\"},true,\"\",false)"))
-    print("Modelica4.0.0初始化:", omc.sendExpression("loadModel(Modelica, {\"4.0.0\"},true,\"\",false)"))
-    print("SolarPower初始化:", omc.sendExpression("loadModel(SolarPower, {\"\"},true,\"\",false)"))
-    print("WindPowerSystem初始化:", omc.sendExpression("loadModel(WindPowerSystem, {\"\"},true,\"\",false)"))
-    fmuPath = omc.buildModelFmu(className="Modelica.Blocks.Examples.PID_Controller", fileNamePrefix="xxx")
-    print("testBuildFMU:", fmuPath)
-    dirname = os.path.dirname(fmuPath)
-    for filename in os.listdir(dirname):
-        if filename.startswith("xxx"):
-            os.remove(os.path.join(dirname, filename))
-            print("删除文件：", filename)
-
-
-# def TimeStampToTime(timestamp):
-#     timeStruct = time.localtime(timestamp)
-#     return time.strftime('%Y-%m-%d %H:%M:%S', timeStruct)
-
-
-def getSate(string1):
-    if 'started' in string1:
-        return 'started'
-    if 'closed' in string1:
-        return 'closed'
-    if 'unknown' in string1:
-        return 'unknown'
-    if 'initial' in string1:
-        return 'initial'
-    if 'stopped' in string1:
-        return 'stopped'
-    return "unknown"
-
-
-def suspendProcess(multiprocessing_id, processList):
-    for i in processList:
-        if i.uuid == multiprocessing_id:
-            proc = psutil.Process(i.pid)  # 传入任意子进程的pid
-            proc.suspend()  # 暂停子进程
-            with Session() as session:
-                processDetails = session.query(YssimSimulateRecords).filter(
-                    YssimSimulateRecords.id == multiprocessing_id).first()
-                processDetails.simulate_status = "2"  # 暂停
-                session.commit()
-            return {"msg": True}
-    return {"msg": False}
-
-
-def resumeProcess(multiprocessing_id, processList):
-    for i in processList:
-        if i.uuid == multiprocessing_id:
-            proc = psutil.Process(i.pid)  # 传入任意子进程的pid
-            proc.resume()  # 恢复子进程
-            with Session() as session:
-                processDetails = session.query(YssimSimulateRecords).filter(
-                    YssimSimulateRecords.id == multiprocessing_id).first()
-                processDetails.state = "2"  # 恢复运行
-                session.commit()
-            return {"msg": True}
-    return {"msg": False}
-
-
-def killProcess(multiprocessing_id, processList, managerResDict):
-    for i in processList:
-        if i.uuid == multiprocessing_id:
-            processState = getSate(i.__repr__())
-            if i.is_alive():
-                i.kill()
+def initTask():
+    dataList = []
+    with Session() as session:
+        # 查询所有为完成的仿真任务,
+        task_record_list = []
+        record_list = session.query(YssimSimulateRecords).filter(
+            YssimSimulateRecords.simulate_status.in_(["2", "1", "6"]),
+            YssimSimulateRecords.deleted_at.is_(None)
+        ).all()
+        for i in record_list:
+            print(i.id)
+            yssim_model = session.query(YssimModels).filter(
+                YssimModels.userspace_id.in_([i.userspace_id, '0']),
+                YssimModels.id == i.package_id,
+                YssimSimulateRecords.deleted_at.is_(None)
+            ).first()
+            if yssim_model:
+                print("未完成", yssim_model.id)
+                task_record_list.append(i)
             else:
-                i.close()
-            with Session() as session:
-                processDetails = session.query(YssimSimulateRecords).filter(
-                    YssimSimulateRecords.id == multiprocessing_id).first()
-                processDetails.state = "4"  # 退出
+                i.simulate_status = "3"
                 session.commit()
+    # 返回任务列表
+    for i in task_record_list:
+        a = router_pb2.PyOmcSimulationRequest(
+            uuid=i.id,
+            userSpaceId=i.userspace_id,
+            userName=i.username,
+            simulateModelName=i.simulate_model_name,
+            resultFilePath=i.simulate_model_result_path,
+            simulationPraData={
+                "startTime": i.start_time,
+                "stopTime": i.stop_time,
+                "method": i.method,
+                "numberOfIntervals": i.number_intervals,
+                "tolerance": i.tolerance,
+            },
+        )
+        dataList.append(a)
+    return dataList
 
-                if multiprocessing_id in managerResDict:
-                    zarr.save(processDetails.resPath, managerResDict[multiprocessing_id])
-                    del managerResDict[multiprocessing_id]
 
-            return {"msg": "End {} Process:{}".format(processState, multiprocessing_id)}
+def new_another_name(username: str, simulate_model_name: str, userspace_id: str) -> str:
+    # 生产新的数据库结果别名
+    another_name_list = []
+    with Session() as session:
+        record_list = session.query(YssimSimulateRecords).filter(
+            YssimSimulateRecords.username == username,
+            YssimSimulateRecords.simulate_model_name == simulate_model_name,
+            YssimSimulateRecords.userspace_id == userspace_id,
+            YssimSimulateRecords.simulate_status == "4",
+            YssimSimulateRecords.deleted_at.is_(None),
+        ).all()
 
-    return {"msg": "The process is not found or has ended or failed:{}".format(multiprocessing_id)}
+    for record in record_list:
+        another_name_list.append(record.another_name)
+    max_suffix = 0
+    suffix_pattern = re.compile(r"\s(\d+)\s*$")
+    for another_name in another_name_list:
+        matches = suffix_pattern.findall(another_name)
+        if len(matches) > 0:
+            suffix = int(matches[0])
+            if suffix > max_suffix:
+                max_suffix = suffix
+
+    return "结果 " + str(max_suffix + 1)
+
+
+def update_records(uuid, simulate_status=None, simulate_result_str=None, simulate_start=None, simulate_start_time=None,
+                   simulate_end_time=None, simulate_model_result_path=None, another_name=None
+                   ):
+    with Session() as session:
+        processDetails = session.query(YssimSimulateRecords).filter(
+            YssimSimulateRecords.id == uuid).first()
+        if simulate_status:
+            processDetails.simulate_status = simulate_status  # 更改状态
+        if simulate_result_str:
+            processDetails.simulate_result_str = simulate_result_str  # 更改仿真结果字符串
+        if simulate_start:
+            processDetails.simulate_start = simulate_start  # 仿真开始标致
+        if simulate_start_time:
+            processDetails.simulate_start_time = simulate_start_time  # 仿真开始时间
+        if simulate_end_time:
+            processDetails.simulate_end_time = simulate_end_time  # 仿真结束时间
+        if simulate_model_result_path:
+            processDetails.simulate_model_result_path = simulate_model_result_path  # 仿真结果文件路径
+        if another_name:
+            processDetails.another_name = another_name  # 结果记录别名
+        session.commit()
+
+# def initOmc():
+#     print("clearProgram:", omc.sendExpression("clearProgram()"))
+#     print("setModelicaPath:", omc.sendExpression("setModelicaPath(\"/usr/lib/omlibrary\")"))
+#     print("Buildings9.1.0初始化:", omc.sendExpression("loadModel(Buildings, {\"9.1.0\"},true,\"\",false)"))
+#     print("Modelica4.0.0初始化:", omc.sendExpression("loadModel(Modelica, {\"4.0.0\"},true,\"\",false)"))
+#     print("SolarPower初始化:", omc.sendExpression("loadModel(SolarPower, {\"\"},true,\"\",false)"))
+#     print("WindPowerSystem初始化:", omc.sendExpression("loadModel(WindPowerSystem, {\"\"},true,\"\",false)"))
+#     fmuPath = omc.buildModelFmu(className="Modelica.Blocks.Examples.PID_Controller", fileNamePrefix="xxx")
+#     print("testBuildFMU:", fmuPath)
+#     dirname = os.path.dirname(fmuPath)
+#     for filename in os.listdir(dirname):
+#         if filename.startswith("xxx"):
+#             os.remove(os.path.join(dirname, filename))
+#             print("删除文件：", filename)
+#

@@ -109,11 +109,7 @@ message PyOmcSimulationRequest{
   string userName = 3;
   string simulateModelName = 4;
   string resultFilePath = 5;
-  string relativePath = 9;
   map<string, string> simulationPraData = 6;
-  map<string, string> sysModel = 7;
-  map<string, string> userModel = 8;
-
 }
 message PyOmcSimulationReply{
   bool ok = 1;

@@ -5,6 +5,7 @@ import pandas as pd
 from libs.PyOmcSimulationProcessOperation import kill_py_omc_process, suspend_process, resume_process
 from libs.PyOmcSimulationProcess import PyOmcSimulation
 from libs.FindPort import findPort
+from libs.defs import initTask
 import threading
 import zarr
 from config.db_config import Session, YssimSimulateRecords
@@ -14,7 +15,12 @@ import router_pb2
 import router_pb2_grpc
 import DyMat
 from fmpy import write_csv
+import configparser
 
+config = configparser.ConfigParser()
+config.read('./config/grpc_config.ini')
+start_port = int(config['app']['start_port'])
+max_simulation_num = int(config['app']['max_simulation_num'])
 
 adsPath = "/home/simtek/code/"
 # used_ports = []
@@ -24,8 +30,8 @@ if __name__ == '__main__':
     # 进程列表，用于保存每个进程对象
     PyOmcSimulationProcessList = []
     # 接收仿真任务队列
-    taskList = []
-
+    # 初始化任务队列
+    taskList = initTask()
 
     # 实现 proto 文件中定义的 GreeterServicer
     class Greeter(router_pb2_grpc.GreeterServicer):
@@ -225,9 +231,9 @@ if __name__ == '__main__':
                         PyOmcSimulationProcessList.remove(i)
                         # del i
 
-                if len(PyOmcSimulationProcessList) < 4 and len(taskList) > 0:
+                if len(PyOmcSimulationProcessList) < max_simulation_num and len(taskList) > 0:
                     # 找到空闲的端口号
-                    port = findPort(23458)
+                    port = findPort(start_port)
                     data = taskList.pop(0)
                     process = PyOmcSimulation(data, port)
                     process.start()
@@ -261,7 +267,6 @@ if __name__ == '__main__':
 
     print("服务开启成功！0.0.0.0:50051")
     server.start()
-
 
     try:
         while True:

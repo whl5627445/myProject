@@ -37,7 +37,6 @@ var SimulateTaskChan = make(chan *SimulateTask, 1000)
 func openModelica(task *SimulateTask, resultFilePath string, SimulationPraData map[string]string) bool {
 	SimulateTaskMap[task.SRecord.ID] = task
 	//res := false
-	pwd, _ := os.Getwd()
 	//pwd = "/home/xuqingda/GolandProjects/YssimGoService"
 	//task.SRecord.SimulateStartTime = time.Now().Unix()
 	task.SRecord.SimulateStart = true
@@ -52,7 +51,6 @@ func openModelica(task *SimulateTask, resultFilePath string, SimulationPraData m
 		task.SRecord.UserspaceId,
 		task.SRecord.UserName,
 		task.SRecord.SimulateModelName,
-		pwd+"/"+resultFilePath,
 		resultFilePath,
 		SimulationPraData)
 	if err != nil {
