@@ -52,10 +52,8 @@ func UploadModelPackageView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	removeSuffix := strings.Split(modelFile.Filename, ".")[0]
-	saveFilePath := "static/UserFiles/UploadFile/" + userName + "/" + removeSuffix + "/" + time.Now().Local().Format("20060102150405") + "/"
-	zipPackagePath := saveFilePath + fileName
-	packageName, packagePath, msg, ok := service.PackageFileParse(fileName, saveFilePath, zipPackagePath, file)
+	saveFilePathBase := "static/UserFiles/UploadFile/" + userName
+	packageName, packagePath, msg, ok := service.PackageFileParse(fileName, saveFilePathBase, file)
 	if ok {
 		var packageModel DataBaseModel.YssimModels
 		DB.Where("sys_or_user IN ? AND userspace_id IN ? AND package_name = ?", []string{"sys", userName}, []string{"0", userSpaceId}, packageName).First(&packageModel)
@@ -81,7 +79,7 @@ func UploadModelPackageView(c *gin.Context) {
 			res.Status = 2
 			service.DeleteLibrary(packageName)
 		} else {
-			conflict, err := service.GetLoadPackageConflict(packageName, packageRecord.Version, packagePath)
+			conflict, err := service.GetLoadPackageConflict(packageName, packageRecord.Version, packagePath+"/package.mo")
 			if len(conflict) > 0 && err != nil {
 				service.DeleteLibrary(packageName)
 				data := map[string]interface{}{}
@@ -199,7 +197,7 @@ func CreateModelPackageView(c *gin.Context) {
 		ID:          uuid.New().String(),
 		PackageName: createPackageName,
 		SysUser:     username,
-		FilePath:    "static/UserFiles/UploadFile/" + username + "/" + createPackageName + "/" + time.Now().Local().Format("20060102150405") + "/" + createPackageName + ".mo",
+		FilePath:    "static/UserFiles/UploadFile/" + username + "/" + time.Now().Local().Format("20060102150405") + "/" + createPackageName + "/" + createPackageName + ".mo",
 		UserSpaceId: userSpaceId,
 	}
 	DB.Where("package_name = ? AND sys_or_user IN ? AND userspace_id IN ?", item.Name, []string{"sys", username}, []string{"0", userSpaceId}).First(&packageRecord)
@@ -687,7 +685,7 @@ func CreateResourcesDirView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
-	result, err := service.CreateResourcesDir(packageModel.PackageName, item.Path, item.Parent)
+	result := service.CreateResourcesDir(packageModel.PackageName, item.Path, item.Parent)
 	if result {
 		res.Msg = "文件夹创建成功"
 		c.JSON(http.StatusOK, res)

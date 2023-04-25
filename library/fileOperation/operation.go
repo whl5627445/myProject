@@ -56,17 +56,18 @@ func DeletePathAndFile(path string) bool {
 	return true
 }
 
-func CreateFilePath(filePath string) (bool, error) {
+func CreateFilePath(filePath string) bool {
 	exists := Exists(filePath)
 	isDir := IsDir(filePath)
 	if exists && isDir {
-		return false, errors.New("文件夹已存在")
+		return true
 	}
 	err := os.MkdirAll(filePath, 0777)
 	if err != nil {
 		log.Println(err)
+		return false
 	}
-	return true, nil
+	return true
 }
 
 func CreateFile(filePath string) (io.ReadWriteCloser, bool) {
@@ -74,9 +75,8 @@ func CreateFile(filePath string) (io.ReadWriteCloser, bool) {
 	path := strings.Join(filePathList[:len(filePathList)-1], "/")
 	exists := Exists(path)
 	if !exists {
-		ok, err := CreateFilePath(path)
+		ok := CreateFilePath(path)
 		if !ok {
-			log.Println("err: ", err)
 			return nil, false
 		}
 	}

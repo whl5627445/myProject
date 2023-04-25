@@ -128,8 +128,8 @@ func GetLoadPackageConflict(packageName, version, path string) ([]map[string]str
 	whiteList := map[string]bool{"Complex": true, "ModelicaServices": true}
 	unloadPackageNameList := checkLibraryInterdependenceNoLoad(packageName, version)
 	if len(unloadPackageNameList) == 0 {
-		_ = LoadPackage(packageName, version, path)
-		unloadPackageNameList = checkLibraryInterdependenceIsLoad(packageName, version)
+		LoadPackage(packageName, version, path)
+		unloadPackageNameList = checkLibraryInterdependenceIsLoad(packageName)
 		if len(unloadPackageNameList) > 0 {
 			deleteModel(packageName)
 		} else {
@@ -183,7 +183,7 @@ func checkLibraryInterdependenceNoLoad(packageName, version string) []string {
 	return unloadPackageNameList
 }
 
-func checkLibraryInterdependenceIsLoad(packageName, version string) []string {
+func checkLibraryInterdependenceIsLoad(packageName string) []string {
 	var unloadPackageNameList []string
 	unloadMap := map[string]bool{}
 	LoadPackageList := GetLoadedLibraries()

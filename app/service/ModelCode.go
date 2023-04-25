@@ -72,15 +72,16 @@ func ModelSave(modelName string) {
 	config.ModelCodeChan <- modelName
 }
 
-func PackageFileParse(fileName, saveFilePath, zipPackagePath string, file io.Reader) (string, string, string, bool) {
-	_, err := fileOperation.CreateFilePath(saveFilePath)
-	if err != nil {
-		return "", "", "", false
-	}
+func PackageFileParse(fileName, saveFilePathBase string, file io.Reader) (string, string, string, bool) {
+	dirName := strings.Split(fileName, ".")[0]
+	saveFilePath := saveFilePathBase + "/" + time.Now().Local().Format("20060102150405") + "/" + dirName
+	zipPackagePath := saveFilePath + "/" + fileName
+	fileOperation.CreateFilePath(saveFilePath)
 	fileData, _ := io.ReadAll(file)
 	fileOperation.WriteFile(zipPackagePath, string(fileData))
 
 	packagePath := ""
+	packageFilePath := ""
 	if strings.HasSuffix(fileName, ".mo") {
 		packagePath = zipPackagePath
 	} else {
@@ -89,7 +90,8 @@ func PackageFileParse(fileName, saveFilePath, zipPackagePath string, file io.Rea
 			log.Println("UnZip err", err)
 			return "", "", "", false
 		}
-		packageFilePath, err := fileOperation.FindFile("package.mo", saveFilePath)
+		os.Remove(zipPackagePath)
+		packageFilePath, err = fileOperation.FindFile("package.mo", saveFilePath)
 		if err != nil {
 			log.Println("FindFile err", err)
 			return "", "", "未找到package", false
@@ -99,13 +101,15 @@ func PackageFileParse(fileName, saveFilePath, zipPackagePath string, file io.Rea
 	packageName, ok := omc.OMC.ParseFile(packagePath)
 	msg := ""
 	if ok {
-		ok = omc.OMC.LoadFile(packagePath)
-
+		pathList := strings.Split(packageFilePath, "/")
+		packagePath = strings.Join(pathList[:len(pathList)-1], "/") + "/" + packageName
+		os.Rename(packageFilePath, packagePath)
+		ok = omc.OMC.LoadFile(packagePath + "/package.mo")
 	}
 	if !ok {
 		msg = "语法错误，请重新检查后上传"
 	}
-	return packageName, packagePath, msg, ok
+	return packageName, packagePath + "/package.mo", msg, ok
 }
 
 func ParseCodeString(code, path string) (string, bool) {
@@ -151,7 +155,7 @@ func CreateModelAndPackage(createPackageName, insertTo, expand, strType, createP
 func ZipPackage(packageName, path string) (string, error) {
 	tmpPath := "static/tmp/" + time.Now().Local().Format("20060102150405") + "/" + packageName + ".zip"
 	packagePathList := strings.Split(path, "/")
-	packagePath := strings.Join(packagePathList[:len(packagePathList)-1], "/")
+	packagePath := strings.Join(packagePathList[:len(packagePathList)-2], "/")
 	err := fileOperation.Zip(packagePath, tmpPath)
 	if err != nil {
 		return "", errors.New("模型包压缩失败，错误为：" + err.Error())

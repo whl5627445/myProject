@@ -95,11 +95,11 @@ func UploadResourcesFile(packageName, parent string, File *multipart.FileHeader)
 	return fileOperation.WriteFileByte(name, fileData)
 }
 
-func CreateResourcesDir(packageName, dirName, parent string) (bool, error) {
+func CreateResourcesDir(packageName, dirName, parent string) bool {
 	path := resourcesDir(packageName, parent)
 	dirPath := path + "/" + dirName
-	ok, err := fileOperation.CreateFilePath(dirPath)
-	return ok, err
+	ok := fileOperation.CreateFilePath(dirPath)
+	return ok
 }
 
 func DeleteResourcesDirAndFile(packageName, name string) bool {

@@ -104,16 +104,17 @@ func openModelica(task *SimulateTask, resultFilePath string, SimulationPraData m
 	//return res
 }
 
-func dymolaSimulate(task *SimulateTask, resultFilePath string, SimulationPraData map[string]string, simulateFilePath string) (bool, error) {
+func dymolaSimulate(task *SimulateTask, resultFilePath string, SimulationPraData map[string]string, simulateFilePath string) bool {
 
 	SimulateTaskMap[task.SRecord.ID] = task
 	task.SRecord.SimulateStartTime = time.Now().Unix()
 	config.DB.Save(&task.SRecord)
 	service, err := dymolaSimulateService(task, simulateFilePath, SimulationPraData, resultFilePath)
 	if err != nil {
-		return service, err
+		log.Println("err", err)
+		return service
 	}
-	return service, nil
+	return service
 }
 
 func dymolaSimulateService(task *SimulateTask, simulateFilePath string, SimulationPraData map[string]string, resultFilePath string) (bool, error) {
@@ -362,11 +363,8 @@ func dymolaServiceStop(taskID string) error {
 
 func ModelSimulate(task *SimulateTask) {
 	resultFilePath := "static/UserFiles/ModelResult/" + task.SRecord.UserName + "/" + strings.ReplaceAll(task.SRecord.SimulateModelName, ".", "-") + "/" + time.Now().Local().Format("20060102150405") + "/"
-	_, err := fileOperation.CreateFilePath(resultFilePath)
-	if err != nil {
-		log.Println("仿真目录创建错误： ", err)
-		return
-	}
+	fileOperation.CreateFilePath(resultFilePath)
+
 	//task.SRecord.SimulateStartTime = time.Now().Unix()
 	//task.SRecord.SimulateStart = true
 	// 模型开始编译 状态“6”
@@ -378,7 +376,7 @@ func ModelSimulate(task *SimulateTask) {
 		//YssimExperimentRecord表的json数据绑定到结构体
 		var componentValue modelVarData
 		if task.ExperimentRecord.ModelVarData.String() != "" {
-			err = sonic.Unmarshal(task.ExperimentRecord.ModelVarData, &componentValue)
+			err := sonic.Unmarshal(task.ExperimentRecord.ModelVarData, &componentValue)
 			if err == nil {
 				mapAttributesStr := mapProcessing.MapDataConversion(componentValue.FinalAttributesStr)
 				//设置组件参数
@@ -423,11 +421,11 @@ func ModelSimulate(task *SimulateTask) {
 		sResult = openModelica(task, resultFilePath, SimulationPraData)
 		return
 	case "DM":
-		sResult, err = dymolaSimulate(task, resultFilePath, SimulationPraData, FilePath)
-	//case "JM":
-	//	sResult = jModelicaSimulate(task, resultFilePath, SimulationPraData, FilePath)
-	case "FmPy":
-		sResult = openModelica(task, resultFilePath, SimulationPraData)
+		sResult = dymolaSimulate(task, resultFilePath, SimulationPraData, FilePath)
+		//case "JM":
+		//	sResult = jModelicaSimulate(task, resultFilePath, SimulationPraData, FilePath)
+		//case "FmPy":
+		//	sResult = openModelica(task, resultFilePath, SimulationPraData)
 		//sResult = fmpySimulate(task, resultFilePath, SimulationPraData)
 		//if !sResult {
 		//	task.SRecord.SimulateStatus = "3"
@@ -438,10 +436,10 @@ func ModelSimulate(task *SimulateTask) {
 		//}
 		//return
 	}
-	if err != nil {
-		// 仿真进程被杀掉后直接退出
-		return
-	}
+	//if err != nil {
+	//	// 仿真进程被杀掉后直接退出
+	//	return
+	//}
 	switch {
 	case sResult:
 		task.SRecord.SimulateModelResultPath = resultFilePath
@@ -449,6 +447,8 @@ func ModelSimulate(task *SimulateTask) {
 		task.SRecord.AnotherName = stringOperation.NewAnotherName(task.SRecord.UserName, task.SRecord.SimulateModelName, task.SRecord.UserspaceId)
 		MessageNotice(map[string]string{"message": task.SRecord.SimulateModelName + " 模型仿真完成"})
 	case task.SRecord.SimulateStatus == "5" && !sResult:
+		MessageNotice(map[string]string{"message": task.SRecord.SimulateModelName + " 仿真任务被删除"})
+	case task.SRecord.SimulateStatus == "3" && !sResult:
 		MessageNotice(map[string]string{"message": task.SRecord.SimulateModelName + " 模型仿真失败"})
 	}
 	task.SRecord.SimulateEndTime = time.Now().Unix()
