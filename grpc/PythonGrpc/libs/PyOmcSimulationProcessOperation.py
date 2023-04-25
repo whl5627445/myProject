@@ -74,7 +74,8 @@ def kill_py_omc_process(multiprocessing_id, process_list):
             try:
                 os.kill(i.omc_obj.omc_process.pid, 9)
                 # os.killpg(os.getpgid(i.omc_obj.omc_process.pid), signal.SIGUSR1)
-
+                if i.run_pid:
+                    os.kill(i.run_pid, 9)
             # i.omc_obj.sendExpression("quit()")
             except OSError as e:
                 print(f"Error: {e}")

@@ -84,6 +84,10 @@ class PyOmcSimulation(threading.Thread):
     def run(self):
 
         self.omc_obj.sendExpression('setCommandLineOptions("-d=nogen,noevalfunc,newInst,nfAPI")')
+        self.omc_obj.sendExpression('setCommandLineOptions("-d=nogen,noevalfunc,newInst,nfAPI")')
+        self.omc_obj.sendExpression('setCommandLineOptions("+ignoreSimulationFlagsAnnotation=false")')
+        self.omc_obj.sendExpression('setCommandLineOptions("+ignoreCommandLineOptionsAnnotation=false")')
+        self.omc_obj.sendExpression('setCommandLineOptions("--matchingAlgorithm=PFPlusExt --indexReductionMethod=dynamicStateSelection")')
         self.omc_obj.sendExpression(
             "setModelicaPath(\"/usr/lib/omlibrary\")")
         # print("clearProgram:", )
