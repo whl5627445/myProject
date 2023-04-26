@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	_ "yssim-go/Init"
 	"yssim-go/config"
 	"yssim-go/middleware"
@@ -10,8 +11,11 @@ import (
 )
 
 func main() {
-
+	if os.Getenv("DEBUG") == "" {
+		gin.SetMode(gin.ReleaseMode)
+	}
 	g := gin.Default()
+
 	g.Use(middleware.Cors())
 	g.Static("/static", "./static")
 	{

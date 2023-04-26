@@ -60,6 +60,7 @@ func UploadModelPackageView(c *gin.Context) {
 
 		if packageModel.PackageName != "" {
 			service.DeleteLibrary(packageName)
+			service.DeletePackageFile(saveFilePathBase)
 			res.Err = packageName + "， 已存在相同名字的包，请重新检查后上传"
 			res.Status = 2
 			c.JSON(http.StatusOK, res)

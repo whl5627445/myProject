@@ -72,6 +72,14 @@ func ModelSave(modelName string) {
 	config.ModelCodeChan <- modelName
 }
 
+func DeletePackageFile(path string) error {
+	err := os.RemoveAll(path)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func PackageFileParse(fileName, saveFilePathBase string, file io.Reader) (string, string, string, bool) {
 	dirName := strings.Split(fileName, ".")[0]
 	saveFilePath := saveFilePathBase + "/" + time.Now().Local().Format("20060102150405") + "/" + dirName
@@ -83,7 +91,9 @@ func PackageFileParse(fileName, saveFilePathBase string, file io.Reader) (string
 	packagePath := ""
 	packageFilePath := ""
 	if strings.HasSuffix(fileName, ".mo") {
+		pathList := strings.Split(zipPackagePath, "/")
 		packagePath = zipPackagePath
+		packageFilePath = strings.Join(pathList[:len(pathList)-1], "/")
 	} else {
 		err := fileOperation.UnZip(zipPackagePath, saveFilePath)
 		if err != nil {
@@ -101,15 +111,19 @@ func PackageFileParse(fileName, saveFilePathBase string, file io.Reader) (string
 	packageName, ok := omc.OMC.ParseFile(packagePath)
 	msg := ""
 	if ok {
-		pathList := strings.Split(packageFilePath, "/")
-		packagePath = strings.Join(pathList[:len(pathList)-1], "/") + "/" + packageName
-		os.Rename(packageFilePath, packagePath)
-		ok = omc.OMC.LoadFile(packagePath + "/package.mo")
+		pathList := strings.Split(packagePath, "/")
+		pathList[len(pathList)-2] = packageName
+		packageFilePathNew := strings.Join(pathList[:len(pathList)-1], "/")
+		packagePathNew := strings.Join(pathList, "/")
+		if !strings.HasSuffix(fileName, ".mo") {
+			os.Rename(packageFilePath, packageFilePathNew)
+		}
+		ok = omc.OMC.LoadFile(packagePathNew)
 	}
 	if !ok {
 		msg = "语法错误，请重新检查后上传"
 	}
-	return packageName, packagePath + "/package.mo", msg, ok
+	return packageName, packagePath, msg, ok
 }
 
 func ParseCodeString(code, path string) (string, bool) {

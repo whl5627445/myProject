@@ -162,7 +162,7 @@ func ExamplesView(c *gin.Context) {
 		# 获取示例
 	*/
 	var res responseData
-	res.Data = config.EXAMPLES
+	//res.Data = config.EXAMPLES
 	c.JSON(http.StatusOK, res)
 }
 
