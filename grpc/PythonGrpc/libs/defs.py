@@ -17,7 +17,7 @@ def initTask():
             yssim_model = session.query(YssimModels).filter(
                 YssimModels.userspace_id.in_([i.userspace_id, '0']),
                 YssimModels.id == i.package_id,
-                YssimSimulateRecords.deleted_at.is_(None)
+                YssimModels.deleted_at.is_(None)
             ).first()
             if yssim_model:
                 print("未完成", yssim_model.id)
