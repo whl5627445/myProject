@@ -94,6 +94,10 @@ func copyModel(copiedClassName, className, parentName string) (bool, string) {
 	copyResult := omc.OMC.CopyClass(copiedClassName, className, parentName)
 	if copyResult {
 		inheritanceModelNameFixes(copiedClassName, classNameAll)
+		packageName := strings.Split(copiedClassName, ".")[0]
+		version := GetVersion(packageName)
+		annotate := "from(version=\"" + version + "\", name=\"" + packageName + "\")"
+		omc.OMC.AddClassAnnotation(className, annotate)
 		return true, "模型复制成功"
 	} else {
 		return false, "模型复制失败"
