@@ -51,9 +51,13 @@ class PyOmcSimulation(threading.Thread):
                             YssimModels.sys_or_user == self.request.userName,
                             YssimModels.userspace_id == self.request.userSpaceId,
                             YssimSimulateRecords.deleted_at.is_(None)).first()
-
+                    # if package.sys_or_user == "sys":
+                    #     print("加载系统模型",package.package_name)
+                    #     self.omc_obj.sendExpression(
+                    #         "loadModel(" + package.package_name + ", {\"" + package.version + "\"},true,\"\",false)")
                     # 加载模型库或者mo文件
-                    self.omc_obj.loadFile("/home/simtek/code/" + package.file_path)
+                    if package:
+                        self.omc_obj.loadFile("/home/simtek/code/" + package.file_path)
 
     def run(self):
 
@@ -102,6 +106,7 @@ class PyOmcSimulation(threading.Thread):
             update_records(uuid=self.uuid, simulate_status="3", simulate_start="0", simulate_result_str="编译失败")
             json_data = {"message": self.request.simulateModelName + " 模编译失败"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
+            self.state = "stopped"
             return
         # 编译完成，通知omc进程退出，杀死父进程
         print(self.omc_obj.omc_process.pid, "编译完成，杀死omc进程")
