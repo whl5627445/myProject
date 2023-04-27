@@ -85,3 +85,4 @@ class YssimModels(Base):
     sys_or_user = Column(String)
     file_path = Column(String)
     default_version = Column(Integer)
+    deleted_at = Column(DateTime)
