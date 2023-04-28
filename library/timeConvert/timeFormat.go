@@ -1,6 +1,7 @@
 package timeConvert
 
 import (
+	"log"
 	"strconv"
 	"time"
 )
@@ -9,7 +10,8 @@ func secondToTimeString(simulateSecond int) string {
 	hours := simulateSecond / 3600
 	minutes := simulateSecond % 3600 / 60
 	seconds := simulateSecond % 60
-	if hours < 0 {
+	if simulateSecond < 0 {
+		log.Println("仿真运行时间为负： ", simulateSecond)
 		return "0秒"
 	}
 	if hours == 0 {
