@@ -110,8 +110,7 @@ message PyOmcSimulationRequest{
   string simulateModelName = 4;
   string resultFilePath = 5;
   map<string, string> simulationPraData = 6;
-  map<string, string> sysModel = 7;
-  map<string, string> userModel = 8;
+  map<string, string> envModelData = 7;
 }
 message PyOmcSimulationReply{
   bool ok = 1;

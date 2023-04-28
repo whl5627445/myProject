@@ -22,14 +22,16 @@ class PyOmcSimulation(threading.Thread):
         self.omc_obj = OMCSessionZMQ(port=port)
 
     def load_dependent_library(self):
-        # 初始化加载系统模型，key是名称，val是版本号
-        for key, val in self.request.sysModel.items():
-            # self.omc_obj.sendExpression("loadModel(" + key + ", {\"" + val + "\"},true,\"\",false)")
-            print(key + "初始化:",
-                  self.omc_obj.sendExpression("loadModel(" + key + ", {\"" + val + "\"},true,\"\",false)"))
-        # 初始化加载用户模型，key是名称，val是mo文件地址
-        for key, val in self.request.userModel.items():
-            print(key + "初始化:",self.omc_obj.loadFile("/home/simtek/code/" + val))
+
+        for key, val in self.request.envModelData.items():
+            if val.startswith("static/"):
+                # 初始化加载用户模型，key是名称，val是mo文件地址
+                print(key + "初始化:", self.omc_obj.loadFile("/home/simtek/code/" + val))
+            else:
+                # 初始化加载系统模型，key是名称，val是版本号
+                # self.omc_obj.sendExpression("loadModel(" + key + ", {\"" + val + "\"},true,\"\",false)")
+                print(key + "初始化:",
+                      self.omc_obj.sendExpression("loadModel(" + key + ", {\"" + val + "\"},true,\"\",false)"))
 
         # 获取注释中的包名和版本号
         name = self.omc_obj.getAnnotationModifierValue(self.request.simulateModelName, "from", "name")
@@ -106,8 +108,6 @@ class PyOmcSimulation(threading.Thread):
         print("编译结果", buildModelRes)
         sendMessage(self.omc_obj, self.request.userName)
         print("消息推送完成")
-        json_data = {"message": self.request.simulateModelName + " 模型编译完成，准备仿真"}
-        R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
         parent_proc = psutil.Process(self.omc_obj.omc_process.pid)
         for child_proc in parent_proc.children(recursive=True):
             print(child_proc.name)
@@ -117,6 +117,8 @@ class PyOmcSimulation(threading.Thread):
         if buildModelRes != ["", ""]:
             # 改数据库状态为2
             update_records(uuid=self.uuid, simulate_status="2", simulate_start="1")
+            json_data = {"message": self.request.simulateModelName + " 模型编译完成，准备仿真"}
+            R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
         else:
             # 改数据库状态为3
             update_records(uuid=self.uuid, simulate_status="3",

@@ -1,5 +1,5 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import create_engine, Column, String, Integer, Text, DateTime
+from sqlalchemy import create_engine, Column, String, Integer, Text, DateTime,JSON
 from sqlalchemy.orm import sessionmaker
 
 HOST = 'mysql'  # 127.0.0.1/localhost 124.70.211.127
@@ -71,6 +71,7 @@ class YssimSimulateRecords(Base):
     method = Column(String)
     another_name = Column(String)
     number_intervals = Column(String)
+    env_model_data = Column(JSON)
     simulate_type = Column(String)
     deleted_at = Column(DateTime)
     create_time = Column(DateTime)

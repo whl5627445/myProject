@@ -34,6 +34,7 @@ type YssimSimulateRecord struct {
 	VariableFilter          string         `gorm:"column:variable_filter;default:\"\""`
 	SimulateStart           bool           `gorm:"column:simulate_start"`
 	AnotherName             string         `gorm:"column:another_name"`
+	EnvModelData            datatypes.JSON `gorm:"column:env_model_data;TYPE:json"`
 	CreatedAt               *time.Time     `gorm:"column:create_time;autoCreateTime"`
 	Deleted                 gorm.DeletedAt `gorm:"column:deleted_at"`
 }

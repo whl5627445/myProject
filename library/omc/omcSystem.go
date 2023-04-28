@@ -867,6 +867,18 @@ func (o *ZmqObject) ConvertUnits(s1, s2 string) []interface{} {
 	return data
 }
 
+// GetAnnotationModifierValue 获取注释的变量值
+func (o *ZmqObject) GetAnnotationModifierValue(className, vendorAnnotation, modifierName string) string {
+	cmd := "getAnnotationModifierValue(" + className + ",\"" + vendorAnnotation + "\",\"" + modifierName + "\")"
+	result, ok := o.SendExpressionNoParsed(cmd)
+	result = bytes.ReplaceAll(result, []byte("\""), []byte(""))
+	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
+	if ok && string(result) != "" {
+		return string(result)
+	}
+	return ""
+}
+
 // GetSimulationOptions 获取模型仿真设置
 func (o *ZmqObject) GetSimulationOptions(className string) []string {
 	var dataList = []string{"", "", "", "", "", "", ""}
@@ -880,21 +892,9 @@ func (o *ZmqObject) GetSimulationOptions(className string) []string {
 		dataList[4] = data[4].(string)
 	}
 	// 获取求解其类型的注释
-	cmd = "getAnnotationModifierValue(" + className + ",\"__OpenModelica_simulationFlags\",\"solver\")"
-	result, ok := o.SendExpressionNoParsed(cmd)
-	result = bytes.ReplaceAll(result, []byte("\""), []byte(""))
-	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
-	if ok && string(result) != "" {
-		dataList[5] = string(result)
-	}
+	dataList[5] = o.GetAnnotationModifierValue(className, "__OpenModelica_simulationFlags", "solver")
 	// 获取仿真类型
-	cmd = "getAnnotationModifierValue(" + className + ",\"simulate_type\",\"solver\")"
-	result, ok = o.SendExpressionNoParsed(cmd)
-	result = bytes.ReplaceAll(result, []byte("\""), []byte(""))
-	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
-	if ok && string(result) != "" {
-		dataList[6] = string(result)
-	}
+	dataList[6] = o.GetAnnotationModifierValue(className, "simulate_type", "solver")
 	return dataList
 }
 

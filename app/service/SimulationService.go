@@ -35,11 +35,37 @@ type modelVarData struct {
 var SimulateTaskChan = make(chan *SimulateTask, 1000)
 
 func openModelica(task *SimulateTask, resultFilePath string, SimulationPraData map[string]string) bool {
+	// 获取需要加载的系统模型
+	environmentModelData := make(map[string]string)
+	var envPackageModel []DataBaseModel.YssimModels
+	DB.Where("sys_or_user =  ? AND userspace_id = ?", "sys", "0").Find(&envPackageModel)
+	libraryAndVersions := GetLibraryAndVersions()
+	for i := 0; i < len(envPackageModel); i++ {
+		p, ok := libraryAndVersions[envPackageModel[i].PackageName]
+		if ok && p == envPackageModel[i].Version {
+			environmentModelData[envPackageModel[i].PackageName] = envPackageModel[i].Version
+		}
+	}
+	// 获取需要加载的用户模型
+	DB.Where("sys_or_user = ? AND userspace_id = ?", task.SRecord.UserName, task.SRecord.UserspaceId).Find(&envPackageModel)
+	for i := 0; i < len(envPackageModel); i++ {
+		loadVersions, ok := libraryAndVersions[envPackageModel[i].PackageName]
+		if ok && loadVersions == envPackageModel[i].Version {
+			environmentModelData[envPackageModel[i].PackageName] = envPackageModel[i].FilePath
+		}
+	}
+	// 转为json，保存到数据库
+	jsonEnvData, err := sonic.Marshal(environmentModelData)
+	if err != nil {
+		log.Println("环境依赖包解析错误：", err)
+	}
+
 	SimulateTaskMap[task.SRecord.ID] = task
 	//res := false
 	//pwd = "/home/xuqingda/GolandProjects/YssimGoService"
 	//task.SRecord.SimulateStartTime = time.Now().Unix()
 	task.SRecord.SimulateStart = true
+	task.SRecord.EnvModelData = jsonEnvData
 	////模型开始编译 状态“6”
 	//task.SRecord.SimulateStatus = "6"
 	config.DB.Save(&task.SRecord)
@@ -52,7 +78,9 @@ func openModelica(task *SimulateTask, resultFilePath string, SimulationPraData m
 		task.SRecord.UserName,
 		task.SRecord.SimulateModelName,
 		resultFilePath,
-		SimulationPraData)
+		SimulationPraData,
+		environmentModelData,
+	)
 	if err != nil {
 		fmt.Println("调用grpc服务(PyOmcSimulation)出错：", err)
 		return false

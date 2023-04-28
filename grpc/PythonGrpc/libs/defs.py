@@ -1,6 +1,7 @@
 import re
 from config.db_config import Session, YssimSimulateRecords, YssimModels
 import router_pb2
+import json
 
 
 def initTask():
@@ -40,6 +41,7 @@ def initTask():
                 "numberOfIntervals": i.number_intervals,
                 "tolerance": i.tolerance,
             },
+            envModelData=i.env_model_data
         )
         dataList.append(a)
     return dataList
