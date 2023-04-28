@@ -108,6 +108,7 @@ func dymolaSimulate(task *SimulateTask, resultFilePath string, SimulationPraData
 
 	SimulateTaskMap[task.SRecord.ID] = task
 	task.SRecord.SimulateStartTime = time.Now().Unix()
+	task.SRecord.SimulateStart = true
 	config.DB.Save(&task.SRecord)
 	service, err := dymolaSimulateService(task, simulateFilePath, SimulationPraData, resultFilePath)
 	if err != nil {
@@ -153,6 +154,9 @@ func dymolaSimulateService(task *SimulateTask, simulateFilePath string, Simulati
 			"taskId":    task.SRecord.ID,
 		}
 		MessageNotice(map[string]string{"message": task.SRecord.SimulateModelName + " 模型开始编译"})
+		task.SRecord.SimulateStatus = "6"
+		config.DB.Save(&task.SRecord)
+
 		req := url.NewRequest()
 		req.Json = compileReqData
 		req.Timeout = 10 * time.Minute
@@ -169,6 +173,8 @@ func dymolaSimulateService(task *SimulateTask, simulateFilePath string, Simulati
 
 		if compileResData["code"].(float64) == 200 {
 			MessageNotice(map[string]string{"message": task.SRecord.SimulateModelName + " 编译成功，开始仿真"})
+			task.SRecord.SimulateStatus = "2"
+			config.DB.Save(&task.SRecord)
 			simulateReqData := map[string]interface{}{
 				"id":                0,
 				"fileName":          fileName,
@@ -440,6 +446,9 @@ func ModelSimulate(task *SimulateTask) {
 	//	// 仿真进程被杀掉后直接退出
 	//	return
 	//}
+	if !sResult {
+		task.SRecord.SimulateStatus = "3"
+	}
 	switch {
 	case sResult:
 		task.SRecord.SimulateModelResultPath = resultFilePath
