@@ -22,43 +22,58 @@ class PyOmcSimulation(threading.Thread):
         self.omc_obj = OMCSessionZMQ(port=port)
 
     def load_dependent_library(self):
-        # 通过records_id找到包id
-        with Session() as session:
-            # 获取包信息
-            record = session.query(YssimModels, YssimSimulateRecords).filter(
-                YssimModels.id == YssimSimulateRecords.package_id).filter(
-                YssimSimulateRecords.id == self.request.uuid,
-                YssimSimulateRecords.deleted_at.is_(None)).first()
-        # 判断是不是系统模型
-        if record[0].sys_or_user == 'sys':
-            # 是系统模型,加载系统模型
-            res = self.omc_obj.sendExpression(
-                "loadModel(" + record[0].package_name + ", {\"" + record[0].version + "\"},true,\"\",false)")
-            print("加载系统模型", record[0].package_name, record[0].version, res)
-        else:
-            # 不是系统模型,先加载mo文件
-            self.omc_obj.loadFile("/home/simtek/code/" + record[0].file_path)
-            # 获取依赖包
-            dependent_library_list = self.omc_obj.getUses(record[0].package_name)
-            print("dependent_library_list:", dependent_library_list)
-            for i in dependent_library_list:
-                if i != "":
-                    with Session() as session:
-                        # 获取依赖包信息
-                        package = session.query(YssimModels).filter(
-                            YssimModels.package_name == i[0],
-                            YssimModels.version == i[1],
-                            YssimModels.sys_or_user == self.request.userName,
-                            YssimModels.userspace_id == self.request.userSpaceId,
-                            YssimSimulateRecords.deleted_at.is_(None)).first()
-                    if package:
-                        if package.sys_or_user == "sys":
-                            print("加载系统模型",package.package_name)
-                            self.omc_obj.sendExpression(
-                                "loadModel(" + package.package_name + ", {\"" + package.version + "\"},true,\"\",false)")
-                        else:
-                            # 加载模型库或者mo文件
-                            self.omc_obj.loadFile("/home/simtek/code/" + package.file_path)
+        # 初始化加载系统模型，key是名称，val是版本号
+        for key, val in self.request.sysModel.items():
+            # self.omc_obj.sendExpression("loadModel(" + key + ", {\"" + val + "\"},true,\"\",false)")
+            print(key + "初始化:",
+                  self.omc_obj.sendExpression("loadModel(" + key + ", {\"" + val + "\"},true,\"\",false)"))
+        # 初始化加载用户模型，key是名称，val是mo文件地址
+        for key, val in self.request.userModel.items():
+            print(key + "初始化:",self.omc_obj.loadFile("/home/simtek/code/" + val))
+
+        # 获取注释中的包名和版本号
+        name = self.omc_obj.getAnnotationModifierValue(self.request.simulateModelName, "from", "name")
+        version = self.omc_obj.getAnnotationModifierValue(self.request.simulateModelName, "from", "version")
+        print(name+"初始化:",self.omc_obj.sendExpression("loadModel(" + name + ", {\"" + version + "\"},true,\"\",false)"))
+
+        #
+        # # 通过records_id找到包id
+        # with Session() as session:
+        #     # 获取包信息
+        #     record = session.query(YssimModels, YssimSimulateRecords).filter(
+        #         YssimModels.id == YssimSimulateRecords.package_id).filter(
+        #         YssimSimulateRecords.id == self.request.uuid,
+        #         YssimSimulateRecords.deleted_at.is_(None)).first()
+        # # 判断是不是系统模型
+        # if record[0].sys_or_user == 'sys':
+        #     # 是系统模型,加载系统模型
+        #     res = self.omc_obj.sendExpression(
+        #         "loadModel(" + record[0].package_name + ", {\"" + record[0].version + "\"},true,\"\",false)")
+        #     print("加载系统模型", record[0].package_name, record[0].version, res)
+        # else:
+        #     # 不是系统模型,先加载mo文件
+        #     self.omc_obj.loadFile("/home/simtek/code/" + record[0].file_path)
+        #     # 获取依赖包
+        #     dependent_library_list = self.omc_obj.getUses(record[0].package_name)
+        #     print("dependent_library_list:", dependent_library_list)
+        #     for i in dependent_library_list:
+        #         if i != "":
+        #             with Session() as session:
+        #                 # 获取依赖包信息
+        #                 package = session.query(YssimModels).filter(
+        #                     YssimModels.package_name == i[0],
+        #                     YssimModels.version == i[1],
+        #                     YssimModels.sys_or_user == self.request.userName,
+        #                     YssimModels.userspace_id == self.request.userSpaceId,
+        #                     YssimSimulateRecords.deleted_at.is_(None)).first()
+        #             if package:
+        #                 if package.sys_or_user == "sys":
+        #                     print("加载系统模型",package.package_name)
+        #                     self.omc_obj.sendExpression(
+        #                         "loadModel(" + package.package_name + ", {\"" + package.version + "\"},true,\"\",false)")
+        #                 else:
+        #                     # 加载模型库或者mo文件
+        #                     self.omc_obj.loadFile("/home/simtek/code/" + package.file_path)
 
     def run(self):
 
