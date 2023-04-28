@@ -82,7 +82,7 @@ func DeletePackageFile(path string) error {
 
 func PackageFileParse(fileName, saveFilePathBase string, file io.Reader) (string, string, string, bool) {
 	dirName := strings.Split(fileName, ".")[0]
-	saveFilePath := saveFilePathBase + "/" + time.Now().Local().Format("20060102150405") + "/" + dirName
+	saveFilePath := saveFilePathBase + "/" + dirName
 	zipPackagePath := saveFilePath + "/" + fileName
 	fileOperation.CreateFilePath(saveFilePath)
 	fileData, _ := io.ReadAll(file)

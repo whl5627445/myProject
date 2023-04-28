@@ -52,7 +52,7 @@ func UploadModelPackageView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	saveFilePathBase := "static/UserFiles/UploadFile/" + userName
+	saveFilePathBase := "static/UserFiles/UploadFile/" + userName + "/" + time.Now().Local().Format("20060102150405")
 	packageName, packagePath, msg, ok := service.PackageFileParse(fileName, saveFilePathBase, file)
 	if ok {
 		var packageModel DataBaseModel.YssimModels
