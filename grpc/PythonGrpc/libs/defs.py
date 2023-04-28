@@ -86,7 +86,7 @@ def update_records(uuid, simulate_status=None, simulate_result_str=None, simulat
         if simulate_start:
             processDetails.simulate_start = simulate_start  # 仿真开始标致
         if simulate_start_time:
-            if processDetails.simulate_start_time is not None:  # 仿真开始时间只会设置一次
+            if processDetails.simulate_start_time == 0:  # 仿真开始时间只会设置一次
                 processDetails.simulate_start_time = simulate_start_time  # 仿真开始时间
         if simulate_end_time:
             processDetails.simulate_end_time = simulate_end_time  # 仿真结束时间

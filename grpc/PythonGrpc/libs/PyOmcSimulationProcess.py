@@ -91,7 +91,7 @@ class PyOmcSimulation(threading.Thread):
         # 加载模型的依赖
         self.load_dependent_library()
 
-        self.processStartTime = time.time()
+        # self.processStartTime = time.time()
         self.state = "compiling"  # 编译中
         print("开始编译")
         # 编译
@@ -110,8 +110,6 @@ class PyOmcSimulation(threading.Thread):
         print("消息推送完成")
         parent_proc = psutil.Process(self.omc_obj.omc_process.pid)
         for child_proc in parent_proc.children(recursive=True):
-            print(child_proc.name)
-            print(child_proc.pid)
             os.kill(child_proc.pid, 9)
         os.kill(self.omc_obj.omc_process.pid, 9)
         if buildModelRes != ["", ""]:
@@ -124,7 +122,7 @@ class PyOmcSimulation(threading.Thread):
             update_records(uuid=self.uuid, simulate_status="3",
                            simulate_start="0",
                            simulate_result_str="编译失败",
-                           simulate_start_time=str(self.processStartTime),
+                           # simulate_start_time=str(self.processStartTime),
                            simulate_end_time=str(time.time()))
             json_data = {"message": self.request.simulateModelName + " 模编译失败"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
@@ -145,7 +143,7 @@ class PyOmcSimulation(threading.Thread):
                            simulate_status="3",
                            simulate_result_str="编译失败",
                            simulate_start="0",
-                           simulate_start_time=str(self.processStartTime),
+                           # simulate_start_time=str(self.processStartTime),
                            simulate_end_time=str(time.time())
                            )
 
@@ -159,7 +157,7 @@ class PyOmcSimulation(threading.Thread):
                                simulate_result_str=simulate_result_str,
                                simulate_status="4",
                                simulate_start="0",
-                               simulate_start_time=str(self.processStartTime),
+                               # simulate_start_time=str(self.processStartTime),
                                simulate_end_time=str(time.time()),
                                another_name=new_another_name(self.request.userName,
                                                              self.request.simulateModelName,
@@ -171,7 +169,7 @@ class PyOmcSimulation(threading.Thread):
                                simulate_result_str=simulate_result_str,
                                simulate_status="3",
                                simulate_start="0",
-                               simulate_start_time=str(self.processStartTime),
+                               # simulate_start_time=str(self.processStartTime),
                                simulate_end_time=str(time.time())
                                )
         self.state = "stopped"
