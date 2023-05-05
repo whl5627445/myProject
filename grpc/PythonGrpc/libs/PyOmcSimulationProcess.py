@@ -24,7 +24,7 @@ class PyOmcSimulation(threading.Thread):
     def load_dependent_library(self):
 
         for key, val in self.request.envModelData.items():
-            if val.startswith("static/"):
+            if "/" in val:
                 # 初始化加载用户模型，key是名称，val是mo文件地址
                 print(key + "初始化:", self.omc_obj.loadFile("/home/simtek/code/" + val))
             else:

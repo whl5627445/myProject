@@ -10,7 +10,7 @@ service Greeter {
   rpc MatToCsv(MatToCsvRequest) returns (MatToCsvReply) {}
   rpc ZarrToCsv(ZarrToCsvRequest) returns (ZarrToCsvReply) {}
   rpc CheckVarExist(CheckVarExistRequest) returns (CheckVarExistReply) {}
-  rpc PyOmcSimulation(PyOmcSimulationRequest) returns (PyOmcSimulationReply) {}
+  rpc Simulation(SimulationRequest) returns (SimulationReply) {}
 }
 
 message FmuSimulationRequest {
@@ -63,6 +63,7 @@ message GetResultReply{
 message ProcessOperationRequest{
   string uuid = 1;
   string operationName = 2;
+  string simulate_type = 3;
 }
 message ProcessOperationReply{
   string msg =1;
@@ -103,7 +104,7 @@ message CheckVarExistReply{
   map<string, bool> Res = 2;
 }
 
-message PyOmcSimulationRequest{
+message SimulationRequest{
   string uuid = 1;
   string userSpaceId = 2;
   string userName = 3;
@@ -111,8 +112,12 @@ message PyOmcSimulationRequest{
   string resultFilePath = 5;
   map<string, string> simulationPraData = 6;
   map<string, string> envModelData = 7;
+  string simulateType = 8;
+  // 下面的这些参数只在dy仿真用到
+  string packageName = 9;  //用于创建文件夹
+  string packageFilePath = 10;  //用户判断是不是系统模型，""表示系统模型
 }
-message PyOmcSimulationReply{
+message SimulationReply{
   bool ok = 1;
   string msg = 2;
 }

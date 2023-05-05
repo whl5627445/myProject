@@ -67,25 +67,50 @@ def resume_process(multiprocessing_id, process_list):
     return {"msg": False}
 
 
-def kill_py_omc_process(multiprocessing_id, process_list):
-    for i in process_list:
-        if i.uuid == multiprocessing_id:
-            i.state = "stopped"
-            try:
-                os.kill(i.omc_obj.omc_process.pid, 9)
-                # os.killpg(os.getpgid(i.omc_obj.omc_process.pid), signal.SIGUSR1)
-                if i.run_pid:
-                    os.kill(i.run_pid, 9)
-            # i.omc_obj.sendExpression("quit()")
-            except OSError as e:
-                print(f"Error: {e}")
-            process_list.remove(i)
-            del i
-            print("杀死进程")
-            with Session() as session:
-                processDetails = session.query(YssimSimulateRecords).filter(
-                    YssimSimulateRecords.id == multiprocessing_id).first()
-                processDetails.simulate_status = "3"  # 杀死进程
-                session.commit()
-            return {"msg": "End Process:{}".format(multiprocessing_id)}
+def kill_py_omc_process(multiprocessing_id, process_list,simulate_type):
+    if simulate_type == "OM":
+        for i in process_list:
+            if i.uuid == multiprocessing_id:
+                i.state = "stopped"
+                try:
+                    os.kill(i.omc_obj.omc_process.pid, 9)
+                    # os.killpg(os.getpgid(i.omc_obj.omc_process.pid), signal.SIGUSR1)
+                    if i.run_pid:
+                        os.kill(i.run_pid, 9)
+                # i.omc_obj.sendExpression("quit()")
+                except OSError as e:
+                    print(f"Error: {e}")
+                process_list.remove(i)
+                del i
+                print("杀死进程")
+                with Session() as session:
+                    processDetails = session.query(YssimSimulateRecords).filter(
+                        YssimSimulateRecords.id == multiprocessing_id).first()
+                    processDetails.simulate_status = "3"  # 杀死进程
+                    session.commit()
+                return {"msg": "End Process:{}".format(multiprocessing_id)}
+    elif simulate_type == "DM":
+        import requests
+        import json
+        import configparser
+        config = configparser.ConfigParser()
+        config.read('./config/grpc_config.ini')
+        DymolaSimulationConnect = config['dymola']['DymolaSimulationConnect']
+
+        url = DymolaSimulationConnect + "/dymola/stopDymola"
+        data = {
+            "taskId": multiprocessing_id
+        }
+        headers = {
+            "Content-Type": "application/json"
+        }
+        timeout = 10 * 60 # 10分钟
+
+        response = requests.post(url, data=json.dumps(data), headers=headers, timeout=timeout)
+        print("response:", response)
+        if response.status_code == 200:
+            result = response.json()
+            print("ssssss:",result)
+            if result["code"] == 200:
+                return {"msg": "End Process:{}".format(multiprocessing_id)}
     return {"msg": "The process is not found or has ended or failed:{}".format(multiprocessing_id)}

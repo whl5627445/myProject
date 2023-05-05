@@ -59,10 +59,10 @@ class GreeterStub(object):
                 request_serializer=router__pb2.CheckVarExistRequest.SerializeToString,
                 response_deserializer=router__pb2.CheckVarExistReply.FromString,
                 )
-        self.PyOmcSimulation = channel.unary_unary(
-                '/Greeter/PyOmcSimulation',
-                request_serializer=router__pb2.PyOmcSimulationRequest.SerializeToString,
-                response_deserializer=router__pb2.PyOmcSimulationReply.FromString,
+        self.Simulation = channel.unary_unary(
+                '/Greeter/Simulation',
+                request_serializer=router__pb2.SimulationRequest.SerializeToString,
+                response_deserializer=router__pb2.SimulationReply.FromString,
                 )
 
 
@@ -123,7 +123,7 @@ class GreeterServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def PyOmcSimulation(self, request, context):
+    def Simulation(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -177,10 +177,10 @@ def add_GreeterServicer_to_server(servicer, server):
                     request_deserializer=router__pb2.CheckVarExistRequest.FromString,
                     response_serializer=router__pb2.CheckVarExistReply.SerializeToString,
             ),
-            'PyOmcSimulation': grpc.unary_unary_rpc_method_handler(
-                    servicer.PyOmcSimulation,
-                    request_deserializer=router__pb2.PyOmcSimulationRequest.FromString,
-                    response_serializer=router__pb2.PyOmcSimulationReply.SerializeToString,
+            'Simulation': grpc.unary_unary_rpc_method_handler(
+                    servicer.Simulation,
+                    request_deserializer=router__pb2.SimulationRequest.FromString,
+                    response_serializer=router__pb2.SimulationReply.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -346,7 +346,7 @@ class Greeter(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def PyOmcSimulation(request,
+    def Simulation(request,
             target,
             options=(),
             channel_credentials=None,
@@ -356,8 +356,8 @@ class Greeter(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Greeter/PyOmcSimulation',
-            router__pb2.PyOmcSimulationRequest.SerializeToString,
-            router__pb2.PyOmcSimulationReply.FromString,
+        return grpc.experimental.unary_unary(request, target, '/Greeter/Simulation',
+            router__pb2.SimulationRequest.SerializeToString,
+            router__pb2.SimulationReply.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

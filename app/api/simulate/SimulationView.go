@@ -101,53 +101,29 @@ func ModelSimulateView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
-	SimulateTypeDict := map[string]bool{"OM": true, "JM": true, "DM": true, "FmPy": true}
-	if !SimulateTypeDict[item.SimulateType] {
-		c.JSON(http.StatusBadRequest, "")
-		return
+	itemMap := map[string]string{
+		"username":            userName,
+		"space_id":            userSpaceId,
+		"package_id":          item.PackageId,
+		"model_name":          item.ModelName,
+		"simulate_type":       item.SimulateType,
+		"start_time":          item.StartTime,
+		"stop_time":           item.StopTime,
+		"tolerance":           item.Tolerance,
+		"number_of_intervals": item.NumberOfIntervals,
+		"interval":            item.Interval,
+		"method":              item.Method,
+		"experiment_id":       item.ExperimentId,
 	}
-	//查询数据库中的实验id对应的记录
-	var experimentRecord DataBaseModel.YssimExperimentRecord
-	DB.Where("id = ? ", item.ExperimentId).First(&experimentRecord)
-
-	var packageModel DataBaseModel.YssimModels
-	err = DB.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", item.PackageId, []string{"sys", userName}, []string{"0", userSpaceId}).First(&packageModel).Error
+	replyId, err := service.GrpcSimulation(itemMap)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, "not found")
-		return
+		fmt.Println("调用(GrpcSimulation)出错：", err)
 	}
-	// SimulateStatus "1"初始(正在准备)  "2"执行  "3"失败(编译失败or仿真运行失败)  "4"成功结束  "5"关闭(killed)  "6"编译阶段
-	record := DataBaseModel.YssimSimulateRecord{
-		ID:                uuid.New().String(),
-		PackageId:         item.PackageId,
-		UserspaceId:       userSpaceId,
-		UserName:          userName,
-		SimulateModelName: item.ModelName,
-		SimulateStatus:    "1",
-		StartTime:         item.StartTime,
-		StopTime:          item.StopTime,
-		Method:            item.Method,
-		SimulateType:      item.SimulateType,
-		NumberOfIntervals: item.NumberOfIntervals,
-		Tolerance:         item.Tolerance,
-		ExperimentId:      item.ExperimentId,
-		Intervals:         item.Interval,
-	}
-	err = DB.Create(&record).Error
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, "出现错误")
-		return
-	}
-	SData := service.SimulateTask{
-		SRecord:          &record,
-		Package:          &packageModel,
-		ExperimentRecord: &experimentRecord,
-	}
-	service.SimulateTaskChan <- &SData
 	var res responseData
 	res.Msg = "仿真任务正在准备，请等待仿真完成"
-	res.Data = map[string]string{"id": record.ID}
+	res.Data = map[string]string{"id": replyId}
 	c.JSON(http.StatusOK, res)
+
 }
 
 func SimulateResultGraphicsView(c *gin.Context) {
@@ -478,7 +454,7 @@ func SimulateResultDeleteView(c *gin.Context) {
 
 	resultRecord.SimulateStatus = "5"
 	config.DB.Save(&resultRecord)
-	service.DeleteSimulateTask(recordId, resultRecord.SimulateType)
+	service.DeleteSimulateTask(recordId, resultRecord.SimulateType, resultRecord.SimulateModelResultPath)
 	config.DB.Delete(&resultRecord)
 	DB.Delete(&DataBaseModel.YssimSnapshots{}, "simulate_result_id = ?", recordId) //删除相关的快照
 	res.Msg = "删除成功"

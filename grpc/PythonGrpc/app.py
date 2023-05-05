@@ -4,8 +4,9 @@ import os.path
 import pandas as pd
 from libs.PyOmcSimulationProcessOperation import kill_py_omc_process, suspend_process, resume_process
 from libs.PyOmcSimulationProcess import PyOmcSimulation
+from libs.DmSimulation import DmSimulation
 from libs.FindPort import findPort
-from libs.defs import initTask
+from libs.init import initTask
 import threading
 import zarr
 from config.db_config import Session, YssimSimulateRecords
@@ -31,19 +32,24 @@ if __name__ == '__main__':
     PyOmcSimulationProcessList = []
     # 接收仿真任务队列
     # 初始化任务队列
-    taskList = initTask()
+    omcTaskList = initTask()
 
     # 实现 proto 文件中定义的 GreeterServicer
     class Greeter(router_pb2_grpc.GreeterServicer):
         # 实现 proto 文件中定义的 rpc 调用
         # 仿真接口
-        def PyOmcSimulation(self, request, context):
+        def Simulation(self, request, context):
 
             newRequest = copy.deepcopy(request)
             data = newRequest
+            if data.simulateType == "OM":
+                omcTaskList.append(data)
+            elif data.simulateType == "DM":
+                # 如果是dm仿真,直接启动请求dm服务的线程
+                dm_threading = DmSimulation(data)
+                dm_threading.start()
 
-            taskList.append(data)
-            return router_pb2.PyOmcSimulationReply(ok=True,
+            return router_pb2.SimulationReply(ok=True,
                                                    msg="Task submitted successfully."
                                                    )
 
@@ -52,7 +58,7 @@ if __name__ == '__main__':
             multiprocessing_id = request.uuid
             operationName = request.operationName
             if operationName == "kill":
-                killProcessReply = kill_py_omc_process(multiprocessing_id, PyOmcSimulationProcessList)
+                killProcessReply = kill_py_omc_process(multiprocessing_id, PyOmcSimulationProcessList, request.simulate_type)
                 return router_pb2.ProcessOperationReply(msg=killProcessReply["msg"])
             if operationName == "suspend":
                 suspendProcessReply = suspend_process(multiprocessing_id, PyOmcSimulationProcessList)
@@ -223,18 +229,18 @@ if __name__ == '__main__':
         def run(self):
             print("仿真任务执行线程启动")
             while True:
-                time.sleep(1)
+                time.sleep(0.2)
                 print("执行任务队列剩余数量： ", len(PyOmcSimulationProcessList))
-                print("未任务队列剩余数量： ", len(taskList))
+                print("未执行任务队列剩余数量： ", len(omcTaskList))
                 for i in PyOmcSimulationProcessList:
                     if i.state == "stopped":
                         PyOmcSimulationProcessList.remove(i)
                         # del i
 
-                if len(PyOmcSimulationProcessList) < max_simulation_num and len(taskList) > 0:
+                if len(PyOmcSimulationProcessList) < max_simulation_num and len(omcTaskList) > 0:
                     # 找到空闲的端口号
                     port = findPort(start_port)
-                    data = taskList.pop(0)
+                    data = omcTaskList.pop(0)
                     process = PyOmcSimulation(data, port)
                     process.start()
                     PyOmcSimulationProcessList.append(process)
