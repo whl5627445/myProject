@@ -475,19 +475,18 @@ func FmuExportModelView(c *gin.Context) {
 		filePath = packageModel.FilePath
 		fileName = packageModel.PackageName
 	}
-	newFileName, ok := service.DymolaFmuExport(item.FmuPar, token, username, item.FmuName, item.PackageName, item.ModelName, fileName, filePath)
+	// 获取依赖
+	envLibrary := service.GetEnvLibrary(username, userSpaceId)
+	newFileName, ok := service.DymolaFmuExportWithLibrary(item.FmuPar, envLibrary, token, username, item.FmuName, item.PackageName, item.ModelName, fileName, filePath)
+	//newFileName, ok := service.DymolaFmuExport(item.FmuPar, token, username, item.FmuName, item.PackageName, item.ModelName, fileName, filePath)
+
 	if ok {
-		//c.Header("content-disposition", `attachment; filename=`+item.FmuName+".fmu")
-		//c.Data(http.StatusOK, "application/octet-stream", resDy)
-		if ok {
-			//c.Header("content-disposition", `attachment; filename=`+recordList[0].SimulateModelName+".csv")
-			//c.File(newFileName)
-			res.Data = map[string]string{"url": newFileName}
-			c.JSON(http.StatusOK, res)
-			return
-		}
+
+		res.Data = map[string]string{"url": newFileName}
+		c.JSON(http.StatusOK, res)
 		return
 	}
+
 	res.Err = "下载失败，请稍后再试"
 	res.Status = 2
 	c.JSON(http.StatusOK, res)

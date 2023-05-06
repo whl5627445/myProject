@@ -22,6 +22,30 @@ type modelVarData struct {
 
 var DB = config.DB
 
+func GetEnvLibrary(userName, spaceId string) map[string]string {
+
+	// 获取需要加载的系统模型
+	environmentModelData := make(map[string]string)
+	var envPackageModel []DataBaseModel.YssimModels
+	DB.Where("sys_or_user =  ? AND userspace_id = ?", "sys", "0").Find(&envPackageModel)
+	libraryAndVersions := GetLibraryAndVersions()
+	for i := 0; i < len(envPackageModel); i++ {
+		p, ok := libraryAndVersions[envPackageModel[i].PackageName]
+		if ok && p == envPackageModel[i].Version {
+			environmentModelData[envPackageModel[i].PackageName] = envPackageModel[i].Version
+		}
+	}
+	// 获取需要加载的用户模型
+	DB.Where("sys_or_user = ? AND userspace_id = ?", userName, spaceId).Find(&envPackageModel)
+	for i := 0; i < len(envPackageModel); i++ {
+		loadVersions, ok := libraryAndVersions[envPackageModel[i].PackageName]
+		if ok && loadVersions == envPackageModel[i].Version {
+			environmentModelData[envPackageModel[i].PackageName] = envPackageModel[i].FilePath
+		}
+	}
+	return environmentModelData
+
+}
 func GrpcReadSimulationResult(VarList []string, SimulateModelResultPath string) ([][]float64, bool) {
 
 	SaveFilterResultTest := &grpcPb.ReadSimulationResultRequest{ // 构造请求体
@@ -179,24 +203,7 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 	}
 
 	// 获取需要加载的系统模型
-	environmentModelData := make(map[string]string)
-	var envPackageModel []DataBaseModel.YssimModels
-	DB.Where("sys_or_user =  ? AND userspace_id = ?", "sys", "0").Find(&envPackageModel)
-	libraryAndVersions := GetLibraryAndVersions()
-	for i := 0; i < len(envPackageModel); i++ {
-		p, ok := libraryAndVersions[envPackageModel[i].PackageName]
-		if ok && p == envPackageModel[i].Version {
-			environmentModelData[envPackageModel[i].PackageName] = envPackageModel[i].Version
-		}
-	}
-	// 获取需要加载的用户模型
-	DB.Where("sys_or_user = ? AND userspace_id = ?", itemMap["username"], itemMap["space_id"]).Find(&envPackageModel)
-	for i := 0; i < len(envPackageModel); i++ {
-		loadVersions, ok := libraryAndVersions[envPackageModel[i].PackageName]
-		if ok && loadVersions == envPackageModel[i].Version {
-			environmentModelData[envPackageModel[i].PackageName] = envPackageModel[i].FilePath
-		}
-	}
+	environmentModelData := GetEnvLibrary(itemMap["username"], itemMap["space_id"])
 	// 转为json，保存到数据库
 	jsonEnvData, err := sonic.Marshal(environmentModelData)
 	if err != nil {
