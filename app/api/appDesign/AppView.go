@@ -156,6 +156,9 @@ func CreateAppSpaceView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
+	res.Data = map[string]string{
+		"id": space.ID,
+	}
 	res.Msg = "创建成功"
 	c.JSON(http.StatusOK, res)
 }
@@ -239,6 +242,10 @@ func CreateAppPageView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
+	res.Data = map[string]string{
+		"id": page.ID,
+	}
+	res.Msg = "创建成功"
 	c.JSON(http.StatusOK, res)
 }
 
@@ -250,14 +257,17 @@ func GetAppPageView(c *gin.Context) {
 	var res responseData
 	userName := c.GetHeader("username")
 	spaceId := c.GetHeader("space_id")
-	var item DeleteAppSpaceData
-	err := c.BindJSON(&item)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, "")
-		return
-	}
+	release := c.Query("release")
 	var pageList []DataBaseModel.AppPage
-	DB.Where("AppSpaceId = ? AND username = ?", spaceId, userName).Order("create_time desc").Find(&pageList)
+	db := DB.Where("AppSpaceId = ? AND username = ?", spaceId, userName).Order("create_time desc")
+	switch {
+	case release == "":
+		db.Find(&pageList)
+	case release == "true":
+		db.Where("release = ?", true).Find(&pageList)
+	case release == "false":
+		db.Where("release = ?", false).Find(&pageList)
+	}
 	var pageDataList []map[string]interface{}
 	for _, page := range pageList {
 		p := map[string]interface{}{
@@ -273,27 +283,35 @@ func GetAppPageView(c *gin.Context) {
 
 func EditAppPageView(c *gin.Context) {
 	/*
-		# 修改app应用空间中的页面
+		# 修改app应用空间中的页面、web设计器页面
 	*/
 	var res responseData
 	userName := c.GetHeader("username")
 	var item EditAppPageData
 	err := c.BindJSON(&item)
 	if err != nil {
+		log.Println("设置app空间页面时出现数据错误：", err)
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
-	var space DataBaseModel.AppSpace
-	DB.Where("id = ? AND username = ?", item.SpaceId, userName).First(&space)
-	err = DB.Delete(&space).Error
+	var page DataBaseModel.AppPage
+	DB.Where("id = ? AND app_space_id = ? AND username = ?", item.PageId, item.SpaceId, userName).First(&page)
+	if page.ID == "" {
+		log.Println("设置app空间页面时未查询到数，相关数据是：", item)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	page.PageName = item.PageName
+	page.PagePath = item.Tag
+	err = DB.Save(&page).Error
 	if err != nil {
-		log.Println("删除app空间时保存数据库出现错误：", err)
-		res.Err = "删除失败，请稍后再试"
+		log.Println("设置app空间页面时保存数据库出现错误：", err)
+		res.Err = "设置失败，请稍后再试"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	res.Msg = "删除成功"
+	res.Msg = "设置成功"
 	c.JSON(http.StatusOK, res)
 }
 
@@ -309,11 +327,11 @@ func DeleteAppPageView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
-	var space DataBaseModel.AppSpace
-	DB.Where("id = ? AND username = ?", item.SpaceId, userName).First(&space)
-	err = DB.Delete(&space).Error
+	var page DataBaseModel.AppPage
+	DB.Where("id = ? AND app_space_id = ? AND username = ?", item.PageId, item.SpaceId, userName).First(&page)
+	err = DB.Delete(&page).Error
 	if err != nil {
-		log.Println("删除app空间时保存数据库出现错误：", err)
+		log.Println("删除app空间页面时保存数据库出现错误：", err)
 		res.Err = "删除失败，请稍后再试"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)

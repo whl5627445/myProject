@@ -41,9 +41,13 @@ type CreateAppPageData struct {
 }
 
 type EditAppPageData struct {
-	SpaceId string `json:"space_id" binding:"required"`
+	SpaceId  string `json:"space_id" binding:"required"`
+	PageId   string `json:"page_id" binding:"required"`
+	PageName string `json:"page_name" binding:"required"`
+	Tag      string `json:"tag" binding:"required"`
 }
 
 type DeleteAppPageData struct {
 	SpaceId string `json:"space_id" binding:"required"`
+	PageId  string `json:"page_id" binding:"required"`
 }
