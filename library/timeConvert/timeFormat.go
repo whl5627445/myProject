@@ -12,7 +12,7 @@ func secondToTimeString(simulateSecond int) string {
 	seconds := simulateSecond % 60
 	if simulateSecond < 0 {
 		log.Println("仿真运行时间为负： ", simulateSecond)
-		return "0秒"
+		return "1秒"
 	}
 	if hours == 0 {
 		if minutes == 0 {

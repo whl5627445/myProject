@@ -10,6 +10,10 @@ type YssimUserSpace struct {
 	ID            string         `gorm:"primaryKey"`
 	SpaceName     string         `gorm:"column:space_name"`
 	UserName      string         `gorm:"column:username"`
+	Description   string         `gorm:"column:description"`
+	Background    string         `gorm:"column:background"`
+	Icon          string         `gorm:"column:icon"`
+	collect       bool           `gorm:"column:collect"`
 	CreatedAt     *time.Time     `gorm:"column:create_time;autoCreateTime"`
 	UpdatedAt     *time.Time     `gorm:"column:update_time"`
 	LastLoginTime int64          `gorm:"column:last_login_time"`

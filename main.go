@@ -19,6 +19,7 @@ func main() {
 	g.Use(middleware.Cors())
 	g.Static("/static", "./static")
 	{
+		router.AppDesignRouter(g)
 		router.ModelRouter(g)
 		router.SimulateRouter(g)
 		router.UserRouter(g)

@@ -475,8 +475,8 @@ func SimulateResultRenameView(c *gin.Context) {
 	}
 
 	var res responseData
-	error := DB.Model(&DataBaseModel.YssimSimulateRecord{}).Where("id = ?", item.RecordId).Update("another_name", item.NewAnotherName).Error
-	if error != nil {
+	err = DB.Model(&DataBaseModel.YssimSimulateRecord{}).Where("id = ?", item.RecordId).Update("another_name", item.NewAnotherName).Error
+	if err != nil {
 		c.JSON(http.StatusBadRequest, "修改失败")
 		return
 	}
