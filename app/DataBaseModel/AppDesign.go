@@ -15,6 +15,7 @@ type AppSpace struct {
 	Description   string         `gorm:"column:description"`
 	Background    string         `gorm:"column:background"`
 	Icon          string         `gorm:"column:icon"`
+	IconColor     string         `gorm:"column:icon_color"`
 	Collect       bool           `gorm:"column:collect"`
 	CreatedAt     *time.Time     `gorm:"column:create_time;autoCreateTime"`
 	UpdatedAt     *time.Time     `gorm:"column:update_time"`
@@ -46,7 +47,7 @@ type AppPage struct {
 	PageHeight   string         `gorm:"column:page_height"`
 	Background   string         `gorm:"column:background"`
 	Color        string         `gorm:"column:color"`
-	Release      bool           `gorm:"column:release"`
+	Release      bool           `gorm:"column:is_release"`
 	CreatedAt    *time.Time     `gorm:"column:create_time;autoCreateTime"`
 	UpdatedAt    *time.Time     `gorm:"column:update_time"`
 	Deleted      gorm.DeletedAt `gorm:"column:deleted_at"`

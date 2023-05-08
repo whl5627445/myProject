@@ -80,9 +80,12 @@ func GetAppSpaceView(c *gin.Context) {
 	keyWords := c.Query("keywords")
 	var recentAppSpaceList []DataBaseModel.AppSpace
 	var allAppSpaceList []DataBaseModel.AppSpace
-	db := DB.Where("username = ?", userName).Where("space_name LIKE ?", "%"+keyWords+"%")
+	db := DB.Where("username = ?", userName)
+	if keyWords != "" {
+		db.Where("space_name LIKE ?", "%"+keyWords+"%")
+	}
 	db.Order("update_time desc").Find(&allAppSpaceList)
-	db.Order("last_login_time desc").Limit(4).Find(&recentAppSpaceList)
+	db.Where("last_login_time <> ?", 0).Order("last_login_time desc").Limit(4).Find(&recentAppSpaceList)
 	allAppSpace := make([]map[string]interface{}, 0)
 	recentAppSpace := make([]map[string]interface{}, 0)
 	for _, space := range allAppSpaceList {
@@ -94,8 +97,9 @@ func GetAppSpaceView(c *gin.Context) {
 			"description": space.Description,
 			"background":  space.Background,
 			"icon":        space.Icon,
+			"icon_color":  space.Icon,
 			"collect":     space.Collect,
-			"edit_time":   editTime,
+			"edit_time":   editTime + "前",
 		}
 		allAppSpace = append(allAppSpace, d)
 	}
@@ -136,7 +140,7 @@ func CreateAppSpaceView(c *gin.Context) {
 	var space DataBaseModel.AppSpace
 	DB.Where("space_name = ? AND username = ?", item.SpaceName, userName).First(&space)
 	if space.ID != "" {
-		res.Err = "创建失败，空间名称已存在"
+		res.Err = "空间名称已存在"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
@@ -258,15 +262,26 @@ func GetAppPageView(c *gin.Context) {
 	userName := c.GetHeader("username")
 	spaceId := c.GetHeader("space_id")
 	release := c.Query("release")
+	keyWords := c.Query("keywords")
+	var releaseCount, noReleaseCount int64
 	var pageList []DataBaseModel.AppPage
-	db := DB.Where("AppSpaceId = ? AND username = ?", spaceId, userName).Order("create_time desc")
+	db := DB.Where("app_space_id = ? AND username = ?", spaceId, userName).Order("create_time desc")
+	rc := DB.Model(DataBaseModel.AppPage{}).Where("app_space_id = ? AND username = ?", spaceId, userName).Where("is_release = ?", true)
+	nrc := DB.Model(DataBaseModel.AppPage{}).Where("app_space_id = ? AND username = ?", spaceId, userName).Where("is_release = ?", false)
+	if keyWords != "" {
+		db.Where("page_name LIKE ?", "%"+keyWords+"%")
+		rc.Where("page_name LIKE ?", "%"+keyWords+"%")
+		nrc.Where("page_name LIKE ?", "%"+keyWords+"%")
+	}
+	rc.Count(&releaseCount)
+	nrc.Count(&noReleaseCount)
 	switch {
 	case release == "":
 		db.Find(&pageList)
 	case release == "true":
-		db.Where("release = ?", true).Find(&pageList)
+		db.Where("is_release = ?", true).Find(&pageList)
 	case release == "false":
-		db.Where("release = ?", false).Find(&pageList)
+		db.Where("is_release = ?", false).Find(&pageList)
 	}
 	var pageDataList []map[string]interface{}
 	for _, page := range pageList {
@@ -277,7 +292,12 @@ func GetAppPageView(c *gin.Context) {
 		}
 		pageDataList = append(pageDataList, p)
 	}
-	res.Data = pageDataList
+	res.Data = map[string]interface{}{
+		"data":             pageDataList,
+		"all_count":        releaseCount + noReleaseCount,
+		"release_count":    releaseCount,
+		"no_release_count": noReleaseCount,
+	}
 	c.JSON(http.StatusOK, res)
 }
 
