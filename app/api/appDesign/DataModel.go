@@ -16,19 +16,19 @@ type AppModelMarkData struct {
 
 type CreateAppSpaceData struct {
 	SpaceName        string `json:"space_name" binding:"required"`
-	SpaceDescription string `json:"space_description" binding:""`
+	SpaceDescription string `json:"space_description,omitempty" binding:""`
 	Background       string `json:"space_background,omitempty" binding:""`
-	Icon             string `json:"space_icon" binding:"required"`
-	IconColor        string `json:"space_icon_color" binding:"required"`
+	Icon             string `json:"space_icon,omitempty" binding:"required"`
+	IconColor        string `json:"space_icon_color,omitempty" binding:"required"`
 }
 
 type EditAppSpaceData struct {
 	SpaceId          string `json:"space_id" binding:"required"`
 	SpaceName        string `json:"space_name" binding:"required"`
-	SpaceDescription string `json:"space_description,omitempty" binding:"required"`
+	SpaceDescription string `json:"space_description,omitempty" binding:""`
 	Background       string `json:"space_background,omitempty" binding:""`
 	Icon             string `json:"space_icon,omitempty" binding:""`
-	IconColor        string `json:"space_icon_color,omitempty" binding:"required"`
+	IconColor        string `json:"space_icon_color,omitempty" binding:""`
 	Collect          string `json:"space_collect,omitempty" binding:""`
 }
 
