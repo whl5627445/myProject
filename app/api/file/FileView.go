@@ -881,6 +881,7 @@ func BackgroundUploadView(c *gin.Context) {
 			"path": filePath,
 		}
 		c.JSON(http.StatusOK, res)
+		return
 	}
 	res.Err = "上传失败，请重新上传"
 	res.Status = 2

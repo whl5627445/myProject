@@ -53,7 +53,6 @@ func GetSysRootModelView(c *gin.Context) {
 	}
 	res.Data = modelData
 	c.JSON(http.StatusOK, res)
-
 }
 
 func GetUserRootModelView(c *gin.Context) {
@@ -62,6 +61,9 @@ func GetUserRootModelView(c *gin.Context) {
 	*/
 	userName := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
+	if userSpaceId == "" {
+		c.JSON(http.StatusBadRequest, "")
+	}
 	keywords := c.Query("keywords")
 	var res responseData
 	var modelData []map[string]interface{}
@@ -94,7 +96,6 @@ func GetUserRootModelView(c *gin.Context) {
 		}
 
 	}
-
 	res.Data = modelData
 	c.JSON(http.StatusOK, res)
 

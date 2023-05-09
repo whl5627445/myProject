@@ -78,14 +78,25 @@ func GetAppSpaceView(c *gin.Context) {
 	userName := c.GetHeader("username")
 	//userSpaceId := c.GetHeader("space_id")
 	keyWords := c.Query("keywords")
+	release := c.Query("release")
+	collect := c.Query("collect")
 	var recentAppSpaceList []DataBaseModel.AppSpace
 	var allAppSpaceList []DataBaseModel.AppSpace
 	db := DB.Where("username = ?", userName)
 	if keyWords != "" {
 		db.Where("space_name LIKE ?", "%"+keyWords+"%")
 	}
+	if collect == "1" {
+		db.Where("collect = ?", true)
+	}
+	switch {
+	case release == "1":
+		db.Where("is_release = ?", true)
+	case release == "0":
+		db.Where("is_release = ?", false)
+	}
 	db.Order("update_time desc").Find(&allAppSpaceList)
-	db.Where("last_login_time <> ?", 0).Order("last_login_time desc").Limit(4).Find(&recentAppSpaceList)
+	db.Where("last_login_time <> ?", 0).Order("last_login_time desc").Limit(5).Find(&recentAppSpaceList)
 	allAppSpace := make([]map[string]interface{}, 0)
 	recentAppSpace := make([]map[string]interface{}, 0)
 	for _, space := range allAppSpaceList {
@@ -97,7 +108,7 @@ func GetAppSpaceView(c *gin.Context) {
 			"description": space.Description,
 			"background":  space.Background,
 			"icon":        space.Icon,
-			"icon_color":  space.Icon,
+			"icon_color":  space.IconColor,
 			"collect":     space.Collect,
 			"edit_time":   editTime + "前",
 		}
@@ -107,13 +118,14 @@ func GetAppSpaceView(c *gin.Context) {
 		updateTime := space.UpdatedAt.Local().Unix()
 		editTime := timeConvert.UseTimeFormat(int(updateTime), int(time.Now().Local().Unix()))
 		d := map[string]interface{}{
-			"id":                space.ID,
-			"space_name":        space.SpaceName,
-			"space_description": space.Description,
-			"space_background":  space.Background,
-			"space_icon":        space.Icon,
-			"space_collect":     space.Collect,
-			"edit_time":         editTime,
+			"id":          space.ID,
+			"name":        space.SpaceName,
+			"description": space.Description,
+			"background":  space.Background,
+			"icon":        space.Icon,
+			"icon_color":  space.IconColor,
+			"collect":     space.Collect,
+			"edit_time":   editTime + "前",
 		}
 		recentAppSpace = append(recentAppSpace, d)
 	}
@@ -151,6 +163,7 @@ func CreateAppSpaceView(c *gin.Context) {
 	space.Description = item.SpaceDescription
 	space.Background = item.Background
 	space.Icon = item.Icon
+	space.IconColor = item.IconColor
 	space.Collect = false
 	err = DB.Create(&space).Error
 	if err != nil {
