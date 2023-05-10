@@ -85,7 +85,7 @@ import (
 //	return newFilePath, true
 //}
 
-func DymolaFmuExportWithLibrary(fmuPar map[string]interface{}, envLibrary map[string]string, token, userName, fmuName, packageName, modelName, fileName, filePath string) (string, bool) {
+func DymolaFmuExportWithLibrary(fmuPar map[string]interface{}, envLibrary map[string]string, token, userName, fmuName, packageName, modelName, fileName, filePath string) (string, bool, string) {
 	data := map[string]interface{}{
 		"username":        userName,
 		"fmuPar":          fmuPar,
@@ -98,6 +98,9 @@ func DymolaFmuExportWithLibrary(fmuPar map[string]interface{}, envLibrary map[st
 	}
 	var folders []string // 所有要加载的用户模型的包文件地址
 	var dymolaLibraries []map[string]string
+	// 编译问题提示 "下载失败，请查看日志"
+	// 系统问题提示 "下载失败，请稍后再试"
+	errTips := "下载失败，请稍后再试"
 	now := time.Now()
 	timestamp := now.Format("20060102150405")
 	// 新建zip文件地址
@@ -151,7 +154,7 @@ func DymolaFmuExportWithLibrary(fmuPar map[string]interface{}, envLibrary map[st
 		err := archiver.Archive(folders, uploadFileName)
 		if err != nil {
 			fmt.Println(err)
-			return "", false
+			return "", false, errTips
 		}
 
 		files := url.NewFiles()
@@ -160,7 +163,7 @@ func DymolaFmuExportWithLibrary(fmuPar map[string]interface{}, envLibrary map[st
 		uploadFileRes, err := requests.Post(config.DymolaSimutalionConnect+"/file/upload", req)
 		if err != nil {
 			log.Println(err)
-			return "", false
+			return "", false, errTips
 		}
 		uploadFileResJson, _ := uploadFileRes.Json()
 		log.Println("dymola服务上传文件结果：", uploadFileResJson)
@@ -168,7 +171,7 @@ func DymolaFmuExportWithLibrary(fmuPar map[string]interface{}, envLibrary map[st
 		if ok && uploadResultCode.(float64) == 200 {
 			data["fileName"] = paramsUrl + "/" + strings.Join(strings.Split(filePath, "/")[5:], "/")
 		} else {
-			return "", false
+			return "", false, errTips
 		}
 
 		err = os.RemoveAll(delUploadFileName)
@@ -178,7 +181,6 @@ func DymolaFmuExportWithLibrary(fmuPar map[string]interface{}, envLibrary map[st
 
 	} else {
 		var filteredDymolaLibraries []map[string]string
-
 		for _, element := range dymolaLibraries {
 			if element["userFile"] == "" {
 				filteredDymolaLibraries = append(filteredDymolaLibraries, element)
@@ -194,13 +196,15 @@ func DymolaFmuExportWithLibrary(fmuPar map[string]interface{}, envLibrary map[st
 	exportFmuRes, err := requests.Post(config.DymolaSimutalionConnect+"/dymola/translateModelFMU", req)
 	if err != nil {
 		log.Println(err)
-		return "", false
+		errTips = "下载失败，请查看日志"
+		return "", false, errTips
 	}
 	exportResult, _ := exportFmuRes.Json()
 	log.Println("dymola服务编译FMU结果：", exportResult)
 	ResultCode, ok := exportResult["code"]
 	if err != nil || len(exportResult) == 0 || (ok && ResultCode.(float64) != 200) {
-		return "", false
+		errTips = "下载失败，请查看日志"
+		return "", false, errTips
 	}
 	req = url.NewRequest()
 	req.Headers = Headers
@@ -208,10 +212,10 @@ func DymolaFmuExportWithLibrary(fmuPar map[string]interface{}, envLibrary map[st
 	fmuFileUrl := config.DymolaSimutalionConnect + "/file/download?fileName=" + exportResult["msg"].(string)
 	fmuFileRes, err := requests.Get(fmuFileUrl, req)
 	if err != nil {
-		return "", false
+		return "", false, errTips
 	}
 	resultFmuFileData := fmuFileRes.Content
 	newFilePath := "static/tmp/" + userName + "/" + strings.ReplaceAll(modelName, ".", "-") + "/" + time.Now().Local().Format("20060102150405") + "/" + fmuName + ".fmu"
 	fileOperation.WriteFileByte(newFilePath, resultFmuFileData)
-	return newFilePath, true
+	return newFilePath, true, ""
 }
