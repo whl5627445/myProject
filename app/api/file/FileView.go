@@ -477,7 +477,7 @@ func FmuExportModelView(c *gin.Context) {
 	}
 	// 获取依赖
 	envLibrary := service.GetEnvLibrary(username, userSpaceId)
-	newFileName, ok := service.DymolaFmuExportWithLibrary(item.FmuPar, envLibrary, token, username, item.FmuName, item.PackageName, item.ModelName, fileName, filePath)
+	newFileName, ok, errTips := service.DymolaFmuExportWithLibrary(item.FmuPar, envLibrary, token, username, item.FmuName, item.PackageName, item.ModelName, fileName, filePath)
 	//newFileName, ok := service.DymolaFmuExport(item.FmuPar, token, username, item.FmuName, item.PackageName, item.ModelName, fileName, filePath)
 
 	if ok {
@@ -486,8 +486,9 @@ func FmuExportModelView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
-
-	res.Err = "下载失败，请稍后再试"
+	// 编译问题提示 "下载失败，请查看日志"
+	// 系统问题提示 "下载失败，请稍后再试"
+	res.Err = errTips
 	res.Status = 2
 	c.JSON(http.StatusOK, res)
 
