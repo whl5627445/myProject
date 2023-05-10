@@ -36,6 +36,7 @@ type EditAppSpaceData struct {
 
 type AppSpaceCollectData struct {
 	SpaceId []string `json:"space_id" binding:"required"`
+	Collect bool     `json:"collect" binding:""`
 }
 
 type DeleteAppSpaceData struct {
@@ -69,8 +70,8 @@ type CreatePageComponentData struct {
 	PositionX          float64        `json:"position_x" binding:"required"`
 	PositionY          float64        `json:"position_y" binding:"required"`
 	Angle              float64        `json:"angle" binding:"required"`
-	HorizontalFlip     bool           `json:"horizontal_flip" binding:"required"`
-	VerticalFlip       bool           `json:"vertical_flip" binding:"required"`
+	HorizontalFlip     bool           `json:"horizontal_flip" binding:""`
+	VerticalFlip       bool           `json:"vertical_flip" binding:""`
 	Opacity            int            `json:"opacity" binding:"required"`
 	OtherConfiguration datatypes.JSON `json:"other_configuration,omitempty" binding:"required"`
 	ZIndex             int            `json:"z_index,omitempty" binding:"required"`
@@ -79,9 +80,9 @@ type CreatePageComponentData struct {
 	ChartConfig        datatypes.JSON `json:"chart_config,omitempty" binding:"required"`
 	Option             datatypes.JSON `json:"option,omitempty" binding:"required"`
 	ComponentPath      string         `json:"component_path,omitempty" binding:"required"`
-	Hide               bool           `json:"hide,omitempty" binding:"required"`
-	Lock               bool           `json:"lock,omitempty" binding:"required"`
-	IsGroup            bool           `json:"is_group,omitempty" binding:"required"`
+	Hide               bool           `json:"hide,omitempty" binding:""`
+	Lock               bool           `json:"lock,omitempty" binding:""`
+	IsGroup            bool           `json:"is_group,omitempty" binding:""`
 }
 
 type EditPageComponentData struct {
