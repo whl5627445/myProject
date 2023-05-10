@@ -2,10 +2,8 @@ import threading
 import time
 import zipfile
 from datetime import datetime
-
-from libs.defs import update_records, new_another_name
+from libs.function.defs import update_simulate_records, new_another_name, zip_folders
 import requests
-
 from config.redis_config import R
 import json
 import os
@@ -18,19 +16,6 @@ adsPath = "/home/simtek/code/"
 
 
 # adsPath = "/home/xuqingda/GolandProjects/YssimGoService/"
-
-
-def zip_folders(folders, output_path):
-    if len(folders) > 0:
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        with zipfile.ZipFile(output_path, mode='w') as archive:
-            for folder in folders:
-                parent_folder = os.path.dirname(folder)
-                for root, dirs, files in os.walk(folder):
-                    for file in files:
-                        file_path = os.path.join(root, file)
-                        archive.write(file_path, arcname=os.path.relpath(file_path, parent_folder))
-
 
 class DmSimulation(threading.Thread):
     def __init__(self, request):
@@ -74,7 +59,7 @@ class DmSimulation(threading.Thread):
                     "libraryVersion": val,
                     "userFile": ""
                 })
-
+        # Modelica必须放在第一个加载
         for d in dymola_libraries:
             if d['libraryName'] == 'Modelica':
                 dymola_libraries.remove(d)
@@ -104,7 +89,7 @@ class DmSimulation(threading.Thread):
                     print('上传文件成功')
                     # uploadFilePath = uploadRes["data"]
                 else:
-                    return False, None , 0
+                    return False, None, 0
             except Exception as e:
                 return False, None, 0
             if os.path.exists(del_upload_fileName):
@@ -114,9 +99,9 @@ class DmSimulation(threading.Thread):
                 print("文件夹不存在。")
         else:
             # 系统模型的仿真要去掉用户模型
-            print("系统模型只加载系统库1:",dymola_libraries)
+            print("系统模型只加载系统库1:", dymola_libraries)
             dymola_libraries = [element for element in dymola_libraries if element['userFile'] == '']
-            print("系统模型只加载系统库2:",dymola_libraries)
+            print("系统模型只加载系统库2:", dymola_libraries)
         if uploadResult or self.request.packageFilePath == "":
             fileName = ""
             if self.request.packageFilePath != "":
@@ -133,17 +118,17 @@ class DmSimulation(threading.Thread):
             print(compileReqData)
             json_data = {"message": self.request.simulateModelName + " 模型开始编译"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
-            update_records(uuid=self.request.uuid, simulate_status="6", simulate_start_time=time.time())
+            update_simulate_records(uuid=self.request.uuid, simulate_status="6", simulate_start_time=int(time.time()))
             compileRes = requests.request("post", DymolaSimulationConnect + "/dymola/translate",
                                           json=compileReqData,
                                           timeout=600)
             if compileRes.status_code != 200:
                 print("dymola服务编译错误: ", compileRes.reason)
-                return False, None , compileRes.status_code
+                return False, None, compileRes.status_code
             compileResData = compileRes.json()
             print("dymola服务编译结果：", compileResData)
             if compileResData["code"] == 200:
-                update_records(uuid=self.request.uuid, simulate_status="2", simulate_start="1")
+                update_simulate_records(uuid=self.request.uuid, simulate_status="2", simulate_start="1")
                 json_data = {"message": self.request.simulateModelName + " 编译成功，开始仿真"}
                 R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
                 simulateReqData = {
@@ -198,30 +183,31 @@ class DmSimulation(threading.Thread):
 
     def run(self):
         print("开启dymola仿真")
-        update_records(uuid=self.request.uuid, simulate_start_time=time.time(), simulate_start=True)
+        update_simulate_records(uuid=self.request.uuid, simulate_start_time=int(time.time()), simulate_start=True)
         res, err, code = self.send_request()
-        print("send_request返回",res, err, code)
+        print("send_request返回", res, err, code)
         if res:
-            update_records(uuid=self.request.uuid,
-                           simulate_status="4",
-                           simulate_result_str="DM",
-                           simulate_start="0",
-                           simulate_end_time=str(time.time()),
-                           another_name=new_another_name(self.request.userName,
-                                                         self.request.simulateModelName,
-                                                         self.request.userSpaceId)
-                           )
+            update_simulate_records(uuid=self.request.uuid,
+                                    simulate_status="4",
+                                    simulate_result_str="DM",
+                                    simulate_start="0",
+                                    simulate_end_time=int(time.time()),
+                                    another_name=new_another_name(self.request.userName,
+                                                                  self.request.simulateModelName,
+                                                                  self.request.userSpaceId)
+                                    )
             json_data = {"message": self.request.simulateModelName + " 模型仿真完成"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
         elif code == 300:
             json_data = {"message": self.request.simulateModelName + " 结束任务"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
         else:
-            update_records(uuid=self.request.uuid,
-                           simulate_status="3",
-                           simulate_result_str="DM",
-                           simulate_start="0",
-                           simulate_end_time=str(time.time())
-                           )
+            update_simulate_records(uuid=self.request.uuid,
+                                    simulate_status="3",
+                                    simulate_result_str="DM",
+                                    simulate_start="0",
+                                    simulate_end_time=int(time.time())
+                                    )
             json_data = {"message": self.request.simulateModelName + " 仿真失败"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
+        self.state = "stopped"

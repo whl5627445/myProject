@@ -214,7 +214,7 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 	record.EnvModelData = jsonEnvData
 	config.DB.Save(&record)
 	// 发送仿真请求
-	GrpcBuildModelRequest := &grpcPb.SimulationRequest{
+	GrpcBuildModelRequest := &grpcPb.SubmitTaskRequest{
 
 		Uuid:              record.ID,
 		UserSpaceId:       record.UserspaceId,
@@ -223,16 +223,91 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 		ResultFilePath:    resultFilePath,
 		SimulationPraData: SimulationPraData,
 		EnvModelData:      environmentModelData,
-		SimulateType:      record.SimulateType,
+		SimulateType:      record.SimulateType, // OM DM
 		// dm才会用到的参数
 		PackageName:     packageModel.PackageName,
 		PackageFilePath: packageModel.FilePath,
+		// 任务类型simulate  translate run_result
+		TaskType: "simulate",
 	}
-	_, err = grpcPb.Client.Simulation(grpcPb.Ctx, GrpcBuildModelRequest)
+	_, err = grpcPb.Client.SubmitTask(grpcPb.Ctx, GrpcBuildModelRequest)
 	return record.ID, err
 
 }
 
+func GrpcTranslate(record DataBaseModel.AppDataSource) (string, error) {
+	//查询数据库中的实验id对应的记录
+	var experimentRecord DataBaseModel.YssimExperimentRecord
+	DB.Where("id = ? ", record.ExperimentId).First(&experimentRecord)
+	//查询数据库中的模型对应的记录
+	var packageModel DataBaseModel.YssimModels
+	err := DB.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", record.PackageId, []string{"sys", record.UserName}, []string{"0", record.UserSpaceId}).First(&packageModel).Error
+	if err != nil {
+		return "", errors.New("not found")
+	}
+	// 将实验参数写入模型
+	if packageModel.SysUser != "sys" {
+		//YssimExperimentRecord表的json数据绑定到结构体
+		var componentValue modelVarData
+		if experimentRecord.ModelVarData.String() != "" {
+			err = sonic.Unmarshal(experimentRecord.ModelVarData, &componentValue)
+			if err == nil {
+				mapAttributesStr := mapProcessing.MapDataConversion(componentValue.FinalAttributesStr)
+				//设置组件参数
+				result := SetComponentModifierValue(experimentRecord.ModelName, mapAttributesStr)
+				if result {
+					log.Println("重新设置参数-完成。")
+				} else {
+					log.Println("重新设置参数-失败: ", mapAttributesStr)
+				}
+			} else {
+				log.Println("modelVarData: ", experimentRecord.ModelVarData)
+				log.Println("err: ", err)
+				log.Println("json2map filed!")
+			}
+		}
+	}
+	// 构建仿真参数
+	SimulationPraData := map[string]string{
+		"startTime":         record.StartTime,
+		"stopTime":          record.StopTime,
+		"method":            record.Method,
+		"numberOfIntervals": record.NumberOfIntervals,
+		"tolerance":         record.Tolerance,
+	}
+
+	// 获取需要加载的系统模型
+	environmentModelData := GetEnvLibrary(record.UserName, record.UserSpaceId)
+	// 转为json，保存到数据库
+	jsonEnvData, err := sonic.Marshal(environmentModelData)
+	if err != nil {
+		log.Println("环境依赖包解析错误：", err)
+	}
+	//SimulateTaskMap[record.ID] = record
+	//record.SimulateStart = true
+	record.EnvModelData = jsonEnvData
+	config.DB.Save(&record)
+	// 发送仿真请求
+	GrpcBuildModelRequest := &grpcPb.SubmitTaskRequest{
+
+		Uuid:              record.ID,
+		UserSpaceId:       record.UserSpaceId,
+		UserName:          record.UserName,
+		SimulateModelName: record.ModelName,
+		ResultFilePath:    record.CompilePath,
+		SimulationPraData: SimulationPraData,
+		EnvModelData:      environmentModelData,
+		SimulateType:      record.CompilerType, // OM DM
+		// dm才会用到的参数
+		PackageName:     packageModel.PackageName,
+		PackageFilePath: packageModel.FilePath,
+		// 任务类型simulate  translate run_result
+		TaskType: "translate",
+	}
+	_, err = grpcPb.Client.SubmitTask(grpcPb.Ctx, GrpcBuildModelRequest)
+	return record.ID, err
+
+}
 func DeleteSimulateTask(taskID, simulateType, SimulateModelResultPath string) {
 
 	replyVar, err := GrpcSimulationProcessOperation(taskID, "kill", simulateType)

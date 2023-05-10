@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 	"yssim-go/app/DataBaseModel"
+	"yssim-go/app/service"
 	"yssim-go/config"
 	"yssim-go/library/timeConvert"
 
@@ -42,17 +43,27 @@ func AppModelMarkView(c *gin.Context) {
 	}
 	CompilePath := "static/modelDataSource/" + userName + "/" + strings.ReplaceAll(item.ModelName, ".", "-") + "/" + time.Now().Local().Format("20060102150405")
 	if record.ID == "" {
+		SimulationPra := service.GetSimulationOptions(record.ModelName)
 		dataSource := DataBaseModel.AppDataSource{
-			ID:            uuid.New().String(),
-			UserName:      userName,
-			UserSpaceId:   userSpaceId,
-			PackageId:     item.PackageId,
-			ModelName:     item.ModelName,
-			CompilerType:  item.CompilerType,
-			CompilePath:   CompilePath,
-			CompileStatus: 0,
+			ID:                uuid.New().String(),
+			UserName:          userName,
+			UserSpaceId:       userSpaceId,
+			PackageId:         item.PackageId,
+			ModelName:         item.ModelName,
+			CompilerType:      item.CompilerType,
+			CompilePath:       CompilePath,
+			ExperimentId:      item.ExperimentId,
+			GroundName:        item.GroundName,
+			DataSourceName:    item.DataSourceName,
+			StartTime:         SimulationPra["startTime"],
+			StopTime:          SimulationPra["stopTime"],
+			Method:            SimulationPra["method"],
+			Tolerance:         SimulationPra["tolerance"],
+			NumberOfIntervals: SimulationPra["numberOfIntervals"],
+			CompileStatus:     0,
 		}
 		err = DB.Create(&dataSource).Error
+		record = dataSource
 	} else {
 		record.CompilePath = CompilePath
 		err = DB.Save(&record).Error
@@ -65,7 +76,7 @@ func AppModelMarkView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
-
+	_, _ = service.GrpcTranslate(record)
 	res.Msg = "创建成功"
 	c.JSON(http.StatusOK, res)
 }

@@ -87,3 +87,28 @@ class YssimModels(Base):
     file_path = Column(String)
     default_version = Column(Integer)
     deleted_at = Column(DateTime)
+
+
+class AppDataSources(Base):
+    __tablename__ = 'app_data_sources'
+    id = Column(String, primary_key=True)
+    username = Column(String)
+    user_space_id = Column(String)
+    package_id = Column(String)
+    model_name = Column(String)
+    compile_type = Column(String)
+    compile_path = Column(String)
+    compile_status = Column(Integer)
+    compile_start_time = Column(Integer)
+    compile_stop_time = Column(Integer)
+    ground_name = Column(String)
+    data_source_name = Column(String)
+    experiment_id = Column(String)
+    env_model_data = Column(JSON)
+    start_time = Column(String)
+    stop_time = Column(String)
+    method = Column(String)
+    number_intervals = Column(String)
+    tolerance = Column(String)
+    deleted_at = Column(DateTime)
+    create_time = Column(DateTime)

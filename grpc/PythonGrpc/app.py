@@ -2,11 +2,17 @@ import copy
 from concurrent import futures
 import os.path
 import pandas as pd
-from libs.PyOmcSimulationProcessOperation import kill_py_omc_process, suspend_process, resume_process
-from libs.PyOmcSimulationProcess import PyOmcSimulation
-from libs.DmSimulation import DmSimulation
-from libs.FindPort import findPort
-from libs.init import initTask
+from libs.function.process_operation import kill_py_omc_process, suspend_process, resume_process
+
+from libs.simulation.OmcSimulationThread import OmcSimulation
+from libs.translate.OmcTranslateThread import OmcTranslateThread
+from libs.run_result.OmcRunThread import OmcRunThread
+
+from libs.simulation.DmSimulationThread import DmSimulation
+from libs.translate.DmcTranslateThread import DmTranslateThread
+
+from libs.function.find_port import findPort
+from libs.function.init import initOmTask, initDmTask
 import threading
 import zarr
 from config.db_config import Session, YssimSimulateRecords
@@ -18,6 +24,8 @@ import DyMat
 from fmpy import write_csv
 import configparser
 
+
+
 config = configparser.ConfigParser()
 config.read('./config/grpc_config.ini')
 start_port = int(config['app']['start_port'])
@@ -28,60 +36,50 @@ adsPath = "/home/simtek/code/"
 # adsPath = "/home/xuqingda/GolandProjects/YssimGoService/"
 
 if __name__ == '__main__':
-    # 进程列表，用于保存每个进程对象
-    PyOmcSimulationProcessList = []
+    # omc进程列表，用于保存每个进程对象
+    OmSimulationThreadList = []
+    # dymola进程列表，用于保存每个进程对象
+    DmSimulationThreadList = []
     # 接收仿真任务队列
-    # 初始化任务队列
-    omcTaskList = initTask()
+    # 初始化omc任务队列
+    omcTaskList = initOmTask()
+    # 初始化dy任务队列
+    dymolaTaskList = initDmTask()
+
 
     # 实现 proto 文件中定义的 GreeterServicer
     class Greeter(router_pb2_grpc.GreeterServicer):
         # 实现 proto 文件中定义的 rpc 调用
         # 仿真接口
-        def Simulation(self, request, context):
+        def SubmitTask(self, request, context):
 
             newRequest = copy.deepcopy(request)
             data = newRequest
             if data.simulateType == "OM":
+                # 如果是OM仿真，将仿真请求体放到omcTaskList中
                 omcTaskList.append(data)
             elif data.simulateType == "DM":
-                # 如果是dm仿真,直接启动请求dm服务的线程
-                dm_threading = DmSimulation(data)
-                dm_threading.start()
-
+                # 如果是DM仿真,将仿真请求体放到dymolaTaskList中
+                dymolaTaskList.append(data)
             return router_pb2.SimulationReply(ok=True,
-                                                   msg="Task submitted successfully."
-                                                   )
+                                              msg="Task submitted successfully."
+                                              )
 
         def ProcessOperation(self, request, context):
             print("ProcessOperation被调用。")
             multiprocessing_id = request.uuid
             operationName = request.operationName
             if operationName == "kill":
-                killProcessReply = kill_py_omc_process(multiprocessing_id, PyOmcSimulationProcessList, request.simulate_type)
+                killProcessReply = kill_py_omc_process(multiprocessing_id, OmSimulationThreadList,
+                                                       request.simulate_type)
                 return router_pb2.ProcessOperationReply(msg=killProcessReply["msg"])
             if operationName == "suspend":
-                suspendProcessReply = suspend_process(multiprocessing_id, PyOmcSimulationProcessList)
+                suspendProcessReply = suspend_process(multiprocessing_id, OmSimulationThreadList)
                 return router_pb2.ProcessOperationReply(msg=suspendProcessReply["msg"])
             if operationName == "resume":
-                resumeProcessReply = resume_process(multiprocessing_id, PyOmcSimulationProcessList)
+                resumeProcessReply = resume_process(multiprocessing_id, OmSimulationThreadList)
                 return router_pb2.ProcessOperationReply(msg=resumeProcessReply["msg"])
             return router_pb2.ProcessOperationReply(msg="Unknown operation!")
-
-        # def FmuSimulation(self, request, context):
-        #
-        #     if not os.path.exists(adsPath + request.moPath):
-        #         return router_pb2.FmuSimulationReply(log="No such file or directory!")
-        #         # 最大任务数
-        #     if not buildFMU(request.moPath, request.className, request.userName, request.resPath):
-        #         return router_pb2.FmuSimulationReply(log="buildFMU error!")
-        #     if len(processList) < 10:
-        #         processOne = MyProcess(request, managerResDict)
-        #         processList.append(processOne)
-        #         return router_pb2.FmuSimulationReply(log="Task submitted successfully.")
-        #     else:
-        #         return router_pb2.FmuSimulationReply(
-        #             log="The total number of system tasks has exceeded 8. Please wait and request again!")
 
         # 获取某个进程状态信息
 
@@ -107,21 +105,6 @@ if __name__ == '__main__':
                                                         state="unknown",
                                                         processRunTime="",
                                                         resPath="")
-
-        # 获取所有进程的数量
-        # def GerAllProcessNumber(self, request, context):
-        #     running_num = 0
-        #     pending_num = 0
-        #     for i in processList:
-        #         processState = getSate(i.__repr__())
-        #         if processState == 'initial':
-        #             pending_num += 1
-        #         if processState == 'started':
-        #             running_num += 1
-        #     return router_pb2.GerAllProcessNumberReply(totalTasks=len(processList),
-        #                                                numOfRunningProcess=running_num,
-        #                                                numOfPendingProcess=pending_num
-        #                                                )
 
         # 获取变量结果 单个记录单个变量
         def GetResult(self, request, context):
@@ -230,39 +213,48 @@ if __name__ == '__main__':
             print("仿真任务执行线程启动")
             while True:
                 time.sleep(0.2)
-                print("执行任务队列剩余数量： ", len(PyOmcSimulationProcessList))
-                print("未执行任务队列剩余数量： ", len(omcTaskList))
-                for i in PyOmcSimulationProcessList:
+                print("OM执行任务队列剩余数量： ", len(OmSimulationThreadList))
+                print("OM未执行任务队列剩余数量： ", len(omcTaskList))
+                for i in OmSimulationThreadList:
                     if i.state == "stopped":
-                        PyOmcSimulationProcessList.remove(i)
+                        OmSimulationThreadList.remove(i)
+                        # del i
+                print("DM执行任务队列剩余数量： ", len(DmSimulationThreadList))
+                print("DM未执行任务队列剩余数量： ", len(dymolaTaskList))
+                for i in DmSimulationThreadList:
+                    if i.state == "stopped":
+                        DmSimulationThreadList.remove(i)
                         # del i
 
-                if len(PyOmcSimulationProcessList) < max_simulation_num and len(omcTaskList) > 0:
+                if len(OmSimulationThreadList) < max_simulation_num and len(omcTaskList) > 0:
                     # 找到空闲的端口号
-                    port = findPort(start_port)
                     data = omcTaskList.pop(0)
-                    process = PyOmcSimulation(data, port)
-                    process.start()
-                    PyOmcSimulationProcessList.append(process)
+                    if data.taskType == "simulation":
+                        port = findPort(start_port)
+                        om_threading = OmcSimulation(data, port)
+                        om_threading.start()
+                        OmSimulationThreadList.append(om_threading)
+                    if data.taskType == "translate":
+                        port = findPort(start_port)
+                        om_threading = OmcTranslateThread(data, port)
+                        om_threading.start()
+                        OmSimulationThreadList.append(om_threading)
+                    if data.taskType == "run":
+                        om_threading = OmcRunThread(data, "/ss/dd/result")
+                        om_threading.start()
+                        OmSimulationThreadList.append(om_threading)
 
+                if len(DmSimulationThreadList) < max_simulation_num and len(dymolaTaskList) > 0:
+                    data = dymolaTaskList.pop(0)
+                    if data.taskType == "simulation":
+                        dm_threading = DmSimulation(data)
+                        dm_threading.start()
+                        DmSimulationThreadList.append(dm_threading)
+                    if data.taskType == "translate":
+                        dm_threading = DmTranslateThread(data)
+                        dm_threading.start()
+                        DmSimulationThreadList.append(dm_threading)
 
-    # def action():
-    #     while True:
-    #         time.sleep(1)
-    #         print(used_ports)
-    #         for i in PyOmcSimulationProcessList:
-    #             # processState = getSate(i.__repr__())
-    #             if i.state == "stopped":
-    #                 PyOmcSimulationProcessList.remove(i)
-    #                 used_ports.remove(i.omc_obj._interactivePort)
-    #                 del i
-    #         for i in PyOmcSimulationProcessList[:2]:
-    #             if i.state == "init":
-    #                 i.run()
-    #
-    #
-    # startProcessList = threading.Thread(target=action)
-    # startProcessList.start()
 
     # 启动 rpc 服务
     simulation_obj = SimulationThread()

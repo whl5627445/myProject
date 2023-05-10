@@ -25,16 +25,25 @@ type AppSpace struct {
 }
 
 type AppDataSource struct {
-	ID            string         `gorm:"primaryKey"`
-	UserName      string         `gorm:"column:username"`
-	UserSpaceId   string         `gorm:"column:user_space_id"`
-	PackageId     string         `gorm:"column:package_id"`
-	ModelName     string         `gorm:"column:model_name"`
-	CompilerType  string         `gorm:"column:compiler_type"`
-	CompilePath   string         `gorm:"column:compile_path"`
-	CompileStatus int            `gorm:"column:compile_status"`
-	CreatedAt     *time.Time     `gorm:"column:create_time;autoCreateTime"`
-	Deleted       gorm.DeletedAt `gorm:"column:deleted_at"`
+	ID                string         `gorm:"primaryKey"`
+	UserName          string         `gorm:"column:username"`
+	UserSpaceId       string         `gorm:"column:user_space_id"`
+	PackageId         string         `gorm:"column:package_id"`
+	ModelName         string         `gorm:"column:model_name"`
+	CompilerType      string         `gorm:"column:compiler_type"`
+	CompilePath       string         `gorm:"column:compile_path"`
+	CompileStatus     int            `gorm:"column:compile_status"`
+	GroundName        string         `gorm:"column:ground_name"`
+	DataSourceName    string         `gorm:"column:data_source_name"`
+	ExperimentId      string         `gorm:"column:experiment_id"`
+	EnvModelData      datatypes.JSON `gorm:"column:env_model_data"`
+	StartTime         string         `gorm:"column:start_time"`
+	StopTime          string         `gorm:"column:stop_time"`
+	Method            string         `gorm:"column:method"`
+	NumberOfIntervals string         `gorm:"column:number_intervals"`
+	Tolerance         string         `gorm:"column:tolerance"`
+	CreatedAt         *time.Time     `gorm:"column:create_time;autoCreateTime"`
+	Deleted           gorm.DeletedAt `gorm:"column:deleted_at"`
 }
 
 type AppPage struct {

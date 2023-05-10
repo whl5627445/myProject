@@ -59,10 +59,10 @@ class GreeterStub(object):
                 request_serializer=router__pb2.CheckVarExistRequest.SerializeToString,
                 response_deserializer=router__pb2.CheckVarExistReply.FromString,
                 )
-        self.Simulation = channel.unary_unary(
-                '/Greeter/Simulation',
-                request_serializer=router__pb2.SimulationRequest.SerializeToString,
-                response_deserializer=router__pb2.SimulationReply.FromString,
+        self.SubmitTask = channel.unary_unary(
+                '/Greeter/SubmitTask',
+                request_serializer=router__pb2.SubmitTaskRequest.SerializeToString,
+                response_deserializer=router__pb2.SubmitTaskReply.FromString,
                 )
 
 
@@ -123,7 +123,7 @@ class GreeterServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def Simulation(self, request, context):
+    def SubmitTask(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -177,10 +177,10 @@ def add_GreeterServicer_to_server(servicer, server):
                     request_deserializer=router__pb2.CheckVarExistRequest.FromString,
                     response_serializer=router__pb2.CheckVarExistReply.SerializeToString,
             ),
-            'Simulation': grpc.unary_unary_rpc_method_handler(
-                    servicer.Simulation,
-                    request_deserializer=router__pb2.SimulationRequest.FromString,
-                    response_serializer=router__pb2.SimulationReply.SerializeToString,
+            'SubmitTask': grpc.unary_unary_rpc_method_handler(
+                    servicer.SubmitTask,
+                    request_deserializer=router__pb2.SubmitTaskRequest.FromString,
+                    response_serializer=router__pb2.SubmitTaskReply.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -346,7 +346,7 @@ class Greeter(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def Simulation(request,
+    def SubmitTask(request,
             target,
             options=(),
             channel_credentials=None,
@@ -356,8 +356,8 @@ class Greeter(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Greeter/Simulation',
-            router__pb2.SimulationRequest.SerializeToString,
-            router__pb2.SimulationReply.FromString,
+        return grpc.experimental.unary_unary(request, target, '/Greeter/SubmitTask',
+            router__pb2.SubmitTaskRequest.SerializeToString,
+            router__pb2.SubmitTaskReply.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
