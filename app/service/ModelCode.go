@@ -112,11 +112,13 @@ func PackageFileParse(fileName, saveFilePathBase string, file io.Reader) (string
 	msg := ""
 	if ok {
 		pathList := strings.Split(packagePath, "/")
-		pathList[len(pathList)-2] = packageName
-		packageFilePathNew := strings.Join(pathList[:len(pathList)-1], "/")
-		packagePathNew := strings.Join(pathList, "/")
-		if !strings.HasSuffix(fileName, ".mo") {
+		packagePathNew := packagePath
+		if pathList[len(pathList)-2] != packageName {
+			pathList[len(pathList)-2] = packageName
+			packageFilePathNew := strings.Join(pathList[:len(pathList)-1], "/")
+			packagePathNew = strings.Join(pathList, "/")
 			os.Rename(packageFilePath, packageFilePathNew)
+			packagePath = packagePathNew
 		}
 		ok = omc.OMC.LoadFile(packagePathNew)
 	}
