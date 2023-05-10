@@ -219,7 +219,7 @@ func AppSpaceCollectView(c *gin.Context) {
 		return
 	}
 	var space DataBaseModel.AppSpace
-	err = DB.Model(&space).Where("id IN ? AND username = ?", item.SpaceId, userName).Updates(map[string]interface{}{"collect": true}).Error
+	err = DB.Model(&space).Where("id IN ? AND username = ?", item.SpaceId, userName).Updates(map[string]interface{}{"collect": item.Collect}).Error
 	if err != nil {
 		log.Println("更新app空间时保存数据库出现错误：", err)
 		res.Err = "收藏失败"
@@ -228,6 +228,9 @@ func AppSpaceCollectView(c *gin.Context) {
 		return
 	}
 	res.Msg = "收藏成功"
+	if !item.Collect {
+		res.Msg = "取消收藏成功"
+	}
 	c.JSON(http.StatusOK, res)
 
 }
