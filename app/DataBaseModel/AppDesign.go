@@ -55,7 +55,7 @@ type AppPage struct {
 	Deleted      gorm.DeletedAt `gorm:"column:deleted_at"`
 }
 
-type AppComponent struct {
+type AppComponentBases struct {
 	ID                 string         `gorm:"primaryKey"`
 	PageId             string         `gorm:"column:page_id"`
 	DataObjectList     datatypes.JSON `gorm:"column:data_object_list"`
@@ -72,4 +72,32 @@ type AppComponent struct {
 	CreatedAt          *time.Time     `gorm:"column:create_time;autoCreateTime"`
 	UpdatedAt          *time.Time     `gorm:"column:update_time"`
 	Deleted            gorm.DeletedAt `gorm:"column:deleted_at"`
+}
+
+type AppPageComponent struct {
+	ID                 string         `gorm:"primaryKey"`
+	PageId             string         `gorm:"column:page_id"`
+	DataObject         datatypes.JSON `gorm:"column:data_object_list"`
+	Type               string         `gorm:"column:type"`
+	Width              string         `gorm:"column:width"`
+	Height             string         `gorm:"column:height"`
+	PositionX          float64        `gorm:"column:position_x"`
+	PositionY          float64        `gorm:"column:position_y"`
+	Angle              float64        `gorm:"column:angle"`
+	HorizontalFlip     bool           `gorm:"column:horizontal_flip"`
+	VerticalFlip       bool           `gorm:"column:vertical_flip"`
+	Opacity            int            `gorm:"column:opacity"`
+	OtherConfiguration datatypes.JSON `gorm:"column:other_configuration"`
+	CreatedAt          *time.Time     `gorm:"column:create_time;autoCreateTime"`
+	UpdatedAt          *time.Time     `gorm:"column:update_time"`
+	Deleted            gorm.DeletedAt `gorm:"column:deleted_at"`
+	ZIndex             int            `gorm:"column:z_index"`
+	Styles             datatypes.JSON `gorm:"column:styles"`
+	Events             datatypes.JSON `gorm:"column:events"`
+	ChartConfig        datatypes.JSON `gorm:"column:chart_config"`
+	Option             datatypes.JSON `gorm:"column:option"`
+	ComponentPath      string         `gorm:"column:component_path"`
+	Hide               bool           `gorm:"column:hide"`
+	Lock               bool           `gorm:"column:lock"`
+	IsGroup            bool           `gorm:"column:is_group"`
 }
