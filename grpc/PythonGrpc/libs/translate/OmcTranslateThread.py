@@ -27,12 +27,12 @@ class OmcTranslateThread(threading.Thread):
                 print(key + "初始化:", self.omc_obj.loadFile("/home/simtek/code/" + val))
             else:
                 # 初始化加载系统模型，key是名称，val是版本号
-                print(key + "初始化:",
+                print(key + val + "初始化:",
                       self.omc_obj.sendExpression("loadModel(" + key + ", {\"" + val + "\"},true,\"\",false)"))
         # 获取注释中的包名和版本号
         name = self.omc_obj.getAnnotationModifierValue(self.request.simulateModelName, "from", "name")
         version = self.omc_obj.getAnnotationModifierValue(self.request.simulateModelName, "from", "version")
-        print(name + "初始化:",
+        print(name + version + "初始化:",
               self.omc_obj.sendExpression("loadModel(" + name + ", {\"" + version + "\"},true,\"\",false)"))
 
     def run(self):
@@ -55,18 +55,21 @@ class OmcTranslateThread(threading.Thread):
 
         absolute_path = r"/home/simtek/code/" + self.request.resultFilePath
         print("absolute_path:", absolute_path)
+        print("simulateModelName", self.request.simulateModelName)
+        print("simulationPraData",self.request.simulationPraData)
         buildModelRes = self.omc_obj.buildModel(className=self.request.simulateModelName,
                                                 fileNamePrefix=absolute_path,
                                                 simulate_parameters_data=self.request.simulationPraData
                                                 )
         print("编译结果", buildModelRes)
+        print("编译结果的type", type(buildModelRes))
         sendMessage(self.omc_obj, self.request.userName)
         print("消息推送完成")
         parent_proc = psutil.Process(self.omc_obj.omc_process.pid)
         for child_proc in parent_proc.children(recursive=True):
             os.kill(child_proc.pid, 9)
         os.kill(self.omc_obj.omc_process.pid, 9)
-        if buildModelRes != ["", ""]:
+        if isinstance(buildModelRes, list) and buildModelRes != ["", ""]:
             # 改数据库状态为4
             update_compile_records(uuid=self.uuid, compile_status=4, compile_end_time=int(time.time()))
             json_data = {"message": self.request.simulateModelName + " 模型编译完成"}

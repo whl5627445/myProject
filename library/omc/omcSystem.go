@@ -892,9 +892,17 @@ func (o *ZmqObject) GetSimulationOptions(className string) []string {
 		dataList[4] = data[4].(string)
 	}
 	// 获取求解其类型的注释
-	dataList[5] = o.GetAnnotationModifierValue(className, "__OpenModelica_simulationFlags", "solver")
+	solver := o.GetAnnotationModifierValue(className, "__OpenModelica_simulationFlags", "solver")
+	if solver == "The Searched value not Found" {
+		solver = "dassl"
+	}
+	dataList[5] = solver
 	// 获取仿真类型
-	dataList[6] = o.GetAnnotationModifierValue(className, "simulate_type", "solver")
+	simulate_type := o.GetAnnotationModifierValue(className, "simulate_type", "solver")
+	if simulate_type == "The Searched value not Found" {
+		simulate_type = "OM"
+	}
+	dataList[6] = simulate_type
 	return dataList
 }
 

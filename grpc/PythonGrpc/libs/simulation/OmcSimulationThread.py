@@ -59,6 +59,8 @@ class OmcSimulation(threading.Thread):
 
         absolute_path = r"/home/simtek/code/" + self.request.resultFilePath
         print("absolute_path:", absolute_path)
+        print("simulateModelName", self.request.simulateModelName)
+        print("simulationPraData",self.request.simulationPraData)
         buildModelRes = self.omc_obj.buildModel(className=self.request.simulateModelName,
                                                 fileNamePrefix=absolute_path,
                                                 simulate_parameters_data=self.request.simulationPraData
@@ -99,7 +101,7 @@ class OmcSimulation(threading.Thread):
         if error:
             update_simulate_records(uuid=self.uuid,
                                     simulate_status="3",
-                                    simulate_result_str="编译失败",
+                                    simulate_result_str="仿真失败",
                                     simulate_start="0",
                                     # simulate_start_time=str(self.processStartTime),
                                     simulate_end_time=int(time.time())

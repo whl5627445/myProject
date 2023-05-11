@@ -1,6 +1,7 @@
 package API
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -8,6 +9,7 @@ import (
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/service"
 	"yssim-go/config"
+	"yssim-go/library/fileOperation"
 	"yssim-go/library/timeConvert"
 
 	"github.com/gin-gonic/gin"
@@ -41,16 +43,18 @@ func AppModelMarkView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	CompilePath := "static/modelDataSource/" + userName + "/" + strings.ReplaceAll(item.ModelName, ".", "-") + "/" + time.Now().Local().Format("20060102150405")
+	CompilePath := "static/modelDataSource/" + userName + "/" + strings.ReplaceAll(item.ModelName, ".", "-") + "/" + time.Now().Local().Format("20060102150405") + "/"
+	fileOperation.CreateFilePath(CompilePath)
 	if record.ID == "" {
-		SimulationPra := service.GetSimulationOptions(record.ModelName)
+		SimulationPra := service.GetSimulationOptions(item.ModelName)
+		fmt.Println(SimulationPra)
 		dataSource := DataBaseModel.AppDataSource{
 			ID:                uuid.New().String(),
 			UserName:          userName,
 			UserSpaceId:       userSpaceId,
 			PackageId:         item.PackageId,
 			ModelName:         item.ModelName,
-			CompilerType:      item.CompilerType,
+			CompileType:       item.CompileType,
 			CompilePath:       CompilePath,
 			ExperimentId:      item.ExperimentId,
 			GroundName:        item.GroundName,
@@ -230,7 +234,7 @@ func AppSpaceCollectView(c *gin.Context) {
 		return
 	}
 	var space DataBaseModel.AppSpace
-	err = DB.Model(&space).Where("id IN ? AND username = ?", item.SpaceId, userName).Updates(map[string]interface{}{"collect": true}).Error
+	err = DB.Model(&space).Where("id IN ? AND username = ?", item.SpaceId, userName).UpdateColumn("collect", item.Collect).Error
 	if err != nil {
 		log.Println("更新app空间时保存数据库出现错误：", err)
 		res.Err = "收藏失败"
@@ -239,6 +243,9 @@ func AppSpaceCollectView(c *gin.Context) {
 		return
 	}
 	res.Msg = "收藏成功"
+	if !item.Collect {
+		res.Msg = "取消收藏成功"
+	}
 	c.JSON(http.StatusOK, res)
 
 }
@@ -577,5 +584,63 @@ func DeletePageComponentView(c *gin.Context) {
 		return
 	}
 	res.Msg = "删除成功"
+	c.JSON(http.StatusOK, res)
+}
+
+func CreateBaseComponentView(c *gin.Context) {
+	/*
+		# 创建公共组件
+	*/
+	var res responseData
+	//userName := c.GetHeader("username")
+	var item CreateBaseComponentData
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+
+	res.Msg = "组件创建成功"
+	c.JSON(http.StatusOK, res)
+}
+func EditBaseComponentView(c *gin.Context) {
+	/*
+		# 编辑公共组件属性
+	*/
+	var res responseData
+	//userName := c.GetHeader("username")
+	var item EditBaseComponentData
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+
+	res.Msg = "组件编辑成功"
+	c.JSON(http.StatusOK, res)
+}
+func GetBaseComponentView(c *gin.Context) {
+	/*
+		# 查询公共组件
+	*/
+	var res responseData
+	//userName := c.GetHeader("username")
+
+	c.JSON(http.StatusOK, res)
+}
+func DeleteBaseComponentView(c *gin.Context) {
+	/*
+		# 删除公共组件
+	*/
+	var res responseData
+	//userName := c.GetHeader("username")
+	var item DeleteBaseComponentData
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+
+	res.Msg = "组件删除成功"
 	c.JSON(http.StatusOK, res)
 }

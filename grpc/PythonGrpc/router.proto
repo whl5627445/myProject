@@ -118,6 +118,12 @@ message SubmitTaskRequest{
   string packageFilePath = 10;  //用户判断是不是系统模型，""表示系统模型
   // 任务类型
   string  taskType = 11;
+  // 运行用到的参数
+  message inputObj{
+    map<string, double> inputValData = 12;
+  }
+  repeated inputObj inputObjList = 14;
+  repeated string outputValNames=13;
 }
 message SubmitTaskReply{
   bool ok = 1;

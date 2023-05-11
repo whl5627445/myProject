@@ -31,7 +31,7 @@ def initOmTask():
 
     # 仿真任务列表
     for i in task_record_list:
-        a = router_pb2.SimulationRequest(
+        a = router_pb2.SubmitTaskRequest(
             uuid=i.id,
             userSpaceId=i.userspace_id,
             userName=i.username,
@@ -55,8 +55,8 @@ def initOmTask():
     with Session() as session:
         task_record_list = []
         record_list = session.query(AppDataSources).filter(
-            AppDataSources.compiler_status.in_(["2", "1", "6"]),
-            AppDataSources.compiler_type == "OM",
+            AppDataSources.compile_status.in_(["2", "1", "6"]),
+            AppDataSources.compile_type == "OM",
             AppDataSources.deleted_at.is_(None)
         ).all()
         for i in record_list:
@@ -76,12 +76,12 @@ def initOmTask():
                 session.commit()
     # 编译任务列表
     for i in task_record_list:
-        a = router_pb2.SimulationRequest(
+        a = router_pb2.SubmitTaskRequest(
             uuid=i.id,
             userSpaceId=i.user_space_id,
             userName=i.username,
             simulateModelName=i.model_name,
-            resultFilePath=i.compiler_path,
+            resultFilePath=i.compile_path,
             simulationPraData={
                 "startTime": i.start_time,
                 "stopTime": i.stop_time,
@@ -129,7 +129,7 @@ def initDmTask():
 
     # 仿真任务列表
     for i in task_record_list:
-        a = router_pb2.SimulationRequest(
+        a = router_pb2.SubmitTaskRequest(
             uuid=i.id,
             userSpaceId=i.userspace_id,
             userName=i.username,
@@ -156,8 +156,8 @@ def initDmTask():
     with Session() as session:
         task_record_list = []
         record_list = session.query(AppDataSources).filter(
-            AppDataSources.compiler_status.in_(["2", "1", "6"]),
-            AppDataSources.compiler_type == "DM",
+            AppDataSources.compile_status.in_(["2", "1", "6"]),
+            AppDataSources.compile_type == "DM",
             AppDataSources.deleted_at.is_(None)
         ).all()
         for i in record_list:
@@ -177,12 +177,12 @@ def initDmTask():
                 session.commit()
     # 编译任务列表
     for i in task_record_list:
-        a = router_pb2.SimulationRequest(
+        a = router_pb2.SubmitTaskRequest(
             uuid=i.id,
             userSpaceId=i.user_space_id,
             userName=i.username,
             simulateModelName=i.model_name,
-            resultFilePath=i.compiler_path,
+            resultFilePath=i.compile_path,
             simulationPraData={
                 "startTime": i.start_time,
                 "stopTime": i.stop_time,

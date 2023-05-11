@@ -46,7 +46,6 @@ if __name__ == '__main__':
     # 初始化dy任务队列
     dymolaTaskList = initDmTask()
 
-
     # 实现 proto 文件中定义的 GreeterServicer
     class Greeter(router_pb2_grpc.GreeterServicer):
         # 实现 proto 文件中定义的 rpc 调用
@@ -61,7 +60,7 @@ if __name__ == '__main__':
             elif data.simulateType == "DM":
                 # 如果是DM仿真,将仿真请求体放到dymolaTaskList中
                 dymolaTaskList.append(data)
-            return router_pb2.SimulationReply(ok=True,
+            return router_pb2.SubmitTaskReply(ok=True,
                                               msg="Task submitted successfully."
                                               )
 
@@ -212,7 +211,7 @@ if __name__ == '__main__':
         def run(self):
             print("仿真任务执行线程启动")
             while True:
-                time.sleep(0.2)
+                time.sleep(2)
                 print("OM执行任务队列剩余数量： ", len(OmSimulationThreadList))
                 print("OM未执行任务队列剩余数量： ", len(omcTaskList))
                 for i in OmSimulationThreadList:
@@ -229,7 +228,8 @@ if __name__ == '__main__':
                 if len(OmSimulationThreadList) < max_simulation_num and len(omcTaskList) > 0:
                     # 找到空闲的端口号
                     data = omcTaskList.pop(0)
-                    if data.taskType == "simulation":
+                    print(data)
+                    if data.taskType == "simulate":
                         port = findPort(start_port)
                         om_threading = OmcSimulation(data, port)
                         om_threading.start()
@@ -240,13 +240,13 @@ if __name__ == '__main__':
                         om_threading.start()
                         OmSimulationThreadList.append(om_threading)
                     if data.taskType == "run":
-                        om_threading = OmcRunThread(data, "/ss/dd/result")
+                        om_threading = OmcRunThread(data)
                         om_threading.start()
                         OmSimulationThreadList.append(om_threading)
 
                 if len(DmSimulationThreadList) < max_simulation_num and len(dymolaTaskList) > 0:
                     data = dymolaTaskList.pop(0)
-                    if data.taskType == "simulation":
+                    if data.taskType == "simulate":
                         dm_threading = DmSimulation(data)
                         dm_threading.start()
                         DmSimulationThreadList.append(dm_threading)

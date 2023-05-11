@@ -30,7 +30,7 @@ type AppDataSource struct {
 	UserSpaceId       string         `gorm:"column:user_space_id"`
 	PackageId         string         `gorm:"column:package_id"`
 	ModelName         string         `gorm:"column:model_name"`
-	CompilerType      string         `gorm:"column:compiler_type"`
+	CompileType       string         `gorm:"column:compile_type"`
 	CompilePath       string         `gorm:"column:compile_path"`
 	CompileStatus     int            `gorm:"column:compile_status"`
 	GroundName        string         `gorm:"column:ground_name"`
@@ -100,13 +100,14 @@ type AppPageComponent struct {
 	CreatedAt          *time.Time     `gorm:"column:create_time;autoCreateTime"`
 	UpdatedAt          *time.Time     `gorm:"column:update_time"`
 	Deleted            gorm.DeletedAt `gorm:"column:deleted_at"`
-	ZIndex             int            `gorm:"column:z_index"`
-	Styles             datatypes.JSON `gorm:"column:styles"`
-	Events             datatypes.JSON `gorm:"column:events"`
-	ChartConfig        datatypes.JSON `gorm:"column:chart_config"`
-	Option             datatypes.JSON `gorm:"column:option"`
-	ComponentPath      string         `gorm:"column:component_path"`
-	Hide               bool           `gorm:"column:hide"`
-	Lock               bool           `gorm:"column:lock"`
-	IsGroup            bool           `gorm:"column:is_group"`
+
+	ZIndex        int            `gorm:"column:z_index"`
+	Styles        datatypes.JSON `gorm:"column:styles"`
+	Events        datatypes.JSON `gorm:"column:events"`
+	ChartConfig   datatypes.JSON `gorm:"column:chart_config"`
+	Option        datatypes.JSON `gorm:"column:option"`
+	ComponentPath string         `gorm:"column:component_path"`
+	Hide          bool           `gorm:"column:hide"`
+	Lock          bool           `gorm:"column:lock"`
+	IsGroup       bool           `gorm:"column:is_group"`
 }

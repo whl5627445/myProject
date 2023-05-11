@@ -297,7 +297,7 @@ func GrpcTranslate(record DataBaseModel.AppDataSource) (string, error) {
 		ResultFilePath:    record.CompilePath,
 		SimulationPraData: SimulationPraData,
 		EnvModelData:      environmentModelData,
-		SimulateType:      record.CompilerType, // OM DM
+		SimulateType:      record.CompileType, // OM DM
 		// dm才会用到的参数
 		PackageName:     packageModel.PackageName,
 		PackageFilePath: packageModel.FilePath,
