@@ -234,7 +234,7 @@ func AppSpaceCollectView(c *gin.Context) {
 		return
 	}
 	var space DataBaseModel.AppSpace
-	err = DB.Model(&space).Where("id IN ? AND username = ?", item.SpaceId, userName).UpdateColumn("collect", item.Collect).Error
+	err = DB.Model(&space).Where("id IN ? AND username = ?", item.SpaceId, userName).Updates(map[string]interface{}{"collect": item.Collect}).Error
 	if err != nil {
 		log.Println("更新app空间时保存数据库出现错误：", err)
 		res.Err = "收藏失败"
@@ -584,63 +584,5 @@ func DeletePageComponentView(c *gin.Context) {
 		return
 	}
 	res.Msg = "删除成功"
-	c.JSON(http.StatusOK, res)
-}
-
-func CreateBaseComponentView(c *gin.Context) {
-	/*
-		# 创建公共组件
-	*/
-	var res responseData
-	//userName := c.GetHeader("username")
-	var item CreateBaseComponentData
-	err := c.BindJSON(&item)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, "")
-		return
-	}
-
-	res.Msg = "组件创建成功"
-	c.JSON(http.StatusOK, res)
-}
-func EditBaseComponentView(c *gin.Context) {
-	/*
-		# 编辑公共组件属性
-	*/
-	var res responseData
-	//userName := c.GetHeader("username")
-	var item EditBaseComponentData
-	err := c.BindJSON(&item)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, "")
-		return
-	}
-
-	res.Msg = "组件编辑成功"
-	c.JSON(http.StatusOK, res)
-}
-func GetBaseComponentView(c *gin.Context) {
-	/*
-		# 查询公共组件
-	*/
-	var res responseData
-	//userName := c.GetHeader("username")
-
-	c.JSON(http.StatusOK, res)
-}
-func DeleteBaseComponentView(c *gin.Context) {
-	/*
-		# 删除公共组件
-	*/
-	var res responseData
-	//userName := c.GetHeader("username")
-	var item DeleteBaseComponentData
-	err := c.BindJSON(&item)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, "")
-		return
-	}
-
-	res.Msg = "组件删除成功"
 	c.JSON(http.StatusOK, res)
 }

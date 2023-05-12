@@ -98,6 +98,8 @@ func DymolaFmuExportWithLibrary(fmuPar map[string]interface{}, envLibrary map[st
 	}
 	var folders []string // 所有要加载的用户模型的包文件地址
 	var dymolaLibraries []map[string]string
+	// 编译问题提示 "下载失败，请查看日志"
+	// 系统问题提示 "下载失败，请稍后再试"
 	errTips := "下载失败，请稍后再试"
 	now := time.Now()
 	timestamp := now.Format("20060102150405")
@@ -179,6 +181,7 @@ func DymolaFmuExportWithLibrary(fmuPar map[string]interface{}, envLibrary map[st
 
 	} else {
 		var filteredDymolaLibraries []map[string]string
+
 		for _, element := range dymolaLibraries {
 			if element["userFile"] == "" {
 				filteredDymolaLibraries = append(filteredDymolaLibraries, element)

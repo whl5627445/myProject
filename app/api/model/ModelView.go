@@ -694,37 +694,37 @@ func AddModelComponentView(c *gin.Context) {
 		return
 	}
 	rotation := strconv.Itoa(item.Rotation)
-	result, msg := service.AddComponent(item.NewComponentName, item.OldComponentName, item.ModelName, item.Origin, rotation, item.Extent)
+	data := service.GetIconNew(item.OldComponentName, false)
+	graphics := data["graphics"].(map[string]interface{})
+	graphics["originDiagram"] = item.Origin
+	graphics["original_name"] = item.NewComponentName
+	graphics["name"] = item.NewComponentName
+	graphics["type"] = "Transformation"
+	graphics["ID"] = "0"
+	graphics["rotateAngle"] = graphics["rotation"]
+	if graphics["extent1Diagram"] != "-,-" && graphics["extent2Diagram"] != "-,-" && graphics["initialScale"] != "-" {
+		l1 := strings.Split(graphics["extent1Diagram"].(string), ",")
+		l2 := strings.Split(graphics["extent2Diagram"].(string), ",")
+		initialScale, _ := strconv.ParseFloat(graphics["initialScale"].(string), 64)
+		x1, _ := strconv.ParseFloat(l1[0], 64)
+		y1, _ := strconv.ParseFloat(l1[1], 64)
+		x2, _ := strconv.ParseFloat(l2[0], 64)
+		y2, _ := strconv.ParseFloat(l2[1], 64)
+		x1, y1, x2, y2 = x1*initialScale, y1*initialScale, x2*initialScale, y2*initialScale
+		x1Str := strconv.FormatFloat(x1, 'f', 1, 64)
+		y1Str := strconv.FormatFloat(y1, 'f', 1, 64)
+		x2Str := strconv.FormatFloat(x2, 'f', 1, 64)
+		y2Str := strconv.FormatFloat(y2, 'f', 1, 64)
+
+		graphics["extent1Diagram"] = strings.Join([]string{x1Str, y1Str}, ",")
+		graphics["extent2Diagram"] = strings.Join([]string{x2Str, y2Str}, ",")
+	}
+	data["graphics"] = graphics
+	result, msg := service.AddComponent(item.NewComponentName, item.OldComponentName, item.ModelName, item.Origin, rotation, []string{graphics["extent1Diagram"].(string), graphics["extent2Diagram"].(string)})
 	if !result {
 		res.Err = msg
 		res.Status = 2
 	} else {
-		data := service.GetIconNew(item.OldComponentName, false)
-		graphics := data["graphics"].(map[string]interface{})
-		graphics["originDiagram"] = item.Origin
-		graphics["original_name"] = item.NewComponentName
-		graphics["name"] = item.NewComponentName
-		graphics["type"] = "Transformation"
-		graphics["ID"] = "0"
-		graphics["rotateAngle"] = graphics["rotation"]
-		if graphics["extent1Diagram"] != "-,-" && graphics["extent2Diagram"] != "-,-" && graphics["initialScale"] != "-" {
-			l1 := strings.Split(graphics["extent1Diagram"].(string), ",")
-			l2 := strings.Split(graphics["extent2Diagram"].(string), ",")
-			initialScale, _ := strconv.ParseFloat(graphics["initialScale"].(string), 64)
-			x1, _ := strconv.ParseFloat(l1[0], 64)
-			y1, _ := strconv.ParseFloat(l1[1], 64)
-			x2, _ := strconv.ParseFloat(l2[0], 64)
-			y2, _ := strconv.ParseFloat(l2[1], 64)
-			x1, y1, x2, y2 = x1*initialScale, y1*initialScale, x2*initialScale, y2*initialScale
-			x1Str := strconv.FormatFloat(x1, 'f', 1, 64)
-			y1Str := strconv.FormatFloat(y1, 'f', 1, 64)
-			x2Str := strconv.FormatFloat(x2, 'f', 1, 64)
-			y2Str := strconv.FormatFloat(y2, 'f', 1, 64)
-
-			graphics["extent1Diagram"] = strings.Join([]string{x1Str, y1Str}, ",")
-			graphics["extent2Diagram"] = strings.Join([]string{x2Str, y2Str}, ",")
-		}
-		data["graphics"] = graphics
 		service.ModelSave(item.ModelName)
 		res.Data = data
 		res.Msg = "新增组件成功"
@@ -804,7 +804,6 @@ func UpdateModelComponentView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	s := time.Now().UnixMilli()
 	result := service.UpdateComponent(item.ComponentName, item.ComponentClassName, item.ModelName, item.Origin, item.Rotation, item.Extent)
 	if !result {
 		res.Err = "更新组件失败"
@@ -816,7 +815,6 @@ func UpdateModelComponentView(c *gin.Context) {
 			service.UpdateConnection(item.ModelName, connect.ConnectStart, connect.ConnectEnd, connect.Color, connect.LinePoints)
 		}
 	}
-	log.Println("time", time.Now().UnixMilli()-s)
 	service.ModelSave(item.ModelName)
 	res.Msg = "更新组件成功"
 	c.JSON(http.StatusOK, res)
