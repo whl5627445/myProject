@@ -19,6 +19,7 @@ class PyOmcSimulation(threading.Thread):
         self.request = request
         self.processStartTime = None
         threading.Thread.__init__(self)
+        update_records(uuid=self.uuid, simulate_status="6", simulate_start_time=time.time())
         self.omc_obj = OMCSessionZMQ(port=port)
 
     def load_dependent_library(self):
@@ -95,12 +96,12 @@ class PyOmcSimulation(threading.Thread):
         self.state = "compiling"  # 编译中
         print("开始编译")
         # 编译
-        update_records(uuid=self.uuid, simulate_status="6", simulate_start_time=time.time())
         json_data = {"message": self.request.simulateModelName + " 模型正在编译"}
         R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
 
         absolute_path = r"/home/simtek/code/" + self.request.resultFilePath
         print("absolute_path:", absolute_path)
+        print("simulationPraData:",self.request.simulationPraData)
         buildModelRes = self.omc_obj.buildModel(className=self.request.simulateModelName,
                                                 fileNamePrefix=absolute_path,
                                                 simulate_parameters_data=self.request.simulationPraData
