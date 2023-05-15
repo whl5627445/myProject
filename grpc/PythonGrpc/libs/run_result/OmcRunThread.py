@@ -49,6 +49,8 @@ class OmcRunThread(threading.Thread):
                         "run_status": 4,
                         "run_end_time": int(time.time()), }
                                      )
+                    # 从mat中读取数据
+
 
                 else:
                     update_json_item(self.uuid,

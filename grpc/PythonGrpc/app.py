@@ -72,12 +72,12 @@ if __name__ == '__main__':
                 killProcessReply = kill_py_omc_process(multiprocessing_id, OmSimulationThreadList,
                                                        request.simulate_type)
                 return router_pb2.ProcessOperationReply(msg=killProcessReply["msg"])
-            if operationName == "suspend":
-                suspendProcessReply = suspend_process(multiprocessing_id, OmSimulationThreadList)
-                return router_pb2.ProcessOperationReply(msg=suspendProcessReply["msg"])
-            if operationName == "resume":
-                resumeProcessReply = resume_process(multiprocessing_id, OmSimulationThreadList)
-                return router_pb2.ProcessOperationReply(msg=resumeProcessReply["msg"])
+            # if operationName == "suspend":
+            #     suspendProcessReply = suspend_process(multiprocessing_id, OmSimulationThreadList)
+            #     return router_pb2.ProcessOperationReply(msg=suspendProcessReply["msg"])
+            # if operationName == "resume":
+            #     resumeProcessReply = resume_process(multiprocessing_id, OmSimulationThreadList)
+            #     return router_pb2.ProcessOperationReply(msg=resumeProcessReply["msg"])
             return router_pb2.ProcessOperationReply(msg="Unknown operation!")
 
         # 获取某个进程状态信息

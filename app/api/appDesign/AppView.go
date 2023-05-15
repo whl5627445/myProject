@@ -85,6 +85,12 @@ func AppModelMarkView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+func MultipleSimulateView(c *gin.Context) {
+	c.JSON(http.StatusBadRequest, "")
+	return
+
+}
+
 func GetAppSpaceView(c *gin.Context) {
 	/*
 		# 获取用户所有的应用空间条目

@@ -18,7 +18,9 @@ engine = create_engine(DB_URI,
                        poolclass=QueuePool,
                        pool_size=50,  # 最大连接数  124 3个  119 50个
                        max_overflow=10,  # 连接池溢出后允许的最大连接数
-                       pool_timeout=15  # 请求超时时间（秒）
+                       pool_timeout=15,  # 请求超时时间（秒）
+                       pool_pre_ping=True,  # 每次从连接池中取连接的时候，都会验证一下与数据库是否连接正常
+                       pool_recycle=25200  # 主动回收mysql连接的时间
                        )
 Base = declarative_base(engine)
 Session = sessionmaker(engine)
