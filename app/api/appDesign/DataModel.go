@@ -19,6 +19,12 @@ type AppModelMarkData struct {
 	ExperimentId   string `json:"experiment_id" binding:""`
 }
 
+type AppMultipleSimulateData struct {
+	RecordId    string               `json:"record_id" binding:"required"`
+	InputData   map[string][]float64 `json:"input_data" binding:"required"`
+	OutputNames []string             `json:"output_names" binding:"required"`
+}
+
 type CreateAppSpaceData struct {
 	SpaceName        string `json:"space_name" binding:"required"`
 	SpaceDescription string `json:"space_description,omitempty" binding:""`

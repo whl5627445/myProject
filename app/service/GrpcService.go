@@ -308,6 +308,63 @@ func GrpcTranslate(record DataBaseModel.AppDataSource) (string, error) {
 	return record.ID, err
 
 }
+
+func GrpcRunResult(record DataBaseModel.AppDataSource, inputData map[string][]float64, outputNames []string) (string, error) {
+	// 构建仿真参数
+	SimulationPraData := map[string]string{
+		"startTime":         record.StartTime,
+		"stopTime":          record.StopTime,
+		"method":            record.Method,
+		"numberOfIntervals": record.NumberOfIntervals,
+		"tolerance":         record.Tolerance,
+	}
+	//查询数据库中的模型对应的记录
+	var packageModel DataBaseModel.YssimModels
+	err := DB.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", record.PackageId, []string{"sys", record.UserName}, []string{"0", record.UserSpaceId}).First(&packageModel).Error
+	if err != nil {
+		return "", errors.New("not found")
+	}
+	var environmentModelData map[string]string
+	err = sonic.Unmarshal(record.EnvModelData, &environmentModelData)
+	if err != nil {
+		return "", errors.New("unmarshal error")
+	}
+	inputValData := make(map[string]*grpcPb.SubmitTaskRequestInputObj)
+	var inputValDataLen int
+	for k, v := range inputData {
+		if inputValDataLen == 0 {
+			inputValDataLen = len(v)
+		} else if len(v) != inputValDataLen {
+			return "", errors.New("长度不一致")
+		}
+		inputValData[k] = &grpcPb.SubmitTaskRequestInputObj{
+			InputObjList: v,
+		}
+	}
+	GrpcBuildModelRequest := &grpcPb.SubmitTaskRequest{
+
+		Uuid:              record.ID,
+		UserSpaceId:       record.UserSpaceId,
+		UserName:          record.UserName,
+		SimulateModelName: record.ModelName,
+		ResultFilePath:    record.CompilePath,
+		SimulationPraData: SimulationPraData,
+		EnvModelData:      environmentModelData,
+		SimulateType:      record.CompileType, // OM DM
+		// dm才会用到的参数
+		PackageName:     packageModel.PackageName,
+		PackageFilePath: packageModel.FilePath,
+		// 任务类型"simulate " "translate " "run"三种
+		TaskType: "run",
+		// 多轮仿真用到的参数
+		OutputValNames: outputNames,
+		InputValData:   inputValData,
+	}
+	_, err = grpcPb.Client.SubmitTask(grpcPb.Ctx, GrpcBuildModelRequest)
+	return record.ID, err
+
+}
+
 func DeleteSimulateTask(taskID, simulateType, SimulateModelResultPath string) {
 
 	replyVar, err := GrpcSimulationProcessOperation(taskID, "kill", simulateType)

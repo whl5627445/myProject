@@ -10,6 +10,7 @@ from libs.run_result.OmcRunThread import OmcRunThread
 
 from libs.simulation.DmSimulationThread import DmSimulation
 from libs.translate.DmcTranslateThread import DmTranslateThread
+from libs.run_result.DmRunThread import DmRunThread
 
 from libs.function.find_port import findPort
 from libs.function.init import initOmTask, initDmTask
@@ -252,6 +253,10 @@ if __name__ == '__main__':
                         DmSimulationThreadList.append(dm_threading)
                     if data.taskType == "translate":
                         dm_threading = DmTranslateThread(data)
+                        dm_threading.start()
+                        DmSimulationThreadList.append(dm_threading)
+                    if data.taskType == "run":
+                        dm_threading = DmRunThread(data)
                         dm_threading.start()
                         DmSimulationThreadList.append(dm_threading)
 

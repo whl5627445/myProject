@@ -86,7 +86,32 @@ func AppModelMarkView(c *gin.Context) {
 }
 
 func MultipleSimulateView(c *gin.Context) {
-	c.JSON(http.StatusBadRequest, "")
+	/*
+		# 多轮仿真接口
+		# 入参AppDataSource的id
+	*/
+	var res responseData
+	userName := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
+	var item AppMultipleSimulateData
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	var appDataSourceRecord DataBaseModel.AppDataSource
+	err = DB.Where("id = ? AND username = ? AND user_space_id = ?", item.RecordId, userName, userSpaceId).First(&appDataSourceRecord).Error
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+	_, err = service.GrpcRunResult(appDataSourceRecord, item.InputData, item.OutputNames)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "多轮仿真失败！")
+		return
+	}
+	res.Msg = "任务提交成功，等待多轮仿真完成。"
+	c.JSON(http.StatusOK, res)
 	return
 
 }
