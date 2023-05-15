@@ -7,6 +7,7 @@ import (
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/service"
 	"yssim-go/config"
+	"yssim-go/library/timeConvert"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -18,17 +19,60 @@ func GetUserSpaceView(c *gin.Context) {
 	/*
 		# 获取用户所有的用户空间条目
 	*/
-	userName := c.GetHeader("username")
-	var res responseData
-	var modelData []map[string]string
-	var userSpace []DataBaseModel.YssimUserSpace
-	_ = DB.Where("username = ?", userName).Find(&userSpace)
-	for _, space := range userSpace {
-		modelData = append(modelData, map[string]string{"id": space.ID, "name": space.SpaceName})
-	}
-	res.Data = modelData
-	c.JSON(http.StatusOK, res)
 
+	var res responseData
+	userName := c.GetHeader("username")
+	keyWords := c.Query("keywords")
+	collect := c.Query("collect")
+	var recentAppSpaceList []DataBaseModel.YssimUserSpace
+	var allAppSpaceList []DataBaseModel.YssimUserSpace
+	db := DB.Where("username = ?", userName)
+	if keyWords != "" {
+		db.Where("space_name LIKE ?", "%"+keyWords+"%")
+	}
+	if collect == "1" {
+		db.Where("collect = ?", true)
+	}
+	db.Order("update_time desc").Find(&allAppSpaceList)
+	db.Where("last_login_time <> ?", 0).Order("last_login_time desc").Limit(5).Find(&recentAppSpaceList)
+	allAppSpace := make([]map[string]interface{}, 0)
+	recentAppSpace := make([]map[string]interface{}, 0)
+	for _, space := range allAppSpaceList {
+		updateTime := space.UpdatedAt.Local().Unix()
+		editTime := timeConvert.UseTimeFormat(int(updateTime), int(time.Now().Local().Unix()))
+		d := map[string]interface{}{
+			"id":          space.ID,
+			"name":        space.SpaceName,
+			"description": space.Description,
+			"background":  space.Background,
+			"icon":        space.Icon,
+			"icon_color":  space.IconColor,
+			"collect":     space.Collect,
+			"edit_time":   editTime + "前",
+		}
+		allAppSpace = append(allAppSpace, d)
+	}
+	for _, space := range recentAppSpaceList {
+		updateTime := space.UpdatedAt.Local().Unix()
+		editTime := timeConvert.UseTimeFormat(int(updateTime), int(time.Now().Local().Unix()))
+		d := map[string]interface{}{
+			"id":          space.ID,
+			"name":        space.SpaceName,
+			"description": space.Description,
+			"background":  space.Background,
+			"icon":        space.Icon,
+			"icon_color":  space.IconColor,
+			"collect":     space.Collect,
+			"edit_time":   editTime + "前",
+		}
+		recentAppSpace = append(recentAppSpace, d)
+	}
+	data := map[string][]map[string]interface{}{
+		"all_space":    allAppSpace,
+		"recent_space": recentAppSpace,
+	}
+	res.Data = data
+	c.JSON(http.StatusOK, res)
 }
 
 func CreateUserSpaceView(c *gin.Context) {
@@ -38,30 +82,30 @@ func CreateUserSpaceView(c *gin.Context) {
 	*/
 	userName := c.GetHeader("username")
 	var res responseData
-	var item userSpaceModel
+	var item CreateUserSpaceModel
 	err := c.BindJSON(&item)
 	if err != nil {
 		return
 	}
-	var oneSpace DataBaseModel.YssimUserSpace
-	var allSpace []DataBaseModel.YssimUserSpace
-	DB.Where("username = ? AND space_name = ?", userName, item.SpaceName).First(&oneSpace)
-	DB.Where("username = ?", userName).Find(&allSpace)
-	if oneSpace.ID != "" || len(allSpace) >= 5 {
-		res.Err = "空间名称已存在或数量超过5个"
+	var space DataBaseModel.YssimUserSpace
+	DB.Where("username = ? AND space_name = ?", userName, item.SpaceName).First(&space)
+	if space.ID != "" {
+		res.Err = "名称已存在"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	space := DataBaseModel.YssimUserSpace{
-		ID:        uuid.New().String(),
-		SpaceName: item.SpaceName,
-		UserName:  userName,
-	}
-	DB.Create(&space)
+	space.ID = uuid.New().String()
+	space.SpaceName = item.SpaceName
+	space.UserName = userName
+	space.Description = item.Description
+	space.Background = item.Background
+	space.Icon = item.Icon
+	space.IconColor = item.IconColor
+	space.Collect = false
+	err = DB.Create(&space).Error
 	res.Data = map[string]string{
-		"id":   space.ID,
-		"name": space.SpaceName,
+		"id": space.ID,
 	}
 	FilePath, ok := service.CreatWorkSpace(userName, space.SpaceName)
 	if ok {
@@ -86,6 +130,55 @@ func CreateUserSpaceView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+func EditUserSpaceView(c *gin.Context) {
+	/*
+		# 编辑用户空间
+	*/
+	userName := c.GetHeader("username")
+	var res responseData
+	var item EditUserSpaceModel
+	err := c.BindJSON(&item)
+	if err != nil {
+
+		return
+	}
+	var space DataBaseModel.YssimUserSpace
+	err = DB.Model(&space).Where("username = ? AND id = ?", userName, item.SpaceId).Updates(item).Error
+	if err != nil {
+		log.Println("建模空间更新数据库失败，错误： ", err)
+		res.Err = "编辑失败，请重试"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	res.Msg = "编辑成功"
+	c.JSON(http.StatusOK, res)
+}
+
+func CollectUserSpaceView(c *gin.Context) {
+	/*
+		# 收藏用户空间
+	*/
+	userName := c.GetHeader("username")
+	var res responseData
+	var item CollectUserSpaceData
+	err := c.BindJSON(&item)
+	if err != nil {
+		return
+	}
+	var space DataBaseModel.YssimUserSpace
+	err = DB.Model(&space).Where("id IN ? AND username = ? ", item.SpaceId, userName).Update("collect", item.Collect).Error
+	if err != nil {
+		log.Println("建模空间更新数据库失败，错误： ", err)
+		res.Err = "编辑失败，请重试"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	res.Msg = "编辑成功"
+	c.JSON(http.StatusOK, res)
+}
+
 func DeleteUserSpaceView(c *gin.Context) {
 	/*
 		# 删除用户空间
@@ -93,17 +186,19 @@ func DeleteUserSpaceView(c *gin.Context) {
 	*/
 	userName := c.GetHeader("username")
 	var res responseData
-	var item userSpaceModel
+	var item DeleteUserSpaceModel
 	err := c.BindJSON(&item)
 	if err != nil {
 		return
 	}
 	var space DataBaseModel.YssimUserSpace
-	result := service.GetWorkSpaceId(&item.SpaceId)
-	if result {
-		service.Clear()
+	for _, id := range item.SpaceId {
+		result := service.GetWorkSpaceId(&id)
+		if result {
+			service.Clear()
+		}
 	}
-	DB.Where("id = ? AND username = ?", item.SpaceId, userName).Delete(&space)
+	DB.Model(&space).Where("id = ? AND username = ?", item.SpaceId, userName).Delete(&space)
 	res.Msg = "删除成功"
 	c.JSON(http.StatusOK, res)
 
@@ -115,7 +210,7 @@ func LoginUserSpaceView(c *gin.Context) {
 		## space_id: 用户空间id
 	*/
 	var res responseData
-	var item userSpaceModel
+	var item LoginUserSpaceModel
 	err := c.BindJSON(&item)
 	if err != nil {
 		return
@@ -132,7 +227,7 @@ func LoginUserSpaceView(c *gin.Context) {
 	DB.Where("id = ? AND username = ?", item.SpaceId, userName).First(&space)
 
 	var packageModelAll []DataBaseModel.YssimModels
-	config.DB.Where("sys_or_user IN ?  AND default_version = ? AND userspace_id IN ?", []string{"sys", userName}, true, []string{"0", space.ID}).Find(&packageModelAll)
+	DB.Where("sys_or_user IN ?  AND default_version = ? AND userspace_id IN ?", []string{"sys", userName}, true, []string{"0", space.ID}).Find(&packageModelAll)
 	service.ModelLibraryInitialization(packageModelAll)
 
 	space.LastLoginTime = time.Now().Local().Unix()

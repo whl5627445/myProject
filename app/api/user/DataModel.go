@@ -7,9 +7,35 @@ type responseData struct {
 	Err    string      `json:"err"`
 }
 
-type userSpaceModel struct {
-	SpaceId   string `json:"space_id"`
-	SpaceName string `json:"space_name"`
+type CreateUserSpaceModel struct {
+	SpaceName   string `json:"space_name" binding:"required"`
+	Description string `json:"space_description" binding:""`
+	Background  string `json:"space_background" binding:""`
+	Icon        string `json:"space_icon" binding:"required"`
+	IconColor   string `json:"space_icon_color" binding:"required"`
+}
+
+type EditUserSpaceModel struct {
+	SpaceId     string `json:"space_id"`
+	SpaceName   string `json:"space_name" binding:"required"`
+	Description string `json:"space_description" binding:""`
+	Background  string `json:"space_background" binding:""`
+	Icon        string `json:"space_icon" binding:"required"`
+	IconColor   string `json:"space_icon_color" binding:"required"`
+	Collect     string `json:"collect"`
+}
+
+type DeleteUserSpaceModel struct {
+	SpaceId []string `json:"space_id" binding:"required"`
+}
+
+type LoginUserSpaceModel struct {
+	SpaceId string `json:"space_id" binding:"required"`
+}
+
+type CollectUserSpaceData struct {
+	SpaceId []string `json:"space_id" binding:"required"`
+	Collect bool     `json:"collect" binding:""`
 }
 
 type userSettingsModel struct {

@@ -12,8 +12,9 @@ type YssimUserSpace struct {
 	UserName      string         `gorm:"column:username"`
 	Description   string         `gorm:"column:description"`
 	Background    string         `gorm:"column:background"`
+	IconColor     string         `gorm:"column:icon_color"`
 	Icon          string         `gorm:"column:icon"`
-	collect       bool           `gorm:"column:collect"`
+	Collect       bool           `gorm:"column:collect"`
 	CreatedAt     *time.Time     `gorm:"column:create_time;autoCreateTime"`
 	UpdatedAt     *time.Time     `gorm:"column:update_time"`
 	LastLoginTime int64          `gorm:"column:last_login_time"`
