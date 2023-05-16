@@ -2,7 +2,7 @@ import copy
 from concurrent import futures
 import os.path
 import pandas as pd
-from libs.function.process_operation import kill_py_omc_process, suspend_process, resume_process
+from libs.function.process_operation import kill_py_omc_process
 
 from libs.simulation.OmcSimulationThread import OmcSimulation
 from libs.translate.OmcTranslateThread import OmcTranslateThread
@@ -213,14 +213,18 @@ if __name__ == '__main__':
             print("仿真任务执行线程启动")
             while True:
                 time.sleep(2)
-                print("OM执行任务队列剩余数量： ", len(OmSimulationThreadList))
-                print("OM未执行任务队列剩余数量： ", len(omcTaskList))
+                if len(OmSimulationThreadList)>0:
+                    print("OM执行任务队列剩余数量： ", len(OmSimulationThreadList))
+                if len(omcTaskList)>0:
+                    print("OM未执行任务队列剩余数量： ", len(omcTaskList))
                 for i in OmSimulationThreadList:
                     if i.state == "stopped":
                         OmSimulationThreadList.remove(i)
                         # del i
-                print("DM执行任务队列剩余数量： ", len(DmSimulationThreadList))
-                print("DM未执行任务队列剩余数量： ", len(dymolaTaskList))
+                if len(DmSimulationThreadList)>0:
+                    print("DM执行任务队列剩余数量： ", len(DmSimulationThreadList))
+                if len(dymolaTaskList)>0:
+                    print("DM未执行任务队列剩余数量： ", len(dymolaTaskList))
                 for i in DmSimulationThreadList:
                     if i.state == "stopped":
                         DmSimulationThreadList.remove(i)

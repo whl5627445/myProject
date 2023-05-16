@@ -129,7 +129,7 @@ class DmTranslateThread(threading.Thread):
             compileResData = compileRes.json()
             print("dymola服务编译结果：", compileResData)
             if compileResData["code"] == 200:
-                update_compile_records(uuid=self.request.uuid, compile_status=4, compile_end_time=int(time.time()))
+                update_compile_records(uuid=self.request.uuid, compile_status=4, compile_stop_time=int(time.time()))
                 json_data = {"message": self.request.simulateModelName + " 编译成功"}
                 R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
                 absolute_path = adsPath + self.request.resultFilePath
@@ -156,7 +156,7 @@ class DmTranslateThread(threading.Thread):
         if res:
             update_compile_records(uuid=self.request.uuid,
                                    compile_status=4,
-                                   compile_end_time=int(time.time())
+                                   compile_stop_time=int(time.time())
                                    )
             json_data = {"message": self.request.simulateModelName + " 模型仿真完成"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
@@ -166,7 +166,7 @@ class DmTranslateThread(threading.Thread):
         else:
             update_compile_records(uuid=self.request.uuid,
                                    compile_status=3,
-                                   compile_end_time=int(time.time())
+                                   compile_stop_time=int(time.time())
                                    )
             json_data = {"message": self.request.simulateModelName + " 仿真失败"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))

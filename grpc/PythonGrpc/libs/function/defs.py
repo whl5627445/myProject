@@ -57,9 +57,10 @@ def update_simulate_records(uuid, simulate_status=None, simulate_result_str=None
         session.commit()
 
 
-def update_compile_records(uuid, compile_status=None,
+def update_compile_records(uuid,
+                           compile_status=None,
                            compile_start_time=None,
-                           compile_end_time=None,
+                           compile_stop_time=None,
                            ):
     with Session() as session:
         data_sources_record = session.query(AppDataSources).filter(
@@ -67,10 +68,10 @@ def update_compile_records(uuid, compile_status=None,
         if compile_status:
             data_sources_record.compile_status = compile_status  # 更改状态
         if compile_start_time:
-            if data_sources_record.compile_start_time == 0:  # 仿真开始时间只会设置一次
-                data_sources_record.compile_start_time = compile_start_time  # 仿真开始时间
-        if compile_end_time:
-            data_sources_record.compile_end_time = compile_end_time  # 仿真结束时间
+            # if data_sources_record.compile_start_time == 0 or data_sources_record.compile_start_time is None :  # 仿真开始时间只会设置一次
+            data_sources_record.compile_start_time = compile_start_time  # 仿真开始时间
+        if compile_stop_time:
+            data_sources_record.compile_stop_time = compile_stop_time  # 仿真结束时间
         session.commit()
 
 

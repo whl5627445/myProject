@@ -71,12 +71,12 @@ class OmcTranslateThread(threading.Thread):
         os.kill(self.omc_obj.omc_process.pid, 9)
         if isinstance(buildModelRes, list) and buildModelRes != ["", ""]:
             # 改数据库状态为4
-            update_compile_records(uuid=self.uuid, compile_status=4, compile_end_time=int(time.time()))
+            update_compile_records(uuid=self.uuid, compile_status=4, compile_stop_time=int(time.time()))
             json_data = {"message": self.request.simulateModelName + " 模型编译完成"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
         else:
             # 改数据库状态为3
-            update_compile_records(uuid=self.uuid, compile_status=3, compile_end_time=int(time.time()))
+            update_compile_records(uuid=self.uuid, compile_status=3, compile_stop_time=int(time.time()))
             json_data = {"message": self.request.simulateModelName + " 模编译失败"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
         # 编译完成，通知omc进程退出，杀死父进程

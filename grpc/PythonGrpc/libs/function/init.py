@@ -55,7 +55,7 @@ def initOmTask():
     with Session() as session:
         task_record_list = []
         record_list = session.query(AppDataSources).filter(
-            AppDataSources.compile_status.in_(["2", "1", "6"]),
+            AppDataSources.compile_status.in_(["2", "1"]),
             AppDataSources.compile_type == "OM",
             AppDataSources.deleted_at.is_(None)
         ).all()
@@ -156,14 +156,14 @@ def initDmTask():
     with Session() as session:
         task_record_list = []
         record_list = session.query(AppDataSources).filter(
-            AppDataSources.compile_status.in_(["2", "1", "6"]),
+            AppDataSources.compile_status.in_(["2", "1"]),
             AppDataSources.compile_type == "DM",
             AppDataSources.deleted_at.is_(None)
         ).all()
         for i in record_list:
             print(i.id)
             yssim_model = session.query(YssimModels).filter(
-                YssimModels.userspace_id.in_([i.userspace_id, '0']),
+                YssimModels.userspace_id.in_([i.user_space_id, '0']),
                 YssimModels.id == i.package_id,
                 YssimModels.deleted_at.is_(None)
             ).first()

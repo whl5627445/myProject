@@ -2,7 +2,8 @@ import threading
 import time
 import zipfile
 from datetime import datetime
-from libs.function.defs import update_compile_records, new_another_name, zip_folders
+from libs.function.defs import zip_folders
+from libs.function.run_result_json import update_item_to_json
 import requests
 import pandas as pd
 from config.redis_config import R
@@ -23,6 +24,8 @@ class DmRunThread(threading.Thread):
         threading.Thread.__init__(self)
         self.state = "init"
         self.request = request
+        update_item_to_json(self.request.uuid,
+                            {"id": self.request.uuid, "run_states": "1", "run_start_time": int(time.time())})
 
     def send_request(self):
         print("发送请求")
@@ -90,16 +93,16 @@ class DmRunThread(threading.Thread):
                     print('上传文件成功')
                     # uploadFilePath = uploadRes["data"]
                 else:
-                    return False, None, 0
+                    return False, '上传文件失败', 0
             except Exception as e:
                 print(e)
-                return False, None, 0
+                return False, str(e), 0
             # 上传完删除zip文件
             if os.path.exists(del_upload_fileName):
                 os.system('rm -rf ' + del_upload_fileName)
-                print("文件夹已成功删除！")
+                print("zip文件夹已成功删除！")
             else:
-                print("文件夹不存在。")
+                print("zip文件夹不存在。")
         else:
             # 系统模型的仿真要去掉用户模型
             dymola_libraries = [element for element in dymola_libraries if element['userFile'] == '']
@@ -108,11 +111,9 @@ class DmRunThread(threading.Thread):
             fileName = ""
             if self.request.packageFilePath != "":
                 fileName = params_url + "/" + "/".join(self.request.packageFilePath.split("/")[5:])
-
-
-            update_simulate_records(uuid=self.request.uuid, simulate_status="2", simulate_start="1")
             json_data = {"message": self.request.simulateModelName + " 开始多轮仿真"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
+            array_initial_values = list(self.request.inputValData.values())
             simulateReqData = {
                 "startTime": self.request.simulationPraData["startTime"],
                 "stopTime": self.request.simulationPraData["stopTime"],
@@ -126,9 +127,12 @@ class DmRunThread(threading.Thread):
                 "modelName": self.request.simulateModelName,
                 "userName": self.request.userName,
                 "taskId": self.request.uuid,
-                "dymolaLibraries": dymola_libraries
-            }
+                "dymolaLibraries": dymola_libraries,
+                "initialNames":list(self.request.inputValData.keys()),
+                "arrayInitialValues": [[v.inputObjList[i] for v in array_initial_values] for i in range(len(array_initial_values[0].inputObjList))],
+                "finalNames": ["Time"]+list(self.request.outputValNames),
 
+            }
             print("simulateReqData", simulateReqData)
             simulateRes = requests.request('post',
                                            DymolaSimulationConnect + "/dymola/simulateMulti",
@@ -142,32 +146,33 @@ class DmRunThread(threading.Thread):
                 csv_data = simulateResData["data"]
                 df = pd.DataFrame(csv_data)
                 # 将DataFrame对象保存为CSV文件
-                df.to_csv('output.csv', index=False)
-                pass
+                df.to_csv(absolute_path + 'output.csv', index=False)
+                return True, None, simulateResData["code"]
 
             else:
-                return False, None, simulateResData["code"]
+                return False, "多轮仿真失败", simulateResData["code"]
 
     def run(self):
         print("开启dymola仿真")
-        update_compile_records(uuid=self.request.uuid, compile_status=2, compile_start_time=int(time.time()))
+        update_item_to_json(self.request.uuid, {"id":self.request.uuid,"run_states": "2", "run_start_time": int(time.time())})
+
         res, err, code = self.send_request()
         print("send_request返回", res, err, code)
         if res:
-            update_compile_records(uuid=self.request.uuid,
-                                   compile_status=4,
-                                   compile_end_time=int(time.time())
-                                   )
+            update_item_to_json(self.request.uuid,
+                                {"id": self.request.uuid, "run_states": "4", "run_stop_time": int(time.time())})
+
             json_data = {"message": self.request.simulateModelName + " 模型仿真完成"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
         elif code == 300:
             json_data = {"message": self.request.simulateModelName + " 结束任务"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
+            update_item_to_json(self.request.uuid,
+                                {"id": self.request.uuid, "run_states": "3", "run_stop_time": int(time.time())})
         else:
-            update_compile_records(uuid=self.request.uuid,
-                                   compile_status=3,
-                                   compile_end_time=int(time.time())
-                                   )
+            update_item_to_json(self.request.uuid,
+                                {"id": self.request.uuid, "run_states": "3", "run_stop_time": int(time.time())})
+
             json_data = {"message": self.request.simulateModelName + " 仿真失败"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
         self.state = "stopped"

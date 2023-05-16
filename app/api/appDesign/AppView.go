@@ -33,17 +33,17 @@ func AppModelMarkView(c *gin.Context) {
 	}
 	var record DataBaseModel.AppDataSource
 	DB.Where("package_id = ? AND username = ? AND user_space_id = ?", item.PackageId, userName, userSpaceId).First(&record)
-	if record.ID != "" && !item.MandatorySave {
-		res.Msg = "该模型已可以创建应用,继续会更新之前的记录,已发布的页面不受影响, 是否继续？"
-		c.JSON(http.StatusOK, res)
-		return
-	}
-	if record.CompileStatus == 1 && !item.MandatorySave {
-		res.Msg = "该模型已导入数据源并正在进行编译,继续保存会放弃编译阶段作业, 是否继续？"
-		c.JSON(http.StatusOK, res)
-		return
-	}
-	CompilePath := "static/modelDataSource/" + userName + "/" + strings.ReplaceAll(item.ModelName, ".", "-") + "/" + time.Now().Local().Format("20060102150405") + "/"
+	//if record.ID != "" && !item.MandatorySave {
+	//	res.Msg = "该模型已可以创建应用,继续会更新之前的记录,已发布的页面不受影响, 是否继续？"
+	//	c.JSON(http.StatusOK, res)
+	//	return
+	//}
+	//if record.CompileStatus == 1 && !item.MandatorySave {
+	//	res.Msg = "该模型已导入数据源并正在进行编译,继续保存会放弃编译阶段作业, 是否继续？"
+	//	c.JSON(http.StatusOK, res)
+	//	return
+	//}
+	CompilePath := "static/UserFiles/modelDataSource/" + userName + "/" + strings.ReplaceAll(item.ModelName, ".", "-") + "/" + time.Now().Local().Format("20060102150405") + "/"
 	fileOperation.CreateFilePath(CompilePath)
 	if record.ID == "" {
 		SimulationPra := service.GetSimulationOptions(item.ModelName)

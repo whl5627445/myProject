@@ -1,6 +1,6 @@
 import json
 
-file_path = '../../config/run_result_records.json'
+file_path = './config/run_result_records.json'
 
 
 def read_json_file():
@@ -14,8 +14,15 @@ def write_json_file(json_data):
         json.dump(json_data, f)
 
 
-def add_item_to_json(item_dict):
+def update_item_to_json(record_id,item_dict):
     json_data = read_json_file()
+    for item in json_data:
+        if "id" in item:
+            if item['id'] == record_id:
+                item.update(item_dict)
+                write_json_file(json_data)
+                return
+
     json_data.append(item_dict)
     write_json_file(json_data)
 
@@ -28,12 +35,12 @@ def delete_item_from_json(record_id):
     write_json_file(json_data)
 
 
-def update_json_item(record_id, updated_data):
-    json_data = read_json_file()
-    for item in json_data:
-        if item['id'] == record_id:
-            item.update(updated_data)
-    write_json_file(json_data)
+# def update_json_item(record_id, updated_data):
+#     json_data = read_json_file()
+#     for item in json_data:
+#         if item['id'] == record_id:
+#             item.update(updated_data)
+#     write_json_file(json_data)
 
 
 
