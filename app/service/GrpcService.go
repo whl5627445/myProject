@@ -236,12 +236,25 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 }
 
 func GrpcTranslate(record DataBaseModel.AppDataSource) (string, error) {
+	fileOperation.CreateFilePath(record.CompilePath)
+	SimulationPra := GetSimulationOptions(record.ModelName)
+	fmt.Println(SimulationPra)
+	record.StartTime = SimulationPra["startTime"]
+	record.StopTime = SimulationPra["stopTime"]
+	record.Method = SimulationPra["method"]
+	record.Tolerance = SimulationPra["tolerance"]
+	record.NumberOfIntervals = SimulationPra["numberOfIntervals"]
+	record.CompileType = SimulationPra["simulate_type"]
+	err := DB.Save(&record).Error
+	if err != nil {
+		return "", errors.New("save error")
+	}
 	//查询数据库中的实验id对应的记录
 	var experimentRecord DataBaseModel.YssimExperimentRecord
 	DB.Where("id = ? ", record.ExperimentId).First(&experimentRecord)
 	//查询数据库中的模型对应的记录
 	var packageModel DataBaseModel.YssimModels
-	err := DB.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", record.PackageId, []string{"sys", record.UserName}, []string{"0", record.UserSpaceId}).First(&packageModel).Error
+	err = DB.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", record.PackageId, []string{"sys", record.UserName}, []string{"0", record.UserSpaceId}).First(&packageModel).Error
 	if err != nil {
 		return "", errors.New("not found")
 	}

@@ -1,15 +1,14 @@
 package API
 
 import (
-	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/service"
 	"yssim-go/config"
-	"yssim-go/library/fileOperation"
 	"yssim-go/library/timeConvert"
 
 	"github.com/gin-gonic/gin"
@@ -44,27 +43,18 @@ func AppModelMarkView(c *gin.Context) {
 	//	return
 	//}
 	CompilePath := "static/UserFiles/modelDataSource/" + userName + "/" + strings.ReplaceAll(item.ModelName, ".", "-") + "/" + time.Now().Local().Format("20060102150405") + "/"
-	fileOperation.CreateFilePath(CompilePath)
 	if record.ID == "" {
-		SimulationPra := service.GetSimulationOptions(item.ModelName)
-		fmt.Println(SimulationPra)
 		dataSource := DataBaseModel.AppDataSource{
-			ID:                uuid.New().String(),
-			UserName:          userName,
-			UserSpaceId:       userSpaceId,
-			PackageId:         item.PackageId,
-			ModelName:         item.ModelName,
-			CompileType:       item.CompileType,
-			CompilePath:       CompilePath,
-			ExperimentId:      item.ExperimentId,
-			GroundName:        item.GroundName,
-			DataSourceName:    item.DataSourceName,
-			StartTime:         SimulationPra["startTime"],
-			StopTime:          SimulationPra["stopTime"],
-			Method:            SimulationPra["method"],
-			Tolerance:         SimulationPra["tolerance"],
-			NumberOfIntervals: SimulationPra["numberOfIntervals"],
-			CompileStatus:     0,
+			ID:             uuid.New().String(),
+			UserName:       userName,
+			UserSpaceId:    userSpaceId,
+			PackageId:      item.PackageId,
+			ModelName:      item.ModelName,
+			CompilePath:    CompilePath,
+			ExperimentId:   item.ExperimentId,
+			GroundName:     item.GroundName,
+			DataSourceName: item.DataSourceName,
+			CompileStatus:  0,
 		}
 		err = DB.Create(&dataSource).Error
 		record = dataSource
@@ -82,6 +72,38 @@ func AppModelMarkView(c *gin.Context) {
 	}
 	_, _ = service.GrpcTranslate(record)
 	res.Msg = "创建成功"
+	c.JSON(http.StatusOK, res)
+}
+
+func AppModelGetView(c *gin.Context) {
+	userName := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
+	var dataList []map[string]interface{}
+	var appDataSourceRecord []DataBaseModel.AppDataSource
+	DB.Where("username = ? AND user_space_id = ?", userName, userSpaceId).Order("create_time desc").Find(&appDataSourceRecord)
+	for i := 0; i < len(appDataSourceRecord); i++ {
+		compileStartTime := time.Unix(appDataSourceRecord[i].CompileStartTime, 0)
+		compileStartTimeStr := compileStartTime.Format("2006-01-02 15:04:05")
+		compileStopTime := time.Unix(appDataSourceRecord[i].CompileStopTime, 0)
+		compileStopTimeStr := compileStopTime.Format("2006-01-02 15:04:05")
+		compileRunTime := timeConvert.UseTimeFormat(int(compileStartTime.Unix()), int(compileStopTime.Unix()))
+		if appDataSourceRecord[i].CompileStartTime == 0 {
+			compileRunTime = "-"
+			compileStartTimeStr = "-"
+		}
+		data := map[string]interface{}{
+			"id":                 appDataSourceRecord[i].ID,
+			"create_time":        appDataSourceRecord[i].CreatedAt.Format("2006-01-02 15:04:05"),
+			"compile_status":     config.MoldelCompileStatus[strconv.FormatInt(appDataSourceRecord[i].CompileStatus, 10)],
+			"compile_start_time": compileStartTimeStr,
+			"compile_end_time":   compileStopTimeStr,
+			"compile_model_name": appDataSourceRecord[i].ModelName,
+			"compile_run_time":   compileRunTime,
+		}
+		dataList = append(dataList, data)
+	}
+	var res responseData
+	res.Data = dataList
 	c.JSON(http.StatusOK, res)
 }
 

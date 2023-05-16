@@ -10,9 +10,9 @@ type responseData struct {
 }
 
 type AppModelMarkData struct {
-	PackageId   string `json:"package_id" binding:"required"`
-	ModelName   string `json:"model_name" binding:"required"`
-	CompileType string `json:"compile_type,omitempty" binding:""`
+	PackageId string `json:"package_id" binding:"required"`
+	ModelName string `json:"model_name" binding:"required"`
+	//CompileType string `json:"compile_type,omitempty" binding:""`
 	//MandatorySave  bool   `json:"save,omitempty" binding:""`
 	GroundName     string `json:"ground_name" binding:"required"`
 	DataSourceName string `json:"data_source_name" binding:"required"`

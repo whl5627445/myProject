@@ -20,6 +20,7 @@ var ModelicaKeywords = map[string]bool{"model": true, "class": true, "connector"
 // }
 
 var MoldelSimutalionStatus = map[string]string{"1": "仿真排队中", "2": "正在仿真", "3": "仿真失败", "4": "仿真完成", "5": "删除任务", "6": "正在编译"}
+var MoldelCompileStatus = map[string]string{"1": "编译排队中", "2": "正在编译", "3": "编译失败", "4": "编译完成"}
 var ClassTypeAll = map[string]bool{"model": true, "class": true, "connector": true, "block": true, "function": true, "record": true, "expandable connector": true}
 
 const dymolaConnect = "http://gateway:6535"

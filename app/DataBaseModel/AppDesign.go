@@ -32,7 +32,9 @@ type AppDataSource struct {
 	ModelName         string         `gorm:"column:model_name"`
 	CompileType       string         `gorm:"column:compile_type"`
 	CompilePath       string         `gorm:"column:compile_path"`
-	CompileStatus     int            `gorm:"column:compile_status"`
+	CompileStatus     int64          `gorm:"column:compile_status"`
+	CompileStartTime  int64          `gorm:"column:compile_start_time"`
+	CompileStopTime   int64          `gorm:"column:compile_stop_time"`
 	GroundName        string         `gorm:"column:ground_name"`
 	DataSourceName    string         `gorm:"column:data_source_name"`
 	ExperimentId      string         `gorm:"column:experiment_id"`
