@@ -188,27 +188,26 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 			continue
 		}
 
-		//if p[9] == true {
-		//	//continue
-		//	oData := make([]string, 1)
-		//	dataDefault["type"] = "Enumeration"
-		//	dataDefault["disable"] = true
-		//	dataDefault["defaultvalue"] = omc.OMC.GetElementModifierValue(m.modelName, componentName+"."+dataDefault["name"].(string))
-		//	if p[13].(string) != "$Any" {
-		//		dataDefault["defaultvalue"] = p[13]
-		//	}
-		//	//模板参数获取有内存泄露问题， 暂时不用
-		//	options := omc.OMC.GetAllSubtypeOf(p[13].(string), componentClassName)
-		//	for _, option := range options {
-		//		optionData := "redeclare " + option.(string) + " " + componentName + "." + dataDefault["name"].(string)
-		//		oData = append(oData, optionData)
-		//	}
-		//	dataDefault["disable"] = false
-		//
-		//	dataDefault["options"] = oData
-		//	dataList = append(dataList, dataDefault)
-		//	continue
-		//}
+		if p[9] == true {
+			//continue
+			//oData := make([]string, 1)
+			dataDefault["defaultvalue"] = omc.OMC.GetElementModifierValue(m.modelName, componentName+"."+dataDefault["name"].(string))
+			options := []interface{}{}
+			if p[13].(string) == "$Any" {
+				options = omc.OMC.GetAllSubtypeOf(p[2].(string), m.modelName)
+			} else {
+				options = omc.OMC.GetAllSubtypeOf(p[13].(string), componentClassName)
+				dataDefault["defaultvalue"] = p[13]
+			}
+			dataDefault["type"] = "Enumeration"
+			//for _, option := range options {
+			//	optionData := "redeclare " + option.(string) + " " + componentName + "." + dataDefault["name"].(string)
+			//	oData = append(oData, optionData)
+			//}
+			dataDefault["options"] = options
+			dataList = append(dataList, dataDefault)
+			continue
+		}
 
 		if p[10] == "parameter" || dataDefault["group"] != "Parameters" || DialogIndexOk {
 			componentModifierValue := omc.OMC.GetElementModifierValue(m.modelName, componentName+"."+dataDefault["name"].(string))
