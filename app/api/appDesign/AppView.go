@@ -1,12 +1,15 @@
 package API
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
 	"time"
 	"yssim-go/app/DataBaseModel"
+	"yssim-go/app/service"
 	"yssim-go/config"
+	"yssim-go/library/fileOperation"
 	"yssim-go/library/timeConvert"
 
 	"github.com/gin-gonic/gin"
@@ -76,7 +79,6 @@ func GetAppSpaceView(c *gin.Context) {
 	*/
 	var res responseData
 	userName := c.GetHeader("username")
-	//userSpaceId := c.GetHeader("space_id")
 	keyWords := c.Query("keywords")
 	release := c.Query("release")
 	collect := c.Query("collect")
@@ -101,7 +103,7 @@ func GetAppSpaceView(c *gin.Context) {
 	recentAppSpace := make([]map[string]interface{}, 0)
 	for _, space := range allAppSpaceList {
 		updateTime := space.UpdatedAt.Local().Unix()
-		editTime := timeConvert.UseTimeFormat(int(updateTime), int(time.Now().Local().Unix()))
+		editTime := timeConvert.UseTimeFormatNew(int(updateTime), int(time.Now().Local().Unix()), 1)
 		d := map[string]interface{}{
 			"id":          space.ID,
 			"name":        space.SpaceName,
@@ -110,13 +112,13 @@ func GetAppSpaceView(c *gin.Context) {
 			"icon":        space.Icon,
 			"icon_color":  space.IconColor,
 			"collect":     space.Collect,
-			"edit_time":   editTime + "前",
+			"edit_time":   "编辑于" + editTime + "前",
 		}
 		allAppSpace = append(allAppSpace, d)
 	}
 	for _, space := range recentAppSpaceList {
 		updateTime := space.UpdatedAt.Local().Unix()
-		editTime := timeConvert.UseTimeFormat(int(updateTime), int(time.Now().Local().Unix()))
+		editTime := timeConvert.UseTimeFormatNew(int(updateTime), int(time.Now().Local().Unix()), 1)
 		d := map[string]interface{}{
 			"id":          space.ID,
 			"name":        space.SpaceName,
@@ -125,7 +127,7 @@ func GetAppSpaceView(c *gin.Context) {
 			"icon":        space.Icon,
 			"icon_color":  space.IconColor,
 			"collect":     space.Collect,
-			"edit_time":   editTime + "前",
+			"edit_time":   "编辑于" + editTime + "前",
 		}
 		recentAppSpace = append(recentAppSpace, d)
 	}
@@ -193,17 +195,16 @@ func EditAppSpaceView(c *gin.Context) {
 		return
 	}
 	var space DataBaseModel.AppSpace
-	err = DB.Model(space).Where("id = ? AND username = ?", item.SpaceId, userName).Updates(item).Error
+	err = DB.Model(&space).Where("id = ? AND username = ?", item.SpaceId, userName).Updates(item).Update("update_time", time.Now().Local()).Error
 	if err != nil {
 		log.Println("更新app空间时保存数据库出现错误：", err)
-		res.Err = "更新失败"
+		res.Err = "编辑失败"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	res.Msg = "更新成功"
+	res.Msg = "编辑成功"
 	c.JSON(http.StatusOK, res)
-
 }
 
 func AppSpaceCollectView(c *gin.Context) {
@@ -267,7 +268,6 @@ func CreateAppPageView(c *gin.Context) {
 	*/
 	var res responseData
 	userName := c.GetHeader("username")
-	spaceId := c.GetHeader("space_id")
 	var item CreateAppPageData
 	err := c.BindJSON(&item)
 	if err != nil {
@@ -276,7 +276,7 @@ func CreateAppPageView(c *gin.Context) {
 	}
 	var page DataBaseModel.AppPage
 	page.ID = uuid.New().String()
-	page.AppSpaceId = spaceId
+	page.AppSpaceId = item.SpaceId
 	page.PageName = item.PageName
 	page.UserName = userName
 	page.PagePath = item.Tag
@@ -302,17 +302,14 @@ func GetAppPageView(c *gin.Context) {
 
 	var res responseData
 	userName := c.GetHeader("username")
-	//spaceId := c.GetHeader("space_id")
 	release := c.Query("release")
+	spaceId := c.Query("space_id")
 	keyWords := c.Query("keywords")
 	var releaseCount, noReleaseCount int64
 	var pageList []DataBaseModel.AppPage
-	//db := DB.Where("app_space_id = ? AND username = ?", spaceId, userName).Order("create_time desc")
-	//rc := DB.Model(DataBaseModel.AppPage{}).Where("app_space_id = ? AND username = ?", spaceId, userName).Where("is_release = ?", true)
-	//nrc := DB.Model(DataBaseModel.AppPage{}).Where("app_space_id = ? AND username = ?", spaceId, userName).Where("is_release = ?", false)
-	db := DB.Where("username = ?", userName).Order("create_time desc")
-	rc := DB.Model(DataBaseModel.AppPage{}).Where("username = ?", userName).Where("is_release = ?", true)
-	nrc := DB.Model(DataBaseModel.AppPage{}).Where("username = ?", userName).Where("is_release = ?", false)
+	db := DB.Where("app_space_id = ? AND username = ?", spaceId, userName).Order("create_time desc")
+	rc := DB.Model(DataBaseModel.AppPage{}).Where("app_space_id = ? AND username = ?", spaceId, userName).Where("is_release = ?", true)
+	nrc := DB.Model(DataBaseModel.AppPage{}).Where("app_space_id = ? AND username = ?", spaceId, userName).Where("is_release = ?", false)
 
 	if keyWords != "" {
 		db.Where("page_name LIKE ?", "%"+keyWords+"%")
@@ -335,6 +332,7 @@ func GetAppPageView(c *gin.Context) {
 			"id":          page.ID,
 			"name":        page.PageName,
 			"create_time": page.CreatedAt.Local().Format("2006年01月02日"),
+			"update_time": page.UpdatedAt.Local().Format("2006年01月02日"),
 			"tag":         page.PagePath,
 		}
 		pageDataList = append(pageDataList, p)
@@ -357,14 +355,14 @@ func EditAppPageView(c *gin.Context) {
 	var item EditAppPageData
 	err := c.BindJSON(&item)
 	if err != nil {
-		log.Println("设置app空间页面时出现数据错误：", err)
+		log.Println("编辑app空间页面时出现数据错误：", err)
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
 	var page DataBaseModel.AppPage
 	DB.Where("id = ? AND app_space_id = ? AND username = ?", item.PageId, item.SpaceId, userName).First(&page)
 	if page.ID == "" {
-		log.Println("设置app空间页面时未查询到数，相关数据是：", item)
+		log.Println("编辑app空间页面时未查询到数，相关数据是：", item)
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
@@ -373,12 +371,12 @@ func EditAppPageView(c *gin.Context) {
 	err = DB.Save(&page).Error
 	if err != nil {
 		log.Println("设置app空间页面时保存数据库出现错误：", err)
-		res.Err = "设置失败，请稍后再试"
+		res.Err = "编辑失败，请稍后再试"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	res.Msg = "设置成功"
+	res.Msg = "编辑成功"
 	c.JSON(http.StatusOK, res)
 }
 
@@ -396,8 +394,7 @@ func DeleteAppPageView(c *gin.Context) {
 		return
 	}
 	var page DataBaseModel.AppPage
-	DB.Where("id = ? AND app_space_id = ? AND username = ?", item.PageId, item.SpaceId, userName).First(&page)
-	err = DB.Delete(&page).Error
+	err = DB.Model(&page).Where("id = ?  AND username = ?", item.PageId, userName).Delete(&page).Error
 	if err != nil {
 		log.Println("删除app空间页面时保存数据库出现错误：", err)
 		res.Err = "删除失败，请稍后再试"
@@ -415,10 +412,11 @@ func CreatePageComponentView(c *gin.Context) {
 	*/
 	var res responseData
 	userName := c.GetHeader("username")
-	spaceId := c.GetHeader("space_id")
+	//spaceId := c.GetHeader("space_id")
 	var item CreatePageComponentData
 	err := c.BindJSON(&item)
 	if err != nil {
+		log.Println("数据错误：", err)
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
@@ -433,7 +431,7 @@ func CreatePageComponentView(c *gin.Context) {
 	pageComponent.PageId = item.PageId
 	pageComponent.Height = item.Height
 	pageComponent.Width = item.Width
-	pageComponent.DataObject = item.DataObject
+	pageComponent.InputOutput = item.InputOutput
 	pageComponent.Type = item.Type
 	pageComponent.PositionX = item.PositionX
 	pageComponent.PositionY = item.PositionY
@@ -473,7 +471,7 @@ func GetPageComponentView(c *gin.Context) {
 
 	var res responseData
 	userName := c.GetHeader("username")
-	spaceId := c.GetHeader("space_id")
+	//spaceId := c.GetHeader("space_id")
 	pageId := c.Query("page_id")
 	var page DataBaseModel.AppPage
 	var componentList []DataBaseModel.AppPageComponent
@@ -485,7 +483,7 @@ func GetPageComponentView(c *gin.Context) {
 	for _, c := range componentList {
 		p := map[string]interface{}{
 			"id":                  c.ID,
-			"data":                c.DataObject,
+			"input_output":        c.InputOutput,
 			"type":                c.Type,
 			"width":               c.Width,
 			"height":              c.Height,
@@ -509,7 +507,7 @@ func GetPageComponentView(c *gin.Context) {
 		componentDataList = append(componentDataList, p)
 	}
 	res.Data = map[string]interface{}{
-		"data": componentDataList,
+		"components": componentDataList,
 	}
 	c.JSON(http.StatusOK, res)
 }
@@ -524,6 +522,7 @@ func EditPageComponentView(c *gin.Context) {
 	var item EditPageComponentData
 	err := c.BindJSON(&item)
 	if err != nil {
+		log.Println("", err)
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
@@ -552,17 +551,18 @@ func DeletePageComponentView(c *gin.Context) {
 		# app应用页面删除组件
 	*/
 	var res responseData
-	userName := c.GetHeader("username")
-	var item DeleteAppPageData
+	//userName := c.GetHeader("username")
+	var item DeletePageComponentData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
-	var page DataBaseModel.AppPage
-	err = DB.Model(&page).Where("id IN ? AND app_space_id = ? AND username = ?", item.PageId, item.SpaceId, userName).Delete(&page).Error
+	var components DataBaseModel.AppPageComponent
+	//err = DB.Model(&page).Where("id IN ? AND app_space_id = ? AND username = ?", item.PageId, item.SpaceId, userName).Delete(&page).Error
+	err = DB.Model(DataBaseModel.AppPageComponent{}).Where("id IN ? AND page_id = ?", item.ComponentsList, item.PageId).Delete(&components).Error
 	if err != nil {
-		log.Println("删除app空间页面时保存数据库出现错误：", err)
+		log.Println("删除app空间页面组件时保存数据库出现错误：", err)
 		res.Err = "删除失败，请稍后再试"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)

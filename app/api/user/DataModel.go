@@ -11,8 +11,8 @@ type CreateUserSpaceModel struct {
 	SpaceName   string `json:"space_name" binding:"required"`
 	Description string `json:"space_description" binding:""`
 	Background  string `json:"space_background" binding:""`
-	Icon        string `json:"space_icon" binding:"required"`
-	IconColor   string `json:"space_icon_color" binding:"required"`
+	Icon        string `json:"space_icon" binding:""`
+	IconColor   string `json:"space_icon_color" binding:""`
 }
 
 type EditUserSpaceModel struct {
@@ -20,8 +20,8 @@ type EditUserSpaceModel struct {
 	SpaceName   string `json:"space_name" binding:"required"`
 	Description string `json:"space_description" binding:""`
 	Background  string `json:"space_background" binding:""`
-	Icon        string `json:"space_icon" binding:"required"`
-	IconColor   string `json:"space_icon_color" binding:"required"`
+	Icon        string `json:"space_icon" binding:""`
+	IconColor   string `json:"space_icon_color" binding:""`
 	Collect     string `json:"collect"`
 }
 

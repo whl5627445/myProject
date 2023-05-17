@@ -41,27 +41,29 @@ type AppPage struct {
 	ID           string         `gorm:"primaryKey"`
 	UserName     string         `gorm:"column:username"`
 	AppSpaceId   string         `gorm:"column:app_space_id"`
+	Input        datatypes.JSON `gorm:"column:input"`
+	Output       datatypes.JSON `gorm:"column:output"`
 	PageName     string         `gorm:"column:page_name"`
 	PagePath     string         `gorm:"column:page_path"`
 	DataSourceId string         `gorm:"column:data_source_id"`
-	PageWidth    string         `gorm:"column:page_width"`
-	PageHeight   string         `gorm:"column:page_height"`
+	PageWidth    int            `gorm:"column:page_width"`
+	PageHeight   int            `gorm:"column:page_height"`
 	Background   string         `gorm:"column:background"`
 	Color        string         `gorm:"column:color"`
-	IconColor    string         `gorm:"column:icon_color"`
-	Release      bool           `gorm:"column:is_release"`
-	CreatedAt    *time.Time     `gorm:"column:create_time;autoCreateTime"`
-	UpdatedAt    *time.Time     `gorm:"column:update_time"`
-	Deleted      gorm.DeletedAt `gorm:"column:deleted_at"`
+	//IconColor    string         `gorm:"column:icon_color"`
+	Release   bool           `gorm:"column:is_release"`
+	CreatedAt *time.Time     `gorm:"column:create_time;autoCreateTime"`
+	UpdatedAt *time.Time     `gorm:"column:update_time"`
+	Deleted   gorm.DeletedAt `gorm:"column:deleted_at"`
 }
 
 type AppComponentBases struct {
 	ID                 string         `gorm:"primaryKey"`
 	PageId             string         `gorm:"column:page_id"`
-	DataObjectList     datatypes.JSON `gorm:"column:data_object_list"`
+	InputOutput        datatypes.JSON `gorm:"column:input_output"`
 	Type               string         `gorm:"column:type"`
-	Width              string         `gorm:"column:width"`
-	Height             string         `gorm:"column:height"`
+	Width              int            `gorm:"column:width"`
+	Height             int            `gorm:"column:height"`
 	PositionX          float64        `gorm:"column:position_x"`
 	PositionY          float64        `gorm:"column:position_y"`
 	Angle              float64        `gorm:"column:angle"`
@@ -77,13 +79,13 @@ type AppComponentBases struct {
 type AppPageComponent struct {
 	ID                 string         `gorm:"primaryKey"`
 	PageId             string         `gorm:"column:page_id"`
-	DataObject         datatypes.JSON `gorm:"column:data_object_list"`
+	InputOutput        datatypes.JSON `gorm:"column:input_output"`
 	Type               string         `gorm:"column:type"`
-	Width              string         `gorm:"column:width"`
-	Height             string         `gorm:"column:height"`
-	PositionX          float64        `gorm:"column:position_x"`
-	PositionY          float64        `gorm:"column:position_y"`
-	Angle              float64        `gorm:"column:angle"`
+	Width              int            `gorm:"column:width"`
+	Height             int            `gorm:"column:height"`
+	PositionX          int            `gorm:"column:position_x"`
+	PositionY          int            `gorm:"column:position_y"`
+	Angle              int            `gorm:"column:angle"`
 	HorizontalFlip     bool           `gorm:"column:horizontal_flip"`
 	VerticalFlip       bool           `gorm:"column:vertical_flip"`
 	Opacity            int            `gorm:"column:opacity"`

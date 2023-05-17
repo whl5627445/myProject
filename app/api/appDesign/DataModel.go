@@ -10,10 +10,19 @@ type responseData struct {
 }
 
 type AppModelMarkData struct {
-	PackageId     string `json:"package_id" binding:"required"`
-	ModelName     string `json:"model_name" binding:"required"`
-	CompilerType  string `json:"compiler_type,omitempty" binding:""`
-	MandatorySave bool   `json:"save,omitempty" binding:""`
+	PackageId   string `json:"package_id" binding:"required"`
+	ModelName   string `json:"model_name" binding:"required"`
+	CompileType string `json:"compile_type,omitempty" binding:""`
+	//MandatorySave  bool   `json:"save,omitempty" binding:""`
+	GroundName     string `json:"ground_name" binding:"required"`
+	DataSourceName string `json:"data_source_name" binding:"required"`
+	ExperimentId   string `json:"experiment_id" binding:""`
+}
+
+type AppMultipleSimulateData struct {
+	RecordId    string               `json:"record_id" binding:"required"`
+	InputData   map[string][]float64 `json:"input_data" binding:"required"`
+	OutputNames []string             `json:"output_names" binding:"required"`
 }
 
 type CreateAppSpaceData struct {
@@ -25,13 +34,13 @@ type CreateAppSpaceData struct {
 }
 
 type EditAppSpaceData struct {
-	SpaceId          string `json:"space_id" binding:"required"`
-	SpaceName        string `json:"space_name" binding:"required"`
-	SpaceDescription string `json:"space_description,omitempty" binding:""`
-	Background       string `json:"space_background,omitempty" binding:""`
-	Icon             string `json:"space_icon,omitempty" binding:""`
-	IconColor        string `json:"space_icon_color,omitempty" binding:""`
-	Collect          bool   `json:"space_collect,omitempty" binding:""`
+	SpaceId     string `json:"space_id" binding:"required"`
+	SpaceName   string `json:"space_name" binding:"required"`
+	Description string `json:"space_description,omitempty" binding:""`
+	Background  string `json:"space_background,omitempty" binding:""`
+	Icon        string `json:"space_icon,omitempty" binding:""`
+	IconColor   string `json:"space_icon_color,omitempty" binding:""`
+	Collect     bool   `json:"space_collect,omitempty" binding:""`
 }
 
 type AppSpaceCollectData struct {
@@ -44,7 +53,7 @@ type DeleteAppSpaceData struct {
 }
 
 type CreateAppPageData struct {
-	//SpaceId  string `json:"space_id" binding:"required"`
+	SpaceId  string `json:"space_id" binding:"required"`
 	PageName string `json:"name" binding:"required"`
 	Tag      string `json:"tag" binding:"required"`
 }
@@ -64,22 +73,22 @@ type DeleteAppPageData struct {
 type CreatePageComponentData struct {
 	PageId             string         `json:"page_id" binding:"required"`
 	Type               string         `json:"type" binding:"required"`
-	DataObject         datatypes.JSON `json:"data,omitempty" binding:""`
-	Width              string         `json:"width" binding:"required"`
-	Height             string         `json:"height" binding:"required"`
-	PositionX          float64        `json:"position_x" binding:"required"`
-	PositionY          float64        `json:"position_y" binding:"required"`
-	Angle              float64        `json:"angle" binding:"required"`
+	InputOutput        datatypes.JSON `json:"input_output,omitempty" binding:""`
+	Width              int            `json:"width" binding:""`
+	Height             int            `json:"height" binding:""`
+	PositionX          int            `json:"position_x" binding:""`
+	PositionY          int            `json:"position_y" binding:""`
+	Angle              int            `json:"angle" binding:""`
 	HorizontalFlip     bool           `json:"horizontal_flip" binding:""`
 	VerticalFlip       bool           `json:"vertical_flip" binding:""`
-	Opacity            int            `json:"opacity" binding:"required"`
-	OtherConfiguration datatypes.JSON `json:"other_configuration,omitempty" binding:"required"`
-	ZIndex             int            `json:"z_index,omitempty" binding:"required"`
-	Styles             datatypes.JSON `json:"styles,omitempty" binding:"required"`
-	Events             datatypes.JSON `json:"events,omitempty" binding:"required"`
-	ChartConfig        datatypes.JSON `json:"chart_config,omitempty" binding:"required"`
-	Option             datatypes.JSON `json:"option,omitempty" binding:"required"`
-	ComponentPath      string         `json:"component_path,omitempty" binding:"required"`
+	Opacity            int            `json:"opacity" binding:""`
+	OtherConfiguration datatypes.JSON `json:"other_configuration,omitempty" binding:""`
+	ZIndex             int            `json:"z_index,omitempty" binding:""`
+	Styles             datatypes.JSON `json:"styles,omitempty" binding:""`
+	Events             datatypes.JSON `json:"events,omitempty" binding:""`
+	ChartConfig        datatypes.JSON `json:"chart_config,omitempty" binding:""`
+	Option             datatypes.JSON `json:"option,omitempty" binding:""`
+	ComponentPath      string         `json:"component_path,omitempty" binding:""`
 	Hide               bool           `json:"hide,omitempty" binding:""`
 	Lock               bool           `json:"lock,omitempty" binding:""`
 	IsGroup            bool           `json:"is_group,omitempty" binding:""`
@@ -89,12 +98,12 @@ type EditPageComponentData struct {
 	Id                 string         `json:"id" binding:"required"`
 	PageId             string         `json:"page_id" binding:"required"`
 	Type               string         `json:"type,omitempty" binding:""`
-	DataObject         datatypes.JSON `json:"data,omitempty" binding:""`
-	Width              string         `json:"width,omitempty" binding:""`
-	Height             string         `json:"height,omitempty" binding:""`
-	PositionX          float64        `json:"position_x,omitempty" binding:""`
-	PositionY          float64        `json:"position_y,omitempty" binding:""`
-	Angle              float64        `json:"angle,omitempty" binding:""`
+	InputOutput        datatypes.JSON `json:"input_output,omitempty" binding:""`
+	Width              int            `json:"width,omitempty" binding:""`
+	Height             int            `json:"height,omitempty" binding:""`
+	PositionX          int            `json:"position_x,omitempty" binding:""`
+	PositionY          int            `json:"position_y,omitempty" binding:""`
+	Angle              int            `json:"angle,omitempty" binding:""`
 	HorizontalFlip     bool           `json:"horizontal_flip,omitempty" binding:""`
 	VerticalFlip       bool           `json:"vertical_flip,omitempty" binding:""`
 	Opacity            int            `json:"opacity,omitempty" binding:""`
@@ -108,4 +117,16 @@ type EditPageComponentData struct {
 	Hide               bool           `json:"hide,omitempty" binding:""`
 	Lock               bool           `json:"lock,omitempty" binding:""`
 	IsGroup            bool           `json:"is_group,omitempty" binding:""`
+}
+
+type DeletePageComponentData struct {
+	PageId         string   `json:"page_id" binding:"required"`
+	ComponentsList []string `json:"component_id" binding:"required"`
+}
+
+type SetPageInputOutputData struct {
+	SpaceId string         `json:"space_id" binding:"required"`
+	PageId  string         `json:"page_id" binding:"required"`
+	Input   datatypes.JSON `json:"input,omitempty" binding:""`
+	Output  datatypes.JSON `json:"output,omitempty" binding:""`
 }
