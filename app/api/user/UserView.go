@@ -15,6 +15,23 @@ import (
 
 var DB = config.DB
 
+//func GetUserSpaceView(c *gin.Context) {
+//	/*
+//		# 获取用户所有的用户空间条目
+//	*/
+//	userName := c.GetHeader("username")
+//	var res responseData
+//	var modelData []map[string]string
+//	var userSpace []DataBaseModel.YssimUserSpace
+//	_ = DB.Where("username = ?", userName).Find(&userSpace)
+//	for _, space := range userSpace {
+//		modelData = append(modelData, map[string]string{"id": space.ID, "name": space.SpaceName})
+//	}
+//	res.Data = modelData
+//	c.JSON(http.StatusOK, res)
+//
+//}
+
 func GetUserSpaceView(c *gin.Context) {
 	/*
 		# 获取用户所有的用户空间条目
@@ -33,13 +50,13 @@ func GetUserSpaceView(c *gin.Context) {
 	if collect == "1" {
 		db.Where("collect = ?", true)
 	}
-	db.Order("update_time desc").Find(&allAppSpaceList)
+	db.Order("create_time desc").Find(&allAppSpaceList)
 	db.Where("last_login_time <> ?", 0).Order("last_login_time desc").Limit(5).Find(&recentAppSpaceList)
 	allAppSpace := make([]map[string]interface{}, 0)
 	recentAppSpace := make([]map[string]interface{}, 0)
 	for _, space := range allAppSpaceList {
 		updateTime := space.UpdatedAt.Local().Unix()
-		editTime := timeConvert.UseTimeFormat(int(updateTime), int(time.Now().Local().Unix()))
+		editTime := timeConvert.UseTimeFormatNew(int(updateTime), int(time.Now().Local().Unix()), 1)
 		d := map[string]interface{}{
 			"id":          space.ID,
 			"name":        space.SpaceName,
@@ -48,13 +65,13 @@ func GetUserSpaceView(c *gin.Context) {
 			"icon":        space.Icon,
 			"icon_color":  space.IconColor,
 			"collect":     space.Collect,
-			"edit_time":   editTime + "前",
+			"edit_time":   "编辑于" + editTime + "前",
 		}
 		allAppSpace = append(allAppSpace, d)
 	}
 	for _, space := range recentAppSpaceList {
 		updateTime := space.UpdatedAt.Local().Unix()
-		editTime := timeConvert.UseTimeFormat(int(updateTime), int(time.Now().Local().Unix()))
+		editTime := timeConvert.UseTimeFormatNew(int(updateTime), int(time.Now().Local().Unix()), 1)
 		d := map[string]interface{}{
 			"id":          space.ID,
 			"name":        space.SpaceName,
@@ -63,7 +80,7 @@ func GetUserSpaceView(c *gin.Context) {
 			"icon":        space.Icon,
 			"icon_color":  space.IconColor,
 			"collect":     space.Collect,
-			"edit_time":   editTime + "前",
+			"edit_time":   "编辑于" + editTime + "前",
 		}
 		recentAppSpace = append(recentAppSpace, d)
 	}
@@ -78,7 +95,6 @@ func GetUserSpaceView(c *gin.Context) {
 func CreateUserSpaceView(c *gin.Context) {
 	/*
 		# 创建用户空间
-		## space_name: 用户空间名称
 	*/
 	userName := c.GetHeader("username")
 	var res responseData
@@ -182,7 +198,6 @@ func CollectUserSpaceView(c *gin.Context) {
 func DeleteUserSpaceView(c *gin.Context) {
 	/*
 		# 删除用户空间
-		## space_id: 用户空间id
 	*/
 	userName := c.GetHeader("username")
 	var res responseData
