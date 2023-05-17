@@ -33,8 +33,9 @@ class OmcSimulation(threading.Thread):
         # 获取注释中的包名和版本号
         name = self.omc_obj.getAnnotationModifierValue(self.request.simulateModelName, "from", "name")
         version = self.omc_obj.getAnnotationModifierValue(self.request.simulateModelName, "from", "version")
-        print(name + "初始化:",
-              self.omc_obj.sendExpression("loadModel(" + name + ", {\"" + version + "\"},true,\"\",false)"))
+        if "not Found" not in name:
+            print(name + "初始化:",
+                  self.omc_obj.sendExpression("loadModel(" + name + ", {\"" + version + "\"},true,\"\",false)"))
 
     def run(self):
 
@@ -72,7 +73,7 @@ class OmcSimulation(threading.Thread):
         for child_proc in parent_proc.children(recursive=True):
             os.kill(child_proc.pid, 9)
         os.kill(self.omc_obj.omc_process.pid, 9)
-        if buildModelRes != ["", ""]:
+        if isinstance(buildModelRes, list) and buildModelRes != ["", ""]:
             # 改数据库状态为2
             update_simulate_records(uuid=self.uuid, simulate_status="2", simulate_start="1")
             json_data = {"message": self.request.simulateModelName + " 模型编译完成，准备仿真"}
@@ -99,6 +100,7 @@ class OmcSimulation(threading.Thread):
         # 获取命令行输出结果
         output, error = process.communicate()
         if error:
+            print(error)
             update_simulate_records(uuid=self.uuid,
                                     simulate_status="3",
                                     simulate_result_str="仿真失败",
@@ -106,6 +108,8 @@ class OmcSimulation(threading.Thread):
                                     # simulate_start_time=str(self.processStartTime),
                                     simulate_end_time=int(time.time())
                                     )
+            json_data = {"message": self.request.simulateModelName + " 仿真失败"}
+            R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
 
         else:
             simulate_result_str = output.decode('utf-8')
@@ -125,6 +129,9 @@ class OmcSimulation(threading.Thread):
                                         )
 
             else:
+                print("仿真失败:",simulate_result_str)
+                json_data = {"message": self.request.simulateModelName + " 仿真失败"}
+                R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
                 update_simulate_records(uuid=self.uuid,
                                         simulate_result_str=simulate_result_str,
                                         simulate_status="3",
