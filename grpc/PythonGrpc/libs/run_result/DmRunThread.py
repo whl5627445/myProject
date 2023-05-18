@@ -3,13 +3,14 @@ import time
 import zipfile
 from datetime import datetime
 from libs.function.defs import zip_folders
-from libs.function.run_result_json import update_item_to_json
+from libs.function.run_result_json import update_item_to_json, delete_item_from_json
 import requests
 import pandas as pd
 from config.redis_config import R
 import json
 import os
 import configparser
+from libs.function.defs import update_app_pages_records
 
 config = configparser.ConfigParser()
 config.read('./config/grpc_config.ini')
@@ -24,8 +25,31 @@ class DmRunThread(threading.Thread):
         threading.Thread.__init__(self)
         self.state = "init"
         self.request = request
-        update_item_to_json(self.request.uuid,
-                            {"id": self.request.uuid, "run_states": "1", "run_start_time": int(time.time())})
+        # inputValDataDict = {}
+        # for key, value in self.request.inputValData.items():
+        #     inputValDataDict[key] = list(value.inputObjList)
+        # update_item_to_json(self.request.uuid,
+        #                     {"id": self.request.uuid,
+        #                      "userSpaceId": self.request.userSpaceId,
+        #                      "userName": self.request.userName,
+        #                      "simulateModelName": self.request.simulateModelName,
+        #                      "resultFilePath": self.request.resultFilePath,
+        #                      "simulationPraData": self.request.simulationPraData,
+        #                      "envModelData": self.request.envModelData,
+        #                      # OM DM
+        #                      "simulateType": self.request.simulateType,
+        #                      #  dm才会用到的参数
+        #                      "packageName": self.request.packageName,
+        #                      "packageFilePath": self.request.packageFilePath,
+        #                      # 任务类型"simulate " "translate " "run"三种
+        #                      "taskType": self.request.taskType,
+        #                      # 多轮仿真用到的参数
+        #                      "pageId": self.request.pageId,
+        #                      "inputValData": inputValDataDict,
+        #                      "outputValNames": list(self.request.outputValNames),
+        #
+        #                      }
+        #                     )
 
     def send_request(self):
         print("发送请求")
@@ -114,6 +138,7 @@ class DmRunThread(threading.Thread):
             json_data = {"message": self.request.simulateModelName + " 开始多轮仿真"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
             array_initial_values = list(self.request.inputValData.values())
+            input_data_length = len(array_initial_values[0].inputObjList)
             simulateReqData = {
                 "startTime": self.request.simulationPraData["startTime"],
                 "stopTime": self.request.simulationPraData["stopTime"],
@@ -128,9 +153,10 @@ class DmRunThread(threading.Thread):
                 "userName": self.request.userName,
                 "taskId": self.request.uuid,
                 "dymolaLibraries": dymola_libraries,
-                "initialNames":list(self.request.inputValData.keys()),
-                "arrayInitialValues": [[v.inputObjList[i] for v in array_initial_values] for i in range(len(array_initial_values[0].inputObjList))],
-                "finalNames": ["Time"]+list(self.request.outputValNames),
+                "initialNames": list(self.request.inputValData.keys()),
+                "arrayInitialValues": [[v.inputObjList[i] for v in array_initial_values] for i in
+                                       range(len(array_initial_values[0].inputObjList))],
+                "finalNames": ["Time"] + list(self.request.outputValNames),
 
             }
             print("simulateReqData", simulateReqData)
@@ -146,7 +172,18 @@ class DmRunThread(threading.Thread):
                 csv_data = simulateResData["data"]
                 df = pd.DataFrame(csv_data)
                 # 将DataFrame对象保存为CSV文件
-                df.to_csv(absolute_path + 'output.csv', index=False)
+                # df.to_csv(absolute_path + 'output.csv', index=False)
+                if input_data_length == 1:
+                    df.to_csv(r"/home/simtek/code/" + absolute_path + 'output_1.csv', index=False)
+                    # 更新数据库
+                    update_app_pages_records(self.request.pageId,
+                                             single_simulation_result_path=absolute_path + 'output_1.csv')
+                else:
+                    df.to_csv(r"/home/simtek/code/" + absolute_path + 'output.csv', index=False)
+                    # 更新数据库
+                    update_app_pages_records(self.request.pageId,
+                                             single_simulation_result_path=absolute_path + 'output.csv')
+
                 return True, None, simulateResData["code"]
 
             else:
@@ -154,25 +191,17 @@ class DmRunThread(threading.Thread):
 
     def run(self):
         print("开启dymola仿真")
-        update_item_to_json(self.request.uuid, {"id":self.request.uuid,"run_states": "2", "run_start_time": int(time.time())})
 
         res, err, code = self.send_request()
         print("send_request返回", res, err, code)
         if res:
-            update_item_to_json(self.request.uuid,
-                                {"id": self.request.uuid, "run_states": "4", "run_stop_time": int(time.time())})
-
             json_data = {"message": self.request.simulateModelName + " 模型仿真完成"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
         elif code == 300:
             json_data = {"message": self.request.simulateModelName + " 结束任务"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
-            update_item_to_json(self.request.uuid,
-                                {"id": self.request.uuid, "run_states": "3", "run_stop_time": int(time.time())})
         else:
-            update_item_to_json(self.request.uuid,
-                                {"id": self.request.uuid, "run_states": "3", "run_stop_time": int(time.time())})
-
             json_data = {"message": self.request.simulateModelName + " 仿真失败"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
         self.state = "stopped"
+        delete_item_from_json(self.request.uuid)

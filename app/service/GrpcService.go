@@ -322,7 +322,17 @@ func GrpcTranslate(record DataBaseModel.AppDataSource) (string, error) {
 
 }
 
-func GrpcRunResult(record DataBaseModel.AppDataSource, inputData map[string][]float64, outputNames []string) (string, error) {
+func GrpcRunResult(appPageId, userName, userSpaceId string) error {
+	var appPageRecord DataBaseModel.AppPage
+	err := DB.Where("id = ? ", appPageId, userName, userSpaceId).First(&appPageRecord).Error
+	if err != nil {
+		return errors.New("not found")
+	}
+	var record DataBaseModel.AppDataSource
+	err = DB.Where("id = ? ", appPageRecord.DataSourceId).First(&record).Error
+	if err != nil {
+		return errors.New("not found")
+	}
 	// 构建仿真参数
 	SimulationPraData := map[string]string{
 		"startTime":         record.StartTime,
@@ -333,22 +343,43 @@ func GrpcRunResult(record DataBaseModel.AppDataSource, inputData map[string][]fl
 	}
 	//查询数据库中的模型对应的记录
 	var packageModel DataBaseModel.YssimModels
-	err := DB.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", record.PackageId, []string{"sys", record.UserName}, []string{"0", record.UserSpaceId}).First(&packageModel).Error
+	err = DB.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", record.PackageId, []string{"sys", record.UserName}, []string{"0", record.UserSpaceId}).First(&packageModel).Error
 	if err != nil {
-		return "", errors.New("not found")
+		return errors.New("not found")
 	}
 	var environmentModelData map[string]string
 	err = sonic.Unmarshal(record.EnvModelData, &environmentModelData)
 	if err != nil {
-		return "", errors.New("unmarshal error")
+		return errors.New("unmarshal error")
 	}
+	// 获取数据库中的输入
+	var inputMap map[string][]float64
+	sonic.Unmarshal(appPageRecord.Input, &inputMap)
+	// 获取数据库中的输出名称数组
+	var outputNames []string
+	sonic.Unmarshal(appPageRecord.Output, &outputNames)
+	// 将[1,0.5,5]转换为[1,1.5,2,2.5,3,3.5,4,4.5,5]
+	inputData := make(map[string][]float64)
+	for key, value := range inputMap {
+		minVal := value[0]
+		step := value[1]
+		maxVal := value[2]
+
+		// 计算新的数组元素
+		var newValues []float64
+		for i := minVal; i <= maxVal; i += step {
+			newValues = append(newValues, i)
+		}
+		inputData[key] = newValues
+	}
+
 	inputValData := make(map[string]*grpcPb.SubmitTaskRequestInputObj)
 	var inputValDataLen int
 	for k, v := range inputData {
 		if inputValDataLen == 0 {
 			inputValDataLen = len(v)
 		} else if len(v) != inputValDataLen {
-			return "", errors.New("长度不一致")
+			return errors.New("长度不一致")
 		}
 		inputValData[k] = &grpcPb.SubmitTaskRequestInputObj{
 			InputObjList: v,
@@ -370,11 +401,12 @@ func GrpcRunResult(record DataBaseModel.AppDataSource, inputData map[string][]fl
 		// 任务类型"simulate " "translate " "run"三种
 		TaskType: "run",
 		// 多轮仿真用到的参数
+		PageId:         appPageId,
 		OutputValNames: outputNames,
 		InputValData:   inputValData,
 	}
 	_, err = grpcPb.Client.SubmitTask(grpcPb.Ctx, GrpcBuildModelRequest)
-	return record.ID, err
+	return err
 
 }
 

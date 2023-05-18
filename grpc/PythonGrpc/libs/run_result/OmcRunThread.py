@@ -6,7 +6,8 @@ import DyMat
 import pandas as pd
 from libs.function.xml_input import write_xml
 from config.redis_config import R
-from libs.function.run_result_json import update_item_to_json
+from libs.function.run_result_json import update_item_to_json, delete_item_from_json
+from libs.function.defs import update_app_pages_records
 
 
 class OmcRunThread(threading.Thread):
@@ -19,37 +20,31 @@ class OmcRunThread(threading.Thread):
         self.outputValNames = request.outputValNames
         self.request = request
         self.csv_data = []
-        update_item_to_json(self.uuid, {"id":self.uuid,"run_states": "init",})
+        update_item_to_json(self.uuid, {"id": self.uuid, "run_states": "init", })
         threading.Thread.__init__(self)
 
     def run(self):
-        update_item_to_json(self.uuid, {"run_states": "running","run_start_time": int(time.time())})
-        run_steps = 0
 
+        run_steps = 0
         keys = list(self.inputValData.keys())  # 获取所有键
-        result = []  # 存储结果
+        input_data = []  # 存储结果
         print(self.inputValData[keys[0]])
         print("type::", type(self.inputValData[keys[0]].inputObjList))
-        length = len(self.inputValData[keys[0]].inputObjList)  # 获取列表长度，也可以使用len(data["J1.J"])
-        for i in range(length):
+        input_data_length = len(self.inputValData[keys[0]].inputObjList)  # 获取列表长度，也可以使用len(data["J1.J"])
+        for i in range(input_data_length):
             item = {}
             for key in keys:
                 item[key] = self.inputValData[key].inputObjList[i]
-            result.append(item)
+            input_data.append(item)
         # 进行多轮仿真
-        for i in result:
+        for i in input_data:
             run_steps += 1
             print("进行第{}轮仿真".format(run_steps))
             # 修改xml文件
             print("i::: ", i)
             if write_xml(r"/home/simtek/code/" + self.absolute_path, i):
-                update_item_to_json(self.uuid,
-                                 {"run_steps": run_steps,
-                                  "run_percentage": run_steps / length,
-                                  "run_result_str": "解析xml文件错误",
-                                  "run_status": 3,
-                                  "run_end_time": int(time.time())}
-                                 )
+                # 解析文件失败
+                break
 
             # 运行可执行文件result
             self.state = "running"
@@ -59,11 +54,6 @@ class OmcRunThread(threading.Thread):
             # 获取命令行输出结果
             output, error = process.communicate()
             if error:
-                update_item_to_json(self.uuid,
-                                 {"run_steps": run_steps,
-                                  "run_percentage": run_steps / length,
-                                  "run_status": "3",
-                                  "run_end_time": int(time.time())})
                 break
 
             else:
@@ -71,13 +61,7 @@ class OmcRunThread(threading.Thread):
                 if "successfully" in run_result_str:
                     json_data = {"message": self.request.simulateModelName + "仿真到第{}轮".format(run_steps)}
                     R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
-                    update_item_to_json(self.uuid, {
-                        "run_steps": run_steps,
-                        "run_percentage": run_steps / length,
-                        "run_result_str": run_result_str,
-                        "run_status": 4,
-                        "run_end_time": int(time.time()), }
-                                     )
+
                     # 从mat中读取数据
                     d = DyMat.DyMatFile(r"/home/simtek/code/" + self.absolute_path + "result_res.mat")
                     if run_steps == 1:
@@ -85,15 +69,20 @@ class OmcRunThread(threading.Thread):
                     for j in self.outputValNames:
                         self.csv_data.append(list(d.data(j)))
                 else:
-                    update_item_to_json(self.uuid,
-                                     {"run_steps": run_steps,
-                                      "run_percentage": run_steps / length,
-                                      "run_result_str": run_result_str,
-                                      "run_status": 3,
-                                      "run_end_time": int(time.time())}
-                                     )
+
                     break
         df = pd.DataFrame(self.csv_data)
         # 将DataFrame对象保存为CSV文件
-        df.to_csv(r"/home/simtek/code/" + self.absolute_path + 'output.csv', index=False)
+        if run_steps == input_data_length:  # 每轮都成功
+            if input_data_length == 1:
+                df.to_csv(r"/home/simtek/code/" + self.absolute_path + 'output_1.csv', index=False)
+                # 更新数据库
+                update_app_pages_records(self.request.pageId,
+                                         single_simulation_result_path=self.absolute_path + 'output_1.csv')
+            else:
+                df.to_csv(r"/home/simtek/code/" + self.absolute_path + 'output.csv', index=False)
+                # 更新数据库
+                update_app_pages_records(self.request.pageId,
+                                         single_simulation_result_path=self.absolute_path + 'output.csv')
         self.state = "stopped"
+        delete_item_from_json(self.uuid)

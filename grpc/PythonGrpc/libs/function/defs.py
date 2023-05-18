@@ -1,5 +1,5 @@
 import re
-from config.db_config import Session, YssimSimulateRecords,AppDataSources
+from config.db_config import Session, YssimSimulateRecords, AppDataSources, AppPages
 from config.redis_config import R
 import json
 import os
@@ -72,6 +72,17 @@ def update_compile_records(uuid,
             data_sources_record.compile_start_time = compile_start_time  # 仿真开始时间
         if compile_stop_time:
             data_sources_record.compile_stop_time = compile_stop_time  # 仿真结束时间
+        session.commit()
+
+
+def update_app_pages_records(pages_id, single_simulation_result_path=None, multi_simulation_results_path=None):
+    with Session() as session:
+        data_sources_record = session.query(AppPages).filter(
+            AppDataSources.id == pages_id).first()
+        if single_simulation_result_path:
+            data_sources_record.compile_status = single_simulation_result_path
+        if multi_simulation_results_path:
+            data_sources_record.compile_start_time = multi_simulation_results_path
         session.commit()
 
 

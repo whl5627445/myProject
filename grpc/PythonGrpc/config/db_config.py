@@ -93,3 +93,10 @@ class AppDataSources(Base):
     tolerance = Column(String)
     deleted_at = Column(DateTime)
     create_time = Column(DateTime)
+
+
+class AppPages(Base):
+    __tablename__ = 'app_pages'
+    id = Column(String, primary_key=True)
+    single_simulation_result_path = Column(String)
+    multi_simulation_results_path = Column(String)

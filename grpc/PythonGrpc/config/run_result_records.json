@@ -1,3 +1,45 @@
-[{"id": 123}, {"id": 122},
-  {"id": "493f2ae9-0f41-4706-8777-e730fb426f4e", "run_states": "init", "run_steps": 5, "run_percentage": 1.0, "run_result_str": "LOG_SUCCESS       | info    | The initialization finished successfully with 3 homotopy steps.\nLOG_SUCCESS       | info    | The simulation finished successfully.\n", "run_status": 4, "run_end_time": 1684201389}
+[
+  {
+    "id": "111",
+    "userSpaceId": "self.request.userSpaceId",
+    "userName": "self.request.userName",
+    "simulateModelName": "self.request.simulateModelName",
+    "resultFilePath": "self.request.resultFilePath",
+    "simulationPraData": {
+      "11": "11"
+    },
+    "envModelData": {
+      "11": "11"
+    },
+    "simulateType": "self.request.simulateType",
+    "packageName": "self.request.packageName",
+    "packageFilePath": "self.request.packageFilePath",
+    "taskType": "self.request.taskType",
+    "pageId": "self.request.pageId",
+    "inputValData": {
+      "name1": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "name2": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ]
+    },
+    "outputValNames": [
+      "1",
+      "2",
+      "3"
+    ]
+  }
 ]

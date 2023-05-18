@@ -20,9 +20,7 @@ type AppModelMarkData struct {
 }
 
 type AppMultipleSimulateData struct {
-	RecordId    string               `json:"record_id" binding:"required"`
-	InputData   map[string][]float64 `json:"input_data" binding:"required"`
-	OutputNames []string             `json:"output_names" binding:"required"`
+	AppPageId string `json:"app_page_id" binding:"required"`
 }
 
 type CreateAppSpaceData struct {
@@ -168,4 +166,9 @@ type EditBaseComponentData struct {
 
 type DeleteBaseComponentData struct {
 	Id string `json:"id" binding:"required"`
+}
+
+type DataSourceRenameData struct {
+	DataSourceID string `json:"data_source_id" binding:"required"`
+	NewName      string `json:"new_name" binding:"required"`
 }

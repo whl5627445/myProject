@@ -1,6 +1,6 @@
 from config.db_config import Session, YssimSimulateRecords, YssimModels, AppDataSources
 import router_pb2
-from libs.simulation.DmSimulationThread import DmSimulation
+from libs.function.run_result_json import read_json_file
 
 
 def initOmTask():
@@ -98,6 +98,35 @@ def initOmTask():
 
         omcDataList.append(a)
 
+    # # 多轮仿真任务
+    # json_data = read_json_file()
+    # for item in json_data:
+    #     data = router_pb2.SubmitTaskRequest()
+    #     data.uuid=item["id"]
+    #     data.userSpaceId = item["userSpaceId"],
+    #     data.userName = item["userName"],
+    #     data.simulateModelName = item["simulateModelName"],
+    #     data.resultFilePath = item["resultFilePath"],
+    #     data.simulationPraData = item["simulationPraData"],
+    #     data.envModelData = item["envModelData"],
+    #     data.simulateType = item["simulateType"],
+    #
+    #     data.packageName = item["packageName"],
+    #     data.packageFilePath = item["packageFilePath"],
+    #
+    #     data.taskType = item["taskType"],
+    #
+    #     data.pageId = item["pageId"],
+    #     dataDict = {}
+    #     for key,val in item["inputValData"].items():
+    #         dataDict[key] = data.inputObj
+    #     data.inputValData = item[""],
+    #
+    #     data.outputValNames = item["outputValNames"]
+    #
+    #
+    #     omcDataList.append(data)
+
     return omcDataList
 
 
@@ -150,8 +179,8 @@ def initDmTask():
         )
         dmDataList.append(a)
 
-            # dm_threading = DmSimulation(a)
-            # dm_threading.start()
+        # dm_threading = DmSimulation(a)
+        # dm_threading.start()
     # 查询所有为完成的编译任务
     with Session() as session:
         task_record_list = []

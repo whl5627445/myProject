@@ -124,6 +124,7 @@ message SubmitTaskRequest{
     repeated double inputObjList = 14;
   }
   repeated string outputValNames=13;
+  string pageId = 15;
 }
 message SubmitTaskReply{
   bool ok = 1;

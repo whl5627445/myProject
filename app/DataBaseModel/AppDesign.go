@@ -52,6 +52,8 @@ type AppPage struct {
 	ID           string         `gorm:"primaryKey"`
 	UserName     string         `gorm:"column:username"`
 	AppSpaceId   string         `gorm:"column:app_space_id"`
+	Input        datatypes.JSON `gorm:"column:input"`
+	Output       datatypes.JSON `gorm:"column:output"`
 	PageName     string         `gorm:"column:page_name"`
 	PagePath     string         `gorm:"column:page_path"`
 	DataSourceId string         `gorm:"column:data_source_id"`
