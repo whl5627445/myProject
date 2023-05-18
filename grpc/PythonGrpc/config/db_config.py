@@ -18,7 +18,9 @@ engine = create_engine(DB_URI,
                        poolclass=QueuePool,
                        pool_size=50,  # 最大连接数  124 3个  119 50个
                        max_overflow=10,  # 连接池溢出后允许的最大连接数
-                       pool_timeout=15  # 请求超时时间（秒）
+                       pool_timeout=15,  # 请求超时时间（秒）
+                       pool_pre_ping=True,  # 每次从连接池中取连接的时候，都会验证一下与数据库是否连接正常
+                       pool_recycle=25200,  # 主动回收mysql连接的时间
                        )
 Base = declarative_base(engine)
 Session = sessionmaker(engine)
@@ -66,3 +68,35 @@ class YssimModels(Base):
     file_path = Column(String)
     default_version = Column(Integer)
     deleted_at = Column(DateTime)
+
+
+class AppDataSources(Base):
+    __tablename__ = 'app_data_sources'
+    id = Column(String, primary_key=True)
+    username = Column(String)
+    user_space_id = Column(String)
+    package_id = Column(String)
+    model_name = Column(String)
+    compile_type = Column(String)
+    compile_path = Column(String)
+    compile_status = Column(Integer)
+    compile_start_time = Column(Integer)
+    compile_stop_time = Column(Integer)
+    ground_name = Column(String)
+    data_source_name = Column(String)
+    experiment_id = Column(String)
+    env_model_data = Column(JSON)
+    start_time = Column(String)
+    stop_time = Column(String)
+    method = Column(String)
+    number_intervals = Column(String)
+    tolerance = Column(String)
+    deleted_at = Column(DateTime)
+    create_time = Column(DateTime)
+
+
+class AppPages(Base):
+    __tablename__ = 'app_pages'
+    id = Column(String, primary_key=True)
+    single_simulation_result_path = Column(String)
+    multi_simulation_results_path = Column(String)

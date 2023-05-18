@@ -85,7 +85,7 @@ class MyProcess(Process):
         self.AllLogTxt += logTxt
 
     def run(self):
-        self.processStartTime = time.time()
+        self.processStartTime = int(time.time())
         try:
             print("开始仿真,仿真结束时间{}，仿真间隔{}".format(self.request.stopTime, self.request.outputInterval))
             json_data = {"message": self.request.className + " FmPy开始仿真"}

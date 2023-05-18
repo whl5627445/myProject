@@ -32,35 +32,26 @@ func AppModelMarkView(c *gin.Context) {
 		return
 	}
 	var record DataBaseModel.AppDataSource
-	DB.Where("package_id = ? AND username = ? AND user_space_id = ?", item.PackageId, userName, userSpaceId).First(&record)
-	if record.ID != "" && !item.MandatorySave {
-		res.Msg = "该模型已可以创建应用,继续会更新之前的记录,已发布的页面不受影响, 是否继续？"
-		c.JSON(http.StatusOK, res)
+	DB.Where("package_id = ? AND username = ? AND user_space_id = ? AND ground_name = ? AND data_source_name = ?", item.PackageId, userName, userSpaceId, item.GroundName, item.DataSourceName).First(&record)
+	if record.ID != "" {
+		c.JSON(http.StatusBadRequest, "名称重复")
 		return
 	}
-	if record.CompileStatus == 1 && !item.MandatorySave {
-		res.Msg = "该模型已导入数据源并正在进行编译,继续保存会放弃编译阶段作业, 是否继续？"
-		c.JSON(http.StatusOK, res)
-		return
+	CompilePath := "static/UserFiles/modelDataSource/" + userName + "/" + strings.ReplaceAll(item.ModelName, ".", "-") + "/" + time.Now().Local().Format("20060102150405") + "/"
+	dataSource := DataBaseModel.AppDataSource{
+		ID:             uuid.New().String(),
+		UserName:       userName,
+		UserSpaceId:    userSpaceId,
+		PackageId:      item.PackageId,
+		ModelName:      item.ModelName,
+		CompilePath:    CompilePath,
+		ExperimentId:   item.ExperimentId,
+		GroundName:     item.GroundName,
+		DataSourceName: item.DataSourceName,
+		CompileStatus:  0,
 	}
-	CompilePath := "static/modelDataSource/" + userName + "/" + strings.ReplaceAll(item.ModelName, ".", "-") + "/" + time.Now().Local().Format("20060102150405")
-	if record.ID == "" {
-		dataSource := DataBaseModel.AppDataSource{
-			ID:            uuid.New().String(),
-			UserName:      userName,
-			UserSpaceId:   userSpaceId,
-			PackageId:     item.PackageId,
-			ModelName:     item.ModelName,
-			CompilerType:  item.CompilerType,
-			CompilePath:   CompilePath,
-			CompileStatus: 0,
-		}
-		err = DB.Create(&dataSource).Error
-	} else {
-		record.CompilePath = CompilePath
-		err = DB.Save(&record).Error
-	}
-
+	err = DB.Create(&dataSource).Error
+	record = dataSource
 	if err != nil {
 		log.Println("标记数据源时创建数据库记录失败： ", err)
 		res.Err = "创建失败"
@@ -68,8 +59,49 @@ func AppModelMarkView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
+	_, _ = service.GrpcTranslate(record)
+	res.Msg = "提交任务成功，请等待编译完成！"
+	c.JSON(http.StatusOK, res)
 
-	res.Msg = "创建成功"
+}
+
+func MultipleSimulateView(c *gin.Context) {
+	/*
+		# 多轮仿真接口
+	*/
+	var res responseData
+	userName := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
+	var item AppMultipleSimulateData
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	err = service.GrpcRunResult(item.AppPageId, userName, userSpaceId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "多轮仿真失败！")
+		return
+	}
+	res.Msg = "任务提交成功，等待多轮仿真完成。"
+	c.JSON(http.StatusOK, res)
+	return
+
+}
+
+func AppGroupNameGetView(c *gin.Context) {
+	/*
+		# 获取用户数据源分组
+	*/
+	var res responseData
+	userName := c.GetHeader("username")
+	var group []DataBaseModel.AppDataSource
+	DB.Select("ground_name").Where("username = ? AND compile_status = ?", userName, 4).Group("ground_name").Find(&group)
+	groupData := make([]string, 0)
+	for _, g := range group {
+		groupData = append(groupData, g.GroundName)
+	}
+	res.Data = groupData
 	c.JSON(http.StatusOK, res)
 }
 
@@ -79,6 +111,7 @@ func GetAppSpaceView(c *gin.Context) {
 	*/
 	var res responseData
 	userName := c.GetHeader("username")
+	//userSpaceId := c.GetHeader("space_id")
 	keyWords := c.Query("keywords")
 	release := c.Query("release")
 	collect := c.Query("collect")
@@ -569,5 +602,73 @@ func DeletePageComponentView(c *gin.Context) {
 		return
 	}
 	res.Msg = "删除成功"
+	c.JSON(http.StatusOK, res)
+}
+
+
+func GetDatasourceView(c *gin.Context) {
+	/*
+		# 获取数据源相关信息
+	*/
+	// TODO： 徐庆达
+	var res responseData
+	userName := c.GetHeader("username")
+	groundName := c.Query("ground_name")
+	searchName := c.Query("search_name")
+	var dataList []map[string]interface{}
+	var appDataSourceRecord []DataBaseModel.AppDataSource
+	DB.Where("username = ? AND ground_name = ? AND compile_status = ? AND data_source_name LIKE ?", userName, groundName, 4, "%"+searchName+"%").Order("create_time desc").Find(&appDataSourceRecord)
+	for i := 0; i < len(appDataSourceRecord); i++ {
+		//compileStartTime := time.Unix(appDataSourceRecord[i].CompileStartTime, 0)
+		//compileStartTimeStr := compileStartTime.Format("2006-01-02 15:04:05")
+		//compileStopTime := time.Unix(appDataSourceRecord[i].CompileStopTime, 0)
+		//compileStopTimeStr := compileStopTime.Format("2006-01-02 15:04:05")
+		//compileRunTime := timeConvert.UseTimeFormat(int(compileStartTime.Unix()), int(compileStopTime.Unix()))
+		//if appDataSourceRecord[i].CompileStartTime == 0 {
+		//	compileRunTime = "-"
+		//	compileStartTimeStr = "-"
+		//}
+		data := map[string]interface{}{
+			"id":                 appDataSourceRecord[i].ID,
+			"source_name":        appDataSourceRecord[i].DataSourceName,
+			"compile_model_name": appDataSourceRecord[i].ModelName,
+		}
+		dataList = append(dataList, data)
+	}
+	res.Data = dataList
+	c.JSON(http.StatusOK, res)
+
+}
+
+func DataSourceRenameView(c *gin.Context) {
+	/*
+		# 重命名数据源
+	*/
+	var item DataSourceRenameData
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+
+	var res responseData
+	err = DB.Model(&DataBaseModel.AppDataSource{}).Where("id = ?", item.DataSourceID).Update("data_source_name", item.NewName).Error
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "修改失败")
+		return
+	}
+	res.Msg = "修改成功"
+	c.JSON(http.StatusOK, res)
+
+}
+func GetDatasourceInputOutputView(c *gin.Context) {
+	/*
+		# 获取数据源输入与输出接口
+	*/
+	// TODO： 徐庆达
+	var res responseData
+	//userName := c.GetHeader("username")
+	//dataId := c.Query("id")
+
 	c.JSON(http.StatusOK, res)
 }

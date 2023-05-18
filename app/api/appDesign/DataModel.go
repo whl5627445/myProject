@@ -10,9 +10,9 @@ type responseData struct {
 }
 
 type AppModelMarkData struct {
-	PackageId   string `json:"package_id" binding:"required"`
-	ModelName   string `json:"model_name" binding:"required"`
-	CompileType string `json:"compile_type,omitempty" binding:""`
+	PackageId string `json:"package_id" binding:"required"`
+	ModelName string `json:"model_name" binding:"required"`
+	//CompileType string `json:"compile_type,omitempty" binding:""`
 	//MandatorySave  bool   `json:"save,omitempty" binding:""`
 	GroundName     string `json:"ground_name" binding:"required"`
 	DataSourceName string `json:"data_source_name" binding:"required"`
@@ -20,9 +20,7 @@ type AppModelMarkData struct {
 }
 
 type AppMultipleSimulateData struct {
-	RecordId    string               `json:"record_id" binding:"required"`
-	InputData   map[string][]float64 `json:"input_data" binding:"required"`
-	OutputNames []string             `json:"output_names" binding:"required"`
+	AppPageId string `json:"app_page_id" binding:"required"`
 }
 
 type CreateAppSpaceData struct {
@@ -129,4 +127,9 @@ type SetPageInputOutputData struct {
 	PageId  string         `json:"page_id" binding:"required"`
 	Input   datatypes.JSON `json:"input,omitempty" binding:""`
 	Output  datatypes.JSON `json:"output,omitempty" binding:""`
+}
+
+type DataSourceRenameData struct {
+	DataSourceID string `json:"data_source_id" binding:"required"`
+	NewName      string `json:"new_name" binding:"required"`
 }

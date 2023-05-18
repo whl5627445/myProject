@@ -214,7 +214,7 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 	record.EnvModelData = jsonEnvData
 	config.DB.Save(&record)
 	// 发送仿真请求
-	GrpcBuildModelRequest := &grpcPb.SimulationRequest{
+	GrpcBuildModelRequest := &grpcPb.SubmitTaskRequest{
 
 		Uuid:              record.ID,
 		UserSpaceId:       record.UserspaceId,
@@ -223,13 +223,190 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 		ResultFilePath:    resultFilePath,
 		SimulationPraData: SimulationPraData,
 		EnvModelData:      environmentModelData,
-		SimulateType:      record.SimulateType,
+		SimulateType:      record.SimulateType, // OM DM
 		// dm才会用到的参数
 		PackageName:     packageModel.PackageName,
 		PackageFilePath: packageModel.FilePath,
+		// 任务类型simulate  translate run_result
+		TaskType: "simulate",
 	}
-	_, err = grpcPb.Client.Simulation(grpcPb.Ctx, GrpcBuildModelRequest)
+	_, err = grpcPb.Client.SubmitTask(grpcPb.Ctx, GrpcBuildModelRequest)
 	return record.ID, err
+
+}
+
+func GrpcTranslate(record DataBaseModel.AppDataSource) (string, error) {
+	fileOperation.CreateFilePath(record.CompilePath)
+	SimulationPra := GetSimulationOptions(record.ModelName)
+	fmt.Println(SimulationPra)
+	record.StartTime = SimulationPra["startTime"]
+	record.StopTime = SimulationPra["stopTime"]
+	record.Method = SimulationPra["method"]
+	record.Tolerance = SimulationPra["tolerance"]
+	record.NumberOfIntervals = SimulationPra["numberOfIntervals"]
+	record.CompileType = SimulationPra["simulate_type"]
+	err := DB.Save(&record).Error
+	if err != nil {
+		return "", errors.New("save error")
+	}
+	//查询数据库中的实验id对应的记录
+	var experimentRecord DataBaseModel.YssimExperimentRecord
+	DB.Where("id = ? ", record.ExperimentId).First(&experimentRecord)
+	//查询数据库中的模型对应的记录
+	var packageModel DataBaseModel.YssimModels
+	err = DB.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", record.PackageId, []string{"sys", record.UserName}, []string{"0", record.UserSpaceId}).First(&packageModel).Error
+	if err != nil {
+		return "", errors.New("not found")
+	}
+	// 将实验参数写入模型
+	if packageModel.SysUser != "sys" {
+		//YssimExperimentRecord表的json数据绑定到结构体
+		var componentValue modelVarData
+		if experimentRecord.ModelVarData.String() != "" {
+			err = sonic.Unmarshal(experimentRecord.ModelVarData, &componentValue)
+			if err == nil {
+				mapAttributesStr := mapProcessing.MapDataConversion(componentValue.FinalAttributesStr)
+				//设置组件参数
+				result := SetComponentModifierValue(experimentRecord.ModelName, mapAttributesStr)
+				if result {
+					log.Println("重新设置参数-完成。")
+				} else {
+					log.Println("重新设置参数-失败: ", mapAttributesStr)
+				}
+			} else {
+				log.Println("modelVarData: ", experimentRecord.ModelVarData)
+				log.Println("err: ", err)
+				log.Println("json2map filed!")
+			}
+		}
+	}
+	// 构建仿真参数
+	SimulationPraData := map[string]string{
+		"startTime":         record.StartTime,
+		"stopTime":          record.StopTime,
+		"method":            record.Method,
+		"numberOfIntervals": record.NumberOfIntervals,
+		"tolerance":         record.Tolerance,
+	}
+
+	// 获取需要加载的系统模型
+	environmentModelData := GetEnvLibrary(record.UserName, record.UserSpaceId)
+	// 转为json，保存到数据库
+	jsonEnvData, err := sonic.Marshal(environmentModelData)
+	if err != nil {
+		log.Println("环境依赖包解析错误：", err)
+	}
+	//SimulateTaskMap[record.ID] = record
+	//record.SimulateStart = true
+	record.EnvModelData = jsonEnvData
+	config.DB.Save(&record)
+	// 发送仿真请求
+	GrpcBuildModelRequest := &grpcPb.SubmitTaskRequest{
+
+		Uuid:              record.ID,
+		UserSpaceId:       record.UserSpaceId,
+		UserName:          record.UserName,
+		SimulateModelName: record.ModelName,
+		ResultFilePath:    record.CompilePath,
+		SimulationPraData: SimulationPraData,
+		EnvModelData:      environmentModelData,
+		SimulateType:      record.CompileType, // OM DM
+		// dm才会用到的参数
+		PackageName:     packageModel.PackageName,
+		PackageFilePath: packageModel.FilePath,
+		// 任务类型simulate  translate run_result
+		TaskType: "translate",
+	}
+	_, err = grpcPb.Client.SubmitTask(grpcPb.Ctx, GrpcBuildModelRequest)
+	return record.ID, err
+
+}
+
+func GrpcRunResult(appPageId, userName, userSpaceId string) error {
+	var appPageRecord DataBaseModel.AppPage
+	err := DB.Where("id = ? ", appPageId, userName, userSpaceId).First(&appPageRecord).Error
+	if err != nil {
+		return errors.New("not found")
+	}
+	var record DataBaseModel.AppDataSource
+	err = DB.Where("id = ? ", appPageRecord.DataSourceId).First(&record).Error
+	if err != nil {
+		return errors.New("not found")
+	}
+	// 构建仿真参数
+	SimulationPraData := map[string]string{
+		"startTime":         record.StartTime,
+		"stopTime":          record.StopTime,
+		"method":            record.Method,
+		"numberOfIntervals": record.NumberOfIntervals,
+		"tolerance":         record.Tolerance,
+	}
+	//查询数据库中的模型对应的记录
+	var packageModel DataBaseModel.YssimModels
+	err = DB.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", record.PackageId, []string{"sys", record.UserName}, []string{"0", record.UserSpaceId}).First(&packageModel).Error
+	if err != nil {
+		return errors.New("not found")
+	}
+	var environmentModelData map[string]string
+	err = sonic.Unmarshal(record.EnvModelData, &environmentModelData)
+	if err != nil {
+		return errors.New("unmarshal error")
+	}
+	// 获取数据库中的输入
+	var inputMap map[string][]float64
+	sonic.Unmarshal(appPageRecord.Input, &inputMap)
+	// 获取数据库中的输出名称数组
+	var outputNames []string
+	sonic.Unmarshal(appPageRecord.Output, &outputNames)
+	// 将[1,0.5,5]转换为[1,1.5,2,2.5,3,3.5,4,4.5,5]
+	inputData := make(map[string][]float64)
+	for key, value := range inputMap {
+		minVal := value[0]
+		step := value[1]
+		maxVal := value[2]
+
+		// 计算新的数组元素
+		var newValues []float64
+		for i := minVal; i <= maxVal; i += step {
+			newValues = append(newValues, i)
+		}
+		inputData[key] = newValues
+	}
+
+	inputValData := make(map[string]*grpcPb.SubmitTaskRequestInputObj)
+	var inputValDataLen int
+	for k, v := range inputData {
+		if inputValDataLen == 0 {
+			inputValDataLen = len(v)
+		} else if len(v) != inputValDataLen {
+			return errors.New("长度不一致")
+		}
+		inputValData[k] = &grpcPb.SubmitTaskRequestInputObj{
+			InputObjList: v,
+		}
+	}
+	GrpcBuildModelRequest := &grpcPb.SubmitTaskRequest{
+
+		Uuid:              record.ID,
+		UserSpaceId:       record.UserSpaceId,
+		UserName:          record.UserName,
+		SimulateModelName: record.ModelName,
+		ResultFilePath:    record.CompilePath,
+		SimulationPraData: SimulationPraData,
+		EnvModelData:      environmentModelData,
+		SimulateType:      record.CompileType, // OM DM
+		// dm才会用到的参数
+		PackageName:     packageModel.PackageName,
+		PackageFilePath: packageModel.FilePath,
+		// 任务类型"simulate " "translate " "run"三种
+		TaskType: "run",
+		// 多轮仿真用到的参数
+		PageId:         appPageId,
+		OutputValNames: outputNames,
+		InputValData:   inputValData,
+	}
+	_, err = grpcPb.Client.SubmitTask(grpcPb.Ctx, GrpcBuildModelRequest)
+	return err
 
 }
 
