@@ -1,7 +1,6 @@
 package API
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -9,7 +8,6 @@ import (
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/service"
 	"yssim-go/config"
-	"yssim-go/library/fileOperation"
 	"yssim-go/library/timeConvert"
 
 	"github.com/gin-gonic/gin"
@@ -22,6 +20,7 @@ func AppModelMarkView(c *gin.Context) {
 	/*
 		# 标记模型为应用可用数据源, 并编译为可执行文件，若编译失败则不作为数据源显示
 	*/
+	// TODO： 徐庆达
 	var res responseData
 	userName := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
@@ -69,6 +68,7 @@ func MultipleSimulateView(c *gin.Context) {
 	/*
 		# 多轮仿真接口
 	*/
+	// TODO： 徐庆达
 	var res responseData
 	userName := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
@@ -89,10 +89,11 @@ func MultipleSimulateView(c *gin.Context) {
 
 }
 
-func AppGroupNameGetView(c *gin.Context) {
+func GetDataSourceGroupView(c *gin.Context) {
 	/*
 		# 获取用户数据源分组
 	*/
+	// TODO： 徐庆达
 	var res responseData
 	userName := c.GetHeader("username")
 	var group []DataBaseModel.AppDataSource
@@ -605,7 +606,6 @@ func DeletePageComponentView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-
 func GetDatasourceView(c *gin.Context) {
 	/*
 		# 获取数据源相关信息
@@ -619,15 +619,6 @@ func GetDatasourceView(c *gin.Context) {
 	var appDataSourceRecord []DataBaseModel.AppDataSource
 	DB.Where("username = ? AND ground_name = ? AND compile_status = ? AND data_source_name LIKE ?", userName, groundName, 4, "%"+searchName+"%").Order("create_time desc").Find(&appDataSourceRecord)
 	for i := 0; i < len(appDataSourceRecord); i++ {
-		//compileStartTime := time.Unix(appDataSourceRecord[i].CompileStartTime, 0)
-		//compileStartTimeStr := compileStartTime.Format("2006-01-02 15:04:05")
-		//compileStopTime := time.Unix(appDataSourceRecord[i].CompileStopTime, 0)
-		//compileStopTimeStr := compileStopTime.Format("2006-01-02 15:04:05")
-		//compileRunTime := timeConvert.UseTimeFormat(int(compileStartTime.Unix()), int(compileStopTime.Unix()))
-		//if appDataSourceRecord[i].CompileStartTime == 0 {
-		//	compileRunTime = "-"
-		//	compileStartTimeStr = "-"
-		//}
 		data := map[string]interface{}{
 			"id":                 appDataSourceRecord[i].ID,
 			"source_name":        appDataSourceRecord[i].DataSourceName,
@@ -644,6 +635,7 @@ func DataSourceRenameView(c *gin.Context) {
 	/*
 		# 重命名数据源
 	*/
+	// TODO： 徐庆达
 	var item DataSourceRenameData
 	err := c.BindJSON(&item)
 	if err != nil {
