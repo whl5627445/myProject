@@ -170,27 +170,29 @@ type defaultExperiment struct {
 }
 
 type scalarVariable struct {
-	XMLName           xml.Name    `xml:"ScalarVariable"`
-	Name              string      `xml:"name,attr"`
-	ValueReference    string      `xml:"valueReference,attr"`
-	Description       string      `xml:"description,attr"`
-	Variability       string      `xml:"variability,attr"`
-	IsDiscrete        bool        `xml:"isDiscrete,attr"`
-	Causality         string      `xml:"causality,attr"`
-	IsValueChangeable bool        `xml:"isValueChangeable,attr"`
-	Alias             string      `xml:"alias,attr"`
-	ClassIndex        string      `xml:"classIndex,attr"`
-	ClassType         string      `xml:"classType,attr"`
-	IsProtected       bool        `xml:"isProtected,attr"`
-	HideResult        bool        `xml:"hideResult,attr"`
-	FileName          string      `xml:"fileName,attr"`
-	StartLine         string      `xml:"startLine,attr"`
-	StartColumn       string      `xml:"startColumn,attr"`
-	EndLine           string      `xml:"endLine,attr"`
-	EndColumn         string      `xml:"endColumn,attr"`
-	FileWritable      string      `xml:"fileWritable,attr"`
-	Real              realType    `xml:"Real,omitempty"`
-	Boolean           booleanType `xml:"Boolean,omitempty"`
+	XMLName           xml.Name `xml:"ScalarVariable"`
+	Name              string   `xml:"name,attr"`
+	ValueReference    string   `xml:"valueReference,attr"`
+	Description       string   `xml:"description,attr"`
+	Variability       string   `xml:"variability,attr"`
+	IsDiscrete        bool     `xml:"isDiscrete,attr"`
+	IsValueChangeable bool     `xml:"isValueChangeable,attr"`
+	Alias             string   `xml:"alias,attr"`
+	ClassIndex        string   `xml:"classIndex,attr"`
+	ClassType         string   `xml:"classType,attr"`
+	IsProtected       bool     `xml:"isProtected,attr"`
+	HideResult        bool     `xml:"hideResult,attr"`
+	FileName          string   `xml:"fileName,attr"`
+	StartLine         string   `xml:"startLine,attr"`
+	StartColumn       string   `xml:"startColumn,attr"`
+	EndLine           string   `xml:"endLine,attr"`
+	EndColumn         string   `xml:"endColumn,attr"`
+	FileWritable      string   `xml:"fileWritable,attr"`
+	// 用于解析dymola的xml文件中的输入变量
+	Causality string      `xml:"causality,attr"`
+	Initial   string      `xml:"initial,attr"`
+	Real      realType    `xml:"Real,omitempty"`
+	Boolean   booleanType `xml:"Boolean,omitempty"`
 }
 
 type modelVariables struct {
@@ -267,13 +269,14 @@ func SimulationResultTree(path, parent, keyWords string) []map[string]interface{
 			}
 			if !nameMap[splitName[0]] && !scalarVariableMap[name].HideResult && !scalarVariableMap[name].IsProtected {
 				data := map[string]interface{}{
-					"variables":    splitName[0],
-					"description":  scalarVariableMap[name].Description,
-					"display_unit": scalarVariableMap[name].Real.DisplayUnit,
-					"has_child":    false,
-					"id":           id,
-					"start":        scalarVariableMap[name].Real.Start,
-					"unit":         scalarVariableMap[name].Real.Unit,
+					"variables":           splitName[0],
+					"description":         scalarVariableMap[name].Description,
+					"display_unit":        scalarVariableMap[name].Real.DisplayUnit,
+					"has_child":           false,
+					"id":                  id,
+					"is_value_changeable": scalarVariableMap[name].IsValueChangeable,
+					"start":               scalarVariableMap[name].Real.Start,
+					"unit":                scalarVariableMap[name].Real.Unit,
 				}
 				if len(splitName) > 1 {
 					data["has_child"] = true
@@ -337,14 +340,19 @@ func DymolaSimulationResultTree(path, parent, keyWords string) []map[string]inte
 					unit = typeDefinitionsMap[declaredTypeName].RealType.Unit
 					displayUnit = typeDefinitionsMap[declaredTypeName].RealType.DisplayUnit
 				}
+				isValueChangeable := false
+				if scalarVariableMap[name].Causality == "parameter" || scalarVariableMap[name].Initial == "exact" {
+					isValueChangeable = true
+				}
 				data := map[string]interface{}{
-					"variables":    splitName[0],
-					"description":  scalarVariableMap[name].Description,
-					"display_unit": displayUnit,
-					"has_child":    false,
-					"id":           id,
-					"start":        scalarVariableMap[name].Real.Start,
-					"unit":         unit,
+					"variables":           splitName[0],
+					"description":         scalarVariableMap[name].Description,
+					"display_unit":        displayUnit,
+					"has_child":           false,
+					"id":                  id,
+					"is_value_changeable": isValueChangeable,
+					"start":               scalarVariableMap[name].Real.Start,
+					"unit":                unit,
 				}
 				if len(splitName) > 1 {
 					data["has_child"] = true

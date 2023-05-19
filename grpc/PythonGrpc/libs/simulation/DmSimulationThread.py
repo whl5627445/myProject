@@ -231,3 +231,4 @@ class DmSimulation(threading.Thread):
                            )
             json_data = {"message": self.request.simulateModelName + " 仿真失败"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
+        self.state = "stopped"

@@ -31,7 +31,7 @@ func AppModelMarkView(c *gin.Context) {
 		return
 	}
 	var record DataBaseModel.AppDataSource
-	DB.Where("package_id = ? AND username = ? AND user_space_id = ? AND ground_name = ? AND data_source_name = ?", item.PackageId, userName, userSpaceId, item.GroundName, item.DataSourceName).First(&record)
+	DB.Where("package_id = ? AND username = ? AND ground_name = ? AND data_source_name = ?", item.PackageId, userName, item.GroundName, item.DataSourceName).First(&record)
 	if record.ID != "" {
 		c.JSON(http.StatusBadRequest, "名称重复")
 		return
@@ -653,14 +653,40 @@ func DataSourceRenameView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 
 }
+
 func GetDatasourceInputOutputView(c *gin.Context) {
 	/*
 		# 获取数据源输入与输出接口
 	*/
 	// TODO： 徐庆达
-	var res responseData
-	//userName := c.GetHeader("username")
-	//dataId := c.Query("id")
 
+	//username := c.GetHeader("username")
+	//userSpaceId := c.GetHeader("space_id")
+	recordId := c.Query("record_id")
+	parentNode := c.Query("parent_node")
+	keyWords := c.Query("key_words")
+	var record DataBaseModel.AppDataSource
+	DB.Where("id = ? AND compile_status = ?", recordId, "4").First(&record)
+	if record.ID == "" {
+		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+
+	var res responseData
+	if record.CompilePath != "" {
+		if record.CompilePath == "DM" {
+			//DM生成的fmu解压后的xml文件
+			result := service.DymolaSimulationResultTree(record.CompilePath+"result_init.xml", parentNode, keyWords)
+			res.Data = result
+		} else {
+			//OMC仿真完输出的xml文件
+			result := service.SimulationResultTree(record.CompilePath+"result_init.xml", parentNode, keyWords)
+			res.Data = result
+		}
+
+	} else {
+		res.Err = "查询失败"
+		res.Status = 2
+	}
 	c.JSON(http.StatusOK, res)
 }
