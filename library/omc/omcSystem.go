@@ -119,13 +119,14 @@ func (o *ZmqObject) SetOptions() {
 	//o.SendExpressionNoParsed("clearVariables()")
 	//o.SendExpressionNoParsed("clearProgram()")
 	//o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nfAPI,execstat,rml,nfAPIDynamicSelect=false\")")
-	o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nfAPI,initialization,NLSanalyticJacobian\")")
+	//o.SendExpressionNoParsed("setCommandLineOptions(\"-d=initialization,NLSanalyticJacobian\")")
 	o.SendExpressionNoParsed("setCommandLineOptions(\"+ignoreSimulationFlagsAnnotation=false\")")
 	o.SendExpressionNoParsed("setCommandLineOptions(\"+ignoreCommandLineOptionsAnnotation=false\")")
 	o.SendExpressionNoParsed("setCommandLineOptions(\"--simCodeTarget=C\")")
 	//o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nogen,noevalfunc,newInst,nfAPI\")")
-	o.SendExpressionNoParsed("setCommandLineOptions(\"--matchingAlgorithm=PFPlusExt --indexReductionMethod=dynamicStateSelection\")")
+	//o.SendExpressionNoParsed("setCommandLineOptions(\"--matchingAlgorithm=PFPlusExt --indexReductionMethod=dynamicStateSelection\")")
 	o.SendExpressionNoParsed("setModelicaPath(\"/usr/lib/omlibrary\")")
+	o.SendExpressionNoParsed("setCommandLineOptions(\"--matchingAlgorithm=PFPlusExt --indexReductionMethod=dynamicStateSelection --allowNonStandardModelica=reinitInAlgorithms -d=initialization,NLSanalyticJacobian\")")
 	//o.SendExpressionNoParsed("setCompiler(\"clang\")")
 	//o.SendExpressionNoParsed("setCXXCompiler(\"clang++\")")
 }
@@ -475,7 +476,7 @@ func (o *ZmqObject) GetClassNames(className string, all bool) []string {
 // ListFile 返回给定模型的文件源码
 func (o *ZmqObject) ListFile(className string) string {
 	code := ""
-	cmd := "listFile(" + className + ",nestedClasses=false)"
+	cmd := "listFile(" + className + ",nestedClasses=true)"
 	codeData, ok := o.SendExpressionNoParsed(cmd)
 	if ok {
 		code = string(codeData)
@@ -595,6 +596,24 @@ func (o *ZmqObject) SetComponentModifierValue(className string, parameter string
 		code = "()"
 	}
 	cmd := "setComponentModifierValue(" + className + ", " + parameter + ", $Code(" + code + "))"
+	data, ok := o.SendExpressionNoParsed(cmd)
+	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
+	if ok && string(data) == "Ok" {
+		return true
+	}
+	return false
+}
+
+// SetElementModifierValue 设置组件修饰符的值
+func (o *ZmqObject) SetElementModifierValue(className string, parameter string, value string) bool {
+	code := "=" + value + ""
+	if strings.HasPrefix(value, "redeclare") {
+		code = "(" + value + ")"
+	}
+	if value == "" {
+		code = "()"
+	}
+	cmd := "setElementModifierValue(" + className + ", " + parameter + ", $Code(" + code + "))"
 	data, ok := o.SendExpressionNoParsed(cmd)
 	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
 	if ok && string(data) == "Ok" {
@@ -1141,7 +1160,7 @@ func (o *ZmqObject) GetAllSubtypeOf(baseClassName, className string) []interface
 	if ok && len(result) > 0 {
 		return result
 	}
-	return make([]interface{}, 1)
+	return make([]interface{}, 0)
 }
 
 // GcSetMaxHeapSize 设置使用的最大内存上限
