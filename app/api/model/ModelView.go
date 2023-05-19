@@ -594,7 +594,6 @@ func CopyClassView(c *gin.Context) {
 			data["id"] = packageModel.ID
 			data["model_name"] = item.ParentName + "." + item.ModelName
 		}
-		service.ModelSave(item.ModelName)
 		res.Data = data
 	} else {
 		res.Msg = msg

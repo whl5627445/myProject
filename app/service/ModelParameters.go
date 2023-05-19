@@ -77,7 +77,12 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 	m.modelName = modelName
 	m.classAll = omc.OMC.GetInheritedClassesListAll([]string{modelName})
 	bEnd := false
+	modelInheritedClasses := map[string]bool{}
+	extendsModifierNamesList := []string{}
+	extendsModifierNamesMap := make(map[string]map[string]string, 0)
 	for i := 1; i < len(m.classAll) && !bEnd; i++ {
+		modelInheritedClasses[m.classAll[i]] = true
+		extendsModifierNamesList = append(extendsModifierNamesList, omc.OMC.GetExtendsModifierNames(modelName, m.classAll[i])...)
 		elementsData := omc.OMC.GetElements(m.classAll[i])
 		annotationsData := omc.OMC.GetElementAnnotations(m.classAll[i])
 		for n, d := range elementsData {
@@ -89,6 +94,9 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 				break
 			}
 		}
+	}
+	for _, emName := range extendsModifierNamesList {
+		extendsModifierNamesMap[emName] = make(map[string]string, 0)
 	}
 	if m.modelName == modelName {
 		m.classAll = omc.OMC.GetInheritedClassesListAll([]string{m.componentClassName})
@@ -164,6 +172,17 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 				}
 			}
 		}
+
+		emName := componentName + "." + varName
+		if extendsModifierNamesMap[emName] != nil {
+			extendsModifierValue := omc.OMC.GetExtendsModifierValue(modelName, m.modelName, emName)
+			dataDefault["value"] = extendsModifierValue
+			dataDefault["name"] = strings.TrimPrefix(emName, componentName+".")
+			dataDefault["unit"] = getUnit(componentClassName, m.className, varName)
+			dataList = append(dataList, dataDefault)
+			continue
+		}
+
 		if showStartAttribute == "true" {
 			fixedValueString := m.getElementModifierFixedValue(m.name + "." + varName + ".fixed")
 			startValueString := m.getElementModifierFixedValue(m.name + "." + varName + ".start")
@@ -189,22 +208,45 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 		}
 
 		if p[9] == true {
-			//continue
-			//oData := make([]string, 1)
-			dataDefault["defaultvalue"] = omc.OMC.GetElementModifierValue(m.modelName, componentName+"."+dataDefault["name"].(string))
-			options := []interface{}{}
-			if p[13].(string) == "$Any" {
-				options = omc.OMC.GetAllSubtypeOf(p[2].(string), m.modelName)
-			} else {
-				options = omc.OMC.GetAllSubtypeOf(p[13].(string), componentClassName)
-				dataDefault["defaultvalue"] = p[13]
+			annotationBase := p[16].([]interface{})
+			optionsBase := []string{}
+			if annotationBase[0] == "choices" && len(annotationBase) > 1 {
+				choicesData := annotationBase[1].([]interface{})
+				if len(choicesData) > 2 {
+					for _, d := range choicesData[2].([]interface{}) {
+						optionsBase = append(optionsBase, d.(string))
+					}
+				}
 			}
+			options := []interface{}{}
+			dataDefault["defaultvalue"] = p[2]
 			dataDefault["type"] = "Enumeration"
-			//for _, option := range options {
-			//	optionData := "redeclare " + option.(string) + " " + componentName + "." + dataDefault["name"].(string)
-			//	oData = append(oData, optionData)
-			//}
-			dataDefault["options"] = options
+			if p[1] == "-" && p[13].(string) == "$Any" {
+				dataDefault["defaultvalue"] = "replaceable" + " " + p[2].(string) + " " + p[3].(string)
+				dataDefault["value"] = ""
+				dataDefault["options"] = options
+				dataList = append(dataList, dataDefault)
+				continue
+			}
+			if p[13].(string) != "$Any" {
+				options = omc.OMC.GetAllSubtypeOf(p[13].(string), componentClassName)
+			} else {
+				options = omc.OMC.GetAllSubtypeOf(p[2].(string), m.modelName)
+			}
+
+			oData := make([]string, 1)
+			oData = append(oData, optionsBase...)
+			for _, option := range options {
+				optionData := ""
+				if p[1] != "-" {
+					optionData = "redeclare " + " " + p[1].(string) + " " + p[3].(string) + " = " + " " + option.(string)
+				} else {
+					optionData = "replaceable" + " " + p[2].(string) + " " + p[3].(string)
+				}
+				oData = append(oData, optionData)
+			}
+			dataDefault["options"] = oData
+			dataDefault["value"] = omc.OMC.GetElementModifierValue(m.modelName, componentName+"."+dataDefault["name"].(string))
 			dataList = append(dataList, dataDefault)
 			continue
 		}
@@ -212,15 +254,6 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 		if p[10] == "parameter" || dataDefault["group"] != "Parameters" || DialogIndexOk {
 			componentModifierValue := omc.OMC.GetElementModifierValue(m.modelName, componentName+"."+dataDefault["name"].(string))
 			dataDefault["value"] = componentModifierValue
-			if componentModifierValue == "" {
-				for _, n := range m.classAll {
-					componentExtendsModifierValue := omc.OMC.GetExtendsModifierValue(m.componentClassName, n, varName)
-					if componentExtendsModifierValue != "" {
-						dataDefault["value"] = componentExtendsModifierValue
-						break
-					}
-				}
-			}
 
 			isEnumeration := omc.OMC.IsEnumeration(m.className)
 			if isEnumeration {
@@ -301,33 +334,8 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 			dataList = append(dataList, data)
 		}
 	}
-	nameMap := make(map[string]int, 1)
-	var data []interface{}
-	extendsModifierNamesList := omc.OMC.GetExtendsModifierNames(modelName, m.modelName)
-	extendsNameMap := map[string]map[string]string{}
-	for _, nameAll := range extendsModifierNamesList {
-		if strings.HasPrefix(nameAll, componentName) {
-			nameList := strings.Split(nameAll, ".")
-			cName := nameList[0]
-			pName := nameList[1]
-			extendsNameMap[pName] = map[string]string{"cName": cName, "nameAll": nameAll}
-		}
-	}
-	for n := 0; n < len(dataList); n++ {
-		pData := dataList[n].(map[string]interface{})
-		name := pData["name"].(string)
-		_, ok := nameMap[name]
-		if !ok {
-			extendsModifierData, ok := extendsNameMap[name]
-			if ok {
-				extendsModifierValue := omc.OMC.GetExtendsModifierValue(modelName, m.modelName, extendsModifierData["nameAll"])
-				pData["value"] = extendsModifierValue
-			}
-			data = append(data, pData)
-			nameMap[name] = n
-		}
-	}
-	return data
+
+	return dataList
 }
 
 func (m modelParameters) getStartAndFixedValue(name, varName, varType string) string {
@@ -350,7 +358,7 @@ func (m modelParameters) getStartAndFixedValue(name, varName, varType string) st
 
 func SetComponentModifierValue(className string, parameterValue map[string]string) bool {
 	for k, v := range parameterValue {
-		result := omc.OMC.SetComponentModifierValue(className, k, v)
+		result := omc.OMC.SetElementModifierValue(className, k, v)
 		if !result {
 			return false
 		}
