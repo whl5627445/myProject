@@ -134,11 +134,16 @@ func SaveModel(className, copiedClassName, parentName, copeOrDelete, fileName st
 		switch {
 		case parentName != "":
 			path := omc.OMC.GetSourceFile(parentName)
-			go SaveModelSource(parentName+"."+className, path)
+			//omc.OMC.SetSourceFile(parentName+"."+className, path)
+			SaveModelSource(parentName+"."+className, path)
 		default:
-			go SaveModelCode(className, fileName)
+			//SaveModelSource(className, fileName)
+			//omc.OMC.SetSourceFile(className, fileName)
+			//SaveModelToFile(className, fileName)
+			SaveModelCode(className, fileName)
 		}
 	}
+
 	return result, msg
 }
 
