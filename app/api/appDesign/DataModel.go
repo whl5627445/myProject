@@ -34,11 +34,11 @@ type CreateAppSpaceData struct {
 type EditAppSpaceData struct {
 	SpaceId     string `json:"space_id" binding:"required"`
 	SpaceName   string `json:"space_name" binding:"required"`
-	Description string `json:"space_description,omitempty" binding:""`
-	Background  string `json:"space_background,omitempty" binding:""`
-	Icon        string `json:"space_icon,omitempty" binding:""`
-	IconColor   string `json:"space_icon_color,omitempty" binding:""`
-	Collect     bool   `json:"space_collect,omitempty" binding:""`
+	Description string `json:"space_description" binding:"required"`
+	Background  string `json:"space_background" binding:"required"`
+	Icon        string `json:"space_icon" binding:"required"`
+	IconColor   string `json:"space_icon_color" binding:"required"`
+	Collect     bool   `json:"space_collect" binding:""`
 }
 
 type AppSpaceCollectData struct {
@@ -59,8 +59,17 @@ type CreateAppPageData struct {
 type EditAppPageData struct {
 	SpaceId  string `json:"space_id" binding:"required"`
 	PageId   string `json:"page_id" binding:"required"`
-	PageName string `json:"page_name" binding:"required"`
-	Tag      string `json:"tag" binding:"required"`
+	PageName string `json:"page_name,omitempty" binding:""`
+	Tag      string `json:"tag,omitempty" binding:""`
+}
+
+type EditAppPageDesignData struct {
+	Id              string `json:"page_id" binding:"required"`
+	AppSpaceId      string `json:"space_id" binding:"required"`
+	PageWidth       int    `json:"page_width,omitempty" binding:""`
+	PageHeight      int    `json:"page_height,omitempty" binding:""`
+	Background      string `json:"background,omitempty" binding:""`
+	BackgroundColor string `json:"background_color,omitempty" binding:""`
 }
 
 type DeleteAppPageData struct {

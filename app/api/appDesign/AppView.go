@@ -229,13 +229,22 @@ func EditAppSpaceView(c *gin.Context) {
 		return
 	}
 	var space DataBaseModel.AppSpace
-	err = DB.Model(&space).Where("id = ? AND username = ?", item.SpaceId, userName).Updates(item).Update("update_time", time.Now().Local()).Error
-	if err != nil {
-		log.Println("更新app空间时保存数据库出现错误：", err)
-		res.Err = "编辑失败"
-		res.Status = 2
-		c.JSON(http.StatusOK, res)
-		return
+	DB.Where("id = ? AND username = ?", item.SpaceId, userName).First(&space)
+	if space.ID != "" {
+		space.SpaceName = item.SpaceName
+		space.Description = item.Description
+		space.Background = item.Background
+		space.Icon = item.Icon
+		space.IconColor = item.IconColor
+		space.Collect = item.Collect
+		err = DB.Save(&space).Error
+		if err != nil {
+			log.Println("更新app空间时保存数据库出现错误：", err)
+			res.Err = "编辑失败"
+			res.Status = 2
+			c.JSON(http.StatusOK, res)
+			return
+		}
 	}
 	res.Msg = "编辑成功"
 	c.JSON(http.StatusOK, res)
@@ -440,6 +449,40 @@ func DeleteAppPageView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+func EditAppPageDesignView(c *gin.Context) {
+	/*
+		# 修改app页面设计
+	*/
+	var res responseData
+	userName := c.GetHeader("username")
+	var item EditAppPageDesignData
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+
+	var page DataBaseModel.AppPage
+	DB.Where("id = ? AND username = ?", item.Id, userName).First(&page)
+	if page.ID != "" {
+		page.PageWidth = item.PageWidth
+		page.PageHeight = item.PageHeight
+		page.Background = item.Background
+		page.BackgroundColor = item.BackgroundColor
+		err = DB.Save(&page).Error
+		if err != nil {
+			log.Println("修改app页面设计出现错误：", err)
+			res.Err = "编辑失败"
+			res.Status = 2
+			c.JSON(http.StatusOK, res)
+			return
+		}
+	}
+	res.Msg = "编辑成功"
+	c.JSON(http.StatusOK, res)
+
+}
+
 func CreatePageComponentView(c *gin.Context) {
 	/*
 		# app应用页面新增组件
@@ -455,7 +498,8 @@ func CreatePageComponentView(c *gin.Context) {
 		return
 	}
 	var page DataBaseModel.AppPage
-	DB.Where("id = ? AND app_space_id = ? AND username = ?", item.PageId, spaceId, userName).First(&page)
+	DB.Where("id = ? AND app_space_id = ? AND username = ?", item.PageId, userName).First(&page)
+	//DB.Where("id = ? AND app_space_id = ? AND username = ?", item.PageId, spaceId, userName).First(&page)
 	if page.ID == "" {
 		c.JSON(http.StatusBadRequest, "")
 		return
@@ -509,7 +553,8 @@ func GetPageComponentView(c *gin.Context) {
 	pageId := c.Query("page_id")
 	var page DataBaseModel.AppPage
 	var componentList []DataBaseModel.AppPageComponent
-	DB.Where("id = ? AND app_space_id = ? AND username = ?", pageId, spaceId, userName).First(&page)
+	//DB.Where("id = ? AND app_space_id = ? AND username = ?", pageId, spaceId, userName).First(&page)
+	DB.Where("id = ? AND app_space_id = ? AND username = ?", pageId, userName).First(&page)
 	DB.Where("page_id = ?", page.ID).Find(&componentList)
 
 	var componentDataList []map[string]interface{}
@@ -687,6 +732,124 @@ func GetDatasourceInputOutputView(c *gin.Context) {
 	} else {
 		res.Err = "查询失败"
 		res.Status = 2
+	}
+	c.JSON(http.StatusOK, res)
+}
+
+func GetPageInputOutputView(c *gin.Context) {
+	/*
+		# 获取app应用页面的数据源输入与输出接口
+	*/
+	var res responseData
+	userName := c.GetHeader("username")
+	pageId := c.Query("id")
+	var page DataBaseModel.AppPage
+	DB.Where("id = ? AND username = ?", pageId, userName).First(&page)
+	data := map[string]interface{}{
+		"input":  page.Input,
+		"output": page.Output,
+	}
+	res.Data = data
+	c.JSON(http.StatusOK, res)
+}
+
+func SetPageInputOutputView(c *gin.Context) {
+	/*
+		# 设置app应用页面的数据源输入与输出接口
+	*/
+	var res responseData
+	userName := c.GetHeader("username")
+	var item SetPageInputOutputData
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	var page DataBaseModel.AppPage
+	err = DB.Where("id = ? AND app_space_id= ? AND username = ?", item.PageId, item.SpaceId, userName).First(&page).Error
+	if err != nil {
+		log.Println("设置app应用页面的数据源时保存数据库出现错误：", err)
+		res.Err = "设置失败，请稍后再试"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	page.Input = item.Input
+	page.Output = item.Output
+	DB.Save(&page)
+	res.Msg = "设置成功"
+	c.JSON(http.StatusOK, res)
+}
+
+func GetPageComponentInputOutputView(c *gin.Context) {
+	/*
+		# app应用页面组件的数据源输入与输出查询接口
+	*/
+	var res responseData
+	//userName := c.GetHeader("username")
+	//dataId := c.Query("id")
+
+	c.JSON(http.StatusOK, res)
+}
+
+func SetPageComponentInputOutputView(c *gin.Context) {
+	/*
+		# app应用页面组件的数据源输入与输出绑定接口
+	*/
+	var res responseData
+	//userName := c.GetHeader("username")
+	//dataId := c.Query("id")
+
+	c.JSON(http.StatusOK, res)
+}
+
+func AppPagePreviewView(c *gin.Context) {
+	/*
+		# 预览页面组件相关接口
+	*/
+	var res responseData
+	userName := c.GetHeader("username")
+	spaceId := c.Query("space_id")
+	pageId := c.Query("page_id")
+	var space DataBaseModel.AppSpace
+	var page DataBaseModel.AppPage
+	var components []DataBaseModel.AppPageComponent
+	DB.Where("id = ? AND username = ?", spaceId, userName).First(&space)
+	DB.Where("id = ? AND app_space_id = ?", pageId, space.ID).First(&page)
+	DB.Where("page_id = ?", page.ID).Find(&components)
+	pageData := make(map[string]interface{}, 0)
+	pageData["width"] = page.PageWidth
+	pageData["height"] = page.PageHeight
+	pageData["background"] = page.Background
+	pageData["color"] = page.Color
+	componentsData := make([]map[string]interface{}, 0)
+	for _, component := range components {
+		d := make(map[string]interface{}, 0)
+		d["id"] = component.ID
+		d["type"] = component.Type
+		d["input_output"] = component.InputOutput
+		d["width"] = component.Width
+		d["height"] = component.Height
+		d["position_x"] = component.PositionX
+		d["position_y"] = component.PositionY
+		d["angle"] = component.Angle
+		d["horizontal_flip"] = component.HorizontalFlip
+		d["vertical_flip"] = component.VerticalFlip
+		d["opacity"] = component.Opacity
+		d["z_index"] = component.ZIndex
+		d["styles"] = component.Styles
+		d["events"] = component.Events
+		d["chart_config"] = component.ChartConfig
+		d["option"] = component.Option
+		d["component_path"] = component.ComponentPath
+		d["hide"] = component.Hide
+		d["lock"] = component.Lock
+		d["other_configuration"] = component.OtherConfiguration
+		componentsData = append(componentsData, d)
+	}
+	res.Data = map[string]interface{}{
+		"page":       pageData,
+		"components": componentsData,
 	}
 	c.JSON(http.StatusOK, res)
 }

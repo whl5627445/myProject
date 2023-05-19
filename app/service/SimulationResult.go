@@ -281,6 +281,7 @@ func SimulationResultTree(path, parent, keyWords string) []map[string]interface{
 				if len(splitName) > 1 {
 					data["has_child"] = true
 					data["unit"] = ""
+					data["is_value_changeable"] = false
 					data["display_unit"] = ""
 				}
 				id += 1
@@ -356,6 +357,7 @@ func DymolaSimulationResultTree(path, parent, keyWords string) []map[string]inte
 				}
 				if len(splitName) > 1 {
 					data["has_child"] = true
+					data["is_value_changeable"] = false
 					data["unit"] = ""
 					data["display_unit"] = ""
 				}
