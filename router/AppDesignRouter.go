@@ -23,6 +23,8 @@ func AppDesignRouter(g *gin.Engine) {
 		Models.POST("/page/edit", API.EditAppPageView)
 		Models.POST("/page/delete", API.DeleteAppPageView)
 
+		Models.POST("/page/design/edit", API.EditAppPageDesignView)
+
 		Models.GET("/page/input-output/get", API.GetPageInputOutputView)
 		Models.POST("/page/input-output/set", API.SetPageInputOutputView)
 

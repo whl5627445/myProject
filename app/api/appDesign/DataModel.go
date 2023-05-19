@@ -59,8 +59,17 @@ type CreateAppPageData struct {
 type EditAppPageData struct {
 	SpaceId  string `json:"space_id" binding:"required"`
 	PageId   string `json:"page_id" binding:"required"`
-	PageName string `json:"page_name" binding:"required"`
-	Tag      string `json:"tag" binding:"required"`
+	PageName string `json:"page_name,omitempty" binding:""`
+	Tag      string `json:"tag,omitempty" binding:""`
+}
+
+type EditAppPageDesignData struct {
+	Id              string `json:"page_id" binding:"required"`
+	AppSpaceId      string `json:"space_id" binding:"required"`
+	PageWidth       int    `json:"page_width,omitempty" binding:""`
+	PageHeight      int    `json:"page_height,omitempty" binding:""`
+	Background      string `json:"background,omitempty" binding:""`
+	BackgroundColor string `json:"background_color,omitempty" binding:""`
 }
 
 type DeleteAppPageData struct {
