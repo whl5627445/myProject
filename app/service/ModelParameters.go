@@ -210,7 +210,7 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 		if p[9] == true {
 			annotationBase := p[16].([]interface{})
 			optionsBase := []string{}
-			if annotationBase[0] == "choices" && len(annotationBase) > 1 {
+			if len(annotationBase) > 1 && annotationBase[0] == "choices" {
 				choicesData := annotationBase[1].([]interface{})
 				if len(choicesData) > 2 {
 					for _, d := range choicesData[2].([]interface{}) {
