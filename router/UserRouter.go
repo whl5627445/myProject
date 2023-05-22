@@ -10,6 +10,7 @@ func UserRouter(g *gin.Engine) {
 	var Models = g.Group("/user")
 	{
 		Models.GET("/userspace/get", UserAPI.GetUserSpaceView)
+		Models.GET("/userspace/get/new", UserAPI.GetUserSpaceNewView)
 		Models.POST("/userspace/create", UserAPI.CreateUserSpaceView)
 		Models.POST("/userspace/edit", UserAPI.EditUserSpaceView)
 		Models.POST("/userspace/delete", UserAPI.DeleteUserSpaceView)

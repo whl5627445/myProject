@@ -15,24 +15,24 @@ import (
 
 var DB = config.DB
 
-//func GetUserSpaceView(c *gin.Context) {
-//	/*
-//		# 获取用户所有的用户空间条目
-//	*/
-//	userName := c.GetHeader("username")
-//	var res responseData
-//	var modelData []map[string]string
-//	var userSpace []DataBaseModel.YssimUserSpace
-//	_ = DB.Where("username = ?", userName).Find(&userSpace)
-//	for _, space := range userSpace {
-//		modelData = append(modelData, map[string]string{"id": space.ID, "name": space.SpaceName})
-//	}
-//	res.Data = modelData
-//	c.JSON(http.StatusOK, res)
-//
-//}
-
 func GetUserSpaceView(c *gin.Context) {
+	/*
+		# 获取用户所有的用户空间条目
+	*/
+	userName := c.GetHeader("username")
+	var res responseData
+	var modelData []map[string]string
+	var userSpace []DataBaseModel.YssimUserSpace
+	_ = DB.Where("username = ?", userName).Find(&userSpace)
+	for _, space := range userSpace {
+		modelData = append(modelData, map[string]string{"id": space.ID, "name": space.SpaceName})
+	}
+	res.Data = modelData
+	c.JSON(http.StatusOK, res)
+
+}
+
+func GetUserSpaceNewView(c *gin.Context) {
 	/*
 		# 获取用户所有的用户空间条目
 	*/
