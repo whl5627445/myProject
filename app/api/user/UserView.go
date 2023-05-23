@@ -9,6 +9,8 @@ import (
 	"yssim-go/config"
 	"yssim-go/library/timeConvert"
 
+	"gorm.io/gorm"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -41,8 +43,8 @@ func GetUserSpaceNewView(c *gin.Context) {
 	userName := c.GetHeader("username")
 	keyWords := c.Query("keywords")
 	collect := c.Query("collect")
-	var recentAppSpaceList []DataBaseModel.YssimUserSpace
-	var allAppSpaceList []DataBaseModel.YssimUserSpace
+	var recentSpaceList []DataBaseModel.YssimUserSpace
+	var allSpaceList []DataBaseModel.YssimUserSpace
 	db := DB.Where("username = ?", userName)
 	if keyWords != "" {
 		db.Where("space_name LIKE ?", "%"+keyWords+"%")
@@ -50,11 +52,12 @@ func GetUserSpaceNewView(c *gin.Context) {
 	if collect == "1" {
 		db.Where("collect = ?", true)
 	}
-	db.Order("create_time desc").Find(&allAppSpaceList)
-	db.Where("last_login_time <> ?", 0).Order("last_login_time desc").Limit(5).Find(&recentAppSpaceList)
+	db = db.Session(&gorm.Session{})
+	db.Order("create_time desc").Find(&allSpaceList)
+	db.Where("last_login_time <> ?", 0).Order("last_login_time desc").Limit(5).Find(&recentSpaceList)
 	allAppSpace := make([]map[string]interface{}, 0)
 	recentAppSpace := make([]map[string]interface{}, 0)
-	for _, space := range allAppSpaceList {
+	for _, space := range allSpaceList {
 		updateTime := space.UpdatedAt.Local().Unix()
 		editTime := timeConvert.UseTimeFormatNew(int(updateTime), int(time.Now().Local().Unix()), 1)
 		d := map[string]interface{}{
@@ -69,7 +72,7 @@ func GetUserSpaceNewView(c *gin.Context) {
 		}
 		allAppSpace = append(allAppSpace, d)
 	}
-	for _, space := range recentAppSpaceList {
+	for _, space := range recentSpaceList {
 		updateTime := space.UpdatedAt.Local().Unix()
 		editTime := timeConvert.UseTimeFormatNew(int(updateTime), int(time.Now().Local().Unix()), 1)
 		d := map[string]interface{}{
@@ -239,14 +242,12 @@ func LoginUserSpaceView(c *gin.Context) {
 	}
 
 	var space DataBaseModel.YssimUserSpace
-	DB.Where("id = ? AND username = ?", item.SpaceId, userName).First(&space)
+	DB.Model(space).Where("id = ? AND username = ?", item.SpaceId, userName).UpdateColumn("last_login_time", time.Now().Local().Unix())
 
 	var packageModelAll []DataBaseModel.YssimModels
 	DB.Where("sys_or_user IN ?  AND default_version = ? AND userspace_id IN ?", []string{"sys", userName}, true, []string{"0", space.ID}).Find(&packageModelAll)
 	service.ModelLibraryInitialization(packageModelAll)
 
-	space.LastLoginTime = time.Now().Local().Unix()
-	DB.Save(&space)
 	res.Msg = "初始化完成"
 	c.JSON(http.StatusOK, res)
 }
