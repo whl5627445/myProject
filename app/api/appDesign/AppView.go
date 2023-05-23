@@ -10,6 +10,8 @@ import (
 	"yssim-go/config"
 	"yssim-go/library/timeConvert"
 
+	"gorm.io/gorm"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -58,7 +60,6 @@ func AppModelMarkView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	_, _ = service.GrpcTranslate(record)
 	res.Msg = "提交任务成功，请等待编译完成！"
 	c.JSON(http.StatusOK, res)
 
@@ -131,6 +132,7 @@ func GetAppSpaceView(c *gin.Context) {
 	case release == "0":
 		db.Where("is_release = ?", false)
 	}
+	db = db.Session(&gorm.Session{})
 	db.Order("update_time desc").Find(&allAppSpaceList)
 	db.Where("last_login_time <> ?", 0).Order("last_login_time desc").Limit(5).Find(&recentAppSpaceList)
 	allAppSpace := make([]map[string]interface{}, 0)
@@ -314,7 +316,8 @@ func CreateAppPageView(c *gin.Context) {
 	var item CreateAppPageData
 	err := c.BindJSON(&item)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, "")
+		log.Println("创建页面时验证数据出错：", err)
+		c.JSON(http.StatusBadRequest, "验证失败")
 		return
 	}
 	var page DataBaseModel.AppPage
@@ -350,6 +353,7 @@ func GetAppPageView(c *gin.Context) {
 	keyWords := c.Query("keywords")
 	var releaseCount, noReleaseCount int64
 	var pageList []DataBaseModel.AppPage
+	DB.Model(DataBaseModel.AppSpace{}).Where("id = ? AND username = ?", spaceId, userName).UpdateColumn("last_login_time", time.Now().Local().Unix())
 	db := DB.Where("app_space_id = ? AND username = ?", spaceId, userName).Order("create_time desc")
 	rc := DB.Model(DataBaseModel.AppPage{}).Where("app_space_id = ? AND username = ?", spaceId, userName).Where("is_release = ?", true)
 	nrc := DB.Model(DataBaseModel.AppPage{}).Where("app_space_id = ? AND username = ?", spaceId, userName).Where("is_release = ?", false)
@@ -489,7 +493,6 @@ func CreatePageComponentView(c *gin.Context) {
 	*/
 	var res responseData
 	userName := c.GetHeader("username")
-	//spaceId := c.GetHeader("space_id")
 	var item CreatePageComponentData
 	err := c.BindJSON(&item)
 	if err != nil {
@@ -498,8 +501,8 @@ func CreatePageComponentView(c *gin.Context) {
 		return
 	}
 	var page DataBaseModel.AppPage
-	DB.Where("id = ? AND app_space_id = ? AND username = ?", item.PageId, userName).First(&page)
-	//DB.Where("id = ? AND app_space_id = ? AND username = ?", item.PageId, spaceId, userName).First(&page)
+	//DB.Where("id = ? AND username = ?", item.PageId, userName).First(&page)
+	DB.Where("id = ? AND app_space_id = ? AND username = ?", item.PageId, item.SpaceId, userName).First(&page)
 	if page.ID == "" {
 		c.JSON(http.StatusBadRequest, "")
 		return
@@ -549,12 +552,11 @@ func GetPageComponentView(c *gin.Context) {
 
 	var res responseData
 	userName := c.GetHeader("username")
-	//spaceId := c.GetHeader("space_id")
 	pageId := c.Query("page_id")
 	var page DataBaseModel.AppPage
 	var componentList []DataBaseModel.AppPageComponent
-	//DB.Where("id = ? AND app_space_id = ? AND username = ?", pageId, spaceId, userName).First(&page)
-	DB.Where("id = ? AND app_space_id = ? AND username = ?", pageId, userName).First(&page)
+	DB.Where("id = ? AND app_space_id = ? AND username = ?", pageId, spaceId, userName).First(&page)
+	//DB.Where("id = ? AND username = ?", pageId, userName).First(&page)
 	DB.Where("page_id = ?", page.ID).Find(&componentList)
 
 	var componentDataList []map[string]interface{}
@@ -597,7 +599,6 @@ func EditPageComponentView(c *gin.Context) {
 	*/
 	var res responseData
 	userName := c.GetHeader("username")
-	spaceId := c.GetHeader("space_id")
 	var item EditPageComponentData
 	err := c.BindJSON(&item)
 	if err != nil {
@@ -606,14 +607,12 @@ func EditPageComponentView(c *gin.Context) {
 		return
 	}
 	var page DataBaseModel.AppPage
-	//var component DataBaseModel.AppPageComponent
-	DB.Where("id = ? AND app_space_id = ? AND username = ?", item.PageId, spaceId, userName).First(&page)
-	//DB.Where("id = ? AND page_id = ?", item.Id, item.PageId).First(&component)
+	DB.Where("id = ? AND app_space_id = ? AND username = ?", item.PageId, item.SpaceId, userName).First(&page)
 	if page.ID == "" {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
-	err = DB.Where("id = ? AND page_id = ?", item.Id, item.PageId).Updates(&item).Error
+	err = DB.Model(DataBaseModel.AppPageComponent{}).Where("id = ? AND page_id = ?", item.Id, item.PageId).Updates(&item).Error
 	if err != nil {
 		log.Println("编辑app页面中组件时保存数据库出现错误：", err)
 		res.Err = "编辑失败，请稍后再试"
@@ -638,8 +637,8 @@ func DeletePageComponentView(c *gin.Context) {
 		return
 	}
 	var components DataBaseModel.AppPageComponent
-	//err = DB.Model(&page).Where("id IN ? AND app_space_id = ? AND username = ?", item.PageId, item.SpaceId, userName).Delete(&page).Error
 	err = DB.Model(DataBaseModel.AppPageComponent{}).Where("id IN ? AND page_id = ?", item.ComponentsList, item.PageId).Delete(&components).Error
+	//err = DB.Model(DataBaseModel.AppPageComponent{}).Where("id IN ? AND page_id = ?", item.ComponentsList, item.PageId).Delete(&components).Error
 	if err != nil {
 		log.Println("删除app空间页面组件时保存数据库出现错误：", err)
 		res.Err = "删除失败，请稍后再试"
