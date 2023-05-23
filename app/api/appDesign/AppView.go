@@ -10,6 +10,8 @@ import (
 	"yssim-go/config"
 	"yssim-go/library/timeConvert"
 
+	"gorm.io/gorm"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -30,6 +32,7 @@ func AppModelMarkView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
+	// 检测数据源名称是否重复
 	var record DataBaseModel.AppDataSource
 	DB.Where("package_id = ? AND username = ? AND ground_name = ? AND data_source_name = ?", item.PackageId, userName, item.GroundName, item.DataSourceName).First(&record)
 	if record.ID != "" {
@@ -37,6 +40,7 @@ func AppModelMarkView(c *gin.Context) {
 		return
 	}
 	CompilePath := "static/UserFiles/modelDataSource/" + userName + "/" + strings.ReplaceAll(item.ModelName, ".", "-") + "/" + time.Now().Local().Format("20060102150405") + "/"
+	// 数据源表中创建一条记录
 	dataSource := DataBaseModel.AppDataSource{
 		ID:             uuid.New().String(),
 		UserName:       userName,
@@ -54,11 +58,16 @@ func AppModelMarkView(c *gin.Context) {
 	if err != nil {
 		log.Println("标记数据源时创建数据库记录失败： ", err)
 		res.Err = "创建失败"
-		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	_, _ = service.GrpcTranslate(record)
+	_, err = service.GrpcTranslate(record)
+	if err != nil {
+		log.Println("提交任务失败： ", err)
+		res.Err = "创建失败"
+		c.JSON(http.StatusOK, res)
+		return
+	}
 	res.Msg = "提交任务成功，请等待编译完成！"
 	c.JSON(http.StatusOK, res)
 
@@ -71,15 +80,15 @@ func MultipleSimulateView(c *gin.Context) {
 	// TODO： 徐庆达
 	var res responseData
 	userName := c.GetHeader("username")
-	userSpaceId := c.GetHeader("space_id")
 	var item AppMultipleSimulateData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
-	err = service.GrpcRunResult(item.AppPageId, userName, userSpaceId)
+	err = service.GrpcRunResult(item.AppPageId, userName, item.SpaceId, item.SingleSimulationInputData)
 	if err != nil {
+		log.Println(err)
 		c.JSON(http.StatusBadRequest, "多轮仿真失败！")
 		return
 	}
@@ -87,6 +96,26 @@ func MultipleSimulateView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 	return
 
+}
+
+func GetMultipleSimulateResultView(c *gin.Context) {
+	/*
+		# 读取多轮仿真结果csv数据接口
+	*/
+	// TODO： 徐庆达
+	var res responseData
+	appPageId := c.Query("app_page_id")
+	singleOrMultiple := c.Query("single_or_multiple")
+	data, err := service.MultipleSimulateResult(appPageId, singleOrMultiple)
+	if err != nil {
+		log.Println(err)
+		res.Msg = "读取失败。"
+		c.JSON(http.StatusBadRequest, res)
+		return
+	}
+	res.Data = data
+	res.Msg = "读取成功。"
+	c.JSON(http.StatusOK, res)
 }
 
 func GetDataSourceGroupView(c *gin.Context) {
@@ -131,6 +160,7 @@ func GetAppSpaceView(c *gin.Context) {
 	case release == "0":
 		db.Where("is_release = ?", false)
 	}
+	db = db.Session(&gorm.Session{})
 	db.Order("update_time desc").Find(&allAppSpaceList)
 	db.Where("last_login_time <> ?", 0).Order("last_login_time desc").Limit(5).Find(&recentAppSpaceList)
 	allAppSpace := make([]map[string]interface{}, 0)
@@ -350,6 +380,7 @@ func GetAppPageView(c *gin.Context) {
 	keyWords := c.Query("keywords")
 	var releaseCount, noReleaseCount int64
 	var pageList []DataBaseModel.AppPage
+	DB.Model(DataBaseModel.AppSpace{}).Where("id = ? AND username = ?", spaceId, userName).UpdateColumn("last_login_time", time.Now().Local().Unix())
 	db := DB.Where("app_space_id = ? AND username = ?", spaceId, userName).Order("create_time desc")
 	rc := DB.Model(DataBaseModel.AppPage{}).Where("app_space_id = ? AND username = ?", spaceId, userName).Where("is_release = ?", true)
 	nrc := DB.Model(DataBaseModel.AppPage{}).Where("app_space_id = ? AND username = ?", spaceId, userName).Where("is_release = ?", false)
@@ -489,7 +520,6 @@ func CreatePageComponentView(c *gin.Context) {
 	*/
 	var res responseData
 	userName := c.GetHeader("username")
-	//spaceId := c.GetHeader("space_id")
 	var item CreatePageComponentData
 	err := c.BindJSON(&item)
 	if err != nil {
@@ -498,7 +528,7 @@ func CreatePageComponentView(c *gin.Context) {
 		return
 	}
 	var page DataBaseModel.AppPage
-	DB.Where("id = ? AND app_space_id = ? AND username = ?", item.PageId, userName).First(&page)
+	DB.Where("id = ? AND username = ?", item.PageId, userName).First(&page)
 	//DB.Where("id = ? AND app_space_id = ? AND username = ?", item.PageId, spaceId, userName).First(&page)
 	if page.ID == "" {
 		c.JSON(http.StatusBadRequest, "")
@@ -509,7 +539,6 @@ func CreatePageComponentView(c *gin.Context) {
 	pageComponent.PageId = item.PageId
 	pageComponent.Height = item.Height
 	pageComponent.Width = item.Width
-	pageComponent.InputOutput = item.InputOutput
 	pageComponent.Type = item.Type
 	pageComponent.PositionX = item.PositionX
 	pageComponent.PositionY = item.PositionY
@@ -554,7 +583,7 @@ func GetPageComponentView(c *gin.Context) {
 	var page DataBaseModel.AppPage
 	var componentList []DataBaseModel.AppPageComponent
 	//DB.Where("id = ? AND app_space_id = ? AND username = ?", pageId, spaceId, userName).First(&page)
-	DB.Where("id = ? AND app_space_id = ? AND username = ?", pageId, userName).First(&page)
+	DB.Where("id = ? AND username = ?", pageId, userName).First(&page)
 	DB.Where("page_id = ?", page.ID).Find(&componentList)
 
 	var componentDataList []map[string]interface{}
@@ -562,7 +591,6 @@ func GetPageComponentView(c *gin.Context) {
 	for _, c := range componentList {
 		p := map[string]interface{}{
 			"id":                  c.ID,
-			"input_output":        c.InputOutput,
 			"type":                c.Type,
 			"width":               c.Width,
 			"height":              c.Height,
@@ -597,7 +625,6 @@ func EditPageComponentView(c *gin.Context) {
 	*/
 	var res responseData
 	userName := c.GetHeader("username")
-	spaceId := c.GetHeader("space_id")
 	var item EditPageComponentData
 	err := c.BindJSON(&item)
 	if err != nil {
@@ -606,14 +633,12 @@ func EditPageComponentView(c *gin.Context) {
 		return
 	}
 	var page DataBaseModel.AppPage
-	//var component DataBaseModel.AppPageComponent
-	DB.Where("id = ? AND app_space_id = ? AND username = ?", item.PageId, spaceId, userName).First(&page)
-	//DB.Where("id = ? AND page_id = ?", item.Id, item.PageId).First(&component)
+	DB.Where("id = ? AND app_space_id = ? AND username = ?", item.PageId, item.SpaceId, userName).First(&page)
 	if page.ID == "" {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
-	err = DB.Where("id = ? AND page_id = ?", item.Id, item.PageId).Updates(&item).Error
+	err = DB.Model(DataBaseModel.AppPageComponent{}).Where("id = ? AND page_id = ?", item.Id, item.PageId).Updates(&item).Error
 	if err != nil {
 		log.Println("编辑app页面中组件时保存数据库出现错误：", err)
 		res.Err = "编辑失败，请稍后再试"
@@ -786,9 +811,44 @@ func GetPageComponentInputOutputView(c *gin.Context) {
 		# app应用页面组件的数据源输入与输出查询接口
 	*/
 	var res responseData
-	//userName := c.GetHeader("username")
-	//dataId := c.Query("id")
+	id := c.Query("id")
+	pageId := c.Query("page_id")
+	spaceId := c.Query("space_id")
+	var component DataBaseModel.AppPageComponent
+	var page DataBaseModel.AppPage
+	DB.Where("app_space_id = ? AND id = ? ", spaceId, pageId).First(&page)
+	if page.ID == "" {
 
+		res.Err = "app_page == null"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	DB.Where("id = ? AND page_id= ? ", id, pageId).First(&component)
+	if component.ID == "" {
+		res.Err = "app_page_components == null"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	input := map[string]interface{}{
+		"inputName": component.InputName,
+		"max":       component.Max,
+		"min":       component.Min,
+		"interval":  component.Interval,
+	}
+
+	output := map[string]interface{}{
+		"outputName": component.OutputName,
+	}
+
+	data := map[string]interface{}{
+		"input":  input,
+		"output": output,
+	}
+
+	res.Data = data
 	c.JSON(http.StatusOK, res)
 }
 
@@ -797,9 +857,32 @@ func SetPageComponentInputOutputView(c *gin.Context) {
 		# app应用页面组件的数据源输入与输出绑定接口
 	*/
 	var res responseData
-	//userName := c.GetHeader("username")
-	//dataId := c.Query("id")
+	var component DataBaseModel.AppPageComponent
 
+	var item SetPageComponentsInputOutputData
+	err := c.BindJSON(&item)
+	if err != nil {
+		log.Println(err)
+		res.Err = "设置参数错误!"
+		c.JSON(http.StatusBadRequest, res)
+		return
+	}
+	err = DB.Where("id = ? AND page_id = ?", item.Id, item.PageId).First(&component).Error
+	if err != nil {
+		log.Println("app应用页面组件的数据源输入与输出绑定时保存数据库出现错误：", err)
+		res.Err = "设置失败，请稍后再试"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	component.InputName = item.InputName
+	component.OutputName = item.OutputName
+	component.Max = item.Min
+	component.Min = item.Min
+	component.Interval = item.Interval
+	DB.Save(&component)
+	res.Msg = "设置成功"
 	c.JSON(http.StatusOK, res)
 }
 
@@ -827,7 +910,11 @@ func AppPagePreviewView(c *gin.Context) {
 		d := make(map[string]interface{}, 0)
 		d["id"] = component.ID
 		d["type"] = component.Type
-		d["input_output"] = component.InputOutput
+		d["input_name"] = component.InputName
+		d["output_name"] = component.Option
+		d["max"] = component.Max
+		d["min"] = component.Min
+		d["interval"] = component.Interval
 		d["width"] = component.Width
 		d["height"] = component.Height
 		d["position_x"] = component.PositionX

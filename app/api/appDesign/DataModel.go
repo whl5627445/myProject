@@ -20,7 +20,9 @@ type AppModelMarkData struct {
 }
 
 type AppMultipleSimulateData struct {
-	AppPageId string `json:"app_page_id" binding:"required"`
+	AppPageId                 string             `json:"app_page_id" binding:"required"`
+	SpaceId                   string             `json:"space_id" binding:"required"`
+	SingleSimulationInputData map[string]float64 `json:"single_simulation_input_data" binding:""`
 }
 
 type CreateAppSpaceData struct {
@@ -52,8 +54,8 @@ type DeleteAppSpaceData struct {
 
 type CreateAppPageData struct {
 	SpaceId  string `json:"space_id" binding:"required"`
-	PageName string `json:"name" binding:"required"`
-	Tag      string `json:"tag" binding:"required"`
+	PageName string `json:"name" binding:"required,max=16"`
+	Tag      string `json:"tag" binding:"required,max=10"`
 }
 
 type EditAppPageData struct {
@@ -78,6 +80,7 @@ type DeleteAppPageData struct {
 }
 
 type CreatePageComponentData struct {
+	//SpaceId            string         `json:"space_id" binding:"required"`
 	PageId             string         `json:"page_id" binding:"required"`
 	Type               string         `json:"type" binding:"required"`
 	InputOutput        datatypes.JSON `json:"input_output,omitempty" binding:""`
@@ -103,6 +106,7 @@ type CreatePageComponentData struct {
 
 type EditPageComponentData struct {
 	Id                 string         `json:"id" binding:"required"`
+	SpaceId            string         `json:"space_id" binding:"required"`
 	PageId             string         `json:"page_id" binding:"required"`
 	Type               string         `json:"type,omitempty" binding:""`
 	InputOutput        datatypes.JSON `json:"input_output,omitempty" binding:""`
@@ -127,6 +131,7 @@ type EditPageComponentData struct {
 }
 
 type DeletePageComponentData struct {
+	//SpaceId        string   `json:"space_id" binding:"required"`
 	PageId         string   `json:"page_id" binding:"required"`
 	ComponentsList []string `json:"component_id" binding:"required"`
 }
@@ -136,6 +141,16 @@ type SetPageInputOutputData struct {
 	PageId  string         `json:"page_id" binding:"required"`
 	Input   datatypes.JSON `json:"input,omitempty" binding:""`
 	Output  datatypes.JSON `json:"output,omitempty" binding:""`
+}
+
+type SetPageComponentsInputOutputData struct {
+	Id         string         `json:"id" binding:"required"`
+	PageId     string         `json:"page_id" binding:"required"`
+	InputName  string         `json:"input_name" binding:"required"`
+	OutputName datatypes.JSON `json:"output_name" binding:"required"`
+	Max        float64        `json:"max" binding:"required"`
+	Min        float64        `json:"min" binding:"required"`
+	Interval   float64        `json:"interval" binding:"required"`
 }
 
 type DataSourceRenameData struct {

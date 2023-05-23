@@ -49,23 +49,25 @@ type AppDataSource struct {
 }
 
 type AppPage struct {
-	ID              string         `gorm:"primaryKey"`
-	UserName        string         `gorm:"column:username"`
-	AppSpaceId      string         `gorm:"column:app_space_id"`
-	Input           datatypes.JSON `gorm:"column:input"`
-	Output          datatypes.JSON `gorm:"column:output"`
-	PageName        string         `gorm:"column:page_name"`
-	PagePath        string         `gorm:"column:page_path"`
-	DataSourceId    string         `gorm:"column:data_source_id"`
-	PageWidth       int            `gorm:"column:page_width"`
-	PageHeight      int            `gorm:"column:page_height"`
-	Background      string         `gorm:"column:background"`
-	Color           string         `gorm:"column:color"`
-	BackgroundColor string         `gorm:"column:background_color"`
-	Release         bool           `gorm:"column:is_release"`
-	CreatedAt       *time.Time     `gorm:"column:create_time;autoCreateTime"`
-	UpdatedAt       *time.Time     `gorm:"column:update_time"`
-	Deleted         gorm.DeletedAt `gorm:"column:deleted_at"`
+	ID                         string         `gorm:"primaryKey"`
+	UserName                   string         `gorm:"column:username"`
+	AppSpaceId                 string         `gorm:"column:app_space_id"`
+	Input                      datatypes.JSON `gorm:"column:input"`
+	Output                     datatypes.JSON `gorm:"column:output"`
+	PageName                   string         `gorm:"column:page_name"`
+	PagePath                   string         `gorm:"column:page_path"`
+	DataSourceId               string         `gorm:"column:data_source_id"`
+	PageWidth                  int            `gorm:"column:page_width"`
+	PageHeight                 int            `gorm:"column:page_height"`
+	Background                 string         `gorm:"column:background"`
+	Color                      string         `gorm:"column:color"`
+	BackgroundColor            string         `gorm:"column:background_color"`
+	Release                    bool           `gorm:"column:is_release"`
+	SingleSimulationResultPath string         `gorm:"column:single_simulation_result_path"`
+	MultiSimulationResultsPath string         `gorm:"column:multi_simulation_results_path"`
+	CreatedAt                  *time.Time     `gorm:"column:create_time;autoCreateTime"`
+	UpdatedAt                  *time.Time     `gorm:"column:update_time"`
+	Deleted                    gorm.DeletedAt `gorm:"column:deleted_at"`
 }
 
 type AppComponentBases struct {
@@ -90,7 +92,11 @@ type AppComponentBases struct {
 type AppPageComponent struct {
 	ID                 string         `gorm:"primaryKey"`
 	PageId             string         `gorm:"column:page_id"`
-	InputOutput        datatypes.JSON `gorm:"column:input_output"`
+	InputName          string         `gorm:"column:input_name"`
+	OutputName         datatypes.JSON `gorm:"column:output_name"`
+	Max                float64        `gorm:"column:max"`
+	Min                float64        `gorm:"column:min"`
+	Interval           float64        `gorm:"column:interval"`
 	Type               string         `gorm:"column:type"`
 	Width              int            `gorm:"column:width"`
 	Height             int            `gorm:"column:height"`
