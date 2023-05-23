@@ -912,7 +912,7 @@ func (o *ZmqObject) GetSimulationOptions(className string) []string {
 	}
 	// 获取求解其类型的注释
 	solver := o.GetAnnotationModifierValue(className, "__OpenModelica_simulationFlags", "solver")
-	log.Println("solver:", solver)
+	//log.Println("solver:", solver)
 	if strings.Contains(solver, "not Found") {
 		solver = "dassl"
 	}
@@ -946,23 +946,23 @@ func (o *ZmqObject) ReadSimulationResult(varNameList []string, path string) ([][
 	data = bytes.ReplaceAll(data, []byte("{"), []byte("["))
 	data = bytes.ReplaceAll(data, []byte("}"), []byte("]"))
 	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
-	dataCutOff := make([]string, 0)
-	for i := 0; i < len(data); i++ {
-		index := strings.Index(string(data[i]), ".")
-		if index > 0 {
-			dataCutOff = append(dataCutOff, string(data[i])[:5])
-		} else {
-			dataCutOff = append(dataCutOff, string(data[i]))
-		}
-	}
+
+	dataUnmarshal := make([][]float64, 0, 2)
+	dataUnmarshal = append(dataUnmarshal, make([]float64, 0, 1))
+	dataUnmarshal = append(dataUnmarshal, make([]float64, 0, 1))
+	_ = sonic.Unmarshal(data, &dataUnmarshal)
 	dataList := make([][]float64, 0, 2)
 	dataList = append(dataList, make([]float64, 0, 1))
 	dataList = append(dataList, make([]float64, 0, 1))
-	_ = sonic.Unmarshal(data, &dataList)
-	//if err != nil || len(dataList) == 0 {
-	//	log.Println(err)
-	//	return nil, false
-	//}
+	d := dataUnmarshal[0]
+	for index, _ := range d {
+		// 时间和数据可能存在重复，循环将时间相同的部分移除
+		if index != 0 && (dataUnmarshal[0][index] == dataUnmarshal[0][index-1]) {
+			continue
+		}
+		dataList[0] = append(dataList[0], dataUnmarshal[0][index])
+		dataList[1] = append(dataList[1], dataUnmarshal[1][index])
+	}
 	return dataList, true
 }
 
