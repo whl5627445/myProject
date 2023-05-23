@@ -131,7 +131,6 @@ type EditPageComponentData struct {
 }
 
 type DeletePageComponentData struct {
-	SpaceId        string   `json:"space_id" binding:"required"`
 	PageId         string   `json:"page_id" binding:"required"`
 	ComponentsList []string `json:"component_id" binding:"required"`
 }
@@ -141,6 +140,16 @@ type SetPageInputOutputData struct {
 	PageId  string         `json:"page_id" binding:"required"`
 	Input   datatypes.JSON `json:"input,omitempty" binding:""`
 	Output  datatypes.JSON `json:"output,omitempty" binding:""`
+}
+
+type SetPageComponentsInputOutputData struct {
+	Id         string         `json:"id" binding:"required"`
+	PageId     string         `json:"page_id" binding:"required"`
+	InputName  string         `json:"input_name" binding:"required"`
+	OutputName datatypes.JSON `json:"output_name" binding:"required"`
+	Max        float64        `json:"max" binding:"required"`
+	Min        float64        `json:"min" binding:"required"`
+	Interval   float64        `json:"interval" binding:"required"`
 }
 
 type DataSourceRenameData struct {
