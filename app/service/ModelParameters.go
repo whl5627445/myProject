@@ -239,9 +239,9 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 			for _, option := range options {
 				optionData := ""
 				if p[1] != "-" {
-					optionData = "redeclare " + " " + p[1].(string) + " " + p[3].(string) + " = " + " " + option.(string)
+					optionData = "redeclare " + p[1].(string) + " " + p[3].(string) + " = " + option.(string)
 				} else {
-					optionData = "replaceable" + " " + p[2].(string) + " " + p[3].(string)
+					optionData = "replaceable " + p[2].(string) + " " + p[3].(string)
 				}
 				oData = append(oData, optionData)
 			}
