@@ -507,10 +507,17 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 
 func (g *graphicsData) getnthconnectionData() {
 	ConnectionCount := omc.OMC.GetConnectionCountList(g.modelNameList)
+	ncDistinct := map[string]bool{}
 	for i := 0; i < len(ConnectionCount); i++ {
 		for c := 0; c < ConnectionCount[i]; c++ {
 			ncData := omc.OMC.GetNthConnection(g.modelNameList[i], c+1)
-			ncaData := omc.OMC.GetNthConnectionAnnotation(g.modelNameList[i], c+1) //
+			if len(ncData) > 1 {
+				if ncDistinct[ncData[0]+ncData[1]] {
+					continue
+				}
+				ncDistinct[ncData[0]+ncData[1]] = true
+			}
+			ncaData := omc.OMC.GetNthConnectionAnnotation(g.modelNameList[i], c+1)
 			d1Data := g.data01(ncaData, g.modelNameList[i], g.modelNameList[i], g.modelNameList[i])
 			if len(ncData) != 0 && len(ncaData) != 0 && len(d1Data) != 0 {
 				for _, daData := range d1Data {
