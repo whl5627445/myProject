@@ -25,8 +25,6 @@ import DyMat
 from fmpy import write_csv
 import configparser
 
-
-
 config = configparser.ConfigParser()
 config.read('./config/grpc_config.ini')
 start_port = int(config['app']['start_port'])
@@ -212,7 +210,7 @@ if __name__ == '__main__':
         def run(self):
             print("仿真任务执行线程启动")
             while True:
-                time.sleep(2)
+                time.sleep(0.2)
                 if len(OmSimulationThreadList)>0:
                     print("OM执行任务队列剩余数量： ", len(OmSimulationThreadList))
                 if len(omcTaskList)>0:
@@ -231,15 +229,16 @@ if __name__ == '__main__':
                         # del i
 
                 if len(OmSimulationThreadList) < max_simulation_num and len(omcTaskList) > 0:
-                    # 找到空闲的端口号
                     data = omcTaskList.pop(0)
                     print(data)
                     if data.taskType == "simulate":
+                        # 找到空闲的端口号
                         port = findPort(start_port)
                         om_threading = OmcSimulation(data, port)
                         om_threading.start()
                         OmSimulationThreadList.append(om_threading)
                     if data.taskType == "translate":
+                        # 找到空闲的端口号
                         port = findPort(start_port)
                         om_threading = OmcTranslateThread(data, port)
                         om_threading.start()

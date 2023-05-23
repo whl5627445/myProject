@@ -77,12 +77,12 @@ def update_compile_records(uuid,
 
 def update_app_pages_records(pages_id, single_simulation_result_path=None, multi_simulation_results_path=None):
     with Session() as session:
-        data_sources_record = session.query(AppPages).filter(
-            AppDataSources.id == pages_id).first()
+        app_pages_record = session.query(AppPages).filter(
+            AppPages.id == pages_id).first()
         if single_simulation_result_path:
-            data_sources_record.compile_status = single_simulation_result_path
+            app_pages_record.single_simulation_result_path = single_simulation_result_path
         if multi_simulation_results_path:
-            data_sources_record.compile_start_time = multi_simulation_results_path
+            app_pages_record.multi_simulation_results_path = multi_simulation_results_path
         session.commit()
 
 

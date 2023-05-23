@@ -5,11 +5,11 @@ zarr==2.13.3
 psutil==5.9.4
 sqlalchemy==1.4.46
 pymysql==1.0.2
-grpcio
-grpcio-tools
-future
-pyparsing
+grpcio==1.51.1
+grpcio-tools==1.51.1
+future==0.18.3
+pyparsing== 3.0.9
 zmq
-dymat
-scipy
-redis
+dymat==0.7
+scipy== 1.10.1
+redis==4.5.1

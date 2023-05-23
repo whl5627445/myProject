@@ -83,6 +83,6 @@ class OmcRunThread(threading.Thread):
                 df.to_csv(r"/home/simtek/code/" + self.absolute_path + 'output.csv', index=False)
                 # 更新数据库
                 update_app_pages_records(self.request.pageId,
-                                         single_simulation_result_path=self.absolute_path + 'output.csv')
+                                         multi_simulation_results_path=self.absolute_path + 'output.csv')
         self.state = "stopped"
         delete_item_from_json(self.uuid)
