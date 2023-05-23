@@ -20,7 +20,9 @@ type AppModelMarkData struct {
 }
 
 type AppMultipleSimulateData struct {
-	AppPageId string `json:"app_page_id" binding:"required"`
+	AppPageId                 string             `json:"app_page_id" binding:"required"`
+	SpaceId                   string             `json:"space_id" binding:"required"`
+	SingleSimulationInputData map[string]float64 `json:"single_simulation_input_data" binding:""`
 }
 
 type CreateAppSpaceData struct {
