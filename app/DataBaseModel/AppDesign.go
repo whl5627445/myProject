@@ -93,7 +93,7 @@ type AppPageComponent struct {
 	ID                 string         `gorm:"primaryKey"`
 	PageId             string         `gorm:"column:page_id"`
 	InputName          string         `gorm:"column:input_name"`
-	OutputName         datatypes.JSON `gorm:"column:output_name"`
+	Output             datatypes.JSON `gorm:"column:output"`
 	Max                float64        `gorm:"column:max"`
 	Min                float64        `gorm:"column:min"`
 	Interval           float64        `gorm:"column:interval"`

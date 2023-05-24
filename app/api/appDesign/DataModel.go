@@ -143,13 +143,13 @@ type SetPageInputOutputData struct {
 }
 
 type SetPageComponentsInputOutputData struct {
-	Id         string         `json:"id" binding:"required"`
-	PageId     string         `json:"page_id" binding:"required"`
-	InputName  string         `json:"input_name" binding:"required"`
-	OutputName datatypes.JSON `json:"output_name" binding:"required"`
-	Max        float64        `json:"max" binding:"required"`
-	Min        float64        `json:"min" binding:"required"`
-	Interval   float64        `json:"interval" binding:"required"`
+	Id        string         `json:"id" binding:"required"`
+	PageId    string         `json:"page_id" binding:"required"`
+	InputName string         `json:"input_name" binding:""`
+	Output    datatypes.JSON `json:"output" binding:""`
+	Max       float64        `json:"max" binding:""`
+	Min       float64        `json:"min" binding:""`
+	Interval  float64        `json:"interval" binding:""`
 }
 
 type DataSourceRenameData struct {
