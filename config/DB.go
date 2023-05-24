@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"gorm.io/gorm/logger"
+
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -27,7 +29,8 @@ func openMySql() *gorm.DB {
 	SqlDB.SetMaxIdleConns(50)
 	SqlDB.SetMaxOpenConns(300)
 	SqlDB.SetConnMaxLifetime(time.Hour * 5)
-	Session := db.Session(&gorm.Session{PrepareStmt: true})
+	Session := db.Session(&gorm.Session{PrepareStmt: true,
+		Logger: logger.Default.LogMode(logger.Info)})
 	return Session
 }
 
