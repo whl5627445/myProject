@@ -194,7 +194,10 @@ func CollectUserSpaceView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	res.Msg = "编辑成功"
+	res.Msg = "收藏成功"
+	if !item.Collect {
+		res.Msg = "取消收藏成功"
+	}
 	c.JSON(http.StatusOK, res)
 }
 
@@ -216,7 +219,7 @@ func DeleteUserSpaceView(c *gin.Context) {
 			service.Clear()
 		}
 	}
-	DB.Model(&space).Where("id = ? AND username = ?", item.SpaceId, userName).Delete(&space)
+	DB.Model(&space).Where("id IN ? AND username = ?", item.SpaceId, userName).Delete(&space)
 	res.Msg = "删除成功"
 	c.JSON(http.StatusOK, res)
 

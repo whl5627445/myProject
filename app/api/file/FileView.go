@@ -678,7 +678,12 @@ func CreateResourcesDirView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
-
+	if item.Path == "" {
+		res.Status = 2
+		res.Err = "文件夹名称不能为空"
+		c.JSON(http.StatusOK, res)
+		return
+	}
 	var packageModel DataBaseModel.YssimModels
 	DB.Where("id = ? AND sys_or_user = ? AND userspace_id = ?", item.PackageId, userName, userSpaceId).First(&packageModel)
 	if packageModel.ID == "" {
@@ -857,6 +862,12 @@ func BackgroundUploadView(c *gin.Context) {
 	var res responseData
 	userName := c.GetHeader("username")
 	varFile, err := c.FormFile("file")
+	if !strings.HasSuffix(varFile.Filename, ".jpg") && !strings.HasSuffix(varFile.Filename, ".jpeg") && !strings.HasSuffix(varFile.Filename, ".png") {
+		res.Err = "暂时只支持*.jpg、*.jpeg、*.png格式文件上传"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
 	if varFile.Size > 3500000 {
 		res.Err = "上传文件过大，请上传小于3.5M的文件"
 		res.Status = 2
@@ -866,12 +877,6 @@ func BackgroundUploadView(c *gin.Context) {
 	if err != nil {
 		log.Println(err)
 		c.JSON(http.StatusBadRequest, "")
-		return
-	}
-	if !strings.HasSuffix(varFile.Filename, ".jpg") && !strings.HasSuffix(varFile.Filename, ".jpeg") && !strings.HasSuffix(varFile.Filename, ".png") {
-		res.Err = "暂时只支持*.jpg、*.jpeg、*.png格式文件上传"
-		res.Status = 2
-		c.JSON(http.StatusOK, res)
 		return
 	}
 	filePath := "static/UserFiles/Images/" + userName + time.Now().Local().Format("20060102150405") + varFile.Filename
