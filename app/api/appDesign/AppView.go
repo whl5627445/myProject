@@ -12,6 +12,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 var DB = config.DB
@@ -692,7 +693,7 @@ func DeletePageComponentView(c *gin.Context) {
 		# app应用页面删除组件
 	*/
 	var res responseData
-	//userName := c.GetHeader("username")
+	userName := c.GetHeader("username")
 	var item DeletePageComponentData
 	err := c.BindJSON(&item)
 	if err != nil {
