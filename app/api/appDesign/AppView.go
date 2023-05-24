@@ -74,7 +74,7 @@ func MultipleSimulateView(c *gin.Context) {
 	// TODO： 徐庆达
 	var res responseData
 	userName := c.GetHeader("username")
-	userSpaceId := c.GetHeader("space_id")
+	//userSpaceId := c.GetHeader("space_id")
 	var item AppMultipleSimulateData
 	err := c.BindJSON(&item)
 	if err != nil {
@@ -93,25 +93,25 @@ func MultipleSimulateView(c *gin.Context) {
 
 }
 
-func GetMultipleSimulateResultView(c *gin.Context) {
-	/*
-		# 读取多轮仿真结果csv数据接口
-	*/
-	// TODO： 徐庆达
-	var res responseData
-	appPageId := c.Query("app_page_id")
-	singleOrMultiple := c.Query("single_or_multiple")
-	data, err := service.MultipleSimulateResult(appPageId, singleOrMultiple)
-	if err != nil {
-		log.Println(err)
-		res.Msg = "读取失败。"
-		c.JSON(http.StatusBadRequest, res)
-		return
-	}
-	res.Data = data
-	res.Msg = "读取成功。"
-	c.JSON(http.StatusOK, res)
-}
+//func GetMultipleSimulateResultView(c *gin.Context) {
+//	/*
+//		# 读取多轮仿真结果csv数据接口
+//	*/
+//	// TODO： 徐庆达
+//	var res responseData
+//	appPageId := c.Query("app_page_id")
+//	singleOrMultiple := c.Query("single_or_multiple")
+//	data, err := service.MultipleSimulateResult(appPageId, singleOrMultiple)
+//	if err != nil {
+//		log.Println(err)
+//		res.Msg = "读取失败。"
+//		c.JSON(http.StatusBadRequest, res)
+//		return
+//	}
+//	res.Data = data
+//	res.Msg = "读取成功。"
+//	c.JSON(http.StatusOK, res)
+//}
 
 func GetDataSourceGroupView(c *gin.Context) {
 	/*
@@ -351,14 +351,7 @@ func CreateAppPageView(c *gin.Context) {
 		return
 	}
 	var page DataBaseModel.AppPage
-	err = DB.Where("app_space_id = ? AND page_name = ? AND username = ?", item.SpaceId, item.PageName, userName).First(&page).Error
-	if err != nil {
-		log.Println("创建app页面时查询数据库出现错误： ", err)
-		res.Err = "创建失败，请稍后再试"
-		res.Status = 2
-		c.JSON(http.StatusOK, res)
-		return
-	}
+	DB.Where("app_space_id = ? AND page_name = ? AND username = ?", item.SpaceId, item.PageName, userName).First(&page)
 	if page.ID != "" {
 		switch {
 		case page.PageName == item.PageName:
@@ -615,12 +608,11 @@ func GetPageComponentView(c *gin.Context) {
 
 	var res responseData
 	userName := c.GetHeader("username")
-	//spaceId := c.GetHeader("space_id")
+	spaceId := c.Query("space_id")
 	pageId := c.Query("page_id")
 	var page DataBaseModel.AppPage
 	var componentList []DataBaseModel.AppPageComponent
 	DB.Where("id = ? AND app_space_id = ? AND username = ?", pageId, spaceId, userName).First(&page)
-	//DB.Where("id = ? AND username = ?", pageId, userName).First(&page)
 	DB.Where("page_id = ?", page.ID).Find(&componentList)
 
 	var componentDataList []map[string]interface{}
@@ -662,7 +654,6 @@ func EditPageComponentView(c *gin.Context) {
 	*/
 	var res responseData
 	userName := c.GetHeader("username")
-	spaceId := c.GetHeader("space_id")
 	var item EditPageComponentData
 	err := c.BindJSON(&item)
 	if err != nil {
@@ -700,8 +691,12 @@ func DeletePageComponentView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
+	//var space DataBaseModel.AppSpace
+	var page DataBaseModel.AppPage
 	var components DataBaseModel.AppPageComponent
-	err = DB.Model(DataBaseModel.AppPageComponent{}).Where("id IN ? AND page_id = ?", item.ComponentsList, item.PageId).Delete(&components).Error
+	//DB.Where("id = ? AND username = ? ",item.)
+	DB.Where("id = ? AND username = ? ", item.PageId, userName).First(&page)
+	err = DB.Model(DataBaseModel.AppPageComponent{}).Where("id IN ? AND page_id = ?", item.ComponentsList, page.ID).Delete(&components).Error
 	//err = DB.Model(DataBaseModel.AppPageComponent{}).Where("id IN ? AND page_id = ?", item.ComponentsList, item.PageId).Delete(&components).Error
 	if err != nil {
 		log.Println("删除app空间页面组件时保存数据库出现错误：", err)
@@ -873,16 +868,13 @@ func GetPageComponentInputOutputView(c *gin.Context) {
 		"min":       component.Min,
 		"interval":  component.Interval,
 	}
-
 	output := map[string]interface{}{
 		"outputName": component.OutputName,
 	}
-
 	data := map[string]interface{}{
 		"input":  input,
 		"output": output,
 	}
-
 	res.Data = data
 	c.JSON(http.StatusOK, res)
 }
