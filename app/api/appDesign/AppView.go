@@ -253,6 +253,13 @@ func EditAppSpaceView(c *gin.Context) {
 		return
 	}
 	var space DataBaseModel.AppSpace
+	DB.Where("space_name = ? AND username = ?", item.SpaceName, userName).First(&space)
+	if space.ID != "" {
+		res.Err = "应用名称已存在"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
 	DB.Where("id = ? AND username = ?", item.SpaceId, userName).First(&space)
 	if space.ID != "" {
 		space.SpaceName = item.SpaceName
@@ -343,12 +350,32 @@ func CreateAppPageView(c *gin.Context) {
 		return
 	}
 	var page DataBaseModel.AppPage
-	page.ID = uuid.New().String()
-	page.AppSpaceId = item.SpaceId
-	page.PageName = item.PageName
-	page.UserName = userName
-	page.PagePath = item.Tag
-	err = DB.Create(&page).Error
+	err = DB.Where("app_space_id = ? AND page_name = ? AND username = ?", item.SpaceId, item.PageName, userName).First(&page).Error
+	if err != nil {
+		log.Println("创建app页面时查询数据库出现错误： ", err)
+		res.Err = "创建失败，请稍后再试"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	if page.ID != "" {
+		switch {
+		case page.PageName == item.PageName:
+			res.Err = "应用页面名称已存在"
+		case page.PagePath == item.Tag:
+			res.Err = "应用页面标识已存在"
+		}
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	var pageNew DataBaseModel.AppPage
+	pageNew.ID = uuid.New().String()
+	pageNew.AppSpaceId = item.SpaceId
+	pageNew.PageName = item.PageName
+	pageNew.UserName = userName
+	pageNew.PagePath = item.Tag
+	err = DB.Create(&pageNew).Error
 	if err != nil {
 		log.Println("创建app页面时保存数据库出现错误：", err)
 		res.Err = "创建失败，请稍后再试"
@@ -429,6 +456,19 @@ func EditAppPageView(c *gin.Context) {
 		return
 	}
 	var page DataBaseModel.AppPage
+	var pageTagAndName DataBaseModel.AppPage
+	DB.Where("app_space_id = ? AND page_path = ? AND username = ? AND id <> ?", item.SpaceId, item.Tag, userName, item.PageId).Or("app_space_id = ? AND page_name = ? AND username = ? AND id <> ?", item.SpaceId, item.PageName, userName, item.PageId).First(&pageTagAndName)
+	if pageTagAndName.PagePath == item.Tag || pageTagAndName.PageName == item.PageName {
+		switch {
+		case pageTagAndName.PageName == item.PageName:
+			res.Err = "应用页面名称已存在"
+		case pageTagAndName.PagePath == item.Tag:
+			res.Err = "应用页面标识已存在"
+		}
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
 	DB.Where("id = ? AND app_space_id = ? AND username = ?", item.PageId, item.SpaceId, userName).First(&page)
 	if page.ID == "" {
 		log.Println("编辑app空间页面时未查询到数，相关数据是：", item)
@@ -815,17 +855,14 @@ func GetPageComponentInputOutputView(c *gin.Context) {
 	var page DataBaseModel.AppPage
 	DB.Where("app_space_id = ? AND id = ? ", spaceId, pageId).First(&page)
 	if page.ID == "" {
-
-		res.Err = "app_page == null"
-		res.Status = 2
-		c.JSON(http.StatusOK, res)
+		log.Println("未查询到页面数据")
+		c.JSON(http.StatusBadRequest, "")
 		return
 	}
 	DB.Where("id = ? AND page_id= ? ", id, pageId).First(&component)
 	if component.ID == "" {
-		res.Err = "app_page_components == null"
-		res.Status = 2
-		c.JSON(http.StatusOK, res)
+		log.Println("未查询到数据")
+		c.JSON(http.StatusBadRequest, "")
 		return
 	}
 
