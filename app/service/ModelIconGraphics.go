@@ -43,8 +43,7 @@ func getIconAnnotationGraphics(modelName, nameType string) map[string]interface{
 	modelIconAnnotation := getIconAnnotation(modelNameList)
 	AnnotationConfig := []interface{}{}
 	data := map[string]interface{}{"extent1Diagram": "-,-", "extent2Diagram": "-,-", "initialScale": "0.1"}
-	componentsData := getElementsAndModelName(modelNameList)
-	componentAnnotationsData := getElementAnnotations(modelNameList)
+	componentsData, componentAnnotationsData := getElementsAndModelName(modelNameList)
 	subShapes := iconSubShapes(modelIconAnnotation, modelName)
 	inputOutputs := iconInputOutputs(componentsData, componentAnnotationsData, modelName)
 	if len(subShapes) == 0 && len(inputOutputs) == 0 && len(modelIconAnnotation) == 0 {

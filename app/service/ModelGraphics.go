@@ -62,8 +62,7 @@ func GetComponentGraphicsData(modelName, componentName string) [][]map[string]in
 	var g = graphicsData{}
 	g.data = [][]map[string]interface{}{{}, {}}
 	g.modelName = modelName
-	components := getElementsAndModelName([]string{modelName})
-	componentAnnotations := getElementAnnotations([]string{modelName})
+	components, componentAnnotations := getElementsAndModelName([]string{modelName})
 	var componentsData [][]interface{}
 	var componentAnnotationsData [][]interface{}
 	for i := 0; i < len(components); i++ {
@@ -99,8 +98,7 @@ func (g *graphicsData) getData02() {
 		if i == len(modelName)-1 && g.permissions != "sys" {
 			mobility = true
 		}
-		componentsData := getElementsAndModelName([]string{modelName[i]})
-		componentAnnotationsData := getElementAnnotations([]string{modelName[i]})
+		componentsData, componentAnnotationsData := getElementsAndModelName([]string{modelName[i]})
 		data := g.data02(componentsData, componentAnnotationsData, false, "", mobility)
 		data2 = append(data2, data...)
 		g.data[1] = append(g.data[1], data2...)
@@ -110,19 +108,6 @@ func (g *graphicsData) getData02() {
 			g.data[1][i]["subShapes"] = append(g.data[1][i]["subShapes"].([]map[string]interface{}), rectangleDefault)
 		}
 	}
-}
-
-func getElementsAndModelName(nameList []string) [][]interface{} {
-	var data [][]interface{}
-	for _, name := range nameList {
-		componentsData := omc.OMC.GetElements(name)
-		for _, c := range componentsData {
-			component := c.([]interface{})
-			component = append(component, name)
-			data = append(data, component)
-		}
-	}
-	return data
 }
 
 func oneDimensionalProcessing(Data interface{}) string {
@@ -408,7 +393,8 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 		return len(caDataFilter)
 	}()
 	for i := 0; i < dataLen2; i++ {
-		modelName := cDataFilter[i][len(cDataFilter[i])-1].(string)
+		log.Println("cDataFilter[i]", cDataFilter[i])
+		modelName := cDataFilter[i][15].(string)
 
 		classname := cDataFilter[i][2].(string)
 
@@ -425,14 +411,8 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 			}
 			return -1
 		}()
-		// if placementIndex != -1 || cDataFilter[i][9] == "true" {
 		if placementIndex != -1 {
 
-			//modelIconAnnotationAll := omc.OMC.GetIconAnnotation(classname)
-			//initialScale := "1"
-			//if len(modelIconAnnotationAll)>0 {
-			//	initialScale = modelIconAnnotationAll[5].(string)
-			//}
 			if len(caDataFilter[i]) < 1 {
 				continue
 			}
@@ -457,6 +437,7 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 			data["name"] = cDataFilter[i][3]
 			data["original_name"] = cDataFilter[i][3]
 			data["parent"] = parent
+			data["connector_sizing"] = cDataFilter[i][16]
 			data["visible"] = caf[0]
 			data["mobility"] = mobility
 			//data["initialScale"] = initialScale
@@ -470,19 +451,7 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 					return "0"
 				}
 			}()
-			//if caf[10].(string) != "-" {
-			//	extentX1, _ := caf[10].(string)
-			//	extentY1, _ := caf[11].(string)
-			//	extentX2, _ := caf[12].(string)
-			//	extentY2, _ := caf[13].(string)
-			//	data["originDiagram"] = strings.Join([]string{caf[8].(string), caf[9].(string)}, ",")
-			//	data["extent1Diagram"] = strings.Join([]string{extentX1, extentY1}, ",")
-			//	data["extent2Diagram"] = strings.Join([]string{extentX2, extentY2}, ",")
-			//} else {
-			//	data["extent1Diagram"] = strings.Join([]string{caf[3].(string), caf[4].(string)}, ",")
-			//	data["extent2Diagram"] = strings.Join([]string{caf[5].(string), caf[6].(string)}, ",")
-			//	data["originDiagram"] = strings.Join([]string{caf[1].(string), caf[2].(string)}, ",")
-			//}
+
 			data["extent1Diagram"] = strings.Join([]string{caf[3].(string), caf[4].(string)}, ",")
 			data["extent2Diagram"] = strings.Join([]string{caf[5].(string), caf[6].(string)}, ",")
 			data["originDiagram"] = strings.Join([]string{caf[1].(string), caf[2].(string)}, ",")
@@ -494,8 +463,7 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 				t := cDataFilter[i][len(cDataFilter[i])-2].(string)
 				return t
 			}()
-			componentsData := getElementsAndModelName(nameList)
-			componentAnnotationsData := getElementAnnotations(nameList)
+			componentsData, componentAnnotationsData := getElementsAndModelName(nameList)
 			IconAnnotationData := getIconAndDiagramAnnotations(nameList, isIcon)
 			data["inputOutputs"] = g.data02(componentsData, componentAnnotationsData, true, data["name"].(string), false)
 			data["subShapes"] = g.data01(IconAnnotationData, classname, cDataFilter[i][3].(string), modelName)
@@ -543,16 +511,70 @@ func (g *graphicsData) getnthconnectionData() {
 	}
 }
 
-func getElementAnnotations(nameList []string) [][]interface{} {
-	var data [][]interface{}
+func getElementsAndModelName(nameList []string) ([][]interface{}, [][]interface{}) {
+	var ComponentData [][]interface{}
+	var AnnotationData [][]interface{}
+
 	for _, name := range nameList {
-		result := omc.OMC.GetElementAnnotations(name)
-		for _, i := range result {
-			data = append(data, i.([]interface{}))
+		connectorSizing := false
+		connectorSizingName := ""
+		componentsData := omc.OMC.GetElements(name)
+		annotationsData := omc.OMC.GetElementAnnotations(name)
+		componentsList := [][]interface{}{}
+		// {Dialog("General","Parameters",true,false,false,-,-,-,-,"",true)}
+		for index, c := range componentsData {
+
+			component := c.([]interface{})
+			component = append(component, name)
+			componentsList = append(componentsList, component)
+			annotation := annotationsData[index].([]interface{})
+			if !connectorSizing {
+				connectorSizing = getDialogConnectorSizing(annotation)
+				if connectorSizing {
+					connectorSizingName = component[3].(string)
+				}
+			}
+			AnnotationData = append(AnnotationData, annotation)
+		}
+		for _, c := range componentsList {
+			c = append(c, connectorSizingName)
+			ComponentData = append(ComponentData, c)
+
 		}
 	}
-	return data
+
+	return ComponentData, AnnotationData
 }
+
+func getDialogConnectorSizing(annotation []interface{}) bool {
+	for n := 0; n < len(annotation); n++ {
+		if annotation[n] == "Dialog" {
+			tabIndex := n + 1
+			dListTab := annotation[tabIndex].([]interface{})
+			if tabIndex > 0 && len(dListTab) > 3 {
+				//if len(annotation) <= 1 || dListTab[len(dListTab)-1] == "true" {
+				if len(annotation) <= 1 || dListTab[2] == "false" {
+					continue
+				}
+				if dListTab[10] == "true" {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+//func getElementAnnotations(nameList []string) [][]interface{} {
+//	var data [][]interface{}
+//	for _, name := range nameList {
+//		result := omc.OMC.GetElementAnnotations(name)
+//		for _, i := range result {
+//			data = append(data, i.([]interface{}))
+//		}
+//	}
+//	return data
+//}
 
 func getIconAndDiagramAnnotations(nameList []string, isIcon bool) []interface{} {
 	res := omc.OMC.GetIconAndDiagramAnnotations(nameList, isIcon)
