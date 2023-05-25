@@ -516,8 +516,7 @@ func getElementsAndModelName(nameList []string) ([][]interface{}, [][]interface{
 	var AnnotationData [][]interface{}
 
 	for _, name := range nameList {
-		connectorSizing := false
-		connectorSizingName := ""
+		connectorSizingList := []string{}
 		componentsData := omc.OMC.GetElements(name)
 		annotationsData := omc.OMC.GetElementAnnotations(name)
 		componentsList := [][]interface{}{}
@@ -528,18 +527,22 @@ func getElementsAndModelName(nameList []string) ([][]interface{}, [][]interface{
 			component = append(component, name)
 			componentsList = append(componentsList, component)
 			annotation := annotationsData[index].([]interface{})
-			if !connectorSizing {
-				connectorSizing = getDialogConnectorSizing(annotation)
-				if connectorSizing {
-					connectorSizingName = component[3].(string)
-				}
+
+			connectorSizing := getDialogConnectorSizing(annotation)
+			if connectorSizing {
+				connectorSizingList = append(connectorSizingList, component[3].(string))
 			}
 			AnnotationData = append(AnnotationData, annotation)
 		}
 		for _, c := range componentsList {
+			connectorSizingName := ""
+			for _, s := range connectorSizingList {
+				if c[14] == "["+s+"]" {
+					connectorSizingName = s
+				}
+			}
 			c = append(c, connectorSizingName)
 			ComponentData = append(ComponentData, c)
-
 		}
 	}
 
