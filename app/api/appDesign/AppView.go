@@ -378,7 +378,7 @@ func CreateAppPageView(c *gin.Context) {
 		return
 	}
 	res.Data = map[string]string{
-		"id": page.ID,
+		"id": pageNew.ID,
 	}
 	res.Msg = "创建成功"
 	c.JSON(http.StatusOK, res)
