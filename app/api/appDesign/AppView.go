@@ -351,7 +351,7 @@ func CreateAppPageView(c *gin.Context) {
 		return
 	}
 	var page DataBaseModel.AppPage
-	DB.Where("app_space_id = ? AND page_name = ? AND username = ?", item.SpaceId, item.PageName, userName).First(&page)
+	DB.Where("app_space_id = ? AND page_name = ? AND username = ?", item.SpaceId, item.PageName, userName).Or("app_space_id = ? AND page_path = ? AND username = ?", item.SpaceId, item.Tag, userName).First(&page)
 	if page.ID != "" {
 		switch {
 		case page.PageName == item.PageName:
