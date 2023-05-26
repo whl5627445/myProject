@@ -363,7 +363,7 @@ func iconInputOutputs(cData [][]interface{}, caData [][]interface{}, modelName s
 			data["rotateAngle"] = rotateAngle
 			data["rotation"] = rotateAngle
 			data["output_type"] = func() string {
-				t := cDataFilter[i][len(cDataFilter[i])-2].(string)
+				t := cDataFilter[i][14].(string)
 				return t
 			}()
 			data["inputOutputs"] = make([]string, 0)
