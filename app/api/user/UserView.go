@@ -248,7 +248,7 @@ func LoginUserSpaceView(c *gin.Context) {
 	DB.Model(space).Where("id = ? AND username = ?", item.SpaceId, userName).UpdateColumn("last_login_time", time.Now().Local().Unix())
 
 	var packageModelAll []DataBaseModel.YssimModels
-	DB.Where("sys_or_user IN ?  AND default_version = ? AND userspace_id IN ?", []string{"sys", userName}, true, []string{"0", space.ID}).Find(&packageModelAll)
+	DB.Where("sys_or_user IN ?  AND default_version = ? AND userspace_id IN ?", []string{"sys", userName}, true, []string{"0", item.SpaceId}).Find(&packageModelAll)
 	service.ModelLibraryInitialization(packageModelAll)
 
 	res.Msg = "初始化完成"
