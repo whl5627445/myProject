@@ -460,7 +460,7 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 			data["rotateAngle"] = rotateAngle
 			data["rotation"] = rotateAngle
 			data["output_type"] = func() string {
-				t := cDataFilter[i][len(cDataFilter[i])-2].(string)
+				t := cDataFilter[i][14].(string)
 				return t
 			}()
 			componentsData, componentAnnotationsData := getElementsAndModelName(nameList)
@@ -497,8 +497,8 @@ func (g *graphicsData) getnthconnectionData() {
 						}
 						daData["connectionfrom_original_name"] = ncData[0]
 						daData["connectionto_original_name"] = ncData[1]
-						re1, _ := regexp.Compile("[[0-9]+]$")
-						re2, _ := regexp.Compile("[[0-9]+].")
+						re1, _ := regexp.Compile("\\[[0-9a-z]+\\]$")
+						re2, _ := regexp.Compile("\\[[0-9a-z]+\\].")
 						connectionfrom := re1.ReplaceAll([]byte(ncData[0]), []byte(""))
 						connectionto := re1.ReplaceAll([]byte(ncData[1]), []byte(""))
 						daData["connectionfrom"] = string(re2.ReplaceAll(connectionfrom, []byte(".")))
