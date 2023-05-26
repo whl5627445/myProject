@@ -3,6 +3,7 @@ import time
 import psutil
 import json
 import os
+import subprocess
 from config.redis_config import R
 from libs.OMPython.OMCSessionZMQ import OMCSessionZMQ
 from libs.function.defs import update_compile_records, sendMessage
@@ -14,6 +15,7 @@ class OmcTranslateThread(threading.Thread):
     def __init__(self, request, port):
         self.state = "init"
         self.port = port
+        self.run_pid = None
         self.uuid = request.uuid
         self.request = request
         update_compile_records(self.uuid,compile_status=2, compile_start_time=int(time.time()))
@@ -70,17 +72,42 @@ class OmcTranslateThread(threading.Thread):
             os.kill(child_proc.pid, 9)
         os.kill(self.omc_obj.omc_process.pid, 9)
         if isinstance(buildModelRes, list) and buildModelRes != ["", ""]:
-            # 改数据库状态为4
-            update_compile_records(uuid=self.uuid, compile_status=4, compile_stop_time=int(time.time()))
-            json_data = {"message": self.request.simulateModelName + " 模型编译完成"}
+            json_data = {"message": self.request.simulateModelName + " 模型编译完成,开始仿真"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
         else:
             # 改数据库状态为3
             update_compile_records(uuid=self.uuid, compile_status=3, compile_stop_time=int(time.time()))
             json_data = {"message": self.request.simulateModelName + " 模编译失败"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
+            self.state = "stopped"
+            return
         # 编译完成，通知omc进程退出，杀死父进程
         print(self.omc_obj.omc_process.pid, "编译完成，杀死omc进程")
 
+        # 仿真
+        self.state = "running"
+        cmd = [absolute_path + "result"]
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.run_pid = process.pid
+        # 获取命令行输出结果
+        output, error = process.communicate()
+        if error:
+            print(error)
+            update_compile_records(uuid=self.uuid, compile_status=3, compile_stop_time=int(time.time()))
+            json_data = {"message": self.request.simulateModelName + " 仿真失败"}
+            R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
+
+        else:
+            simulate_result_str = output.decode('utf-8')
+            if "successfully" in simulate_result_str:
+                json_data = {"message": self.request.simulateModelName + " 模型仿真完成"}
+                R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
+                update_compile_records(uuid=self.uuid, compile_status=4, compile_stop_time=int(time.time()))
+
+            else:
+                print("仿真失败:",simulate_result_str)
+                json_data = {"message": self.request.simulateModelName + " 仿真失败"}
+                R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
+                update_compile_records(uuid=self.uuid, compile_status=3, compile_stop_time=int(time.time()))
         # 仿真
         self.state = "stopped"

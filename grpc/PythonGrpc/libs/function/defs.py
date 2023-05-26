@@ -75,14 +75,16 @@ def update_compile_records(uuid,
         session.commit()
 
 
-def update_app_pages_records(pages_id, single_simulation_result_path=None, multi_simulation_results_path=None):
+def update_app_pages_records(pages_id, single_simulation_result_path=None, multi_simulation_results_path=None,release_status = None):
     with Session() as session:
         app_pages_record = session.query(AppPages).filter(
             AppPages.id == pages_id).first()
         if single_simulation_result_path:
-            app_pages_record.single_simulation_result_path = single_simulation_result_path
+            app_pages_record.single_result = single_simulation_result_path
         if multi_simulation_results_path:
-            app_pages_record.multi_simulation_results_path = multi_simulation_results_path
+            app_pages_record.multi_results = multi_simulation_results_path
+        if release_status:
+            app_pages_record.release_status = release_status
         session.commit()
 
 

@@ -57,11 +57,16 @@ func AppModelMarkView(c *gin.Context) {
 	if err != nil {
 		log.Println("标记数据源时创建数据库记录失败： ", err)
 		res.Err = "创建失败"
-		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	_, _ = service.GrpcTranslate(record)
+	_, err = service.GrpcTranslate(record)
+	if err != nil {
+		log.Println("提交任务失败： ", err)
+		res.Err = "创建失败"
+		c.JSON(http.StatusOK, res)
+		return
+	}
 	res.Msg = "提交任务成功，请等待编译完成！"
 	c.JSON(http.StatusOK, res)
 
@@ -73,7 +78,7 @@ func MultipleSimulateView(c *gin.Context) {
 	*/
 	// TODO： 徐庆达
 	var res responseData
-	userName := c.GetHeader("username")
+	//userName := c.GetHeader("username")
 	//userSpaceId := c.GetHeader("space_id")
 	var item AppMultipleSimulateData
 	err := c.BindJSON(&item)
@@ -81,7 +86,7 @@ func MultipleSimulateView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
-	err = service.GrpcRunResult(item.AppPageId, userName, item.SpaceId, item.SingleSimulationInputData)
+	err = service.GrpcRunResult(item.AppPageId, item.SingleSimulationInputData)
 	if err != nil {
 		log.Println(err)
 		c.JSON(http.StatusBadRequest, "多轮仿真失败！")
@@ -93,25 +98,29 @@ func MultipleSimulateView(c *gin.Context) {
 
 }
 
-//func GetMultipleSimulateResultView(c *gin.Context) {
-//	/*
-//		# 读取多轮仿真结果csv数据接口
-//	*/
-//	// TODO： 徐庆达
-//	var res responseData
-//	appPageId := c.Query("app_page_id")
-//	singleOrMultiple := c.Query("single_or_multiple")
-//	data, err := service.MultipleSimulateResult(appPageId, singleOrMultiple)
-//	if err != nil {
-//		log.Println(err)
-//		res.Msg = "读取失败。"
-//		c.JSON(http.StatusBadRequest, res)
-//		return
-//	}
-//	res.Data = data
-//	res.Msg = "读取成功。"
-//	c.JSON(http.StatusOK, res)
-//}
+func GetMultipleSimulateResultView(c *gin.Context) {
+	/*
+		# 读取多轮仿真结果csv数据接口
+	*/
+	// TODO： 徐庆达
+	var res responseData
+	var item GetMulSimResData
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	data, err := service.MultipleSimulateResult(item.AppPageId, item.SingleOrMultiple, item.Variable)
+	if err != nil {
+		log.Println(err)
+		res.Msg = "读取失败。"
+		c.JSON(http.StatusBadRequest, res)
+		return
+	}
+	res.Data = data
+	res.Msg = "读取成功。"
+	c.JSON(http.StatusOK, res)
+}
 
 func GetDataSourceGroupView(c *gin.Context) {
 	/*
@@ -813,6 +822,7 @@ func GetPageInputOutputView(c *gin.Context) {
 	data := map[string]interface{}{
 		"input":  page.Input,
 		"output": page.Output,
+		"data_source_id": page.DataSourceId,
 	}
 	res.Data = data
 	c.JSON(http.StatusOK, res)
@@ -841,6 +851,7 @@ func SetPageInputOutputView(c *gin.Context) {
 	}
 	page.Input = item.Input
 	page.Output = item.Output
+	page.DataSourceId = item.DataSourceId
 	DB.Save(&page)
 	res.Msg = "设置成功"
 	c.JSON(http.StatusOK, res)

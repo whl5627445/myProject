@@ -1,5 +1,5 @@
 import threading
-import time
+import os
 import subprocess
 import json
 import DyMat
@@ -27,7 +27,7 @@ class OmcRunThread(threading.Thread):
 
         run_steps = 0
         keys = list(self.inputValData.keys())  # 获取所有键
-        input_data = []  # 存储结果
+        input_data = []  # 存储结果输入字典,[{"name1":1,"name2":2,},{"name1":11,"name2":22,}]
         print(self.inputValData[keys[0]])
         print("type::", type(self.inputValData[keys[0]].inputObjList))
         input_data_length = len(self.inputValData[keys[0]].inputObjList)  # 获取列表长度，也可以使用len(data["J1.J"])
@@ -64,25 +64,51 @@ class OmcRunThread(threading.Thread):
 
                     # 从mat中读取数据
                     d = DyMat.DyMatFile(r"/home/simtek/code/" + self.absolute_path + "result_res.mat")
-                    if run_steps == 1:
-                        self.csv_data.append(list(d.abscissa("2", True)))
-                    for j in self.outputValNames:
-                        self.csv_data.append(list(d.data(j)))
-                else:
+                    # if run_steps == 1:
+                    #     self.csv_data.append(list(d.abscissa("2", True)))
+                    # for j in self.outputValNames:
+                    #     self.csv_data.append(list(d.data(j)))
 
+                    dictCsv = {"time": list(d.abscissa("2", True))
+                               # "time2": list(d.abscissa("1", True))
+                               }
+
+                    dictCsv["time"] = dictCsv["time"][:500]
+
+                    for j in self.outputValNames:
+                        dictCsv[j] = list(d.data(j))[:500]
+                    print("self.outputValNames",self.outputValNames)
+                    df = pd.DataFrame(pd.DataFrame.from_dict(dictCsv, orient='index').values.T,
+                                      columns=list(dictCsv.keys()))
+                    if input_data_length == 1:
+                        pass
+                        # 单次仿真的结果
+                        # if not os.path.exists(r"/home/simtek/code/" + self.absolute_path + 'single_output'):
+                        #     # 创建新的文件夹
+                        #     os.mkdir(r"/home/simtek/code/" + self.absolute_path + 'single_output')
+                        # df.to_csv(r"/home/simtek/code/" + self.absolute_path + 'single_output/Single_output.csv',
+                        #           index=False,
+                        #           encoding='utf-8')
+                    else:
+                        # 多轮仿真每轮一个scv文件
+                        if not os.path.exists(r"/home/simtek/code/" + self.absolute_path + 'mul_output'):
+                            # 创建新的文件夹
+                            os.mkdir(r"/home/simtek/code/" + self.absolute_path + 'mul_output')
+                        df.to_csv(r"/home/simtek/code/" + self.absolute_path + 'mul_output/Mul_output_{}.csv'.format(
+                            run_steps),
+                                  index=False,
+                                  encoding='utf-8')
+                else:
                     break
-        df = pd.DataFrame(self.csv_data)
-        # 将DataFrame对象保存为CSV文件
-        if run_steps == input_data_length:  # 每轮都成功
+
+        if run_steps == input_data_length:  # 如果每轮都成功
             if input_data_length == 1:
-                df.to_csv(r"/home/simtek/code/" + self.absolute_path + 'output_1.csv', index=False)
                 # 更新数据库
                 update_app_pages_records(self.request.pageId,
-                                         single_simulation_result_path=self.absolute_path + 'output_1.csv')
+                                         single_simulation_result_path=self.absolute_path + 'single_output/')
             else:
-                df.to_csv(r"/home/simtek/code/" + self.absolute_path + 'output.csv', index=False)
                 # 更新数据库
                 update_app_pages_records(self.request.pageId,
-                                         multi_simulation_results_path=self.absolute_path + 'output.csv')
+                                         multi_simulation_results_path=self.absolute_path + 'mul_output/')
         self.state = "stopped"
         delete_item_from_json(self.uuid)

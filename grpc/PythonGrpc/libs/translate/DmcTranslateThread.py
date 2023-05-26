@@ -2,7 +2,7 @@ import threading
 import time
 import zipfile
 from datetime import datetime
-from libs.function.defs import update_compile_records, new_another_name, zip_folders
+from libs.function.defs import update_compile_records, zip_folders
 import requests
 from config.redis_config import R
 import json
@@ -129,22 +129,56 @@ class DmTranslateThread(threading.Thread):
             compileResData = compileRes.json()
             print("dymola服务编译结果：", compileResData)
             if compileResData["code"] == 200:
-                update_compile_records(uuid=self.request.uuid, compile_status=4, compile_stop_time=int(time.time()))
-                json_data = {"message": self.request.simulateModelName + " 编译成功"}
+
+                json_data = {"message": self.request.simulateModelName + " 编译成功，开始仿真"}
                 R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
+                simulateReqData = {
+                    "startTime": self.request.simulationPraData["startTime"],
+                    "stopTime": self.request.simulationPraData["stopTime"],
+                    "numberOfIntervals": self.request.simulationPraData["numberOfIntervals"],
+                    "outputInterval": 0.0,
+                    "method": self.request.simulationPraData["method"],
+                    "tolerance": self.request.simulationPraData["tolerance"],
+                    "fixedStepSize": 0.0,
+                    "resultFile": "dsres",
+                    "fileName": fileName,
+                    "modelName": self.request.simulateModelName,
+                    "userName": self.request.userName,
+                    "taskId": self.request.uuid,
+                    "dymolaLibraries": dymola_libraries
+                }
+
+                print("simulateReqData", simulateReqData)
+                simulateRes = requests.request('post',
+                                               DymolaSimulationConnect + "/dymola/simulate",
+                                               json=simulateReqData)
+                simulateResData = simulateRes.json()
+
+                print("dymola仿真结果：", simulateResData)
                 absolute_path = adsPath + self.request.resultFilePath
                 print("absolute_path", absolute_path)
-                fmuFileUrl = DymolaSimulationConnect + "/file/download?fileName=" + compileResData["msg"]
-                # 创建文件夹
-                os.makedirs(absolute_path, exist_ok=True)
-                downloadFmuFileUrl = requests.get(fmuFileUrl)
-                with open(absolute_path + "dymola_model.fmu.zip", "wb") as f:
-                    f.write(downloadFmuFileUrl.content)
-                with zipfile.ZipFile(absolute_path + "dymola_model.fmu.zip", 'r') as zip_ref:
-                    zip_ref.extract('modelDescription.xml', absolute_path)
-                os.rename(absolute_path + "modelDescription.xml", absolute_path + "result_init.xml")
-                return True, None, 0
+                if simulateResData.get("code") == 200:
+                    resFileUrl = DymolaSimulationConnect + "/file/download?fileName=" + simulateResData["msg"]
+                    fmuFileUrl = DymolaSimulationConnect + "/file/download?fileName=" + compileResData["msg"]
 
+                    downloadResFileUrl = requests.get(resFileUrl)
+                    # 创建文件夹
+                    os.makedirs(absolute_path, exist_ok=True)
+                    with open(absolute_path + "result_res.mat", "wb") as f:
+                        f.write(downloadResFileUrl.content)
+
+                    downloadFmuFileUrl = requests.get(fmuFileUrl)
+                    with open(absolute_path + "dymola_model.fmu.zip", "wb") as f:
+                        f.write(downloadFmuFileUrl.content)
+
+                    with zipfile.ZipFile(absolute_path + "dymola_model.fmu.zip", 'r') as zip_ref:
+                        zip_ref.extract('modelDescription.xml', absolute_path)
+
+                    os.rename(absolute_path + "modelDescription.xml", absolute_path + "result_init.xml")
+
+                    return True, None, 0
+                else:
+                    return False, None, simulateResData.get("code")
             else:
                 return False, None, compileResData["code"]
 
@@ -161,6 +195,10 @@ class DmTranslateThread(threading.Thread):
             json_data = {"message": self.request.simulateModelName + " 模型仿真完成"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
         elif code == 300:
+            update_compile_records(uuid=self.request.uuid,
+                                   compile_status=3,
+                                   compile_stop_time=int(time.time())
+                                   )
             json_data = {"message": self.request.simulateModelName + " 结束任务"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
         else:

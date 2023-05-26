@@ -98,5 +98,6 @@ class AppDataSources(Base):
 class AppPages(Base):
     __tablename__ = 'app_pages'
     id = Column(String, primary_key=True)
-    single_simulation_result_path = Column(String)
-    multi_simulation_results_path = Column(String)
+    single_result = Column(String)
+    multi_results = Column(String)
+    release_status = Column(Integer)

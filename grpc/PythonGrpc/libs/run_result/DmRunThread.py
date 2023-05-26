@@ -25,6 +25,7 @@ class DmRunThread(threading.Thread):
         threading.Thread.__init__(self)
         self.state = "init"
         self.request = request
+        update_app_pages_records(self.request.pageId,release_status=1)
         # inputValDataDict = {}
         # for key, value in self.request.inputValData.items():
         #     inputValDataDict[key] = list(value.inputObjList)
@@ -139,68 +140,105 @@ class DmRunThread(threading.Thread):
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
             array_initial_values = list(self.request.inputValData.values())
             input_data_length = len(array_initial_values[0].inputObjList)
-            simulateReqData = {
-                "startTime": self.request.simulationPraData["startTime"],
-                "stopTime": self.request.simulationPraData["stopTime"],
-                "numberOfIntervals": self.request.simulationPraData["numberOfIntervals"],
-                "outputInterval": 0.0,
-                "method": self.request.simulationPraData["method"],
-                "tolerance": self.request.simulationPraData["tolerance"],
-                "fixedStepSize": 0.0,
-                "resultFile": "dsres",
-                "fileName": fileName,
-                "modelName": self.request.simulateModelName,
-                "userName": self.request.userName,
-                "taskId": self.request.uuid,
-                "dymolaLibraries": dymola_libraries,
-                "initialNames": list(self.request.inputValData.keys()),
-                "arrayInitialValues": [[v.inputObjList[i] for v in array_initial_values] for i in
-                                       range(len(array_initial_values[0].inputObjList))],
-                "finalNames": ["Time"] + list(self.request.outputValNames),
+            # 如果input_data_length的程度为1，这是单次仿真
+            if input_data_length == 1:
+                simulateReqData = {
+                    "startTime": self.request.simulationPraData["startTime"],
+                    "stopTime": self.request.simulationPraData["stopTime"],
+                    "numberOfIntervals": self.request.simulationPraData["numberOfIntervals"],
+                    "outputInterval": 0.0,
+                    "method": self.request.simulationPraData["method"],
+                    "tolerance": self.request.simulationPraData["tolerance"],
+                    "fixedStepSize": 0.0,
+                    "resultFile": "dsres",
+                    "fileName": fileName,
+                    "modelName": self.request.simulateModelName,
+                    "userName": self.request.userName,
+                    "taskId": self.request.uuid,
+                    "dymolaLibraries": dymola_libraries
+                }
 
-            }
-            print("simulateReqData", simulateReqData)
-            simulateRes = requests.request('post',
-                                           DymolaSimulationConnect + "/dymola/simulateMulti",
-                                           json=simulateReqData)
-            simulateResData = simulateRes.json()
+                print("simulateReqData", simulateReqData)
+                simulateRes = requests.request('post',
+                                               DymolaSimulationConnect + "/dymola/simulate",
+                                               json=simulateReqData)
+                simulateResData = simulateRes.json()
 
-            print("dymola仿真结果：", simulateResData)
-            absolute_path = adsPath + self.request.resultFilePath
-            print("absolute_path", absolute_path)
-            if simulateResData.get("code") == 200:
-                csv_data = simulateResData["data"]
-                df = pd.DataFrame(csv_data)
-                # 将DataFrame对象保存为CSV文件
-                # df.to_csv(absolute_path + 'output.csv', index=False)
-                if input_data_length == 1:
-                    df.to_csv(r"/home/simtek/code/" + absolute_path + 'output_1.csv', index=False)
-                    # 更新数据库
-                    update_app_pages_records(self.request.pageId,
-                                             single_simulation_result_path=absolute_path + 'output_1.csv')
+                print("dymola仿真结果：", simulateResData)
+                absolute_path = adsPath + self.request.resultFilePath
+                print("absolute_path", absolute_path)
+                if simulateResData.get("code") == 200:
+                    resFileUrl = DymolaSimulationConnect + "/file/download?fileName=" + simulateResData["msg"]
+
+                    downloadResFileUrl = requests.get(resFileUrl)
+                    # 创建文件夹
+                    os.makedirs(absolute_path, exist_ok=True)
+                    with open(absolute_path + "result_res.mat", "wb") as f:
+                        f.write(downloadResFileUrl.content)
+                    return True, None, 0
                 else:
+                    return False, "单轮仿真失败", simulateResData.get("code")
+            # 多轮仿真
+            else:
+                simulateReqData = {
+                    "startTime": self.request.simulationPraData["startTime"],
+                    "stopTime": self.request.simulationPraData["stopTime"],
+                    "numberOfIntervals": self.request.simulationPraData["numberOfIntervals"],
+                    "outputInterval": 0.0,
+                    "method": self.request.simulationPraData["method"],
+                    "tolerance": self.request.simulationPraData["tolerance"],
+                    "fixedStepSize": 0.0,
+                    "resultFile": "dsres",
+                    "fileName": fileName,
+                    "modelName": self.request.simulateModelName,
+                    "userName": self.request.userName,
+                    "taskId": self.request.uuid,
+                    "dymolaLibraries": dymola_libraries,
+                    "initialNames": list(self.request.inputValData.keys()),
+                    "arrayInitialValues": [[v.inputObjList[i] for v in array_initial_values] for i in
+                                           range(len(array_initial_values[0].inputObjList))],
+                    "finalNames": ["Time"] + list(self.request.outputValNames),
+
+                }
+                print("simulateReqData", simulateReqData)
+                simulateRes = requests.request('post',
+                                               DymolaSimulationConnect + "/dymola/simulateMulti",
+                                               json=simulateReqData)
+                simulateResData = simulateRes.json()
+
+                print("dymola仿真结果：", simulateResData)
+                absolute_path = adsPath + self.request.resultFilePath
+                print("absolute_path", absolute_path)
+                if simulateResData.get("code") == 200:
+                    csv_data = simulateResData["data"]
+                    df = pd.DataFrame(csv_data)
+                    # 将DataFrame对象保存为CSV文件
+                    # df.to_csv(absolute_path + 'output.csv', index=False)
                     df.to_csv(r"/home/simtek/code/" + absolute_path + 'output.csv', index=False)
                     # 更新数据库
                     update_app_pages_records(self.request.pageId,
                                              single_simulation_result_path=absolute_path + 'output.csv')
 
-                return True, None, simulateResData["code"]
+                    return True, None, simulateResData["code"]
 
-            else:
-                return False, "多轮仿真失败", simulateResData["code"]
+                else:
+                    return False, "多轮仿真失败", simulateResData["code"]
 
     def run(self):
         print("开启dymola仿真")
-
+        update_app_pages_records(self.request.pageId, release_status=2)
         res, err, code = self.send_request()
         print("send_request返回", res, err, code)
         if res:
+            update_app_pages_records(self.request.pageId, release_status=4)
             json_data = {"message": self.request.simulateModelName + " 模型仿真完成"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
         elif code == 300:
+            update_app_pages_records(self.request.pageId, release_status=3)
             json_data = {"message": self.request.simulateModelName + " 结束任务"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
         else:
+            update_app_pages_records(self.request.pageId, release_status=3)
             json_data = {"message": self.request.simulateModelName + " 仿真失败"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
         self.state = "stopped"

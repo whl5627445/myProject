@@ -25,6 +25,12 @@ type AppMultipleSimulateData struct {
 	SingleSimulationInputData map[string]float64 `json:"single_simulation_input_data" binding:""`
 }
 
+type GetMulSimResData struct {
+	AppPageId        string   `json:"app_page_id" binding:"required"`
+	SingleOrMultiple string   `json:"single_or_multiple" binding:"required"`
+	Variable         []string `json:"variable" binding:"required"`
+}
+
 type CreateAppSpaceData struct {
 	SpaceName        string `json:"space_name" binding:"required"`
 	SpaceDescription string `json:"space_description,omitempty" binding:""`
@@ -136,10 +142,11 @@ type DeletePageComponentData struct {
 }
 
 type SetPageInputOutputData struct {
-	SpaceId string         `json:"space_id" binding:"required"`
-	PageId  string         `json:"page_id" binding:"required"`
-	Input   datatypes.JSON `json:"input,omitempty" binding:""`
-	Output  datatypes.JSON `json:"output,omitempty" binding:""`
+	SpaceId      string         `json:"space_id" binding:"required"`
+	PageId       string         `json:"page_id" binding:"required"`
+	DataSourceId string         `json:"data_source_id" binding:"required"`
+	Input        datatypes.JSON `json:"input,omitempty" binding:""`
+	Output       datatypes.JSON `json:"output,omitempty" binding:""`
 }
 
 type SetPageComponentsInputOutputData struct {

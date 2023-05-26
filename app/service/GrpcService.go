@@ -236,9 +236,10 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 }
 
 func GrpcTranslate(record DataBaseModel.AppDataSource) (string, error) {
+	// 创建文件夹
 	fileOperation.CreateFilePath(record.CompilePath)
+	// 获取仿真参数
 	SimulationPra := GetSimulationOptions(record.ModelName)
-	fmt.Println(SimulationPra)
 	record.StartTime = SimulationPra["startTime"]
 	record.StopTime = SimulationPra["stopTime"]
 	record.Method = SimulationPra["method"]
@@ -322,12 +323,15 @@ func GrpcTranslate(record DataBaseModel.AppDataSource) (string, error) {
 
 }
 
-func GrpcRunResult(appPageId, userName, userSpaceId string) error {
+func GrpcRunResult(appPageId string, singleSimulationInputData map[string]float64) error {
+	// OM和DM 多轮仿真
 	var appPageRecord DataBaseModel.AppPage
-	err := DB.Where("id = ? ", appPageId, userName, userSpaceId).First(&appPageRecord).Error
+	// 查询appPageId是否存在
+	err := DB.Where("id = ? ", appPageId).First(&appPageRecord).Error
 	if err != nil {
 		return errors.New("not found")
 	}
+	// 查询对应的数据源是否存在
 	var record DataBaseModel.AppDataSource
 	err = DB.Where("id = ? ", appPageRecord.DataSourceId).First(&record).Error
 	if err != nil {
@@ -341,36 +345,49 @@ func GrpcRunResult(appPageId, userName, userSpaceId string) error {
 		"numberOfIntervals": record.NumberOfIntervals,
 		"tolerance":         record.Tolerance,
 	}
-	//查询数据库中的模型对应的记录
+	//查询数据库中的模型表
 	var packageModel DataBaseModel.YssimModels
 	err = DB.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", record.PackageId, []string{"sys", record.UserName}, []string{"0", record.UserSpaceId}).First(&packageModel).Error
 	if err != nil {
 		return errors.New("not found")
 	}
+	// 获取依赖
 	var environmentModelData map[string]string
 	err = sonic.Unmarshal(record.EnvModelData, &environmentModelData)
 	if err != nil {
 		return errors.New("unmarshal error")
 	}
-	// 获取数据库中的输入
-	var inputMap map[string][]float64
-	sonic.Unmarshal(appPageRecord.Input, &inputMap)
+
+	inputData := make(map[string][]float64)
 	// 获取数据库中的输出名称数组
 	var outputNames []string
 	sonic.Unmarshal(appPageRecord.Output, &outputNames)
-	// 将[1,0.5,5]转换为[1,1.5,2,2.5,3,3.5,4,4.5,5]
-	inputData := make(map[string][]float64)
-	for key, value := range inputMap {
-		minVal := value[0]
-		step := value[1]
-		maxVal := value[2]
-
-		// 计算新的数组元素
-		var newValues []float64
-		for i := minVal; i <= maxVal; i += step {
-			newValues = append(newValues, i)
+	if singleSimulationInputData != nil {
+		log.Println("单次仿真！")
+		for key, value := range singleSimulationInputData {
+			var newValues []float64
+			newValues = append(newValues, value)
+			// 单次仿真的inputData map中的value是长度为1的数组
+			inputData[key] = newValues
 		}
-		inputData[key] = newValues
+	} else {
+		log.Println("多次仿真！")
+		//查询数据库中的模型表
+		var componentRecord []DataBaseModel.AppPageComponent
+		DB.Where("page_id = ? AND type = ? ", appPageId, "slider").Find(&componentRecord)
+
+		for i := 0; i < len(componentRecord); i++ {
+			// 将[1,0.5,5]转换为[1,1.5,2,2.5,3,3.5,4,4.5,5]
+			minVal := componentRecord[i].Min
+			step := componentRecord[i].Interval
+			maxVal := componentRecord[i].Max
+			// 计算新的数组元素
+			var newValues []float64
+			for i := minVal; i <= maxVal; i += step {
+				newValues = append(newValues, i)
+			}
+			inputData[componentRecord[i].InputName] = newValues
+		}
 	}
 
 	inputValData := make(map[string]*grpcPb.SubmitTaskRequestInputObj)
@@ -385,6 +402,7 @@ func GrpcRunResult(appPageId, userName, userSpaceId string) error {
 			InputObjList: v,
 		}
 	}
+	// 构建grpc请求体
 	GrpcBuildModelRequest := &grpcPb.SubmitTaskRequest{
 
 		Uuid:              record.ID,
