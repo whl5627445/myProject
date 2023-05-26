@@ -231,7 +231,7 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 			switch {
 			case p[13].(string) != "$Any":
 				options = omc.OMC.GetAllSubtypeOf(p[13].(string), componentClassName)
-			case len(annotationBase) > 1 && annotationBase[0] == "choicesAllMatching=true":
+			case len(annotationBase) > 0 && annotationBase[0] == "choicesAllMatching=true":
 				options = omc.OMC.GetAllSubtypeOf(p[2].(string), m.modelName)
 			}
 
