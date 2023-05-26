@@ -644,6 +644,13 @@ func GetPageComponentView(c *gin.Context) {
 	}
 	res.Data = map[string]interface{}{
 		"components": componentDataList,
+		"page": map[string]interface{}{
+			"background":       page.Background,
+			"background_color": page.BackgroundColor,
+			"height":           page.PageHeight,
+			"width":            page.PageWidth,
+			"release":          page.Release,
+		},
 	}
 	c.JSON(http.StatusOK, res)
 }
