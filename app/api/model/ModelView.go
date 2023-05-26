@@ -930,7 +930,7 @@ func DeleteConnectionAnnotationView(c *gin.Context) {
 		return
 	}
 	service.ModelSave(item.ModelName)
-	res.Msg = "删除连线成功"
+	res.Msg = "连线已删除"
 	c.JSON(http.StatusOK, res)
 }
 
