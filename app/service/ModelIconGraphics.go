@@ -326,6 +326,7 @@ func iconInputOutputs(cData [][]interface{}, caData [][]interface{}, modelName s
 			data := map[string]interface{}{}
 
 			data["graphType"] = "connecter"
+			data["connector_sizing"] = cDataFilter[i][16]
 			//data["ID"] = strconv.Itoa(i)
 			data["classname"] = classname
 			data["name"] = cDataFilter[i][3]
