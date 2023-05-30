@@ -393,7 +393,6 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 		return len(caDataFilter)
 	}()
 	for i := 0; i < dataLen2; i++ {
-		log.Println("cDataFilter[i]", cDataFilter[i])
 		modelName := cDataFilter[i][15].(string)
 
 		classname := cDataFilter[i][2].(string)
