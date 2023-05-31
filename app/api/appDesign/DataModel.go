@@ -163,3 +163,7 @@ type DataSourceRenameData struct {
 	DataSourceID string `json:"data_source_id" binding:"required"`
 	NewName      string `json:"new_name" binding:"required"`
 }
+
+type DeleteDatasourceData struct {
+	DataSourceID string `json:"data_source_id" binding:"required"`
+}

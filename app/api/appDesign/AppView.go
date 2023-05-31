@@ -3,6 +3,7 @@ package API
 import (
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 	"yssim-go/app/DataBaseModel"
@@ -774,6 +775,38 @@ func GetDatasourceView(c *gin.Context) {
 		dataList = append(dataList, data)
 	}
 	res.Data = dataList
+	c.JSON(http.StatusOK, res)
+
+}
+
+func DatasourceDeleteView(c *gin.Context) {
+	/*
+		# 删除数据源
+	*/
+	// TODO： 徐庆达
+	var res responseData
+	var item DeleteDatasourceData
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	// 删除数据库记录
+	var page DataBaseModel.AppDataSource
+	err = DB.Model(DataBaseModel.AppDataSource{}).Where("id = ?", item.DataSourceID).Delete(&page).Error
+	if err != nil {
+		log.Println("删除app数据源出现错误：", err)
+		res.Err = "删除失败，请稍后再试"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	// 删除文件
+	err = os.RemoveAll(page.CompilePath)
+	if err != nil {
+		log.Println(err)
+	}
+	res.Msg = "删除成功"
 	c.JSON(http.StatusOK, res)
 
 }
