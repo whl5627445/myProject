@@ -132,6 +132,7 @@ func GetDataSourceGroupView(c *gin.Context) {
 	var group []DataBaseModel.AppDataSource
 	DB.Select("ground_name").Where("username = ? AND compile_status = ?", userName, 4).Group("ground_name").Find(&group)
 	groupData := make([]string, 0)
+
 	for _, g := range group {
 		groupData = append(groupData, g.GroundName)
 	}
@@ -406,7 +407,9 @@ func GetAppPageView(c *gin.Context) {
 	var releaseCount, noReleaseCount int64
 	var pageList []DataBaseModel.AppPage
 	DB.Model(DataBaseModel.AppSpace{}).Where("id = ? AND username = ?", spaceId, userName).UpdateColumn("last_login_time", time.Now().Local().Unix())
+
 	db := DB.Where("app_space_id = ? AND username = ?", spaceId, userName).Order("create_time desc")
+
 	rc := DB.Model(DataBaseModel.AppPage{}).Where("app_space_id = ? AND username = ?", spaceId, userName).Where("is_release = ?", true)
 	nrc := DB.Model(DataBaseModel.AppPage{}).Where("app_space_id = ? AND username = ?", spaceId, userName).Where("is_release = ?", false)
 
@@ -683,7 +686,31 @@ func EditPageComponentView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
-	err = DB.Model(DataBaseModel.AppPageComponent{}).Where("id = ? AND page_id = ?", item.Id, item.PageId).Updates(&item).Error
+
+	//err = DB.Model(DataBaseModel.AppPageComponent{}).Select("*").Where("id = ? AND page_id = ?", item.Id, item.PageId).Updates(&item).Error
+	err = DB.Model(DataBaseModel.AppPageComponent{}).Where("id = ? AND page_id = ?", item.Id, item.PageId).Updates(map[string]interface{}{
+		"type": item.Type,
+		//"input_output": item.InputOutput,
+		"width":               item.Width,
+		"height":              item.Height,
+		"position_x":          item.PositionX,
+		"position_y":          item.PositionY,
+		"angle":               item.Angle,
+		"horizontal_flip":     item.HorizontalFlip,
+		"vertical_flip":       item.VerticalFlip,
+		"opacity":             item.Opacity,
+		"other_configuration": item.OtherConfiguration,
+		"z_index":             item.ZIndex,
+		"styles":              item.Styles,
+		"events":              item.Events,
+		"chart_config":        item.ChartConfig,
+		"option":              item.Option,
+		"component_path":      item.ComponentPath,
+		"hide":                item.Hide,
+		"lock":                item.Lock,
+		"is_group":            item.IsGroup,
+	}).Error
+
 	if err != nil {
 		log.Println("编辑app页面中组件时保存数据库出现错误：", err)
 		res.Err = "编辑失败，请稍后再试"
@@ -691,6 +718,7 @@ func EditPageComponentView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
+
 	res.Msg = "更新成功"
 	c.JSON(http.StatusOK, res)
 }
@@ -820,8 +848,8 @@ func GetPageInputOutputView(c *gin.Context) {
 	var page DataBaseModel.AppPage
 	DB.Where("id = ? AND username = ?", pageId, userName).First(&page)
 	data := map[string]interface{}{
-		"input":  page.Input,
-		"output": page.Output,
+		"input":          page.Input,
+		"output":         page.Output,
 		"data_source_id": page.DataSourceId,
 	}
 	res.Data = data
