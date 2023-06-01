@@ -16,12 +16,15 @@ func main() {
 	g := gin.Default()
 
 	g.Use(middleware.Cors())
+
 	g.Static("/static", "./static")
 	{
+		router.UserRouter(g)
 		router.AppDesignRouter(g)
+
+		g.Use(middleware.CheckOMC())
 		router.ModelRouter(g)
 		router.SimulateRouter(g)
-		router.UserRouter(g)
 		router.FileRouter(g)
 	}
 

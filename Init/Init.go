@@ -1,7 +1,7 @@
 package Init
 
 func init() {
-	ModelLibraryInit()
+	//ModelLibraryInit()
 	LogInit()
 	//go simulationService()
 	go Register()
