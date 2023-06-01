@@ -123,6 +123,30 @@ func GetMultipleSimulateResultView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+func GetModelStateView(c *gin.Context) {
+	/*
+	   ## 获取仿真状态 返回2表示在仿真中或者发布中  返回4表示仿真结束或者发布结束
+	*/
+	// TODO： 徐庆达
+	appPageId := c.Query("app_page_id")
+	var appPageRecord DataBaseModel.AppPage
+	DB.Where("id = ?", appPageId).First(&appPageRecord)
+	var res responseData
+	resData := map[string]int{
+		"ReleaseState":  2,
+		"SimulateState": 2,
+	}
+	// 如果状态是3（失败）或者4（仿真结束），返回4，否则返回2
+	if appPageRecord.ReleaseState == 4 || appPageRecord.ReleaseState == 3 {
+		resData["ReleaseState"] = 4
+	}
+	if appPageRecord.SimulateState == 4 || appPageRecord.ReleaseState == 3 {
+		resData["SimulateState"] = 4
+	}
+	res.Data = resData
+	c.JSON(http.StatusOK, res)
+
+}
 func GetDataSourceGroupView(c *gin.Context) {
 	/*
 		# 获取用户数据源分组

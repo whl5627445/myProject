@@ -497,12 +497,12 @@ func MultipleSimulateResult(appPageId, singleOrMultiple string, varNameList []st
 
 	if singleOrMultiple == "multiple" {
 		// 未完成
-		if appPageRecord.MultiSimulationResultsPath == "" {
+		if appPageRecord.MulResultPath == "" {
 			return nil, errors.New("not found")
 		} else {
 			// 获取appPageRecord.MultiSimulationResultsPath下的所有csv文件
 			var csvFileNames []string
-			err := filepath.Walk(appPageRecord.MultiSimulationResultsPath, func(path string, info os.FileInfo, err error) error {
+			err := filepath.Walk(appPageRecord.MulResultPath, func(path string, info os.FileInfo, err error) error {
 				if err != nil {
 					return err
 				}
@@ -515,7 +515,7 @@ func MultipleSimulateResult(appPageId, singleOrMultiple string, varNameList []st
 				fmt.Println(err)
 			}
 			// 读取csv数据
-			file, err := os.Open(appPageRecord.MultiSimulationResultsPath + csvFileNames[0])
+			file, err := os.Open(appPageRecord.MulResultPath + csvFileNames[0])
 			if err != nil {
 				return nil, err
 			}
