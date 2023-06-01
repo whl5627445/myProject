@@ -448,7 +448,7 @@ func FmpySimulationResultTree(modelName, path, parent, keyWords string) []map[st
 	return dataList2
 }
 
-func MultipleSimulateResult(appPageId, singleOrMultiple string, varNameList []string) ([]map[string]interface{}, error) {
+func AppSimulateResult(appPageId string, varNameList []string) ([]map[string]interface{}, error) {
 	var appPageRecord DataBaseModel.AppPage
 	var resData []map[string]interface{}
 	// 查询appPageId是否存在
@@ -458,64 +458,76 @@ func MultipleSimulateResult(appPageId, singleOrMultiple string, varNameList []st
 	if appPageRecord.ID == "" || appDataSourceRecord.ID == "" {
 		return nil, errors.New("not found")
 	}
-	if singleOrMultiple == "single" {
-		for i := 0; i < len(varNameList); i++ {
-			data, ok := ReadSimulationResult([]string{varNameList[i]}, appDataSourceRecord.CompilePath+"result_res.mat")
-			if ok {
-				ordinate := data[1]
-				abscissa := data[0]
-				if len(ordinate) > 1000 {
-					step := len(ordinate) / 1000
-					o := []float64{}
-					a := []float64{}
-					for s := 0; s < len(ordinate); s++ {
-						index := s * step
-						if index > 1000 {
-							break
-						}
-						o = append(o, data[1][index])
-						a = append(a, data[0][index])
-					}
-					//if len(ordinate)%1000 != 0 {
-					//	o = append(o, data[1][len(ordinate)-1])
-					//	a = append(a, data[0][len(ordinate)-1])
-					//}
-					ordinate = o
-					abscissa = a
-				}
-				oneData := map[string]interface{}{
-					"variable": varNameList[i],
-					"abscissa": abscissa,
-					"ordinate": ordinate,
-				}
-				resData = append(resData, oneData)
-			}
 
+	for i := 0; i < len(varNameList); i++ {
+		data, ok := ReadSimulationResult([]string{varNameList[i]}, appDataSourceRecord.CompilePath+"result_res.mat")
+		if ok {
+			ordinate := data[1]
+			abscissa := data[0]
+			if len(ordinate) > 1000 {
+				step := len(ordinate) / 1000
+				o := []float64{}
+				a := []float64{}
+				for s := 0; s < len(ordinate); s++ {
+					index := s * step
+					if index > 1000 {
+						break
+					}
+					o = append(o, data[1][index])
+					a = append(a, data[0][index])
+				}
+				//if len(ordinate)%1000 != 0 {
+				//	o = append(o, data[1][len(ordinate)-1])
+				//	a = append(a, data[0][len(ordinate)-1])
+				//}
+				ordinate = o
+				abscissa = a
+			}
+			oneData := map[string]interface{}{
+				"variable": varNameList[i],
+				"abscissa": abscissa,
+				"ordinate": ordinate,
+			}
+			resData = append(resData, oneData)
 		}
-		return resData, nil
+
+	}
+	return resData, nil
+
+}
+
+func AppReleaseResult(appPageId string) (map[string]interface{}, error) {
+	var appPageRecord DataBaseModel.AppPage
+	resData := make(map[string]interface{})
+	// 查询appPageId是否存在
+	DB.Where("id = ? ", appPageId).First(&appPageRecord)
+	var appDataSourceRecord DataBaseModel.AppDataSource
+	DB.Where("id = ? ", appPageRecord.DataSourceId).First(&appDataSourceRecord)
+	if appPageRecord.ID == "" || appDataSourceRecord.ID == "" {
+		return nil, errors.New("not found")
 	}
 
-	if singleOrMultiple == "multiple" {
-		// 未完成
-		if appPageRecord.MulResultPath == "" {
-			return nil, errors.New("not found")
-		} else {
-			// 获取appPageRecord.MultiSimulationResultsPath下的所有csv文件
-			var csvFileNames []string
-			err := filepath.Walk(appPageRecord.MulResultPath, func(path string, info os.FileInfo, err error) error {
-				if err != nil {
-					return err
-				}
-				if !info.IsDir() && strings.HasSuffix(info.Name(), ".csv") {
-					csvFileNames = append(csvFileNames, info.Name())
-				}
-				return nil
-			})
+	// 未完成
+	if appPageRecord.MulResultPath == "" {
+		return nil, errors.New("not found")
+	} else {
+		// 获取appPageRecord.MultiSimulationResultsPath下的所有csv文件
+		var csvFileNames []string
+		err := filepath.Walk(appPageRecord.MulResultPath, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
-				fmt.Println(err)
+				return err
 			}
+			if !info.IsDir() && strings.HasSuffix(info.Name(), ".csv") {
+				csvFileNames = append(csvFileNames, info.Name())
+			}
+			return nil
+		})
+		if err != nil {
+			fmt.Println(err)
+		}
+		for i := 0; i < len(csvFileNames); i++ {
 			// 读取csv数据
-			file, err := os.Open(appPageRecord.MulResultPath + csvFileNames[0])
+			file, err := os.Open(appPageRecord.MulResultPath + "/" + csvFileNames[i])
 			if err != nil {
 				return nil, err
 			}
@@ -527,26 +539,30 @@ func MultipleSimulateResult(appPageId, singleOrMultiple string, varNameList []st
 			}
 			// 遍历每一列数据
 			resultMap := make(map[string]interface{})
-			for i := 0; i < len(records[0]); i++ {
+			for n := 0; n < len(records[0]); n++ {
 				var column []string
 				for _, record := range records {
-					column = append(column, record[i])
+					column = append(column, record[n])
 				}
-				floatArr := make([]float64, len(column[1:]))
+				var floatArr []float64
 				// 将字符串数组转换为 float 数组
-				for j, s := range column[1:] {
-					f, err := strconv.ParseFloat(s, 64)
-					if err != nil {
-						panic(err)
+				for _, s := range column[1:] {
+					if s != "" {
+						f, err := strconv.ParseFloat(s, 64)
+						if err != nil {
+							fmt.Println(err)
+						}
+						floatArr = append(floatArr, f)
 					}
-					floatArr[j] = f
 				}
 				resultMap[column[0]] = floatArr
 			}
-			return nil, nil
+
+			resData[csvFileNames[i]] = resultMap
+
 		}
 
 	}
-	return nil, errors.New("not found")
+	return resData, nil
 
 }

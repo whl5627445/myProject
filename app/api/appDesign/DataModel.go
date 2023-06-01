@@ -21,14 +21,16 @@ type AppModelMarkData struct {
 
 type AppMultipleSimulateData struct {
 	AppPageId                 string             `json:"app_page_id" binding:"required"`
-	SpaceId                   string             `json:"space_id" binding:"required"`
 	SingleSimulationInputData map[string]float64 `json:"single_simulation_input_data" binding:""`
 }
 
-type GetMulSimResData struct {
-	AppPageId        string   `json:"app_page_id" binding:"required"`
-	SingleOrMultiple string   `json:"single_or_multiple" binding:"required"`
-	Variable         []string `json:"variable" binding:"required"`
+type GetSimResData struct {
+	AppPageId string   `json:"app_page_id" binding:"required"`
+	Variable  []string `json:"variable" binding:"required"`
+}
+
+type GetReleaseResData struct {
+	AppPageId string `json:"app_page_id" binding:"required"`
 }
 
 type CreateAppSpaceData struct {

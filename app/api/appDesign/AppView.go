@@ -99,19 +99,19 @@ func MultipleSimulateView(c *gin.Context) {
 
 }
 
-func GetMultipleSimulateResultView(c *gin.Context) {
+func GetAppSimulateResultView(c *gin.Context) {
 	/*
-		# 读取多轮仿真结果csv数据接口
+		# 读取AppPage仿真结果
 	*/
 	// TODO： 徐庆达
 	var res responseData
-	var item GetMulSimResData
+	var item GetSimResData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
-	data, err := service.MultipleSimulateResult(item.AppPageId, item.SingleOrMultiple, item.Variable)
+	data, err := service.AppSimulateResult(item.AppPageId, item.Variable)
 	if err != nil {
 		log.Println(err)
 		res.Msg = "读取失败。"
@@ -123,6 +123,29 @@ func GetMultipleSimulateResultView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+func GetAppReleaseResultView(c *gin.Context) {
+	/*
+		# 读取多轮仿真结果csv数据接口
+	*/
+	// TODO： 徐庆达
+	var res responseData
+	var item GetReleaseResData
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	data, err := service.AppReleaseResult(item.AppPageId)
+	if err != nil {
+		log.Println(err)
+		res.Msg = "读取失败。"
+		c.JSON(http.StatusBadRequest, res)
+		return
+	}
+	res.Data = data
+	res.Msg = "读取成功。"
+	c.JSON(http.StatusOK, res)
+}
 func GetModelStateView(c *gin.Context) {
 	/*
 	   ## 获取仿真状态 返回2表示在仿真中或者发布中  返回4表示仿真结束或者发布结束
