@@ -3,6 +3,7 @@ package API
 import (
 	"log"
 	"net/http"
+	"strings"
 	"time"
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/service"
@@ -124,7 +125,8 @@ func CreateUserSpaceView(c *gin.Context) {
 	space.Collect = false
 	err = DB.Create(&space).Error
 	res.Data = map[string]string{
-		"id": space.ID,
+		"id":   space.ID,
+		"name": space.SpaceName,
 	}
 	FilePath, ok := service.CreatWorkSpace(userName, space.SpaceName)
 	if ok {
@@ -162,6 +164,13 @@ func EditUserSpaceView(c *gin.Context) {
 		return
 	}
 	var space DataBaseModel.YssimUserSpace
+	DB.Where("space_name = ? AND username = ? AND id <> ?", item.SpaceName, userName, item.SpaceId).First(&space)
+	if space.ID != "" {
+		res.Err = "应用名称已存在"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
 	err = DB.Model(&space).Where("username = ? AND id = ?", userName, item.SpaceId).Updates(item).Error
 	if err != nil {
 		log.Println("建模空间更新数据库失败，错误： ", err)
@@ -213,46 +222,16 @@ func DeleteUserSpaceView(c *gin.Context) {
 		return
 	}
 	var space DataBaseModel.YssimUserSpace
-	for _, id := range item.SpaceId {
-		result := service.GetWorkSpaceId(&id)
-		if result {
-			service.Clear()
-		}
-	}
+	//for _, id := range item.SpaceId {
+	//	result := service.GetWorkSpaceId(&id)
+	//	if result {
+	//		service.Clear()
+	//	}
+	//}
 	DB.Model(&space).Where("id IN ? AND username = ?", item.SpaceId, userName).Delete(&space)
 	res.Msg = "删除成功"
 	c.JSON(http.StatusOK, res)
 
-}
-
-func LoginUserSpaceView(c *gin.Context) {
-	/*
-		# 进入用户空间
-		## space_id: 用户空间id
-	*/
-	var res responseData
-	var item LoginUserSpaceModel
-	err := c.BindJSON(&item)
-	if err != nil {
-		return
-	}
-	userName := c.GetHeader("username")
-	result := service.SetWorkSpaceId(&item.SpaceId)
-	if result {
-		res.Msg = "初始化完成"
-		c.JSON(http.StatusOK, res)
-		return
-	}
-
-	var space DataBaseModel.YssimUserSpace
-	DB.Model(space).Where("id = ? AND username = ?", item.SpaceId, userName).UpdateColumn("last_login_time", time.Now().Local().Unix())
-
-	var packageModelAll []DataBaseModel.YssimModels
-	DB.Where("sys_or_user IN ?  AND default_version = ? AND userspace_id IN ?", []string{"sys", userName}, true, []string{"0", item.SpaceId}).Find(&packageModelAll)
-	service.ModelLibraryInitialization(packageModelAll)
-
-	res.Msg = "初始化完成"
-	c.JSON(http.StatusOK, res)
 }
 
 func GetUserRecentlyOpenedView(c *gin.Context) {
@@ -334,5 +313,61 @@ func SetUserSettingsView(c *gin.Context) {
 		}
 	}
 
+	c.JSON(http.StatusOK, res)
+}
+
+func BackgroundUploadView(c *gin.Context) {
+	/*
+		# 上传背景图接口
+		## path: 文件相对路径
+	*/
+	var res responseData
+	userName := c.GetHeader("username")
+	varFile, err := c.FormFile("file")
+	if !strings.HasSuffix(varFile.Filename, ".jpg") && !strings.HasSuffix(varFile.Filename, ".jpeg") && !strings.HasSuffix(varFile.Filename, ".png") {
+		res.Err = "暂时只支持*.jpg、*.jpeg、*.png格式文件上传"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	if varFile.Size > 3500000 {
+		res.Err = "上传文件过大，请上传小于3.5M的文件"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	filePath := "static/UserFiles/Images/" + userName + time.Now().Local().Format("20060102150405") + varFile.Filename
+	ok := service.SaveBackground(filePath, varFile)
+	if ok {
+		res.Msg = "上传成功"
+		res.Data = map[string]string{
+			"path": filePath,
+		}
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	res.Err = "上传失败，请重新上传"
+	res.Status = 2
+	c.JSON(http.StatusOK, res)
+
+}
+
+func StartOMCView(c *gin.Context) {
+	/*
+		# 启动用户的omc实例并连接
+	*/
+	var res responseData
+	result := service.StartOMC()
+	if result {
+		res.Msg = "服务启动成功"
+	} else {
+		res.Err = "服务启动失败,请联系管理员"
+		res.Status = 2
+	}
 	c.JSON(http.StatusOK, res)
 }

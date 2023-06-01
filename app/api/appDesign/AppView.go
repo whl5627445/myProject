@@ -289,7 +289,7 @@ func EditAppSpaceView(c *gin.Context) {
 		return
 	}
 	var space DataBaseModel.AppSpace
-	DB.Where("space_name = ? AND username = ?", item.SpaceName, userName).First(&space)
+	DB.Where("space_name = ? AND username = ? AND id <> ?", item.SpaceName, userName, item.SpaceId).First(&space)
 	if space.ID != "" {
 		res.Err = "应用名称已存在"
 		res.Status = 2
