@@ -57,6 +57,8 @@ func ModelRouter(g *gin.Engine) {
 
 		Models.POST("/reference/resources", ModelAPI.GetModelResourcesReferenceView)
 
+		Models.POST("/userspace/login", ModelAPI.LoginUserSpaceView)
+
 	}
 	g.POST("/test", ModelAPI.Test)
 	g.POST("/test1", ModelAPI.Test1)

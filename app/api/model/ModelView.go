@@ -1386,6 +1386,36 @@ func GetIconView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+func LoginUserSpaceView(c *gin.Context) {
+	/*
+		# 进入用户空间
+		## space_id: 用户空间id
+	*/
+	var res responseData
+	var item LoginUserSpaceModel
+	err := c.BindJSON(&item)
+	if err != nil {
+		return
+	}
+	userName := c.GetHeader("username")
+	result := service.SetWorkSpaceId(&item.SpaceId)
+	if result {
+		res.Msg = "初始化完成"
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	var space DataBaseModel.YssimUserSpace
+	DB.Model(space).Where("id = ? AND username = ?", item.SpaceId, userName).UpdateColumn("last_login_time", time.Now().Local().Unix())
+
+	var packageModelAll []DataBaseModel.YssimModels
+	DB.Where("sys_or_user IN ?  AND default_version = ? AND userspace_id IN ?", []string{"sys", userName}, true, []string{"0", item.SpaceId}).Find(&packageModelAll)
+	service.ModelLibraryInitialization(packageModelAll)
+
+	res.Msg = "初始化完成"
+	c.JSON(http.StatusOK, res)
+}
+
 func Test(c *gin.Context) {
 	/*
 		测试omc命令

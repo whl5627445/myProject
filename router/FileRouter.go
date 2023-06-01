@@ -33,6 +33,5 @@ func FileRouter(g *gin.Engine) {
 
 		Models.POST("/icon/set", FileAPI.ModelIconSetView)
 
-		Models.POST("/background/upload", FileAPI.BackgroundUploadView)
 	}
 }

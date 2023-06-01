@@ -155,3 +155,7 @@ type packageResourcesData struct {
 	Parent    string `json:"parent" binding:""`
 	Path      string `json:"path" binding:""`
 }
+
+type LoginUserSpaceModel struct {
+	SpaceId string `json:"space_id" binding:"required"`
+}

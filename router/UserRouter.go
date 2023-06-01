@@ -14,7 +14,6 @@ func UserRouter(g *gin.Engine) {
 		Models.POST("/userspace/create", UserAPI.CreateUserSpaceView)
 		Models.POST("/userspace/edit", UserAPI.EditUserSpaceView)
 		Models.POST("/userspace/delete", UserAPI.DeleteUserSpaceView)
-		Models.POST("/userspace/login", UserAPI.LoginUserSpaceView)
 		Models.GET("/userspace/recent", UserAPI.GetUserRecentlyOpenedView)
 
 		Models.POST("/userspace/collect", UserAPI.CollectUserSpaceView)
@@ -23,5 +22,9 @@ func UserRouter(g *gin.Engine) {
 
 		Models.GET("/settings/get", UserAPI.GetUserSettingsView)
 		Models.POST("/settings/set", UserAPI.SetUserSettingsView)
+
+		Models.POST("/background/upload", UserAPI.BackgroundUploadView)
+
+		Models.POST("/service/start", UserAPI.StartOMCView)
 	}
 }

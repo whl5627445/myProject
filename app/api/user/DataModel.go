@@ -29,10 +29,6 @@ type DeleteUserSpaceModel struct {
 	SpaceId []string `json:"space_id" binding:"required"`
 }
 
-type LoginUserSpaceModel struct {
-	SpaceId string `json:"space_id" binding:"required"`
-}
-
 type CollectUserSpaceData struct {
 	SpaceId []string `json:"space_id" binding:"required"`
 	Collect bool     `json:"collect" binding:""`
