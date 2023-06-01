@@ -10,7 +10,7 @@ from config.redis_config import R
 import json
 import os
 import configparser
-from libs.function.defs import update_app_pages_records
+from libs.function.defs import update_app_pages_records,convert_list
 
 config = configparser.ConfigParser()
 config.read('./config/grpc_config.ini')
@@ -25,32 +25,7 @@ class DmRunThread(threading.Thread):
         threading.Thread.__init__(self)
         self.state = "init"
         self.request = request
-        update_app_pages_records(self.request.pageId,release_status=1)
-        # inputValDataDict = {}
-        # for key, value in self.request.inputValData.items():
-        #     inputValDataDict[key] = list(value.inputObjList)
-        # update_item_to_json(self.request.uuid,
-        #                     {"id": self.request.uuid,
-        #                      "userSpaceId": self.request.userSpaceId,
-        #                      "userName": self.request.userName,
-        #                      "simulateModelName": self.request.simulateModelName,
-        #                      "resultFilePath": self.request.resultFilePath,
-        #                      "simulationPraData": self.request.simulationPraData,
-        #                      "envModelData": self.request.envModelData,
-        #                      # OM DM
-        #                      "simulateType": self.request.simulateType,
-        #                      #  dm才会用到的参数
-        #                      "packageName": self.request.packageName,
-        #                      "packageFilePath": self.request.packageFilePath,
-        #                      # 任务类型"simulate " "translate " "run"三种
-        #                      "taskType": self.request.taskType,
-        #                      # 多轮仿真用到的参数
-        #                      "pageId": self.request.pageId,
-        #                      "inputValData": inputValDataDict,
-        #                      "outputValNames": list(self.request.outputValNames),
-        #
-        #                      }
-        #                     )
+        update_app_pages_records(self.request.pageId, release_state=1)
 
     def send_request(self):
         print("发送请求")
@@ -226,19 +201,19 @@ class DmRunThread(threading.Thread):
 
     def run(self):
         print("开启dymola仿真")
-        update_app_pages_records(self.request.pageId, release_status=2)
+        update_app_pages_records(self.request.pageId, release_state=2)
         res, err, code = self.send_request()
         print("send_request返回", res, err, code)
         if res:
-            update_app_pages_records(self.request.pageId, release_status=4)
+            update_app_pages_records(self.request.pageId, release_state=4)
             json_data = {"message": self.request.simulateModelName + " 模型仿真完成"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
         elif code == 300:
-            update_app_pages_records(self.request.pageId, release_status=3)
+            update_app_pages_records(self.request.pageId, release_state=3)
             json_data = {"message": self.request.simulateModelName + " 结束任务"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
         else:
-            update_app_pages_records(self.request.pageId, release_status=3)
+            update_app_pages_records(self.request.pageId, release_state=3)
             json_data = {"message": self.request.simulateModelName + " 仿真失败"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
         self.state = "stopped"

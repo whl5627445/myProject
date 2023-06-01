@@ -391,13 +391,13 @@ func GrpcRunResult(appPageId string, singleSimulationInputData map[string]float6
 	}
 
 	inputValData := make(map[string]*grpcPb.SubmitTaskRequestInputObj)
-	var inputValDataLen int
+	//var inputValDataLen int
 	for k, v := range inputData {
-		if inputValDataLen == 0 {
-			inputValDataLen = len(v)
-		} else if len(v) != inputValDataLen {
-			return errors.New("长度不一致")
-		}
+		//if inputValDataLen == 0 {
+		//	inputValDataLen = len(v)
+		//} else if len(v) != inputValDataLen {
+		//	return errors.New("长度不一致")
+		//}
 		inputValData[k] = &grpcPb.SubmitTaskRequestInputObj{
 			InputObjList: v,
 		}
