@@ -831,11 +831,18 @@ func ModelIconSetView(c *gin.Context) {
 		return
 	}
 
-	iconFileNameList := strings.Split(item.Path, ".")
-	iconFileNameSuffix := iconFileNameList[len(iconFileNameList)-1]
-	iconType := map[string]bool{"png": true}
+	//iconFileNameList := strings.Split(item.Path, ".")
+	//iconFileNameSuffix := iconFileNameList[len(iconFileNameList)-1]
+	//iconType := map[string]bool{"png": true}
+	//file := service.GetResourcesImages(item.Path)
+	//if !iconType[iconFileNameSuffix] || len(file) == 0 {
+	//	res.Err = ""
+	//	res.Status = 2
+	//	c.JSON(http.StatusBadRequest, res)
+	//	return
+	//}
 	file := service.GetResourcesImages(item.Path)
-	if !iconType[iconFileNameSuffix] || len(file) == 0 {
+	if !strings.HasSuffix(item.Path, ".png") || len(file) == 0 {
 		res.Err = ""
 		res.Status = 2
 		c.JSON(http.StatusBadRequest, res)
