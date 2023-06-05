@@ -27,12 +27,11 @@ var OMCInstance instance
 
 func StartOMC(result chan bool) {
 
-	//log.Println("准备启动omc，杀死之前的残留")
-	StopOMC()
-
+	if OMCInstance.Cmd != nil {
+		return
+	}
 	cmd := exec.Command("omc", "--interactive=zmq", "--locale=C", "-z=omc", "--interactivePort=23456")
 	err := cmd.Start()
-	//logrus.Printf("用户 %s 启动OMC实例", config.USERNAME)
 	if err != nil {
 		result <- false
 		logrus.Println("启动OMC实例失败， 错误： ", err)
@@ -42,8 +41,7 @@ func StartOMC(result chan bool) {
 	UseTime := time.Now().Local()
 	OMCInstance.UseTime = &UseTime
 	OMC = OmcInit()
-	//logrus.Println("OMC实例连接成功")
-	//logrus.Println("OMC实例启动完毕")
+
 	result <- true
 	err = cmd.Wait()
 	if err != nil {
@@ -54,6 +52,9 @@ func StartOMC(result chan bool) {
 }
 
 func StopOMC() {
+	if OMCInstance.Start == false {
+		return
+	}
 	if OMCInstance.Cmd != nil {
 		OMCInstance.Cmd.Process.Kill()
 		OMCInstance.Cmd = nil
