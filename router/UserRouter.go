@@ -26,5 +26,6 @@ func UserRouter(g *gin.Engine) {
 		Models.POST("/background/upload", UserAPI.BackgroundUploadView)
 
 		Models.POST("/service/start", UserAPI.StartOMCView)
+		Models.POST("/service/stop", UserAPI.StopOMCView)
 	}
 }

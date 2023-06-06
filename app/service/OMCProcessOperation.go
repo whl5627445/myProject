@@ -10,3 +10,7 @@ func StartOMC() bool {
 	go omc.StartOMC(result)
 	return <-result
 }
+
+func StopOMC() {
+	omc.StopOMC()
+}

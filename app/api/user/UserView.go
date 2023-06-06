@@ -371,3 +371,13 @@ func StartOMCView(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, res)
 }
+
+func StopOMCView(c *gin.Context) {
+	/*
+		# 暂停用户的omc实例并连接
+	*/
+	var res responseData
+	service.StopOMC()
+	res.Msg = "服务暂停成功"
+	c.JSON(http.StatusOK, res)
+}
