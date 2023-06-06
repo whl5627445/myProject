@@ -120,7 +120,7 @@ type EditPageComponentData struct {
 	SpaceId            string         `json:"space_id" binding:"required"`
 	PageId             string         `json:"page_id" binding:"required"`
 	Type               string         `json:"type,omitempty" binding:""`
-	InputOutput        datatypes.JSON `json:"input_output,omitempty" binding:""`
+	InputName          string         `json:"input_name,omitempty" binding:""`
 	Width              int            `json:"width,omitempty" binding:""`
 	Height             int            `json:"height,omitempty" binding:""`
 	PositionX          int            `json:"position_x,omitempty" binding:""`

@@ -699,6 +699,7 @@ func GetPageComponentView(c *gin.Context) {
 			"max":                 c.Max,
 			"min":                 c.Min,
 			"interval":            c.Interval,
+			"input_name":          c.InputName,
 		}
 		componentDataList = append(componentDataList, p)
 	}
@@ -737,8 +738,8 @@ func EditPageComponentView(c *gin.Context) {
 
 	//err = DB.Model(DataBaseModel.AppPageComponent{}).Select("*").Where("id = ? AND page_id = ?", item.Id, item.PageId).Updates(&item).Error
 	err = DB.Model(DataBaseModel.AppPageComponent{}).Where("id = ? AND page_id = ?", item.Id, item.PageId).Updates(map[string]interface{}{
-		"type": item.Type,
-		//"input_output": item.InputOutput,
+		"type":                item.Type,
+		"input_name":          item.InputName,
 		"width":               item.Width,
 		"height":              item.Height,
 		"position_x":          item.PositionX,
