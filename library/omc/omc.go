@@ -3,7 +3,9 @@ package omc
 import (
 	"log"
 	"os/exec"
+	"sync"
 	"time"
+	"yssim-go/config"
 
 	"github.com/sirupsen/logrus"
 )
@@ -21,15 +23,16 @@ type instance struct {
 	Start   bool
 	Cmd     *exec.Cmd
 	UseTime *time.Time
+	Mu      sync.Mutex
 }
 
 var OMCInstance instance
 
 func StartOMC(result chan bool) {
-
 	if OMCInstance.Cmd != nil {
 		return
 	}
+	OMCInstance.Mu.Lock()
 	cmd := exec.Command("omc", "--interactive=zmq", "--locale=C", "-z=omc", "--interactivePort=23456")
 	err := cmd.Start()
 	if err != nil {
@@ -41,17 +44,17 @@ func StartOMC(result chan bool) {
 	UseTime := time.Now().Local()
 	OMCInstance.UseTime = &UseTime
 	OMC = OmcInit()
-
+	OMCInstance.Mu.Unlock()
 	result <- true
 	err = cmd.Wait()
 	if err != nil {
 		log.Println("omc wait 出错：", err)
-		return
 	}
 	StopOMC()
 }
 
 func StopOMC() {
+
 	if OMCInstance.Start == false {
 		return
 	}
@@ -61,6 +64,7 @@ func StopOMC() {
 	}
 	OMCInstance.Start = false
 	OMC = nil
+	config.UserSpaceId = ""
 	log.Println("omc进程已停止")
 	return
 }
