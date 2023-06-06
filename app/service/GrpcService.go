@@ -383,8 +383,11 @@ func GrpcRunResult(appPageId string, singleSimulationInputData map[string]float6
 			maxVal := componentRecord[i].Max
 			// 计算新的数组元素
 			var newValues []float64
-			for i := minVal; i <= maxVal; i += step {
-				newValues = append(newValues, i)
+			if step == 0 {
+				break
+			}
+			for j := minVal; j <= maxVal; j += step {
+				newValues = append(newValues, j)
 			}
 			inputData[componentRecord[i].InputName] = newValues
 		}

@@ -36,7 +36,8 @@ func AppModelMarkView(c *gin.Context) {
 	var record DataBaseModel.AppDataSource
 	DB.Where("package_id = ? AND username = ? AND ground_name = ? AND data_source_name = ?", item.PackageId, userName, item.GroundName, item.DataSourceName).First(&record)
 	if record.ID != "" {
-		c.JSON(http.StatusBadRequest, "名称重复")
+		res.Err = "名称重复"
+		c.JSON(http.StatusOK, res)
 		return
 	}
 	CompilePath := "static/UserFiles/modelDataSource/" + userName + "/" + strings.ReplaceAll(item.ModelName, ".", "-") + "/" + time.Now().Local().Format("20060102150405") + "/"
@@ -148,7 +149,7 @@ func GetAppReleaseResultView(c *gin.Context) {
 }
 func GetModelStateView(c *gin.Context) {
 	/*
-	   ## 获取仿真状态 返回2表示在仿真中或者发布中  返回4表示仿真结束或者发布结束
+	   ## 获取仿真状态  0未发布 1初始化 2发布中 3 发布失败 4 发布完成
 	*/
 	// TODO： 徐庆达
 	appPageId := c.Query("app_page_id")
@@ -156,15 +157,8 @@ func GetModelStateView(c *gin.Context) {
 	DB.Where("id = ?", appPageId).First(&appPageRecord)
 	var res responseData
 	resData := map[string]int{
-		"ReleaseState":  2,
-		"SimulateState": 2,
-	}
-	// 如果状态是3（失败）或者4（仿真结束），返回4，否则返回2
-	if appPageRecord.ReleaseState == 4 || appPageRecord.ReleaseState == 3 {
-		resData["ReleaseState"] = 4
-	}
-	if appPageRecord.SimulateState == 4 || appPageRecord.ReleaseState == 3 {
-		resData["SimulateState"] = 4
+		"ReleaseState":  appPageRecord.ReleaseState,
+		"SimulateState": appPageRecord.SimulateState,
 	}
 	res.Data = resData
 	c.JSON(http.StatusOK, res)
