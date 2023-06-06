@@ -375,7 +375,7 @@ func GrpcRunResult(appPageId string, singleSimulationInputData map[string]float6
 		//查询数据库中的模型表
 		var componentRecord []DataBaseModel.AppPageComponent
 		DB.Where("page_id = ? AND type = ? ", appPageId, "slider").Find(&componentRecord)
-
+		var componentsId []string
 		for i := 0; i < len(componentRecord); i++ {
 			// 将[1,0.5,5]转换为[1,1.5,2,2.5,3,3.5,4,4.5,5]
 			minVal := componentRecord[i].Min
@@ -390,17 +390,15 @@ func GrpcRunResult(appPageId string, singleSimulationInputData map[string]float6
 				newValues = append(newValues, j)
 			}
 			inputData[componentRecord[i].InputName] = newValues
+			componentsId = append(componentsId, componentRecord[i].ID)
 		}
+		componentsIdJsonData, _ := sonic.Marshal(componentsId)
+		appPageRecord.ComponentsId = componentsIdJsonData
+		DB.Save(&appPageRecord)
 	}
 
 	inputValData := make(map[string]*grpcPb.SubmitTaskRequestInputObj)
-	//var inputValDataLen int
 	for k, v := range inputData {
-		//if inputValDataLen == 0 {
-		//	inputValDataLen = len(v)
-		//} else if len(v) != inputValDataLen {
-		//	return errors.New("长度不一致")
-		//}
 		inputValData[k] = &grpcPb.SubmitTaskRequestInputObj{
 			InputObjList: v,
 		}

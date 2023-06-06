@@ -499,6 +499,7 @@ func AppSimulateResult(appPageId string, varNameList []string) ([]map[string]int
 func AppReleaseResult(appPageId string) (map[string]interface{}, error) {
 	var appPageRecord DataBaseModel.AppPage
 	resData := make(map[string]interface{})
+	csvData := make(map[string]interface{})
 	// 查询appPageId是否存在
 	DB.Where("id = ? ", appPageId).First(&appPageRecord)
 	var appDataSourceRecord DataBaseModel.AppDataSource
@@ -557,12 +558,12 @@ func AppReleaseResult(appPageId string) (map[string]interface{}, error) {
 				}
 				resultMap[column[0]] = floatArr
 			}
-
-			resData[csvFileNames[i]] = resultMap
-
+			csvDataKey := csvFileNames[i][:len(csvFileNames[i])-4]
+			csvData[csvDataKey] = resultMap
 		}
-
 	}
+	resData["mul_simulate_data"] = csvData
+	resData["components_id"] = appPageRecord.ComponentsId
 	return resData, nil
 
 }
