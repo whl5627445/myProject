@@ -1093,3 +1093,61 @@ func AppPagePreviewView(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, res)
 }
+
+func SetComponentBasicInformationView(c *gin.Context) {
+	var res responseData
+	//userName := c.GetHeader("username")
+	var item CreateComponentBasesData
+	err := c.BindJSON(&item)
+	if err != nil {
+		log.Println("", err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+
+	var component DataBaseModel.AppComponentBases
+	component.ID = uuid.New().String()
+	component.TopLevelName = item.TopLevelName
+	component.SecondLevelName = item.SecondLevelName
+	component.Type = item.Type
+	component.Width = item.Width
+	component.Height = item.Height
+	component.Margin = item.Margin
+	component.PositionX = item.PositionX
+	component.PositionY = item.PositionY
+	component.Angle = item.Angle
+	component.HorizontalFlip = item.HorizontalFlip
+	component.VerticalFlip = item.VerticalFlip
+	component.Opacity = item.Opacity
+	component.OtherConfiguration = item.OtherConfiguration
+	//component.CreatedAt = time.Now().Local().Format("20060102150405")
+	err = DB.Save(&component).Error
+	if err != nil {
+		log.Println("创建web组件设计页面数据库失败！", err)
+		res.Err = "创建失败,其稍后再试!"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	data := map[string]interface{}{
+		"componentId": component.ID,
+	}
+	res.Data = data
+	res.Msg = "创建成功!"
+	c.JSON(http.StatusOK, res)
+}
+
+func GetComponentBasicInformationView(c *gin.Context) {
+	var res responseData
+	//id := c.Query("id")
+
+	var component []DataBaseModel.AppComponentBases
+	DB.Find(&component)
+
+	//if err != nil {
+	//	c.JSON(http.StatusBadRequest, "not found")
+	//	return
+	//}
+	res.Data = component
+	c.JSON(http.StatusOK, res)
+}

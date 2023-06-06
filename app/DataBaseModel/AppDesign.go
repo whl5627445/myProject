@@ -73,14 +73,15 @@ type AppPage struct {
 
 type AppComponentBases struct {
 	ID                 string         `gorm:"primaryKey"`
-	PageId             string         `gorm:"column:page_id"`
-	InputOutput        datatypes.JSON `gorm:"column:input_output"`
+	TopLevelName       string         `gorm:"column:top_level _name"`
+	SecondLevelName    string         `gorm:"column:second_level_name"`
 	Type               string         `gorm:"column:type"`
 	Width              int            `gorm:"column:width"`
 	Height             int            `gorm:"column:height"`
-	PositionX          float64        `gorm:"column:position_x"`
-	PositionY          float64        `gorm:"column:position_y"`
-	Angle              float64        `gorm:"column:angle"`
+	Margin             int            `gorm:"column:margin"`
+	PositionX          int            `gorm:"column:position_x"`
+	PositionY          int            `gorm:"column:position_y"`
+	Angle              int            `gorm:"column:angle"`
 	HorizontalFlip     bool           `gorm:"column:horizontal_flip"`
 	VerticalFlip       bool           `gorm:"column:vertical_flip"`
 	Opacity            int            `gorm:"column:opacity"`

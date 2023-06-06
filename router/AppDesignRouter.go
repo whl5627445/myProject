@@ -46,5 +46,8 @@ func AppDesignRouter(g *gin.Engine) {
 		Models.GET("/datasource/input-output/get", API.GetDatasourceInputOutputView)
 
 		Models.GET("/page/preview", API.AppPagePreviewView)
+
+		Models.POST("/components/basic/information/set", API.SetComponentBasicInformationView)
+		Models.GET("/components/basic/information/get", API.GetComponentBasicInformationView)
 	}
 }

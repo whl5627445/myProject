@@ -169,3 +169,19 @@ type DataSourceRenameData struct {
 type DeleteDatasourceData struct {
 	DataSourceID string `json:"data_source_id" binding:"required"`
 }
+
+type CreateComponentBasesData struct {
+	TopLevelName       string         `json:"top_level_name" binding:""`
+	SecondLevelName    string         `json:"second_level_name" binding:""`
+	Type               string         `json:"type" binding:""`
+	Width              int            `json:"width" binding:""`
+	Height             int            `json:"height" binding:""`
+	Margin             int            `json:"margin" binding:""`
+	PositionX          int            `json:"position_x" binding:""`
+	PositionY          int            `json:"position_y" binding:""`
+	Angle              int            `json:"angle" binding:""`
+	HorizontalFlip     bool           `json:"horizontal_flip" binding:""`
+	VerticalFlip       bool           `json:"vertical_flip" binding:""`
+	Opacity            int            `json:"opacity" binding:""`
+	OtherConfiguration datatypes.JSON `json:"other_configuration" binding:""`
+}
