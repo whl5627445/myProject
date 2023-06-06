@@ -640,6 +640,9 @@ func CreatePageComponentView(c *gin.Context) {
 	pageComponent.Hide = item.Hide
 	pageComponent.Lock = item.Lock
 	pageComponent.IsGroup = item.IsGroup
+	pageComponent.Max = item.Max
+	pageComponent.Min = item.Min
+	pageComponent.Interval = item.Interval
 	err = DB.Create(&pageComponent).Error
 	if err != nil {
 		log.Println("创建app页面时保存数据库出现错误：", err)
@@ -693,6 +696,9 @@ func GetPageComponentView(c *gin.Context) {
 			"hide":                c.Hide,
 			"lock":                c.Lock,
 			"is_group":            c.IsGroup,
+			"max":                 c.Max,
+			"min":                 c.Min,
+			"interval":            c.Interval,
 		}
 		componentDataList = append(componentDataList, p)
 	}
@@ -751,6 +757,9 @@ func EditPageComponentView(c *gin.Context) {
 		"hide":                item.Hide,
 		"lock":                item.Lock,
 		"is_group":            item.IsGroup,
+		"max":                 item.Max,
+		"min":                 item.Min,
+		"interval":            item.Interval,
 	}).Error
 
 	if err != nil {

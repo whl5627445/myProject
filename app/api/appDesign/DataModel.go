@@ -110,6 +110,9 @@ type CreatePageComponentData struct {
 	Hide               bool           `json:"hide,omitempty" binding:""`
 	Lock               bool           `json:"lock,omitempty" binding:""`
 	IsGroup            bool           `json:"is_group,omitempty" binding:""`
+	Max                float64        `json:"max" binding:""`
+	Min                float64        `json:"min" binding:""`
+	Interval           float64        `json:"interval" binding:""`
 }
 
 type EditPageComponentData struct {
@@ -136,6 +139,9 @@ type EditPageComponentData struct {
 	Hide               bool           `json:"hide,omitempty" binding:""`
 	Lock               bool           `json:"lock,omitempty" binding:""`
 	IsGroup            bool           `json:"is_group,omitempty" binding:""`
+	Max                float64        `json:"max" binding:""`
+	Min                float64        `json:"min" binding:""`
+	Interval           float64        `json:"interval" binding:""`
 }
 
 type DeletePageComponentData struct {
