@@ -5,7 +5,7 @@ import json
 import os
 import zipfile
 import itertools
-
+from libs.function.grpc_log import log
 
 def new_another_name(username: str, simulate_model_name: str, userspace_id: str) -> str:
     # 生产新的数据库结果别名
@@ -139,6 +139,7 @@ def convert_dict_to_list(dict_obj):
 
     # 定义一个字典的 key 的列表
     keys = list(dict_obj.keys())
+    log.info("(OMC)需要修改的参数:"+str(keys))
 
     # 获取字典的值的列表
     values = [dict_obj[k].inputObjList for k in keys]

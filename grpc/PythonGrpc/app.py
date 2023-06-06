@@ -13,6 +13,7 @@ from libs.translate.DmcTranslateThread import DmTranslateThread
 from libs.run_result.DmRunThread import DmRunThread
 
 from libs.function.find_port import findPort
+from libs.function.grpc_log import log
 from libs.function.init import initOmTask, initDmTask
 import threading
 import zarr
@@ -35,15 +36,16 @@ adsPath = "/home/simtek/code/"
 # adsPath = "/home/xuqingda/GolandProjects/YssimGoService/"
 
 if __name__ == '__main__':
-    # omc进程列表，用于保存每个进程对象
+    # omc线程列表，用于保存每个线程对象
     OmSimulationThreadList = []
-    # dymola进程列表，用于保存每个进程对象
+    # dymola线程列表，用于保存每个线程对象
     DmSimulationThreadList = []
     # 接收仿真任务队列
     # 初始化omc任务队列
     omcTaskList = initOmTask()
     # 初始化dy任务队列
     dymolaTaskList = initDmTask()
+
 
     # 实现 proto 文件中定义的 GreeterServicer
     class Greeter(router_pb2_grpc.GreeterServicer):
@@ -64,7 +66,7 @@ if __name__ == '__main__':
                                               )
 
         def ProcessOperation(self, request, context):
-            print("ProcessOperation被调用。")
+            log.info("ProcessOperation被调用。")
             multiprocessing_id = request.uuid
             operationName = request.operationName
             if operationName == "kill":
@@ -106,7 +108,7 @@ if __name__ == '__main__':
 
         # 获取变量结果 单个记录单个变量
         def GetResult(self, request, context):
-            print("GetResult被调用。")
+            log.info("GetResult被调用。")
             with Session() as session:
                 processDetails = session.query(YssimSimulateRecords).filter(
                     YssimSimulateRecords.id == request.uuid).first()
@@ -126,8 +128,7 @@ if __name__ == '__main__':
 
         # 单个记录，多个变量
         def ReadSimulationResult(self, request, context):
-            print("ReadSimulationResult被调用。")
-            print(adsPath, request.resultPath)
+            log.info("ReadSimulationResult被调用。")
             res = zarr.load(adsPath + request.resultPath)
             if res is not None:
                 resList = [res["time"].tolist()]
@@ -146,7 +147,7 @@ if __name__ == '__main__':
                 return router_pb2.SaveFilterResultToCsvReply(ok=False)
 
         def MatToCsv(self, request, context):
-            print("MatToCsv被调用。")
+            log.info("MatToCsv被调用。")
             try:
                 d = DyMat.DyMatFile(adsPath + request.matPath)
                 namesList = list(d.names())
@@ -164,26 +165,26 @@ if __name__ == '__main__':
                                   columns=list(dictCsv.keys()))
                 df.to_csv(os.path.dirname(adsPath + request.matPath) + "/result_res.csv", index=False, encoding='utf-8')
             except Exception as e:
-                print(e)
+                log.info(str(e))
                 return router_pb2.MatToCsvReply(ok=False)
             else:
                 return router_pb2.MatToCsvReply(ok=True)
 
         def ZarrToCsv(self, request, context):
-            print("ZarrToCsv被调用")
+            log.info("ZarrToCsv被调用")
             try:
                 d = zarr.load(adsPath + request.zarrPath)
                 if d.shape[0] > 1000:
                     d = d[:1000]
                 write_csv(os.path.dirname(adsPath + request.zarrPath) + "/result_res.csv", d)
             except Exception as e:
-                print(e)
+                log.info(str(e))
                 return router_pb2.ZarrToCsvReply(ok=False)
             else:
                 return router_pb2.ZarrToCsvReply(ok=True)
 
         def CheckVarExist(self, request, context):
-            print("CheckVarExist被调用")
+            log.info("CheckVarExist被调用")
             resMap = {}
             zarrPath = os.path.dirname(adsPath + request.Path) + "/zarr_res.zarr"
 
@@ -208,29 +209,43 @@ if __name__ == '__main__':
             pass
 
         def run(self):
-            print("仿真任务执行线程启动")
+            log.info("仿真任务执行线程启动!")
             while True:
-                time.sleep(0.2)
-                if len(OmSimulationThreadList)>0:
-                    print("OM执行任务队列剩余数量： ", len(OmSimulationThreadList))
-                if len(omcTaskList)>0:
-                    print("OM未执行任务队列剩余数量： ", len(omcTaskList))
+                time.sleep(1)
+                if len(OmSimulationThreadList) > 0:
+                    log.info("(OMC)正在运行的任务数：{}".format(len(OmSimulationThreadList)))
+                    log.info("(OMC)正在运行的任务：" + str(
+                        [{j.request.simulateModelName: j.state, "user_name": j.request.userName} for j in
+                         OmSimulationThreadList]))
+                if len(omcTaskList) > 0:
+                    log.info("(OMC)正在排队的任务数：{}".format(len(omcTaskList)))
+                    log.info("(OMC)正在排队的任务：" + str(
+                        [{"model_name":j.simulateModelName, "user_name": j.userName} for j in
+                         omcTaskList]))
+
                 for i in OmSimulationThreadList:
                     if i.state == "stopped":
+                        log.info("(OMC)"+i.request.simulateModelName+"仿真结束,线程关闭。")
                         OmSimulationThreadList.remove(i)
                         # del i
-                if len(DmSimulationThreadList)>0:
-                    print("DM执行任务队列剩余数量： ", len(DmSimulationThreadList))
-                if len(dymolaTaskList)>0:
-                    print("DM未执行任务队列剩余数量： ", len(dymolaTaskList))
+                if len(DmSimulationThreadList) > 0:
+                    log.info("(Dymola)正在运行的任务数：{}".format(len(DmSimulationThreadList)))
+                    log.info("(Dymola)正在运行的任务：" + str(
+                        [{j.request.simulateModelName: j.state, "user_name": j.request.userName} for j in
+                         DmSimulationThreadList]))
+                if len(dymolaTaskList) > 0:
+                    log.info("(Dymola)未执行任务队列剩余数量：{}".format(len(dymolaTaskList)))
+                    log.info("(Dymola)正在排队的任务：" + str(
+                        [{"model_name": j.simulateModelName, "user_name": j.userName} for j in
+                         dymolaTaskList]))
                 for i in DmSimulationThreadList:
                     if i.state == "stopped":
+                        log.info("(Dymola)"+i.request.simulateModelName + "仿真结束,线程关闭。")
                         DmSimulationThreadList.remove(i)
                         # del i
 
                 if len(OmSimulationThreadList) < max_simulation_num and len(omcTaskList) > 0:
                     data = omcTaskList.pop(0)
-                    print(data)
                     if data.taskType == "simulate":
                         # 找到空闲的端口号
                         port = findPort(start_port)
@@ -271,7 +286,7 @@ if __name__ == '__main__':
     router_pb2_grpc.add_GreeterServicer_to_server(Greeter(), server)
     server.add_insecure_port('0.0.0.0:50051')
 
-    print("服务开启成功！0.0.0.0:50051")
+    log.info("服务开启成功！0.0.0.0:50051")
     server.start()
 
     try:

@@ -2,6 +2,7 @@ import psutil
 from config.db_config import Session, YssimSimulateRecords
 import os
 import signal
+from libs.function.grpc_log import log
 
 
 # def getSate(string1):
@@ -79,10 +80,10 @@ def kill_py_omc_process(multiprocessing_id, process_list,simulate_type):
                         os.kill(i.run_pid, 9)
                 # i.omc_obj.sendExpression("quit()")
                 except OSError as e:
-                    print(f"Error: {e}")
+                    log.info(f"(OMC)Error: {e}")
                 process_list.remove(i)
                 del i
-                print("杀死进程")
+                log.info("(OMC)杀死线程，数据库YssimSimulateRecords_id:"+multiprocessing_id)
                 with Session() as session:
                     processDetails = session.query(YssimSimulateRecords).filter(
                         YssimSimulateRecords.id == multiprocessing_id).first()
@@ -107,10 +108,10 @@ def kill_py_omc_process(multiprocessing_id, process_list,simulate_type):
         timeout = 10 * 60 # 10分钟
 
         response = requests.post(url, data=json.dumps(data), headers=headers, timeout=timeout)
-        print("response:", response)
+        log.info("(Dymola)发送请求体："+str(response))
         if response.status_code == 200:
             result = response.json()
-            print("ssssss:",result)
+            log.info("(Dymola)请求返回的结果："+str(result))
             if result["code"] == 200:
                 return {"msg": "End Process:{}".format(multiprocessing_id)}
     return {"msg": "The process is not found or has ended or failed:{}".format(multiprocessing_id)}

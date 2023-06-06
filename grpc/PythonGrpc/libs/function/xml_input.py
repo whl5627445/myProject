@@ -1,10 +1,11 @@
 import xml.etree.ElementTree as ET
+from libs.function.grpc_log import log
 
 
 def write_xml(xml_path, var_dict):
     # 解析XML文件为一个树
     result_xml_path = xml_path+"result_init.xml"
-    print("result_xml_path",result_xml_path)
+    log.info("(OMC)解析xml文件地址："+result_xml_path)
 
     try:
         tree = ET.parse(result_xml_path)
@@ -12,7 +13,7 @@ def write_xml(xml_path, var_dict):
         root = tree.getroot()
         model_variables = root.find('ModelVariables')
     except ET.ParseError as err:
-        print(f"解析XML文档时出现错误：{err}")
+        log.info(f"(OMC)解析XML文档时出现错误：{err}")
         return 1
 
     # 迭代ScalarVariable元素
@@ -22,9 +23,7 @@ def write_xml(xml_path, var_dict):
         variability = scalar_var.get('variability')
         causality = scalar_var.get('causality')
         if variability == "parameter" and causality == "parameter" and name in var_dict:
-            print(name)
-            print(variability)
-            print(causality)
+            log.info("(OMC)修改xml变量："+name)
             real_node = scalar_var.find('Real')
             # 设置startLine属性为100
             real_node.set("start", str(var_dict[name]))

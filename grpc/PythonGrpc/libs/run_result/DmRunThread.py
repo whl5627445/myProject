@@ -11,6 +11,7 @@ import json
 import os
 import configparser
 from libs.function.defs import update_app_pages_records,convert_list
+from libs.function.grpc_log import log
 
 config = configparser.ConfigParser()
 config.read('./config/grpc_config.ini')
@@ -28,7 +29,7 @@ class DmRunThread(threading.Thread):
         update_app_pages_records(self.request.pageId, release_state=1)
 
     def send_request(self):
-        print("发送请求")
+        log.info("(Dymola)发送请求")
         folders = []  # 所有要加载的用户模型的包文件地址
         uploadResult = False
         # uploadFilePath = ""
@@ -68,10 +69,10 @@ class DmRunThread(threading.Thread):
                 dymola_libraries.remove(d)
                 dymola_libraries.insert(0, d)
                 break
-        print("folders:", folders)
-        print("dymola_libraries:", dymola_libraries)
-        print("uploadFileName:", uploadFileName)
-        print("params_url:", params_url)
+        log.info("(Dymola)压缩文件:"+str(folders))
+        log.info("(Dymola)需要加载的依赖:"+str(dymola_libraries))
+        log.info("(Dymola)上传的压缩文件:"+uploadFileName)
+        log.info("(Dymola)服务器上新建的路径:"+params_url)
 
         if self.request.packageFilePath != "":
             # 不是系统模型,上传文件
@@ -83,30 +84,30 @@ class DmRunThread(threading.Thread):
                 "file": (self.request.packageName + ".zip", open(uploadFileName, "rb"))
             }
             try:
-                print("开始上传文件")
-                print("url:", url)
+                log.info("(Dymola)开始上传文件")
+                log.info("(Dymola)url:"+url)
                 response = requests.post(url, data=params, files=files, timeout=timeout)
                 uploadRes = response.json()
-                print("uploadRes:", uploadRes)
+                log.info("(Dymola)上传文件:"+str(uploadRes))
                 if uploadRes["code"] == 200:
                     uploadResult = True
-                    print('上传文件成功')
+                    log.info('(Dymola)上传文件成功')
                     # uploadFilePath = uploadRes["data"]
                 else:
                     return False, '上传文件失败', 0
             except Exception as e:
-                print(e)
+                log.info("(Dymola)"+str(e))
                 return False, str(e), 0
             # 上传完删除zip文件
             if os.path.exists(del_upload_fileName):
                 os.system('rm -rf ' + del_upload_fileName)
-                print("zip文件夹已成功删除！")
+                log.info("(Dymola)上传完成后，zip文件夹已成功删除！")
             else:
-                print("zip文件夹不存在。")
+                log.info("(Dymola)zip文件夹不存在。")
         else:
             # 系统模型的仿真要去掉用户模型
             dymola_libraries = [element for element in dymola_libraries if element['userFile'] == '']
-            print("系统模型只加载系统库:", dymola_libraries)
+            log.info("(Dymola)系统模型只加载系统库:"+str(dymola_libraries))
         if uploadResult or self.request.packageFilePath == "":
             fileName = ""
             if self.request.packageFilePath != "":
@@ -133,15 +134,15 @@ class DmRunThread(threading.Thread):
                     "dymolaLibraries": dymola_libraries
                 }
 
-                print("simulateReqData", simulateReqData)
+                log.info("(Dymola)仿真接口请求体：" + str(simulateReqData))
                 simulateRes = requests.request('post',
                                                DymolaSimulationConnect + "/dymola/simulate",
                                                json=simulateReqData)
                 simulateResData = simulateRes.json()
 
-                print("dymola仿真结果：", simulateResData)
+                log.info("(Dymola)dymola仿真结果："+str(simulateResData))
                 absolute_path = adsPath + self.request.resultFilePath
-                print("absolute_path", absolute_path)
+                log.info("(Dymola)结果路径："+absolute_path)
                 if simulateResData.get("code") == 200:
                     resFileUrl = DymolaSimulationConnect + "/file/download?fileName=" + simulateResData["msg"]
 
@@ -175,15 +176,15 @@ class DmRunThread(threading.Thread):
                     "finalNames": ["Time"] + list(self.request.outputValNames),
 
                 }
-                print("simulateReqData", simulateReqData)
+                log.info("(Dymola)仿真请求体："+str(simulateReqData))
                 simulateRes = requests.request('post',
                                                DymolaSimulationConnect + "/dymola/simulateMulti",
                                                json=simulateReqData)
                 simulateResData = simulateRes.json()
 
-                print("dymola仿真结果：", simulateResData)
+                log.info("(Dymola)dymola仿真结果："+str(simulateResData))
                 absolute_path = adsPath + self.request.resultFilePath
-                print("absolute_path", absolute_path)
+                log.info("(Dymola)结果路径："+absolute_path)
                 if simulateResData.get("code") == 200:
                     csv_data = simulateResData["data"]
                     df = pd.DataFrame(csv_data)
@@ -200,10 +201,10 @@ class DmRunThread(threading.Thread):
                     return False, "多轮仿真失败", simulateResData["code"]
 
     def run(self):
-        print("开启dymola仿真")
+        log.info("(Dymola)开启dymola仿真")
         update_app_pages_records(self.request.pageId, release_state=2)
         res, err, code = self.send_request()
-        print("send_request返回", res, err, code)
+        log.info("(Dymola)返回"+str(res)+str(err)+str(code))
         if res:
             update_app_pages_records(self.request.pageId, release_state=4)
             json_data = {"message": self.request.simulateModelName + " 模型仿真完成"}
@@ -217,4 +218,5 @@ class DmRunThread(threading.Thread):
             json_data = {"message": self.request.simulateModelName + " 仿真失败"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
         self.state = "stopped"
+        log.info("(Dymola)仿真线程执行完毕")
         delete_item_from_json(self.request.uuid)

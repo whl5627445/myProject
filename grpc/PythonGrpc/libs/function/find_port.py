@@ -1,4 +1,5 @@
 import socket
+from libs.function.grpc_log import log
 
 
 def checkPort(port):
@@ -8,7 +9,7 @@ def checkPort(port):
     try:
         s.bind(('localhost', port))
     except socket.error as e:
-        print("端口{}已被占用".format(port))
+        log.info("(OMC)端口{}已被占用,查找可用端口。".format(port))
         res = True
 
     s.close()

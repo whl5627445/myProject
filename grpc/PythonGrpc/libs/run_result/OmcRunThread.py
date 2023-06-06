@@ -8,7 +8,8 @@ from libs.function.xml_input import write_xml
 from config.redis_config import R
 from libs.function.run_result_json import update_item_to_json, delete_item_from_json
 from libs.function.defs import update_app_pages_records, convert_dict_to_list
-
+from libs.function.grpc_log import log
+import shutil
 
 class OmcRunThread(threading.Thread):
     def __init__(self, request):
@@ -37,10 +38,15 @@ class OmcRunThread(threading.Thread):
         else:  # 发布任务
             update_app_pages_records(self.request.pageId, release_state=2)
         # 进行多轮仿真
+        mul_output_path = r"/home/simtek/code/" + self.absolute_path + 'mul_output'
+        if os.path.exists(mul_output_path):
+            shutil.rmtree(mul_output_path)
+        # 创建新的文件夹
+        os.mkdir(mul_output_path)
         for i in self.input_data:
-            print("进行第{}轮仿真".format(run_steps))
+            log.info("(OMC)进行第{}轮仿真".format(run_steps))
             # 修改xml文件
-            print("i::: ", i)
+            log.info("(OMC)修改参数："+str(i))
             if write_xml(r"/home/simtek/code/" + self.absolute_path, i):
                 # 解析文件失败
                 break
@@ -68,22 +74,20 @@ class OmcRunThread(threading.Thread):
                                # "time2": list(d.abscissa("1", True))
                                }
 
-                    dictCsv["time"] = dictCsv["time"][:500]
+                    dictCsv["time"] = dictCsv["time"][:50]
 
                     for j in self.outputValNames:
-                        dictCsv[j] = list(d.data(j))[:500]
-                    print("self.outputValNames", self.outputValNames)
+                        dictCsv[j] = list(d.data(j))[:50]
                     df = pd.DataFrame(pd.DataFrame.from_dict(dictCsv, orient='index').values.T,
                                       columns=list(dictCsv.keys()))
                     if len(self.input_data) == 1:
                         pass
                     else:
                         # 多轮仿真每轮一个scv文件
-                        if not os.path.exists(r"/home/simtek/code/" + self.absolute_path + 'mul_output'):
-                            # 创建新的文件夹
-                            os.mkdir(r"/home/simtek/code/" + self.absolute_path + 'mul_output')
+
                         csv_file_name = ""
                         for s in i.values():
+                            s = round(s, 4)
                             csv_file_name = csv_file_name + "_" + str(s)
                         df.to_csv(r"/home/simtek/code/" + self.absolute_path + 'mul_output/{}.csv'.format(csv_file_name),
                                   index=False,

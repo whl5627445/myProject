@@ -1,6 +1,7 @@
 from config.db_config import Session, YssimSimulateRecords, YssimModels, AppDataSources
 import router_pb2
 from libs.function.run_result_json import read_json_file
+from libs.function.grpc_log import log
 
 
 def initOmTask():
@@ -13,19 +14,20 @@ def initOmTask():
             YssimSimulateRecords.simulate_type == "OM",
             YssimSimulateRecords.deleted_at.is_(None)
         ).all()
+        log.info("(OMC)未完成的仿真记录："+str([k.id for k in record_list]))
         for i in record_list:
-            print(i.id)
             yssim_model = session.query(YssimModels).filter(
                 YssimModels.userspace_id.in_([i.userspace_id, '0']),
                 YssimModels.id == i.package_id,
                 YssimModels.deleted_at.is_(None)
             ).first()
             if yssim_model:
-                print("未完成", yssim_model.id)
+                log.info("(OMC)重新开始仿真的模型："+yssim_model.package_name)
                 i.package_name = yssim_model.package_name
                 i.package_file_path = yssim_model.file_path
                 task_record_list.append(i)
             else:
+                log.info("(OMC)重新开始仿真，模型不存在："+yssim_model.package_name+"，退出线程。")
                 i.simulate_status = "3"
                 session.commit()
 
@@ -51,7 +53,7 @@ def initOmTask():
             taskType="simulate"
         )
         omcDataList.append(a)
-    # 查询所有为完成的编译任务
+    # 查询所有未完成的数据源任务
     with Session() as session:
         task_record_list = []
         record_list = session.query(AppDataSources).filter(
@@ -59,20 +61,21 @@ def initOmTask():
             AppDataSources.compile_type == "OM",
             AppDataSources.deleted_at.is_(None)
         ).all()
+        log.info("(OMC)未完成的导出数据源记录：" + str([k.id for k in record_list]))
         for i in record_list:
-            print(i.id)
             yssim_model = session.query(YssimModels).filter(
                 YssimModels.userspace_id.in_([i.userspace_id, '0']),
                 YssimModels.id == i.package_id,
                 YssimModels.deleted_at.is_(None)
             ).first()
             if yssim_model:
-                print("未完成", yssim_model.id)
+                log.info("(OMC)重新开始导出数据源的模型："+yssim_model.package_name)
                 i.package_name = yssim_model.package_name
                 i.package_file_path = yssim_model.file_path
                 task_record_list.append(i)
             else:
-                i.simulate_status = "3"
+                log.info("(OMC)重新开始导出数据源，模型不存在：" + yssim_model.package_name + "，退出线程。")
+                i.compile_status = "3"
                 session.commit()
     # 编译任务列表
     for i in task_record_list:
@@ -140,19 +143,20 @@ def initDmTask():
             YssimSimulateRecords.simulate_type == "DM",
             YssimSimulateRecords.deleted_at.is_(None)
         ).all()
+        log.info("(Dymola)未完成的仿真记录：" + str([k.id for k in record_list]))
         for i in record_list:
-            print(i.id)
             yssim_model = session.query(YssimModels).filter(
                 YssimModels.userspace_id.in_([i.userspace_id, '0']),
                 YssimModels.id == i.package_id,
                 YssimModels.deleted_at.is_(None)
             ).first()
             if yssim_model:
-                print("未完成", yssim_model.id)
+                log.info("(Dymola)重新开始仿真的模型：" + yssim_model.package_name)
                 i.package_name = yssim_model.package_name
                 i.package_file_path = yssim_model.file_path
                 task_record_list.append(i)
             else:
+                log.info("(Dymola)重新开始仿真，模型不存在：" + yssim_model.package_name + "，退出线程。")
                 i.simulate_status = "3"
                 session.commit()
 
@@ -181,7 +185,7 @@ def initDmTask():
 
         # dm_threading = DmSimulation(a)
         # dm_threading.start()
-    # 查询所有为完成的编译任务
+    # 查询所有为完成的数据源任务
     with Session() as session:
         task_record_list = []
         record_list = session.query(AppDataSources).filter(
@@ -189,20 +193,21 @@ def initDmTask():
             AppDataSources.compile_type == "DM",
             AppDataSources.deleted_at.is_(None)
         ).all()
+        log.info("(Dymola)未完成的数据源记录：" + str([k.id for k in record_list]))
         for i in record_list:
-            print(i.id)
             yssim_model = session.query(YssimModels).filter(
                 YssimModels.userspace_id.in_([i.user_space_id, '0']),
                 YssimModels.id == i.package_id,
                 YssimModels.deleted_at.is_(None)
             ).first()
             if yssim_model:
-                print("未完成", yssim_model.id)
+                log.info("(Dymola)重新开始导出数据源的模型：" + yssim_model.package_name)
                 i.package_name = yssim_model.package_name
                 i.package_file_path = yssim_model.file_path
                 task_record_list.append(i)
             else:
-                i.simulate_status = "3"
+                log.info("(Dymola)重新开始导出数据源，模型不存在：" + yssim_model.package_name + "，退出线程。")
+                i.compile_status = "3"
                 session.commit()
     # 编译任务列表
     for i in task_record_list:
