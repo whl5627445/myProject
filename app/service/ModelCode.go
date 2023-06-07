@@ -170,6 +170,29 @@ func CreateModelAndPackage(createPackageName, insertTo, expand, strType, createP
 	return res
 }
 
+func CreateWorkSpace(createPackageName, insertTo, expand, strType, comment string, partial, encapsulated bool) string {
+	if expand != "" {
+		expand = " extends " + expand + ";"
+	}
+	if comment != "" {
+		comment = " \"" + comment + "\""
+	}
+	modelStrBase := strType + " " + createPackageName + comment + expand + " end " + createPackageName + ";"
+	modelStr := ""
+	if insertTo != "" {
+		modelStr = "within " + insertTo + "; "
+	}
+	if encapsulated {
+		modelStr = modelStr + "encapsulated "
+	}
+	if partial {
+		modelStr = modelStr + "partial "
+	}
+	modelStr = modelStr + modelStrBase
+
+	return modelStr
+}
+
 func ZipPackage(packageName, path string) (string, error) {
 	tmpPath := "static/tmp/" + time.Now().Local().Format("20060102150405") + "/" + packageName + ".zip"
 	packagePathList := strings.Split(path, "/")

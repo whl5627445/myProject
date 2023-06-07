@@ -11,12 +11,11 @@ func CreatWorkSpace(userName, SpaceName string) (string, bool) {
 	fileOperation.CreateFilePath(path + "/Resources")
 	FilePath := path + "/Workspace.mo"
 	fileOperation.CreateFile(FilePath)
-	ok := CreateModelAndPackage("Workspace", "", "", "package", "", "", false, false, false)
-	if ok {
-		ok = SaveModelSource("Workspace", FilePath)
-		return FilePath, ok
-	}
-	return "", ok
+	modelStr := CreateWorkSpace("Workspace", "", "", "package", "", false, false)
+	ok := fileOperation.WriteFile(FilePath, modelStr)
+	//ok = SaveModelSource("Workspace", FilePath)
+	return FilePath, ok
+
 }
 
 func SetWorkSpaceId(spaceId *string) bool {
