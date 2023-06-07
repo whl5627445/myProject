@@ -35,7 +35,7 @@ type AppDataSource struct {
 	CompileStatus     int64          `gorm:"column:compile_status"`
 	CompileStartTime  int64          `gorm:"column:compile_start_time"`
 	CompileStopTime   int64          `gorm:"column:compile_stop_time"`
-	GroundName        string         `gorm:"column:ground_name"`
+	GroupName         string         `gorm:"column:group_name"`
 	DataSourceName    string         `gorm:"column:data_source_name"`
 	ExperimentId      string         `gorm:"column:experiment_id"`
 	EnvModelData      datatypes.JSON `gorm:"column:env_model_data"`

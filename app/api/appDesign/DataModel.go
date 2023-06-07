@@ -14,7 +14,7 @@ type AppModelMarkData struct {
 	ModelName string `json:"model_name" binding:"required"`
 	//CompileType string `json:"compile_type,omitempty" binding:""`
 	//MandatorySave  bool   `json:"save,omitempty" binding:""`
-	GroundName     string `json:"ground_name" binding:"required"`
+	GroupName      string `json:"group_name" binding:"required"`
 	DataSourceName string `json:"data_source_name" binding:"required"`
 	ExperimentId   string `json:"experiment_id" binding:""`
 }

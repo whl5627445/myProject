@@ -34,7 +34,7 @@ func AppModelMarkView(c *gin.Context) {
 	}
 	// 检测数据源名称是否重复
 	var record DataBaseModel.AppDataSource
-	DB.Where("package_id = ? AND username = ? AND ground_name = ? AND data_source_name = ?", item.PackageId, userName, item.GroundName, item.DataSourceName).First(&record)
+	DB.Where("package_id = ? AND username = ? AND group_name = ? AND data_source_name = ?", item.PackageId, userName, item.GroupName, item.DataSourceName).First(&record)
 	if record.ID != "" {
 		res.Err = "名称重复"
 		c.JSON(http.StatusOK, res)
@@ -50,7 +50,7 @@ func AppModelMarkView(c *gin.Context) {
 		ModelName:      item.ModelName,
 		CompilePath:    CompilePath,
 		ExperimentId:   item.ExperimentId,
-		GroundName:     item.GroundName,
+		GroupName:      item.GroupName,
 		DataSourceName: item.DataSourceName,
 		CompileStatus:  0,
 	}
@@ -172,11 +172,11 @@ func GetDataSourceGroupView(c *gin.Context) {
 	var res responseData
 	userName := c.GetHeader("username")
 	var group []DataBaseModel.AppDataSource
-	DB.Select("ground_name").Where("username = ? AND compile_status = ?", userName, 4).Group("ground_name").Find(&group)
+	DB.Select("group_name").Where("username = ? AND compile_status = ?", userName, 4).Group("group_name").Find(&group)
 	groupData := make([]string, 0)
 
 	for _, g := range group {
-		groupData = append(groupData, g.GroundName)
+		groupData = append(groupData, g.GroupName)
 	}
 	res.Data = groupData
 	c.JSON(http.StatusOK, res)
@@ -812,11 +812,11 @@ func GetDatasourceView(c *gin.Context) {
 	// TODO： 徐庆达
 	var res responseData
 	userName := c.GetHeader("username")
-	groundName := c.Query("ground_name")
+	groupName := c.Query("group_name")
 	searchName := c.Query("search_name")
 	var dataList []map[string]interface{}
 	var appDataSourceRecord []DataBaseModel.AppDataSource
-	DB.Where("username = ? AND ground_name = ? AND compile_status = ? AND data_source_name LIKE ?", userName, groundName, 4, "%"+searchName+"%").Order("create_time desc").Find(&appDataSourceRecord)
+	DB.Where("username = ? AND group_name = ? AND compile_status = ? AND data_source_name LIKE ?", userName, groupName, 4, "%"+searchName+"%").Order("create_time desc").Find(&appDataSourceRecord)
 	for i := 0; i < len(appDataSourceRecord); i++ {
 		data := map[string]interface{}{
 			"id":                 appDataSourceRecord[i].ID,
@@ -931,10 +931,14 @@ func GetPageInputOutputView(c *gin.Context) {
 	pageId := c.Query("id")
 	var page DataBaseModel.AppPage
 	DB.Where("id = ? AND username = ?", pageId, userName).First(&page)
+	var dataSourceRecord DataBaseModel.AppDataSource
+	DB.Where("id = ?", page.DataSourceId).First(&dataSourceRecord)
 	data := map[string]interface{}{
-		"input":          page.Input,
-		"output":         page.Output,
-		"data_source_id": page.DataSourceId,
+		"input":            page.Input,
+		"output":           page.Output,
+		"data_source_id":   page.DataSourceId,
+		"data_source_name": dataSourceRecord.DataSourceName,
+		"group_name":       dataSourceRecord.GroupName,
 	}
 	res.Data = data
 	c.JSON(http.StatusOK, res)
