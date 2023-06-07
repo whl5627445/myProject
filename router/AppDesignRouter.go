@@ -9,7 +9,6 @@ import (
 func AppDesignRouter(g *gin.Engine) {
 	var Models = g.Group("/app")
 	{
-		Models.POST("/model/mark", API.AppModelMarkView)
 		Models.POST("/model/multiple/simulate", API.MultipleSimulateView)
 		Models.POST("/model/simulate/result", API.GetAppSimulateResultView)
 		Models.POST("/model/release/result", API.GetAppReleaseResultView)

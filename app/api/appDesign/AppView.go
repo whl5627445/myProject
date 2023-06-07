@@ -4,7 +4,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/service"
@@ -17,62 +16,6 @@ import (
 )
 
 var DB = config.DB
-
-func AppModelMarkView(c *gin.Context) {
-	/*
-		# 标记模型为应用可用数据源, 并编译为可执行文件，若编译失败则不作为数据源显示
-	*/
-	// TODO： 徐庆达
-	var res responseData
-	userName := c.GetHeader("username")
-	userSpaceId := c.GetHeader("space_id")
-	var item AppModelMarkData
-	err := c.BindJSON(&item)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, "")
-		return
-	}
-	// 检测数据源名称是否重复
-	var record DataBaseModel.AppDataSource
-	DB.Where("package_id = ? AND username = ? AND group_name = ? AND data_source_name = ?", item.PackageId, userName, item.GroupName, item.DataSourceName).First(&record)
-	if record.ID != "" {
-		res.Err = "名称重复"
-		c.JSON(http.StatusOK, res)
-		return
-	}
-	CompilePath := "static/UserFiles/modelDataSource/" + userName + "/" + strings.ReplaceAll(item.ModelName, ".", "-") + "/" + time.Now().Local().Format("20060102150405") + "/"
-	// 数据源表中创建一条记录
-	dataSource := DataBaseModel.AppDataSource{
-		ID:             uuid.New().String(),
-		UserName:       userName,
-		UserSpaceId:    userSpaceId,
-		PackageId:      item.PackageId,
-		ModelName:      item.ModelName,
-		CompilePath:    CompilePath,
-		ExperimentId:   item.ExperimentId,
-		GroupName:      item.GroupName,
-		DataSourceName: item.DataSourceName,
-		CompileStatus:  0,
-	}
-	err = DB.Create(&dataSource).Error
-	record = dataSource
-	if err != nil {
-		log.Println("标记数据源时创建数据库记录失败： ", err)
-		res.Err = "创建失败"
-		c.JSON(http.StatusOK, res)
-		return
-	}
-	_, err = service.GrpcTranslate(record)
-	if err != nil {
-		log.Println("提交任务失败： ", err)
-		res.Err = "创建失败"
-		c.JSON(http.StatusOK, res)
-		return
-	}
-	res.Msg = "提交任务成功，请等待编译完成！"
-	c.JSON(http.StatusOK, res)
-
-}
 
 func MultipleSimulateView(c *gin.Context) {
 	/*
@@ -452,8 +395,8 @@ func GetAppPageView(c *gin.Context) {
 
 	db := DB.Where("app_space_id = ? AND username = ?", spaceId, userName).Order("create_time desc")
 
-	rc := DB.Model(DataBaseModel.AppPage{}).Where("app_space_id = ? AND username = ?", spaceId, userName).Where("is_release = ?", true)
-	nrc := DB.Model(DataBaseModel.AppPage{}).Where("app_space_id = ? AND username = ?", spaceId, userName).Where("is_release = ?", false)
+	rc := DB.Model(DataBaseModel.AppPage{}).Where("app_space_id = ? AND username = ?", spaceId, userName).Where("release_state = ?", 4)
+	nrc := DB.Model(DataBaseModel.AppPage{}).Where("app_space_id = ? AND username = ?", spaceId, userName).Where("release_state != ?", 4)
 
 	if keyWords != "" {
 		db.Where("page_name LIKE ?", "%"+keyWords+"%")
@@ -466,18 +409,23 @@ func GetAppPageView(c *gin.Context) {
 	case release == "":
 		db.Find(&pageList)
 	case release == "1":
-		db.Where("is_release = ?", true).Find(&pageList)
+		db.Where("release_state = ?", 4).Find(&pageList)
 	case release == "0":
-		db.Where("is_release = ?", false).Find(&pageList)
+		db.Where("release_state != ?", 4).Find(&pageList)
 	}
 	var pageDataList []map[string]interface{}
 	for _, page := range pageList {
+		releaseState := false
+		if page.ReleaseState == 4 {
+			releaseState = true
+		}
 		p := map[string]interface{}{
-			"id":          page.ID,
-			"name":        page.PageName,
-			"create_time": page.CreatedAt.Local().Format("2006年01月02日"),
-			"update_time": page.UpdatedAt.Local().Format("2006年01月02日"),
-			"tag":         page.PagePath,
+			"id":            page.ID,
+			"name":          page.PageName,
+			"create_time":   page.CreatedAt.Local().Format("2006年01月02日"),
+			"update_time":   page.UpdatedAt.Local().Format("2006年01月02日"),
+			"tag":           page.PagePath,
+			"release_state": releaseState,
 		}
 		pageDataList = append(pageDataList, p)
 	}

@@ -1435,6 +1435,62 @@ func Test(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+func AppModelMarkView(c *gin.Context) {
+	/*
+		# 标记模型为可用数据源,(执行一次仿真)
+	*/
+	// TODO： 徐庆达
+	var res responseData
+	userName := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
+	var item AppModelMarkData
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	// 检测数据源名称是否重复
+	var record DataBaseModel.AppDataSource
+	DB.Where("package_id = ? AND username = ? AND group_name = ? AND data_source_name = ?", item.PackageId, userName, item.GroupName, item.DataSourceName).First(&record)
+	if record.ID != "" {
+		res.Err = "名称重复"
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	CompilePath := "static/UserFiles/modelDataSource/" + userName + "/" + strings.ReplaceAll(item.ModelName, ".", "-") + "/" + time.Now().Local().Format("20060102150405") + "/"
+	// 数据源表中创建一条记录
+	dataSource := DataBaseModel.AppDataSource{
+		ID:             uuid.New().String(),
+		UserName:       userName,
+		UserSpaceId:    userSpaceId,
+		PackageId:      item.PackageId,
+		ModelName:      item.ModelName,
+		CompilePath:    CompilePath,
+		ExperimentId:   item.ExperimentId,
+		GroupName:      item.GroupName,
+		DataSourceName: item.DataSourceName,
+		CompileStatus:  0,
+	}
+	err = DB.Create(&dataSource).Error
+	record = dataSource
+	if err != nil {
+		log.Println("标记数据源时创建数据库记录失败： ", err)
+		res.Err = "创建失败"
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	_, err = service.GrpcTranslate(record)
+	if err != nil {
+		log.Println("提交任务失败： ", err)
+		res.Err = "创建失败"
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	res.Msg = "提交任务成功，请等待编译完成！"
+	c.JSON(http.StatusOK, res)
+
+}
+
 func Test1(c *gin.Context) {
 	/*
 		测试omc命令

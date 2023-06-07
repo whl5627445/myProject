@@ -9,16 +9,6 @@ type responseData struct {
 	Err    string      `json:"err"`
 }
 
-type AppModelMarkData struct {
-	PackageId string `json:"package_id" binding:"required"`
-	ModelName string `json:"model_name" binding:"required"`
-	//CompileType string `json:"compile_type,omitempty" binding:""`
-	//MandatorySave  bool   `json:"save,omitempty" binding:""`
-	GroupName      string `json:"group_name" binding:"required"`
-	DataSourceName string `json:"data_source_name" binding:"required"`
-	ExperimentId   string `json:"experiment_id" binding:""`
-}
-
 type AppMultipleSimulateData struct {
 	AppPageId                 string             `json:"app_page_id" binding:"required"`
 	SingleSimulationInputData map[string]float64 `json:"single_simulation_input_data" binding:""`
