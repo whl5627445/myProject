@@ -269,7 +269,8 @@ func SimulationResultTree(path, parent, keyWords string) []map[string]interface{
 			} else {
 				continue
 			}
-			if !nameMap[splitName[0]] && !scalarVariableMap[name].HideResult && !scalarVariableMap[name].IsProtected {
+			//if !nameMap[splitName[0]] && !scalarVariableMap[name].HideResult && !scalarVariableMap[name].IsProtected {
+			if !nameMap[splitName[0]] && !scalarVariableMap[name].HideResult {
 				data := map[string]interface{}{
 					"variables":           splitName[0],
 					"description":         scalarVariableMap[name].Description,
@@ -290,9 +291,7 @@ func SimulationResultTree(path, parent, keyWords string) []map[string]interface{
 				nameMap[splitName[0]] = true
 
 				dataList = append(dataList, data)
-
 			}
-
 		}
 	}
 	return dataList
@@ -333,7 +332,8 @@ func DymolaSimulationResultTree(path, parent, keyWords string) []map[string]inte
 			} else {
 				continue
 			}
-			if !nameMap[splitName[0]] && !scalarVariableMap[name].HideResult && !scalarVariableMap[name].IsProtected {
+			//if !nameMap[splitName[0]] && !scalarVariableMap[name].HideResult && !scalarVariableMap[name].IsProtected {
+			if !nameMap[splitName[0]] && !scalarVariableMap[name].HideResult {
 				unit := scalarVariableMap[name].Real.Unit
 				displayUnit := scalarVariableMap[name].Real.DisplayUnit
 				declaredTypeName := scalarVariableMap[name].Real.DeclaredType
