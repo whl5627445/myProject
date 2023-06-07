@@ -11,6 +11,7 @@ from libs.function.defs import update_app_pages_records, convert_dict_to_list
 from libs.function.grpc_log import log
 import shutil
 
+
 class OmcRunThread(threading.Thread):
     def __init__(self, request):
         self.state = "init"
@@ -43,10 +44,11 @@ class OmcRunThread(threading.Thread):
             shutil.rmtree(mul_output_path)
         # 创建新的文件夹
         os.mkdir(mul_output_path)
+        log.info("(OMC)一共需要执行{}轮".format(len(self.input_data)))
         for i in self.input_data:
             log.info("(OMC)进行第{}轮仿真".format(run_steps))
             # 修改xml文件
-            log.info("(OMC)修改参数："+str(i))
+            log.info("(OMC)修改参数：" + str(i))
             if write_xml(r"/home/simtek/code/" + self.absolute_path, i):
                 # 解析文件失败
                 break
@@ -59,14 +61,15 @@ class OmcRunThread(threading.Thread):
             # 获取命令行输出结果
             output, error = process.communicate()
             if error:
+                log.info("(OMC)多轮仿真出错" + str(error))
                 break
 
             else:
                 run_result_str = output.decode('utf-8')
                 if "successfully" in run_result_str:
-                    json_data = {"message": self.request.simulateModelName + "仿真到第{}轮".format(run_steps)}
-                    R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
-
+                    # json_data = {"message": self.request.simulateModelName + "仿真到第{}轮".format(run_steps)}
+                    # R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
+                    log.info("(OMC)successfully")
                     # 从mat中读取数据
                     d = DyMat.DyMatFile(r"/home/simtek/code/" + self.absolute_path + "result_res.mat")
 
@@ -77,7 +80,10 @@ class OmcRunThread(threading.Thread):
                     dictCsv["time"] = dictCsv["time"][:50]
 
                     for j in self.outputValNames:
-                        dictCsv[j] = list(d.data(j))[:50]
+                        d_data = list(d.data(j))[:50]
+                        if len(d_data) == 2 and d_data[0] == d_data[1]:
+                            d_data = [d_data[0] for i in range(50)]
+                        dictCsv[j] = d_data
                     df = pd.DataFrame(pd.DataFrame.from_dict(dictCsv, orient='index').values.T,
                                       columns=list(dictCsv.keys()))
                     if len(self.input_data) == 1:
@@ -89,10 +95,12 @@ class OmcRunThread(threading.Thread):
                         for s in i.values():
                             s = round(s, 4)
                             csv_file_name = csv_file_name + "_" + str(s)
-                        df.to_csv(r"/home/simtek/code/" + self.absolute_path + 'mul_output/{}.csv'.format(csv_file_name),
-                                  index=False,
-                                  encoding='utf-8')
+                        df.to_csv(
+                            r"/home/simtek/code/" + self.absolute_path + 'mul_output/{}.csv'.format(csv_file_name),
+                            index=False,
+                            encoding='utf-8')
                 else:
+                    log.info("(OMC)fail")
                     break
             run_steps += 1
 

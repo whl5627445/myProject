@@ -106,7 +106,7 @@ if __name__ == '__main__':
                                                         processRunTime="",
                                                         resPath="")
 
-        # 获取变量结果 单个记录单个变量
+        # 获取变量结果 单个记录单个变量zarr
         def GetResult(self, request, context):
             log.info("GetResult被调用。")
             with Session() as session:
@@ -126,7 +126,7 @@ if __name__ == '__main__':
             else:
                 return router_pb2.GetResultReply(data=[], log="not found resPath")
 
-        # 单个记录，多个变量
+        # 单个记录，多个变量zarr
         def ReadSimulationResult(self, request, context):
             log.info("ReadSimulationResult被调用。")
             res = zarr.load(adsPath + request.resultPath)

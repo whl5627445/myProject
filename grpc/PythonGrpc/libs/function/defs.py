@@ -143,11 +143,13 @@ def convert_dict_to_list(dict_obj):
 
     # 获取字典的值的列表
     values = [dict_obj[k].inputObjList for k in keys]
+    log.info("(OMC)需要修改的参数:" + str(values))
 
     # 生成所有可能的元素组合，并将它们转换为字典
     for combination in itertools.product(*values):
         d = {keys[i]: combination[i] for i in range(len(keys))}
         result.append(d)
+
     return result
 
 def convert_list(lst):

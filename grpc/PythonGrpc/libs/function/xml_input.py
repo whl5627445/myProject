@@ -20,9 +20,7 @@ def write_xml(xml_path, var_dict):
     for scalar_var in model_variables.findall('ScalarVariable'):
         # 获取元素的名称和值引用
         name = scalar_var.get('name')
-        variability = scalar_var.get('variability')
-        causality = scalar_var.get('causality')
-        if variability == "parameter" and causality == "parameter" and name in var_dict:
+        if name in var_dict:
             log.info("(OMC)修改xml变量："+name)
             real_node = scalar_var.find('Real')
             # 设置startLine属性为100
