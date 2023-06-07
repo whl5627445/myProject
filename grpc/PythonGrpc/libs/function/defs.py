@@ -7,14 +7,13 @@ import zipfile
 import itertools
 from libs.function.grpc_log import log
 
-def new_another_name(username: str, simulate_model_name: str, userspace_id: str) -> str:
+
+def new_another_name(package_id):
     # 生产新的数据库结果别名
     another_name_list = []
     with Session() as session:
         record_list = session.query(YssimSimulateRecords).filter(
-            YssimSimulateRecords.username == username,
-            YssimSimulateRecords.simulate_model_name == simulate_model_name,
-            YssimSimulateRecords.userspace_id == userspace_id,
+            YssimSimulateRecords.package_id == package_id,
             YssimSimulateRecords.simulate_status == "4",
             YssimSimulateRecords.deleted_at.is_(None),
         ).all()
@@ -139,7 +138,7 @@ def convert_dict_to_list(dict_obj):
 
     # 定义一个字典的 key 的列表
     keys = list(dict_obj.keys())
-    log.info("(OMC)需要修改的参数:"+str(keys))
+    log.info("(OMC)需要修改的参数:" + str(keys))
 
     # 获取字典的值的列表
     values = [dict_obj[k].inputObjList for k in keys]
@@ -152,9 +151,9 @@ def convert_dict_to_list(dict_obj):
 
     return result
 
+
 def convert_list(lst):
     # 使用 itertools.product() 函数生成所有元素组合，并转换为结果列表
     result = list(itertools.product(*lst))
     res = [list(t) for t in result]
     return res
-

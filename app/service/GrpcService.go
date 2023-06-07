@@ -220,6 +220,7 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 		Uuid:              record.ID,
 		UserSpaceId:       record.UserspaceId,
 		UserName:          record.UserName,
+		SimulatePackageId: record.PackageId,
 		SimulateModelName: record.SimulateModelName,
 		ResultFilePath:    resultFilePath,
 		SimulationPraData: SimulationPraData,

@@ -1,34 +1,15 @@
 syntax = "proto3";
 option go_package = "./grpcPb" ;
 service Greeter {
-  rpc FmuSimulation(FmuSimulationRequest) returns (FmuSimulationReply) {}
   rpc GetProcessStatus(GetProcessStatusRequest) returns (GetProcessStatusReply) {}
   rpc GetAllProcessNumber(GetAllProcessNumberRequest) returns (GetAllProcessNumberReply) {}
   rpc GetResult(GetResultRequest) returns (GetResultReply) {}
   rpc ProcessOperation(ProcessOperationRequest) returns (ProcessOperationReply) {}
   rpc ReadSimulationResult(ReadSimulationResultRequest) returns (ReadSimulationResultReply) {}
-  rpc MatToCsv(MatToCsvRequest) returns (MatToCsvReply) {}
-  rpc ZarrToCsv(ZarrToCsvRequest) returns (ZarrToCsvReply) {}
   rpc CheckVarExist(CheckVarExistRequest) returns (CheckVarExistReply) {}
   rpc SubmitTask(SubmitTaskRequest) returns (SubmitTaskReply) {}
 }
 
-message FmuSimulationRequest {
-  string uuid = 1;
-  string userSpaceId = 11;
-  string moPath = 2;
-  string className = 3;
-  string userName = 4;
-  double startTime = 5;
-  double stopTime = 6;
-  string resPath = 7;
-  map<string, string> params = 8;
-  double outputInterval = 9;
-  double tolerance=10;
-}
-message FmuSimulationReply {
-  string log = 1;
-}
 
 message GetProcessStatusRequest{
   string uuid = 1;
@@ -82,19 +63,6 @@ message ReadSimulationResultReply{
   repeated ele data=2;
 }
 
-message MatToCsvRequest{
-  string matPath = 1;
-}
-message MatToCsvReply{
-  bool ok = 1;
-}
-
-message ZarrToCsvRequest{
-  string zarrPath = 1;
-}
-message ZarrToCsvReply{
-  bool ok = 1;
-}
 
 message CheckVarExistRequest{
   repeated string Names=1;
@@ -108,6 +76,7 @@ message SubmitTaskRequest{
   string uuid = 1;
   string userSpaceId = 2;
   string userName = 3;
+  string simulatePackageId = 16;
   string simulateModelName = 4;
   string resultFilePath = 5;
   map<string, string> simulationPraData = 6;

@@ -14,11 +14,6 @@ class GreeterStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.FmuSimulation = channel.unary_unary(
-                '/Greeter/FmuSimulation',
-                request_serializer=router__pb2.FmuSimulationRequest.SerializeToString,
-                response_deserializer=router__pb2.FmuSimulationReply.FromString,
-                )
         self.GetProcessStatus = channel.unary_unary(
                 '/Greeter/GetProcessStatus',
                 request_serializer=router__pb2.GetProcessStatusRequest.SerializeToString,
@@ -44,16 +39,6 @@ class GreeterStub(object):
                 request_serializer=router__pb2.ReadSimulationResultRequest.SerializeToString,
                 response_deserializer=router__pb2.ReadSimulationResultReply.FromString,
                 )
-        self.MatToCsv = channel.unary_unary(
-                '/Greeter/MatToCsv',
-                request_serializer=router__pb2.MatToCsvRequest.SerializeToString,
-                response_deserializer=router__pb2.MatToCsvReply.FromString,
-                )
-        self.ZarrToCsv = channel.unary_unary(
-                '/Greeter/ZarrToCsv',
-                request_serializer=router__pb2.ZarrToCsvRequest.SerializeToString,
-                response_deserializer=router__pb2.ZarrToCsvReply.FromString,
-                )
         self.CheckVarExist = channel.unary_unary(
                 '/Greeter/CheckVarExist',
                 request_serializer=router__pb2.CheckVarExistRequest.SerializeToString,
@@ -68,12 +53,6 @@ class GreeterStub(object):
 
 class GreeterServicer(object):
     """Missing associated documentation comment in .proto file."""
-
-    def FmuSimulation(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
 
     def GetProcessStatus(self, request, context):
         """Missing associated documentation comment in .proto file."""
@@ -105,18 +84,6 @@ class GreeterServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def MatToCsv(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def ZarrToCsv(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
     def CheckVarExist(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -132,11 +99,6 @@ class GreeterServicer(object):
 
 def add_GreeterServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'FmuSimulation': grpc.unary_unary_rpc_method_handler(
-                    servicer.FmuSimulation,
-                    request_deserializer=router__pb2.FmuSimulationRequest.FromString,
-                    response_serializer=router__pb2.FmuSimulationReply.SerializeToString,
-            ),
             'GetProcessStatus': grpc.unary_unary_rpc_method_handler(
                     servicer.GetProcessStatus,
                     request_deserializer=router__pb2.GetProcessStatusRequest.FromString,
@@ -162,16 +124,6 @@ def add_GreeterServicer_to_server(servicer, server):
                     request_deserializer=router__pb2.ReadSimulationResultRequest.FromString,
                     response_serializer=router__pb2.ReadSimulationResultReply.SerializeToString,
             ),
-            'MatToCsv': grpc.unary_unary_rpc_method_handler(
-                    servicer.MatToCsv,
-                    request_deserializer=router__pb2.MatToCsvRequest.FromString,
-                    response_serializer=router__pb2.MatToCsvReply.SerializeToString,
-            ),
-            'ZarrToCsv': grpc.unary_unary_rpc_method_handler(
-                    servicer.ZarrToCsv,
-                    request_deserializer=router__pb2.ZarrToCsvRequest.FromString,
-                    response_serializer=router__pb2.ZarrToCsvReply.SerializeToString,
-            ),
             'CheckVarExist': grpc.unary_unary_rpc_method_handler(
                     servicer.CheckVarExist,
                     request_deserializer=router__pb2.CheckVarExistRequest.FromString,
@@ -191,23 +143,6 @@ def add_GreeterServicer_to_server(servicer, server):
  # This class is part of an EXPERIMENTAL API.
 class Greeter(object):
     """Missing associated documentation comment in .proto file."""
-
-    @staticmethod
-    def FmuSimulation(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Greeter/FmuSimulation',
-            router__pb2.FmuSimulationRequest.SerializeToString,
-            router__pb2.FmuSimulationReply.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
     def GetProcessStatus(request,
@@ -291,40 +226,6 @@ class Greeter(object):
         return grpc.experimental.unary_unary(request, target, '/Greeter/ReadSimulationResult',
             router__pb2.ReadSimulationResultRequest.SerializeToString,
             router__pb2.ReadSimulationResultReply.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def MatToCsv(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Greeter/MatToCsv',
-            router__pb2.MatToCsvRequest.SerializeToString,
-            router__pb2.MatToCsvReply.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def ZarrToCsv(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Greeter/ZarrToCsv',
-            router__pb2.ZarrToCsvRequest.SerializeToString,
-            router__pb2.ZarrToCsvReply.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

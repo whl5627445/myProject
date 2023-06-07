@@ -143,43 +143,6 @@ if __name__ == '__main__':
             else:
                 return router_pb2.SaveFilterResultToCsvReply(ok=False)
 
-        def MatToCsv(self, request, context):
-            log.info("MatToCsv被调用。")
-            try:
-                d = DyMat.DyMatFile(adsPath + request.matPath)
-                namesList = list(d.names())
-                dictCsv = {"time1": list(d.abscissa("2", True)),
-                           "time2": list(d.abscissa("1", True))
-                           }
-                if len(dictCsv["time1"]) > 1000:
-                    dictCsv["time1"] = dictCsv["time1"][:1000]
-                    for i in namesList:
-                        dictCsv[i] = list(d.data(i))[:1000]
-                else:
-                    for i in namesList:
-                        dictCsv[i] = list(d.data(i))
-                df = pd.DataFrame(pd.DataFrame.from_dict(dictCsv, orient='index').values.T,
-                                  columns=list(dictCsv.keys()))
-                df.to_csv(os.path.dirname(adsPath + request.matPath) + "/result_res.csv", index=False, encoding='utf-8')
-            except Exception as e:
-                log.info(str(e))
-                return router_pb2.MatToCsvReply(ok=False)
-            else:
-                return router_pb2.MatToCsvReply(ok=True)
-
-        def ZarrToCsv(self, request, context):
-            log.info("ZarrToCsv被调用")
-            try:
-                d = zarr.load(adsPath + request.zarrPath)
-                if d.shape[0] > 1000:
-                    d = d[:1000]
-                write_csv(os.path.dirname(adsPath + request.zarrPath) + "/result_res.csv", d)
-            except Exception as e:
-                log.info(str(e))
-                return router_pb2.ZarrToCsvReply(ok=False)
-            else:
-                return router_pb2.ZarrToCsvReply(ok=True)
-
         def CheckVarExist(self, request, context):
             log.info("CheckVarExist被调用")
             resMap = {}

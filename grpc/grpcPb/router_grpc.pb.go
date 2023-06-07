@@ -22,14 +22,11 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type GreeterClient interface {
-	FmuSimulation(ctx context.Context, in *FmuSimulationRequest, opts ...grpc.CallOption) (*FmuSimulationReply, error)
 	GetProcessStatus(ctx context.Context, in *GetProcessStatusRequest, opts ...grpc.CallOption) (*GetProcessStatusReply, error)
 	GetAllProcessNumber(ctx context.Context, in *GetAllProcessNumberRequest, opts ...grpc.CallOption) (*GetAllProcessNumberReply, error)
 	GetResult(ctx context.Context, in *GetResultRequest, opts ...grpc.CallOption) (*GetResultReply, error)
 	ProcessOperation(ctx context.Context, in *ProcessOperationRequest, opts ...grpc.CallOption) (*ProcessOperationReply, error)
 	ReadSimulationResult(ctx context.Context, in *ReadSimulationResultRequest, opts ...grpc.CallOption) (*ReadSimulationResultReply, error)
-	MatToCsv(ctx context.Context, in *MatToCsvRequest, opts ...grpc.CallOption) (*MatToCsvReply, error)
-	ZarrToCsv(ctx context.Context, in *ZarrToCsvRequest, opts ...grpc.CallOption) (*ZarrToCsvReply, error)
 	CheckVarExist(ctx context.Context, in *CheckVarExistRequest, opts ...grpc.CallOption) (*CheckVarExistReply, error)
 	SubmitTask(ctx context.Context, in *SubmitTaskRequest, opts ...grpc.CallOption) (*SubmitTaskReply, error)
 }
@@ -40,15 +37,6 @@ type greeterClient struct {
 
 func NewGreeterClient(cc grpc.ClientConnInterface) GreeterClient {
 	return &greeterClient{cc}
-}
-
-func (c *greeterClient) FmuSimulation(ctx context.Context, in *FmuSimulationRequest, opts ...grpc.CallOption) (*FmuSimulationReply, error) {
-	out := new(FmuSimulationReply)
-	err := c.cc.Invoke(ctx, "/Greeter/FmuSimulation", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *greeterClient) GetProcessStatus(ctx context.Context, in *GetProcessStatusRequest, opts ...grpc.CallOption) (*GetProcessStatusReply, error) {
@@ -96,24 +84,6 @@ func (c *greeterClient) ReadSimulationResult(ctx context.Context, in *ReadSimula
 	return out, nil
 }
 
-func (c *greeterClient) MatToCsv(ctx context.Context, in *MatToCsvRequest, opts ...grpc.CallOption) (*MatToCsvReply, error) {
-	out := new(MatToCsvReply)
-	err := c.cc.Invoke(ctx, "/Greeter/MatToCsv", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *greeterClient) ZarrToCsv(ctx context.Context, in *ZarrToCsvRequest, opts ...grpc.CallOption) (*ZarrToCsvReply, error) {
-	out := new(ZarrToCsvReply)
-	err := c.cc.Invoke(ctx, "/Greeter/ZarrToCsv", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *greeterClient) CheckVarExist(ctx context.Context, in *CheckVarExistRequest, opts ...grpc.CallOption) (*CheckVarExistReply, error) {
 	out := new(CheckVarExistReply)
 	err := c.cc.Invoke(ctx, "/Greeter/CheckVarExist", in, out, opts...)
@@ -136,14 +106,11 @@ func (c *greeterClient) SubmitTask(ctx context.Context, in *SubmitTaskRequest, o
 // All implementations must embed UnimplementedGreeterServer
 // for forward compatibility
 type GreeterServer interface {
-	FmuSimulation(context.Context, *FmuSimulationRequest) (*FmuSimulationReply, error)
 	GetProcessStatus(context.Context, *GetProcessStatusRequest) (*GetProcessStatusReply, error)
 	GetAllProcessNumber(context.Context, *GetAllProcessNumberRequest) (*GetAllProcessNumberReply, error)
 	GetResult(context.Context, *GetResultRequest) (*GetResultReply, error)
 	ProcessOperation(context.Context, *ProcessOperationRequest) (*ProcessOperationReply, error)
 	ReadSimulationResult(context.Context, *ReadSimulationResultRequest) (*ReadSimulationResultReply, error)
-	MatToCsv(context.Context, *MatToCsvRequest) (*MatToCsvReply, error)
-	ZarrToCsv(context.Context, *ZarrToCsvRequest) (*ZarrToCsvReply, error)
 	CheckVarExist(context.Context, *CheckVarExistRequest) (*CheckVarExistReply, error)
 	SubmitTask(context.Context, *SubmitTaskRequest) (*SubmitTaskReply, error)
 	mustEmbedUnimplementedGreeterServer()
@@ -153,9 +120,6 @@ type GreeterServer interface {
 type UnimplementedGreeterServer struct {
 }
 
-func (UnimplementedGreeterServer) FmuSimulation(context.Context, *FmuSimulationRequest) (*FmuSimulationReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method FmuSimulation not implemented")
-}
 func (UnimplementedGreeterServer) GetProcessStatus(context.Context, *GetProcessStatusRequest) (*GetProcessStatusReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetProcessStatus not implemented")
 }
@@ -170,12 +134,6 @@ func (UnimplementedGreeterServer) ProcessOperation(context.Context, *ProcessOper
 }
 func (UnimplementedGreeterServer) ReadSimulationResult(context.Context, *ReadSimulationResultRequest) (*ReadSimulationResultReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ReadSimulationResult not implemented")
-}
-func (UnimplementedGreeterServer) MatToCsv(context.Context, *MatToCsvRequest) (*MatToCsvReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method MatToCsv not implemented")
-}
-func (UnimplementedGreeterServer) ZarrToCsv(context.Context, *ZarrToCsvRequest) (*ZarrToCsvReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ZarrToCsv not implemented")
 }
 func (UnimplementedGreeterServer) CheckVarExist(context.Context, *CheckVarExistRequest) (*CheckVarExistReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CheckVarExist not implemented")
@@ -194,24 +152,6 @@ type UnsafeGreeterServer interface {
 
 func RegisterGreeterServer(s grpc.ServiceRegistrar, srv GreeterServer) {
 	s.RegisterService(&Greeter_ServiceDesc, srv)
-}
-
-func _Greeter_FmuSimulation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(FmuSimulationRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(GreeterServer).FmuSimulation(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/Greeter/FmuSimulation",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GreeterServer).FmuSimulation(ctx, req.(*FmuSimulationRequest))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _Greeter_GetProcessStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -304,42 +244,6 @@ func _Greeter_ReadSimulationResult_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Greeter_MatToCsv_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MatToCsvRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(GreeterServer).MatToCsv(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/Greeter/MatToCsv",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GreeterServer).MatToCsv(ctx, req.(*MatToCsvRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Greeter_ZarrToCsv_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ZarrToCsvRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(GreeterServer).ZarrToCsv(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/Greeter/ZarrToCsv",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GreeterServer).ZarrToCsv(ctx, req.(*ZarrToCsvRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Greeter_CheckVarExist_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CheckVarExistRequest)
 	if err := dec(in); err != nil {
@@ -384,10 +288,6 @@ var Greeter_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*GreeterServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "FmuSimulation",
-			Handler:    _Greeter_FmuSimulation_Handler,
-		},
-		{
 			MethodName: "GetProcessStatus",
 			Handler:    _Greeter_GetProcessStatus_Handler,
 		},
@@ -406,14 +306,6 @@ var Greeter_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ReadSimulationResult",
 			Handler:    _Greeter_ReadSimulationResult_Handler,
-		},
-		{
-			MethodName: "MatToCsv",
-			Handler:    _Greeter_MatToCsv_Handler,
-		},
-		{
-			MethodName: "ZarrToCsv",
-			Handler:    _Greeter_ZarrToCsv_Handler,
 		},
 		{
 			MethodName: "CheckVarExist",

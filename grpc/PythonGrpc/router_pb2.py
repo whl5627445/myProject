@@ -13,7 +13,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0crouter.proto\"\xb1\x02\n\x14\x46muSimulationRequest\x12\x0c\n\x04uuid\x18\x01 \x01(\t\x12\x13\n\x0buserSpaceId\x18\x0b \x01(\t\x12\x0e\n\x06moPath\x18\x02 \x01(\t\x12\x11\n\tclassName\x18\x03 \x01(\t\x12\x10\n\x08userName\x18\x04 \x01(\t\x12\x11\n\tstartTime\x18\x05 \x01(\x01\x12\x10\n\x08stopTime\x18\x06 \x01(\x01\x12\x0f\n\x07resPath\x18\x07 \x01(\t\x12\x31\n\x06params\x18\x08 \x03(\x0b\x32!.FmuSimulationRequest.ParamsEntry\x12\x16\n\x0eoutputInterval\x18\t \x01(\x01\x12\x11\n\ttolerance\x18\n \x01(\x01\x1a-\n\x0bParamsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"!\n\x12\x46muSimulationReply\x12\x0b\n\x03log\x18\x01 \x01(\t\"\'\n\x17GetProcessStatusRequest\x12\x0c\n\x04uuid\x18\x01 \x01(\t\"\x9b\x01\n\x15GetProcessStatusReply\x12\x0b\n\x03log\x18\x01 \x01(\t\x12\x11\n\texception\x18\x02 \x01(\x05\x12\x10\n\x08progress\x18\x03 \x01(\x05\x12\x18\n\x10processStartTime\x18\x04 \x01(\t\x12\r\n\x05state\x18\x05 \x01(\t\x12\x16\n\x0eprocessRunTime\x18\x06 \x01(\t\x12\x0f\n\x07resPath\x18\x07 \x01(\t\"\x1c\n\x1aGetAllProcessNumberRequest\"h\n\x18GetAllProcessNumberReply\x12\x12\n\ntotalTasks\x18\x01 \x01(\x05\x12\x1b\n\x13numOfRunningProcess\x18\x02 \x01(\x05\x12\x1b\n\x13numOfPendingProcess\x18\x03 \x01(\x05\"2\n\x10GetResultRequest\x12\x0c\n\x04path\x18\x01 \x01(\t\x12\x10\n\x08variable\x18\x02 \x01(\t\"+\n\x0eGetResultReply\x12\x0b\n\x03log\x18\x01 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x02 \x03(\x01\"U\n\x17ProcessOperationRequest\x12\x0c\n\x04uuid\x18\x01 \x01(\t\x12\x15\n\roperationName\x18\x02 \x01(\t\x12\x15\n\rsimulate_type\x18\x03 \x01(\t\"$\n\x15ProcessOperationReply\x12\x0b\n\x03msg\x18\x01 \x01(\t\"?\n\x1bReadSimulationResultRequest\x12\x0c\n\x04Vars\x18\x01 \x03(\t\x12\x12\n\nresultPath\x18\x02 \x01(\t\"i\n\x19ReadSimulationResultReply\x12\n\n\x02ok\x18\x01 \x01(\x08\x12,\n\x04\x64\x61ta\x18\x02 \x03(\x0b\x32\x1e.ReadSimulationResultReply.ele\x1a\x12\n\x03\x65le\x12\x0b\n\x03row\x18\x03 \x03(\x01\"\"\n\x0fMatToCsvRequest\x12\x0f\n\x07matPath\x18\x01 \x01(\t\"\x1b\n\rMatToCsvReply\x12\n\n\x02ok\x18\x01 \x01(\x08\"$\n\x10ZarrToCsvRequest\x12\x10\n\x08zarrPath\x18\x01 \x01(\t\"\x1c\n\x0eZarrToCsvReply\x12\n\n\x02ok\x18\x01 \x01(\x08\"3\n\x14\x43heckVarExistRequest\x12\r\n\x05Names\x18\x01 \x03(\t\x12\x0c\n\x04Path\x18\x02 \x01(\t\"k\n\x12\x43heckVarExistReply\x12)\n\x03Res\x18\x02 \x03(\x0b\x32\x1c.CheckVarExistReply.ResEntry\x1a*\n\x08ResEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x08:\x02\x38\x01\"\x9a\x05\n\x11SubmitTaskRequest\x12\x0c\n\x04uuid\x18\x01 \x01(\t\x12\x13\n\x0buserSpaceId\x18\x02 \x01(\t\x12\x10\n\x08userName\x18\x03 \x01(\t\x12\x19\n\x11simulateModelName\x18\x04 \x01(\t\x12\x16\n\x0eresultFilePath\x18\x05 \x01(\t\x12\x44\n\x11simulationPraData\x18\x06 \x03(\x0b\x32).SubmitTaskRequest.SimulationPraDataEntry\x12:\n\x0c\x65nvModelData\x18\x07 \x03(\x0b\x32$.SubmitTaskRequest.EnvModelDataEntry\x12\x14\n\x0csimulateType\x18\x08 \x01(\t\x12\x13\n\x0bpackageName\x18\t \x01(\t\x12\x17\n\x0fpackageFilePath\x18\n \x01(\t\x12\x10\n\x08taskType\x18\x0b \x01(\t\x12:\n\x0cinputValData\x18\x0c \x03(\x0b\x32$.SubmitTaskRequest.InputValDataEntry\x12\x16\n\x0eoutputValNames\x18\r \x03(\t\x12\x0e\n\x06pageId\x18\x0f \x01(\t\x1a\x38\n\x16SimulationPraDataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x1a\x33\n\x11\x45nvModelDataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x1aP\n\x11InputValDataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12*\n\x05value\x18\x02 \x01(\x0b\x32\x1b.SubmitTaskRequest.inputObj:\x02\x38\x01\x1a \n\x08inputObj\x12\x14\n\x0cinputObjList\x18\x0e \x03(\x01\"*\n\x0fSubmitTaskReply\x12\n\n\x02ok\x18\x01 \x01(\x08\x12\x0b\n\x03msg\x18\x02 \x01(\t2\x88\x05\n\x07Greeter\x12=\n\rFmuSimulation\x12\x15.FmuSimulationRequest\x1a\x13.FmuSimulationReply\"\x00\x12\x46\n\x10GetProcessStatus\x12\x18.GetProcessStatusRequest\x1a\x16.GetProcessStatusReply\"\x00\x12O\n\x13GetAllProcessNumber\x12\x1b.GetAllProcessNumberRequest\x1a\x19.GetAllProcessNumberReply\"\x00\x12\x31\n\tGetResult\x12\x11.GetResultRequest\x1a\x0f.GetResultReply\"\x00\x12\x46\n\x10ProcessOperation\x12\x18.ProcessOperationRequest\x1a\x16.ProcessOperationReply\"\x00\x12R\n\x14ReadSimulationResult\x12\x1c.ReadSimulationResultRequest\x1a\x1a.ReadSimulationResultReply\"\x00\x12.\n\x08MatToCsv\x12\x10.MatToCsvRequest\x1a\x0e.MatToCsvReply\"\x00\x12\x31\n\tZarrToCsv\x12\x11.ZarrToCsvRequest\x1a\x0f.ZarrToCsvReply\"\x00\x12=\n\rCheckVarExist\x12\x15.CheckVarExistRequest\x1a\x13.CheckVarExistReply\"\x00\x12\x34\n\nSubmitTask\x12\x12.SubmitTaskRequest\x1a\x10.SubmitTaskReply\"\x00\x42\nZ\x08./grpcPbb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0crouter.proto\"\'\n\x17GetProcessStatusRequest\x12\x0c\n\x04uuid\x18\x01 \x01(\t\"\x9b\x01\n\x15GetProcessStatusReply\x12\x0b\n\x03log\x18\x01 \x01(\t\x12\x11\n\texception\x18\x02 \x01(\x05\x12\x10\n\x08progress\x18\x03 \x01(\x05\x12\x18\n\x10processStartTime\x18\x04 \x01(\t\x12\r\n\x05state\x18\x05 \x01(\t\x12\x16\n\x0eprocessRunTime\x18\x06 \x01(\t\x12\x0f\n\x07resPath\x18\x07 \x01(\t\"\x1c\n\x1aGetAllProcessNumberRequest\"h\n\x18GetAllProcessNumberReply\x12\x12\n\ntotalTasks\x18\x01 \x01(\x05\x12\x1b\n\x13numOfRunningProcess\x18\x02 \x01(\x05\x12\x1b\n\x13numOfPendingProcess\x18\x03 \x01(\x05\"2\n\x10GetResultRequest\x12\x0c\n\x04path\x18\x01 \x01(\t\x12\x10\n\x08variable\x18\x02 \x01(\t\"+\n\x0eGetResultReply\x12\x0b\n\x03log\x18\x01 \x01(\t\x12\x0c\n\x04\x64\x61ta\x18\x02 \x03(\x01\"U\n\x17ProcessOperationRequest\x12\x0c\n\x04uuid\x18\x01 \x01(\t\x12\x15\n\roperationName\x18\x02 \x01(\t\x12\x15\n\rsimulate_type\x18\x03 \x01(\t\"$\n\x15ProcessOperationReply\x12\x0b\n\x03msg\x18\x01 \x01(\t\"?\n\x1bReadSimulationResultRequest\x12\x0c\n\x04Vars\x18\x01 \x03(\t\x12\x12\n\nresultPath\x18\x02 \x01(\t\"i\n\x19ReadSimulationResultReply\x12\n\n\x02ok\x18\x01 \x01(\x08\x12,\n\x04\x64\x61ta\x18\x02 \x03(\x0b\x32\x1e.ReadSimulationResultReply.ele\x1a\x12\n\x03\x65le\x12\x0b\n\x03row\x18\x03 \x03(\x01\"3\n\x14\x43heckVarExistRequest\x12\r\n\x05Names\x18\x01 \x03(\t\x12\x0c\n\x04Path\x18\x02 \x01(\t\"k\n\x12\x43heckVarExistReply\x12)\n\x03Res\x18\x02 \x03(\x0b\x32\x1c.CheckVarExistReply.ResEntry\x1a*\n\x08ResEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x08:\x02\x38\x01\"\xb5\x05\n\x11SubmitTaskRequest\x12\x0c\n\x04uuid\x18\x01 \x01(\t\x12\x13\n\x0buserSpaceId\x18\x02 \x01(\t\x12\x10\n\x08userName\x18\x03 \x01(\t\x12\x19\n\x11simulatePackageId\x18\x10 \x01(\t\x12\x19\n\x11simulateModelName\x18\x04 \x01(\t\x12\x16\n\x0eresultFilePath\x18\x05 \x01(\t\x12\x44\n\x11simulationPraData\x18\x06 \x03(\x0b\x32).SubmitTaskRequest.SimulationPraDataEntry\x12:\n\x0c\x65nvModelData\x18\x07 \x03(\x0b\x32$.SubmitTaskRequest.EnvModelDataEntry\x12\x14\n\x0csimulateType\x18\x08 \x01(\t\x12\x13\n\x0bpackageName\x18\t \x01(\t\x12\x17\n\x0fpackageFilePath\x18\n \x01(\t\x12\x10\n\x08taskType\x18\x0b \x01(\t\x12:\n\x0cinputValData\x18\x0c \x03(\x0b\x32$.SubmitTaskRequest.InputValDataEntry\x12\x16\n\x0eoutputValNames\x18\r \x03(\t\x12\x0e\n\x06pageId\x18\x0f \x01(\t\x1a\x38\n\x16SimulationPraDataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x1a\x33\n\x11\x45nvModelDataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x1aP\n\x11InputValDataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12*\n\x05value\x18\x02 \x01(\x0b\x32\x1b.SubmitTaskRequest.inputObj:\x02\x38\x01\x1a \n\x08inputObj\x12\x14\n\x0cinputObjList\x18\x0e \x03(\x01\"*\n\x0fSubmitTaskReply\x12\n\n\x02ok\x18\x01 \x01(\x08\x12\x0b\n\x03msg\x18\x02 \x01(\t2\xe6\x03\n\x07Greeter\x12\x46\n\x10GetProcessStatus\x12\x18.GetProcessStatusRequest\x1a\x16.GetProcessStatusReply\"\x00\x12O\n\x13GetAllProcessNumber\x12\x1b.GetAllProcessNumberRequest\x1a\x19.GetAllProcessNumberReply\"\x00\x12\x31\n\tGetResult\x12\x11.GetResultRequest\x1a\x0f.GetResultReply\"\x00\x12\x46\n\x10ProcessOperation\x12\x18.ProcessOperationRequest\x1a\x16.ProcessOperationReply\"\x00\x12R\n\x14ReadSimulationResult\x12\x1c.ReadSimulationResultRequest\x1a\x1a.ReadSimulationResultReply\"\x00\x12=\n\rCheckVarExist\x12\x15.CheckVarExistRequest\x1a\x13.CheckVarExistReply\"\x00\x12\x34\n\nSubmitTask\x12\x12.SubmitTaskRequest\x1a\x10.SubmitTaskReply\"\x00\x42\nZ\x08./grpcPbb\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'router_pb2', globals())
@@ -21,8 +21,6 @@ if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
   DESCRIPTOR._serialized_options = b'Z\010./grpcPb'
-  _FMUSIMULATIONREQUEST_PARAMSENTRY._options = None
-  _FMUSIMULATIONREQUEST_PARAMSENTRY._serialized_options = b'8\001'
   _CHECKVAREXISTREPLY_RESENTRY._options = None
   _CHECKVAREXISTREPLY_RESENTRY._serialized_options = b'8\001'
   _SUBMITTASKREQUEST_SIMULATIONPRADATAENTRY._options = None
@@ -31,60 +29,46 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _SUBMITTASKREQUEST_ENVMODELDATAENTRY._serialized_options = b'8\001'
   _SUBMITTASKREQUEST_INPUTVALDATAENTRY._options = None
   _SUBMITTASKREQUEST_INPUTVALDATAENTRY._serialized_options = b'8\001'
-  _FMUSIMULATIONREQUEST._serialized_start=17
-  _FMUSIMULATIONREQUEST._serialized_end=322
-  _FMUSIMULATIONREQUEST_PARAMSENTRY._serialized_start=277
-  _FMUSIMULATIONREQUEST_PARAMSENTRY._serialized_end=322
-  _FMUSIMULATIONREPLY._serialized_start=324
-  _FMUSIMULATIONREPLY._serialized_end=357
-  _GETPROCESSSTATUSREQUEST._serialized_start=359
-  _GETPROCESSSTATUSREQUEST._serialized_end=398
-  _GETPROCESSSTATUSREPLY._serialized_start=401
-  _GETPROCESSSTATUSREPLY._serialized_end=556
-  _GETALLPROCESSNUMBERREQUEST._serialized_start=558
-  _GETALLPROCESSNUMBERREQUEST._serialized_end=586
-  _GETALLPROCESSNUMBERREPLY._serialized_start=588
-  _GETALLPROCESSNUMBERREPLY._serialized_end=692
-  _GETRESULTREQUEST._serialized_start=694
-  _GETRESULTREQUEST._serialized_end=744
-  _GETRESULTREPLY._serialized_start=746
-  _GETRESULTREPLY._serialized_end=789
-  _PROCESSOPERATIONREQUEST._serialized_start=791
-  _PROCESSOPERATIONREQUEST._serialized_end=876
-  _PROCESSOPERATIONREPLY._serialized_start=878
-  _PROCESSOPERATIONREPLY._serialized_end=914
-  _READSIMULATIONRESULTREQUEST._serialized_start=916
-  _READSIMULATIONRESULTREQUEST._serialized_end=979
-  _READSIMULATIONRESULTREPLY._serialized_start=981
-  _READSIMULATIONRESULTREPLY._serialized_end=1086
-  _READSIMULATIONRESULTREPLY_ELE._serialized_start=1068
-  _READSIMULATIONRESULTREPLY_ELE._serialized_end=1086
-  _MATTOCSVREQUEST._serialized_start=1088
-  _MATTOCSVREQUEST._serialized_end=1122
-  _MATTOCSVREPLY._serialized_start=1124
-  _MATTOCSVREPLY._serialized_end=1151
-  _ZARRTOCSVREQUEST._serialized_start=1153
-  _ZARRTOCSVREQUEST._serialized_end=1189
-  _ZARRTOCSVREPLY._serialized_start=1191
-  _ZARRTOCSVREPLY._serialized_end=1219
-  _CHECKVAREXISTREQUEST._serialized_start=1221
-  _CHECKVAREXISTREQUEST._serialized_end=1272
-  _CHECKVAREXISTREPLY._serialized_start=1274
-  _CHECKVAREXISTREPLY._serialized_end=1381
-  _CHECKVAREXISTREPLY_RESENTRY._serialized_start=1339
-  _CHECKVAREXISTREPLY_RESENTRY._serialized_end=1381
-  _SUBMITTASKREQUEST._serialized_start=1384
-  _SUBMITTASKREQUEST._serialized_end=2050
-  _SUBMITTASKREQUEST_SIMULATIONPRADATAENTRY._serialized_start=1825
-  _SUBMITTASKREQUEST_SIMULATIONPRADATAENTRY._serialized_end=1881
-  _SUBMITTASKREQUEST_ENVMODELDATAENTRY._serialized_start=1883
-  _SUBMITTASKREQUEST_ENVMODELDATAENTRY._serialized_end=1934
-  _SUBMITTASKREQUEST_INPUTVALDATAENTRY._serialized_start=1936
-  _SUBMITTASKREQUEST_INPUTVALDATAENTRY._serialized_end=2016
-  _SUBMITTASKREQUEST_INPUTOBJ._serialized_start=2018
-  _SUBMITTASKREQUEST_INPUTOBJ._serialized_end=2050
-  _SUBMITTASKREPLY._serialized_start=2052
-  _SUBMITTASKREPLY._serialized_end=2094
-  _GREETER._serialized_start=2097
-  _GREETER._serialized_end=2745
+  _GETPROCESSSTATUSREQUEST._serialized_start=16
+  _GETPROCESSSTATUSREQUEST._serialized_end=55
+  _GETPROCESSSTATUSREPLY._serialized_start=58
+  _GETPROCESSSTATUSREPLY._serialized_end=213
+  _GETALLPROCESSNUMBERREQUEST._serialized_start=215
+  _GETALLPROCESSNUMBERREQUEST._serialized_end=243
+  _GETALLPROCESSNUMBERREPLY._serialized_start=245
+  _GETALLPROCESSNUMBERREPLY._serialized_end=349
+  _GETRESULTREQUEST._serialized_start=351
+  _GETRESULTREQUEST._serialized_end=401
+  _GETRESULTREPLY._serialized_start=403
+  _GETRESULTREPLY._serialized_end=446
+  _PROCESSOPERATIONREQUEST._serialized_start=448
+  _PROCESSOPERATIONREQUEST._serialized_end=533
+  _PROCESSOPERATIONREPLY._serialized_start=535
+  _PROCESSOPERATIONREPLY._serialized_end=571
+  _READSIMULATIONRESULTREQUEST._serialized_start=573
+  _READSIMULATIONRESULTREQUEST._serialized_end=636
+  _READSIMULATIONRESULTREPLY._serialized_start=638
+  _READSIMULATIONRESULTREPLY._serialized_end=743
+  _READSIMULATIONRESULTREPLY_ELE._serialized_start=725
+  _READSIMULATIONRESULTREPLY_ELE._serialized_end=743
+  _CHECKVAREXISTREQUEST._serialized_start=745
+  _CHECKVAREXISTREQUEST._serialized_end=796
+  _CHECKVAREXISTREPLY._serialized_start=798
+  _CHECKVAREXISTREPLY._serialized_end=905
+  _CHECKVAREXISTREPLY_RESENTRY._serialized_start=863
+  _CHECKVAREXISTREPLY_RESENTRY._serialized_end=905
+  _SUBMITTASKREQUEST._serialized_start=908
+  _SUBMITTASKREQUEST._serialized_end=1601
+  _SUBMITTASKREQUEST_SIMULATIONPRADATAENTRY._serialized_start=1376
+  _SUBMITTASKREQUEST_SIMULATIONPRADATAENTRY._serialized_end=1432
+  _SUBMITTASKREQUEST_ENVMODELDATAENTRY._serialized_start=1434
+  _SUBMITTASKREQUEST_ENVMODELDATAENTRY._serialized_end=1485
+  _SUBMITTASKREQUEST_INPUTVALDATAENTRY._serialized_start=1487
+  _SUBMITTASKREQUEST_INPUTVALDATAENTRY._serialized_end=1567
+  _SUBMITTASKREQUEST_INPUTOBJ._serialized_start=1569
+  _SUBMITTASKREQUEST_INPUTOBJ._serialized_end=1601
+  _SUBMITTASKREPLY._serialized_start=1603
+  _SUBMITTASKREPLY._serialized_end=1645
+  _GREETER._serialized_start=1648
+  _GREETER._serialized_end=2134
 # @@protoc_insertion_point(module_scope)
