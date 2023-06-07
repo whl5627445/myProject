@@ -91,14 +91,13 @@ func GetComponentGraphicsData(modelName, componentName string) [][]map[string]in
 
 func (g *graphicsData) getData02() {
 	// nameList第一个名字是模型自身的名字，之后是继承的模型名字
-	modelName := g.modelNameList
-	for i := len(modelName) - 1; i >= 0; i-- {
+	for i := len(g.modelNameList) - 1; i >= 0; i-- {
 		var data2 []map[string]interface{}
 		mobility := false
-		if i == len(modelName)-1 && g.permissions != "sys" {
+		if i == len(g.modelNameList)-1 && g.permissions != "sys" {
 			mobility = true
 		}
-		componentsData, componentAnnotationsData := getElementsAndModelName([]string{modelName[i]})
+		componentsData, componentAnnotationsData := getElementsAndModelName([]string{g.modelNameList[i]})
 		data := g.data02(componentsData, componentAnnotationsData, false, "", mobility)
 		data2 = append(data2, data...)
 		g.data[1] = append(g.data[1], data2...)
@@ -365,23 +364,21 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 	dataList := make([]map[string]interface{}, 0, 1)
 	var cDataFilter [][]interface{}
 	var caDataFilter [][]interface{}
-	dataLen := func() int {
-		if len(cData) > len(caData) {
-			return len(caData)
-		}
-		return len(cData)
-	}()
-	if isIcon && cData != nil && caData != nil {
-		for i := 0; i < dataLen; i++ {
-			nameType := omc.OMC.GetClassRestriction(cData[i][2].(string))
+
+	for i := 0; i < len(cData); i++ {
+
+		nameType := omc.OMC.GetClassRestriction(cData[i][2].(string))
+		if isIcon && cData != nil && caData != nil {
 			if nameType == "connector" || nameType == "expandable connector" {
+				cData[i] = append(cData[i], nameType)
 				cDataFilter = append(cDataFilter, cData[i])
 				caDataFilter = append(caDataFilter, caData[i])
 			}
+		} else {
+			cData[i] = append(cData[i], nameType)
+			cDataFilter = append(cDataFilter, cData[i])
+			caDataFilter = append(caDataFilter, caData[i])
 		}
-	} else {
-		cDataFilter = cData
-		caDataFilter = caData
 	}
 	if cDataFilter == nil || caDataFilter == nil {
 		return dataList
@@ -423,18 +420,12 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 
 			data := map[string]interface{}{"type": "Transformation"}
 
-			data["graphType"] = func() string {
-				if isIcon {
-					return "connecter"
-				} else {
-					nameType := omc.OMC.GetClassRestriction(classname)
-					return nameType
-				}
-			}()
+			data["graphType"] = cDataFilter[i][17]
 			//data["ID"] = strconv.Itoa(i)
 			data["classname"] = classname
 			data["name"] = cDataFilter[i][3]
 			data["original_name"] = cDataFilter[i][3]
+
 			data["parent"] = parent
 			data["connector_sizing"] = cDataFilter[i][16]
 			data["visible"] = caf[0]
@@ -450,12 +441,23 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 					return "0"
 				}
 			}()
-
-			data["extent1Diagram"] = strings.Join([]string{caf[3].(string), caf[4].(string)}, ",")
-			data["extent2Diagram"] = strings.Join([]string{caf[5].(string), caf[6].(string)}, ",")
-			data["originDiagram"] = strings.Join([]string{caf[1].(string), caf[2].(string)}, ",")
-			data["extent1Diagram"] = strings.Replace(data["extent1Diagram"].(string), "-,-", "-100.0,-100.0", 1)
-			data["extent2Diagram"] = strings.Replace(data["extent2Diagram"].(string), "-,-", "100.0,100.0", 1)
+			if parent != "" && caf[10].(string) != "-" {
+				extentX1, extentY1, extentX2, extentY2 := caf[10].(string), caf[11].(string), caf[12].(string), caf[13].(string)
+				data["extent1Diagram"] = strings.Join([]string{extentX1, extentY1}, ",")
+				data["extent2Diagram"] = strings.Join([]string{extentX2, extentY2}, ",")
+				data["originDiagram"] = strings.Join([]string{caf[8].(string), caf[9].(string)}, ",")
+			} else {
+				data["extent1Diagram"] = strings.Join([]string{caf[3].(string), caf[4].(string)}, ",")
+				data["extent2Diagram"] = strings.Join([]string{caf[5].(string), caf[6].(string)}, ",")
+				data["originDiagram"] = strings.Join([]string{caf[1].(string), caf[2].(string)}, ",")
+			}
+			//data["extent1Diagram"] = strings.Replace(data["extent1Diagram"].(string), "-,-", "-100.0,-100.0", 1)
+			//data["extent2Diagram"] = strings.Replace(data["extent2Diagram"].(string), "-,-", "100.0,100.0", 1)
+			//data["extent1Diagram"] = strings.Join([]string{caf[3].(string), caf[4].(string)}, ",")
+			//data["extent2Diagram"] = strings.Join([]string{caf[5].(string), caf[6].(string)}, ",")
+			//data["originDiagram"] = strings.Join([]string{caf[1].(string), caf[2].(string)}, ",")
+			//data["extent1Diagram"] = strings.Replace(data["extent1Diagram"].(string), "-,-", "-100.0,-100.0", 1)
+			//data["extent2Diagram"] = strings.Replace(data["extent2Diagram"].(string), "-,-", "100.0,100.0", 1)
 			data["rotateAngle"] = rotateAngle
 			data["rotation"] = rotateAngle
 			data["output_type"] = func() string {
@@ -496,8 +498,10 @@ func (g *graphicsData) getnthconnectionData() {
 						}
 						daData["connectionfrom_original_name"] = ncData[0]
 						daData["connectionto_original_name"] = ncData[1]
-						re1, _ := regexp.Compile("\\[[0-9a-z]+\\]$")
-						re2, _ := regexp.Compile("\\[[0-9a-z]+\\].")
+						//re1, _ := regexp.Compile("\\[[0-9a-zA-Z]+\\]$")
+						//re2, _ := regexp.Compile("\\[[0-9a-zA-Z]+\\].")
+						re1, _ := regexp.Compile("\\[[0-9a-zA-Z,，]+\\]$")
+						re2, _ := regexp.Compile("\\[[0-9a-zA-Z,，]+\\].")
 						connectionfrom := re1.ReplaceAll([]byte(ncData[0]), []byte(""))
 						connectionto := re1.ReplaceAll([]byte(ncData[1]), []byte(""))
 						daData["connectionfrom"] = string(re2.ReplaceAll(connectionfrom, []byte(".")))
