@@ -82,7 +82,7 @@ class AppDataSources(Base):
     compile_status = Column(Integer)
     compile_start_time = Column(Integer)
     compile_stop_time = Column(Integer)
-    ground_name = Column(String)
+    group_name = Column(String)
     data_source_name = Column(String)
     experiment_id = Column(String)
     env_model_data = Column(JSON)

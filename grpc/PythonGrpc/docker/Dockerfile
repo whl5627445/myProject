@@ -1,4 +1,4 @@
-FROM openmodelica/openmodelica:v1.20.0-minimal
+FROM openmodelica/openmodelica:v1.21.0-minimal
 RUN useradd --create-home --no-log-init --shell /bin/bash simtek \
     && adduser simtek sudo \
     && echo 'simtek:simtek' | chpasswd
