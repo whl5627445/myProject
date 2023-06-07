@@ -55,11 +55,11 @@ func ReadSimulationResult(varNameList []string, path string) ([][]float64, bool)
 	return data, ok
 }
 
-// ReadSimulationResultFromGrpc 读取单个id单个变量
-func ReadSimulationResultFromGrpc(recordId string, varName string) ([][]float64, bool) {
+// ReadSimulationResultFromGrpc 读取单个mat文件中的单个变量
+func ReadSimulationResultFromGrpc(path string, varName string) ([][]float64, bool) {
 	var data [][]float64
-	replyTime, err := GrpcGetResult(recordId, "time")
-	replyVar, err := GrpcGetResult(recordId, varName)
+	replyTime, err := GrpcGetResult(path, "time")
+	replyVar, err := GrpcGetResult(path, varName)
 	if err != nil {
 		fmt.Println("调用grpc服务(GrpcGetResult)出错：", err)
 		return nil, false
@@ -97,12 +97,7 @@ func FilterSimulationResult(items map[string][]string, recordDict map[string]Dat
 			headRow = append(headRow, headFlagName+value[i])
 		}
 		// 获取结果数据
-		if recordDict[key].SimulateType == "FmPy" {
-			result, ok = GrpcReadSimulationResult(value, recordDict[key].SimulateModelResultPath+"zarr_res.zarr")
-
-		} else {
-			result, ok = ReadSimulationResult(value, recordDict[key].SimulateModelResultPath+"result_res.mat")
-		}
+		result, ok = ReadSimulationResult(value, recordDict[key].SimulateModelResultPath+"result_res.mat")
 		if !ok {
 			return false
 		}
@@ -460,7 +455,7 @@ func AppSimulateResult(appPageId string, varNameList []string) ([]map[string]int
 	}
 
 	for i := 0; i < len(varNameList); i++ {
-		data, ok := ReadSimulationResult([]string{varNameList[i]}, appDataSourceRecord.CompilePath+"result_res.mat")
+		data, ok := ReadSimulationResultFromGrpc(appDataSourceRecord.CompilePath+"result_res.mat", varNameList[i])
 		if ok {
 			ordinate := data[1]
 			abscissa := data[0]

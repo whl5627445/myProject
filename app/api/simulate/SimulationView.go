@@ -170,11 +170,9 @@ func SimulateResultGraphicsView(c *gin.Context) {
 	for i := 0; i < len(recordIdList); i++ {
 		var data [][]float64
 		var ok bool
-		if recordDict[recordIdList[i]].SimulateType == "FmPy" {
-			data, ok = service.ReadSimulationResultFromGrpc(recordIdList[i], item.Variable)
-		} else {
-			data, ok = service.ReadSimulationResult([]string{item.Variable}, recordDict[recordIdList[i]].SimulateModelResultPath+"result_res.mat")
-		}
+
+		data, ok = service.ReadSimulationResult([]string{item.Variable}, recordDict[recordIdList[i]].SimulateModelResultPath+"result_res.mat")
+
 		unitsData := service.ConvertUnits(item.S2, item.S1)
 		if ok {
 			ordinate := data[1]
@@ -261,11 +259,7 @@ func SimulateResultSingularView(c *gin.Context) {
 	for i := 0; i < len(items); i++ { //遍历items的每条记录，如果与数据库查询结果中的一条能对得上，则读取对应变量结果
 		var data [][]float64
 		var ok bool
-		if recordDict[items[i].RecordId].SimulateType == "FmPy" {
-			data, ok = service.ReadSimulationResultFromGrpc(items[i].RecordId, items[i].Variable)
-		} else {
-			data, ok = service.ReadSimulationResult([]string{items[i].Variable}, recordDict[items[i].RecordId].SimulateModelResultPath+"result_res.mat")
-		}
+		data, ok = service.ReadSimulationResult([]string{items[i].Variable}, recordDict[items[i].RecordId].SimulateModelResultPath+"result_res.mat")
 		unitsData := service.ConvertUnits(items[i].S2, items[i].S1)
 		if ok {
 			ordinate := data[1]

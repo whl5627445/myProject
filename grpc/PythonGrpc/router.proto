@@ -51,7 +51,7 @@ message GetAllProcessNumberReply{
 }
 
 message GetResultRequest{
-    string uuid = 1;
+    string path = 1;
     string variable =2;
 }
 message GetResultReply{

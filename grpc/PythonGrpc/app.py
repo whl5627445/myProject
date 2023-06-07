@@ -106,25 +106,22 @@ if __name__ == '__main__':
                                                         processRunTime="",
                                                         resPath="")
 
-        # 获取变量结果 单个记录单个变量zarr
+        # 获取变量结果 单个mat文件单个变量mat
         def GetResult(self, request, context):
             log.info("GetResult被调用。")
-            with Session() as session:
-                processDetails = session.query(YssimSimulateRecords).filter(
-                    YssimSimulateRecords.id == request.uuid).first()
-            if processDetails is None:
-                return router_pb2.GetResultReply(data=[], log="not found in db")
-            if processDetails.simulate_model_result_path:
-                zarrPath = adsPath + processDetails.simulate_model_result_path + "zarr_res.zarr"
-                if processDetails.simulate_status in ["3", "4"]:
-                    res = zarr.load(zarrPath)
-                    if (res is not None) and (request.variable in res.dtype.names):
-                        data = res[request.variable].tolist()
-                        return router_pb2.GetResultReply(data=data, log="true")
-                    else:
-                        return router_pb2.GetResultReply(data=[], log="not found var(end)")
-            else:
-                return router_pb2.GetResultReply(data=[], log="not found resPath")
+            d = DyMat.DyMatFile(r"/home/simtek/code/" + request.path)
+            try:
+                data_time = list(d.abscissa("2", True))
+                if request.variable == "time":
+                    data = data_time
+                else:
+                    d_data = list(d.data(request.variable))
+                    if len(d_data) == 2 and d_data[0] == d_data[1]:
+                        d_data = [d_data[0] for i in range(len(data_time))]
+                    data = d_data
+                return router_pb2.GetResultReply(data=data, log="true")
+            except Exception as e:
+                return router_pb2.GetResultReply(data=[], log=str(e))
 
         # 单个记录，多个变量zarr
         def ReadSimulationResult(self, request, context):
