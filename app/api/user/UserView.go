@@ -301,6 +301,7 @@ func SetUserSettingsView(c *gin.Context) {
 
 	} else { //不存在则创建
 		settingNew := DataBaseModel.YssimUserSettings{
+			ID:          uuid.New().String(),
 			UserName:    username,
 			GridDisplay: setting.GridDisplay,
 		}
