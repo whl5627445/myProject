@@ -183,6 +183,6 @@ type CreateComponentBasesData struct {
 }
 
 type SetPageAlignmentLineData struct {
-	PageId           string                 `json:"page_id" binding:"required"`
-	AlignmentLineMap map[string]interface{} `json:"alignment_line" binding:"required"`
+	PageId           string         `json:"page_id" binding:"required"`
+	AlignmentLineMap datatypes.JSON `json:"alignment_line" binding:"required"`
 }
