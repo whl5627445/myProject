@@ -1,5 +1,5 @@
 import re
-from config.db_config import Session, YssimSimulateRecords, AppDataSources, AppPages
+from config.db_config import Session, YssimSimulateRecords, AppDataSources, AppPages, AppSpaces
 from config.redis_config import R
 import json
 import os
@@ -30,6 +30,19 @@ def new_another_name(package_id):
                 max_suffix = suffix
 
     return "结果 " + str(max_suffix + 1)
+
+
+def update_app_spaces_records(page_id):
+    # 发布完成更改app_space的发布状态is_release为True
+    with Session() as session:
+        query = session.query(AppPages, AppSpaces).join(
+            AppSpaces, AppPages.app_space_id == AppSpaces.id
+        ).filter(
+            AppPages.id == page_id
+        ).first()
+        app_space = query[1]
+        app_space.is_release = True
+        session.commit()
 
 
 def update_simulate_records(uuid, simulate_status=None, simulate_result_str=None, simulate_start=None,
@@ -132,7 +145,7 @@ def zip_folders(folders, output_path):
                         archive.write(file_path, arcname=os.path.relpath(file_path, parent_folder))
 
 
-def convert_dict_to_list(dict_obj,PageId):
+def convert_dict_to_list(dict_obj, PageId):
     # 定义待返回的结果列表
     result = []
 
@@ -144,7 +157,6 @@ def convert_dict_to_list(dict_obj,PageId):
             AppPages.id == PageId).first()
         app_pages_record.naming_order = keys
         session.commit()
-
 
     # 获取字典的值的列表
     values = [dict_obj[k].inputObjList for k in keys]

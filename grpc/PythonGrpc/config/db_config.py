@@ -1,5 +1,5 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import create_engine, Column, String, Integer, Text, DateTime, JSON
+from sqlalchemy import create_engine, Column, String, Integer, Text, DateTime, JSON, Boolean
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import QueuePool
 
@@ -102,3 +102,10 @@ class AppPages(Base):
     simulate_state = Column(Integer)
     release_state = Column(Integer)
     naming_order = Column(JSON)
+    app_space_id = Column(String)
+
+
+class AppSpaces(Base):
+    __tablename__ = 'app_spaces'
+    id = Column(String, primary_key=True)
+    is_release = Column(Boolean)

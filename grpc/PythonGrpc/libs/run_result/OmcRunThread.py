@@ -7,7 +7,7 @@ import pandas as pd
 from libs.function.xml_input import write_xml
 from config.redis_config import R
 from libs.function.run_result_json import update_item_to_json, delete_item_from_json
-from libs.function.defs import update_app_pages_records, convert_dict_to_list
+from libs.function.defs import update_app_pages_records, convert_dict_to_list, update_app_spaces_records
 from libs.function.grpc_log import log
 import shutil
 
@@ -113,6 +113,8 @@ class OmcRunThread(threading.Thread):
                 update_app_pages_records(self.request.pageId,
                                          mul_result_path=self.absolute_path + 'mul_output/',
                                          release_state=4)
+                update_app_spaces_records(self.request.pageId)
+
         else:
             if len(self.input_data) == 1:
                 # 更新数据库

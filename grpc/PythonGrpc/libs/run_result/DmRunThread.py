@@ -10,7 +10,7 @@ from config.redis_config import R
 import json
 import os
 import configparser
-from libs.function.defs import update_app_pages_records,convert_list
+from libs.function.defs import update_app_pages_records,convert_list,update_app_spaces_records
 from libs.function.grpc_log import log
 
 config = configparser.ConfigParser()
@@ -207,6 +207,7 @@ class DmRunThread(threading.Thread):
         log.info("(Dymola)返回"+str(res)+str(err)+str(code))
         if res:
             update_app_pages_records(self.request.pageId, release_state=4)
+            update_app_spaces_records(self.request.pageId)
             json_data = {"message": self.request.simulateModelName + " 模型仿真完成"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
         elif code == 300:
