@@ -117,11 +117,16 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 		m.components[i] = append(m.components[i], m.componentAnnotations[i])
 		m.componentsDict[m.components[i][3].(string)] = m.components[i]
 	}
+	deduplicationMap := make(map[string]bool, 0) // 参数变量名去重
 	for i := 0; i < len(m.components); i++ {
-		dataDefault := map[string]interface{}{"tab": "General", "type": "Normal", "group": "Parameters"}
 		p := m.componentsDict[m.components[i][3].(string)].([]interface{})
-
 		varName := p[3].(string)
+		if deduplicationMap[varName] {
+			continue
+		}
+		deduplicationMap[varName] = true
+		dataDefault := map[string]interface{}{"tab": "General", "type": "Normal", "group": "Parameters"}
+
 		if p[2] != "-" {
 			m.className = p[2].(string)
 		} else {
