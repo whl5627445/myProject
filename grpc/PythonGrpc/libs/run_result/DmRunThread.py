@@ -112,8 +112,8 @@ class DmRunThread(threading.Thread):
             fileName = ""
             if self.request.packageFilePath != "":
                 fileName = params_url + "/" + "/".join(self.request.packageFilePath.split("/")[5:])
-            json_data = {"message": self.request.simulateModelName + " 开始多轮仿真"}
-            R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
+            # json_data = {"message": self.request.simulateModelName + " 开始多轮仿真"}
+            # R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
             array_initial_values = list(self.request.inputValData.values())
             input_data_length = len(array_initial_values[0].inputObjList)
             # 如果input_data_length的程度为1，这是单次仿真
@@ -208,16 +208,16 @@ class DmRunThread(threading.Thread):
         if res:
             update_app_pages_records(self.request.pageId, release_state=4)
             update_app_spaces_records(self.request.pageId)
-            json_data = {"message": self.request.simulateModelName + " 模型仿真完成"}
-            R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
+            # json_data = {"message": self.request.simulateModelName + " 模型仿真完成"}
+            # R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
         elif code == 300:
             update_app_pages_records(self.request.pageId, release_state=3)
-            json_data = {"message": self.request.simulateModelName + " 结束任务"}
-            R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
+            # json_data = {"message": self.request.simulateModelName + " 结束任务"}
+            # R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
         else:
             update_app_pages_records(self.request.pageId, release_state=3)
-            json_data = {"message": self.request.simulateModelName + " 仿真失败"}
-            R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
+            # json_data = {"message": self.request.simulateModelName + " 仿真失败"}
+            # R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
         self.state = "stopped"
         log.info("(Dymola)仿真线程执行完毕")
         delete_item_from_json(self.request.uuid)

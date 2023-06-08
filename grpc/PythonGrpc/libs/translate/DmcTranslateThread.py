@@ -118,7 +118,7 @@ class DmTranslateThread(threading.Thread):
             }
             log.info('(Dymola)开始编译')
             log.info("(Dymola)编译请求体：" + str(compileReqData))
-            json_data = {"message": self.request.simulateModelName + " 模型开始编译"}
+            json_data = {"message": "(导出数据源)"+self.request.simulateModelName + " 模型开始编译"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
 
             compileRes = requests.request("post", DymolaSimulationConnect + "/dymola/translate",
@@ -131,7 +131,7 @@ class DmTranslateThread(threading.Thread):
             log.info("(Dymola)服务编译结果："+str(compileResData))
             if compileResData["code"] == 200:
 
-                json_data = {"message": self.request.simulateModelName + " 编译成功，开始仿真"}
+                json_data = {"message": "(导出数据源)"+self.request.simulateModelName + " 编译成功，开始仿真"}
                 R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
                 simulateReqData = {
                     "startTime": self.request.simulationPraData["startTime"],
@@ -192,21 +192,21 @@ class DmTranslateThread(threading.Thread):
                                    compile_status=4,
                                    compile_stop_time=int(time.time())
                                    )
-            json_data = {"message": self.request.simulateModelName + " 模型仿真完成"}
+            json_data = {"message": "(导出数据源)"+self.request.simulateModelName + " 导出完成"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
         elif code == 300:
             update_compile_records(uuid=self.request.uuid,
                                    compile_status=3,
                                    compile_stop_time=int(time.time())
                                    )
-            json_data = {"message": self.request.simulateModelName + " 结束任务"}
+            json_data = {"message": "(导出数据源)"+self.request.simulateModelName + " 终止任务"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
         else:
             update_compile_records(uuid=self.request.uuid,
                                    compile_status=3,
                                    compile_stop_time=int(time.time())
                                    )
-            json_data = {"message": self.request.simulateModelName + " 仿真失败"}
+            json_data = {"message": "(导出数据源)"+self.request.simulateModelName + " 导出失败"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
         log.info("(Dymola)仿真线程执行完毕")
         self.state = "stopped"

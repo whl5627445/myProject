@@ -53,7 +53,7 @@ class OmcTranslateThread(threading.Thread):
         self.state = "compiling"  # 编译中
         log.info("(OMC)开始编译")
         # 编译
-        json_data = {"message": self.request.simulateModelName + " 模型正在编译"}
+        json_data = {"message": "(导出数据源)"+self.request.simulateModelName + " 模型正在编译"}
         R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
 
         absolute_path = r"/home/simtek/code/" + self.request.resultFilePath
@@ -73,13 +73,13 @@ class OmcTranslateThread(threading.Thread):
         os.kill(self.omc_obj.omc_process.pid, 9)
         if isinstance(buildModelRes, list) and buildModelRes != ["", ""]:
             log.info("(OMC)编译成功")
-            json_data = {"message": self.request.simulateModelName + " 模型编译完成,开始仿真"}
+            json_data = {"message": "(导出数据源)"+self.request.simulateModelName + " 模型编译完成,开始仿真"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
         else:
             # 改数据库状态为3
             log.info("(OMC)编译失败")
             update_compile_records(uuid=self.uuid, compile_status=3, compile_stop_time=int(time.time()))
-            json_data = {"message": self.request.simulateModelName + " 模编译失败"}
+            json_data = {"message": "(导出数据源)"+self.request.simulateModelName + " 模编译失败"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
             self.state = "stopped"
             return
@@ -96,20 +96,20 @@ class OmcTranslateThread(threading.Thread):
         if error:
             log.info("(OMC)仿真失败,error:"+str(error))
             update_compile_records(uuid=self.uuid, compile_status=3, compile_stop_time=int(time.time()))
-            json_data = {"message": self.request.simulateModelName + " 仿真失败"}
+            json_data = {"message": "(导出数据源)"+self.request.simulateModelName + " 导出失败"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
 
         else:
             simulate_result_str = output.decode('utf-8')
             if "successfully" in simulate_result_str:
                 log.info("(OMC)模型仿真成功完成")
-                json_data = {"message": self.request.simulateModelName + " 模型仿真完成"}
+                json_data = {"message": "(导出数据源)"+self.request.simulateModelName + " 模型导出完成"}
                 R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
                 update_compile_records(uuid=self.uuid, compile_status=4, compile_stop_time=int(time.time()))
 
             else:
                 log.info("(OMC)仿真失败:" + str(simulate_result_str))
-                json_data = {"message": self.request.simulateModelName + " 仿真失败"}
+                json_data = {"message": "(导出数据源)"+self.request.simulateModelName + " 导出失败"}
                 R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
                 update_compile_records(uuid=self.uuid, compile_status=3, compile_stop_time=int(time.time()))
         # 仿真
