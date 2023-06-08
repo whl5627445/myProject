@@ -5,7 +5,6 @@ import json
 import DyMat
 import pandas as pd
 from libs.function.xml_input import write_xml
-from config.redis_config import R
 from libs.function.run_result_json import update_item_to_json, delete_item_from_json
 from libs.function.defs import update_app_pages_records, convert_dict_to_list, update_app_spaces_records
 from libs.function.grpc_log import log
@@ -23,7 +22,7 @@ class OmcRunThread(threading.Thread):
         self.request = request
         self.csv_data = []
         update_item_to_json(self.uuid, {"id": self.uuid, "run_states": "init", })
-        self.input_data = convert_dict_to_list(self.inputValData,self.request.pageId)
+        self.input_data = convert_dict_to_list(self.inputValData, self.request.pageId)
 
         if len(self.input_data) == 1:  # 仿真任务
             update_app_pages_records(self.request.pageId, simulate_state=1)
@@ -39,7 +38,7 @@ class OmcRunThread(threading.Thread):
         else:  # 发布任务
             update_app_pages_records(self.request.pageId, release_state=2)
         # 进行多轮仿真
-        mul_output_path = r"/home/simtek/code/" + self.absolute_path + 'mul_output'
+        mul_output_path = r"/home/simtek/code/" + self.request.mulResultPath
         if os.path.exists(mul_output_path):
             shutil.rmtree(mul_output_path)
         # 创建新的文件夹
@@ -95,10 +94,9 @@ class OmcRunThread(threading.Thread):
                         for s in i.values():
                             s = round(s, 4)
                             csv_file_name = csv_file_name + "_" + str(s)
-                        df.to_csv(
-                            r"/home/simtek/code/" + self.absolute_path + 'mul_output/{}.csv'.format(csv_file_name),
-                            index=False,
-                            encoding='utf-8')
+                        df.to_csv(mul_output_path + '{}.csv'.format(csv_file_name),
+                                  index=False,
+                                  encoding='utf-8')
                 else:
                     log.info("(OMC)fail")
                     break
@@ -111,7 +109,6 @@ class OmcRunThread(threading.Thread):
             else:
                 # 更新数据库
                 update_app_pages_records(self.request.pageId,
-                                         mul_result_path=self.absolute_path + 'mul_output/',
                                          release_state=4)
                 update_app_spaces_records(self.request.pageId)
 

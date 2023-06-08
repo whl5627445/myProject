@@ -24,6 +24,7 @@ class OmcSimulation(threading.Thread):
 
     def load_dependent_library(self):
         for key, val in self.request.envModelData.items():
+            log.info(key+val)
             if "/" in val:
                 # 初始化加载用户模型，key是名称，val是mo文件地址
                 log.info("(OMC)"+key + "初始化:" + str(self.omc_obj.loadFile("/home/simtek/code/" + val)))

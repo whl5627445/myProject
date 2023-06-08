@@ -418,6 +418,7 @@ func GrpcRunResult(appPageId string, singleSimulationInputData map[string]float6
 		TaskType: "run",
 		// 多轮仿真用到的参数
 		PageId:         appPageId,
+		MulResultPath:  appPageRecord.MulResultPath,
 		OutputValNames: outputNames,
 		InputValData:   inputValData,
 	}

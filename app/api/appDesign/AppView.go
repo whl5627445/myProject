@@ -5,10 +5,12 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"strings"
 	"time"
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/service"
 	"yssim-go/config"
+	"yssim-go/library/fileOperation"
 	"yssim-go/library/timeConvert"
 
 	"github.com/gin-gonic/gin"
@@ -378,12 +380,15 @@ func CreateAppPageView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
+	mulResultPath := "static/UserFiles/mul_result_path/" + userName + "/" + strings.ReplaceAll(item.PageName, ".", "-") + "/" + time.Now().Local().Format("20060102150405") + "/"
+	fileOperation.CreateFilePath(mulResultPath)
 	var pageNew DataBaseModel.AppPage
 	pageNew.ID = uuid.New().String()
 	pageNew.AppSpaceId = item.SpaceId
 	pageNew.PageName = item.PageName
 	pageNew.UserName = userName
 	pageNew.PagePath = item.Tag
+	pageNew.MulResultPath = mulResultPath
 	err = DB.Create(&pageNew).Error
 	if err != nil {
 		log.Println("创建app页面时保存数据库出现错误：", err)

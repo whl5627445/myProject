@@ -1,17 +1,14 @@
 import threading
-import time
-import zipfile
 from datetime import datetime
 from libs.function.defs import zip_folders
-from libs.function.run_result_json import update_item_to_json, delete_item_from_json
+from libs.function.run_result_json import delete_item_from_json
 import requests
 import pandas as pd
-from config.redis_config import R
-import json
 import os
 import configparser
-from libs.function.defs import update_app_pages_records,convert_list,update_app_spaces_records
+from libs.function.defs import update_app_pages_records,dymola_convert_list,update_app_spaces_records,dymola_res_list_to_csv_dict
 from libs.function.grpc_log import log
+import shutil
 
 config = configparser.ConfigParser()
 config.read('./config/grpc_config.ini')
@@ -26,7 +23,14 @@ class DmRunThread(threading.Thread):
         threading.Thread.__init__(self)
         self.state = "init"
         self.request = request
+        self.inputValData = request.inputValData
         update_app_pages_records(self.request.pageId, release_state=1)
+
+        self.input_data = dymola_convert_list(self.inputValData)
+        if len(self.input_data) == 1:  # 仿真任务
+            update_app_pages_records(self.request.pageId, simulate_state=1)
+        else:  # 发布任务
+            update_app_pages_records(self.request.pageId, release_state=1)
 
     def send_request(self):
         log.info("(Dymola)发送请求")
@@ -112,12 +116,10 @@ class DmRunThread(threading.Thread):
             fileName = ""
             if self.request.packageFilePath != "":
                 fileName = params_url + "/" + "/".join(self.request.packageFilePath.split("/")[5:])
-            # json_data = {"message": self.request.simulateModelName + " 开始多轮仿真"}
-            # R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
-            array_initial_values = list(self.request.inputValData.values())
-            input_data_length = len(array_initial_values[0].inputObjList)
+            # array_initial_values = list(self.request.inputValData.values())
+            # input_data_length = len(array_initial_values[0].inputObjList)
             # 如果input_data_length的程度为1，这是单次仿真
-            if input_data_length == 1:
+            if len(self.input_data) == 1:
                 simulateReqData = {
                     "startTime": self.request.simulationPraData["startTime"],
                     "stopTime": self.request.simulationPraData["stopTime"],
@@ -171,8 +173,7 @@ class DmRunThread(threading.Thread):
                     "taskId": self.request.uuid,
                     "dymolaLibraries": dymola_libraries,
                     "initialNames": list(self.request.inputValData.keys()),
-                    "arrayInitialValues": [[v.inputObjList[i] for v in array_initial_values] for i in
-                                           range(len(array_initial_values[0].inputObjList))],
+                    "arrayInitialValues": self.input_data,
                     "finalNames": ["Time"] + list(self.request.outputValNames),
 
                 }
@@ -183,18 +184,29 @@ class DmRunThread(threading.Thread):
                 simulateResData = simulateRes.json()
 
                 log.info("(Dymola)dymola仿真结果："+str(simulateResData))
-                absolute_path = adsPath + self.request.resultFilePath
-                log.info("(Dymola)结果路径："+absolute_path)
+                mul_output_path = adsPath + self.request.mulResultPath
+                log.info("(Dymola)结果路径："+mul_output_path)
                 if simulateResData.get("code") == 200:
                     csv_data = simulateResData["data"]
-                    df = pd.DataFrame(csv_data)
-                    # 将DataFrame对象保存为CSV文件
-                    # df.to_csv(absolute_path + 'output.csv', index=False)
-                    df.to_csv(r"/home/simtek/code/" + absolute_path + 'output.csv', index=False)
-                    # 更新数据库
-                    update_app_pages_records(self.request.pageId,
-                                             single_simulation_result_path=absolute_path + 'output.csv')
+                    if os.path.exists(mul_output_path):
+                        shutil.rmtree(mul_output_path)
+                    # 创建新的文件夹
+                    os.mkdir(mul_output_path)
 
+                    csv_data_ = csv_data[1:]
+                    csv_dict_list = dymola_res_list_to_csv_dict(csv_data_, list(self.request.inputValData.keys()))
+                    if len(csv_dict_list) != len(self.input_data):
+                        log.info("(Dymola)输入个数和输出个数不一致")
+                        return False, "输入个数和输出个数不一致", ""
+                    else:
+                        for i in range(len(csv_dict_list)):
+                            csv_dict_list[i]["time"] = csv_data[0]
+                            df = pd.DataFrame(pd.DataFrame.from_dict(csv_dict_list[i], orient='index').values.T,
+                                              columns=list(csv_dict_list[i].keys()))
+                            csv_file_name = ""
+                            for s in self.input_data[i]:
+                                csv_file_name = csv_file_name + "_" + str(s)
+                            df.to_csv(mul_output_path + '{}.csv'.format(csv_file_name), index=False)
                     return True, None, simulateResData["code"]
 
                 else:
@@ -202,22 +214,31 @@ class DmRunThread(threading.Thread):
 
     def run(self):
         log.info("(Dymola)开启dymola仿真")
-        update_app_pages_records(self.request.pageId, release_state=2)
+        if len(self.input_data) == 1:  # 仿真任务
+            update_app_pages_records(self.request.pageId, simulate_state=2)
+        else:  # 发布任务
+            update_app_pages_records(self.request.pageId, release_state=2)
         res, err, code = self.send_request()
-        log.info("(Dymola)返回"+str(res)+str(err)+str(code))
+        log.info("(Dymola)send_request返回"+str(res)+str(err)+str(code))
         if res:
-            update_app_pages_records(self.request.pageId, release_state=4)
-            update_app_spaces_records(self.request.pageId)
-            # json_data = {"message": self.request.simulateModelName + " 模型仿真完成"}
-            # R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
+            if len(self.input_data) == 1:  # 仿真任务
+                update_app_pages_records(self.request.pageId, simulate_state=4)
+            else:  # 发布任务
+                update_app_pages_records(self.request.pageId, release_state=4)
+                update_app_spaces_records(self.request.pageId)
+
         elif code == 300:
-            update_app_pages_records(self.request.pageId, release_state=3)
-            # json_data = {"message": self.request.simulateModelName + " 结束任务"}
-            # R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
+            if len(self.input_data) == 1:  # 仿真任务
+                update_app_pages_records(self.request.pageId, simulate_state=3)
+            else:  # 发布任务
+                update_app_pages_records(self.request.pageId, release_state=3)
+
         else:
-            update_app_pages_records(self.request.pageId, release_state=3)
-            # json_data = {"message": self.request.simulateModelName + " 仿真失败"}
-            # R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
+            if len(self.input_data) == 1:  # 仿真任务
+                update_app_pages_records(self.request.pageId, simulate_state=3)
+            else:  # 发布任务
+                update_app_pages_records(self.request.pageId, release_state=3)
+
         self.state = "stopped"
         log.info("(Dymola)仿真线程执行完毕")
         delete_item_from_json(self.request.uuid)

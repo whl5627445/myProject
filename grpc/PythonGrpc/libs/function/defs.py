@@ -145,7 +145,7 @@ def zip_folders(folders, output_path):
                         archive.write(file_path, arcname=os.path.relpath(file_path, parent_folder))
 
 
-def convert_dict_to_list(dict_obj, PageId):
+def omc_convert_dict_to_list(dict_obj, page_id):
     # 定义待返回的结果列表
     result = []
 
@@ -154,7 +154,7 @@ def convert_dict_to_list(dict_obj, PageId):
     log.info("(OMC)需要修改的参数:" + str(keys))
     with Session() as session:
         app_pages_record = session.query(AppPages).filter(
-            AppPages.id == PageId).first()
+            AppPages.id == page_id).first()
         app_pages_record.naming_order = keys
         session.commit()
 
@@ -170,8 +170,22 @@ def convert_dict_to_list(dict_obj, PageId):
     return result
 
 
-def convert_list(lst):
+def dymola_convert_list(dict_obj):
+    # 定义一个字典的 key 的列表
+    keys = list(dict_obj.keys())
+    # 获取字典的值的列表
+    values = [dict_obj[k].inputObjList for k in keys]
     # 使用 itertools.product() 函数生成所有元素组合，并转换为结果列表
-    result = list(itertools.product(*lst))
+    result = list(itertools.product(*values))
     res = [list(t) for t in result]
     return res
+
+
+def dymola_res_list_to_csv_dict(input_data, input_names):
+    result = []
+    for i in range(0, len(input_data), len(input_names)):
+        row = {}
+        for j in range(len(input_names)):
+            row[input_names[j]] = input_data[i + j]
+        result.append(row)
+    return result

@@ -94,6 +94,7 @@ message SubmitTaskRequest{
   }
   repeated string outputValNames=13;
   string pageId = 15;
+  string mulResultPath = 17;
 }
 message SubmitTaskReply{
   bool ok = 1;
