@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"regexp"
 	"time"
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/service"
@@ -205,6 +206,13 @@ func CreateAppSpaceView(c *gin.Context) {
 	var res responseData
 	userName := c.GetHeader("username")
 	var item CreateAppSpaceData
+	matchSpaceName, _ := regexp.MatchString("^[0-9a-zA-Z_]+$", item.SpaceName)
+	if !matchSpaceName {
+		res.Err = "空间名称只能由字母数字下划线组成"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
@@ -345,6 +353,13 @@ func CreateAppPageView(c *gin.Context) {
 	userName := c.GetHeader("username")
 	var item CreateAppPageData
 	err := c.BindJSON(&item)
+	matchSpaceName, _ := regexp.MatchString("^[0-9a-zA-Z_]+$", item.PageName)
+	if !matchSpaceName {
+		res.Err = "页面名称只能由字母数字下划线组成"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
 	if err != nil {
 		log.Println("创建页面时验证数据出错：", err)
 		c.JSON(http.StatusBadRequest, "验证失败")
