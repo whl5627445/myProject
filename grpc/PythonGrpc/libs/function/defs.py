@@ -132,13 +132,19 @@ def zip_folders(folders, output_path):
                         archive.write(file_path, arcname=os.path.relpath(file_path, parent_folder))
 
 
-def convert_dict_to_list(dict_obj):
+def convert_dict_to_list(dict_obj,PageId):
     # 定义待返回的结果列表
     result = []
 
     # 定义一个字典的 key 的列表
     keys = list(dict_obj.keys())
     log.info("(OMC)需要修改的参数:" + str(keys))
+    with Session() as session:
+        app_pages_record = session.query(AppPages).filter(
+            AppPages.id == PageId).first()
+        app_pages_record.naming_order = keys
+        session.commit()
+
 
     # 获取字典的值的列表
     values = [dict_obj[k].inputObjList for k in keys]

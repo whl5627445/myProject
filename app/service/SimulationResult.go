@@ -558,7 +558,7 @@ func AppReleaseResult(appPageId string) (map[string]interface{}, error) {
 		}
 	}
 	resData["mul_simulate_data"] = csvData
-	resData["components_id"] = appPageRecord.ComponentsId
+	resData["naming_order"] = appPageRecord.NamingOrder
 	return resData, nil
 
 }

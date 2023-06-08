@@ -101,3 +101,4 @@ class AppPages(Base):
     mul_result_path = Column(String)
     simulate_state = Column(Integer)
     release_state = Column(Integer)
+    naming_order = Column(JSON)

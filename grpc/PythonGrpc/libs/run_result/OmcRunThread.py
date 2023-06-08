@@ -23,7 +23,7 @@ class OmcRunThread(threading.Thread):
         self.request = request
         self.csv_data = []
         update_item_to_json(self.uuid, {"id": self.uuid, "run_states": "init", })
-        self.input_data = convert_dict_to_list(self.inputValData)
+        self.input_data = convert_dict_to_list(self.inputValData,self.request.pageId)
 
         if len(self.input_data) == 1:  # 仿真任务
             update_app_pages_records(self.request.pageId, simulate_state=1)

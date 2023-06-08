@@ -66,7 +66,7 @@ type AppPage struct {
 	MulResultPath   string         `gorm:"column:mul_result_path"`
 	SimulateState   int            `gorm:"column:simulate_state"`
 	ReleaseState    int            `gorm:"column:release_state"`
-	ComponentsId    datatypes.JSON `gorm:"column:components_id"`
+	NamingOrder     datatypes.JSON `gorm:"column:naming_order"`
 	AlignmentLine   datatypes.JSON `gorm:"column:alignment_line"`
 	CreatedAt       *time.Time     `gorm:"column:create_time;autoCreateTime"`
 	UpdatedAt       *time.Time     `gorm:"column:update_time"`
