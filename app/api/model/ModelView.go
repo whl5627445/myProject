@@ -60,7 +60,11 @@ func GetUserRootModelView(c *gin.Context) {
 		# 获取左侧模型列表接口， 此接口获取系统模型和用户上传模型的根节点列表，暂时没有图标信息
 	*/
 	userName := c.GetHeader("username")
-	userSpaceId := c.GetHeader("space_id")
+
+	userSpaceId := c.Query("space_id")
+	if userSpaceId == "" {
+		userSpaceId = c.GetHeader("space_id")
+	}
 	if userSpaceId == "" {
 		c.JSON(http.StatusBadRequest, "")
 	}
@@ -1230,7 +1234,8 @@ func SearchModelView(c *gin.Context) {
 		## parent: 需要搜索的关键字的父节点
 	*/
 	username := c.GetHeader("username")
-	userSpaceId := c.GetHeader("space_id")
+	//userSpaceId := c.GetHeader("space_id")
+	userSpaceId := c.Query("space_id")
 	keywords := c.Query("keywords")
 	parent := c.Query("parent")
 	var res responseData
