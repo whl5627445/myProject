@@ -181,3 +181,8 @@ type CreateComponentBasesData struct {
 	Opacity            int            `json:"opacity" binding:""`
 	OtherConfiguration datatypes.JSON `json:"other_configuration" binding:""`
 }
+
+type SetPageAlignmentLineData struct {
+	PageId           string                 `json:"page_id" binding:"required"`
+	AlignmentLineMap map[string]interface{} `json:"alignment_line" binding:"required"`
+}

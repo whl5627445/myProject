@@ -48,5 +48,8 @@ func AppDesignRouter(g *gin.Engine) {
 
 		Models.POST("/components/basic/information/set", API.SetComponentBasicInformationView)
 		Models.GET("/components/basic/information/get", API.GetComponentBasicInformationView)
+
+		Models.POST("/page/alignment-line/set", API.SetPageAlignmentLineView)
+		Models.GET("/page/alignment-line/get", API.GetPageAlignmentLineView)
 	}
 }

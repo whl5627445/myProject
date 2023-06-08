@@ -513,7 +513,7 @@ func DeleteAppPageView(c *gin.Context) {
 
 func EditAppPageDesignView(c *gin.Context) {
 	/*
-		# 修改app页面设计
+		# 更新app设计器基础数据
 	*/
 	var res responseData
 	userName := c.GetHeader("username")
@@ -1051,6 +1051,9 @@ func AppPagePreviewView(c *gin.Context) {
 }
 
 func SetComponentBasicInformationView(c *gin.Context) {
+	/*
+		# 设置web应用页面基础组件接口
+	*/
 	var res responseData
 	//userName := c.GetHeader("username")
 	var item CreateComponentBasesData
@@ -1094,16 +1097,48 @@ func SetComponentBasicInformationView(c *gin.Context) {
 }
 
 func GetComponentBasicInformationView(c *gin.Context) {
+	/*
+		# 获取web应用页面基础组件接口
+	*/
 	var res responseData
-	//id := c.Query("id")
 
 	var component []DataBaseModel.AppComponentBases
 	DB.Find(&component)
 
-	//if err != nil {
-	//	c.JSON(http.StatusBadRequest, "not found")
-	//	return
-	//}
 	res.Data = component
+	c.JSON(http.StatusOK, res)
+}
+
+func SetPageAlignmentLineView(c *gin.Context) {
+	/*
+		# 设置web应用页面对齐线
+	*/
+
+	var res responseData
+	//userName := c.GetHeader("username")
+	var item SetPageAlignmentLineData
+	err := c.BindJSON(&item)
+	if err != nil {
+		log.Println("", err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	var alignmentLine DataBaseModel.AppPage
+	DB.Model(&alignmentLine).Where("id = ? ", item.PageId).Update("alignment_line", item.AlignmentLineMap)
+	res.Msg = "设置成功!"
+	c.JSON(http.StatusOK, res)
+}
+
+func GetPageAlignmentLineView(c *gin.Context) {
+	/*
+		# 获取web应用页面对齐线
+	*/
+	var res responseData
+	pageId := c.Query("page_id")
+
+	var page DataBaseModel.AppPage
+	DB.Where("id = ? ", pageId).First(&page)
+
+	res.Data = page.AlignmentLine
 	c.JSON(http.StatusOK, res)
 }
