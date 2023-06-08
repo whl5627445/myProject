@@ -34,10 +34,15 @@ func MultipleSimulateView(c *gin.Context) {
 	err = service.GrpcRunResult(item.AppPageId, item.SingleSimulationInputData)
 	if err != nil {
 		log.Println(err)
-		c.JSON(http.StatusBadRequest, "多轮仿真失败！")
+		c.JSON(http.StatusBadRequest, "任务提交失败！")
 		return
 	}
-	res.Msg = "任务提交成功，等待多轮仿真完成。"
+	if item.SingleSimulationInputData != nil {
+		res.Msg = "任务提交成功，等待仿真完成。"
+	} else {
+		res.Msg = "任务提交成功，等待发布完成。"
+	}
+
 	c.JSON(http.StatusOK, res)
 	return
 
