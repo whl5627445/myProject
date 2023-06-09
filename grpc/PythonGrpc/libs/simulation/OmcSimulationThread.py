@@ -98,11 +98,13 @@ class OmcSimulation(threading.Thread):
 
         # 仿真
         self.state = "running"
+        time1 = time.time()
         cmd = [absolute_path + "result"]
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         self.run_pid = process.pid
         # 获取命令行输出结果
         output, error = process.communicate()
+        time2 = time.time()
         if error:
             log.info("(OMC)仿真失败,error:"+str(error))
             update_simulate_records(uuid=self.uuid,
@@ -126,7 +128,7 @@ class OmcSimulation(threading.Thread):
                                         simulate_result_str=simulate_result_str,
                                         simulate_status="4",
                                         simulate_start="0",
-                                        # simulate_start_time=str(self.processStartTime),
+                                        result_run_time=time2-time1,
                                         simulate_end_time=int(time.time()),
                                         another_name=new_another_name(self.request.simulatePackageId)
                                         )

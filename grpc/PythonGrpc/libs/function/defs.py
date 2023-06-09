@@ -47,7 +47,8 @@ def update_app_spaces_records(page_id):
 
 def update_simulate_records(uuid, simulate_status=None, simulate_result_str=None, simulate_start=None,
                             simulate_start_time=None,
-                            simulate_end_time=None, simulate_model_result_path=None, another_name=None
+                            simulate_end_time=None, simulate_model_result_path=None, another_name=None,
+                            result_run_time=None
                             ):
     with Session() as session:
         processDetails = session.query(YssimSimulateRecords).filter(
@@ -67,6 +68,9 @@ def update_simulate_records(uuid, simulate_status=None, simulate_result_str=None
             processDetails.simulate_model_result_path = simulate_model_result_path  # 仿真结果文件路径
         if another_name:
             processDetails.another_name = another_name  # 结果记录别名
+        if result_run_time:
+            processDetails.result_run_time = result_run_time  # 可执行文件的运行时间
+
         session.commit()
 
 
@@ -74,6 +78,7 @@ def update_compile_records(uuid,
                            compile_status=None,
                            compile_start_time=None,
                            compile_stop_time=None,
+                           result_run_time=None
                            ):
     with Session() as session:
         data_sources_record = session.query(AppDataSources).filter(
@@ -85,6 +90,8 @@ def update_compile_records(uuid,
             data_sources_record.compile_start_time = compile_start_time  # 仿真开始时间
         if compile_stop_time:
             data_sources_record.compile_stop_time = compile_stop_time  # 仿真结束时间
+        if result_run_time:
+            data_sources_record.result_run_time = result_run_time
         session.commit()
 
 

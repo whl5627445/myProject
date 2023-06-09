@@ -1,5 +1,5 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import create_engine, Column, String, Integer, Text, DateTime, JSON, Boolean
+from sqlalchemy import create_engine, Column, String, Integer, Text, DateTime, JSON, Boolean,Float
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import QueuePool
 
@@ -50,6 +50,7 @@ class YssimSimulateRecords(Base):
     userspace_id = Column(String)
     simulate_start = Column(String)
     method = Column(String)
+    result_run_time = Column(Float)
     another_name = Column(String)
     number_intervals = Column(String)
     env_model_data = Column(JSON)
@@ -82,6 +83,7 @@ class AppDataSources(Base):
     compile_status = Column(Integer)
     compile_start_time = Column(Integer)
     compile_stop_time = Column(Integer)
+    result_run_time = Column(Float)
     group_name = Column(String)
     data_source_name = Column(String)
     experiment_id = Column(String)

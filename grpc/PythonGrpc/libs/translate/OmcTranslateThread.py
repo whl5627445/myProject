@@ -88,11 +88,13 @@ class OmcTranslateThread(threading.Thread):
 
         # 仿真
         self.state = "running"
+        time1 = time.time()
         cmd = [absolute_path + "result"]
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         self.run_pid = process.pid
         # 获取命令行输出结果
         output, error = process.communicate()
+        time2 = time.time()
         if error:
             log.info("(OMC)仿真失败,error:"+str(error))
             update_compile_records(uuid=self.uuid, compile_status=3, compile_stop_time=int(time.time()))
@@ -105,7 +107,7 @@ class OmcTranslateThread(threading.Thread):
                 log.info("(OMC)模型仿真成功完成")
                 json_data = {"message": "(导出数据源)"+self.request.simulateModelName + " 模型导出完成"}
                 R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
-                update_compile_records(uuid=self.uuid, compile_status=4, compile_stop_time=int(time.time()))
+                update_compile_records(uuid=self.uuid, compile_status=4,result_run_time=time2-time1, compile_stop_time=int(time.time()))
 
             else:
                 log.info("(OMC)仿真失败:" + str(simulate_result_str))
