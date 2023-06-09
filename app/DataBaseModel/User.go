@@ -7,24 +7,24 @@ import (
 )
 
 type YssimUserSpace struct {
-	ID            string         `gorm:"primaryKey"`
-	SpaceName     string         `gorm:"column:space_name"`
-	UserName      string         `gorm:"column:username"`
-	Description   string         `gorm:"column:description"`
-	Background    string         `gorm:"column:background"`
-	IconColor     string         `gorm:"column:icon_color"`
-	Icon          string         `gorm:"column:icon"`
-	Collect       bool           `gorm:"column:collect"`
+	ID            string         `gorm:"primaryKey;type:varchar(128)"`
+	SpaceName     string         `gorm:"column:space_name;type:varchar(32)"`
+	UserName      string         `gorm:"column:username;type:varchar(32)"`
+	Description   string         `gorm:"column:description;type:varchar(128)"`
+	Background    string         `gorm:"column:background;type:varchar(32)"`
+	IconColor     string         `gorm:"column:icon_color;type:varchar(32)"`
+	Icon          string         `gorm:"column:icon;type:varchar(32)"`
+	Collect       bool           `gorm:"column:collect;type:bool"`
 	CreatedAt     *time.Time     `gorm:"column:create_time;autoCreateTime"`
 	UpdatedAt     *time.Time     `gorm:"column:update_time"`
-	LastLoginTime int64          `gorm:"column:last_login_time"`
+	LastLoginTime int64          `gorm:"column:last_login_time;type:int"`
 	Deleted       gorm.DeletedAt `gorm:"column:deleted_at"`
 }
 
 type YssimUserSettings struct {
-	//ID          string     `gorm:"AUTO_INCREMENT"`   坑，创建记录的时候自增失败
-	UserName    string     `gorm:"column:username"`
-	GridDisplay bool       `gorm:"column:grid_display" json:"grid_display" binding:"required"`
+	ID          string     `gorm:"primaryKey"`
+	UserName    string     `gorm:"column:username;type:varchar(32)"`
+	GridDisplay bool       `gorm:"column:grid_display;type:bool" json:"grid_display" binding:"required"`
 	CreatedAt   *time.Time `gorm:"column:create_time;autoCreateTime"`
 	UpdatedAt   *time.Time `gorm:"column:update_time"`
 }

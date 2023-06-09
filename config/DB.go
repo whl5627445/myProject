@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"time"
+	"yssim-go/app/DataBaseModel"
 
 	"gorm.io/gorm/logger"
 
@@ -35,3 +36,21 @@ func openMySql() *gorm.DB {
 }
 
 var DB = openMySql()
+
+func init() {
+	DB.AutoMigrate(
+		&DataBaseModel.YssimExperimentRecord{},
+		&DataBaseModel.YssimSimulateRecord{},
+		&DataBaseModel.YssimModels{},
+		&DataBaseModel.YssimModelsCollection{},
+		&DataBaseModel.YssimSnapshots{},
+		&DataBaseModel.YssimUserSpace{},
+		&DataBaseModel.YssimUserSettings{},
+
+		&DataBaseModel.AppDataSource{},
+		&DataBaseModel.AppSpace{},
+		&DataBaseModel.AppPage{},
+		&DataBaseModel.AppPageComponent{},
+		&DataBaseModel.AppComponentBases{},
+	)
+}
