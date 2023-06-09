@@ -6,7 +6,7 @@ import DyMat
 import pandas as pd
 from libs.function.xml_input import write_xml
 from libs.function.run_result_json import update_item_to_json, delete_item_from_json
-from libs.function.defs import update_app_pages_records, convert_dict_to_list, update_app_spaces_records
+from libs.function.defs import update_app_pages_records, omc_convert_dict_to_list, update_app_spaces_records
 from libs.function.grpc_log import log
 import shutil
 
@@ -22,7 +22,7 @@ class OmcRunThread(threading.Thread):
         self.request = request
         self.csv_data = []
         update_item_to_json(self.uuid, {"id": self.uuid, "run_states": "init", })
-        self.input_data = convert_dict_to_list(self.inputValData, self.request.pageId)
+        self.input_data = omc_convert_dict_to_list(self.inputValData, self.request.pageId)
 
         if len(self.input_data) == 1:  # 仿真任务
             update_app_pages_records(self.request.pageId, simulate_state=1)
@@ -38,11 +38,22 @@ class OmcRunThread(threading.Thread):
         else:  # 发布任务
             update_app_pages_records(self.request.pageId, release_state=2)
         # 进行多轮仿真
-        mul_output_path = r"/home/simtek/code/" + self.request.mulResultPath
-        if os.path.exists(mul_output_path):
-            shutil.rmtree(mul_output_path)
-        # 创建新的文件夹
-        os.mkdir(mul_output_path)
+        if self.request.mulResultPath:
+            mul_output_path = r"/home/simtek/code/" + self.request.mulResultPath
+            if os.path.exists(mul_output_path):
+                shutil.rmtree(mul_output_path)
+            # 创建新的文件夹
+            os.mkdir(mul_output_path)
+        else:
+            log.info("(OMC)mulResultPath路径不存在")
+            if len(self.input_data) == 1:
+                # 更新数据库
+                update_app_pages_records(self.request.pageId, simulate_state=3)
+            else:
+                # 更新数据库
+                update_app_pages_records(self.request.pageId, release_state=3)
+            self.state = "stopped"
+            return
         log.info("(OMC)一共需要执行{}轮".format(len(self.input_data)))
         for i in self.input_data:
             log.info("(OMC)进行第{}轮仿真".format(run_steps))

@@ -185,6 +185,8 @@ class DmRunThread(threading.Thread):
 
                 log.info("(Dymola)dymola仿真结果："+str(simulateResData))
                 mul_output_path = adsPath + self.request.mulResultPath
+                if self.request.mulResultPath is None:
+                    return False, "mulResultPath为空", ''
                 log.info("(Dymola)结果路径："+mul_output_path)
                 if simulateResData.get("code") == 200:
                     csv_data = simulateResData["data"]
