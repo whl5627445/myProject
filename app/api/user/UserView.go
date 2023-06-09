@@ -3,6 +3,7 @@ package API
 import (
 	"log"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 	"yssim-go/app/DataBaseModel"
@@ -105,6 +106,13 @@ func CreateUserSpaceView(c *gin.Context) {
 	var item CreateUserSpaceModel
 	err := c.BindJSON(&item)
 	if err != nil {
+		return
+	}
+	matchSpaceName, _ := regexp.MatchString("^[0-9a-zA-Z_]+$", item.SpaceName)
+	if !matchSpaceName {
+		res.Err = "空间名称只能由字母数字下划线组成"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
 		return
 	}
 	var space DataBaseModel.YssimUserSpace
