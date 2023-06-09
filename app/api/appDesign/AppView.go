@@ -143,6 +143,7 @@ func GetAppSpaceView(c *gin.Context) {
 	keyWords := c.Query("keywords")
 	release := c.Query("release")
 	collect := c.Query("collect")
+	order := c.Query("order")
 	var recentAppSpaceList []DataBaseModel.AppSpace
 	var allAppSpaceList []DataBaseModel.AppSpace
 	db := DB.Where("username = ?", userName)
@@ -152,15 +153,26 @@ func GetAppSpaceView(c *gin.Context) {
 	if collect == "1" {
 		db.Where("collect = ?", true)
 	}
+
+	rdb := db.Session(&gorm.Session{})
+	rdb.Where("last_login_time <> ?", 0).Order("last_login_time desc").Limit(5).Find(&recentAppSpaceList)
 	switch {
 	case release == "1":
 		db.Where("is_release = ?", true)
 	case release == "0":
 		db.Where("is_release = ?", false)
 	}
-	db = db.Session(&gorm.Session{})
-	db.Order("update_time desc").Find(&allAppSpaceList)
-	db.Where("last_login_time <> ?", 0).Order("last_login_time desc").Limit(5).Find(&recentAppSpaceList)
+	switch {
+	case order == "1":
+		db.Order("last_login_time desc")
+	case order == "2":
+		db.Order("last_login_time asc")
+	case order == "3":
+		db.Order("update_time asc")
+	case order == "4":
+		db.Order("update_time desc")
+	}
+	db.Find(&allAppSpaceList)
 	allAppSpace := make([]map[string]interface{}, 0)
 	recentAppSpace := make([]map[string]interface{}, 0)
 	for _, space := range allAppSpaceList {
@@ -174,6 +186,7 @@ func GetAppSpaceView(c *gin.Context) {
 			"icon":        space.Icon,
 			"icon_color":  space.IconColor,
 			"collect":     space.Collect,
+			"recent":      space.LastLoginTime,
 			"edit_time":   "编辑于" + editTime + "前",
 		}
 		allAppSpace = append(allAppSpace, d)
