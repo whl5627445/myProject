@@ -108,9 +108,9 @@ func CreateUserSpaceView(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	matchSpaceName, _ := regexp.MatchString("^[0-9a-zA-Z_]+$", item.SpaceName)
+	matchSpaceName, _ := regexp.MatchString("^[_0-9a-zA-Z\u4e00-\u9fa5]+$", item.SpaceName) // 由中文、字母、数字、下划线验证
 	if !matchSpaceName {
-		res.Err = "空间名称只能由字母数字下划线组成"
+		res.Err = "空间名称只能由中文、字母、数字、下划线组成"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
