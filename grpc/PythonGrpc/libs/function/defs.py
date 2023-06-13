@@ -1,4 +1,6 @@
 import re
+import time
+
 from config.db_config import Session, YssimSimulateRecords, AppDataSources, AppPages, AppSpaces
 from config.redis_config import R
 import json
@@ -98,7 +100,7 @@ def update_compile_records(uuid,
         session.commit()
 
 
-def update_app_pages_records(pages_id, mul_result_path=None, simulate_state=None, release_state=None):
+def update_app_pages_records(pages_id, mul_result_path=None, simulate_state=None, release_state=None, release_time=None, simulate_time=None, release_message_read=None,simulate_message_read=None):
     with Session() as session:
         app_pages_record = session.query(AppPages).filter(
             AppPages.id == pages_id).first()
@@ -108,6 +110,14 @@ def update_app_pages_records(pages_id, mul_result_path=None, simulate_state=None
             app_pages_record.simulate_state = simulate_state
         if release_state:
             app_pages_record.release_state = release_state
+        if release_time:
+            app_pages_record.release_time = release_time
+        if simulate_time:
+            app_pages_record.simulate_time = simulate_time
+        if release_message_read:
+            app_pages_record.release_message_read = release_message_read
+        if simulate_message_read:
+            app_pages_record.simulate_message_read = simulate_message_read
         session.commit()
 
 

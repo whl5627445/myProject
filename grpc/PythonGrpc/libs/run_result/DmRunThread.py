@@ -1,4 +1,5 @@
 import threading
+import time
 from datetime import datetime
 from libs.function.defs import zip_folders
 from libs.function.run_result_json import delete_item_from_json
@@ -242,5 +243,11 @@ class DmRunThread(threading.Thread):
                 update_app_pages_records(self.request.pageId, release_state=3)
 
         self.state = "stopped"
+        if len(self.input_data) == 1:  # 仿真任务
+            update_app_pages_records(self.request.pageId, simulate_time=time.time())
+            update_app_pages_records(self.request.pageId, simulate_message_read=False)
+        else:
+            update_app_pages_records(self.request.pageId, release_time=time.time())
+            update_app_pages_records(self.request.pageId, release_message_read=False)
         log.info("(Dymola)仿真线程执行完毕")
         delete_item_from_json(self.request.uuid)

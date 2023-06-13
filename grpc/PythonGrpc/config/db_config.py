@@ -105,6 +105,10 @@ class AppPages(Base):
     release_state = Column(Integer)
     naming_order = Column(JSON)
     app_space_id = Column(String)
+    release_time = Column(Integer)
+    release_message_read = Column(Boolean)
+    simulate_time = Column(Integer)
+    simulate_message_read = Column(Boolean)
 
 
 class AppSpaces(Base):

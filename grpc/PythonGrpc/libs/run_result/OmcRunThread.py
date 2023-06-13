@@ -2,6 +2,8 @@ import threading
 import os
 import subprocess
 import json
+import time
+
 import DyMat
 import pandas as pd
 from libs.function.xml_input import write_xml
@@ -53,6 +55,7 @@ class OmcRunThread(threading.Thread):
                 # 更新数据库
                 update_app_pages_records(self.request.pageId, release_state=3)
             self.state = "stopped"
+            update_app_pages_records(self.request.pageId, update_time=time.time())
             return
         log.info("(OMC)一共需要执行{}轮".format(len(self.input_data)))
         for i in self.input_data:
@@ -130,5 +133,11 @@ class OmcRunThread(threading.Thread):
             else:
                 # 更新数据库
                 update_app_pages_records(self.request.pageId, release_state=3)
+        if len(self.input_data) == 1:  # 仿真任务
+            update_app_pages_records(self.request.pageId, simulate_time=time.time())
+            update_app_pages_records(self.request.pageId, simulate_message_read=False)
+        else:
+            update_app_pages_records(self.request.pageId, release_time=time.time())
+            update_app_pages_records(self.request.pageId, release_message_read=False)
         self.state = "stopped"
         delete_item_from_json(self.uuid)

@@ -49,28 +49,32 @@ type AppDataSource struct {
 }
 
 type AppPage struct {
-	ID              string         `gorm:"primaryKey;type:varchar(128)"`
-	UserName        string         `gorm:"column:username;type:varchar(32)"`
-	AppSpaceId      string         `gorm:"column:app_space_id;type:varchar(128)"`
-	Input           datatypes.JSON `gorm:"column:input;type:json"`
-	Output          datatypes.JSON `gorm:"column:output;type:json"`
-	PageName        string         `gorm:"column:page_name;type:varchar(32)"`
-	PagePath        string         `gorm:"column:page_path;type:varchar(32)"`
-	DataSourceId    string         `gorm:"column:data_source_id;type:varchar(128)"`
-	PageWidth       int            `gorm:"column:page_width;type:int"`
-	PageHeight      int            `gorm:"column:page_height;type:int"`
-	Background      string         `gorm:"column:background;type:varchar(64)"`
-	Color           string         `gorm:"column:color;type:varchar(32)"`
-	BackgroundColor string         `gorm:"column:background_color;type:varchar(32)"`
-	Release         bool           `gorm:"column:is_release;type:bool"`
-	MulResultPath   string         `gorm:"column:mul_result_path;type:varchar(128)"`
-	SimulateState   int            `gorm:"column:simulate_state;type:int"`
-	ReleaseState    int            `gorm:"column:release_state;type:int"`
-	NamingOrder     datatypes.JSON `gorm:"column:naming_order;type:json"`
-	AlignmentLine   datatypes.JSON `gorm:"column:alignment_line;type:json"`
-	CreatedAt       *time.Time     `gorm:"column:create_time;autoCreateTime"`
-	UpdatedAt       *time.Time     `gorm:"column:update_time"`
-	Deleted         gorm.DeletedAt `gorm:"column:deleted_at"`
+	ID                  string         `gorm:"primaryKey;type:varchar(128)"`
+	UserName            string         `gorm:"column:username;type:varchar(32)"`
+	AppSpaceId          string         `gorm:"column:app_space_id;type:varchar(128)"`
+	Input               datatypes.JSON `gorm:"column:input;type:json"`
+	Output              datatypes.JSON `gorm:"column:output;type:json"`
+	PageName            string         `gorm:"column:page_name;type:varchar(32)"`
+	PagePath            string         `gorm:"column:page_path;type:varchar(32)"`
+	DataSourceId        string         `gorm:"column:data_source_id;type:varchar(128)"`
+	PageWidth           int            `gorm:"column:page_width;type:int"`
+	PageHeight          int            `gorm:"column:page_height;type:int"`
+	Background          string         `gorm:"column:background;type:varchar(64)"`
+	Color               string         `gorm:"column:color;type:varchar(32)"`
+	BackgroundColor     string         `gorm:"column:background_color;type:varchar(32)"`
+	Release             bool           `gorm:"column:is_release;type:bool"`
+	MulResultPath       string         `gorm:"column:mul_result_path;type:varchar(128)"`
+	SimulateState       int            `gorm:"column:simulate_state;type:int"`
+	SimulateMessageRead bool           `gorm:"column:simulate_message_read;type:bool"`
+	SimulateTime        int            `gorm:"column:simulate_time;type:int"`
+	ReleaseMessageRead  bool           `gorm:"column:release_message_read;type:bool"`
+	ReleaseState        int            `gorm:"column:release_state;type:int"`
+	ReleaseTime         int            `gorm:"column:release_time;type:int"`
+	NamingOrder         datatypes.JSON `gorm:"column:naming_order;type:json"`
+	AlignmentLine       datatypes.JSON `gorm:"column:alignment_line;type:json"`
+	CreatedAt           *time.Time     `gorm:"column:create_time;autoCreateTime"`
+	UpdatedAt           *time.Time     `gorm:"column:update_time"`
+	Deleted             gorm.DeletedAt `gorm:"column:deleted_at"`
 }
 
 type AppComponentBases struct {
