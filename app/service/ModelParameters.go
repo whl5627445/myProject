@@ -77,6 +77,7 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 	m.modelName = modelName
 	m.classAll = omc.OMC.GetInheritedClassesListAll([]string{modelName})
 	bEnd := false
+	extend := false
 	modelInheritedClasses := map[string]bool{}
 	extendsModifierNamesList := []string{}
 	extendsModifierNamesMap := make(map[string]map[string]string, 0)
@@ -91,6 +92,7 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 				inheritedClassAll := omc.OMC.GetInheritedClassesListAll([]string{d.([]interface{})[2].(string)})
 				m.classAll = inheritedClassAll
 				bEnd = true
+				extend = true
 				break
 			}
 		}
@@ -125,7 +127,7 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 			continue
 		}
 		deduplicationMap[varName] = true
-		dataDefault := map[string]interface{}{"tab": "General", "type": "Normal", "group": "Parameters"}
+		dataDefault := map[string]interface{}{"tab": "General", "type": "Normal", "group": "Parameters", "is_extend": extend, "extend_name": m.modelName}
 
 		if p[2] != "-" {
 			m.className = p[2].(string)
@@ -139,7 +141,8 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 				break
 			}
 		}
-		if p[5] == "protected" || IsExtendsModifierFinal == "true" || p[6] == "true" {
+
+		if p[5] == "protected" || IsExtendsModifierFinal == "true" || p[6] == true {
 			continue
 		}
 		dataDefault["name"] = varName
