@@ -526,17 +526,16 @@ func CopyClassView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
-	if strings.Contains(item.ModelName, ".") {
-
-		res.Err = "模型名称不能包含: \".\""
+	matchSpaceName1, _ := regexp.MatchString("^[_a-zA-Z0-9]+$", item.ModelName) // 字母、数字、下划线验证
+	matchSpaceName2, _ := regexp.MatchString("^[a-zA-Z_]", item.ModelName)      // 字母、下划线验证
+	if !matchSpaceName1 {
+		res.Err = "名称只能由字母数字下划线组成"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	re1, _ := regexp.Compile("^[a-zA-Z_]")
-	f := re1.Find([]byte(item.ModelName))
-	if f == nil {
-		res.Err = "名称请以字母和下划线开头"
+	if !matchSpaceName2 {
+		res.Err = "名称只能由字母下划线开头"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
