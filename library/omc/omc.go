@@ -29,10 +29,10 @@ type instance struct {
 var OMCInstance instance
 
 func StartOMC(result chan bool) {
+	OMCInstance.Mu.Lock()
 	if OMCInstance.Cmd != nil {
 		return
 	}
-	OMCInstance.Mu.Lock()
 	cmd := exec.Command("omc", "--interactive=zmq", "--locale=C", "-z=omc", "--interactivePort=23456")
 	err := cmd.Start()
 	if err != nil {
@@ -58,6 +58,11 @@ func StopOMC() {
 	if OMCInstance.Start == false {
 		return
 	}
+	for {
+		if len(config.ModelCodeChan) == 0 {
+			break
+		}
+	}
 	if OMCInstance.Cmd != nil {
 		OMCInstance.Cmd.Process.Kill()
 		OMCInstance.Cmd = nil
@@ -65,6 +70,7 @@ func StopOMC() {
 	OMCInstance.Start = false
 	OMC = nil
 	config.UserSpaceId = ""
+	log.Printf("omc实例信息： %#v", OMCInstance)
 	log.Println("omc进程已停止")
 	return
 }

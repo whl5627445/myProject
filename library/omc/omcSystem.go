@@ -123,7 +123,7 @@ func (o *ZmqObject) SetOptions() {
 	o.SendExpressionNoParsed("setCommandLineOptions(\"+ignoreSimulationFlagsAnnotation=false\")")
 	o.SendExpressionNoParsed("setCommandLineOptions(\"+ignoreCommandLineOptionsAnnotation=false\")")
 	o.SendExpressionNoParsed("setCommandLineOptions(\"--simCodeTarget=C\")")
-	//o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nogen,noevalfunc,newInst,nfAPI\")")
+	o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nfAPI\")")
 	//o.SendExpressionNoParsed("setCommandLineOptions(\"--matchingAlgorithm=PFPlusExt --indexReductionMethod=dynamicStateSelection\")")
 	o.SendExpressionNoParsed("setModelicaPath(\"/usr/lib/omlibrary\")")
 	o.SendExpressionNoParsed("setCommandLineOptions(\"--matchingAlgorithm=PFPlusExt --indexReductionMethod=dynamicStateSelection --allowNonStandardModelica=reinitInAlgorithms -d=initialization,NLSanalyticJacobian\")")
@@ -1286,13 +1286,13 @@ func (o *ZmqObject) DeleteComponentParameter(varName, className string) bool {
 
 func (o *ZmqObject) GetIconAndDiagramAnnotations(classNameList []string, isIcon bool) []interface{} {
 	var data []interface{}
-	ctx := context.Background()
+	//ctx := context.Background()
 	var msg []byte
 	for _, name := range classNameList {
 		nType := o.GetClassRestriction(classNameList[len(classNameList)-1])
-		if nType != "connector" && nType != "expandable connector" {
-			msg, _ = allModelCache.HGet(ctx, userName+"-yssim-componentGraphicsData", name).Bytes()
-		}
+		//if nType != "connector" && nType != "expandable connector" {
+		//	msg, _ = allModelCache.HGet(ctx, userName+"-yssim-componentGraphicsData", name).Bytes()
+		//}
 		if len(msg) > 0 && string(msg) != "null" {
 			var d []interface{}
 			err := sonic.Unmarshal(msg, &d)
@@ -1308,8 +1308,8 @@ func (o *ZmqObject) GetIconAndDiagramAnnotations(classNameList []string, isIcon 
 			}
 		} else {
 			result = o.GetIconAnnotationLineData(name)
-			setData, _ := sonic.Marshal(result)
-			allModelCache.HSet(ctx, userName+"-yssim-componentGraphicsData", name, setData)
+			//setData, _ := sonic.Marshal(result)
+			//allModelCache.HSet(ctx, userName+"-yssim-componentGraphicsData", name, setData)
 		}
 		if len(result) > 8 {
 			result = result[8].([]interface{})
@@ -1321,19 +1321,19 @@ func (o *ZmqObject) GetIconAndDiagramAnnotations(classNameList []string, isIcon 
 
 func (o *ZmqObject) GetIconAnnotations(className string) []interface{} {
 	var data []interface{}
-	ctx := context.Background()
-	var msg []byte
-	msg, _ = allModelCache.HGet(ctx, userName+"-yssim-IconGraphicsData", className).Bytes()
-	if len(msg) > 0 && string(msg) != "null" {
-		err := sonic.Unmarshal(msg, &data)
-		if err != nil {
-			log.Println("err", err)
-			return nil
-		}
-		return data
-	}
+	//ctx := context.Background()
+	//var msg []byte
+	//msg, _ = allModelCache.HGet(ctx, userName+"-yssim-IconGraphicsData", className).Bytes()
+	//if len(msg) > 0 && string(msg) != "null" {
+	//	err := sonic.Unmarshal(msg, &data)
+	//	if err != nil {
+	//		log.Println("err", err)
+	//		return nil
+	//	}
+	//	return data
+	//}
 	data = o.GetIconAnnotationLineData(className)
-	setData, _ := sonic.Marshal(data)
-	allModelCache.HSet(ctx, userName+"-yssim-IconGraphicsData", className, setData)
+	//setData, _ := sonic.Marshal(data)
+	//allModelCache.HSet(ctx, userName+"-yssim-IconGraphicsData", className, setData)
 	return data
 }
