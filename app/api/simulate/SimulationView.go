@@ -2,6 +2,7 @@ package API
 
 import (
 	"fmt"
+	"log"
 	"math"
 	"net/http"
 	"strconv"
@@ -243,12 +244,12 @@ func SimulateResultSingularView(c *gin.Context) {
 	// 判断记录是否存在，有一条不存在就返回"not found"
 	var recordList []DataBaseModel.YssimSimulateRecord
 	err = DB.Where("id IN ? AND username = ?", recordIdList, username).Find(&recordList).Error
-	for i := 0; i < len(recordList); i++ {
-		if err != nil || recordList[i].SimulateStatus != "4" {
-			c.JSON(http.StatusBadRequest, "not found")
-			return
-		}
-	}
+	//for i := 0; i < len(recordList); i++ {
+	//	if err != nil || recordList[i].SimulateStatus != "4" {
+	//		c.JSON(http.StatusBadRequest, "not found")
+	//		return
+	//	}
+	//}
 	// 构建key为id，val为SimulateModelResultPath的健值对,降低时间复杂度
 	recordDict := map[string]DataBaseModel.YssimSimulateRecord{}
 	for _, record := range recordList {
@@ -652,7 +653,7 @@ func ExperimentParametersView(c *gin.Context) {
 }
 func CreateSnapshotView(c *gin.Context) {
 	/*
-		#xqd#创建试图(快照)接口
+		#xqd#创建视图(快照)接口
 	*/
 	var res responseData
 	var item snapshotCreatData
@@ -688,7 +689,7 @@ func CreateSnapshotView(c *gin.Context) {
 	}
 	err = DB.Create(&snapshot).Error
 	if err != nil {
-		fmt.Println("DB Create err:", err)
+		log.Println("DB Create err:", err)
 		res.Err = "创建失败，请稍后再试"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
