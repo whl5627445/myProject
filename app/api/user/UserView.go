@@ -151,7 +151,7 @@ func CreateUserSpaceView(c *gin.Context) {
 	if err != nil || !ok {
 		DB.Delete(&space)
 		res.Err = "创建失败，请稍后再试"
-		res.Status = 1
+		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
 	}

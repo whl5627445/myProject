@@ -1458,6 +1458,7 @@ func AppModelMarkView(c *gin.Context) {
 	DB.Where("package_id = ? AND username = ? AND group_name = ? AND data_source_name = ?", item.PackageId, userName, item.GroupName, item.DataSourceName).First(&record)
 	if record.ID != "" {
 		res.Err = "名称重复"
+		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
 	}
@@ -1479,6 +1480,7 @@ func AppModelMarkView(c *gin.Context) {
 	record = dataSource
 	if err != nil {
 		log.Println("标记数据源时创建数据库记录失败： ", err)
+		res.Status = 2
 		res.Err = "创建失败"
 		c.JSON(http.StatusOK, res)
 		return
@@ -1486,6 +1488,7 @@ func AppModelMarkView(c *gin.Context) {
 	_, err = service.GrpcTranslate(record)
 	if err != nil {
 		log.Println("提交任务失败： ", err)
+		res.Status = 2
 		res.Err = "创建失败"
 		c.JSON(http.StatusOK, res)
 		return

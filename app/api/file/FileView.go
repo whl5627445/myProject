@@ -361,7 +361,7 @@ func GetPackageFileView(c *gin.Context) {
 	filePath, err := service.ZipPackageStream(packageRecord.PackageName, packageRecord.FilePath)
 	if err != nil {
 		res.Err = "导出模型库失败，请稍后再试"
-		res.Status = 1
+		res.Status = 2
 		c.JSON(http.StatusInternalServerError, res)
 	}
 	res.Data = map[string]string{"url": filePath}
@@ -390,7 +390,7 @@ func GetResultFileView(c *gin.Context) {
 		res.Data = map[string]string{"url": resultRecord.SimulateModelResultPath + "result_res.mat"}
 	} else {
 		res.Err = "下载失败"
-		res.Status = 1
+		res.Status = 2
 	}
 	c.JSON(http.StatusOK, res)
 }
@@ -449,7 +449,7 @@ func GetFilterResultFileView(c *gin.Context) {
 		return
 	}
 	res.Err = "下载失败，请稍后再试"
-	res.Status = 1
+	res.Status = 2
 	c.JSON(http.StatusOK, res)
 }
 
