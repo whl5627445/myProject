@@ -195,7 +195,8 @@ class DmSimulation(threading.Thread):
                                     simulate_result_str="DM",
                                     simulate_start="0",
                                     simulate_end_time=str(time.time()),
-                                    another_name=new_another_name(self.request.simulatePackageId)
+                                    another_name=new_another_name(self.request.userName, self.request.simulateModelName, self.request.simulatePackageId, self.request.userSpaceId)
+
                                     )
             json_data = {"message": self.request.simulateModelName + " 模型仿真完成"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))

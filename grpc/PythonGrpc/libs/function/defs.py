@@ -8,12 +8,16 @@ import itertools
 from libs.function.grpc_log import log
 
 
-def new_another_name(package_id):
+def new_another_name(username: str, simulate_model_name: str, package_id: str, userspace_id: str) -> str:
+
     # 生产新的数据库结果别名
     another_name_list = []
     with Session() as session:
         record_list = session.query(YssimSimulateRecords).filter(
             YssimSimulateRecords.package_id == package_id,
+            YssimSimulateRecords.username == username,
+            YssimSimulateRecords.userspace_id == userspace_id,
+            YssimSimulateRecords.simulate_model_name == simulate_model_name,
             YssimSimulateRecords.simulate_status == "4",
             YssimSimulateRecords.deleted_at.is_(None),
         ).all()
@@ -30,7 +34,6 @@ def new_another_name(package_id):
                 max_suffix = suffix
 
     return "结果 " + str(max_suffix + 1)
-
 
 def update_app_spaces_records(page_id):
     # 发布完成更改app_space的发布状态is_release为True

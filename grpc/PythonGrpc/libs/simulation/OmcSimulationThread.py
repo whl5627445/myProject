@@ -130,7 +130,7 @@ class OmcSimulation(threading.Thread):
                                         simulate_start="0",
                                         result_run_time=time2-time1,
                                         simulate_end_time=int(time.time()),
-                                        another_name=new_another_name(self.request.simulatePackageId)
+                                        another_name=new_another_name(self.request.userName, self.request.simulateModelName, self.request.simulatePackageId, self.request.userSpaceId )
                                         )
 
             else:
