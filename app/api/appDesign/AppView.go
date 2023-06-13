@@ -98,6 +98,7 @@ func GetAppReleaseResultView(c *gin.Context) {
 	res.Msg = "读取成功。"
 	c.JSON(http.StatusOK, res)
 }
+
 func GetModelStateView(c *gin.Context) {
 	/*
 	   ## 获取仿真状态  0未发布 1初始化 2发布中 3 发布失败 4 发布完成
@@ -107,14 +108,41 @@ func GetModelStateView(c *gin.Context) {
 	var appPageRecord DataBaseModel.AppPage
 	DB.Where("id = ?", appPageId).First(&appPageRecord)
 	var res responseData
-	resData := map[string]int{
-		"ReleaseState":  appPageRecord.ReleaseState,
-		"SimulateState": appPageRecord.SimulateState,
+	resData := map[string]interface{}{
+		"release_state":         appPageRecord.ReleaseState,
+		"simulate_state":        appPageRecord.SimulateState,
+		"release_time":          appPageRecord.ReleaseTime,
+		"simulate_time":         appPageRecord.SimulateTime,
+		"simulate_message_read": appPageRecord.SimulateMessageRead,
+		"release_message_read":  appPageRecord.ReleaseMessageRead,
 	}
 	res.Data = resData
 	c.JSON(http.StatusOK, res)
-
 }
+
+func ModelStateMessageReadView(c *gin.Context) {
+	/*
+	   ## 告知服务器页面仿真或发布状态消息已被读取
+	*/
+	var item ModelStateMessageReadData
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	var appPageRecord DataBaseModel.AppPage
+	DB.Where("id = ?", item.AppPageId).First(&appPageRecord)
+	var res responseData
+	switch {
+	case item.MessageType == "simulate":
+		appPageRecord.SimulateMessageRead = true
+	case item.MessageType == "release":
+		appPageRecord.ReleaseMessageRead = true
+	}
+	DB.Save(&appPageRecord)
+	c.JSON(http.StatusOK, res)
+}
+
 func GetDataSourceGroupView(c *gin.Context) {
 	/*
 		# 获取用户数据源分组

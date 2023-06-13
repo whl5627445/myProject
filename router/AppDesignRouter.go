@@ -13,6 +13,7 @@ func AppDesignRouter(g *gin.Engine) {
 		Models.POST("/model/simulate/result", API.GetAppSimulateResultView)
 		Models.POST("/model/release/result", API.GetAppReleaseResultView)
 		Models.GET("/model/state/get", API.GetModelStateView)
+		Models.POST("/model/message/state/update", API.ModelStateMessageReadView)
 
 		Models.GET("/space/get", API.GetAppSpaceView)
 		Models.POST("/space/create", API.CreateAppSpaceView)
