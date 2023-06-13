@@ -45,6 +45,10 @@ func MultipleSimulateView(c *gin.Context) {
 	} else {
 		res.Msg = "任务提交成功，等待发布完成。"
 	}
+	updateTime := time.Now().Local()
+	var page DataBaseModel.AppPage
+	DB.Where("id = ?", item.AppPageId).First(&page)
+	DB.Model(DataBaseModel.AppSpace{}).Where("id = ? AND username = ?", page.AppSpaceId, page.UserName).Update("update_time", &updateTime)
 
 	c.JSON(http.StatusOK, res)
 	return
@@ -111,8 +115,8 @@ func GetModelStateView(c *gin.Context) {
 	resData := map[string]interface{}{
 		"release_state":         appPageRecord.ReleaseState,
 		"simulate_state":        appPageRecord.SimulateState,
-		"release_time":          appPageRecord.ReleaseTime,
-		"simulate_time":         appPageRecord.SimulateTime,
+		"release_time":          appPageRecord.ReleaseTime * 1000,
+		"simulate_time":         appPageRecord.SimulateTime * 1000,
 		"simulate_message_read": appPageRecord.SimulateMessageRead,
 		"release_message_read":  appPageRecord.ReleaseMessageRead,
 	}
@@ -256,7 +260,7 @@ func CreateAppSpaceView(c *gin.Context) {
 	}
 	matchSpaceName, _ := regexp.MatchString("^[_0-9a-zA-Z\u4e00-\u9fa5]+$", item.SpaceName) // 由中文、字母、数字、下划线验证
 	if !matchSpaceName {
-		res.Err = "空间名称只能由字母数字下划线组成"
+		res.Err = "空间名称只能由中文、字母、数字、下划线组成"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
@@ -302,6 +306,13 @@ func EditAppSpaceView(c *gin.Context) {
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	matchSpaceName, _ := regexp.MatchString("^[_0-9a-zA-Z\u4e00-\u9fa5]+$", item.SpaceName) // 由中文、字母、数字、下划线验证
+	if !matchSpaceName {
+		res.Err = "空间名称只能由中文、字母、数字、下划线组成"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
 		return
 	}
 	var space DataBaseModel.AppSpace
@@ -442,6 +453,8 @@ func CreateAppPageView(c *gin.Context) {
 		"id": pageNew.ID,
 	}
 	res.Msg = "创建成功"
+	updateTime := time.Now().Local()
+	DB.Model(DataBaseModel.AppSpace{}).Where("id = ? AND username = ?", item.SpaceId, userName).Update("update_time", &updateTime)
 	c.JSON(http.StatusOK, res)
 }
 
@@ -517,6 +530,13 @@ func EditAppPageView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
+	matchSpaceName, _ := regexp.MatchString("^[_0-9a-zA-Z\u4e00-\u9fa5]+$", item.PageName) // 由中文、字母、数字、下划线验证
+	if !matchSpaceName {
+		res.Err = "空间名称只能由中文、字母、数字、下划线组成"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
 	var page DataBaseModel.AppPage
 	var pageTagAndName DataBaseModel.AppPage
 	DB.Where("app_space_id = ? AND page_path = ? AND username = ? AND id <> ?", item.SpaceId, item.Tag, userName, item.PageId).Or("app_space_id = ? AND page_name = ? AND username = ? AND id <> ?", item.SpaceId, item.PageName, userName, item.PageId).First(&pageTagAndName)
@@ -547,6 +567,8 @@ func EditAppPageView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
+	updateTime := time.Now().Local()
+	DB.Model(DataBaseModel.AppSpace{}).Where("id = ? AND username = ?", item.SpaceId, userName).Update("update_time", &updateTime)
 	res.Msg = "编辑成功"
 	c.JSON(http.StatusOK, res)
 }
@@ -581,6 +603,8 @@ func DeleteAppPageView(c *gin.Context) {
 	}
 	DB.Model(DataBaseModel.AppSpace{}).Where("id = ?  AND username = ?", item.SpaceId, userName).Update("is_release", isRelease)
 	res.Msg = "删除成功"
+	updateTime := time.Now().Local()
+	DB.Model(DataBaseModel.AppSpace{}).Where("id = ? AND username = ?", item.SpaceId, userName).Update("update_time", &updateTime)
 	c.JSON(http.StatusOK, res)
 }
 
@@ -614,6 +638,8 @@ func EditAppPageDesignView(c *gin.Context) {
 		}
 	}
 	res.Msg = "编辑成功"
+	updateTime := time.Now().Local()
+	DB.Model(DataBaseModel.AppSpace{}).Where("id = ? AND username = ?", item.AppSpaceId, userName).Update("update_time", &updateTime)
 	c.JSON(http.StatusOK, res)
 
 }
@@ -676,6 +702,8 @@ func CreatePageComponentView(c *gin.Context) {
 		"id": pageComponent.ID,
 	}
 	res.Msg = "创建成功"
+	updateTime := time.Now().Local()
+	DB.Model(DataBaseModel.AppSpace{}).Where("id = ? AND username = ?", item.SpaceId, userName).Update("update_time", &updateTime)
 	c.JSON(http.StatusOK, res)
 }
 
@@ -793,6 +821,8 @@ func EditPageComponentView(c *gin.Context) {
 	}
 
 	res.Msg = "更新成功"
+	updateTime := time.Now().Local()
+	DB.Model(DataBaseModel.AppSpace{}).Where("id = ? AND username = ?", item.SpaceId, userName).Update("update_time", &updateTime)
 	c.JSON(http.StatusOK, res)
 }
 
@@ -823,6 +853,8 @@ func DeletePageComponentView(c *gin.Context) {
 		return
 	}
 	res.Msg = "删除成功"
+	updateTime := time.Now().Local()
+	DB.Model(DataBaseModel.AppSpace{}).Where("id = ? AND username = ?", page.AppSpaceId, userName).Update("update_time", &updateTime)
 	c.JSON(http.StatusOK, res)
 }
 
@@ -991,6 +1023,8 @@ func SetPageInputOutputView(c *gin.Context) {
 	page.DataSourceId = item.DataSourceId
 	DB.Save(&page)
 	res.Msg = "设置成功"
+	updateTime := time.Now().Local()
+	DB.Model(DataBaseModel.AppSpace{}).Where("id = ? AND username = ?", item.SpaceId, userName).Update("update_time", &updateTime)
 	c.JSON(http.StatusOK, res)
 }
 
@@ -1065,6 +1099,10 @@ func SetPageComponentInputOutputView(c *gin.Context) {
 	component.Interval = item.Interval
 	DB.Save(&component)
 	res.Msg = "设置成功"
+	updateTime := time.Now().Local()
+	var page DataBaseModel.AppPage
+	DB.Where("id = ?", component.PageId).First(&page)
+	DB.Model(DataBaseModel.AppSpace{}).Where("id = ? AND username = ?", page.AppSpaceId, page.UserName).Update("update_time", &updateTime)
 	c.JSON(http.StatusOK, res)
 }
 
@@ -1199,6 +1237,8 @@ func SetPageAlignmentLineView(c *gin.Context) {
 	var alignmentLine DataBaseModel.AppPage
 	DB.Model(&alignmentLine).Where("id = ? ", item.PageId).Update("alignment_line", item.AlignmentLineMap)
 	res.Msg = "设置成功!"
+	updateTime := time.Now().Local()
+	DB.Model(DataBaseModel.AppSpace{}).Where("id = ? AND username = ?", alignmentLine.AppSpaceId, alignmentLine.UserName).Update("update_time", &updateTime)
 	c.JSON(http.StatusOK, res)
 }
 
