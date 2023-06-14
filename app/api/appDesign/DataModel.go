@@ -163,7 +163,7 @@ type DataSourceRenameData struct {
 }
 
 type DeleteDatasourceData struct {
-	DataSourceID string `json:"data_source_id" binding:"required"`
+	DataSourceID []string `json:"data_source_id" binding:"required"`
 }
 
 type CreateComponentBasesData struct {

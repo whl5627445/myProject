@@ -903,6 +903,7 @@ func DatasourceDeleteView(c *gin.Context) {
 		# 删除数据源
 	*/
 	// TODO： 徐庆达
+	userName := c.GetHeader("username")
 	var res responseData
 	var item DeleteDatasourceData
 	err := c.BindJSON(&item)
@@ -912,7 +913,7 @@ func DatasourceDeleteView(c *gin.Context) {
 	}
 	// 删除数据库记录
 	var page DataBaseModel.AppDataSource
-	err = DB.Model(DataBaseModel.AppDataSource{}).Where("id = ?", item.DataSourceID).Delete(&page).Error
+	err = DB.Model(DataBaseModel.AppDataSource{}).Where("id IN ? AND username = ?", item.DataSourceID, userName).Delete(&page).Error
 	if err != nil {
 		log.Println("删除app数据源出现错误：", err)
 		res.Err = "删除失败，请稍后再试"
@@ -1007,6 +1008,7 @@ func GetPageInputOutputView(c *gin.Context) {
 		"data_source_id":   page.DataSourceId,
 		"data_source_name": dataSourceRecord.DataSourceName,
 		"group_name":       dataSourceRecord.GroupName,
+		"model_name":       dataSourceRecord.ModelName,
 	}
 	res.Data = data
 	c.JSON(http.StatusOK, res)
