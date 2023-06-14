@@ -991,6 +991,18 @@ func (o *ZmqObject) LoadFile(path string) bool {
 	return false
 }
 
+// LoadFileNoPwd LoadFile 加载mo文件
+func (o *ZmqObject) LoadFileNoPwd(path string) bool {
+	cmd := "loadFile(\"" + "/" + path + "\")"
+	log.Println("cmd", cmd)
+	result, ok := o.SendExpressionNoParsed(cmd)
+	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
+	if ok && string(result) == "true" {
+		return true
+	}
+	return false
+}
+
 // ParseString 解析Modelica字符串
 func (o *ZmqObject) ParseString(code, path string) (string, bool) {
 	jsonCode, _ := sonic.Marshal(code)

@@ -13,9 +13,9 @@ type YssimSimulateRecord struct {
 	UserspaceId             string         `gorm:"column:userspace_id;type:varchar(128)"`
 	ExperimentId            string         `gorm:"column:experiment_id;type:varchar(128)"`
 	UserName                string         `gorm:"column:username;type:varchar(32)"`
-	SimulateModelName       string         `gorm:"column:simulate_model_name;type:varchar(32)"`
-	SimulateModelResultPath string         `gorm:"column:simulate_model_result_path;type:varchar(32)"`
-	SimulateResultStr       string         `gorm:"column:simulate_result_str;type:varchar(256)"`
+	SimulateModelName       string         `gorm:"column:simulate_model_name;type:varchar(128)"`
+	SimulateModelResultPath string         `gorm:"column:simulate_model_result_path;type:varchar(256)"`
+	SimulateResultStr       string         `gorm:"column:simulate_result_str"`
 	SimulateStatus          string         `gorm:"column:simulate_status;type:varchar(32)"`
 	SimulateStartTime       int64          `gorm:"column:simulate_start_time;type:int"`
 	SimulateEndTime         int64          `gorm:"column:simulate_end_time;type:int"`

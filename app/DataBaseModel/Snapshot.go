@@ -14,8 +14,8 @@ type YssimSnapshots struct {
 	ExperimentId      string         `gorm:"column:experiment_id;type:varchar(128)"`
 	SnapshotName      string         `gorm:"column:snapshot_name;type:varchar(32)"`
 	UserName          string         `gorm:"column:username;type:varchar(32)"`
-	ModelName         string         `gorm:"column:model_name;type:varchar(32)"`
-	ComponentName     string         `gorm:"column:component_name;type:varchar(32)"`
+	ModelName         string         `gorm:"column:model_name;type:varchar(128)"`
+	ComponentName     string         `gorm:"column:component_name;type:varchar(128)"`
 	SimulateResultId  string         `gorm:"column:simulate_result_id;type:varchar(128)"`
 	SimulateResultObj datatypes.JSON `gorm:"column:simulate_result_obj;type:json"`
 	SimulateVarData   datatypes.JSON `gorm:"column:simulate_var_data;type:json"`

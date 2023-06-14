@@ -29,14 +29,14 @@ type AppDataSource struct {
 	UserName          string         `gorm:"column:username;type:varchar(32)"`
 	UserSpaceId       string         `gorm:"column:user_space_id;type:varchar(128)"`
 	PackageId         string         `gorm:"column:package_id;type:varchar(128)"`
-	ModelName         string         `gorm:"column:model_name;type:varchar(32)"`
+	ModelName         string         `gorm:"column:model_name;type:varchar(128)"`
 	CompileType       string         `gorm:"column:compile_type;type:varchar(128)"`
 	CompilePath       string         `gorm:"column:compile_path;type:varchar(128)"`
 	CompileStatus     int64          `gorm:"column:compile_status;type:int"`
 	CompileStartTime  int64          `gorm:"column:compile_start_time;type:int"`
 	CompileStopTime   int64          `gorm:"column:compile_stop_time;type:int"`
 	GroupName         string         `gorm:"column:group_name;type:varchar(32)"`
-	DataSourceName    string         `gorm:"column:data_source_name;type:varchar(32)"`
+	DataSourceName    string         `gorm:"column:data_source_name;type:varchar(128)"`
 	ExperimentId      string         `gorm:"column:experiment_id;type:varchar(32)"`
 	EnvModelData      datatypes.JSON `gorm:"column:env_model_data;type:json"`
 	StartTime         string         `gorm:"column:start_time;type:varchar(32)"`
@@ -65,9 +65,9 @@ type AppPage struct {
 	Release             bool           `gorm:"column:is_release;type:bool"`
 	MulResultPath       string         `gorm:"column:mul_result_path;type:varchar(128)"`
 	SimulateState       int            `gorm:"column:simulate_state;type:int"`
-	SimulateMessageRead bool           `gorm:"column:simulate_message_read;type:bool"`
+	SimulateMessageRead bool           `gorm:"column:simulate_message_read;type:bool;default:true"`
 	SimulateTime        int            `gorm:"column:simulate_time;type:int"`
-	ReleaseMessageRead  bool           `gorm:"column:release_message_read;type:bool"`
+	ReleaseMessageRead  bool           `gorm:"column:release_message_read;type:bool;default:true"`
 	ReleaseState        int            `gorm:"column:release_state;type:int"`
 	ReleaseTime         int            `gorm:"column:release_time;type:int"`
 	NamingOrder         datatypes.JSON `gorm:"column:naming_order;type:json"`
