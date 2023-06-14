@@ -517,6 +517,21 @@ func GetAppPageView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+func GetAppPageSpaceView(c *gin.Context) {
+	/*
+		# 查询app应用空间中的页面
+	*/
+
+	var res responseData
+	userName := c.GetHeader("username")
+	spaceId := c.Query("space_id")
+	path := c.Query("path")
+	var page DataBaseModel.AppPage
+	DB.Where("username = ? AND app_space_id = ? AND page_path = ?", userName, spaceId, path).First(&page)
+	res.Data = map[string]interface{}{"page_id": page.ID}
+	c.JSON(http.StatusOK, res)
+}
+
 func EditAppPageView(c *gin.Context) {
 	/*
 		# 修改app应用空间中的页面、web设计器页面

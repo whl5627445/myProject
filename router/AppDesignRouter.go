@@ -22,6 +22,7 @@ func AppDesignRouter(g *gin.Engine) {
 		Models.POST("/space/collect", API.AppSpaceCollectView)
 
 		Models.GET("/page/get", API.GetAppPageView)
+		Models.GET("/page/space/get", API.GetAppPageSpaceView)
 		Models.POST("/page/create", API.CreateAppPageView)
 		Models.POST("/page/edit", API.EditAppPageView)
 		Models.POST("/page/delete", API.DeleteAppPageView)
