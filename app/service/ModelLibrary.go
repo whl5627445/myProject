@@ -14,7 +14,7 @@ import (
 var r = config.R
 var redisKey = config.RedisCacheKey
 
-func ModelLibraryInitialization(packageModel []DataBaseModel.YssimModels) {
+func DefaultLibraryInitialization(packageModel []DataBaseModel.YssimModels) {
 	setOptions()
 	packageAll := GetLibraryAndVersions()
 
@@ -243,5 +243,32 @@ func refreshCache(packageAndVersion map[string]string) {
 			NewKeyValues = append(NewKeyValues, packageCacheValues[i])
 		}
 		r.HSet(ctx, redisKey, NewKeyValues)
+	}
+}
+
+func GetPackageInformation() map[string]map[string]string {
+	// 获取库的版本，和所在文件
+	data := map[string]map[string]string{}
+	loadedLibraries := omc.OMC.GetPackages()
+	for _, library := range loadedLibraries {
+		Information := omc.OMC.GetClassInformation(library)
+		if len(Information) > 0 {
+			libraryVersion := Information[14].(string)
+			fileName := Information[5].(string)
+			data[library] = map[string]string{"version": libraryVersion, "file": fileName}
+		}
+	}
+	return data
+}
+
+func LibraryInitialization(LibraryMap map[string]map[string]string, packageModel []DataBaseModel.YssimModels) {
+	if LibraryMap == nil {
+		DefaultLibraryInitialization(packageModel)
+		return
+	}
+	for name, information := range LibraryMap {
+		version := information["version"]
+		ok := omc.OMC.LoadFileNoPwd(information["file"])
+		log.Printf("初始化模型库：%s %s  %t \n", name, version, ok)
 	}
 }

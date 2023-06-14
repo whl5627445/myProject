@@ -11,6 +11,8 @@ import (
 	"yssim-go/app/service"
 	"yssim-go/library/omc"
 
+	"github.com/bytedance/sonic"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
@@ -1306,6 +1308,9 @@ func LoadModelView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
+	packageInformation := service.GetPackageInformation()
+	packageInformationJson, _ := sonic.Marshal(packageInformation)
+	DB.Model(DataBaseModel.YssimUserSpace{}).Where("id = ? AND username = ?", userSpaceId, username).Update("package_information", packageInformationJson)
 	res.Msg = "加载成功"
 	c.JSON(http.StatusOK, res)
 }
@@ -1339,6 +1344,10 @@ func UnLoadModelView(c *gin.Context) {
 		return
 	}
 	res.Msg = "卸载成功"
+	packageInformation := service.GetPackageInformation()
+	packageInformationJson, _ := sonic.Marshal(packageInformation)
+	DB.Model(DataBaseModel.YssimUserSpace{}).Where("id = ? AND username = ?", userSpaceId, username).Update("package_information", packageInformationJson)
+	res.Msg = "加载成功"
 	c.JSON(http.StatusOK, res)
 }
 
@@ -1402,19 +1411,23 @@ func LoginUserSpaceView(c *gin.Context) {
 		return
 	}
 	userName := c.GetHeader("username")
-	result := service.SetWorkSpaceId(&item.SpaceId)
-	if result {
-		res.Msg = "初始化完成"
-		c.JSON(http.StatusOK, res)
-		return
-	}
-
-	var space DataBaseModel.YssimUserSpace
-	DB.Model(space).Where("id = ? AND username = ?", item.SpaceId, userName).UpdateColumn("last_login_time", time.Now().Local().Unix())
+	//result := service.SetWorkSpaceId(&item.SpaceId)
+	//if result {
+	//	res.Msg = "初始化完成"
+	//	c.JSON(http.StatusOK, res)
+	//	return
+	//}
 
 	var packageModelAll []DataBaseModel.YssimModels
 	DB.Where("sys_or_user IN ?  AND default_version = ? AND userspace_id IN ?", []string{"sys", userName}, true, []string{"0", item.SpaceId}).Find(&packageModelAll)
-	service.ModelLibraryInitialization(packageModelAll)
+
+	DB.Model(DataBaseModel.YssimUserSpace{}).Where("id = ? AND username = ?", item.SpaceId, userName).UpdateColumn("last_login_time", time.Now().Local().Unix())
+	var space DataBaseModel.YssimUserSpace
+	DB.Model(space).Where("id = ? AND username = ?", item.SpaceId, userName).First(&space)
+	information, _ := space.PackageInformation.MarshalJSON()
+	packageInformation := map[string]map[string]string{}
+	sonic.Unmarshal(information, &packageInformation)
+	service.LibraryInitialization(packageInformation, packageModelAll)
 
 	res.Msg = "初始化完成"
 	c.JSON(http.StatusOK, res)

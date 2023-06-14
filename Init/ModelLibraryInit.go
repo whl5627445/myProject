@@ -17,7 +17,7 @@ func ModelLibraryInit() {
 	config.DB.Where("sys_or_user IN ? AND userspace_id IN ? AND default_version = ?", []string{"sys", userName}, []string{"0", userSpace.ID}, true).Find(&packageModelAll)
 
 	log.Println("初始化模型库...")
-	service.ModelLibraryInitialization(packageModelAll)
+	service.DefaultLibraryInitialization(packageModelAll)
 	service.SetWorkSpaceId(&userSpace.ID)
 	log.Println("模型库初始化完成")
 }
