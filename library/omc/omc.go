@@ -44,8 +44,10 @@ func StartOMC(result chan bool) {
 	UseTime := time.Now().Local()
 	OMCInstance.UseTime = &UseTime
 	OMC = OmcInit()
+	OMC.SetOptions()
 	OMCInstance.Mu.Unlock()
 	result <- true
+	//libraryInitialization()
 	err = cmd.Wait()
 	if err != nil {
 		log.Println("omc wait 出错：", err)
@@ -54,7 +56,6 @@ func StartOMC(result chan bool) {
 }
 
 func StopOMC() {
-
 	if OMCInstance.Start == false {
 		return
 	}
@@ -63,14 +64,26 @@ func StopOMC() {
 			break
 		}
 	}
+	OMCInstance.Mu.Lock()
 	if OMCInstance.Cmd != nil {
 		OMCInstance.Cmd.Process.Kill()
 		OMCInstance.Cmd = nil
 	}
 	OMCInstance.Start = false
 	OMC = nil
-	config.UserSpaceId = ""
+	OMCInstance.Mu.Unlock()
+	//config.UserSpaceId = ""
 	log.Printf("omc实例信息： %#v", OMCInstance)
 	log.Println("omc进程已停止")
 	return
 }
+
+//func libraryInitialization(LibraryMap map[string]map[string]string) {
+//	OMC.SetOptions()
+//	//log.Println("LibraryMap", config.LibraryMap)
+//	for name, information := range LibraryMap {
+//		version := information["version"]
+//		ok := OMC.LoadModel(information["file"], "")
+//		log.Printf("初始化模型库：%s %s  %t \n", name, version, ok)
+//	}
+//}
