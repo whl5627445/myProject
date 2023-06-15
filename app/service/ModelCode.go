@@ -41,7 +41,8 @@ func SaveModelCode(modelName, path string) bool {
 	if len(filesList) == 0 {
 		_, ok = fileOperation.CreateFile(path)
 	}
-	ok = SaveModelSource(modelName, path)
+	pwd, _ := os.Getwd()
+	ok = SaveModelSource(modelName, pwd+"/"+path)
 	return ok
 }
 
