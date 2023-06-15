@@ -29,8 +29,11 @@ type instance struct {
 var OMCInstance instance
 
 func StartOMC(result chan bool) {
+	time.Sleep(2 * time.Second)
 	OMCInstance.Mu.Lock()
 	if OMCInstance.Cmd != nil {
+		result <- true
+		logrus.Println("OMC实例已存在，无需重复启动")
 		return
 	}
 	cmd := exec.Command("omc", "--interactive=zmq", "--locale=C", "-z=omc", "--interactivePort=23456")
@@ -38,6 +41,7 @@ func StartOMC(result chan bool) {
 	if err != nil {
 		result <- false
 		logrus.Println("启动OMC实例失败， 错误： ", err)
+		return
 	}
 	OMCInstance.Start = true
 	OMCInstance.Cmd = cmd
