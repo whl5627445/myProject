@@ -600,6 +600,10 @@ func CopyClassView(c *gin.Context) {
 			data["model_name"] = item.ParentName + "." + item.ModelName
 		}
 		res.Data = data
+		packageInformation := service.GetPackageInformation()
+		packageInformationJson, _ := sonic.Marshal(packageInformation)
+		DB.Model(DataBaseModel.YssimUserSpace{}).Where("id = ? AND username = ?", userSpaceId, userName).Update("package_information", packageInformationJson)
+
 	} else {
 		res.Msg = msg
 		res.Status = 2

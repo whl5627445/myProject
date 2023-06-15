@@ -13,6 +13,8 @@ import (
 	"yssim-go/app/service"
 	"yssim-go/config"
 
+	"github.com/bytedance/sonic"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -91,7 +93,9 @@ func UploadModelPackageView(c *gin.Context) {
 				c.JSON(http.StatusOK, res)
 				return
 			}
-
+			packageInformation := service.GetPackageInformation()
+			packageInformationJson, _ := sonic.Marshal(packageInformation)
+			DB.Model(DataBaseModel.YssimUserSpace{}).Where("id = ? AND username = ?", userSpaceId, userName).Update("package_information", packageInformationJson)
 			res.Msg = packageName + " 上传成功"
 		}
 		c.JSON(http.StatusOK, res)
@@ -236,7 +240,6 @@ func CreateModelPackageView(c *gin.Context) {
 	if result {
 		saveResult := service.SaveModelCode(createPackageNameALL, newPackage.FilePath)
 		if saveResult {
-
 			res.Msg = "创建成功"
 			if item.Vars.InsertTo == "" {
 				res.Data = map[string]string{
@@ -251,7 +254,9 @@ func CreateModelPackageView(c *gin.Context) {
 					"id": newPackage.ID,
 				}
 			}
-
+			packageInformation := service.GetPackageInformation()
+			packageInformationJson, _ := sonic.Marshal(packageInformation)
+			DB.Model(DataBaseModel.YssimUserSpace{}).Where("id = ? AND username = ?", userSpaceId, username).Update("package_information", packageInformationJson)
 		} else {
 			DB.Create(&newPackage)
 			res.Err = "创建失败，请稍后再试"
