@@ -56,7 +56,6 @@ func (o *ZmqObject) SendExpression(cmd string) ([]interface{}, bool) {
 	}
 
 	//if time.Now().UnixNano()/1e6-s > 20 {
-	//log.Println("cmd: ", cmd)
 	//	log.Println("消耗时间: ", time.Now().UnixNano()/1e6-s)
 	//}
 	return parseData, true
@@ -89,6 +88,7 @@ func (o *ZmqObject) SendExpressionNoParsed(cmd string) ([]byte, bool) {
 	//	log.Println("cmd: ", cmd)
 	//	log.Println("消耗时间: ", time.Now().UnixNano()/1e6-s)
 	//}
+
 	return msg, true
 }
 
@@ -461,9 +461,9 @@ func (o *ZmqObject) GetClassNames(className string, all bool) []string {
 	var dataList []string
 	var cmd string
 	if all == true {
-		cmd = "getClassNames(" + className + ",true,true,false,false,true,false)"
+		cmd = "getClassNames(" + className + ",true,true,false,false,false,false)"
 	} else {
-		cmd = "getClassNames(" + className + ",false,false,false,false,true,false)"
+		cmd = "getClassNames(" + className + ",false,false,false,false,false,false)"
 	}
 
 	classNamesData, _ := o.SendExpression(cmd)
@@ -614,6 +614,25 @@ func (o *ZmqObject) SetElementModifierValue(className string, parameter string, 
 		code = "()"
 	}
 	cmd := "setElementModifierValue(" + className + ", " + parameter + ", $Code(" + code + "))"
+	data, ok := o.SendExpressionNoParsed(cmd)
+	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
+	if ok && string(data) == "Ok" {
+		return true
+	}
+	return false
+}
+
+// SetExtendsModifierValue  设置组件修饰符的值
+func (o *ZmqObject) SetExtendsModifierValue(className, extendsName, parameter, value string) bool {
+	// setExtendsModifierValue(test12345, Modelica.Blocks.Examples.PID_Controller, kinematicPTP.startTime, $Code(=10))
+	code := "=" + value + ""
+	if strings.HasPrefix(value, "redeclare") {
+		code = "(" + value + ")"
+	}
+	if value == "" {
+		code = "()"
+	}
+	cmd := "setExtendsModifierValue(" + className + ", " + extendsName + ", " + parameter + ", $Code(" + code + "))"
 	data, ok := o.SendExpressionNoParsed(cmd)
 	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
 	if ok && string(data) == "Ok" {
