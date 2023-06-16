@@ -425,6 +425,13 @@ func (g *graphicsData) data02(cData [][]interface{}, caData [][]interface{}, isI
 			data["classname"] = classname
 			data["name"] = cDataFilter[i][3]
 			data["original_name"] = cDataFilter[i][3]
+			data["extend_name"] = modelName
+			data["is_extend"] = func() bool {
+				if g.modelName == modelName {
+					return false
+				}
+				return true
+			}()
 
 			data["parent"] = parent
 			data["connector_sizing"] = cDataFilter[i][16]
