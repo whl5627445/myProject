@@ -337,8 +337,20 @@ func SetModelParametersView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	result := service.SetComponentModifierValue(item.ModelName, item.ParameterValue)
-	if result {
+	result := false
+	errParameterName := []string{}
+	for _, parameter := range item.Parameter {
+		if !parameter.IsExtend {
+			result = service.SetElementModifierValue(item.ModelName, parameter.ParameterName, parameter.ParameterValue)
+		} else {
+			result = service.SetExtendsModifierValue(item.ModelName, parameter.ExtendName, parameter.ParameterName, parameter.ParameterValue)
+		}
+		if !result {
+			errParameterName = append(errParameterName, parameter.ParameterName)
+		}
+	}
+
+	if len(errParameterName) == 0 {
 		service.ModelSave(item.ModelName)
 		res.Msg = "设置完成"
 	} else {

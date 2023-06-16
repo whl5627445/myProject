@@ -14,9 +14,16 @@ type modelGraphicsData struct {
 }
 
 type setComponentModifierValueData struct {
-	PackageId      string            `json:"package_id" binding:"required"`
-	ModelName      string            `json:"model_name" binding:"required"`
-	ParameterValue map[string]string `json:"parameter_value" binding:"required"`
+	PackageId string          `json:"package_id" binding:"required"`
+	ModelName string          `json:"model_name" binding:"required"`
+	Parameter []parameterData `json:"parameter" binding:"required"`
+}
+
+type parameterData struct {
+	ExtendName     string `json:"extend_name" binding:"required"`
+	IsExtend       bool   `json:"is_extend" binding:"required"`
+	ParameterName  string `json:"parameter_name" binding:"required"`
+	ParameterValue string `json:"parameter_value" binding:"required"`
 }
 
 type addComponentParametersData struct {

@@ -75,9 +75,11 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 	m.name = componentName
 	m.componentClassName = componentClassName
 	m.modelName = modelName
-	m.classAll = omc.OMC.GetInheritedClassesListAll([]string{modelName})
+	parentAndChild := map[string]string{}
+	m.classAll, parentAndChild = getInheritedClassesAndParent(modelName)
 	bEnd := false
 	extend := false
+	extendName := ""
 	modelInheritedClasses := map[string]bool{}
 	extendsModifierNamesList := []string{}
 	extendsModifierNamesMap := make(map[string]map[string]string, 0)
@@ -92,7 +94,6 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 				inheritedClassAll := omc.OMC.GetInheritedClassesListAll([]string{d.([]interface{})[2].(string)})
 				m.classAll = inheritedClassAll
 				bEnd = true
-				extend = true
 				break
 			}
 		}
@@ -106,7 +107,11 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 	for _, c := range m.classAll {
 		data := omc.OMC.GetElements(c)
 		for _, d := range data {
-			dd := append(d.([]interface{}), c)
+			class := parentAndChild[c]
+			if class == "" {
+				class = c
+			}
+			dd := append(d.([]interface{}), class)
 			m.components = append(m.components, dd)
 		}
 	}
@@ -127,7 +132,17 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 			continue
 		}
 		deduplicationMap[varName] = true
-		dataDefault := map[string]interface{}{"tab": "General", "type": "Normal", "group": "Parameters", "is_extend": extend, "extend_name": m.modelName}
+
+		switch {
+		case m.modelName != m.components[i][15].(string) && m.components[i][15].(string) != m.componentClassName && m.modelName == m.componentClassName:
+			extend = true
+			extendName = m.components[i][15].(string)
+		case m.modelName != m.components[i][15].(string) && m.components[i][15].(string) == m.componentClassName && m.modelName != m.componentClassName && modelName != m.modelName:
+			extend = true
+			extendName = m.modelName
+		}
+
+		dataDefault := map[string]interface{}{"tab": "General", "type": "Normal", "group": "Parameters", "is_extend": extend, "extend_name": extendName}
 
 		if p[2] != "-" {
 			m.className = p[2].(string)
@@ -142,7 +157,7 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 			}
 		}
 
-		if p[5] == "protected" || IsExtendsModifierFinal == "true" || p[6] == true {
+		if p[5] == "protected" || IsExtendsModifierFinal == "true" || p[6] == true || p[8] == true {
 			continue
 		}
 		dataDefault["name"] = varName
@@ -182,8 +197,11 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 		}
 
 		emName := componentName + "." + varName
+		if componentName == modelName {
+			emName = varName
+		}
 		if extendsModifierNamesMap[emName] != nil {
-			extendsModifierValue := omc.OMC.GetExtendsModifierValue(modelName, m.modelName, emName)
+			extendsModifierValue := omc.OMC.GetExtendsModifierValue(modelName, extendName, emName)
 			dataDefault["value"] = extendsModifierValue
 			dataDefault["name"] = strings.TrimPrefix(emName, componentName+".")
 			dataDefault["unit"] = getUnit(componentClassName, m.className, varName)
@@ -203,13 +221,15 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 			}
 			value := map[string]interface{}{"isFixed": fixedValueBool, "value": startValueString}
 			data := map[string]interface{}{
-				"type":    "checkWrite",
-				"name":    varName + ".start",
-				"comment": dataDefault["comment"],
-				"tab":     dataDefault["tab"],
-				"group":   dataDefault["group"],
-				"value":   value,
-				"unit":    getUnit(componentClassName, m.className, varName),
+				"type":        "checkWrite",
+				"name":        varName + ".start",
+				"comment":     dataDefault["comment"],
+				"tab":         dataDefault["tab"],
+				"group":       dataDefault["group"],
+				"value":       value,
+				"unit":        getUnit(componentClassName, m.className, varName),
+				"is_extend":   extend,
+				"extend_name": m.modelName,
 			}
 			dataList = append(dataList, data)
 			continue
@@ -332,19 +352,37 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 			}
 			value := map[string]interface{}{"isFixed": fixedValueBool, "value": startValueString}
 			data := map[string]interface{}{
-				"type":    "checkWrite",
-				"name":    varName + ".start",
-				"comment": dataDefault["comment"],
-				"tab":     dataDefault["tab"],
-				"group":   "Initialization",
-				"value":   value,
-				"unit":    getUnit(componentClassName, m.className, varName),
+				"type":        "checkWrite",
+				"name":        varName + ".start",
+				"comment":     dataDefault["comment"],
+				"tab":         dataDefault["tab"],
+				"group":       "Initialization",
+				"value":       value,
+				"unit":        getUnit(componentClassName, m.className, varName),
+				"is_extend":   extend,
+				"extend_name": m.modelName,
 			}
 			dataList = append(dataList, data)
 		}
 	}
 
 	return dataList
+}
+
+func getInheritedClassesAndParent(modelName string) ([]string, map[string]string) {
+	var dataList = []string{modelName}
+	var parentAndChild = map[string]string{}
+	inheritedList := omc.OMC.GetInheritedClasses(modelName)
+	dataList = append(dataList, inheritedList...)
+	for i := 0; i < len(inheritedList); i++ {
+		inheritedClassesList := omc.OMC.GetInheritedClassesListAll([]string{inheritedList[i]})
+		for c := 1; c < len(inheritedClassesList); c++ {
+			parentAndChild[inheritedClassesList[c]] = inheritedList[i]
+		}
+		dataList = append(dataList, inheritedClassesList...)
+
+	}
+	return dataList, parentAndChild
 }
 
 func (m modelParameters) getStartAndFixedValue(name, varName, varType string) string {
@@ -373,6 +411,16 @@ func SetComponentModifierValue(className string, parameterValue map[string]strin
 		}
 	}
 	return true
+}
+
+func SetElementModifierValue(className string, parameter, Value string) bool {
+	result := omc.OMC.SetElementModifierValue(className, parameter, Value)
+	return result
+}
+
+func SetExtendsModifierValue(className, extentsName, parameter, Value string) bool {
+	result := omc.OMC.SetExtendsModifierValue(className, extentsName, parameter, Value)
+	return result
 }
 
 func AddComponentParameters(varName, varType, className string) (bool, error) {
