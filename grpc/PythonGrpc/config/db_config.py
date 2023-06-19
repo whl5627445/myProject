@@ -109,6 +109,8 @@ class AppPages(Base):
     release_message_read = Column(Boolean)
     simulate_time = Column(Integer)
     simulate_message_read = Column(Boolean)
+    simulate_err = Column(String)
+    release_err = Column(String)
 
 
 class AppSpaces(Base):

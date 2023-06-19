@@ -66,8 +66,10 @@ type AppPage struct {
 	MulResultPath       string         `gorm:"column:mul_result_path;type:varchar(128)"`
 	SimulateState       int            `gorm:"column:simulate_state;type:int"`
 	SimulateMessageRead bool           `gorm:"column:simulate_message_read;type:bool;default:true"`
+	SimulateErr         string         `gorm:"column:simulate_err;type:int"`
 	SimulateTime        int            `gorm:"column:simulate_time;type:int"`
 	ReleaseMessageRead  bool           `gorm:"column:release_message_read;type:bool;default:true"`
+	ReleaseErr          string         `gorm:"column:release_err;type:int"`
 	ReleaseState        int            `gorm:"column:release_state;type:int"`
 	ReleaseTime         int            `gorm:"column:release_time;type:int"`
 	NamingOrder         datatypes.JSON `gorm:"column:naming_order;type:json"`

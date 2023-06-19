@@ -103,6 +103,36 @@ func GetAppReleaseResultView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+func GetModelSimulateDetailsView(c *gin.Context) {
+	/*
+		# 读取单次仿真输出的详细信息
+	*/
+	var res responseData
+	userName := c.GetHeader("username")
+	pageId := c.Query("page_id")
+	var page DataBaseModel.AppPage
+	DB.Where("id = ? AND username = ?", pageId, userName).First(&page)
+	res.Data = map[string]interface{}{
+		"details": page.SimulateErr,
+	}
+	c.JSON(http.StatusOK, res)
+}
+
+func GetModelReleaseDetailsView(c *gin.Context) {
+	/*
+		# 读取多轮仿真输出的详细信息
+	*/
+	var res responseData
+	userName := c.GetHeader("username")
+	pageId := c.Query("page_id")
+	var page DataBaseModel.AppPage
+	DB.Where("id = ? AND username = ?", pageId, userName).First(&page)
+	res.Data = map[string]interface{}{
+		"details": page.ReleaseErr,
+	}
+	c.JSON(http.StatusOK, res)
+}
+
 func GetModelStateView(c *gin.Context) {
 	/*
 	   ## 获取仿真状态  0未发布 1初始化 2发布中 3 发布失败 4 发布完成

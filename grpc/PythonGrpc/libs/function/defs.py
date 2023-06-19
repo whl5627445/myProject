@@ -1,4 +1,5 @@
 import re
+import re
 import time
 
 from config.db_config import Session, YssimSimulateRecords, AppDataSources, AppPages, AppSpaces
@@ -100,7 +101,7 @@ def update_compile_records(uuid,
         session.commit()
 
 
-def update_app_pages_records(pages_id, mul_result_path=None, simulate_state=None, release_state=None, release_time=None, simulate_time=None, release_message_read=None,simulate_message_read=None):
+def update_app_pages_records(pages_id, mul_result_path=None, simulate_state=None, release_state=None, release_time=None, simulate_time=None, release_message_read=None,simulate_message_read=None,simulate_err=None,release_err=None):
     with Session() as session:
         app_pages_record = session.query(AppPages).filter(
             AppPages.id == pages_id).first()
@@ -118,6 +119,10 @@ def update_app_pages_records(pages_id, mul_result_path=None, simulate_state=None
             app_pages_record.release_message_read = release_message_read
         if simulate_message_read is not None:
             app_pages_record.simulate_message_read = simulate_message_read
+        if simulate_err:
+            app_pages_record.simulate_err = simulate_err
+        if release_err:
+            app_pages_record.release_err = release_err
         session.commit()
 
 
