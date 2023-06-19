@@ -59,9 +59,7 @@ func UploadModelPackageView(c *gin.Context) {
 	if ok {
 		var packageModel DataBaseModel.YssimModels
 		DB.Where("sys_or_user IN ? AND userspace_id IN ? AND package_name = ?", []string{"sys", userName}, []string{"0", userSpaceId}, packageName).First(&packageModel)
-
 		if packageModel.PackageName != "" {
-			service.DeleteLibrary(packageName)
 			service.DeletePackageFile(saveFilePathBase)
 			res.Err = packageName + "， 已存在相同名字的包，请重新检查后上传"
 			res.Status = 2
