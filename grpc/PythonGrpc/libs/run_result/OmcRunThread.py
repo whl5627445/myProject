@@ -33,7 +33,7 @@ class OmcRunThread(threading.Thread):
         threading.Thread.__init__(self)
 
     def run(self):
-
+        message = ""
         run_steps = 0
         if len(self.input_data) == 1:  # 仿真任务
             update_app_pages_records(self.request.pageId, simulate_state=2)
@@ -64,6 +64,7 @@ class OmcRunThread(threading.Thread):
             log.info("(OMC)修改参数：" + str(i))
             if write_xml(r"/home/simtek/code/" + self.absolute_path, i):
                 # 解析文件失败
+                message = "仿真失败，模型由于未知原因损坏，请重新导出"
                 break
 
             # 运行可执行文件result
@@ -75,10 +76,12 @@ class OmcRunThread(threading.Thread):
             output, error = process.communicate()
             if error:
                 log.info("(OMC)多轮仿真出错" + str(error))
+                message = str(error)
                 break
 
             else:
                 run_result_str = output.decode('utf-8')
+                message = str(run_result_str)
                 if "successfully" in run_result_str:
                     # json_data = {"message": self.request.simulateModelName + "仿真到第{}轮".format(run_steps)}
                     # R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
@@ -136,8 +139,11 @@ class OmcRunThread(threading.Thread):
         if len(self.input_data) == 1:  # 仿真任务
             update_app_pages_records(self.request.pageId, simulate_time=time.time())
             update_app_pages_records(self.request.pageId, simulate_message_read=False)
+            update_app_pages_records(self.request.pageId, simulate_err=message)
         else:
             update_app_pages_records(self.request.pageId, release_time=time.time())
             update_app_pages_records(self.request.pageId, release_message_read=False)
+            update_app_pages_records(self.request.pageId, release_err=message)
+
         self.state = "stopped"
         delete_item_from_json(self.uuid)
