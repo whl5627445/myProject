@@ -7,7 +7,7 @@ import subprocess
 import sys, os, time, zmq
 from libs.OMPython.cdata_to_pydata import CdataToPYdata
 import random
-
+from libs.function.grpc_log import log
 
 class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
 
@@ -25,6 +25,7 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
         self._port_file = os.path.join("/tmp" if docker else self._temp_dir, self._port_file).replace("\\", "/")
         self._interactivePort = port
         self._serverIPAddress = address
+        self.lock = threading.RLock()
         # set omc executable path and args
         self._set_omc_command([
             "--interactive=zmq",
@@ -58,8 +59,8 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
         import zmq
         context = zmq.Context.instance()
         self._omc = context.socket(zmq.REQ)
-        self._omc.setsockopt(zmq.LINGER, 0)  # Dismisses pending messages if closed
-        self._omc.setsockopt(zmq.IMMEDIATE, True)  # Queue messages only to completed connections
+        # self._omc.setsockopt(zmq.LINGER, 0)  # Dismisses pending messages if closed
+        # self._omc.setsockopt(zmq.IMMEDIATE, True)  # Queue messages only to completed connections
         self._omc.connect(self._port)
 
     def execute(self, command):
@@ -69,27 +70,32 @@ class OMCSessionZMQ(OMCSessionHelper, OMCSessionBase):
     def sendExpression(self, command, parsed=True):
         ## check for process is running
         attempts = 0
+        with self.lock:
+            while True:
+                try:
+                    self._omc.send_string(str(command), flags=zmq.NOBLOCK)
+                    break
+                except zmq.error.Again as e:
 
-        while True:
+                    pass
+                attempts += 1
+                if attempts == 50.0:
+                    name = self._omc_log_file.name
+                    raise Exception(
+                        "No connection with OMC (timeout=%f). Log-file says: \n%s" % (
+                            self._timeout, open(name).read()))
+                time.sleep(self._timeout / 50.0)
+            log.info("(OMC)等待OMC返回数据：" + str(command))
+
             try:
-                self._omc.send_string(str(command), flags=zmq.NOBLOCK)
-                break
-            except zmq.error.Again as e:
-                pass
-            attempts += 1
-            if attempts == 50.0:
-                name = self._omc_log_file.name
-                raise Exception(
-                    "No connection with OMC (timeout=%f). Log-file says: \n%s" % (
-                        self._timeout, open(name).read()))
-            time.sleep(self._timeout / 50.0)
-
-        result = self._omc.recv_string()
-        if parsed is True:
-            answer = CdataToPYdata(result)
-            return answer
-        else:
-            return result
+                result = self._omc.recv_string()
+            except Exception as e:
+                log.info("(OMC)等待OMC返回数据出错：" + str(e))
+            if parsed is True:
+                answer = CdataToPYdata(result)
+                return answer
+            else:
+                return result
 
     def getComponents(self, class_name):
         return self.sendExpression("getComponents(" + class_name + ")")

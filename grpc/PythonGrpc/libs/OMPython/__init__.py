@@ -21,6 +21,8 @@ from distutils import spawn
 import psutil
 import pyparsing
 from future.utils import with_metaclass
+from libs.function.grpc_log import log
+
 
 if sys.platform == 'darwin':
     # On Mac let's assume omc is installed here and there might be a broken omniORB installed in a bad place
@@ -264,6 +266,19 @@ class OMCSessionBase(with_metaclass(abc.ABCMeta, object)):
         # self.directoryExists(fileNamePrefix)
         simulate_result = self.ask('buildModel', '{0}'.format(cmd))
         return simulate_result
+
+    def translateModel(self, className, fileNamePrefix, translate_parameters_data):
+        cmd = className + ', fileNamePrefix = "' + fileNamePrefix + '\"'
+        if translate_parameters_data:
+            translate_parameters_list = []
+            for k, v in translate_parameters_data.items():
+                if v:
+                    translate_parameters_list.append(str(k) + "=" + str(v))
+            cmd = cmd + ", " + ", ".join(translate_parameters_list)
+        # self.directoryExists(fileNamePrefix)
+        translate_result = self.ask('translateModel', '{0}'.format(cmd))
+        log.info("(OMC)translate_result: " + str(translate_result))
+        return translate_result
 
     def cd(self, newWorkingDirectory):
         return self.ask('cd', '"{0}"'.format(newWorkingDirectory))
