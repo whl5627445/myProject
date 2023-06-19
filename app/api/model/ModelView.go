@@ -1522,7 +1522,7 @@ func AppModelMarkView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	res.Msg = "提交任务成功，请等待编译完成！"
+	res.Msg = "请等待导出完成。"
 	c.JSON(http.StatusOK, res)
 
 }
