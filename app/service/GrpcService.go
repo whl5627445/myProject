@@ -3,8 +3,6 @@ package service
 import (
 	"errors"
 	"fmt"
-	"github.com/bytedance/sonic"
-	"github.com/google/uuid"
 	"log"
 	"os"
 	"strings"
@@ -14,6 +12,9 @@ import (
 	"yssim-go/grpc/grpcPb"
 	"yssim-go/library/fileOperation"
 	"yssim-go/library/mapProcessing"
+
+	"github.com/bytedance/sonic"
+	"github.com/google/uuid"
 )
 
 type modelVarData struct {
@@ -247,7 +248,7 @@ func GrpcTranslate(record DataBaseModel.AppDataSource) (string, error) {
 	record.Method = SimulationPra["method"]
 	record.Tolerance = SimulationPra["tolerance"]
 	record.NumberOfIntervals = SimulationPra["numberOfIntervals"]
-	record.CompileType = SimulationPra["simulate_type"]
+	//record.CompileType = SimulationPra["simulate_type"]
 	err := DB.Save(&record).Error
 	if err != nil {
 		return "", errors.New("save error")
