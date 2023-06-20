@@ -3,7 +3,7 @@ package API
 type responseData struct {
 	Data   interface{} `json:"data"`
 	Msg    string      `json:"msg"`
-	Status int         `json:"status"` // 正常是0，系统级错误是1， 用戶错误是2
+	Status int         `json:"status"` // 正常是0，系统级错误是1， 用戶错误是2, omc未启动则是3， 资源已被删除是4
 	Err    string      `json:"err"`
 }
 
@@ -168,10 +168,10 @@ type LoginUserSpaceModel struct {
 }
 
 type AppModelMarkData struct {
-	PackageId string `json:"package_id" binding:"required"`
-	ModelName string `json:"model_name" binding:"required"`
-	//CompileType string `json:"compile_type,omitempty" binding:""`
-	//MandatorySave  bool   `json:"save,omitempty" binding:""`
+	PackageId      string `json:"package_id" binding:"required"`
+	ModelName      string `json:"model_name" binding:"required"`
+	CompileType    string `json:"compile_type,omitempty" binding:""`
+	MandatorySave  bool   `json:"save,omitempty" binding:""`
 	GroupName      string `json:"group_name" binding:"required"`
 	DataSourceName string `json:"data_source_name" binding:"required"`
 	ExperimentId   string `json:"experiment_id" binding:""`

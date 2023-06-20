@@ -62,18 +62,15 @@ func GetUserRootModelView(c *gin.Context) {
 		# 获取左侧模型列表接口， 此接口获取系统模型和用户上传模型的根节点列表，暂时没有图标信息
 	*/
 	userName := c.GetHeader("username")
-
 	userSpaceId := c.Query("space_id")
-	if userSpaceId == "" {
-		userSpaceId = c.GetHeader("space_id")
-	}
-	if userSpaceId == "" {
-		c.JSON(http.StatusBadRequest, "")
-	}
+
 	keywords := c.Query("keywords")
 	var res responseData
 	var modelData []map[string]interface{}
 	var packageModel []DataBaseModel.YssimModels
+	var space DataBaseModel.YssimUserSpace
+	DB.Where("id = ? AND username = ?", userSpaceId, userName).First(&space)
+
 	DB.Where("sys_or_user = ? AND userspace_id = ?", userName, userSpaceId).Find(&packageModel)
 	libraryAndVersions := service.GetLibraryAndVersions()
 	for i := 0; i < len(packageModel); i++ {
@@ -1433,13 +1430,18 @@ func LoginUserSpaceView(c *gin.Context) {
 	//	c.JSON(http.StatusOK, res)
 	//	return
 	//}
-
+	var space DataBaseModel.YssimUserSpace
+	DB.Model(space).Where("id = ? AND username = ?", item.SpaceId, userName).First(&space)
+	if space.ID == "" {
+		res.Status = 4
+		res.Err = "空间已被删除"
+		c.JSON(http.StatusOK, res)
+	}
 	var packageModelAll []DataBaseModel.YssimModels
 	DB.Where("sys_or_user IN ?  AND default_version = ? AND userspace_id IN ?", []string{"sys", userName}, true, []string{"0", item.SpaceId}).Find(&packageModelAll)
 
 	DB.Model(DataBaseModel.YssimUserSpace{}).Where("id = ? AND username = ?", item.SpaceId, userName).UpdateColumn("last_login_time", time.Now().Local().Unix())
-	var space DataBaseModel.YssimUserSpace
-	DB.Model(space).Where("id = ? AND username = ?", item.SpaceId, userName).First(&space)
+
 	information, _ := space.PackageInformation.MarshalJSON()
 	packageInformation := map[string]map[string]string{}
 	sonic.Unmarshal(information, &packageInformation)
@@ -1479,6 +1481,7 @@ func AppModelMarkView(c *gin.Context) {
 	var item AppModelMarkData
 	err := c.BindJSON(&item)
 	if err != nil {
+		log.Println("导出数据源数据错误： ", err)
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
@@ -1500,6 +1503,7 @@ func AppModelMarkView(c *gin.Context) {
 		PackageId:      item.PackageId,
 		ModelName:      item.ModelName,
 		CompilePath:    CompilePath,
+		CompileType:    item.CompileType,
 		ExperimentId:   item.ExperimentId,
 		GroupName:      item.GroupName,
 		DataSourceName: item.DataSourceName,
