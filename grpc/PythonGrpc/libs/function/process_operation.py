@@ -68,11 +68,10 @@ from libs.function.grpc_log import log
 #     return {"msg": False}
 
 
-def kill_py_omc_process(multiprocessing_id, process_list,simulate_type):
+def kill_py_omc_process(multiprocessing_id, process_list,simulate_type, taskMarkDict):
     if simulate_type == "OM":
         for i in process_list:
             if i.uuid == multiprocessing_id:
-                i.state = "stopped"
                 try:
                     os.kill(i.omc_obj.omc_process.pid, 9)
                     # os.killpg(os.getpgid(i.omc_obj.omc_process.pid), signal.SIGUSR1)
@@ -81,9 +80,12 @@ def kill_py_omc_process(multiprocessing_id, process_list,simulate_type):
                 # i.omc_obj.sendExpression("quit()")
                 except OSError as e:
                     log.info(f"(OMC)Error: {e}")
+                i.state = "stopped"
+
+                del taskMarkDict[i.request.userName]
                 process_list.remove(i)
                 del i
-                log.info("(OMC)杀死线程，数据库YssimSimulateRecords_id:"+multiprocessing_id)
+                log.info("(OMC)杀死线程，数据库Yssi mSimulateRecords_id:"+multiprocessing_id)
                 with Session() as session:
                     processDetails = session.query(YssimSimulateRecords).filter(
                         YssimSimulateRecords.id == multiprocessing_id).first()

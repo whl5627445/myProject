@@ -1,6 +1,8 @@
 import re
 import re
 import time
+import random
+import string
 
 from config.db_config import Session, YssimSimulateRecords, AppDataSources, AppPages, AppSpaces
 from config.redis_config import R
@@ -127,6 +129,8 @@ def update_app_pages_records(pages_id, mul_result_path=None, simulate_state=None
 
 
 def sendMessage(omc_obj, username):
+    if omc_obj.omc_process.poll() is not None:
+        return
     message_str = omc_obj.getMessagesStringInternal()
     data_list = message_str.split(";,")
     message_list = []
@@ -167,7 +171,8 @@ def zip_folders(folders, output_path):
                 for root, dirs, files in os.walk(folder):
                     for file in files:
                         file_path = os.path.join(root, file)
-                        archive.write(file_path, arcname=os.path.relpath(file_path, parent_folder))
+                        arcname = os.path.relpath(file_path, parent_folder)
+                        archive.write(file_path, arcname=arcname)
 
 
 def omc_convert_dict_to_list(dict_obj, page_id):
