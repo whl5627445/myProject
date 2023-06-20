@@ -748,6 +748,7 @@ func DownloadResourcesFileView(c *gin.Context) {
 		# 静态资源文件的下载
 		## package_id: 包id
 	*/
+	var res responseData
 	userName := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
 	var item packageResourcesData
@@ -768,9 +769,14 @@ func DownloadResourcesFileView(c *gin.Context) {
 	} else {
 		filePath = item.Path
 	}
-	fileData := service.GetResourcesFile(packageModel.PackageName, filePath)
-	c.Header("content-disposition", `attachment;filename=`+url.QueryEscape(item.Path))
-	c.Data(http.StatusOK, "application/octet-stream", fileData)
+	filePathAll := service.GetResourcesDir(packageModel.PackageName, filePath)
+	//c.Header("content-disposition", `attachment;filename=`+url.QueryEscape(item.Path))
+	//c.Data(http.StatusOK, "application/octet-stream", fileData)
+	res.Data = map[string]interface{}{
+		"url": filePathAll,
+	}
+	c.JSON(http.StatusOK, res)
+
 }
 
 func ResourcesImagesPathGetView(c *gin.Context) {

@@ -83,6 +83,13 @@ func resourcesDir(packageName, parent string) string {
 	return resourcesPath
 }
 
+func GetResourcesDir(packageName, parent string) string {
+	path := resourcesDir(packageName, parent)
+	pwd, _ := os.Getwd()
+	path = strings.TrimPrefix(path, pwd+"/")
+	return path
+}
+
 func UploadResourcesFile(packageName, parent string, File *multipart.FileHeader) bool {
 	pType := omc.OMC.IsPackage(packageName)
 	if !pType {
