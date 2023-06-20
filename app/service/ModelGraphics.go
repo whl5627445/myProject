@@ -305,6 +305,7 @@ func (g *graphicsData) data01(cData []interface{}, className, component, modelNa
 							classNameList := append(classNameAll, className)
 							for n := 0; n < len(classNameList); n++ {
 								Unit = omc.OMC.GetElementModifierValue(classNameList[n], varName+"."+"unit")
+								Unit = strings.ReplaceAll(Unit, "\"", "")
 								if Unit != "" {
 									Unit = " " + Unit
 									break
