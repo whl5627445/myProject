@@ -328,7 +328,7 @@ func DymolaSimulationResultTree(path, parent, keyWords string) []map[string]inte
 				continue
 			}
 			//if !nameMap[splitName[0]] && !scalarVariableMap[name].HideResult && !scalarVariableMap[name].IsProtected {
-			if !nameMap[splitName[0]] && !scalarVariableMap[name].HideResult {
+			if !nameMap[splitName[0]] {
 				unit := scalarVariableMap[name].Real.Unit
 				displayUnit := scalarVariableMap[name].Real.DisplayUnit
 				declaredTypeName := scalarVariableMap[name].Real.DeclaredType
