@@ -110,7 +110,7 @@ func CreateUserSpaceView(c *gin.Context) {
 	}
 	matchSpaceName, _ := regexp.MatchString("^[_0-9a-zA-Z\u4e00-\u9fa5]+$", item.SpaceName) // 由中文、字母、数字、下划线验证
 	if !matchSpaceName {
-		res.Err = "空间名称只能由中文、字母、数字、下划线组成"
+		res.Err = "工作空间名称只能由中文、字母、数字、下划线组成"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
@@ -118,7 +118,7 @@ func CreateUserSpaceView(c *gin.Context) {
 	var space DataBaseModel.YssimUserSpace
 	DB.Where("username = ? AND space_name = ?", userName, item.SpaceName).First(&space)
 	if space.ID != "" {
-		res.Err = "名称已存在"
+		res.Err = "工作空间名称已存在"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
@@ -173,7 +173,7 @@ func EditUserSpaceView(c *gin.Context) {
 	}
 	matchSpaceName, _ := regexp.MatchString("^[_0-9a-zA-Z\u4e00-\u9fa5]+$", item.SpaceName) // 由中文、字母、数字、下划线验证
 	if !matchSpaceName {
-		res.Err = "空间名称只能由中文、字母、数字、下划线组成"
+		res.Err = "工作空间名称只能由中文、字母、数字、下划线组成"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
@@ -181,7 +181,7 @@ func EditUserSpaceView(c *gin.Context) {
 	var space DataBaseModel.YssimUserSpace
 	DB.Where("space_name = ? AND username = ? AND id <> ?", item.SpaceName, userName, item.SpaceId).First(&space)
 	if space.ID != "" {
-		res.Err = "应用名称已存在"
+		res.Err = "工作空间名称已存在"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return

@@ -290,7 +290,7 @@ func CreateAppSpaceView(c *gin.Context) {
 	}
 	matchSpaceName, _ := regexp.MatchString("^[_0-9a-zA-Z\u4e00-\u9fa5]+$", item.SpaceName) // 由中文、字母、数字、下划线验证
 	if !matchSpaceName {
-		res.Err = "空间名称只能由中文、字母、数字、下划线组成"
+		res.Err = "应用名称只能由中文、字母、数字、下划线组成"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
@@ -298,7 +298,7 @@ func CreateAppSpaceView(c *gin.Context) {
 	var space DataBaseModel.AppSpace
 	DB.Where("space_name = ? AND username = ?", item.SpaceName, userName).First(&space)
 	if space.ID != "" {
-		res.Err = "空间名称已存在"
+		res.Err = "应用名称已存在"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
@@ -340,7 +340,7 @@ func EditAppSpaceView(c *gin.Context) {
 	}
 	matchSpaceName, _ := regexp.MatchString("^[_0-9a-zA-Z\u4e00-\u9fa5]+$", item.SpaceName) // 由中文、字母、数字、下划线验证
 	if !matchSpaceName {
-		res.Err = "空间名称只能由中文、字母、数字、下划线组成"
+		res.Err = "应用名称只能由中文、字母、数字、下划线组成"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
