@@ -25,7 +25,6 @@ class DmRunThread(threading.Thread):
         self.state = "init"
         self.request = request
         self.inputValData = request.inputValData
-        update_app_pages_records(self.request.pageId, release_state=1)
 
         self.input_data = dymola_convert_list(self.inputValData)
         if len(self.input_data) == 1:  # 仿真任务
@@ -146,6 +145,8 @@ class DmRunThread(threading.Thread):
                 log.info("(Dymola)dymola仿真结果："+str(simulateResData))
                 absolute_path = adsPath + self.request.resultFilePath
                 log.info("(Dymola)结果路径："+absolute_path)
+                update_app_pages_records(self.request.pageId, simulate_message_read=False)
+                update_app_pages_records(self.request.pageId, simulate_err=simulateResData.get("log"))
                 if simulateResData.get("code") == 200:
                     resFileUrl = DymolaSimulationConnect + "/file/download?fileName=" + simulateResData["msg"]
 
@@ -157,6 +158,7 @@ class DmRunThread(threading.Thread):
                     return True, None, 0
                 else:
                     return False, "单轮仿真失败", simulateResData.get("code")
+
             # 多轮仿真
             else:
                 simulateReqData = {
@@ -189,6 +191,8 @@ class DmRunThread(threading.Thread):
                 if self.request.mulResultPath is None:
                     return False, "mulResultPath为空", ''
                 log.info("(Dymola)结果路径："+mul_output_path)
+                update_app_pages_records(self.request.pageId, release_message_read=False)
+                update_app_pages_records(self.request.pageId, release_err=simulateResData.get("log"))
                 if simulateResData.get("code") == 200:
                     csv_data = simulateResData["data"]
                     if os.path.exists(mul_output_path):
@@ -210,13 +214,14 @@ class DmRunThread(threading.Thread):
                             for s in self.input_data[i]:
                                 csv_file_name = csv_file_name + "_" + str(s)
                             df.to_csv(mul_output_path + '{}.csv'.format(csv_file_name), index=False)
-                    return True, None, simulateResData["code"]
 
+                    return True, None, simulateResData["code"]
                 else:
                     return False, "多轮仿真失败", simulateResData["code"]
 
     def run(self):
         log.info("(Dymola)开启dymola仿真")
+        message = ""
         if len(self.input_data) == 1:  # 仿真任务
             update_app_pages_records(self.request.pageId, simulate_state=2)
         else:  # 发布任务
@@ -245,9 +250,8 @@ class DmRunThread(threading.Thread):
         self.state = "stopped"
         if len(self.input_data) == 1:  # 仿真任务
             update_app_pages_records(self.request.pageId, simulate_time=time.time())
-            update_app_pages_records(self.request.pageId, simulate_message_read=False)
         else:
             update_app_pages_records(self.request.pageId, release_time=time.time())
-            update_app_pages_records(self.request.pageId, release_message_read=False)
+
         log.info("(Dymola)仿真线程执行完毕")
         delete_item_from_json(self.request.uuid)

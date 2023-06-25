@@ -30,7 +30,7 @@ type AppDataSource struct {
 	UserSpaceId       string         `gorm:"column:user_space_id;type:varchar(128)"`
 	PackageId         string         `gorm:"column:package_id;type:varchar(128)"`
 	ModelName         string         `gorm:"column:model_name;type:varchar(128)"`
-	CompileType       string         `gorm:"column:compile_type;type:varchar(128)"`
+	CompileType       string         `gorm:"column:compile_type;type:varchar(128);default:\"OM\""`
 	CompilePath       string         `gorm:"column:compile_path;type:varchar(128)"`
 	CompileStatus     int64          `gorm:"column:compile_status;type:int"`
 	CompileStartTime  int64          `gorm:"column:compile_start_time;type:int"`
@@ -64,13 +64,13 @@ type AppPage struct {
 	BackgroundColor     string         `gorm:"column:background_color;type:varchar(32)"`
 	Release             bool           `gorm:"column:is_release;type:bool"`
 	MulResultPath       string         `gorm:"column:mul_result_path;type:varchar(128)"`
-	SimulateState       int            `gorm:"column:simulate_state;type:int"`
+	SimulateState       int            `gorm:"column:simulate_state;type:int;default:0"`
 	SimulateMessageRead bool           `gorm:"column:simulate_message_read;type:bool;default:true"`
 	SimulateErr         string         `gorm:"column:simulate_err;type:int"`
 	SimulateTime        int            `gorm:"column:simulate_time;type:int"`
 	ReleaseMessageRead  bool           `gorm:"column:release_message_read;type:bool;default:true"`
 	ReleaseErr          string         `gorm:"column:release_err;type:int"`
-	ReleaseState        int            `gorm:"column:release_state;type:int"`
+	ReleaseState        int            `gorm:"column:release_state;type:int;default:0"`
 	ReleaseTime         int            `gorm:"column:release_time;type:int"`
 	NamingOrder         datatypes.JSON `gorm:"column:naming_order;type:json"`
 	AlignmentLine       datatypes.JSON `gorm:"column:alignment_line;type:json"`

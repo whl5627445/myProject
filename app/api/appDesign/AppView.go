@@ -1004,7 +1004,7 @@ func GetDatasourceInputOutputView(c *gin.Context) {
 
 	var res responseData
 	if record.CompilePath != "" {
-		if record.CompilePath == "DM" {
+		if record.CompileType == "DM" {
 			//DM生成的fmu解压后的xml文件
 			result := service.DymolaSimulationResultTree(record.CompilePath+"result_init.xml", parentNode, keyWords)
 			res.Data = result

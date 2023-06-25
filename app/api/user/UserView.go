@@ -304,7 +304,7 @@ func SetUserSettingsView(c *gin.Context) {
 	}
 	res.Data = true
 	DB.Where("username =? ", username).First(&settingRecord)
-	if settingRecord.UserName != "" { //存在则修改
+	if settingRecord.ID != "" { //存在则修改
 		res.Msg = "修改成功。"
 		settingRecord.GridDisplay = setting.GridDisplay
 		err := DB.Where("username =? ", username).Save(&settingRecord).Error
@@ -312,6 +312,7 @@ func SetUserSettingsView(c *gin.Context) {
 			log.Println("err:", err)
 			res.Data = false
 			res.Msg = "修改失败。"
+			res.Status = 2
 		}
 
 	} else { //不存在则创建
@@ -326,6 +327,7 @@ func SetUserSettingsView(c *gin.Context) {
 			log.Println("errr", err)
 			res.Data = false
 			res.Msg = "创建失败。"
+			res.Status = 2
 		}
 	}
 

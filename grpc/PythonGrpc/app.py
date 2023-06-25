@@ -239,10 +239,11 @@ if __name__ == '__main__':
                             OmSimulationThreadList.append(om_threading)
                         taskMarkDict[userName] = True
                     i += 1
-                while i < len(dymolaTaskList):
-                    userName = dymolaTaskList[i].userName
+                di = 0
+                while di < len(dymolaTaskList):
+                    userName = dymolaTaskList[di].userName
                     if userName not in taskMarkDict:
-                        data = dymolaTaskList.pop(i)
+                        data = dymolaTaskList.pop(di)
                         if data.taskType == "simulate":
                             dm_threading = DmSimulation(data)
                             dm_threading.start()
@@ -256,7 +257,7 @@ if __name__ == '__main__':
                             dm_threading.start()
                             DmSimulationThreadList.append(dm_threading)
                         taskMarkDict[userName] = True
-                    i += 1
+                    di += 1
                 # if len(OmSimulationThreadList) < max_simulation_num and len(omcTaskList) > 0:
                 #     data = omcTaskList.pop(0)
                 #     if data.taskType == "simulate":

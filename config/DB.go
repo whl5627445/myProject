@@ -27,9 +27,9 @@ func openMySql() *gorm.DB {
 	if err != nil {
 		panic(fmt.Sprintf("数据库初始化失败： %s", err))
 	}
-	SqlDB.SetMaxIdleConns(50)
-	SqlDB.SetMaxOpenConns(300)
-	SqlDB.SetConnMaxLifetime(time.Hour * 5)
+	SqlDB.SetMaxIdleConns(30)
+	SqlDB.SetMaxOpenConns(50)
+	SqlDB.SetConnMaxLifetime(time.Hour * 1)
 	Session := db.Session(&gorm.Session{PrepareStmt: true,
 		Logger: logger.Default.LogMode(logger.Info)})
 	return Session
