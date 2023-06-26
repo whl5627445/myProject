@@ -1004,16 +1004,8 @@ func GetDatasourceInputOutputView(c *gin.Context) {
 
 	var res responseData
 	if record.CompilePath != "" {
-		if record.CompileType == "DM" {
-			//DM生成的fmu解压后的xml文件
-			result := service.DymolaSimulationResultTree(record.CompilePath+"result_init.xml", parentNode, keyWords)
-			res.Data = result
-		} else {
-			//OMC仿真完输出的xml文件
-			result := service.SimulationResultTree(record.CompilePath+"result_init.xml", parentNode, keyWords)
-			res.Data = result
-		}
-
+		result := service.AppInputTree(record.CompileType, record.CompilePath+"result_init.xml", parentNode, keyWords)
+		res.Data = result
 	} else {
 		res.Err = "查询失败"
 		res.Status = 2

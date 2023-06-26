@@ -291,7 +291,52 @@ func SimulationResultTree(path, parent, keyWords string) []map[string]interface{
 	}
 	return dataList
 }
+func AppInputTree(compileType, path, parent, keyWords string) []map[string]interface{} {
+	var result []map[string]interface{}
+	if compileType == "OM" {
+		result = SimulationResultTree(path, parent, keyWords)
+	}
+	if compileType == "DM" {
+		result = DymolaSimulationResultTree(path, parent, keyWords)
+	}
+	var filteredResult []map[string]interface{}
+	parentName := ""
+	if parent != "" {
+		parentName = parent + "."
+	}
+	for _, variable := range result {
+		// 非节点不需要检查非空
+		if variable["has_child"] == false && variable["is_value_changeable"] == true {
+			filteredResult = append(filteredResult, variable)
+			break
+		}
+		parent_ := parentName + variable["variables"].(string)
+		var result_ []map[string]interface{}
+		if compileType == "OM" {
+			result_ = SimulationResultTree(path, parent_, keyWords)
+		}
+		if compileType == "DM" {
+			result_ = DymolaSimulationResultTree(path, parent_, keyWords)
+		}
+		// 是否是空的节点
+		emptyInput := true
+		for _, variable_ := range result_ {
+			if variable_["is_value_changeable"] == true {
+				emptyInput = false
+			}
+			if variable_["has_child"] == true {
+				emptyInput = false
+			}
+		}
+		// 如果是非空节点，添加到返回的数据中
+		if !emptyInput {
+			filteredResult = append(filteredResult, variable)
+		}
 
+	}
+	return filteredResult
+
+}
 func DymolaSimulationResultTree(path, parent, keyWords string) []map[string]interface{} {
 	// 读取xml文件
 	v := xmlInit{}
