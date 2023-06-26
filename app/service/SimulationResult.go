@@ -308,7 +308,7 @@ func AppInputTree(compileType, path, parent, keyWords string) []map[string]inter
 		// 非节点不需要检查非空
 		if variable["has_child"] == false && variable["is_value_changeable"] == true {
 			filteredResult = append(filteredResult, variable)
-			break
+			continue
 		}
 		parent_ := parentName + variable["variables"].(string)
 		var result_ []map[string]interface{}
