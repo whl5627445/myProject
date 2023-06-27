@@ -97,8 +97,8 @@ class DmSimulation(threading.Thread):
                 return False, None, 0
             # 上传完删除zip文件
             if os.path.exists(del_upload_fileName):
-                os.remove(del_upload_fileName)
-                # os.system('rm -rf ' + del_upload_fileName)
+                # os.remove(del_upload_fileName)
+                os.system('rm -rf ' + del_upload_fileName)
                 log.info("(Dymola)上传完成后，zip文件夹已成功删除！")
             else:
                 log.info("(Dymola)ip文件夹不存在。")
