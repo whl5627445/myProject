@@ -565,18 +565,21 @@ func CopyClassView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	if packageModel.PackageName == item.ModelName {
+	modelName := item.ModelName
+
+	if item.ParentName != "" {
+		packageName = packageModel.PackageName
+		filePath = packageModel.FilePath
+		modelName = item.ParentName + "." + item.ModelName
+	} else {
+		packageName = item.ModelName
+		filePath = "static/UserFiles/UploadFile/" + userName + "/" + time.Now().Local().Format("20060102150405") + "/" + packageName + "/" + item.ModelName + ".mo"
+	}
+	if packageModel.PackageName == modelName {
 		res.Msg = "模型名称已存在"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
-	}
-	if item.ParentName != "" {
-		packageName = packageModel.PackageName
-		filePath = packageModel.FilePath
-	} else {
-		packageName = item.ModelName
-		filePath = "static/UserFiles/UploadFile/" + userName + "/" + time.Now().Local().Format("20060102150405") + "/" + packageName + "/" + item.ModelName + ".mo"
 	}
 	model := DataBaseModel.YssimModels{
 		ID:          uuid.New().String(),
