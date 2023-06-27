@@ -984,9 +984,9 @@ func DataSourceRenameView(c *gin.Context) {
 
 }
 
-func GetDatasourceInputOutputView(c *gin.Context) {
+func GetDatasourceInputView(c *gin.Context) {
 	/*
-		# 获取数据源输入与输出接口
+		# 获取数据源输入接口
 	*/
 	// TODO： 徐庆达
 
@@ -1006,6 +1006,43 @@ func GetDatasourceInputOutputView(c *gin.Context) {
 	if record.CompilePath != "" {
 		result := service.AppInputTree(record.CompileType, record.CompilePath+"result_init.xml", parentNode, keyWords)
 		res.Data = result
+	} else {
+		res.Err = "查询失败"
+		res.Status = 2
+	}
+	c.JSON(http.StatusOK, res)
+}
+
+func GetDatasourceOutputView(c *gin.Context) {
+	/*
+		# 获取数据源输出接口
+	*/
+	// TODO： 徐庆达
+
+	//username := c.GetHeader("username")
+	//userSpaceId := c.GetHeader("space_id")
+	recordId := c.Query("record_id")
+	parentNode := c.Query("parent_node")
+	keyWords := c.Query("key_words")
+	var record DataBaseModel.AppDataSource
+	DB.Where("id = ? AND compile_status = ?", recordId, "4").First(&record)
+	if record.ID == "" {
+		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+
+	var res responseData
+	if record.CompilePath != "" {
+		if record.CompileType == "DM" {
+			//DM生成的fmu解压后的xml文件
+			result := service.DymolaSimulationResultTree(record.CompilePath+"result_init.xml", parentNode, keyWords)
+			res.Data = result
+		} else {
+			//OMC仿真完输出的xml文件
+			result := service.SimulationResultTree(record.CompilePath+"result_init.xml", parentNode, keyWords)
+			res.Data = result
+		}
+
 	} else {
 		res.Err = "查询失败"
 		res.Status = 2

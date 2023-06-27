@@ -46,7 +46,8 @@ func AppDesignRouter(g *gin.Engine) {
 		Models.POST("/datasource/delete", API.DatasourceDeleteView)
 		Models.POST("/datasource/rename", API.DataSourceRenameView)
 		Models.GET("/datasource/group/name/get", API.GetDataSourceGroupView)
-		Models.GET("/datasource/input-output/get", API.GetDatasourceInputOutputView)
+		Models.GET("/datasource/input/get", API.GetDatasourceInputView)
+		Models.GET("/datasource/output/get", API.GetDatasourceOutputView)
 
 		Models.GET("/page/preview", API.AppPagePreviewView)
 		Models.GET("/page/release/access", API.AppPageReleaseAccessView)
