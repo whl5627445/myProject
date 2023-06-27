@@ -1200,6 +1200,29 @@ func AppPagePreviewView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+func AppPageReleaseAccessView(c *gin.Context) {
+	/*
+		# 访问发布成功的页面数据获取接口
+	*/
+	var res responseData
+	//userName := c.GetHeader("username")
+	spaceId := c.Query("space_id")
+	path := c.Query("path")
+	var page DataBaseModel.AppPage
+	DB.Where("app_space_id = ? AND page_path = ? AND is_release = ?", spaceId, path, true).First(&page)
+	var components DataBaseModel.AppPageComponentsRelease
+	DB.Where("page_id = ?", page.ID).Find(&components)
+	result, err := service.AppReleaseResult(page.ID)
+	if err != nil {
+		log.Println(err)
+		res.Msg = "发布数据读取失败。"
+		c.JSON(http.StatusBadRequest, res)
+		return
+	}
+	res.Data = map[string]interface{}{"result": result, "component": components}
+	c.JSON(http.StatusOK, res)
+}
+
 func SetComponentBasicInformationView(c *gin.Context) {
 	/*
 		# 设置web应用页面基础组件接口

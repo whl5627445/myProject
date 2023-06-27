@@ -51,6 +51,7 @@ func init() {
 		&DataBaseModel.AppSpace{},
 		&DataBaseModel.AppPage{},
 		&DataBaseModel.AppPageComponent{},
+		&DataBaseModel.AppPageComponentsRelease{},
 		&DataBaseModel.AppComponentBases{},
 	)
 }
