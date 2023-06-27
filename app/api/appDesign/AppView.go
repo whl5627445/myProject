@@ -632,7 +632,7 @@ func DeleteAppPageView(c *gin.Context) {
 		return
 	}
 	var page DataBaseModel.AppPage
-	err = DB.Model(&page).Where("id = ?  AND username = ?", item.PageId, userName).Delete(&page).Error
+	err = DB.Model(&page).Where("id IN ?  AND username = ? AND app_space_id = ?", item.PageId, userName, item.SpaceId).Delete(&page).Error
 	if err != nil {
 		log.Println("删除app空间页面时保存数据库出现错误：", err)
 		res.Err = "删除失败，请稍后再试"
