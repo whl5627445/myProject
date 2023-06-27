@@ -8,7 +8,7 @@ import DyMat
 import pandas as pd
 from libs.function.xml_input import write_xml
 from libs.function.run_result_json import update_item_to_json, delete_item_from_json
-from libs.function.defs import update_app_pages_records, omc_convert_dict_to_list, update_app_spaces_records
+from libs.function.defs import update_app_pages_records, omc_convert_dict_to_list, update_app_spaces_records,page_release_component_freeze
 from libs.function.grpc_log import log
 import shutil
 
@@ -126,8 +126,9 @@ class OmcRunThread(threading.Thread):
             else:
                 # 更新数据库
                 update_app_pages_records(self.request.pageId,
-                                         release_state=4)
+                                         release_state=4, is_release=True)
                 update_app_spaces_records(self.request.pageId)
+                page_release_component_freeze(self.request.pageId)
 
         else:
             if len(self.input_data) == 1:
@@ -144,6 +145,7 @@ class OmcRunThread(threading.Thread):
             update_app_pages_records(self.request.pageId, release_time=time.time())
             update_app_pages_records(self.request.pageId, release_message_read=False)
             update_app_pages_records(self.request.pageId, release_err=message)
+
 
         self.state = "stopped"
         delete_item_from_json(self.uuid)

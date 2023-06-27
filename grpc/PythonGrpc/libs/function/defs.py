@@ -4,7 +4,8 @@ import time
 import random
 import string
 
-from config.db_config import Session, YssimSimulateRecords, AppDataSources, AppPages, AppSpaces
+from config.db_config import Session, YssimSimulateRecords, AppDataSources, AppPages, AppSpaces, AppPagesComponent, \
+    AppPagesComponentRelease
 from config.redis_config import R
 import json
 import os
@@ -14,7 +15,6 @@ from libs.function.grpc_log import log
 
 
 def new_another_name(username: str, simulate_model_name: str, package_id: str, userspace_id: str) -> str:
-
     # 生产新的数据库结果别名
     another_name_list = []
     with Session() as session:
@@ -39,6 +39,7 @@ def new_another_name(username: str, simulate_model_name: str, package_id: str, u
                 max_suffix = suffix
 
     return "结果 " + str(max_suffix + 1)
+
 
 def update_app_spaces_records(page_id):
     # 发布完成更改app_space的发布状态is_release为True
@@ -103,10 +104,14 @@ def update_compile_records(uuid,
         session.commit()
 
 
-def update_app_pages_records(pages_id, mul_result_path=None, simulate_state=None, release_state=None, release_time=None, simulate_time=None, release_message_read=None,simulate_message_read=None,simulate_err=None,release_err=None):
+def update_app_pages_records(pages_id, mul_result_path=None, simulate_state=None, release_state=None, release_time=None,
+                             simulate_time=None, release_message_read=None, simulate_message_read=None,
+                             simulate_err=None, release_err=None, is_release=None):
     with Session() as session:
         app_pages_record = session.query(AppPages).filter(
             AppPages.id == pages_id).first()
+        if is_release is not None:
+            app_pages_record.is_release = is_release
         if mul_result_path:
             app_pages_record.mul_result_path = mul_result_path
         if simulate_state:
@@ -125,6 +130,50 @@ def update_app_pages_records(pages_id, mul_result_path=None, simulate_state=None
             app_pages_record.simulate_err = simulate_err
         if release_err:
             app_pages_record.release_err = release_err
+        session.commit()
+
+
+def page_release_component_freeze(pages_id):
+    with Session() as session:
+        components_list = session.query(AppPagesComponent).filter(
+            AppPagesComponent.page_id == pages_id, AppPagesComponent.deleted_at == None).all()
+        new_components_list = []
+        session.query(AppPagesComponentRelease).filter(
+            AppPagesComponentRelease.page_id == pages_id).delete()
+        for i in components_list:
+            component_release = AppPagesComponentRelease(
+                id=i.id,
+                page_id=i.page_id,
+                type=i.type,
+                width=i.width,
+                height=i.height,
+                position_x=i.position_x,
+                position_y=i.position_y,
+                angle=i.angle,
+                horizontal_flip=i.horizontal_flip,
+                vertical_flip=i.vertical_flip,
+                opacity=i.opacity,
+                other_configuration=i.other_configuration,
+                z_index=i.z_index,
+                styles=i.styles,
+                events=i.events,
+                chart_config=i.chart_config,
+                option=i.option,
+                component_path=i.component_path,
+                hide=i.hide,
+                lock=i.lock,
+                is_group=i.is_group,
+                create_time=i.create_time,
+                deleted_at=i.deleted_at,
+                input_name=i.input_name,
+                output=i.output,
+                max=i.max,
+                min=i.min,
+                interval=i.interval
+            )
+
+            new_components_list.append(component_release)
+        session.add_all(new_components_list)
         session.commit()
 
 

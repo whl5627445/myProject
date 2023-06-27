@@ -7,7 +7,7 @@ import requests
 import pandas as pd
 import os
 import configparser
-from libs.function.defs import update_app_pages_records,dymola_convert_list,update_app_spaces_records,dymola_res_list_to_csv_dict
+from libs.function.defs import update_app_pages_records,dymola_convert_list,update_app_spaces_records,dymola_res_list_to_csv_dict,page_release_component_freeze
 from libs.function.grpc_log import log
 import shutil
 
@@ -232,8 +232,9 @@ class DmRunThread(threading.Thread):
             if len(self.input_data) == 1:  # 仿真任务
                 update_app_pages_records(self.request.pageId, simulate_state=4)
             else:  # 发布任务
-                update_app_pages_records(self.request.pageId, release_state=4)
+                update_app_pages_records(self.request.pageId, release_state=4, is_release=True)
                 update_app_spaces_records(self.request.pageId)
+                page_release_component_freeze(self.request.pageId)
 
         elif code == 300:
             if len(self.input_data) == 1:  # 仿真任务
