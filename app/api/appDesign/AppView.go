@@ -1247,7 +1247,7 @@ func AppPageReleaseAccessView(c *gin.Context) {
 	path := c.Query("path")
 	var page DataBaseModel.AppPage
 	DB.Where("app_space_id = ? AND page_path = ? AND is_release = ?", spaceId, path, true).First(&page)
-	var components DataBaseModel.AppPageComponentsRelease
+	var components []DataBaseModel.AppPageComponentsRelease
 	DB.Where("page_id = ?", page.ID).Find(&components)
 	result, err := service.AppReleaseResult(page.ID)
 	if err != nil {
