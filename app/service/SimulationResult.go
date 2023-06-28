@@ -523,7 +523,7 @@ func AppSimulateResult(appPageId string, varNameList []string) ([]map[string]int
 	}
 
 	for i := 0; i < len(varNameList); i++ {
-		data, ok := ReadSimulationResultFromGrpc(appDataSourceRecord.CompilePath+"result_res.mat", varNameList[i])
+		data, ok := ReadSimulationResultFromGrpc(appDataSourceRecord.CompilePath+"result_res_single.mat", varNameList[i])
 		if ok {
 			ordinate := data[1]
 			abscissa := data[0]

@@ -88,6 +88,7 @@ message SubmitTaskRequest{
   // 任务类型
   string  taskType = 11;
   // 多轮仿真用到的参数
+  string singleOrMultiple =18;
   map<string, inputObj> inputValData = 12;
   message inputObj{
     repeated double inputObjList = 14;

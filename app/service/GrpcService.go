@@ -364,9 +364,11 @@ func GrpcRunResult(appPageId string, singleSimulationInputData map[string]float6
 	inputData := make(map[string][]float64)
 	// 获取数据库中的输出名称数组
 	var outputNames []string
+	var singleOrMultiple string
 	sonic.Unmarshal(appPageRecord.Output, &outputNames)
 	if singleSimulationInputData != nil {
 		log.Println("单次仿真！")
+		singleOrMultiple = "single"
 		for key, value := range singleSimulationInputData {
 			var newValues []float64
 			newValues = append(newValues, value)
@@ -374,10 +376,11 @@ func GrpcRunResult(appPageId string, singleSimulationInputData map[string]float6
 			inputData[key] = newValues
 		}
 	} else {
-		log.Println("多次仿真！")
+		singleOrMultiple = "multiple"
+		log.Println("多轮仿真！")
 		//查询数据库中的模型表
 		var componentRecord []DataBaseModel.AppPageComponent
-		DB.Where("page_id = ? AND type = ? ", appPageId, "slider").Find(&componentRecord)
+		DB.Where("page_id = ? AND type = ? AND input_name != ''", appPageId, "slider").Find(&componentRecord)
 		for i := 0; i < len(componentRecord); i++ {
 			// 将[1,0.5,5]转换为[1,1.5,2,2.5,3,3.5,4,4.5,5]
 			minVal := componentRecord[i].Min
@@ -418,10 +421,11 @@ func GrpcRunResult(appPageId string, singleSimulationInputData map[string]float6
 		// 任务类型"simulate " "translate " "run"三种
 		TaskType: "run",
 		// 多轮仿真用到的参数
-		PageId:         appPageId,
-		MulResultPath:  appPageRecord.MulResultPath,
-		OutputValNames: outputNames,
-		InputValData:   inputValData,
+		SingleOrMultiple: singleOrMultiple, // 单次仿真为“single”，多次仿真为“multiple”
+		PageId:           appPageId,
+		MulResultPath:    appPageRecord.MulResultPath,
+		OutputValNames:   outputNames,
+		InputValData:     inputValData,
 	}
 	_, err = grpcPb.Client.SubmitTask(grpcPb.Ctx, GrpcBuildModelRequest)
 	return err

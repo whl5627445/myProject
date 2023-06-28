@@ -118,8 +118,7 @@ class DmRunThread(threading.Thread):
                 fileName = params_url + "/" + "/".join(self.request.packageFilePath.split("/")[5:])
             # array_initial_values = list(self.request.inputValData.values())
             # input_data_length = len(array_initial_values[0].inputObjList)
-            # 如果input_data_length的程度为1，这是单次仿真
-            if len(self.input_data) == 1:
+            if self.request.singleOrMultiple == "single":
                 simulateReqData = {
                     "startTime": self.request.simulationPraData["startTime"],
                     "stopTime": self.request.simulationPraData["stopTime"],
@@ -133,6 +132,8 @@ class DmRunThread(threading.Thread):
                     "modelName": self.request.simulateModelName,
                     "userName": self.request.userName,
                     "taskId": self.request.uuid,
+                    "initialNames": list(self.request.inputValData.keys()),
+                    "initialValues": self.input_data[0],
                     "dymolaLibraries": dymola_libraries
                 }
 
@@ -142,7 +143,7 @@ class DmRunThread(threading.Thread):
                                                json=simulateReqData)
                 simulateResData = simulateRes.json()
 
-                log.info("(Dymola)dymola仿真结果："+str(simulateResData))
+                log.info("(Dymola)dymola仿真结果："+str(simulateResData["msg"]))
                 absolute_path = adsPath + self.request.resultFilePath
                 log.info("(Dymola)结果路径："+absolute_path)
                 update_app_pages_records(self.request.pageId, simulate_message_read=False)
@@ -155,6 +156,9 @@ class DmRunThread(threading.Thread):
                     os.makedirs(absolute_path, exist_ok=True)
                     with open(absolute_path + "result_res.mat", "wb") as f:
                         f.write(downloadResFileUrl.content)
+                    # 单次仿真成功后，copy一份mat结果文件，命名为'result_res_single.mat'，后续读取仿真结果从result_res_single.mat读取
+                    shutil.copy(absolute_path+'result_res.mat',
+                                absolute_path+'result_res_single.mat')
                     return True, None, 0
                 else:
                     return False, "单轮仿真失败", simulateResData.get("code")
@@ -177,7 +181,7 @@ class DmRunThread(threading.Thread):
                     "dymolaLibraries": dymola_libraries,
                     "initialNames": list(self.request.inputValData.keys()),
                     "arrayInitialValues": self.input_data,
-                    "finalNames": ["Time"] + list(self.request.outputValNames),
+                    "finalNames": ["time"] + list(self.request.outputValNames),
 
                 }
                 log.info("(Dymola)仿真请求体："+str(simulateReqData))
@@ -186,7 +190,7 @@ class DmRunThread(threading.Thread):
                                                json=simulateReqData)
                 simulateResData = simulateRes.json()
 
-                log.info("(Dymola)dymola仿真结果："+str(simulateResData))
+                log.info("(Dymola)dymola仿真结果："+str(simulateResData["code"]))
                 mul_output_path = adsPath + self.request.mulResultPath
                 if self.request.mulResultPath is None:
                     return False, "mulResultPath为空", ''
@@ -199,21 +203,16 @@ class DmRunThread(threading.Thread):
                         shutil.rmtree(mul_output_path)
                     # 创建新的文件夹
                     os.mkdir(mul_output_path)
-
-                    csv_data_ = csv_data[1:]
-                    csv_dict_list = dymola_res_list_to_csv_dict(csv_data_, list(self.request.inputValData.keys()))
-                    if len(csv_dict_list) != len(self.input_data):
-                        log.info("(Dymola)输入个数和输出个数不一致")
-                        return False, "输入个数和输出个数不一致", ""
-                    else:
-                        for i in range(len(csv_dict_list)):
-                            csv_dict_list[i]["time"] = csv_data[0]
-                            df = pd.DataFrame(pd.DataFrame.from_dict(csv_dict_list[i], orient='index').values.T,
-                                              columns=list(csv_dict_list[i].keys()))
-                            csv_file_name = ""
-                            for s in self.input_data[i]:
-                                csv_file_name = csv_file_name + "_" + str(s)
-                            df.to_csv(mul_output_path + '{}.csv'.format(csv_file_name), index=False)
+                    for i in range(len(csv_data["time"])):
+                        temp = {}
+                        for key, value in csv_data.items():
+                            temp[key] = value[i]
+                        df = pd.DataFrame(pd.DataFrame.from_dict(temp, orient='index').values.T,
+                                          columns=list(temp.keys()))
+                        csv_file_name = ""
+                        for s in self.input_data[i]:
+                            csv_file_name = csv_file_name + "_" + str(s)
+                        df.to_csv(mul_output_path + '{}.csv'.format(csv_file_name), index=False)
 
                     return True, None, simulateResData["code"]
                 else:

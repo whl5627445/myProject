@@ -1,8 +1,16 @@
+import shutil
 import xml.etree.ElementTree as ET
 from libs.function.grpc_log import log
 
 
 def write_xml(xml_path, var_dict):
+    # 每一次修改xml的时候，都会从原始的result_init_copy.xml拷贝一份新的xml
+    try:
+        shutil.copy(xml_path+'result_init_copy.xml',
+                    xml_path+'result_init.xml')
+    except Exception as err:
+        log.info(f"(OMC)复制XML出错：{err}")
+        return 1
     # 解析XML文件为一个树
     result_xml_path = xml_path+"result_init.xml"
     log.info("(OMC)解析xml文件地址："+result_xml_path)

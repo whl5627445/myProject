@@ -1,3 +1,4 @@
+import shutil
 import threading
 import time
 import psutil
@@ -107,7 +108,13 @@ class OmcTranslateThread(threading.Thread):
                 log.info("(OMC)模型仿真成功完成")
                 json_data = {"message": "(导出数据源)"+self.request.simulateModelName + " 模型导出完成"}
                 R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
-                update_compile_records(uuid=self.uuid, compile_status=4,result_run_time=time2-time1, compile_stop_time=int(time.time()))
+                update_compile_records(uuid=self.uuid, compile_status=4, result_run_time=time2-time1, compile_stop_time=int(time.time()))
+                # 导出数据源成功后，保存一份原始的xml，命名为result_init_copy.xml
+                shutil.copy(absolute_path+'result_init.xml',
+                            absolute_path+'result_init_copy.xml')
+                # 导出数据源成功后，copy一份mat结果文件，命名为'result_res_single.mat'
+                shutil.copy(absolute_path+'result_res.mat',
+                            absolute_path+'result_res_single.mat')
 
             else:
                 log.info("(OMC)仿真失败:" + str(simulate_result_str))

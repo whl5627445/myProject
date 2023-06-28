@@ -1,3 +1,4 @@
+import shutil
 import threading
 import time
 import zipfile
@@ -175,6 +176,12 @@ class DmTranslateThread(threading.Thread):
                         zip_ref.extract('modelDescription.xml', absolute_path)
 
                     os.rename(absolute_path + "modelDescription.xml", absolute_path + "result_init.xml")
+                    # 导出数据源成功后，保存一份原始的xml，命名为result_init_copy.xml
+                    shutil.copy(absolute_path+'result_init.xml',
+                                absolute_path+'result_init_copy.xml')
+                    # 导出数据源成功后，copy一份mat结果文件，命名为'result_res_single.mat'
+                    shutil.copy(absolute_path+'result_res.mat',
+                            absolute_path+'result_res_single.mat')
 
                     return True, None, 0
                 else:
