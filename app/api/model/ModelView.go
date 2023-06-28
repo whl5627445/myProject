@@ -1439,6 +1439,7 @@ func LoginUserSpaceView(c *gin.Context) {
 		res.Status = 4
 		res.Err = "空间已被删除"
 		c.JSON(http.StatusOK, res)
+		return
 	}
 	var packageModelAll []DataBaseModel.YssimModels
 	DB.Where("sys_or_user IN ?  AND default_version = ? AND userspace_id IN ?", []string{"sys", userName}, true, []string{"0", item.SpaceId}).Find(&packageModelAll)
