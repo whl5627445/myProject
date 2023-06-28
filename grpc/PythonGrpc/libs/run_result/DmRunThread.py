@@ -27,7 +27,7 @@ class DmRunThread(threading.Thread):
         self.inputValData = request.inputValData
 
         self.input_data = dymola_convert_list(self.inputValData, self.request.pageId)
-        if len(self.input_data) == 1:  # 仿真任务
+        if self.request.singleOrMultiple == "single":  # 仿真任务
             update_app_pages_records(self.request.pageId, simulate_state=1)
         else:  # 发布任务
             update_app_pages_records(self.request.pageId, release_state=1)
@@ -190,7 +190,7 @@ class DmRunThread(threading.Thread):
                                                json=simulateReqData)
                 simulateResData = simulateRes.json()
 
-                log.info("(Dymola)dymola仿真结果："+str(simulateResData["data"]))
+                log.info("(Dymola)dymola仿真结果："+str(simulateResData["code"]))
                 mul_output_path = adsPath + self.request.mulResultPath
                 if self.request.mulResultPath is None:
                     return False, "mulResultPath为空", ''
@@ -222,14 +222,14 @@ class DmRunThread(threading.Thread):
     def run(self):
         log.info("(Dymola)开启dymola仿真")
         message = ""
-        if len(self.input_data) == 1:  # 仿真任务
+        if self.request.singleOrMultiple == "single":  # 仿真任务
             update_app_pages_records(self.request.pageId, simulate_state=2)
         else:  # 发布任务
             update_app_pages_records(self.request.pageId, release_state=2)
         res, err, code = self.send_request()
         log.info("(Dymola)send_request返回"+str(res)+str(err)+str(code))
         if res:
-            if len(self.input_data) == 1:  # 仿真任务
+            if self.request.singleOrMultiple == "single":  # 仿真任务
                 update_app_pages_records(self.request.pageId, simulate_state=4)
             else:  # 发布任务
                 update_app_pages_records(self.request.pageId, release_state=4, is_release=True)
@@ -237,19 +237,19 @@ class DmRunThread(threading.Thread):
                 page_release_component_freeze(self.request.pageId)
 
         elif code == 300:
-            if len(self.input_data) == 1:  # 仿真任务
+            if self.request.singleOrMultiple == "single":  # 仿真任务
                 update_app_pages_records(self.request.pageId, simulate_state=3)
             else:  # 发布任务
                 update_app_pages_records(self.request.pageId, release_state=3)
 
         else:
-            if len(self.input_data) == 1:  # 仿真任务
+            if self.request.singleOrMultiple == "single":  # 仿真任务
                 update_app_pages_records(self.request.pageId, simulate_state=3)
             else:  # 发布任务
                 update_app_pages_records(self.request.pageId, release_state=3)
 
         self.state = "stopped"
-        if len(self.input_data) == 1:  # 仿真任务
+        if self.request.singleOrMultiple == "single":  # 仿真任务
             update_app_pages_records(self.request.pageId, simulate_time=time.time())
         else:
             update_app_pages_records(self.request.pageId, release_time=time.time())

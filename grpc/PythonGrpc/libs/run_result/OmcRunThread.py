@@ -26,9 +26,9 @@ class OmcRunThread(threading.Thread):
         update_item_to_json(self.uuid, {"id": self.uuid, "run_states": "init", })
         self.input_data = omc_convert_dict_to_list(self.inputValData, self.request.pageId)
 
-        if len(self.input_data) == 1:  # 仿真任务
+        if self.request.singleOrMultiple == "single":  # 单次仿真任务
             update_app_pages_records(self.request.pageId, simulate_state=1)
-        else:  # 发布任务
+        else:  # 多轮仿真/发布任务
             update_app_pages_records(self.request.pageId, release_state=1)
         threading.Thread.__init__(self)
 
@@ -74,7 +74,7 @@ class OmcRunThread(threading.Thread):
                                      simulate_message_read=False,
                                      simulate_err=message)
 
-        else:  # 发布任务
+        else:  # 多轮仿真/发布任务
             update_app_pages_records(self.request.pageId, release_state=2)
             # 进行多轮仿真
             if self.request.mulResultPath:
@@ -85,12 +85,7 @@ class OmcRunThread(threading.Thread):
                 os.mkdir(mul_output_path)
             else:
                 log.info("(OMC)mulResultPath路径不存在")
-                if len(self.input_data) == 1:
-                    # 更新数据库
-                    update_app_pages_records(self.request.pageId, simulate_state=3)
-                else:
-                    # 更新数据库
-                    update_app_pages_records(self.request.pageId, release_state=3)
+                update_app_pages_records(self.request.pageId, release_state=3)
                 self.state = "stopped"
                 update_app_pages_records(self.request.pageId, update_time=time.time())
                 return
@@ -139,26 +134,22 @@ class OmcRunThread(threading.Thread):
                             dictCsv[j] = d_data
                         df = pd.DataFrame(pd.DataFrame.from_dict(dictCsv, orient='index').values.T,
                                           columns=list(dictCsv.keys()))
-                        if len(self.input_data) == 1:
-                            pass
-                        else:
-                            # 多轮仿真每轮一个scv文件
-
-                            csv_file_name = ""
-                            for s in i.values():
-                                s = round(s, 4)
-                                csv_file_name = csv_file_name + "_" + str(s)
-                            log.info("(OMC)保存地址："+str(mul_output_path))
-                            df.to_csv(mul_output_path + '{}.csv'.format(csv_file_name),
-                                      index=False,
-                                      encoding='utf-8')
+                        # 多轮仿真每轮一个scv文件
+                        csv_file_name = ""
+                        for s in i.values():
+                            s = round(s, 4)
+                            csv_file_name = csv_file_name + "_" + str(s)
+                        log.info("(OMC)保存地址："+str(mul_output_path))
+                        df.to_csv(mul_output_path + '{}.csv'.format(csv_file_name),
+                                  index=False,
+                                  encoding='utf-8')
                     else:
                         log.info("(OMC)fail")
                         break
                 run_steps += 1
 
             if run_steps == len(self.input_data):  # 如果每轮都成功
-
+                log.info("(OMC)如果每轮都成功")
                 # 更新数据库
                 update_app_pages_records(self.request.pageId,
                                          release_state=4, is_release=True)
