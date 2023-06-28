@@ -26,7 +26,7 @@ class DmRunThread(threading.Thread):
         self.request = request
         self.inputValData = request.inputValData
 
-        self.input_data = dymola_convert_list(self.inputValData)
+        self.input_data = dymola_convert_list(self.inputValData, self.request.pageId)
         if len(self.input_data) == 1:  # 仿真任务
             update_app_pages_records(self.request.pageId, simulate_state=1)
         else:  # 发布任务
@@ -190,7 +190,7 @@ class DmRunThread(threading.Thread):
                                                json=simulateReqData)
                 simulateResData = simulateRes.json()
 
-                log.info("(Dymola)dymola仿真结果："+str(simulateResData["code"]))
+                log.info("(Dymola)dymola仿真结果："+str(simulateResData["data"]))
                 mul_output_path = adsPath + self.request.mulResultPath
                 if self.request.mulResultPath is None:
                     return False, "mulResultPath为空", ''
@@ -199,6 +199,7 @@ class DmRunThread(threading.Thread):
                 update_app_pages_records(self.request.pageId, release_err=simulateResData.get("log"))
                 if simulateResData.get("code") == 200:
                     csv_data = simulateResData["data"]
+                    log.info(type(csv_data))
                     if os.path.exists(mul_output_path):
                         shutil.rmtree(mul_output_path)
                     # 创建新的文件夹
