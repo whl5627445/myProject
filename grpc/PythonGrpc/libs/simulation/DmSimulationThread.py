@@ -186,6 +186,7 @@ class DmSimulation(threading.Thread):
                 return False, None, compileResData["code"]
 
     def run(self):
+        self.state = "running"
         log.info("(Dymola)开启dymola仿真")
         update_simulate_records(uuid=self.request.uuid, simulate_start_time=time.time(), simulate_start=True)
         res, err, code = self.send_request()

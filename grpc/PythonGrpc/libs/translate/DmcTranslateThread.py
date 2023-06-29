@@ -190,6 +190,7 @@ class DmTranslateThread(threading.Thread):
                 return False, None, compileResData["code"]
 
     def run(self):
+        self.state = "running"
         log.info("(Dymola)开启dymola仿真")
         update_compile_records(uuid=self.request.uuid, compile_status=2, compile_start_time=int(time.time()))
         res, err, code = self.send_request()

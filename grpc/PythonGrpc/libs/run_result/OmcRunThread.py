@@ -33,6 +33,7 @@ class OmcRunThread(threading.Thread):
         threading.Thread.__init__(self)
 
     def run(self):
+        self.state = "running"
         message = ""
         run_steps = 0
         if self.request.singleOrMultiple == "single":  # 单次仿真任务
@@ -43,8 +44,16 @@ class OmcRunThread(threading.Thread):
             if write_xml(r"/home/simtek/code/" + self.absolute_path, self.input_data[0]):
                 # 解析文件失败
                 message = "仿真失败，模型由于未知原因损坏，请重新导出"
+                # 更新数据库
+                update_app_pages_records(self.request.pageId,
+                                         simulate_state=3,
+                                         simulate_time=time.time(),
+                                         simulate_message_read=False,
+                                         simulate_err=message)
+                self.state = "stopped"
+                delete_item_from_json(self.uuid)
+                return
             # 运行可执行文件result
-            self.state = "running"
             cmd = [r"/home/simtek/code/" + self.absolute_path + "result"]
             process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             self.run_pid = process.pid
@@ -85,9 +94,8 @@ class OmcRunThread(threading.Thread):
                 os.mkdir(mul_output_path)
             else:
                 log.info("(OMC)mulResultPath路径不存在")
-                update_app_pages_records(self.request.pageId, release_state=3)
+                update_app_pages_records(self.request.pageId, release_state=3,release_time=time.time())
                 self.state = "stopped"
-                update_app_pages_records(self.request.pageId, update_time=time.time())
                 return
             log.info("(OMC)一共需要执行{}轮".format(len(self.input_data)))
             for i in self.input_data:
@@ -100,7 +108,6 @@ class OmcRunThread(threading.Thread):
                     break
 
                 # 运行可执行文件result
-                self.state = "running"
                 cmd = [r"/home/simtek/code/" + self.absolute_path + "result"]
                 process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 self.run_pid = process.pid

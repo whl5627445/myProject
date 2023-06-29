@@ -220,6 +220,7 @@ class DmRunThread(threading.Thread):
                     return False, "多轮仿真失败", simulateResData["code"]
 
     def run(self):
+        self.state = "running"
         log.info("(Dymola)开启dymola仿真")
         message = ""
         if self.request.singleOrMultiple == "single":  # 仿真任务
@@ -247,8 +248,6 @@ class DmRunThread(threading.Thread):
                 update_app_pages_records(self.request.pageId, simulate_state=3)
             else:  # 发布任务
                 update_app_pages_records(self.request.pageId, release_state=3)
-
-        self.state = "stopped"
         if self.request.singleOrMultiple == "single":  # 仿真任务
             update_app_pages_records(self.request.pageId, simulate_time=time.time())
         else:
@@ -256,3 +255,4 @@ class DmRunThread(threading.Thread):
 
         log.info("(Dymola)仿真线程执行完毕")
         delete_item_from_json(self.request.uuid)
+        self.state = "stopped"
