@@ -16,7 +16,6 @@ from libs.function.grpc_log import log
 
 def new_another_name(username: str, simulate_model_name: str, package_id: str, userspace_id: str) -> str:
     # 生产新的数据库结果别名
-    another_name_list = []
     with Session() as session:
         record_list = session.query(YssimSimulateRecords).filter(
             YssimSimulateRecords.package_id == package_id,
@@ -26,17 +25,17 @@ def new_another_name(username: str, simulate_model_name: str, package_id: str, u
             YssimSimulateRecords.simulate_status == "4",
             YssimSimulateRecords.deleted_at.is_(None),
         ).all()
-
-    for record in record_list:
-        another_name_list.append(record.another_name)
     max_suffix = 0
-    suffix_pattern = re.compile(r"\s(\d+)\s*$")
-    for another_name in another_name_list:
-        matches = suffix_pattern.findall(another_name)
-        if len(matches) > 0:
-            suffix = int(matches[0])
-            if suffix > max_suffix:
-                max_suffix = suffix
+    for another_name in [i.another_name for i in record_list]:
+        # 使用正则表达式提取数字部分
+        match = re.search(r"\s*(\d+)\s*$", another_name)
+        # 如果能找到数字
+        if match:
+            # 将匹配到的数字转换为整数
+            num = int(match.group())
+            # 如果当前数字比最大值大或者最大值为空，则更新最大值
+            if max_suffix is None or num > max_suffix:
+                max_suffix = num
 
     return "结果 " + str(max_suffix + 1)
 
