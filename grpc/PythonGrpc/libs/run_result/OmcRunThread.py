@@ -86,17 +86,15 @@ class OmcRunThread(threading.Thread):
         else:  # 多轮仿真/发布任务
             update_app_pages_records(self.request.pageId, release_state=2)
             # 进行多轮仿真
-            if self.request.mulResultPath:
-                mul_output_path = r"/home/simtek/code/" + self.request.mulResultPath
-                if os.path.exists(mul_output_path):
-                    shutil.rmtree(mul_output_path)
-                # 创建新的文件夹
-                os.mkdir(mul_output_path)
-            else:
-                log.info("(OMC)mulResultPath路径不存在")
-                update_app_pages_records(self.request.pageId, release_state=3,release_time=time.time())
-                self.state = "stopped"
-                return
+
+            # 创建暂存这次多轮结果的文件夹，如果这次多轮仿真成功，将这个文件夹覆盖上一次的多轮仿真结果文件夹
+            staging_mul_output_path = r"/home/simtek/code/" + os.path.dirname(os.path.dirname(self.request.mulResultPath))+"/copy/"
+            if os.path.exists(staging_mul_output_path):
+                shutil.rmtree(staging_mul_output_path)
+            # 创建新的文件夹
+            log.info("(OMC)创建新的暂存文件夹"+str(staging_mul_output_path))
+            os.mkdir(staging_mul_output_path)
+
             log.info("(OMC)一共需要执行{}轮".format(len(self.input_data)))
             for i in self.input_data:
                 log.info("(OMC)进行第{}轮仿真".format(run_steps))
@@ -146,8 +144,8 @@ class OmcRunThread(threading.Thread):
                         for s in i.values():
                             s = round(s, 4)
                             csv_file_name = csv_file_name + "_" + str(s)
-                        log.info("(OMC)保存地址："+str(mul_output_path))
-                        df.to_csv(mul_output_path + '{}.csv'.format(csv_file_name),
+                        log.info("(OMC)保存地址："+str(staging_mul_output_path))
+                        df.to_csv(staging_mul_output_path + '{}.csv'.format(csv_file_name),
                                   index=False,
                                   encoding='utf-8')
                     else:
@@ -162,6 +160,13 @@ class OmcRunThread(threading.Thread):
                                          release_state=4, is_release=True)
                 update_app_spaces_records(self.request.pageId)
                 page_release_component_freeze(self.request.pageId)
+                mul_output_path = r"/home/simtek/code/" + self.request.mulResultPath
+                # 清空上次的多轮仿真结果
+                shutil.rmtree(mul_output_path)
+                # 将暂存的刚刚多轮仿真成功的结果copy过去
+                shutil.copytree(staging_mul_output_path, mul_output_path)
+                # 清空暂存的文件
+                shutil.rmtree(staging_mul_output_path)
             else:
                 # 更新数据库
                 update_app_pages_records(self.request.pageId, release_state=3)

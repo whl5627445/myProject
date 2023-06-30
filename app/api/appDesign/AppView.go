@@ -504,8 +504,8 @@ func GetAppPageView(c *gin.Context) {
 
 	db := DB.Where("app_space_id = ? AND username = ?", spaceId, userName).Order("create_time desc")
 
-	rc := DB.Model(DataBaseModel.AppPage{}).Where("app_space_id = ? AND username = ?", spaceId, userName).Where("release_state = ?", 4)
-	nrc := DB.Model(DataBaseModel.AppPage{}).Where("app_space_id = ? AND username = ?", spaceId, userName).Where("release_state != ?", 4)
+	rc := DB.Model(DataBaseModel.AppPage{}).Where("app_space_id = ? AND username = ?", spaceId, userName).Where("is_release = ?", true)
+	nrc := DB.Model(DataBaseModel.AppPage{}).Where("app_space_id = ? AND username = ?", spaceId, userName).Where("is_release = ?", false)
 
 	if keyWords != "" {
 		db.Where("page_name LIKE ?", "%"+keyWords+"%")
@@ -518,23 +518,19 @@ func GetAppPageView(c *gin.Context) {
 	case release == "":
 		db.Find(&pageList)
 	case release == "1":
-		db.Where("release_state = ?", 4).Find(&pageList)
+		db.Where("is_release = ?", true).Find(&pageList)
 	case release == "0":
-		db.Where("release_state != ?", 4).Find(&pageList)
+		db.Where("is_release = ?", false).Find(&pageList)
 	}
 	var pageDataList []map[string]interface{}
 	for _, page := range pageList {
-		releaseState := false
-		if page.ReleaseState == 4 {
-			releaseState = true
-		}
 		p := map[string]interface{}{
 			"id":            page.ID,
 			"name":          page.PageName,
 			"create_time":   page.CreatedAt.Local().Format("2006年01月02日"),
 			"update_time":   page.UpdatedAt.Local().Format("2006年01月02日"),
 			"tag":           page.PagePath,
-			"release_state": releaseState,
+			"release_state": page.Release,
 		}
 		pageDataList = append(pageDataList, p)
 	}
