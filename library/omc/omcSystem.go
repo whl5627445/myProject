@@ -54,7 +54,7 @@ func (o *ZmqObject) SendExpression(cmd string) ([]interface{}, bool) {
 	if len(parseData) == 0 {
 		return nil, false
 	}
-
+	//log.Println("cmd", cmd)
 	//if time.Now().UnixNano()/1e6-s > 20 {
 	//	log.Println("消耗时间: ", time.Now().UnixNano()/1e6-s)
 	//}
@@ -78,7 +78,10 @@ func (o *ZmqObject) SendExpressionNoParsed(cmd string) ([]byte, bool) {
 			allModelCache.HSet(ctx, *redisCacheKey, cmd, msg)
 		}
 	}
-	msg = bytes.ReplaceAll(msg, []byte("\"\"\n"), []byte(""))
+	if string(msg) == "\"\"\n" {
+		return []byte{}, false
+	}
+	//msg = bytes.ReplaceAll(msg, []byte("\"\"\n"), []byte(""))
 	msg = bytes.ReplaceAll(msg, []byte("\"false\""), []byte("false"))
 	msg = bytes.ReplaceAll(msg, []byte("\"true\""), []byte("true"))
 	if len(msg) == 0 {
@@ -88,7 +91,7 @@ func (o *ZmqObject) SendExpressionNoParsed(cmd string) ([]byte, bool) {
 	//	log.Println("cmd: ", cmd)
 	//	log.Println("消耗时间: ", time.Now().UnixNano()/1e6-s)
 	//}
-
+	//log.Println("cmd", cmd)
 	return msg, true
 }
 
@@ -123,10 +126,9 @@ func (o *ZmqObject) SetOptions() {
 	o.SendExpressionNoParsed("setCommandLineOptions(\"+ignoreSimulationFlagsAnnotation=false\")")
 	o.SendExpressionNoParsed("setCommandLineOptions(\"+ignoreCommandLineOptionsAnnotation=false\")")
 	o.SendExpressionNoParsed("setCommandLineOptions(\"--simCodeTarget=C\")")
-	o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nfAPI\")")
 	//o.SendExpressionNoParsed("setCommandLineOptions(\"--matchingAlgorithm=PFPlusExt --indexReductionMethod=dynamicStateSelection\")")
 	o.SendExpressionNoParsed("setModelicaPath(\"/usr/lib/omlibrary\")")
-	o.SendExpressionNoParsed("setCommandLineOptions(\"--matchingAlgorithm=PFPlusExt --indexReductionMethod=dynamicStateSelection --allowNonStandardModelica=reinitInAlgorithms -d=initialization,NLSanalyticJacobian\")")
+	o.SendExpressionNoParsed("setCommandLineOptions(\"--matchingAlgorithm=PFPlusExt --indexReductionMethod=dynamicStateSelection --allowNonStandardModelica=reinitInAlgorithms -d=nfAPI,initialization,NLSanalyticJacobian\")")
 	//o.SendExpressionNoParsed("setCompiler(\"clang\")")
 	//o.SendExpressionNoParsed("setCXXCompiler(\"clang++\")")
 }
@@ -382,7 +384,7 @@ func (o *ZmqObject) GetElementAnnotations(className string) []interface{} {
 	if className == "Real" {
 		return componentAnnotations
 	}
-	cmd := "getElementAnnotations(" + className + ", useQuotes = false)"
+	cmd := "getElementAnnotations(" + className + ", useQuotes = true)"
 	componentAnnotations, _ = o.SendExpression(cmd)
 	//annotation(Placement(visible = true,transformation(origin = {16,-87},extent = {{-10,  -10},{10, 10}},rotation = 0,iconTransformation(origin = {168.94117431640626,-87.15294189453125},extent = {{-10,-10},{10,10}},rotation = 0))))
 	//annotation(Placement(visible = true,transformation(origin = {-8, 40}, extent = {{-10, -10},{10, 10}}, rotation = 0), iconTransformation(origin = {-36, 20}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
@@ -397,7 +399,7 @@ func (o *ZmqObject) GetElementAnnotationsList(classNameList []string) [][]interf
 		if classNameList[i] == "Real" {
 			continue
 		}
-		cmd := "getElementAnnotations(" + classNameList[i] + ", useQuotes = false)"
+		cmd := "getElementAnnotations(" + classNameList[i] + ", useQuotes = true)"
 		componentAnnotations, ok := o.SendExpression(cmd)
 		if ok {
 			for p := 0; p < len(componentAnnotations); p++ {
@@ -496,13 +498,20 @@ func (o *ZmqObject) List(className string) string {
 }
 
 // GetElementModifierNames 获取模型组件的修饰符名称
-func (o *ZmqObject) GetElementModifierNames(className string, componentName string) string {
-	cmd := "getElementModifierNames(" + className + "," + componentName + ")"
-	data, _ := o.SendExpressionNoParsed(cmd)
+func (o *ZmqObject) GetElementModifierNames(className string, componentName string) []string {
+	var modifierNames = []string{}
+	cmd := "getElementModifierNames(" + className + ",\"" + componentName + "\")"
+	data, ok := o.SendExpressionNoParsed(cmd)
 	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
-	data = bytes.ReplaceAll(data, []byte("\""), []byte(""))
-	data = bytes.ReplaceAll(data, []byte("\\"), []byte(""))
-	return string(data)
+	//data = bytes.ReplaceAll(data, []byte("\""), []byte(""))
+	//data = bytes.ReplaceAll(data, []byte("\\"), []byte(""))
+	if ok && len(data) > 0 {
+		data = data[1 : len(data)-1]
+		data = append([]byte{'['}, data...)
+		data = append(data, ']')
+		sonic.Unmarshal(data, &modifierNames)
+	}
+	return modifierNames
 }
 
 // GetElementModifierValue 获取模型组件对应修饰符名称的值
@@ -561,7 +570,7 @@ func (o *ZmqObject) GetDerivedClassModifierValue(className string, modifierName 
 // GetExtendsModifierNames 获取模型继承类修饰符的名称列表
 func (o *ZmqObject) GetExtendsModifierNames(classNameOne string, classNameTwo string) []string {
 	var dataList []string
-	cmd := "getExtendsModifierNames(" + classNameOne + "," + classNameTwo + ", useQuotes = false)"
+	cmd := "getExtendsModifierNames(" + classNameOne + "," + classNameTwo + ", useQuotes = true)"
 	data, ok := o.SendExpression(cmd)
 	if ok {
 		for p := 0; p < len(data); p++ {
@@ -625,13 +634,14 @@ func (o *ZmqObject) SetElementModifierValue(className string, parameter string, 
 // SetExtendsModifierValue  设置组件修饰符的值
 func (o *ZmqObject) SetExtendsModifierValue(className, extendsName, parameter, value string) bool {
 	// setExtendsModifierValue(test12345, Modelica.Blocks.Examples.PID_Controller, kinematicPTP.startTime, $Code(=10))
+	value = strings.ReplaceAll(value, "\"", "\\\"")
 	code := "=" + value + ""
 	if strings.HasPrefix(value, "redeclare") {
-		code = "(" + value + ")"
+		code = "=\"" + value + "\""
 	}
-	if value == "" {
-		code = "()"
-	}
+	//if value == "" {
+	//	code = "()"
+	//}
 	cmd := "setExtendsModifierValue(" + className + ", " + extendsName + ", " + parameter + ", $Code(" + code + "))"
 	data, ok := o.SendExpressionNoParsed(cmd)
 	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
@@ -1013,7 +1023,6 @@ func (o *ZmqObject) LoadFile(path string) bool {
 // LoadFileNoPwd LoadFile 加载mo文件
 func (o *ZmqObject) LoadFileNoPwd(path string) bool {
 	cmd := "loadFile(\"" + "/" + path + "\")"
-	log.Println("cmd", cmd)
 	result, ok := o.SendExpressionNoParsed(cmd)
 	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
 	if ok && string(result) == "true" {

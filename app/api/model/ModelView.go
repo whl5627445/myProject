@@ -63,7 +63,9 @@ func GetUserRootModelView(c *gin.Context) {
 	*/
 	userName := c.GetHeader("username")
 	userSpaceId := c.Query("space_id")
-
+	if userSpaceId == "" {
+		userSpaceId = c.GetHeader("space_id")
+	}
 	keywords := c.Query("keywords")
 	var res responseData
 	var modelData []map[string]interface{}
@@ -284,10 +286,6 @@ func GetModelParametersView(c *gin.Context) {
 
 	var res responseData
 	properties := make(map[string]interface{}, 0)
-	if modelName == "" || componentName == "" || className == "" {
-		componentName = modelName
-		className = modelName
-	}
 	parameters := service.GetModelParameters(modelName, componentName, className)
 	elements := service.GetElements(modelName, componentName)
 	if len(elements) > 0 && componentName != "" {
@@ -1363,7 +1361,6 @@ func UnLoadModelView(c *gin.Context) {
 	packageInformation := service.GetPackageInformation()
 	packageInformationJson, _ := sonic.Marshal(packageInformation)
 	DB.Model(DataBaseModel.YssimUserSpace{}).Where("id = ? AND username = ?", userSpaceId, username).Update("package_information", packageInformationJson)
-	res.Msg = "加载成功"
 	c.JSON(http.StatusOK, res)
 }
 
