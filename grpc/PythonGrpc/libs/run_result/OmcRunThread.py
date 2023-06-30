@@ -157,7 +157,9 @@ class OmcRunThread(threading.Thread):
                 log.info("(OMC)如果每轮都成功")
                 # 更新数据库
                 update_app_pages_records(self.request.pageId,
-                                         release_state=4, is_release=True)
+                                         release_state=4,
+                                         is_release=True,
+                                         naming_order=list(self.input_data[0].keys()))
                 update_app_spaces_records(self.request.pageId)
                 page_release_component_freeze(self.request.pageId)
                 mul_output_path = r"/home/simtek/code/" + self.request.mulResultPath

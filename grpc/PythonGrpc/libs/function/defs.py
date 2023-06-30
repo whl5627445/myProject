@@ -105,7 +105,7 @@ def update_compile_records(uuid,
 
 def update_app_pages_records(pages_id, mul_result_path=None, simulate_state=None, release_state=None, release_time=None,
                              simulate_time=None, release_message_read=None, simulate_message_read=None,
-                             simulate_err=None, release_err=None, is_release=None):
+                             simulate_err=None, release_err=None, is_release=None,naming_order=None):
     with Session() as session:
         app_pages_record = session.query(AppPages).filter(
             AppPages.id == pages_id).first()
@@ -129,6 +129,8 @@ def update_app_pages_records(pages_id, mul_result_path=None, simulate_state=None
             app_pages_record.simulate_err = simulate_err
         if release_err:
             app_pages_record.release_err = release_err
+        if naming_order:
+            app_pages_record.naming_order = naming_order
         session.commit()
 
 
@@ -230,11 +232,11 @@ def omc_convert_dict_to_list(dict_obj, page_id):
     # 定义一个字典的 key 的列表
     keys = list(dict_obj.keys())
     log.info("(OMC)需要修改的参数:" + str(keys))
-    with Session() as session:
-        app_pages_record = session.query(AppPages).filter(
-            AppPages.id == page_id).first()
-        app_pages_record.naming_order = keys
-        session.commit()
+    # with Session() as session:
+    #     app_pages_record = session.query(AppPages).filter(
+    #         AppPages.id == page_id).first()
+    #     app_pages_record.naming_order = keys
+    #     session.commit()
 
     # 获取字典的值的列表
     values = [dict_obj[k].inputObjList for k in keys]
