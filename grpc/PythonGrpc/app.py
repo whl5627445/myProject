@@ -184,6 +184,7 @@ if __name__ == '__main__':
             log.info("仿真任务执行线程启动!")
             while True:
                 time.sleep(1)
+                # 打印正在运行的仿真任务i
                 if len(OmSimulationThreadList) > 0:
                     log.info("(OMC)正在运行的任务数：{}".format(len(OmSimulationThreadList)))
                     log.info("(OMC)正在运行的任务：" + str(
@@ -194,7 +195,17 @@ if __name__ == '__main__':
                     log.info("(OMC)正在排队的任务：" + str(
                         [{"model_name": j.simulateModelName, "user_name": j.userName} for j in
                          omcTaskList]))
-
+                if len(DmSimulationThreadList) > 0:
+                    log.info("(Dymola)正在运行的任务数：{}".format(len(DmSimulationThreadList)))
+                    log.info("(Dymola)正在运行的任务：" + str(
+                        [{j.request.simulateModelName: j.state, "user_name": j.request.userName} for j in
+                         DmSimulationThreadList]))
+                if len(dymolaTaskList) > 0:
+                    log.info("(Dymola)未执行任务队列剩余数量：{}".format(len(dymolaTaskList)))
+                    log.info("(Dymola)正在排队的任务：" + str(
+                        [{"model_name": j.simulateModelName, "user_name": j.userName} for j in
+                         dymolaTaskList]))
+                # 任务状态为"stopped"的移除队列
                 for i in OmSimulationThreadList:
                     if i.state == "stopped":
                         log.info("(OMC)" + i.request.simulateModelName + "仿真结束,线程关闭。")
@@ -206,16 +217,7 @@ if __name__ == '__main__':
                         log.info("(Dymola)" + i.request.simulateModelName + "仿真结束,线程关闭。")
                         DmSimulationThreadList.remove(i)
                         del taskMarkDict[i.request.userName]
-                if len(DmSimulationThreadList) > 0:
-                    log.info("(Dymola)正在运行的任务数：{}".format(len(DmSimulationThreadList)))
-                    log.info("(Dymola)正在运行的任务：" + str(
-                        [{j.request.simulateModelName: j.state, "user_name": j.request.userName} for j in
-                         DmSimulationThreadList]))
-                if len(dymolaTaskList) > 0:
-                    log.info("(Dymola)未执行任务队列剩余数量：{}".format(len(dymolaTaskList)))
-                    log.info("(Dymola)正在排队的任务：" + str(
-                        [{"model_name": j.simulateModelName, "user_name": j.userName} for j in
-                         dymolaTaskList]))
+                # 取omc任务
                 i = 0
                 while i < len(omcTaskList):
                     userName = omcTaskList[i].userName
@@ -239,6 +241,7 @@ if __name__ == '__main__':
                             OmSimulationThreadList.append(om_threading)
                         taskMarkDict[userName] = True
                     i += 1
+                # 取 dymola任务
                 di = 0
                 while di < len(dymolaTaskList):
                     userName = dymolaTaskList[di].userName
@@ -258,39 +261,6 @@ if __name__ == '__main__':
                             DmSimulationThreadList.append(dm_threading)
                         taskMarkDict[userName] = True
                     di += 1
-                # if len(OmSimulationThreadList) < max_simulation_num and len(omcTaskList) > 0:
-                #     data = omcTaskList.pop(0)
-                #     if data.taskType == "simulate":
-                #         # 找到空闲的端口号
-                #         port = findPort(start_port)
-                #         om_threading = OmcSimulation(data, port)
-                #         om_threading.start()
-                #         OmSimulationThreadList.append(om_threading)
-                #     if data.taskType == "translate":
-                #         # 找到空闲的端口号
-                #         port = findPort(start_port)
-                #         om_threading = OmcTranslateThread(data, port)
-                #         om_threading.start()
-                #         OmSimulationThreadList.append(om_threading)
-                #     if data.taskType == "run":
-                #         om_threading = OmcRunThread(data)
-                #         om_threading.start()
-                #         OmSimulationThreadList.append(om_threading)
-
-                # if len(DmSimulationThreadList) < max_simulation_num and len(dymolaTaskList) > 0:
-                #     data = dymolaTaskList.pop(0)
-                #     if data.taskType == "simulate":
-                #         dm_threading = DmSimulation(data)
-                #         dm_threading.start()
-                #         DmSimulationThreadList.append(dm_threading)
-                #     if data.taskType == "translate":
-                #         dm_threading = DmTranslateThread(data)
-                #         dm_threading.start()
-                #         DmSimulationThreadList.append(dm_threading)
-                #     if data.taskType == "run":
-                #         dm_threading = DmRunThread(data)
-                #         dm_threading.start()
-                #         DmSimulationThreadList.append(dm_threading)
 
 
     # 启动 rpc 服务

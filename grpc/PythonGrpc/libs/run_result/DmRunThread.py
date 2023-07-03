@@ -207,7 +207,7 @@ class DmRunThread(threading.Thread):
                     for i in range(len(csv_data["time"])):
                         temp = {}
                         for key, value in csv_data.items():
-                            temp[key] = value[i]
+                            temp[key] = value[i][:50]
                         df = pd.DataFrame(pd.DataFrame.from_dict(temp, orient='index').values.T,
                                           columns=list(temp.keys()))
                         csv_file_name = ""
@@ -231,27 +231,20 @@ class DmRunThread(threading.Thread):
         log.info("(Dymola)send_request返回"+str(res)+str(err)+str(code))
         if res:
             if self.request.singleOrMultiple == "single":  # 仿真任务
-                update_app_pages_records(self.request.pageId, simulate_state=4)
+                update_app_pages_records(self.request.pageId, simulate_state=4,simulate_time=time.time())
             else:  # 发布任务
-                update_app_pages_records(self.request.pageId, release_state=4, is_release=True)
+                update_app_pages_records(self.request.pageId,
+                                         release_state=4,
+                                         is_release=True,
+                                         release_time=time.time(),
+                                         naming_order=list(self.inputValData.keys()))
                 update_app_spaces_records(self.request.pageId)
                 page_release_component_freeze(self.request.pageId)
-
-        elif code == 300:
-            if self.request.singleOrMultiple == "single":  # 仿真任务
-                update_app_pages_records(self.request.pageId, simulate_state=3)
-            else:  # 发布任务
-                update_app_pages_records(self.request.pageId, release_state=3)
-
         else:
             if self.request.singleOrMultiple == "single":  # 仿真任务
-                update_app_pages_records(self.request.pageId, simulate_state=3)
+                update_app_pages_records(self.request.pageId, simulate_state=3,simulate_time=time.time())
             else:  # 发布任务
-                update_app_pages_records(self.request.pageId, release_state=3)
-        if self.request.singleOrMultiple == "single":  # 仿真任务
-            update_app_pages_records(self.request.pageId, simulate_time=time.time())
-        else:
-            update_app_pages_records(self.request.pageId, release_time=time.time())
+                update_app_pages_records(self.request.pageId, release_state=3,release_time=time.time())
 
         log.info("(Dymola)仿真线程执行完毕")
         delete_item_from_json(self.request.uuid)

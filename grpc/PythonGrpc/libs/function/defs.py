@@ -250,15 +250,15 @@ def omc_convert_dict_to_list(dict_obj, page_id):
     return result
 
 
-def dymola_convert_list(dict_obj,page_id):
+def dymola_convert_list(dict_obj, page_id):
     # 定义一个字典的 key 的列表
     keys = list(dict_obj.keys())
     log.info("(Dymola)需要修改的参数:" + str(keys))
-    with Session() as session:
-        app_pages_record = session.query(AppPages).filter(
-            AppPages.id == page_id).first()
-        app_pages_record.naming_order = keys
-        session.commit()
+    # with Session() as session:
+    #     app_pages_record = session.query(AppPages).filter(
+    #         AppPages.id == page_id).first()
+    #     app_pages_record.naming_order = keys
+    #     session.commit()
     # 获取字典的值的列表
     values = [dict_obj[k].inputObjList for k in keys]
     # 使用 itertools.product() 函数生成所有元素组合，并转换为结果列表
