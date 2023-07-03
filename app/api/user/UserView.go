@@ -324,7 +324,7 @@ func SetUserSettingsView(c *gin.Context) {
 		res.Msg = "创建成功。"
 		err := DB.Create(&settingNew).Error
 		if err != nil {
-			log.Println("errr", err)
+			log.Println("err", err)
 			res.Data = false
 			res.Msg = "创建失败。"
 			res.Status = 2
@@ -342,8 +342,9 @@ func BackgroundUploadView(c *gin.Context) {
 	var res responseData
 	userName := c.GetHeader("username")
 	varFile, err := c.FormFile("file")
-	if !strings.HasSuffix(varFile.Filename, ".jpg") && !strings.HasSuffix(varFile.Filename, ".jpeg") && !strings.HasSuffix(varFile.Filename, ".png") {
-		res.Err = "暂时只支持*.jpg、*.jpeg、*.png格式文件上传"
+	if !strings.HasSuffix(varFile.Filename, ".jpg") && !strings.HasSuffix(varFile.Filename, ".jpeg") && !strings.HasSuffix(varFile.Filename, ".png") &&
+		!strings.HasSuffix(varFile.Filename, ".jfif") && !strings.HasSuffix(varFile.Filename, ".pjp") && !strings.HasSuffix(varFile.Filename, ".pjpeg") {
+		res.Err = "暂时只支持*.jpg、*.jfif、*.pjpeg、*.pjp、*.jpeg、*.png格式文件上传"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
