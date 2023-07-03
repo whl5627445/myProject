@@ -66,32 +66,11 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 // getDerivedClassModifierValueALL 获取参数的单位, TODO 需要重构
 func getDerivedClassModifierValueALL(className string) string {
 
-	classAll := GetICList(className)
-	var DerivedClassModifierValue string
-	for p := 0; p < len(classAll); p++ {
-		data := omc.OMC.GetDerivedClassModifierValue(classAll[p], "unit")
-		if data != "" {
-			return data
-		}
-	}
-	return DerivedClassModifierValue
+	return omc.OMC.GetDerivedClassModifierValue(className, "unit")
 }
 
 // getUnit 获取参数的单位, TODO 需要重构
-func getUnit(modelName, componentClassName, varName string) []string {
-	modelNameAll := []string{modelName}
-	for len(modelNameAll) > 0 {
-		for _, name := range modelNameAll {
-			value := omc.OMC.GetElementModifierValue(name, varName+"."+"unit")
-			if value != "" {
-				value = strings.ReplaceAll(value, "\"", "")
-				value = strings.ReplaceAll(value, "\\", "")
-				return []string{value}
-			}
-		}
-		modelNameAll = omc.OMC.GetInheritedClassesList(modelNameAll)
-	}
-
+func getUnit(componentClassName string) []string {
 	return []string{getDerivedClassModifierValueALL(componentClassName)}
 }
 
@@ -502,7 +481,7 @@ func (m *modelParameters) elementsAndAnnotations(modelName string) []interface{}
 				}
 			}
 
-			unit := getUnit(m.componentClassName, className, varName)
+			unit := getUnit(className)
 			if len(unit) > 0 {
 				dataDefault["unit"] = unit
 			}
@@ -529,7 +508,7 @@ func (m *modelParameters) elementsAndAnnotations(modelName string) []interface{}
 			}
 			dataDefault["value"] = map[string]interface{}{"isFixed": isFixed, "value": value}
 			dataDefault["unit"] = ""
-			unit := getUnit(m.componentClassName, className, varName)
+			unit := getUnit(className)
 			if len(unit) > 0 {
 				dataDefault["unit"] = unit
 			}
