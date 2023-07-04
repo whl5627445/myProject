@@ -7,7 +7,7 @@ import requests
 import pandas as pd
 import os
 import configparser
-from libs.function.defs import update_app_pages_records,dymola_convert_list,update_app_spaces_records,dymola_res_list_to_csv_dict,page_release_component_freeze
+from libs.function.defs import update_app_pages_records,dymola_convert_list,update_app_spaces_records,dymola_res_list_to_csv_dict,page_release_component_freeze,result_step
 from libs.function.grpc_log import log
 import shutil
 
@@ -207,7 +207,7 @@ class DmRunThread(threading.Thread):
                     for i in range(len(csv_data["time"])):
                         temp = {}
                         for key, value in csv_data.items():
-                            temp[key] = value[i][:50]
+                            temp[key] = result_step(value[i])
                         df = pd.DataFrame(pd.DataFrame.from_dict(temp, orient='index').values.T,
                                           columns=list(temp.keys()))
                         csv_file_name = ""

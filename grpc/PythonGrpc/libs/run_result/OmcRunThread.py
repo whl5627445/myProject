@@ -8,7 +8,7 @@ import DyMat
 import pandas as pd
 from libs.function.xml_input import write_xml
 from libs.function.run_result_json import update_item_to_json, delete_item_from_json
-from libs.function.defs import update_app_pages_records, omc_convert_dict_to_list, update_app_spaces_records,page_release_component_freeze
+from libs.function.defs import update_app_pages_records, omc_convert_dict_to_list, update_app_spaces_records,page_release_component_freeze,result_step
 from libs.function.grpc_log import log
 import shutil
 
@@ -130,12 +130,12 @@ class OmcRunThread(threading.Thread):
                                    # "time2": list(d.abscissa("1", True))
                                    }
 
-                        dictCsv["time"] = dictCsv["time"][:50]
+                        dictCsv["time"] = result_step(dictCsv["time"])
 
                         for j in self.outputValNames:
-                            d_data = list(d.data(j))[:50]
+                            d_data = result_step(list(d.data(j)))
                             if len(d_data) == 2 and d_data[0] == d_data[1]:
-                                d_data = [d_data[0] for i in range(50)]
+                                d_data = [d_data[0] for i in range(len(dictCsv["time"]))]
                             dictCsv[j] = d_data
                         df = pd.DataFrame(pd.DataFrame.from_dict(dictCsv, orient='index').values.T,
                                           columns=list(dictCsv.keys()))

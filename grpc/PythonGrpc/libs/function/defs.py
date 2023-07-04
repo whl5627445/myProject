@@ -275,3 +275,12 @@ def dymola_res_list_to_csv_dict(input_data, input_names):
             row[input_names[j]] = input_data[i + j]
         result.append(row)
     return result
+
+
+def result_step(arr):
+    if len(arr) <= 50:
+        return arr
+    else:
+        step = len(arr) // 50  # 计算步长
+        new_arr = [arr[i] for i in range(0, len(arr), step)]   # 等间距取值
+        return new_arr
