@@ -467,6 +467,7 @@ func CreateAppPageView(c *gin.Context) {
 	var pageNew DataBaseModel.AppPage
 	pageNew.ID = uuid.New().String()
 	pageNew.AppSpaceId = item.SpaceId
+	pageNew.PageType = item.PageType
 	pageNew.PageName = item.PageName
 	pageNew.UserName = userName
 	pageNew.PagePath = item.Tag
@@ -531,6 +532,7 @@ func GetAppPageView(c *gin.Context) {
 			"update_time":   page.UpdatedAt.Local().Format("2006年01月02日"),
 			"tag":           page.PagePath,
 			"release_state": page.Release,
+			"page_type":     page.PageType,
 		}
 		pageDataList = append(pageDataList, p)
 	}

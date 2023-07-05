@@ -51,6 +51,7 @@ type AppDataSource struct {
 type AppPage struct {
 	ID                  string         `gorm:"primaryKey;type:varchar(128)"`
 	UserName            string         `gorm:"column:username;type:varchar(32)"`
+	PageType            string         `gorm:"column:page_type;type:varchar(32)"`
 	AppSpaceId          string         `gorm:"column:app_space_id;type:varchar(128)"`
 	Input               datatypes.JSON `gorm:"column:input;type:json"`
 	Output              datatypes.JSON `gorm:"column:output;type:json"`

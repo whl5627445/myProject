@@ -54,6 +54,7 @@ type CreateAppPageData struct {
 	SpaceId  string `json:"space_id" binding:"required"`
 	PageName string `json:"name" binding:"required,max=16"`
 	Tag      string `json:"tag" binding:"required,max=10"`
+	PageType string `json:"page_type" binding:"required"`
 }
 
 type EditAppPageData struct {
