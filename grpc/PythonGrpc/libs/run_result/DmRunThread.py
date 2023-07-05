@@ -212,6 +212,7 @@ class DmRunThread(threading.Thread):
                                           columns=list(temp.keys()))
                         csv_file_name = ""
                         for s in self.input_data[i]:
+                            s = round(s, 6)
                             csv_file_name = csv_file_name + "_" + str(s)
                         df.to_csv(mul_output_path + '{}.csv'.format(csv_file_name), index=False)
 

@@ -82,7 +82,7 @@ type snapshotCreatData struct {
 	ModelVarData      datatypes.JSON `json:"model_var_data" binding:""`
 	ExperimentId      string         `json:"experiment_id" binding:""`
 	SimulateVarData   datatypes.JSON `json:"simulate_var_data" binding:""`
-	SimulateResultId  string         `json:"simulate_result_id" binding:""`
+	SimulateResultId  string         `json:"simulate_result_id" binding:"required"`
 	SimulateResultObj datatypes.JSON `json:"simulate_result_obj" binding:""`
 }
 

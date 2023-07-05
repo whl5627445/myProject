@@ -142,7 +142,7 @@ class OmcRunThread(threading.Thread):
                         # 多轮仿真每轮一个scv文件
                         csv_file_name = ""
                         for s in i.values():
-                            s = round(s, 4)
+                            s = round(s, 6)
                             csv_file_name = csv_file_name + "_" + str(s)
                         log.info("(OMC)保存地址："+str(staging_mul_output_path))
                         df.to_csv(staging_mul_output_path + '{}.csv'.format(csv_file_name),
