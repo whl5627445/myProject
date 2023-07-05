@@ -1327,19 +1327,19 @@ func (o *ZmqObject) DeleteComponentParameter(varName, className string) bool {
 func (o *ZmqObject) GetIconAndDiagramAnnotations(classNameList []string, isIcon bool) []interface{} {
 	var data []interface{}
 	//ctx := context.Background()
-	var msg []byte
+	//var msg []byte
 	for _, name := range classNameList {
 		nType := o.GetClassRestriction(classNameList[len(classNameList)-1])
 		//if nType != "connector" && nType != "expandable connector" {
 		//	msg, _ = allModelCache.HGet(ctx, userName+"-yssim-componentGraphicsData", name).Bytes()
 		//}
-		if len(msg) > 0 && string(msg) != "null" {
-			var d []interface{}
-			err := sonic.Unmarshal(msg, &d)
-			if err == nil && len(d) > 8 {
-				data = append(data, d[8].([]interface{})...)
-			}
-		}
+		//if len(msg) > 0 && string(msg) != "null" {
+		//	var d []interface{}
+		//	err := sonic.Unmarshal(msg, &d)
+		//	if err == nil && len(d) > 8 {
+		//		data = append(data, d[8].([]interface{})...)
+		//	}
+		//}
 		result := make([]interface{}, 0)
 		if (nType == "connector" || nType == "expandable connector") && !isIcon {
 			result = o.GetDiagramAnnotation(name)
@@ -1357,6 +1357,26 @@ func (o *ZmqObject) GetIconAndDiagramAnnotations(classNameList []string, isIcon 
 		}
 	}
 	return data
+}
+func (o *ZmqObject) GetCoordinateSystem(className string, isIcon bool) []interface{} {
+
+	nType := o.GetClassRestriction(className)
+
+	result := make([]interface{}, 0)
+	if (nType == "connector" || nType == "expandable connector") && !isIcon {
+		result = o.GetDiagramAnnotation(className)
+		if len(result) < 8 {
+			result = o.GetIconAnnotationLineData(className)
+		}
+	} else {
+		result = o.GetIconAnnotationLineData(className)
+	}
+	log.Println("className: ", className)
+	log.Println("result: ", result)
+	if len(result) > 0 {
+		return result[:8]
+	}
+	return []interface{}{"-100.0", "100.0", "-100.0", "100.0", "true", "-", "-", "-"}
 }
 
 func (o *ZmqObject) GetIconAnnotations(className string) []interface{} {

@@ -191,7 +191,7 @@ func GetGraphicsDataView(c *gin.Context) {
 		return
 	}
 	var res responseData
-	var graphicsData [][]map[string]interface{}
+	var graphicsData any
 	if item.ComponentName == "" {
 		graphicsData = service.GetGraphicsData(item.ModelName, packageModel.SysUser)
 	} else {

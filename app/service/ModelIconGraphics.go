@@ -59,6 +59,7 @@ func getIconAnnotationGraphics(modelName, nameType string) map[string]interface{
 			data["initialScale"] = AnnotationConfig[5].(string)
 		}
 	}
+	data["preserve_aspect_ratio"] = AnnotationConfig[4]
 	data["output_type"] = "[]"
 	data["graphType"] = nameType
 	data["classname"] = modelName
@@ -85,6 +86,8 @@ func getDiagramAnnotationGraphics(modelName, nameType string) map[string]interfa
 	}
 	if len(modelIconAnnotation) > 8 {
 		AnnotationConfig = modelIconAnnotation[:8]
+		AnnotationConfig = modelIconAnnotation[:8]
+
 		x1, y1, x2, y2 := AnnotationConfig[0], AnnotationConfig[1], AnnotationConfig[2], AnnotationConfig[3]
 		data["extent1Diagram"] = strings.Replace(strings.Join([]string{x1.(string), y1.(string)}, ","), "-,-", "-100.0,-100.0", 1)
 		data["extent2Diagram"] = strings.Replace(strings.Join([]string{x2.(string), y2.(string)}, ","), "-,-", "100.0,100.0", 1)
@@ -92,6 +95,7 @@ func getDiagramAnnotationGraphics(modelName, nameType string) map[string]interfa
 			data["initialScale"] = AnnotationConfig[5].(string)
 		}
 	}
+	data["preserve_aspect_ratio"] = AnnotationConfig[4]
 	data["output_type"] = "[]"
 	data["graphType"] = nameType
 	data["classname"] = modelName
