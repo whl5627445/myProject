@@ -269,75 +269,25 @@ func (g *graphicsData) data01(cData []interface{}, className, component, modelNa
 				for _, t := range textList {
 					pSignIndex := strings.Index(t, "%")
 					if pSignIndex != -1 {
-						classNameAll := omc.OMC.GetInheritedClassesListAll([]string{className})
 						varName := t[pSignIndex+1:]
 						varValue := ""
+						Unit := ""
 						if varName != "name" {
 							varName = strings.TrimSuffix(varName, "%")
 							if varName != "" {
-								modifierName := component + "." + varName
-								extendsModifierNamesList := omc.OMC.GetExtendsModifierNames(g.modelName, modelName)
-								for _, nameAll := range extendsModifierNamesList {
-									if modifierName == nameAll {
-										extendsModifierVarValue := omc.OMC.GetExtendsModifierValue(g.modelName, modelName, modifierName)
-										if extendsModifierVarValue != varName {
-											varValue = extendsModifierVarValue
-										}
-									}
-								}
+								d := GetModelParameters(g.modelName, component, className, varName)
+								varValue, Unit = d[0].(string), d[1].(string)
 								if varValue == "" {
-									varValue = omc.OMC.GetElementModifierValue(modelName, modifierName)
-									if varValue == "" {
-										for _, name := range classNameAll {
-											varValue = omc.OMC.GetParameterValue(name, varName)
-											if varValue != "" {
-												break
-											}
-										}
-
-										if varValue == "" {
-											varValue = varName
-										}
-									}
-								}
-
-								if len(varValue) > 20 && (strings.Contains(varValue, ".") || strings.Contains(varValue, " ")) {
-									varValueList := strings.Split(varValue, ".") // 某些值是模型全称的需要取最后一部分。所以分割一下
-									varValue = varValueList[len(varValueList)-1]
+									varValue = varName
 								}
 							}
-							Unit := ""
-							classNameList := append(classNameAll, className)
-							for n := 0; n < len(classNameList); n++ {
-								Unit = omc.OMC.GetElementModifierValue(classNameList[n], varName+"."+"unit")
-								Unit = strings.ReplaceAll(Unit, "\"", "")
-								if Unit != "" {
-									Unit = " " + Unit
-									break
-								}
-							}
-							if Unit == "" {
-								for n := 0; n < len(classNameList); n++ {
-									classnameData := omc.OMC.GetElements(classNameList[n])
-									for p := 0; p < len(classnameData); p++ {
-										name := classnameData[p].([]interface{})[3].(string)
-										varClassName := classnameData[p].([]interface{})[2].(string)
-										if name != varName {
-											continue
-										}
-										Unit = " " + getDerivedClassModifierValueALL(varClassName)
-										break
-									}
-								}
+
+							if Unit != "" {
+								Unit = " " + Unit
 							}
 							oldVarName := "%" + varName
 							varValueUnit := varName + Unit
-							//varValue = func() string {
-							//	if len(varValue) > 12 {
-							//		return varValue[:12] + "..."
-							//	}
-							//	return varValue
-							//}()
+
 							varValueUnit = strings.Replace(varValueUnit, varName, varValue, 1)
 							originalTextString = strings.Replace(originalTextString, oldVarName, varValueUnit, 1)
 						}

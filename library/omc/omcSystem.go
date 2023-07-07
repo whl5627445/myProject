@@ -567,6 +567,16 @@ func (o *ZmqObject) GetDerivedClassModifierValue(className string, modifierName 
 	return string(data)
 }
 
+// GetDerivedClassModifierNames 获取模型派生类修饰符的值
+func (o *ZmqObject) GetDerivedClassModifierNames(className string) []interface{} {
+	cmd := "getDerivedClassModifierNames(" + className + ")"
+	data, _ := o.SendExpression(cmd)
+	//data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
+	//data = bytes.ReplaceAll(data, []byte("\""), []byte(""))
+	//data = bytes.ReplaceAll(data, []byte("\\"), []byte(""))
+	return data
+}
+
 // GetExtendsModifierNames 获取模型继承类修饰符的名称列表
 func (o *ZmqObject) GetExtendsModifierNames(classNameOne string, classNameTwo string) []string {
 	var dataList []string
@@ -1371,8 +1381,7 @@ func (o *ZmqObject) GetCoordinateSystem(className string, isIcon bool) []interfa
 	} else {
 		result = o.GetIconAnnotationLineData(className)
 	}
-	log.Println("className: ", className)
-	log.Println("result: ", result)
+
 	if len(result) > 0 {
 		return result[:8]
 	}
