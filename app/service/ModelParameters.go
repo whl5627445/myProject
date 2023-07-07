@@ -63,15 +63,46 @@ func GetModelParameters(modelName, componentName, componentClassName string) []i
 	return sortDataList
 }
 
-// getDerivedClassModifierValueALL 获取参数的单位, TODO 需要重构
-func getDerivedClassModifierValueALL(className string) string {
-
-	return omc.OMC.GetDerivedClassModifierValue(className, "unit")
+// getDerivedClassModifierValue 获取参数的单位
+func getDerivedClassModifierValue(className, modifierName string) string {
+	return omc.OMC.GetDerivedClassModifierValue(className, modifierName)
 }
 
-// getUnit 获取参数的单位, TODO 需要重构
-func getUnit(componentClassName string) []string {
-	return []string{getDerivedClassModifierValueALL(componentClassName)}
+// getDerivedClassModifierNames 获取参数的单位
+func getDerivedClassModifierNames(className string) []string {
+	names := []string{}
+	namesList := omc.OMC.GetDerivedClassModifierNames(className)
+	for _, name := range namesList {
+		names = append(names, name.(string))
+	}
+	return names
+}
+
+// getDerivedClassModifierNamesAndValues 获取参数的单位
+func getDerivedClassModifierNamesAndValues(className string) map[string]string {
+	data := make(map[string]string, 0)
+	names := getDerivedClassModifierNames(className)
+	for _, name := range names {
+		value := getDerivedClassModifierValue(className, name)
+		data[name] = value
+	}
+	return data
+}
+
+// getUnit 获取参数的单位
+func getUnit(componentClassName string) string {
+	unit := ""
+	classNameList := []string{componentClassName}
+	for i := 0; i < len(classNameList); i++ {
+		unit = getDerivedClassModifierValue(classNameList[i], "unit")
+		if unit == "" {
+			name := omc.OMC.GetInheritedClasses(classNameList[i])
+			classNameList = append(classNameList, name...)
+			continue
+		}
+		break
+	}
+	return unit
 }
 
 // getInherited 获取模型继承项, 并且继承等级加1
