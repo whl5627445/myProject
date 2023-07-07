@@ -55,6 +55,25 @@ func MultipleSimulateView(c *gin.Context) {
 
 }
 
+func MultipleSimulateKillView(c *gin.Context) {
+	/*
+	   # 取消多轮仿真任务
+	*/
+	// TODO： 宋义
+	var res responseData
+	pageId := c.Query("app_page_id")
+
+	replyVar, err := service.GrpcSimulationProcessOperation(pageId, "kill", "")
+	log.Println(replyVar)
+	if err != nil {
+		log.Println("调用grpc服务(GrpcPyOmcSimulationProcessOperation)出错：：", err)
+	}
+	res.Msg = replyVar.Msg
+	res.Err = ""
+	c.JSON(http.StatusOK, res)
+
+}
+
 func GetAppSimulateResultView(c *gin.Context) {
 	/*
 		# 读取AppPage仿真结果

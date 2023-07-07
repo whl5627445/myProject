@@ -2,7 +2,7 @@ import copy
 from concurrent import futures
 import os.path
 import pandas as pd
-from libs.function.process_operation import kill_py_omc_process
+from libs.function.process_operation import kill_process
 
 from libs.simulation.OmcSimulationThread import OmcSimulation
 from libs.translate.OmcTranslateThread import OmcTranslateThread
@@ -71,17 +71,20 @@ if __name__ == '__main__':
             multiprocessing_id = request.uuid
             operationName = request.operationName
             if operationName == "kill":
-                if request.simulate_type == "OM":
-                    for i in range(len(omcTaskList)):
-                        if omcTaskList[i].uuid == multiprocessing_id:
-                            omcTaskList.pop(i)
-                            break
-                if request.simulate_type == "DM":
-                    for i in range(len(dymolaTaskList)):
-                        if dymolaTaskList[i].uuid == multiprocessing_id:
-                            dymolaTaskList.pop(i)
-                killProcessReply = kill_py_omc_process(multiprocessing_id, OmSimulationThreadList,
-                                                       request.simulate_type, taskMarkDict)
+                # 删除在在排队的任务
+                for i in range(len(omcTaskList)):
+                    if omcTaskList[i].uuid == multiprocessing_id:
+                        omcTaskList.pop(i)
+                for i in range(len(dymolaTaskList)):
+                    if dymolaTaskList[i].uuid == multiprocessing_id:
+                        dymolaTaskList.pop(i)
+                # OmSimulationThreadList   DmSimulationThreadList
+                # 删除仿真任务
+                killProcessReply = kill_process(multiprocessing_id, OmSimulationThreadList, DmSimulationThreadList
+                                                , taskMarkDict)
+
+                # 删除多轮仿真任务
+
                 # del taskMarkDict[request.userName]
                 # del taskMarkDict[request.userName]
                 return router_pb2.ProcessOperationReply(msg=killProcessReply["msg"])
@@ -188,7 +191,7 @@ if __name__ == '__main__':
                 if len(OmSimulationThreadList) > 0:
                     log.info("(OMC)正在运行的任务数：{}".format(len(OmSimulationThreadList)))
                     log.info("(OMC)正在运行的任务：" + str(
-                        [{j.request.simulateModelName: j.state, "user_name": j.request.userName} for j in
+                        [{j.request.simulateModelName: j.state, "user_name": j.request.userName, "id": j.uuid} for j in
                          OmSimulationThreadList]))
                 if len(omcTaskList) > 0:
                     log.info("(OMC)正在排队的任务数：{}".format(len(omcTaskList)))

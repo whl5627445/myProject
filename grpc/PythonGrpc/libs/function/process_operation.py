@@ -1,8 +1,11 @@
 import psutil
-from config.db_config import Session, YssimSimulateRecords
+from config.db_config import Session, YssimSimulateRecords,AppPages
 import os
 import signal
 from libs.function.grpc_log import log
+import requests
+import json
+import configparser
 
 
 # def getSate(string1):
@@ -68,52 +71,68 @@ from libs.function.grpc_log import log
 #     return {"msg": False}
 
 
-def kill_py_omc_process(multiprocessing_id, process_list,simulate_type, taskMarkDict):
-    if simulate_type == "OM":
-        for i in process_list:
-            if i.uuid == multiprocessing_id:
-                try:
+def kill_process(multiprocessing_id, om_process_list, dm_process_list, taskMarkDict):
+    
+    for i in om_process_list:
+        if i.uuid == multiprocessing_id:
+            try:
+                if hasattr(i, 'omc_obj'):
                     os.kill(i.omc_obj.omc_process.pid, 9)
-                    # os.killpg(os.getpgid(i.omc_obj.omc_process.pid), signal.SIGUSR1)
-                    if i.run_pid:
-                        os.kill(i.run_pid, 9)
-                # i.omc_obj.sendExpression("quit()")
-                except OSError as e:
-                    log.info(f"(OMC)Error: {e}")
-                i.state = "stopped"
+                # os.killpg(os.getpgid(i.omc_obj.omc_process.pid), signal.SIGUSR1)
+                if i.run_pid:
+                    os.kill(i.run_pid, 9)
+            # i.omc_obj.sendExpression("quit()")
+            except OSError as e:
+                log.info(f"(OMC)Error: {e}")
+            i.state = "stopped"
 
-                del taskMarkDict[i.request.userName]
-                process_list.remove(i)
-                del i
-                log.info("(OMC)杀死线程，数据库Yssi mSimulateRecords_id:"+multiprocessing_id)
-                with Session() as session:
-                    processDetails = session.query(YssimSimulateRecords).filter(
-                        YssimSimulateRecords.id == multiprocessing_id).first()
-                    processDetails.simulate_status = "3"  # 杀死进程
-                    session.commit()
-                return {"msg": "End Process:{}".format(multiprocessing_id)}
-    elif simulate_type == "DM":
-        import requests
-        import json
-        import configparser
-        config = configparser.ConfigParser()
-        config.read('./config/grpc_config.ini')
-        DymolaSimulationConnect = config['dymola']['DymolaSimulationConnect']
+            del taskMarkDict[i.request.userName]
+            om_process_list.remove(i)
+            del i
+            log.info("(OMC)杀死线程，数据库id:"+multiprocessing_id)
+            with Session() as session:
+                simulate_records = session.query(YssimSimulateRecords).filter(
+                    YssimSimulateRecords.id == multiprocessing_id).first()
+                app_pages_record = session.query(AppPages).filter(
+                    AppPages.id == multiprocessing_id).first()
+                simulate_records.simulate_status = "3"  # 杀死进程
+                app_pages_record.release_state = 3  # 杀死进程
+                session.commit()
+            return {"msg": "End Process:{}".format(multiprocessing_id)}
 
-        url = DymolaSimulationConnect + "/dymola/stopDymola"
-        data = {
-            "taskId": multiprocessing_id
-        }
-        headers = {
-            "Content-Type": "application/json"
-        }
-        timeout = 10 * 60 # 10分钟
+    for i in dm_process_list:
+        if i.uuid == multiprocessing_id:
+            config = configparser.ConfigParser()
+            config.read('./config/grpc_config.ini')
+            DymolaSimulationConnect = config['dymola']['DymolaSimulationConnect']
 
-        response = requests.post(url, data=json.dumps(data), headers=headers, timeout=timeout)
-        log.info("(Dymola)发送请求体："+str(response))
-        if response.status_code == 200:
-            result = response.json()
-            log.info("(Dymola)请求返回的结果："+str(result))
-            if result["code"] == 200:
-                return {"msg": "End Process:{}".format(multiprocessing_id)}
+            url = DymolaSimulationConnect + "/dymola/stopDymola"
+            data = {
+                "taskId": multiprocessing_id
+            }
+            headers = {
+                "Content-Type": "application/json"
+            }
+            timeout = 10 * 60 # 10分钟
+
+            response = requests.post(url, data=json.dumps(data), headers=headers, timeout=timeout)
+            log.info("(Dymola)发送请求体："+str(response))
+            if response.status_code == 200:
+                result = response.json()
+                log.info("(Dymola)请求返回的结果："+str(result))
+                if result["code"] == 200:
+                    i.state = "stopped"
+                    del taskMarkDict[i.request.userName]
+                    dm_process_list.remove(i)
+                    del i
+                    log.info("(Dymola)杀死线程，数据库id:" + multiprocessing_id)
+                    with Session() as session:
+                        processDetails = session.query(YssimSimulateRecords).filter(
+                            YssimSimulateRecords.id == multiprocessing_id).first()
+                        app_pages_record = session.query(AppPages).filter(
+                            AppPages.id == multiprocessing_id).first()
+                        processDetails.simulate_status = "3"  # 杀死进程
+                        app_pages_record.simulate_state = 3  # 杀死进程
+                        session.commit()
+                    return {"msg": "End Process:{}".format(multiprocessing_id)}
     return {"msg": "The process is not found or has ended or failed:{}".format(multiprocessing_id)}

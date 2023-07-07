@@ -22,6 +22,7 @@ class DmSimulation(threading.Thread):
     def __init__(self, request):
         threading.Thread.__init__(self)
         self.state = "init"
+        self.uuid = request.uuid
         self.request = request
         self.processStartTime = None
 

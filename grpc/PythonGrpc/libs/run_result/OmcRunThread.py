@@ -17,7 +17,7 @@ class OmcRunThread(threading.Thread):
     def __init__(self, request):
         self.state = "init"
         self.absolute_path = request.resultFilePath
-        self.uuid = request.uuid
+        self.uuid = request.pageId
         self.run_pid = None
         self.inputValData = request.inputValData
         self.outputValNames = request.outputValNames
@@ -97,6 +97,10 @@ class OmcRunThread(threading.Thread):
 
             log.info("(OMC)一共需要执行{}轮".format(len(self.input_data)))
             for i in self.input_data:
+                if self.state == "stopped":
+                    log.info("(OMC)kill多轮仿真")
+                    return
+                time.sleep(10)
                 log.info("(OMC)进行第{}轮仿真".format(run_steps))
                 # 修改xml文件
                 log.info("(OMC)修改参数：" + str(i))

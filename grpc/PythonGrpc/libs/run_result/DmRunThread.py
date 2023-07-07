@@ -23,6 +23,7 @@ class DmRunThread(threading.Thread):
     def __init__(self, request):
         threading.Thread.__init__(self)
         self.state = "init"
+        self.uuid = request.pageId
         self.request = request
         self.inputValData = request.inputValData
 
@@ -131,7 +132,7 @@ class DmRunThread(threading.Thread):
                     "fileName": fileName,
                     "modelName": self.request.simulateModelName,
                     "userName": self.request.userName,
-                    "taskId": self.request.uuid,
+                    "taskId": self.request.pageId,
                     "initialNames": list(self.request.inputValData.keys()),
                     "initialValues": self.input_data[0],
                     "dymolaLibraries": dymola_libraries
