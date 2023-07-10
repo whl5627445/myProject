@@ -1273,7 +1273,7 @@ func AppPageReleaseAccessView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, res)
 		return
 	}
-	pageData := map[string]interface{}{"width": page.PageWidth, "height": page.PageHeight, "background": page.Background, "background_color": page.BackgroundColor}
+	pageData := map[string]interface{}{"width": page.PageWidth, "height": page.PageHeight, "background": page.Background, "background_color": page.BackgroundColor, "page_type": page.PageType}
 	res.Data = map[string]interface{}{"result": result, "component": components, "page": pageData}
 	c.JSON(http.StatusOK, res)
 }
