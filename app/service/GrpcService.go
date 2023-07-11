@@ -385,14 +385,16 @@ func GrpcRunResult(appPageId string, singleSimulationInputData map[string]float6
 			// 将[1,0.5,5]转换为[1,1.5,2,2.5,3,3.5,4,4.5,5]
 			minVal := componentRecord[i].Min
 			step := componentRecord[i].Interval
-			maxVal := componentRecord[i].Max
+			//maxVal := componentRecord[i].Max
 			// 计算新的数组元素
 			var newValues []float64
 			if step == 0 {
 				break
 			}
-			for j := minVal; j <= maxVal; j += step {
-				newValues = append(newValues, j)
+			newValues = append(newValues, minVal)
+			for j := 0; j <= 8; j++ {
+				minVal = minVal + step
+				newValues = append(newValues, minVal)
 			}
 			inputData[componentRecord[i].InputName] = newValues
 		}
