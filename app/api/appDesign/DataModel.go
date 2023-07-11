@@ -23,6 +23,10 @@ type GetReleaseResData struct {
 	AppPageId string `json:"app_page_id" binding:"required"`
 }
 
+type ReleaseData struct {
+	AppPageId string `json:"app_page_id" binding:"required"`
+}
+
 type CreateAppSpaceData struct {
 	SpaceName        string `json:"space_name" binding:"required"`
 	SpaceDescription string `json:"space_description,omitempty" binding:""`

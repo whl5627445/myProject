@@ -197,3 +197,57 @@ func GetDirChild(rootPath string) ([]map[string]string, error) {
 	}
 	return dataList, nil
 }
+
+// 复制文件夹
+func CopyDir(srcDir string, destDir string) error {
+	err := filepath.Walk(srcDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		destPath := filepath.Join(destDir, path[len(srcDir):])
+
+		if info.IsDir() {
+			err := os.MkdirAll(destPath, info.Mode())
+			if err != nil {
+				return err
+			}
+		} else {
+			err := copyFile(path, destPath, info.Mode())
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+
+	return err
+}
+
+// 复制文件
+func copyFile(srcPath string, destPath string, mode os.FileMode) error {
+	srcFile, err := os.Open(srcPath)
+	if err != nil {
+		return err
+	}
+	defer srcFile.Close()
+
+	destFile, err := os.Create(destPath)
+	if err != nil {
+		return err
+	}
+	defer destFile.Close()
+
+	_, err = io.Copy(destFile, srcFile)
+	if err != nil {
+		return err
+	}
+
+	err = destFile.Chmod(mode)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

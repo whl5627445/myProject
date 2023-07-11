@@ -64,6 +64,7 @@ type AppPage struct {
 	Color               string         `gorm:"column:color;type:varchar(32)"`
 	BackgroundColor     string         `gorm:"column:background_color;type:varchar(32)"`
 	Release             bool           `gorm:"column:is_release;type:bool"`
+	IsMulSimulate       bool           `gorm:"column:is_mul_simulate;type:bool"`
 	MulResultPath       string         `gorm:"column:mul_result_path;type:varchar(128)"`
 	SimulateState       int            `gorm:"column:simulate_state;type:int;default:0"`
 	SimulateMessageRead bool           `gorm:"column:simulate_message_read;type:bool;default:true"`
@@ -132,6 +133,37 @@ type AppPageComponent struct {
 	IsGroup            bool           `gorm:"column:is_group;type:bool"`
 }
 
+type AppPageComponentsPreview struct {
+	ID                 string         `gorm:"primaryKey;type:varchar(128)" json:"id,omitempty"`
+	PageId             string         `gorm:"column:page_id;type:varchar(128)" json:"-"`
+	InputName          string         `gorm:"column:input_name;type:varchar(32)" json:"input_name,omitempty"`
+	Output             datatypes.JSON `gorm:"column:output;type:json" json:"output,omitempty"`
+	Max                float64        `gorm:"column:max;type:float" json:"max,omitempty"`
+	Min                float64        `gorm:"column:min;type:float" json:"min,omitempty"`
+	Interval           float64        `gorm:"column:interval;type:float" json:"interval,omitempty"`
+	Type               string         `gorm:"column:type;type:varchar(32)" json:"type,omitempty"`
+	Width              int            `gorm:"column:width;type:int" json:"width,omitempty"`
+	Height             int            `gorm:"column:height;type:int" json:"height,omitempty"`
+	PositionX          int            `gorm:"column:position_x;type:int" json:"position_x,omitempty"`
+	PositionY          int            `gorm:"column:position_y;type:int" json:"position_y,omitempty"`
+	Angle              int            `gorm:"column:angle;type:int" json:"angle,omitempty"`
+	HorizontalFlip     bool           `gorm:"column:horizontal_flip;type:bool" json:"horizontal_flip,omitempty"`
+	VerticalFlip       bool           `gorm:"column:vertical_flip;type:bool" json:"vertical_flip,omitempty"`
+	Opacity            int            `gorm:"column:opacity;type:int" json:"opacity,omitempty"`
+	OtherConfiguration datatypes.JSON `gorm:"column:other_configuration;type:json" json:"other_configuration,omitempty"`
+	CreatedAt          *time.Time     `gorm:"column:create_time;autoCreateTime" json:"-"`
+	//Deleted            gorm.DeletedAt `gorm:"column:deleted_at" json:"-"`
+	ZIndex        int            `gorm:"column:z_index;type:int" json:"z_index,omitempty"`
+	Styles        datatypes.JSON `gorm:"column:styles;type:json" json:"styles,omitempty"`
+	Events        datatypes.JSON `gorm:"column:events;type:json" json:"events,omitempty"`
+	ChartConfig   datatypes.JSON `gorm:"column:chart_config;type:json" json:"chart_config,omitempty"`
+	Option        datatypes.JSON `gorm:"column:option;type:json" json:"option,omitempty"`
+	ComponentPath string         `gorm:"column:component_path;type:varchar(32)" json:"component_path,omitempty"`
+	Hide          bool           `gorm:"column:hide;type:bool" json:"hide,omitempty"`
+	Lock          bool           `gorm:"column:lock;type:bool" json:"lock,omitempty"`
+	IsGroup       bool           `gorm:"column:is_group;type:bool" json:"is_group,omitempty"`
+}
+
 type AppPageComponentsRelease struct {
 	ID                 string         `gorm:"primaryKey;type:varchar(128)" json:"id,omitempty"`
 	PageId             string         `gorm:"column:page_id;type:varchar(128)" json:"-"`
@@ -151,14 +183,14 @@ type AppPageComponentsRelease struct {
 	Opacity            int            `gorm:"column:opacity;type:int" json:"opacity,omitempty"`
 	OtherConfiguration datatypes.JSON `gorm:"column:other_configuration;type:json" json:"other_configuration,omitempty"`
 	CreatedAt          *time.Time     `gorm:"column:create_time;autoCreateTime" json:"-"`
-	Deleted            gorm.DeletedAt `gorm:"column:deleted_at" json:"-"`
-	ZIndex             int            `gorm:"column:z_index;type:int" json:"z_index,omitempty"`
-	Styles             datatypes.JSON `gorm:"column:styles;type:json" json:"styles,omitempty"`
-	Events             datatypes.JSON `gorm:"column:events;type:json" json:"events,omitempty"`
-	ChartConfig        datatypes.JSON `gorm:"column:chart_config;type:json" json:"chart_config,omitempty"`
-	Option             datatypes.JSON `gorm:"column:option;type:json" json:"option,omitempty"`
-	ComponentPath      string         `gorm:"column:component_path;type:varchar(32)" json:"component_path,omitempty"`
-	Hide               bool           `gorm:"column:hide;type:bool" json:"hide,omitempty"`
-	Lock               bool           `gorm:"column:lock;type:bool" json:"lock,omitempty"`
-	IsGroup            bool           `gorm:"column:is_group;type:bool" json:"is_group,omitempty"`
+	//Deleted            gorm.DeletedAt `gorm:"column:deleted_at" json:"-"`
+	ZIndex        int            `gorm:"column:z_index;type:int" json:"z_index,omitempty"`
+	Styles        datatypes.JSON `gorm:"column:styles;type:json" json:"styles,omitempty"`
+	Events        datatypes.JSON `gorm:"column:events;type:json" json:"events,omitempty"`
+	ChartConfig   datatypes.JSON `gorm:"column:chart_config;type:json" json:"chart_config,omitempty"`
+	Option        datatypes.JSON `gorm:"column:option;type:json" json:"option,omitempty"`
+	ComponentPath string         `gorm:"column:component_path;type:varchar(32)" json:"component_path,omitempty"`
+	Hide          bool           `gorm:"column:hide;type:bool" json:"hide,omitempty"`
+	Lock          bool           `gorm:"column:lock;type:bool" json:"lock,omitempty"`
+	IsGroup       bool           `gorm:"column:is_group;type:bool" json:"is_group,omitempty"`
 }

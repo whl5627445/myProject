@@ -74,6 +74,94 @@ func MultipleSimulateKillView(c *gin.Context) {
 
 }
 
+func AppReleaseView(c *gin.Context) {
+	/*
+		# 发布接口
+	*/
+	// TODO： 徐庆达
+	var res responseData
+	var item ReleaseData
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	var page DataBaseModel.AppPage
+	var appSpace DataBaseModel.AppSpace
+	DB.Where("id = ? ", item.AppPageId).First(&page)
+	DB.Where("id = ? ", page.AppSpaceId).First(&appSpace)
+	if !page.IsMulSimulate {
+		// 没有多轮仿真过
+		res.Msg = "发布失败！还没有多轮仿真过！"
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	sourceResPath := page.MulResultPath + "preview/"
+	log.Println("--------------------------------", sourceResPath)
+	releaseCopyPath := page.MulResultPath + "release/"
+	fileOperation.DeletePathAndFile(releaseCopyPath)
+	log.Println("--------------------------------", releaseCopyPath)
+	err = fileOperation.CopyDir(sourceResPath, releaseCopyPath)
+	if err != nil {
+		res.Msg = "发布失败！"
+		log.Println("--------------------------------", err)
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	var components []DataBaseModel.AppPageComponentsPreview
+	DB.Where("page_id = ?", item.AppPageId).Find(&components)
+
+	var newComponents []DataBaseModel.AppPageComponentsRelease
+	DB.Where("page_id = ?", item.AppPageId).Delete(&DataBaseModel.AppPageComponentsRelease{})
+
+	for _, component := range components {
+		newComponent := DataBaseModel.AppPageComponentsRelease{
+			ID:                 component.ID,
+			PageId:             component.PageId,
+			Type:               component.Type,
+			Width:              component.Width,
+			Height:             component.Height,
+			PositionX:          component.PositionX,
+			PositionY:          component.PositionY,
+			Angle:              component.Angle,
+			HorizontalFlip:     component.HorizontalFlip,
+			VerticalFlip:       component.VerticalFlip,
+			Opacity:            component.Opacity,
+			OtherConfiguration: component.OtherConfiguration,
+			ZIndex:             component.ZIndex,
+			Styles:             component.Styles,
+			Events:             component.Events,
+			ChartConfig:        component.ChartConfig,
+			Option:             component.Option,
+			ComponentPath:      component.ComponentPath,
+			Hide:               component.Hide,
+			Lock:               component.Lock,
+			IsGroup:            component.IsGroup,
+			InputName:          component.InputName,
+			Output:             component.Output,
+			Max:                component.Max,
+			Min:                component.Min,
+			Interval:           component.Interval,
+		}
+
+		newComponents = append(newComponents, newComponent)
+	}
+
+	err = DB.Create(&newComponents).Error
+	if err != nil {
+		res.Msg = "发布失败！"
+		log.Println("--------------------------------", err)
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	res.Msg = "发布成功！"
+	c.JSON(http.StatusOK, res)
+	page.Release = true
+	appSpace.Release = true
+	DB.Save(&page)
+	DB.Save(&appSpace)
+}
+
 func GetAppSimulateResultView(c *gin.Context) {
 	/*
 		# 读取AppPage仿真结果
@@ -111,6 +199,30 @@ func GetAppReleaseResultView(c *gin.Context) {
 		return
 	}
 	data, err := service.AppReleaseResult(item.AppPageId)
+	if err != nil {
+		log.Println(err)
+		res.Msg = "读取失败。"
+		c.JSON(http.StatusBadRequest, res)
+		return
+	}
+	res.Data = data
+	res.Msg = "读取成功。"
+	c.JSON(http.StatusOK, res)
+}
+
+func GetAppPreviewResultView(c *gin.Context) {
+	/*
+		# 读取多轮仿真结果csv数据接口
+	*/
+	// TODO： 徐庆达
+	var res responseData
+	var item GetReleaseResData
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	data, err := service.AppPreviewResult(item.AppPageId)
 	if err != nil {
 		log.Println(err)
 		res.Msg = "读取失败。"
@@ -162,6 +274,7 @@ func GetModelStateView(c *gin.Context) {
 	DB.Where("id = ?", appPageId).First(&appPageRecord)
 	var res responseData
 	resData := map[string]interface{}{
+		"is_release":            appPageRecord.Release,
 		"release_state":         appPageRecord.ReleaseState,
 		"simulate_state":        appPageRecord.SimulateState,
 		"release_time":          appPageRecord.ReleaseTime * 1000,
@@ -1264,7 +1377,7 @@ func AppPageReleaseAccessView(c *gin.Context) {
 	path := c.Query("path")
 	var page DataBaseModel.AppPage
 	DB.Where("app_space_id = ? AND page_path = ? AND is_release = ?", spaceId, path, true).First(&page)
-	var components []DataBaseModel.AppPageComponentsRelease
+	var components []DataBaseModel.AppPageComponentsPreview
 	DB.Where("page_id = ?", page.ID).Find(&components)
 	result, err := service.AppReleaseResult(page.ID)
 	if err != nil {

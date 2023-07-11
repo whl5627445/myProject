@@ -577,6 +577,78 @@ func AppReleaseResult(appPageId string) (map[string]interface{}, error) {
 	} else {
 		// 获取appPageRecord.MultiSimulationResultsPath下的所有csv文件
 		var csvFileNames []string
+		err := filepath.Walk(appPageRecord.MulResultPath+"release/", func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if !info.IsDir() && strings.HasSuffix(info.Name(), ".csv") {
+				csvFileNames = append(csvFileNames, info.Name())
+			}
+			return nil
+		})
+		if err != nil {
+			fmt.Println(err)
+		}
+		for i := 0; i < len(csvFileNames); i++ {
+			// 读取csv数据
+			file, err := os.Open(appPageRecord.MulResultPath + "/" + csvFileNames[i])
+			if err != nil {
+				return nil, err
+			}
+			defer file.Close()
+			reader := csv.NewReader(file)
+			records, err := reader.ReadAll()
+			if err != nil {
+				return nil, err
+			}
+			// 遍历每一列数据
+			resultMap := make(map[string]interface{})
+			for n := 0; n < len(records[0]); n++ {
+				var column []string
+				for _, record := range records {
+					column = append(column, record[n])
+				}
+				var floatArr []float64
+				// 将字符串数组转换为 float 数组
+				for _, s := range column[1:] {
+					if s != "" {
+						f, err := strconv.ParseFloat(s, 64)
+						if err != nil {
+							fmt.Println(err)
+						}
+						floatArr = append(floatArr, f)
+					}
+				}
+				resultMap[column[0]] = floatArr
+			}
+			csvDataKey := csvFileNames[i][:len(csvFileNames[i])-4]
+			csvData[csvDataKey] = resultMap
+		}
+	}
+	resData["mul_simulate_data"] = csvData
+	resData["naming_order"] = appPageRecord.NamingOrder
+	return resData, nil
+
+}
+
+func AppPreviewResult(appPageId string) (map[string]interface{}, error) {
+	var appPageRecord DataBaseModel.AppPage
+	resData := make(map[string]interface{})
+	csvData := make(map[string]interface{})
+	// 查询appPageId是否存在
+	DB.Where("id = ? ", appPageId).First(&appPageRecord)
+	var appDataSourceRecord DataBaseModel.AppDataSource
+	DB.Where("id = ? ", appPageRecord.DataSourceId).First(&appDataSourceRecord)
+	if appPageRecord.ID == "" || appDataSourceRecord.ID == "" {
+		return nil, errors.New("not found")
+	}
+
+	// 未完成
+	if appPageRecord.MulResultPath == "" {
+		return nil, errors.New("not found")
+	} else {
+		// 获取appPageRecord.MultiSimulationResultsPath下的所有csv文件
+		var csvFileNames []string
 		err := filepath.Walk(appPageRecord.MulResultPath, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
