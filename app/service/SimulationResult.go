@@ -643,7 +643,6 @@ func AppPreviewResult(appPageId string) (map[string]interface{}, error) {
 		return nil, errors.New("not found")
 	}
 
-	// 未完成
 	if appPageRecord.MulResultPath == "" {
 		return nil, errors.New("not found")
 	} else {

@@ -1474,8 +1474,8 @@ func Test(c *gin.Context) {
 func AppModelMarkView(c *gin.Context) {
 	/*
 		# 标记模型为可用数据源,(执行一次仿真)
+		开发人： 徐庆达
 	*/
-	// TODO： 徐庆达
 	var res responseData
 	userName := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")

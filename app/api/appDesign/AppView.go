@@ -23,8 +23,8 @@ var DB = config.DB
 func MultipleSimulateView(c *gin.Context) {
 	/*
 		# 多轮仿真接口
+		开发人： 徐庆达
 	*/
-	// TODO： 徐庆达
 	var res responseData
 	//userName := c.GetHeader("username")
 	//userSpaceId := c.GetHeader("space_id")
@@ -57,14 +57,13 @@ func MultipleSimulateView(c *gin.Context) {
 
 func MultipleSimulateKillView(c *gin.Context) {
 	/*
-	   # 取消多轮仿真任务
+		   # 取消多轮仿真任务
+			开发人： 宋义
 	*/
-	// TODO： 宋义
 	var res responseData
 	pageId := c.Query("app_page_id")
 
 	replyVar, err := service.GrpcSimulationProcessOperation(pageId, "kill", "")
-	log.Println(replyVar)
 	if err != nil {
 		log.Println("调用grpc服务(GrpcPyOmcSimulationProcessOperation)出错：：", err)
 	}
@@ -77,8 +76,8 @@ func MultipleSimulateKillView(c *gin.Context) {
 func AppReleaseView(c *gin.Context) {
 	/*
 		# 发布接口
+		开发人： 徐庆达
 	*/
-	// TODO： 徐庆达
 	var res responseData
 	var item ReleaseData
 	err := c.BindJSON(&item)
@@ -97,10 +96,8 @@ func AppReleaseView(c *gin.Context) {
 		return
 	}
 	sourceResPath := page.MulResultPath + "preview/"
-	log.Println("--------------------------------", sourceResPath)
 	releaseCopyPath := page.MulResultPath + "release/"
 	fileOperation.DeletePathAndFile(releaseCopyPath)
-	log.Println("--------------------------------", releaseCopyPath)
 	err = fileOperation.CopyDir(sourceResPath, releaseCopyPath)
 	if err != nil {
 		res.Msg = "发布失败！"
@@ -165,8 +162,8 @@ func AppReleaseView(c *gin.Context) {
 func GetAppSimulateResultView(c *gin.Context) {
 	/*
 		# 读取AppPage仿真结果
+		开发人： 徐庆达
 	*/
-	// TODO： 徐庆达
 	var res responseData
 	var item GetSimResData
 	err := c.BindJSON(&item)
@@ -218,9 +215,9 @@ func GetModelReleaseDetailsView(c *gin.Context) {
 
 func GetModelStateView(c *gin.Context) {
 	/*
-	   ## 获取仿真状态  0未发布 1初始化 2发布中 3 发布失败 4 发布完成
+		## 获取仿真状态  0未发布 1初始化 2发布中 3 发布失败 4 发布完成
+		开发人： 徐庆达
 	*/
-	// TODO： 徐庆达
 	appPageId := c.Query("app_page_id")
 	var appPageRecord DataBaseModel.AppPage
 	DB.Where("id = ?", appPageId).First(&appPageRecord)
@@ -265,8 +262,8 @@ func ModelStateMessageReadView(c *gin.Context) {
 func GetDataSourceGroupView(c *gin.Context) {
 	/*
 		# 获取用户数据源分组
+		开发人： 徐庆达
 	*/
-	// TODO： 徐庆达
 	var res responseData
 	userName := c.GetHeader("username")
 	var group []DataBaseModel.AppDataSource
@@ -839,7 +836,6 @@ func GetPageComponentView(c *gin.Context) {
 	/*
 		# app应用页面组件查询组件
 	*/
-
 	var res responseData
 	userName := c.GetHeader("username")
 	spaceId := c.Query("space_id")
@@ -851,32 +847,32 @@ func GetPageComponentView(c *gin.Context) {
 
 	var componentDataList []map[string]interface{}
 
-	for _, c := range componentList {
+	for _, component := range componentList {
 		p := map[string]interface{}{
-			"id":                  c.ID,
-			"type":                c.Type,
-			"width":               c.Width,
-			"height":              c.Height,
-			"position_x":          c.PositionX,
-			"position_y":          c.PositionY,
-			"angle":               c.Angle,
-			"horizontal_flip":     c.HorizontalFlip,
-			"vertical_flip":       c.VerticalFlip,
-			"opacity":             c.Opacity,
-			"other_configuration": c.OtherConfiguration,
-			"z_index":             c.ZIndex,
-			"styles":              c.Styles,
-			"events":              c.Events,
-			"chart_config":        c.ChartConfig,
-			"option":              c.Option,
-			"component_path":      c.ComponentPath,
-			"hide":                c.Hide,
-			"lock":                c.Lock,
-			"is_group":            c.IsGroup,
-			"max":                 c.Max,
-			"min":                 c.Min,
-			"interval":            c.Interval,
-			"input_name":          c.InputName,
+			"id":                  component.ID,
+			"type":                component.Type,
+			"width":               component.Width,
+			"height":              component.Height,
+			"position_x":          component.PositionX,
+			"position_y":          component.PositionY,
+			"angle":               component.Angle,
+			"horizontal_flip":     component.HorizontalFlip,
+			"vertical_flip":       component.VerticalFlip,
+			"opacity":             component.Opacity,
+			"other_configuration": component.OtherConfiguration,
+			"z_index":             component.ZIndex,
+			"styles":              component.Styles,
+			"events":              component.Events,
+			"chart_config":        component.ChartConfig,
+			"option":              component.Option,
+			"component_path":      component.ComponentPath,
+			"hide":                component.Hide,
+			"lock":                component.Lock,
+			"is_group":            component.IsGroup,
+			"max":                 component.Max,
+			"min":                 component.Min,
+			"interval":            component.Interval,
+			"input_name":          component.InputName,
 		}
 		componentDataList = append(componentDataList, p)
 	}
@@ -1091,8 +1087,8 @@ func DeletePageComponentView(c *gin.Context) {
 func GetDatasourceView(c *gin.Context) {
 	/*
 		# 获取数据源相关信息
+		开发人： 徐庆达
 	*/
-	// TODO： 徐庆达
 	var res responseData
 	userName := c.GetHeader("username")
 	groupName := c.Query("group_name")
@@ -1116,8 +1112,8 @@ func GetDatasourceView(c *gin.Context) {
 func DatasourceDeleteView(c *gin.Context) {
 	/*
 		# 删除数据源
+		开发人： 徐庆达
 	*/
-	// TODO： 徐庆达
 	userName := c.GetHeader("username")
 	var res responseData
 	var item DeleteDatasourceData
@@ -1149,8 +1145,8 @@ func DatasourceDeleteView(c *gin.Context) {
 func DataSourceRenameView(c *gin.Context) {
 	/*
 		# 重命名数据源
+		开发人： 徐庆达
 	*/
-	// TODO： 徐庆达
 	var item DataSourceRenameData
 	err := c.BindJSON(&item)
 	if err != nil {
@@ -1172,8 +1168,8 @@ func DataSourceRenameView(c *gin.Context) {
 func GetDatasourceInputView(c *gin.Context) {
 	/*
 		# 获取数据源输入接口
+		开发人： 徐庆达
 	*/
-	// TODO： 徐庆达
 
 	//username := c.GetHeader("username")
 	//userSpaceId := c.GetHeader("space_id")
@@ -1201,8 +1197,8 @@ func GetDatasourceInputView(c *gin.Context) {
 func GetDatasourceOutputView(c *gin.Context) {
 	/*
 		# 获取数据源输出接口
+		开发人： 徐庆达
 	*/
-	// TODO： 徐庆达
 
 	//username := c.GetHeader("username")
 	//userSpaceId := c.GetHeader("space_id")
