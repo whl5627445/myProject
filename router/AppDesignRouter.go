@@ -13,8 +13,6 @@ func AppDesignRouter(g *gin.Engine) {
 		Models.GET("/model/multiple/simulate/kill", API.MultipleSimulateKillView)
 		Models.POST("/model/release", API.AppReleaseView)
 		Models.POST("/model/simulate/result", API.GetAppSimulateResultView)
-		Models.POST("/model/release/result", API.GetAppReleaseResultView)
-		Models.POST("/model/preview/result", API.GetAppPreviewResultView)
 		Models.GET("/model/simulate/details", API.GetModelSimulateDetailsView)
 		Models.GET("/model/release/details", API.GetModelReleaseDetailsView)
 		Models.GET("/model/state/get", API.GetModelStateView)
@@ -54,7 +52,6 @@ func AppDesignRouter(g *gin.Engine) {
 
 		Models.GET("/page/preview", API.AppPagePreviewView)
 		Models.GET("/page/release/access", API.AppPageReleaseAccessView)
-
 		Models.POST("/components/basic/information/set", API.SetComponentBasicInformationView)
 		Models.GET("/components/basic/information/get", API.GetComponentBasicInformationView)
 

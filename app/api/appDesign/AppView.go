@@ -186,54 +186,6 @@ func GetAppSimulateResultView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-func GetAppReleaseResultView(c *gin.Context) {
-	/*
-		# 读取多轮仿真结果csv数据接口
-	*/
-	// TODO： 徐庆达
-	var res responseData
-	var item GetReleaseResData
-	err := c.BindJSON(&item)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, "")
-		return
-	}
-	data, err := service.AppReleaseResult(item.AppPageId)
-	if err != nil {
-		log.Println(err)
-		res.Msg = "读取失败。"
-		c.JSON(http.StatusBadRequest, res)
-		return
-	}
-	res.Data = data
-	res.Msg = "读取成功。"
-	c.JSON(http.StatusOK, res)
-}
-
-func GetAppPreviewResultView(c *gin.Context) {
-	/*
-		# 读取多轮仿真结果csv数据接口
-	*/
-	// TODO： 徐庆达
-	var res responseData
-	var item GetReleaseResData
-	err := c.BindJSON(&item)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, "")
-		return
-	}
-	data, err := service.AppPreviewResult(item.AppPageId)
-	if err != nil {
-		log.Println(err)
-		res.Msg = "读取失败。"
-		c.JSON(http.StatusBadRequest, res)
-		return
-	}
-	res.Data = data
-	res.Msg = "读取成功。"
-	c.JSON(http.StatusOK, res)
-}
-
 func GetModelSimulateDetailsView(c *gin.Context) {
 	/*
 		# 读取单次仿真输出的详细信息
@@ -1377,7 +1329,7 @@ func AppPageReleaseAccessView(c *gin.Context) {
 	path := c.Query("path")
 	var page DataBaseModel.AppPage
 	DB.Where("app_space_id = ? AND page_path = ? AND is_release = ?", spaceId, path, true).First(&page)
-	var components []DataBaseModel.AppPageComponentsPreview
+	var components []DataBaseModel.AppPageComponentsRelease
 	DB.Where("page_id = ?", page.ID).Find(&components)
 	result, err := service.AppReleaseResult(page.ID)
 	if err != nil {
