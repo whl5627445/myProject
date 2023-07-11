@@ -62,6 +62,41 @@ func SearchModel(model DataBaseModel.YssimModels, keyWords, parentNode string) [
 	return modelNameList
 }
 
+func SearchModelType(parentNode string) []map[string]interface{} {
+	var modelNameList []map[string]interface{}
+	var nodeNames []string
+	searchModelMap := map[string]bool{}
+	nodeNames = omc.OMC.GetClassNames(parentNode, false)
+	for i := 0; i < len(nodeNames); i++ {
+		n := nodeNames[i]
+		if parentNode != "" {
+			n = parentNode + "." + nodeNames[i]
+		}
+		modelNames := omc.OMC.GetClassNames(n, true)
+		for _, name := range modelNames {
+			modelType := omc.OMC.GetClassRestriction(name)
+			if modelType == "function" {
+				nameListAll := strings.Split(name, ".")
+				shortName := nameListAll[len(nameListAll)-2]
+				nameParent := shortName
+				searchModelMap[nameParent] = true
+				data := map[string]interface{}{
+					"name":       shortName,
+					"model_name": name,
+					"haschild":   false,
+					"type":       modelType,
+					"image":      "",
+				}
+				modelNameList = append(modelNameList, data)
+			} else {
+				continue
+			}
+			break
+		}
+	}
+	return modelNameList
+}
+
 func SearchPackage(model DataBaseModel.YssimModels, keyWords string) map[string]interface{} {
 	words := strings.ToLower(keyWords)
 	modelNames := omc.OMC.GetClassNames(model.PackageName, true)
