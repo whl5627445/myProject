@@ -571,8 +571,7 @@ func AppReleaseResult(appPageId string) (map[string]interface{}, error) {
 		return nil, errors.New("not found")
 	}
 
-	// 未完成
-	if appPageRecord.MulResultPath == "" {
+	if appPageRecord.MulResultPath == "" && !fileOperation.Exists(appPageRecord.MulResultPath+"release/") {
 		return nil, errors.New("not found")
 	} else {
 		// 获取appPageRecord.MultiSimulationResultsPath下的所有csv文件
@@ -591,7 +590,7 @@ func AppReleaseResult(appPageId string) (map[string]interface{}, error) {
 		}
 		for i := 0; i < len(csvFileNames); i++ {
 			// 读取csv数据
-			file, err := os.Open(appPageRecord.MulResultPath + "/" + csvFileNames[i])
+			file, err := os.Open(appPageRecord.MulResultPath + "release/" + csvFileNames[i])
 			if err != nil {
 				return nil, err
 			}
@@ -643,7 +642,7 @@ func AppPreviewResult(appPageId string) (map[string]interface{}, error) {
 		return nil, errors.New("not found")
 	}
 
-	if appPageRecord.MulResultPath == "" {
+	if appPageRecord.MulResultPath == "" && !fileOperation.Exists(appPageRecord.MulResultPath+"preview/") {
 		return nil, errors.New("not found")
 	} else {
 		// 获取appPageRecord.MultiSimulationResultsPath下的所有csv文件
@@ -662,7 +661,7 @@ func AppPreviewResult(appPageId string) (map[string]interface{}, error) {
 		}
 		for i := 0; i < len(csvFileNames); i++ {
 			// 读取csv数据
-			file, err := os.Open(appPageRecord.MulResultPath + "/" + csvFileNames[i])
+			file, err := os.Open(appPageRecord.MulResultPath + "preview/" + csvFileNames[i])
 			if err != nil {
 				return nil, err
 			}

@@ -101,7 +101,7 @@ func AppReleaseView(c *gin.Context) {
 	err = fileOperation.CopyDir(sourceResPath, releaseCopyPath)
 	if err != nil {
 		res.Msg = "发布失败！"
-		log.Println("--------------------------------", err)
+		log.Println("发布失败:", err)
 		c.JSON(http.StatusOK, res)
 		return
 	}
@@ -147,7 +147,7 @@ func AppReleaseView(c *gin.Context) {
 	err = DB.Create(&newComponents).Error
 	if err != nil {
 		res.Msg = "发布失败！"
-		log.Println("--------------------------------", err)
+		log.Println("发布失败:", err)
 		c.JSON(http.StatusOK, res)
 		return
 	}
@@ -829,6 +829,9 @@ func CreatePageComponentView(c *gin.Context) {
 	res.Msg = "创建成功"
 	updateTime := time.Now().Local()
 	DB.Model(DataBaseModel.AppSpace{}).Where("id = ? AND username = ?", item.SpaceId, userName).Update("update_time", &updateTime)
+	// 创建组件后，页面不能预览，is_preview设置为false
+	page.IsPreview = false
+	DB.Save(&page)
 	c.JSON(http.StatusOK, res)
 }
 
@@ -1081,6 +1084,9 @@ func DeletePageComponentView(c *gin.Context) {
 	res.Msg = "删除成功"
 	updateTime := time.Now().Local()
 	DB.Model(DataBaseModel.AppSpace{}).Where("id = ? AND username = ?", page.AppSpaceId, userName).Update("update_time", &updateTime)
+	// 删除组件后，页面不能预览，is_preview设置为false
+	page.IsPreview = false
+	DB.Save(&page)
 	c.JSON(http.StatusOK, res)
 }
 
