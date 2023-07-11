@@ -5,7 +5,7 @@ import random
 import string
 
 from config.db_config import Session, YssimSimulateRecords, AppDataSources, AppPages, AppSpaces, AppPagesComponent, \
-    AppPagesComponentRelease
+    AppPagesComponentRelease, AppPagesComponentPreview
 from config.redis_config import R
 import json
 import os
@@ -105,7 +105,7 @@ def update_compile_records(uuid,
 
 def update_app_pages_records(pages_id, mul_result_path=None, simulate_state=None, release_state=None, release_time=None,
                              simulate_time=None, release_message_read=None, simulate_message_read=None,
-                             simulate_err=None, release_err=None, is_release=None,naming_order=None):
+                             simulate_err=None, release_err=None, is_release=None,naming_order=None,is_mul_simulate=None):
     with Session() as session:
         app_pages_record = session.query(AppPages).filter(
             AppPages.id == pages_id).first()
@@ -131,18 +131,20 @@ def update_app_pages_records(pages_id, mul_result_path=None, simulate_state=None
             app_pages_record.release_err = release_err
         if naming_order:
             app_pages_record.naming_order = naming_order
+        if is_mul_simulate is not None:
+            app_pages_record.is_mul_simulate = is_mul_simulate
         session.commit()
 
 
-def page_release_component_freeze(pages_id):
+def page_preview_component_freeze(pages_id):
     with Session() as session:
         components_list = session.query(AppPagesComponent).filter(
             AppPagesComponent.page_id == pages_id, AppPagesComponent.deleted_at == None).all()
         new_components_list = []
-        session.query(AppPagesComponentRelease).filter(
-            AppPagesComponentRelease.page_id == pages_id).delete()
+        session.query(AppPagesComponentPreview).filter(
+            AppPagesComponentPreview.page_id == pages_id).delete()
         for i in components_list:
-            component_release = AppPagesComponentRelease(
+            component_preview = AppPagesComponentPreview(
                 id=i.id,
                 page_id=i.page_id,
                 type=i.type,
@@ -173,7 +175,7 @@ def page_release_component_freeze(pages_id):
                 interval=i.interval
             )
 
-            new_components_list.append(component_release)
+            new_components_list.append(component_preview)
         session.add_all(new_components_list)
         session.commit()
 

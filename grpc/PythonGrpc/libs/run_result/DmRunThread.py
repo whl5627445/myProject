@@ -7,7 +7,7 @@ import requests
 import pandas as pd
 import os
 import configparser
-from libs.function.defs import update_app_pages_records,dymola_convert_list,update_app_spaces_records,dymola_res_list_to_csv_dict,page_release_component_freeze,result_step
+from libs.function.defs import update_app_pages_records,dymola_convert_list,update_app_spaces_records,dymola_res_list_to_csv_dict,page_preview_component_freeze,result_step
 from libs.function.grpc_log import log
 import shutil
 
@@ -241,7 +241,7 @@ class DmRunThread(threading.Thread):
                                          release_time=time.time(),
                                          naming_order=list(self.inputValData.keys()))
                 update_app_spaces_records(self.request.pageId)
-                page_release_component_freeze(self.request.pageId)
+                page_preview_component_freeze(self.request.pageId)
         else:
             if self.request.singleOrMultiple == "single":  # 仿真任务
                 update_app_pages_records(self.request.pageId, simulate_state=3,simulate_time=time.time())

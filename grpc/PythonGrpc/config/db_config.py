@@ -1,5 +1,5 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import create_engine, Column, String, Integer, Text, DateTime, JSON, Boolean,Float
+from sqlalchemy import create_engine, Column, String, Integer, Text, DateTime, JSON, Boolean, Float
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import QueuePool
 
@@ -112,6 +112,7 @@ class AppPages(Base):
     simulate_err = Column(String)
     release_err = Column(String)
     is_release = Column(Boolean)
+    is_mul_simulate = Column(Boolean)
 
 
 class AppSpaces(Base):
@@ -155,6 +156,38 @@ class AppPagesComponent(Base):
 
 class AppPagesComponentRelease(Base):
     __tablename__ = 'app_page_components_releases'
+    id = Column(String, primary_key=True)
+    page_id = Column(String)
+    type = Column(String)
+    width = Column(Integer)
+    height = Column(Integer)
+    position_x = Column(Integer)
+    position_y = Column(Integer)
+    angle = Column(Integer)
+    horizontal_flip = Column(Boolean)
+    vertical_flip = Column(Boolean)
+    opacity = Column(Integer)
+    other_configuration = Column(JSON)
+    z_index = Column(Integer)
+    styles = Column(JSON)
+    events = Column(JSON)
+    chart_config = Column(JSON)
+    option = Column(JSON)
+    component_path = Column(String)
+    hide = Column(Boolean)
+    lock = Column(Boolean)
+    is_group = Column(Boolean)
+    create_time = Column(DateTime)
+    deleted_at = Column(DateTime)
+    input_name = Column(String)
+    output = Column(JSON)
+    max = Column(Float)
+    min = Column(Float)
+    interval = Column(Float)
+
+
+class AppPagesComponentPreview(Base):
+    __tablename__ = 'app_page_components_previews'
     id = Column(String, primary_key=True)
     page_id = Column(String)
     type = Column(String)
