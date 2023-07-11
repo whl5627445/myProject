@@ -105,7 +105,9 @@ def update_compile_records(uuid,
 
 def update_app_pages_records(pages_id, mul_result_path=None, simulate_state=None, release_state=None, release_time=None,
                              simulate_time=None, release_message_read=None, simulate_message_read=None,
-                             simulate_err=None, release_err=None, is_release=None,naming_order=None,is_mul_simulate=None):
+                             simulate_err=None, release_err=None, is_release=None, naming_order=None,
+                             is_mul_simulate=None,
+                             is_preview=None):
     with Session() as session:
         app_pages_record = session.query(AppPages).filter(
             AppPages.id == pages_id).first()
@@ -133,6 +135,8 @@ def update_app_pages_records(pages_id, mul_result_path=None, simulate_state=None
             app_pages_record.naming_order = naming_order
         if is_mul_simulate is not None:
             app_pages_record.is_mul_simulate = is_mul_simulate
+        if is_preview is not None:
+            app_pages_record.is_preview = is_preview
         session.commit()
 
 
@@ -284,5 +288,5 @@ def result_step(arr):
         return arr
     else:
         step = len(arr) // 50  # 计算步长
-        new_arr = [arr[i] for i in range(0, len(arr), step)]   # 等间距取值
+        new_arr = [arr[i] for i in range(0, len(arr), step)]  # 等间距取值
         return new_arr

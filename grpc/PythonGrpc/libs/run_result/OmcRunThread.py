@@ -38,11 +38,11 @@ class OmcRunThread(threading.Thread):
         # 进行多轮仿真
 
         # 创建暂存这次多轮结果的文件夹，如果这次多轮仿真成功，将这个文件夹覆盖上一次的多轮仿真结果文件夹
-        staging_mul_output_path = r"/home/simtek/code/" + self.request.mulResultPath+"copy/"
+        staging_mul_output_path = r"/home/simtek/code/" + self.request.mulResultPath + "copy/"
         if os.path.exists(staging_mul_output_path):
             shutil.rmtree(staging_mul_output_path)
         # 创建新的文件夹
-        log.info("(OMC)创建新的暂存文件夹"+str(staging_mul_output_path))
+        log.info("(OMC)创建新的暂存文件夹" + str(staging_mul_output_path))
         os.mkdir(staging_mul_output_path)
 
         log.info("(OMC)一共需要执行{}轮".format(len(self.input_data)))
@@ -50,7 +50,7 @@ class OmcRunThread(threading.Thread):
             if self.state == "stopped":
                 log.info("(OMC)kill多轮仿真")
                 return
-            log.info("(OMC)进行第{}轮仿真".format(run_steps+1))
+            log.info("(OMC)进行第{}轮仿真".format(run_steps + 1))
             # 修改xml文件
             log.info("(OMC)修改参数：" + str(i))
             if write_xml(r"/home/simtek/code/" + self.absolute_path, i):
@@ -96,7 +96,7 @@ class OmcRunThread(threading.Thread):
                 for s in i.values():
                     s = round(s, 6)
                     csv_file_name = csv_file_name + "_" + str(s)
-                log.info("(OMC)保存地址："+str(staging_mul_output_path))
+                log.info("(OMC)保存地址：" + str(staging_mul_output_path))
                 df.to_csv(staging_mul_output_path + '{}.csv'.format(csv_file_name),
                           index=False,
                           encoding='utf-8')
@@ -110,11 +110,12 @@ class OmcRunThread(threading.Thread):
             # 更新数据库
             update_app_pages_records(self.request.pageId,
                                      release_state=4,
-                                     is_mul_simulate=1, # 是否多轮仿真过
+                                     is_preview=1,  # 是否可以预览
+                                     is_mul_simulate=1,  # 是否多轮仿真过
                                      naming_order=list(self.input_data[0].keys()))
             update_app_spaces_records(self.request.pageId)
             page_preview_component_freeze(self.request.pageId)
-            mul_output_path = r"/home/simtek/code/" + self.request.mulResultPath+"preview/"
+            mul_output_path = r"/home/simtek/code/" + self.request.mulResultPath + "preview/"
             # 清空上次的多轮仿真结果
             if os.path.exists(mul_output_path):
                 shutil.rmtree(mul_output_path)

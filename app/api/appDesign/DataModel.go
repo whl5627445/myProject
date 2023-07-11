@@ -139,6 +139,42 @@ type EditPageComponentData struct {
 	Interval           float64        `json:"interval" binding:""`
 }
 
+type ConfigEditPageComponentData struct {
+	Id                 string         `json:"id" binding:"required"`
+	SpaceId            string         `json:"space_id" binding:"required"`
+	PageId             string         `json:"page_id" binding:"required"`
+	Type               string         `json:"type,omitempty" binding:""`
+	Width              int            `json:"width,omitempty" binding:""`
+	Height             int            `json:"height,omitempty" binding:""`
+	PositionX          int            `json:"position_x,omitempty" binding:""`
+	PositionY          int            `json:"position_y,omitempty" binding:""`
+	Angle              int            `json:"angle,omitempty" binding:""`
+	HorizontalFlip     bool           `json:"horizontal_flip,omitempty" binding:""`
+	VerticalFlip       bool           `json:"vertical_flip,omitempty" binding:""`
+	Opacity            int            `json:"opacity,omitempty" binding:""`
+	OtherConfiguration datatypes.JSON `json:"other_configuration,omitempty" binding:""`
+	ZIndex             int            `json:"z_index,omitempty" binding:""`
+	Styles             datatypes.JSON `json:"styles,omitempty" binding:""`
+	Events             datatypes.JSON `json:"events,omitempty" binding:""`
+	ChartConfig        datatypes.JSON `json:"chart_config,omitempty" binding:""`
+	Option             datatypes.JSON `json:"option,omitempty" binding:""`
+	ComponentPath      string         `json:"component_path,omitempty" binding:""`
+	Hide               bool           `json:"hide,omitempty" binding:""`
+	Lock               bool           `json:"lock,omitempty" binding:""`
+	IsGroup            bool           `json:"is_group,omitempty" binding:""`
+}
+
+type DataEditPageComponentData struct {
+	Id        string         `json:"id" binding:"required"`
+	SpaceId   string         `json:"space_id" binding:"required"`
+	PageId    string         `json:"page_id" binding:"required"`
+	InputName string         `json:"input_name,omitempty" binding:""`
+	Max       float64        `json:"max" binding:""`
+	Min       float64        `json:"min" binding:""`
+	Interval  float64        `json:"interval" binding:""`
+	Option    datatypes.JSON `json:"option,omitempty" binding:""`
+}
+
 type DeletePageComponentData struct {
 	PageId         string   `json:"page_id" binding:"required"`
 	ComponentsList []string `json:"component_id" binding:"required"`

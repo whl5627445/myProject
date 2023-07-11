@@ -113,6 +113,7 @@ class AppPages(Base):
     release_err = Column(String)
     is_release = Column(Boolean)
     is_mul_simulate = Column(Boolean)
+    is_preview = Column(Boolean)
 
 
 class AppSpaces(Base):

@@ -65,6 +65,7 @@ type AppPage struct {
 	BackgroundColor     string         `gorm:"column:background_color;type:varchar(32)"`
 	Release             bool           `gorm:"column:is_release;type:bool"`
 	IsMulSimulate       bool           `gorm:"column:is_mul_simulate;type:bool"`
+	IsPreview           bool           `gorm:"column:is_preview;type:bool"`
 	MulResultPath       string         `gorm:"column:mul_result_path;type:varchar(128)"`
 	SimulateState       int            `gorm:"column:simulate_state;type:int;default:0"`
 	SimulateMessageRead bool           `gorm:"column:simulate_message_read;type:bool;default:true"`
