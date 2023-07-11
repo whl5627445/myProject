@@ -649,7 +649,7 @@ func AppPreviewResult(appPageId string) (map[string]interface{}, error) {
 	} else {
 		// 获取appPageRecord.MultiSimulationResultsPath下的所有csv文件
 		var csvFileNames []string
-		err := filepath.Walk(appPageRecord.MulResultPath, func(path string, info os.FileInfo, err error) error {
+		err := filepath.Walk(appPageRecord.MulResultPath+"preview/", func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
 			}

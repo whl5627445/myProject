@@ -1319,6 +1319,30 @@ func AppPagePreviewView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+func AppPagePreviewAccessView(c *gin.Context) {
+	/*
+		# 预览的页面数据获取接口
+	*/
+	var res responseData
+	//userName := c.GetHeader("username")
+	spaceId := c.Query("space_id")
+	path := c.Query("path")
+	var page DataBaseModel.AppPage
+	DB.Where("app_space_id = ? AND page_path = ? AND is_release = ?", spaceId, path, true).First(&page)
+	var components []DataBaseModel.AppPageComponentsPreview
+	DB.Where("page_id = ?", page.ID).Find(&components)
+	result, err := service.AppPreviewResult(page.ID)
+	if err != nil {
+		log.Println(err)
+		res.Msg = "预览数据读取失败。"
+		c.JSON(http.StatusBadRequest, res)
+		return
+	}
+	pageData := map[string]interface{}{"width": page.PageWidth, "height": page.PageHeight, "background": page.Background, "background_color": page.BackgroundColor, "page_type": page.PageType}
+	res.Data = map[string]interface{}{"result": result, "component": components, "page": pageData}
+	c.JSON(http.StatusOK, res)
+}
+
 func AppPageReleaseAccessView(c *gin.Context) {
 	/*
 		# 访问发布成功的页面数据获取接口
