@@ -286,7 +286,7 @@ func GetModelParametersView(c *gin.Context) {
 
 	var res responseData
 	properties := make(map[string]interface{}, 0)
-	parameters := service.GetModelParameters(modelName, componentName, className)
+	parameters := service.GetModelParameters(modelName, componentName, className, "")
 	elements := service.GetElements(modelName, componentName)
 	if len(elements) > 0 && componentName != "" {
 		dimension := elements[len(elements)-1].(string)
