@@ -113,7 +113,7 @@ class OmcRunThread(threading.Thread):
                                      is_preview=1,  # 是否可以预览
                                      is_mul_simulate=1,  # 是否多轮仿真过
                                      naming_order=list(self.input_data[0].keys()))
-            update_app_spaces_records(self.request.pageId)
+            # update_app_spaces_records(self.request.pageId)
             page_preview_component_freeze(self.request.pageId)
             mul_output_path = r"/home/simtek/code/" + self.request.mulResultPath + "preview/"
             # 清空上次的多轮仿真结果

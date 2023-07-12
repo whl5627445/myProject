@@ -201,7 +201,7 @@ if __name__ == '__main__':
                 if len(DmSimulationThreadList) > 0:
                     log.info("(Dymola)正在运行的任务数：{}".format(len(DmSimulationThreadList)))
                     log.info("(Dymola)正在运行的任务：" + str(
-                        [{j.request.simulateModelName: j.state, "user_name": j.request.userName} for j in
+                        [{j.request.simulateModelName: j.state, "user_name": j.request.userName, "id": j.uuid} for j in
                          DmSimulationThreadList]))
                 if len(dymolaTaskList) > 0:
                     log.info("(Dymola)未执行任务队列剩余数量：{}".format(len(dymolaTaskList)))

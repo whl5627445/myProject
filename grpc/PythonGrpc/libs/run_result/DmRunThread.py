@@ -183,7 +183,7 @@ class DmRunThread(threading.Thread):
                                      is_preview=1,  # 是否可以预览
                                      is_mul_simulate=1,  # 是否多轮仿真过
                                      naming_order=list(self.inputValData.keys()))
-            update_app_spaces_records(self.request.pageId)
+            # update_app_spaces_records(self.request.pageId)
             page_preview_component_freeze(self.request.pageId)
         else:
             update_app_pages_records(self.request.pageId, release_state=3)

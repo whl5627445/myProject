@@ -89,74 +89,133 @@ func AppReleaseView(c *gin.Context) {
 	var appSpace DataBaseModel.AppSpace
 	DB.Where("id = ? ", item.AppPageId).First(&page)
 	DB.Where("id = ? ", page.AppSpaceId).First(&appSpace)
-	if !page.IsMulSimulate {
-		// 没有多轮仿真过
-		res.Msg = "发布失败！还没有多轮仿真过！"
-		c.JSON(http.StatusOK, res)
-		return
-	}
-	sourceResPath := page.MulResultPath + "preview/"
-	releaseCopyPath := page.MulResultPath + "release/"
-	fileOperation.DeletePathAndFile(releaseCopyPath)
-	err = fileOperation.CopyDir(sourceResPath, releaseCopyPath)
-	if err != nil {
-		res.Msg = "发布失败！"
-		log.Println("发布失败:", err)
-		c.JSON(http.StatusOK, res)
-		return
-	}
-	var components []DataBaseModel.AppPageComponentsPreview
-	DB.Where("page_id = ?", item.AppPageId).Find(&components)
+	// 页面类型为web-app时,复制结果文件和组件
+	if page.PageType == "web-app" {
+		if !page.IsMulSimulate {
+			// 没有多轮仿真过
+			res.Msg = "发布失败！还没有多轮仿真过！"
+			c.JSON(http.StatusOK, res)
+			return
+		}
+		// 复制多轮仿真的结果文件
+		sourceResPath := page.MulResultPath + "preview/"
+		releaseCopyPath := page.MulResultPath + "release/"
+		fileOperation.DeletePathAndFile(releaseCopyPath)
+		err = fileOperation.CopyDir(sourceResPath, releaseCopyPath)
+		if err != nil {
+			res.Msg = "发布失败！"
+			log.Println("发布失败:", err)
+			c.JSON(http.StatusOK, res)
+			return
+		}
+		// 复制组件AppPageComponentsPreview-->AppPageComponentsRelease
+		var components []DataBaseModel.AppPageComponentsPreview
+		DB.Where("page_id = ?", item.AppPageId).Find(&components)
 
-	var newComponents []DataBaseModel.AppPageComponentsRelease
-	DB.Where("page_id = ?", item.AppPageId).Delete(&DataBaseModel.AppPageComponentsRelease{})
+		var newComponents []DataBaseModel.AppPageComponentsRelease
+		DB.Where("page_id = ?", item.AppPageId).Delete(&DataBaseModel.AppPageComponentsRelease{})
 
-	for _, component := range components {
-		newComponent := DataBaseModel.AppPageComponentsRelease{
-			ID:                 component.ID,
-			PageId:             component.PageId,
-			Type:               component.Type,
-			Width:              component.Width,
-			Height:             component.Height,
-			PositionX:          component.PositionX,
-			PositionY:          component.PositionY,
-			Angle:              component.Angle,
-			HorizontalFlip:     component.HorizontalFlip,
-			VerticalFlip:       component.VerticalFlip,
-			Opacity:            component.Opacity,
-			OtherConfiguration: component.OtherConfiguration,
-			ZIndex:             component.ZIndex,
-			Styles:             component.Styles,
-			Events:             component.Events,
-			ChartConfig:        component.ChartConfig,
-			Option:             component.Option,
-			ComponentPath:      component.ComponentPath,
-			Hide:               component.Hide,
-			Lock:               component.Lock,
-			IsGroup:            component.IsGroup,
-			InputName:          component.InputName,
-			Output:             component.Output,
-			Max:                component.Max,
-			Min:                component.Min,
-			Interval:           component.Interval,
+		for _, component := range components {
+			newComponent := DataBaseModel.AppPageComponentsRelease{
+				ID:                 component.ID,
+				PageId:             component.PageId,
+				Type:               component.Type,
+				Width:              component.Width,
+				Height:             component.Height,
+				PositionX:          component.PositionX,
+				PositionY:          component.PositionY,
+				Angle:              component.Angle,
+				HorizontalFlip:     component.HorizontalFlip,
+				VerticalFlip:       component.VerticalFlip,
+				Opacity:            component.Opacity,
+				OtherConfiguration: component.OtherConfiguration,
+				ZIndex:             component.ZIndex,
+				Styles:             component.Styles,
+				Events:             component.Events,
+				ChartConfig:        component.ChartConfig,
+				Option:             component.Option,
+				ComponentPath:      component.ComponentPath,
+				Hide:               component.Hide,
+				Lock:               component.Lock,
+				IsGroup:            component.IsGroup,
+				InputName:          component.InputName,
+				Output:             component.Output,
+				Max:                component.Max,
+				Min:                component.Min,
+				Interval:           component.Interval,
+			}
+
+			newComponents = append(newComponents, newComponent)
 		}
 
-		newComponents = append(newComponents, newComponent)
+		err = DB.Create(&newComponents).Error
+		if err != nil {
+			res.Msg = "发布失败！"
+			log.Println("发布失败:", err)
+			c.JSON(http.StatusOK, res)
+			return
+		}
+
+	}
+	// 页面类型为large-screen时，只复制组件
+	if page.PageType == "large-screen" {
+		// 复制组件，AppPageComponent-->AppPageComponentsRelease
+		var components []DataBaseModel.AppPageComponent
+		DB.Where("page_id = ?", item.AppPageId).Find(&components)
+
+		var newComponents []DataBaseModel.AppPageComponentsRelease
+		DB.Where("page_id = ?", item.AppPageId).Delete(&DataBaseModel.AppPageComponentsRelease{})
+
+		for _, component := range components {
+			newComponent := DataBaseModel.AppPageComponentsRelease{
+				ID:                 component.ID,
+				PageId:             component.PageId,
+				Type:               component.Type,
+				Width:              component.Width,
+				Height:             component.Height,
+				PositionX:          component.PositionX,
+				PositionY:          component.PositionY,
+				Angle:              component.Angle,
+				HorizontalFlip:     component.HorizontalFlip,
+				VerticalFlip:       component.VerticalFlip,
+				Opacity:            component.Opacity,
+				OtherConfiguration: component.OtherConfiguration,
+				ZIndex:             component.ZIndex,
+				Styles:             component.Styles,
+				Events:             component.Events,
+				ChartConfig:        component.ChartConfig,
+				Option:             component.Option,
+				ComponentPath:      component.ComponentPath,
+				Hide:               component.Hide,
+				Lock:               component.Lock,
+				IsGroup:            component.IsGroup,
+				InputName:          component.InputName,
+				Output:             component.Output,
+				Max:                component.Max,
+				Min:                component.Min,
+				Interval:           component.Interval,
+			}
+
+			newComponents = append(newComponents, newComponent)
+		}
+
+		err = DB.Create(&newComponents).Error
+		if err != nil {
+			res.Msg = "发布失败！"
+			log.Println("发布失败:", err)
+			c.JSON(http.StatusOK, res)
+			return
+		}
+
 	}
 
-	err = DB.Create(&newComponents).Error
-	if err != nil {
-		res.Msg = "发布失败！"
-		log.Println("发布失败:", err)
-		c.JSON(http.StatusOK, res)
-		return
-	}
 	res.Msg = "发布成功！"
 	c.JSON(http.StatusOK, res)
 	page.Release = true
 	appSpace.Release = true
 	DB.Save(&page)
 	DB.Save(&appSpace)
+
 }
 
 func GetAppSimulateResultView(c *gin.Context) {
@@ -1431,20 +1490,34 @@ func AppPagePreviewAccessView(c *gin.Context) {
 	var res responseData
 	//userName := c.GetHeader("username")
 	spaceId := c.Query("space_id")
-	path := c.Query("path")
+	pageId := c.Query("page_id")
 	var page DataBaseModel.AppPage
-	DB.Where("app_space_id = ? AND page_path = ? AND is_release = ?", spaceId, path, true).First(&page)
-	var components []DataBaseModel.AppPageComponentsPreview
-	DB.Where("page_id = ?", page.ID).Find(&components)
-	result, err := service.AppPreviewResult(page.ID)
-	if err != nil {
-		log.Println(err)
-		res.Msg = "预览数据读取失败。"
-		c.JSON(http.StatusBadRequest, res)
-		return
+	DB.Where("id = ? AND app_space_id = ? ", pageId, spaceId).First(&page)
+
+	result := map[string]interface{}{}
+	if page.PageType == "web-app" {
+		var components []DataBaseModel.AppPageComponentsPreview
+		DB.Where("page_id = ?", page.ID).Find(&components)
+		var err error
+		result, err = service.AppPreviewResult(page.ID)
+		if err != nil {
+			log.Println(err)
+			res.Msg = "预览数据读取失败。"
+			c.JSON(http.StatusBadRequest, res)
+			return
+		}
+		pageData := map[string]interface{}{"width": page.PageWidth, "height": page.PageHeight, "background": page.Background, "background_color": page.BackgroundColor, "page_type": page.PageType}
+		res.Data = map[string]interface{}{"result": result, "component": components, "page": pageData}
+		c.JSON(http.StatusOK, res)
 	}
-	pageData := map[string]interface{}{"width": page.PageWidth, "height": page.PageHeight, "background": page.Background, "background_color": page.BackgroundColor, "page_type": page.PageType}
-	res.Data = map[string]interface{}{"result": result, "component": components, "page": pageData}
+	if page.PageType == "large-screen" {
+		var components []DataBaseModel.AppPageComponent
+		DB.Where("page_id = ?", page.ID).Find(&components)
+		pageData := map[string]interface{}{"width": page.PageWidth, "height": page.PageHeight, "background": page.Background, "background_color": page.BackgroundColor, "page_type": page.PageType}
+		res.Data = map[string]interface{}{"result": result, "component": components, "page": pageData}
+		c.JSON(http.StatusOK, res)
+	}
+	res.Msg = "不存在的页面类型！"
 	c.JSON(http.StatusOK, res)
 }
 
@@ -1455,17 +1528,21 @@ func AppPageReleaseAccessView(c *gin.Context) {
 	var res responseData
 	//userName := c.GetHeader("username")
 	spaceId := c.Query("space_id")
-	path := c.Query("path")
+	pageId := c.Query("page_id")
 	var page DataBaseModel.AppPage
-	DB.Where("app_space_id = ? AND page_path = ? AND is_release = ?", spaceId, path, true).First(&page)
+	DB.Where("id = ? AND app_space_id = ?  AND is_release = ?", pageId, spaceId, true).First(&page)
 	var components []DataBaseModel.AppPageComponentsRelease
 	DB.Where("page_id = ?", page.ID).Find(&components)
-	result, err := service.AppReleaseResult(page.ID)
-	if err != nil {
-		log.Println(err)
-		res.Msg = "发布数据读取失败。"
-		c.JSON(http.StatusBadRequest, res)
-		return
+	result := map[string]interface{}{}
+	if page.PageType == "web-app" {
+		var err error
+		result, err = service.AppReleaseResult(page.ID)
+		if err != nil {
+			log.Println(err)
+			res.Msg = "发布数据读取失败。"
+			c.JSON(http.StatusBadRequest, res)
+			return
+		}
 	}
 	pageData := map[string]interface{}{"width": page.PageWidth, "height": page.PageHeight, "background": page.Background, "background_color": page.BackgroundColor, "page_type": page.PageType}
 	res.Data = map[string]interface{}{"result": result, "component": components, "page": pageData}
