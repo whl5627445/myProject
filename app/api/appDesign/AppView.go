@@ -212,6 +212,7 @@ func AppReleaseView(c *gin.Context) {
 	res.Msg = "发布成功！"
 	c.JSON(http.StatusOK, res)
 	page.Release = true
+	page.ReleaseTime = int(time.Now().UnixNano() / int64(time.Millisecond))
 	appSpace.Release = true
 	DB.Save(&page)
 	DB.Save(&appSpace)
@@ -242,7 +243,7 @@ func GetAppSimulateResultView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-func GetModelSimulateDetailsView(c *gin.Context) {
+func GetModelMulSimulateDetailsView(c *gin.Context) {
 	/*
 		# 读取单次仿真输出的详细信息
 	*/
@@ -252,22 +253,7 @@ func GetModelSimulateDetailsView(c *gin.Context) {
 	var page DataBaseModel.AppPage
 	DB.Where("id = ? AND username = ?", pageId, userName).First(&page)
 	res.Data = map[string]interface{}{
-		"details": page.SimulateErr,
-	}
-	c.JSON(http.StatusOK, res)
-}
-
-func GetModelReleaseDetailsView(c *gin.Context) {
-	/*
-		# 读取多轮仿真输出的详细信息
-	*/
-	var res responseData
-	userName := c.GetHeader("username")
-	pageId := c.Query("page_id")
-	var page DataBaseModel.AppPage
-	DB.Where("id = ? AND username = ?", pageId, userName).First(&page)
-	res.Data = map[string]interface{}{
-		"details": page.ReleaseErr,
+		"details": page.MulSimulateErr,
 	}
 	c.JSON(http.StatusOK, res)
 }
@@ -282,14 +268,14 @@ func GetModelStateView(c *gin.Context) {
 	DB.Where("id = ?", appPageId).First(&appPageRecord)
 	var res responseData
 	resData := map[string]interface{}{
-		"is_preview":            appPageRecord.IsPreview,
-		"is_release":            appPageRecord.Release,
-		"release_state":         appPageRecord.ReleaseState,
-		"simulate_state":        appPageRecord.SimulateState,
-		"release_time":          appPageRecord.ReleaseTime * 1000,
-		"simulate_time":         appPageRecord.SimulateTime * 1000,
-		"simulate_message_read": appPageRecord.SimulateMessageRead,
-		"release_message_read":  appPageRecord.ReleaseMessageRead,
+		"is_preview": appPageRecord.IsPreview,
+		"is_release": appPageRecord.Release,
+		//"release_state": appPageRecord.ReleaseState,
+		"release_time":         appPageRecord.ReleaseTime * 1000,
+		"mul_sim_state":        appPageRecord.MulSimulateState,
+		"mul_sim_time":         appPageRecord.MulSimulateTime * 1000,
+		"mul_sim_message_read": appPageRecord.MulSimulateMessageRead,
+		//"release_message_read": appPageRecord.ReleaseMessageRead,
 	}
 	res.Data = resData
 	c.JSON(http.StatusOK, res)
@@ -309,8 +295,8 @@ func ModelStateMessageReadView(c *gin.Context) {
 	DB.Where("id = ?", item.AppPageId).First(&appPageRecord)
 	var res responseData
 	switch {
-	case item.MessageType == "simulate":
-		appPageRecord.SimulateMessageRead = true
+	case item.MessageType == "mul_simulate":
+		appPageRecord.MulSimulateMessageRead = true
 	case item.MessageType == "release":
 		appPageRecord.ReleaseMessageRead = true
 	}
@@ -1517,8 +1503,6 @@ func AppPagePreviewAccessView(c *gin.Context) {
 		res.Data = map[string]interface{}{"result": result, "component": components, "page": pageData}
 		c.JSON(http.StatusOK, res)
 	}
-	res.Msg = "不存在的页面类型！"
-	c.JSON(http.StatusOK, res)
 }
 
 func AppPageReleaseAccessView(c *gin.Context) {

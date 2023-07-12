@@ -6,7 +6,7 @@ import requests
 import pandas as pd
 import os
 import configparser
-from libs.function.defs import update_app_pages_records, dymola_convert_list, update_app_spaces_records, \
+from libs.function.defs import update_app_pages_records, dymola_convert_list, \
     page_preview_component_freeze, result_step
 from libs.function.grpc_log import log
 import shutil
@@ -25,7 +25,7 @@ class DmRunThread(threading.Thread):
         self.request = request
         self.inputValData = request.inputValData
         self.input_data = dymola_convert_list(self.inputValData, self.request.pageId)
-        update_app_pages_records(self.request.pageId, release_state=1)
+        update_app_pages_records(self.request.pageId, mul_sim_state=1)
 
     def send_request(self):
         log.info("(Dymola)发送请求")
@@ -145,8 +145,9 @@ class DmRunThread(threading.Thread):
             if self.request.mulResultPath is None:
                 return False, "mulResultPath为空", ''
             log.info("(Dymola)结果路径：" + mul_output_path)
-            update_app_pages_records(self.request.pageId, release_message_read=False)
-            update_app_pages_records(self.request.pageId, release_err=simulateResData.get("log"))
+            update_app_pages_records(self.request.pageId,
+                                     mul_sim_message_read=False,
+                                     mul_sim_err=simulateResData.get("log"))
             if simulateResData.get("code") == 200:
                 csv_data = simulateResData["data"]
                 log.info(type(csv_data))
@@ -173,24 +174,22 @@ class DmRunThread(threading.Thread):
     def run(self):
         self.state = "running"
         log.info("(Dymola)开启dymola仿真")
-        message = " "
-        update_app_pages_records(self.request.pageId, release_state=2)
+        update_app_pages_records(self.request.pageId, mul_sim_state=2)
         res, err, code = self.send_request()
         log.info("(Dymola)send_request返回" + str(res) + str(err) + str(code))
         if res:
             update_app_pages_records(self.request.pageId,
-                                     release_state=4,
+                                     mul_sim_state=4,
                                      is_preview=1,  # 是否可以预览
                                      is_mul_simulate=1,  # 是否多轮仿真过
                                      naming_order=list(self.inputValData.keys()))
             # update_app_spaces_records(self.request.pageId)
             page_preview_component_freeze(self.request.pageId)
         else:
-            update_app_pages_records(self.request.pageId, release_state=3)
+            update_app_pages_records(self.request.pageId, mul_sim_state=3)
         update_app_pages_records(self.request.pageId,
-                                 release_time=time.time(),
-                                 release_message_read=False,
-                                 release_err=message)
+                                 mul_sim_time=time.time(),
+                                 mul_sim_message_read=False,)
         log.info("(Dymola)仿真线程执行完毕")
         # delete_item_from_json(self.request.uuid)
         self.state = "stopped"
