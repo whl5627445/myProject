@@ -64,47 +64,30 @@ func SearchModel(model DataBaseModel.YssimModels, keyWords, parentNode string) [
 
 func SearchFunctionType(parentNode string) []map[string]interface{} {
 	var modelNameList []map[string]interface{}
-	var nodeNames []string
-	searchModelMap := map[string]bool{}
+	searchMap := map[string]bool{}
 	parentNodePackageList := strings.Split(parentNode, ".")
 
-	nodeNames = omc.OMC.GetClassNames(parentNode, false)
-	for i := 0; i < len(nodeNames); i++ {
-		n := nodeNames[i]
-		if parentNode != "" {
-			n = parentNode + "." + nodeNames[i]
-		}
-		modelNames := omc.OMC.GetClassNames(n, true)
-		for _, name := range modelNames {
+	names := omc.OMC.GetClassNames(parentNode, true)
+	for i := 1; i < len(names); i++ {
+		name := names[i]
+		nameListAll := strings.Split(name, ".")
+		shortName := nameListAll[len(parentNodePackageList)]
+		nameParent := strings.Join(nameListAll[:len(parentNodePackageList)+1], ".")
+		_, ok := searchMap[nameParent]
+		if !ok {
 			modelType := omc.OMC.GetClassRestriction(name)
 			if modelType == "function" {
-				nameListAll := strings.Split(name, ".")
-				shortName := nameListAll[0]
-				nameParent := shortName
-				if parentNode != "" {
-					nameParent = strings.Join(nameListAll[:len(parentNodePackageList)+1], ".")
-					shortName = nameListAll[len(parentNodePackageList)]
+				searchMap[nameParent] = true
+				data := map[string]interface{}{
+					"name":       shortName,
+					"model_name": nameParent,
+					"haschild":   false,
 				}
-				_, ok := searchModelMap[nameParent]
-				if !ok {
-					searchModelMap[nameParent] = true
-
-					data := map[string]interface{}{
-						"name":       shortName,
-						"model_name": nameParent,
-						"haschild":   false,
-						"type":       modelType,
-						"image":      "",
-						//"package_version": model.Version,
-					}
-					childList := omc.OMC.GetClassNames(nameParent, false)
-					if len(childList) > 0 {
-						data["haschild"] = true
-					}
-					modelNameList = append(modelNameList, data)
-
-					break
+				childList := omc.OMC.GetClassNames(nameParent, false)
+				if len(childList) > 0 {
+					data["haschild"] = true
 				}
+				modelNameList = append(modelNameList, data)
 			}
 		}
 	}
