@@ -62,7 +62,7 @@ func SearchModel(model DataBaseModel.YssimModels, keyWords, parentNode string) [
 	return modelNameList
 }
 
-func SearchModelType(parentNode string) []map[string]interface{} {
+func SearchFunctionType(parentNode string) []map[string]interface{} {
 	var modelNameList []map[string]interface{}
 	var nodeNames []string
 	searchModelMap := map[string]bool{}
@@ -85,7 +85,6 @@ func SearchModelType(parentNode string) []map[string]interface{} {
 					"model_name": name,
 					"haschild":   false,
 					"type":       modelType,
-					"image":      "",
 				}
 				modelNameList = append(modelNameList, data)
 			} else {

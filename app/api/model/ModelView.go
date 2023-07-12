@@ -1274,7 +1274,7 @@ func SearchModelView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-func SearchModelTypeView(c *gin.Context) {
+func SearchFunctionTypeView(c *gin.Context) {
 	/*
 		# 搜索类型为function的模型
 		## parent: 需要搜索的模型的父节点
@@ -1282,7 +1282,7 @@ func SearchModelTypeView(c *gin.Context) {
 	parent := c.Query("parent")
 	var res responseData
 	var data []map[string]interface{}
-	modelNameList := service.SearchModelType(parent)
+	modelNameList := service.SearchFunctionType(parent)
 	data = append(data, modelNameList...)
 	res.Data = data
 	c.JSON(http.StatusOK, res)
