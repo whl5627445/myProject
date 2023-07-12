@@ -382,7 +382,7 @@ func (m *modelParameters) getParameter(className string, varName string, p []int
 	if m.extendComponent {
 		isExtend = m.extend
 	}
-	dataDefault := map[string]interface{}{"tab": "General", "type": "Normal", "group": "Parameters", "is_extend": isExtend, "extend_name": m.extendLevel2Name}
+	dataDefault := map[string]interface{}{"tab": "General", "type": "Normal", "group": "Parameters", "defaultvalue": "", "unit": []string{""}, "is_extend": isExtend, "extend_name": m.extendLevel2Name}
 	dataDefault["unit_related"] = getDerivedClassModifierNamesAndValues(className)
 	IsExtendsModifierFinal := "false"
 	if p[5] == "protected" || p[6] == true || p[8] == true { // 筛选模型, 部分受保护的,隐藏的需要被过滤
@@ -472,6 +472,21 @@ func (m *modelParameters) getParameter(className string, varName string, p []int
 	}
 
 	if p[9] == true { // 处理模板参数类型
+		classInformation := omc.OMC.GetClassInformation(p[2].(string))
+		dataDefault["read_only"] = false
+		if dataDefault["value"] == "" {
+			dataDefault["value"] = omc.OMC.GetElementModifierValue(m.modelName, m.componentName+"."+dataDefault["name"].(string))
+		}
+		if dataDefault["value"] == "" {
+			dataDefault["value"] = p[2].(string) + " - " + classInformation[1].(string)
+		}
+		if dataDefault["defaultvalue"] == "" {
+			dataDefault["defaultvalue"] = p[2].(string) + " - " + classInformation[1].(string)
+		}
+		if m.level == 0 {
+			dataDefault["read_only"] = true
+			return dataDefault
+		}
 		annotationBase := m.componentAnnotations[i].([]interface{})
 		optionsBase := []string{}
 		if len(annotationBase) > 1 && annotationBase[0] == "choices" {
@@ -499,28 +514,23 @@ func (m *modelParameters) getParameter(className string, varName string, p []int
 			dataDefault["options"] = options
 			return dataDefault
 		}
-		switch {
-		case p[13].(string) != "$Any":
-			options = omc.OMC.GetAllSubtypeOf(p[13].(string), m.componentClassName)
-			dataDefault["value"] = p[2].(string)
-		case len(annotationBase) > 0 && annotationBase[0] == "choicesAllMatching=true":
-			options = omc.OMC.GetAllSubtypeOf(p[2].(string), m.modelName)
-		}
-		classInformation := omc.OMC.GetClassInformation(p[2].(string))
-		dataDefault["read_only"] = false
-		if dataDefault["value"] == "" {
-			dataDefault["value"] = omc.OMC.GetElementModifierValue(m.modelName, m.componentName+"."+dataDefault["name"].(string))
-		}
-		if m.level == 0 && dataDefault["value"] == "" {
-			dataDefault["value"] = p[2].(string) + " - " + classInformation[1].(string)
-		} else {
-			dataDefault["read_only"] = true
-		}
-		if dataDefault["defaultvalue"] == "" {
-			dataDefault["defaultvalue"] = p[2].(string) + " - " + classInformation[1].(string)
-		}
 		oData := make([]string, 1)
 		oData = append(oData, optionsBase...)
+		choicesAllMatching := func() bool {
+			for _, c := range annotationBase {
+				if c == "choicesAllMatching=true" {
+					return true
+				}
+			}
+			return false
+		}()
+		switch {
+		case p[13].(string) != "$Any" && m.level != 0:
+			options = omc.OMC.GetAllSubtypeOf(p[13].(string), m.componentClassName)
+			dataDefault["value"] = p[2].(string)
+		case choicesAllMatching:
+			options = omc.OMC.GetAllSubtypeOf(p[2].(string), m.modelName)
+		}
 		for _, option := range options {
 			optionData := ""
 			if p[1] != "-" {
