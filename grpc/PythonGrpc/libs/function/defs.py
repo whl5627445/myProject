@@ -103,9 +103,9 @@ def update_compile_records(uuid,
         session.commit()
 
 
-def update_app_pages_records(pages_id, mul_result_path=None, simulate_state=None, release_state=None, release_time=None,
-                             simulate_time=None, release_message_read=None, simulate_message_read=None,
-                             simulate_err=None, release_err=None, is_release=None, naming_order=None,
+def update_app_pages_records(pages_id, mul_result_path=None, mul_sim_state=None, release_state=None, release_time=None,
+                             mul_sim_time=None, release_message_read=None, mul_sim_message_read=None,
+                             mul_sim_err=None, release_err=None, is_release=None, naming_order=None,
                              is_mul_simulate=None,
                              is_preview=None):
     with Session() as session:
@@ -115,20 +115,20 @@ def update_app_pages_records(pages_id, mul_result_path=None, simulate_state=None
             app_pages_record.is_release = is_release
         if mul_result_path:
             app_pages_record.mul_result_path = mul_result_path
-        if simulate_state:
-            app_pages_record.simulate_state = simulate_state
+        if mul_sim_state:
+            app_pages_record.mul_sim_state = mul_sim_state
         if release_state:
             app_pages_record.release_state = release_state
         if release_time:
             app_pages_record.release_time = release_time
-        if simulate_time:
-            app_pages_record.simulate_time = simulate_time
+        if mul_sim_time:
+            app_pages_record.mul_sim_time = mul_sim_time
         if release_message_read is not None:
             app_pages_record.release_message_read = release_message_read
-        if simulate_message_read is not None:
-            app_pages_record.simulate_message_read = simulate_message_read
-        if simulate_err:
-            app_pages_record.simulate_err = simulate_err
+        if mul_sim_message_read is not None:
+            app_pages_record.mul_sim_message_read = mul_sim_message_read
+        if mul_sim_err:
+            app_pages_record.mul_sim_err = mul_sim_err
         if release_err:
             app_pages_record.release_err = release_err
         if naming_order:

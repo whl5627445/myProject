@@ -26,7 +26,7 @@ class OmcRunThread(threading.Thread):
         self.csv_data = []
         # update_item_to_json(self.uuid, {"id": self.uuid, "run_states": "init", })
         self.input_data = omc_convert_dict_to_list(self.inputValData, self.request.pageId)
-        update_app_pages_records(self.request.pageId, release_state=1)
+        update_app_pages_records(self.request.pageId, mul_sim_state=1)
         threading.Thread.__init__(self)
 
     def run(self):
@@ -34,7 +34,7 @@ class OmcRunThread(threading.Thread):
         message = ""
         run_steps = 0
         # 多轮仿真/发布任务
-        update_app_pages_records(self.request.pageId, release_state=2)
+        update_app_pages_records(self.request.pageId, mul_sim_state=2)
         # 进行多轮仿真
 
         # 创建暂存这次多轮结果的文件夹，如果这次多轮仿真成功，将这个文件夹覆盖上一次的多轮仿真结果文件夹
@@ -109,7 +109,7 @@ class OmcRunThread(threading.Thread):
             log.info("(OMC)如果每轮都成功")
             # 更新数据库
             update_app_pages_records(self.request.pageId,
-                                     release_state=4,
+                                     mul_sim_state=4,
                                      is_preview=1,  # 是否可以预览
                                      is_mul_simulate=1,  # 是否多轮仿真过
                                      naming_order=list(self.input_data[0].keys()))
@@ -125,11 +125,11 @@ class OmcRunThread(threading.Thread):
             shutil.rmtree(staging_mul_output_path)
         else:
             # 更新数据库
-            update_app_pages_records(self.request.pageId, release_state=3)
+            update_app_pages_records(self.request.pageId, mul_sim_state=3)
         update_app_pages_records(self.request.pageId,
-                                 release_time=time.time(),
-                                 release_message_read=False,
-                                 release_err=message)
+                                 mul_sim_time=time.time(),
+                                 mul_sim_message_read=False,
+                                 mul_sim_err=message)
 
         self.state = "stopped"
         # delete_item_from_json(self.uuid)
