@@ -557,7 +557,7 @@ func CopyClassView(c *gin.Context) {
 
 	var packageModel DataBaseModel.YssimModels
 	DB.Where("package_name = ? AND userspace_id = ?", packageName, "0").Or("sys_or_user = ? AND userspace_id = ? AND package_name = ?", userName, userSpaceId, packageName).First(&packageModel)
-	if packageModel.SysUser == "sys" {
+	if packageModel.SysUser == "sys" && item.ParentName != "" {
 		res.Msg = "标准库不允许插入模型"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
@@ -598,7 +598,8 @@ func CopyClassView(c *gin.Context) {
 	}
 	result, msg := service.SaveModel(item.ModelName, item.CopiedClassName, item.ParentName, "copy", filePath)
 	if result {
-
+		model.Version = service.GetVersion(model.PackageName)
+		DB.Save(&model)
 		res.Msg = msg
 		data := map[string]string{}
 		if item.ParentName == "" {
