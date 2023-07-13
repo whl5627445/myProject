@@ -256,7 +256,7 @@ func CreateModelPackageView(c *gin.Context) {
 			packageInformationJson, _ := sonic.Marshal(packageInformation)
 			DB.Model(DataBaseModel.YssimUserSpace{}).Where("id = ? AND username = ?", userSpaceId, username).Update("package_information", packageInformationJson)
 		} else {
-			DB.Create(&newPackage)
+			DB.Delete(&newPackage)
 			res.Err = "创建失败，请稍后再试"
 			res.Status = 2
 		}
