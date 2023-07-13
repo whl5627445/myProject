@@ -477,6 +477,7 @@ func (m *modelParameters) getParameter(className string, varName string, p []int
 
 		if m.level == 0 {
 			dataDefault["read_only"] = true
+			dataDefault["value"] = p[2].(string)
 			return dataDefault
 		}
 		annotationBase := m.componentAnnotations[i].([]interface{})
