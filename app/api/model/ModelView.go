@@ -209,7 +209,7 @@ func GetModelCodeView(c *gin.Context) {
 	*/
 	modelName := c.Query("model_name")
 	var res responseData
-	modelCode := service.GetModelFileCode(modelName)
+	modelCode := service.GetModelCode(modelName)
 	res.Data = modelCode
 	c.JSON(http.StatusOK, res)
 }
@@ -529,7 +529,6 @@ func CopyClassView(c *gin.Context) {
 	var item copyClassData
 	var res responseData
 	err := c.BindJSON(&item)
-	// if err != nil || item.PackageId == "" && item.ParentName != "" {
 	if err != nil {
 		log.Println(err)
 		c.JSON(http.StatusBadRequest, "not found")
