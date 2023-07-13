@@ -641,12 +641,13 @@ func DeletePackageAndModelView(c *gin.Context) {
 	}
 	result, msg := service.SaveModel(item.ModelName, "", item.ParentName, "delete", packageModel.FilePath)
 	if result {
-		service.ModelSave(item.ParentName)
 		res.Msg = msg
 		if item.ParentName == "" {
 			var simulateRecord []DataBaseModel.YssimSimulateRecord
 			DB.Where("package_id = ? AND username = ? AND userspace_id = ?", item.PackageId, userName, userSpaceId).Find(&simulateRecord)
 			DB.Delete(&packageModel)
+		} else {
+			service.ModelSave(item.ParentName)
 		}
 		var modelCollection []DataBaseModel.YssimModelsCollection
 		DB.Where("package_id = ? AND model_name = ? AND userspace_id = ?", packageModel.ID, item.ModelName, userSpaceId).Find(&modelCollection)
