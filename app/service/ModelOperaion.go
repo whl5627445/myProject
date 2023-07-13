@@ -6,12 +6,12 @@ import (
 )
 
 func inheritanceModelNameFixes(copiedClassName, className string) {
-	classInformation := omc.OMC.GetClassRestriction(copiedClassName)
+	//classInformation := omc.OMC.GetClassRestriction(copiedClassName)
+	//if classInformation != "model" {
+	//	return
+	//}
 	classStrOld := omc.OMC.ListFile(className)
 	classStrNew := classStrOld
-	if classInformation != "model" {
-		return
-	}
 	classNameList := strings.Split(copiedClassName, ".")
 	packageName := classNameList[0]
 	components := omc.OMC.GetElements(className)
@@ -77,7 +77,10 @@ func inheritanceModelNameFixes(copiedClassName, className string) {
 
 func copyModel(copiedClassName, className, parentName string) (bool, string) {
 	classNameAll := className
-
+	copiedClassInformation := omc.OMC.GetClassRestriction(copiedClassName)
+	if copiedClassInformation == "package" {
+		return false, "包类型不允许复制，请继承使用"
+	}
 	if parentName == "" {
 		parentName = "TopLevel"
 	} else {
@@ -93,10 +96,10 @@ func copyModel(copiedClassName, className, parentName string) (bool, string) {
 	}
 	copyResult := omc.OMC.CopyClass(copiedClassName, className, parentName)
 	if copyResult {
+		fromPackage := strings.Split(copiedClassName, ".")[0]
+		fromVersion := GetVersion(fromPackage)
 		inheritanceModelNameFixes(copiedClassName, classNameAll)
-		packageName := strings.Split(copiedClassName, ".")[0]
-		version := GetVersion(packageName)
-		annotate := "from(version=\"" + version + "\", name=\"" + packageName + "\")"
+		annotate := "from(version=\"" + fromVersion + "\", name=\"" + fromPackage + "\")"
 		omc.OMC.AddClassAnnotation(className, annotate)
 		return true, "模型复制成功"
 	} else {
@@ -135,12 +138,12 @@ func SaveModel(className, copiedClassName, parentName, copeOrDelete, fileName st
 		case parentName != "":
 			path := omc.OMC.GetSourceFile(parentName)
 			//omc.OMC.SetSourceFile(parentName+"."+className, path)
-			go SaveModelSource(parentName+"."+className, path)
+			SaveModelSource(parentName+"."+className, path)
 		default:
 			//SaveModelSource(className, fileName)
 			//omc.OMC.SetSourceFile(className, fileName)
-			SaveModelToFile(className, fileName)
-			//go SaveModelCode(className, fileName)
+			//go SaveModelToFile(className, fileName)
+			SaveModelCode(className, fileName)
 		}
 	}
 

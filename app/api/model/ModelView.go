@@ -553,7 +553,6 @@ func CopyClassView(c *gin.Context) {
 	if item.ParentName != "" {
 		packageName = strings.Split(item.ParentName, ".")[0]
 	}
-	filePath := ""
 
 	var packageModel DataBaseModel.YssimModels
 	DB.Where("package_name = ? AND userspace_id = ?", packageName, "0").Or("sys_or_user = ? AND userspace_id = ? AND package_name = ?", userName, userSpaceId, packageName).First(&packageModel)
@@ -563,23 +562,22 @@ func CopyClassView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	modelName := item.ModelName
-
-	if item.ParentName != "" {
-		packageName = packageModel.PackageName
-		filePath = packageModel.FilePath
-		modelName = item.ParentName + "." + item.ModelName
-	} else {
-		packageName = item.ModelName
-		filePath = "static/UserFiles/UploadFile/" + userName + "/" + time.Now().Local().Format("20060102150405") + "/" + packageName + "/" + item.ModelName + ".mo"
-	}
-	if packageModel.PackageName == modelName {
+	if packageModel.PackageName == item.ModelName {
 		res.Msg = "模型名称已存在"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	model := DataBaseModel.YssimModels{
+	filePath := ""
+	if item.ParentName != "" {
+		packageName = packageModel.PackageName
+		filePath = packageModel.FilePath
+	} else {
+		packageName = item.ModelName
+		filePath = "static/UserFiles/UploadFile/" + userName + "/" + time.Now().Local().Format("20060102150405") + "/" + packageName + "/" + item.ModelName + ".mo"
+	}
+
+	newModel := DataBaseModel.YssimModels{
 		ID:          uuid.New().String(),
 		PackageName: packageName,
 		SysUser:     userName,
@@ -587,7 +585,7 @@ func CopyClassView(c *gin.Context) {
 		UserSpaceId: userSpaceId,
 	}
 	if item.ParentName == "" {
-		err = DB.Create(&model).Error
+		err = DB.Create(&newModel).Error
 		if err != nil {
 			log.Println("复制模型失败 err：", err)
 			res.Msg = "复制模型失败"
@@ -598,13 +596,10 @@ func CopyClassView(c *gin.Context) {
 	}
 	result, msg := service.SaveModel(item.ModelName, item.CopiedClassName, item.ParentName, "copy", filePath)
 	if result {
-		model.Version = service.GetVersion(model.PackageName)
-		DB.Save(&model)
 		res.Msg = msg
 		data := map[string]string{}
 		if item.ParentName == "" {
-
-			data["id"] = model.ID
+			data["id"] = newModel.ID
 			data["model_name"] = item.ModelName
 		} else {
 			data["id"] = packageModel.ID
