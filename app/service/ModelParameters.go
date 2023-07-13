@@ -474,15 +474,7 @@ func (m *modelParameters) getParameter(className string, varName string, p []int
 	if p[9] == true { // 处理模板参数类型
 		classInformation := omc.OMC.GetClassInformation(p[2].(string))
 		dataDefault["read_only"] = false
-		if dataDefault["value"] == "" {
-			dataDefault["value"] = omc.OMC.GetElementModifierValue(m.modelName, m.componentName+"."+dataDefault["name"].(string))
-		}
-		if dataDefault["value"] == "" {
-			dataDefault["value"] = p[2].(string) + " - " + classInformation[1].(string)
-		}
-		if dataDefault["defaultvalue"] == "" {
-			dataDefault["defaultvalue"] = p[2].(string) + " - " + classInformation[1].(string)
-		}
+
 		if m.level == 0 {
 			dataDefault["read_only"] = true
 			return dataDefault
@@ -524,10 +516,19 @@ func (m *modelParameters) getParameter(className string, varName string, p []int
 			}
 			return false
 		}()
+
+		value := omc.OMC.GetElementModifierValue(m.modelName, m.componentName+"."+dataDefault["name"].(string))
+		if value == "" {
+			value = p[2].(string) + " - " + classInformation[1].(string)
+		}
+		dataDefault["value"] = value
+		if m.level != 0 {
+			dataDefault["defaultvalue"] = value
+			dataDefault["value"] = ""
+		}
 		switch {
-		case p[13].(string) != "$Any" && m.level != 0:
+		case p[13].(string) != "$Any":
 			options = omc.OMC.GetAllSubtypeOf(p[13].(string), m.componentClassName)
-			dataDefault["value"] = p[2].(string)
 		case choicesAllMatching:
 			options = omc.OMC.GetAllSubtypeOf(p[2].(string), m.modelName)
 		}
@@ -601,11 +602,8 @@ func (m *modelParameters) getParameter(className string, varName string, p []int
 			value = ""
 		}
 		dataDefault["value"] = map[string]interface{}{"isFixed": isFixed, "value": value}
-		dataDefault["unit"] = []string{""}
-		unit := getUnit(className)
-		if unit != "" {
-			dataDefault["unit"] = []string{unit}
-		}
+		dataDefault["unit"] = []string{getUnit(className)}
+
 		return dataDefault
 	}
 	return nil
