@@ -58,8 +58,8 @@ func getIconAnnotationGraphics(modelName, nameType string) map[string]interface{
 		if AnnotationConfig[5].(string) != "-" {
 			data["initialScale"] = AnnotationConfig[5].(string)
 		}
+		data["preserve_aspect_ratio"] = AnnotationConfig[4]
 	}
-	data["preserve_aspect_ratio"] = AnnotationConfig[4]
 	data["output_type"] = "[]"
 	data["graphType"] = nameType
 	data["classname"] = modelName
@@ -223,61 +223,6 @@ func iconSubShapes(cData []interface{}, modelName string) []map[string]interface
 					}
 				}
 				data["originalTextString"] = originalTextString
-				//for _, t := range textList {
-				//	pSignIndex := strings.Index(t, "%")
-				//	if pSignIndex != -1 {
-				//		classNameAll := omc.OMC.GetInheritedClassesListAll([]string{modelName})
-				//		varName := t[pSignIndex+1:]
-				//		varValue := ""
-				//		if varName != "name" {
-				//			varName = strings.TrimSuffix(varName, "%")
-				//			for _, name := range classNameAll {
-				//				varValue = omc.OMC.GetParameterValue(name, varName)
-				//				if varValue != "" {
-				//					break
-				//				}
-				//
-				//				if varValue == "" {
-				//					varValue = varName
-				//				}
-				//
-				//				if len(varValue) > 20 && (strings.Contains(varValue, ".") || strings.Contains(varValue, " ")) {
-				//					varValueList := strings.Split(varValue, ".") // 某些值是模型全称的需要取最后一部分。所以分割一下
-				//					varValue = varValueList[len(varValueList)-1]
-				//				}
-				//			}
-				//			Unit := ""
-				//			classNameList := append(classNameAll, modelName)
-				//			for n := 0; n < len(classNameList); n++ {
-				//				Unit = omc.OMC.GetElementModifierValue(classNameList[n], varName+"."+"unit")
-				//				if Unit != "" {
-				//					Unit = " " + Unit
-				//					break
-				//				}
-				//			}
-				//			if Unit == "" {
-				//				for n := 0; n < len(classNameList); n++ {
-				//					classnameData := omc.OMC.GetElements(classNameList[n])
-				//					for p := 0; p < len(classnameData); p++ {
-				//						name := classnameData[p].([]interface{})[3].(string)
-				//						varClassName := classnameData[p].([]interface{})[2].(string)
-				//						if name != varName {
-				//							continue
-				//						}
-				//						Unit = " " + getDerivedClassModifierValue(varClassName, "unit")
-				//						break
-				//					}
-				//				}
-				//			}
-				//			oldVarName := "%" + varName
-				//			varValueUnit := varName + Unit
-				//
-				//			varValueUnit = strings.Replace(varValueUnit, varName, varValue, 1)
-				//			originalTextString = strings.Replace(originalTextString, oldVarName, varValueUnit, 1)
-				//		}
-				//	}
-				//}
-				//data["originalTextString"] = originalTextString
 			}
 			data["fontSize"] = drawingDataList[10]
 			data["textColor"] = oneDimensionalProcessing(drawingDataList[11])
