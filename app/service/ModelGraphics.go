@@ -276,7 +276,7 @@ func (g *graphicsData) data01(cData []interface{}, className, component, modelNa
 							varName = strings.TrimSuffix(varName, "%")
 							if varName != "" {
 								d := GetModelParameters(g.modelName, component, className, varName)
-								varValue, Unit = d[0].(string), d[1].(string)
+								Unit, varValue = d[0].(string), d[1].(string)
 								if varValue == "" {
 									varValue = varName
 								}

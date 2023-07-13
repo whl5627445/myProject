@@ -67,15 +67,8 @@ func GetModelParameters(modelName, componentName, componentClassName string, gra
 		m.level += 1
 		dataList = m.getClassParameters(componentClassName)
 	}
-	if m.graphicsParameterName != "" && len(dataList) != 0 {
-		d := dataList[0].(map[string]interface{})
-		value := d["value"]
-		if value == nil {
-			value = d["defaultvalue"]
-		}
-		unit := d["unit"].([]string)[0]
-		data := []interface{}{value, unit}
-		return data
+	if m.graphicsParameterName != "" {
+		return dataList
 	}
 	sortDataList := m.elementsToSort(dataList)
 	return sortDataList
@@ -216,11 +209,11 @@ func (m *modelParameters) getClassParameters(className string) []interface{} {
 		m.getExtendsModifierNamesAndValue()
 		m.getElementsModifierNamesAndValue(classAll[i], m.componentName)
 		dataList = append(dataList, m.elementsAndAnnotations(className)...)
-		classes := m.getInherited(classAll[i])
-		classAll = append(classAll, classes...)
 		if !m.graphicsParameter && m.graphicsParameterName != "" {
 			break
 		}
+		classes := m.getInherited(classAll[i])
+		classAll = append(classAll, classes...)
 	}
 	return dataList
 }
@@ -356,14 +349,16 @@ func (m *modelParameters) elementsAndAnnotations(modelName string) []any {
 		p := m.components[i].([]interface{})
 		className = p[2].(string)
 		varName := p[3].(string)
-		data := m.getParameter(className, varName, p, i)
 		if m.graphicsParameterName == varName {
 			m.graphicsParameter = false
-			return []any{data}
+			return m.getGraphicsParameter(className, varName)
 		}
-		if data != nil {
-			data["attributes"] = m.getAttributes(varName)
-			dataList = append(dataList, data)
+		if m.graphicsParameterName == "" {
+			data := m.getParameter(className, varName, p, i)
+			if data != nil {
+				data["attributes"] = m.getAttributes(varName)
+				dataList = append(dataList, data)
+			}
 		}
 	}
 	return dataList
@@ -382,19 +377,40 @@ func (m *modelParameters) getParameter(className string, varName string, p []int
 	if m.extendComponent {
 		isExtend = m.extend
 	}
-	dataDefault := map[string]interface{}{"tab": "General", "type": "Normal", "group": "Parameters", "defaultvalue": "", "unit": []string{""}, "is_extend": isExtend, "extend_name": m.extendLevel2Name}
+	dataDefault := map[string]interface{}{"tab": "General", "type": "Normal", "group": "Parameters", "defaultvalue": "", "unit": []string{getUnit(className)}, "is_extend": isExtend, "extend_name": m.extendLevel2Name}
 	dataDefault["unit_related"] = getDerivedClassModifierNamesAndValues(className)
+	modifier := m.componentName + "." + varName
+	elementModifierData := m.elementModifierNamesMap[modifier] // 查找有没有标识符标记该组件或参数
+	elementModifierValue := elementModifierData.value          // 如果有标记的话, 取出值
+	delete(m.elementModifierNamesMap, modifier)
 	IsExtendsModifierFinal := "false"
+	emName := varName
+	if m.extendsModifierNamesMap[emName] == nil {
+		emName = m.componentName + "." + varName
+	}
+	if m.extendsModifierNamesMap[emName] != nil {
+		extendsModifier := m.extendsModifierNamesMap[emName]
+		IsExtendsModifierFinal = omc.OMC.IsExtendsModifierFinal(extendsModifier["child"].(string), extendsModifier["parent"].(string), varName)
+		if IsExtendsModifierFinal == "true" { //判断参数是否是不可修改的, 如果是,则过滤该参数
+			return nil
+		}
+		extendsModifierValue := extendsModifier["value"] // 继承过来的标识符中如果有该参数的值,则根据level等级进行赋值
+		if extendsModifier["level"].(int) > 0 {
+			dataDefault["defaultvalue"] = extendsModifierValue
+		} else {
+			dataDefault["value"] = extendsModifierValue
+		}
+		dataDefault["name"] = strings.TrimPrefix(emName, m.componentName+".")
+	}
 	if p[5] == "protected" || p[6] == true || p[8] == true { // 筛选模型, 部分受保护的,隐藏的需要被过滤
 		return nil
 	}
 	dataDefault["name"] = varName
 	dataDefault["comment"] = p[4].(string)
-	modifier := m.componentName + "." + varName
 
-	elementModifierData := m.elementModifierNamesMap[modifier] // 查找有没有标识符标记该组件或参数
-	elementModifierValue := elementModifierData.value          // 如果有标记的话, 取出值
-	delete(m.elementModifierNamesMap, modifier)
+	//elementModifierData := m.elementModifierNamesMap[modifier] // 查找有没有标识符标记该组件或参数
+	//elementModifierValue := elementModifierData.value          // 如果有标记的话, 取出值
+	//delete(m.elementModifierNamesMap, modifier)
 	switch { // 根据参数是否被标识符标记, 参数所在模型的第几层父类判断是value还是默认值
 	case m.level > 0 && elementModifierData.value == "":
 		dataDefault["defaultvalue"] = parameterValue
@@ -451,24 +467,6 @@ func (m *modelParameters) getParameter(className string, varName string, p []int
 				dataDefault["filter"] = strings.Split(dListTab[5].(string), ";;")
 			}
 		}
-	}
-	emName := varName
-	if m.extendsModifierNamesMap[emName] == nil {
-		emName = m.componentName + "." + varName
-	}
-	if m.extendsModifierNamesMap[emName] != nil {
-		extendsModifier := m.extendsModifierNamesMap[emName]
-		IsExtendsModifierFinal = omc.OMC.IsExtendsModifierFinal(extendsModifier["child"].(string), extendsModifier["parent"].(string), varName)
-		if IsExtendsModifierFinal == "true" { //判断参数是否是不可修改的, 如果是,则过滤该参数
-			return nil
-		}
-		extendsModifierValue := extendsModifier["value"] // 继承过来的标识符中如果有该参数的值,则根据level等级进行赋值
-		if extendsModifier["level"].(int) > 0 {
-			dataDefault["defaultvalue"] = extendsModifierValue
-		} else {
-			dataDefault["value"] = extendsModifierValue
-		}
-		dataDefault["name"] = strings.TrimPrefix(emName, m.componentName+".")
 	}
 
 	if p[9] == true { // 处理模板参数类型
@@ -577,11 +575,7 @@ func (m *modelParameters) getParameter(className string, varName string, p []int
 				dataDefault["defaultvalue"] = parameterValue
 			}
 		}
-		dataDefault["unit"] = []string{""}
-		unit := getUnit(className)
-		if unit != "" {
-			dataDefault["unit"] = []string{unit}
-		}
+		//dataDefault["unit"] = []string{getUnit(className)}
 		return dataDefault
 	}
 	if elementModifierData.start != "" || elementModifierData.fixed != nil || showStartAttribute == "true" { // 处理 fixed类型参数
@@ -603,11 +597,41 @@ func (m *modelParameters) getParameter(className string, varName string, p []int
 			value = ""
 		}
 		dataDefault["value"] = map[string]interface{}{"isFixed": isFixed, "value": value}
-		dataDefault["unit"] = []string{getUnit(className)}
+		//dataDefault["unit"] = []string{getUnit(className)}
 
 		return dataDefault
 	}
 	return nil
+}
+
+// getGraphicsParameter 图形参数操作
+func (m *modelParameters) getGraphicsParameter(className string, varName string) []any {
+	data := make([]any, 2)
+	data[0] = getUnit(className)
+	data[1] = ""
+	emName := varName
+	if m.extendsModifierNamesMap[emName] == nil {
+		emName = m.componentName + "." + varName
+	}
+	if m.extendsModifierNamesMap[emName] != nil {
+		extendsModifier := m.extendsModifierNamesMap[emName]
+		extendsValue := extendsModifier["value"].(string)
+		if extendsValue != "" {
+			data[1] = extendsValue
+			return data
+		}
+	}
+	m.getElementsModifierNamesAndValue(m.className, varName) // 获取当前组件的修饰符与值
+	modifier := m.componentName + "." + varName
+	elementModifierData := m.elementModifierNamesMap[modifier] // 查找有没有标识符标记该组件或参数
+	elementModifierValue := elementModifierData.value          // 如果有标记的话, 取出值
+	if elementModifierValue != "" {
+		data[1] = elementModifierValue
+		return data
+	}
+	value := omc.OMC.GetParameterValue(m.className, varName) // 获取当前组件的默认值
+	data[1] = value
+	return data
 }
 
 // SetComponentModifierValue 参数操作
