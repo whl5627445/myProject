@@ -71,7 +71,7 @@ import configparser
 #     return {"msg": False}
 
 
-def kill_process(multiprocessing_id, om_process_list, dm_process_list, taskMarkDict):
+def kill_process(multiprocessing_id, om_process_list, dm_process_list, om_task_mark_dict, dymola_task_mark_dict):
     
     for i in om_process_list:
         if i.uuid == multiprocessing_id:
@@ -86,7 +86,7 @@ def kill_process(multiprocessing_id, om_process_list, dm_process_list, taskMarkD
                 log.info(f"(OMC)Error: {e}")
             i.state = "stopped"
 
-            del taskMarkDict[i.request.userName]
+            del om_task_mark_dict[i.request.userName]
             om_process_list.remove(i)
             del i
             log.info("(OMC)杀死线程，数据库id:"+multiprocessing_id)
@@ -122,7 +122,7 @@ def kill_process(multiprocessing_id, om_process_list, dm_process_list, taskMarkD
                 log.info("(Dymola)请求返回的结果："+str(result))
                 if result["code"] == 200:
                     i.state = "stopped"
-                    del taskMarkDict[i.request.userName]
+                    del dymola_task_mark_dict[i.request.userName]
                     dm_process_list.remove(i)
                     del i
                     log.info("(Dymola)杀死线程，数据库id:" + multiprocessing_id)

@@ -23,7 +23,7 @@ import grpc
 import router_pb2
 import router_pb2_grpc
 import DyMat
-from fmpy import write_csv
+# from fmpy import write_csv
 import configparser
 
 config = configparser.ConfigParser()
@@ -45,8 +45,9 @@ if __name__ == '__main__':
     omcTaskList = initOmTask()
     # 初始化dy任务队列
     dymolaTaskList = initDmTask()
-    taskMarkDict = {}
-
+    # 每个用户只能开启一个omc线程和一个dymola线程
+    omcTaskMarkDict = {}
+    dymolaTaskMarkDict = {}
 
     # 实现 proto 文件中定义的 GreeterServicer
     class Greeter(router_pb2_grpc.GreeterServicer):
@@ -80,8 +81,11 @@ if __name__ == '__main__':
                         dymolaTaskList.pop(i)
                 # OmSimulationThreadList   DmSimulationThreadList
                 # 删除仿真任务
-                killProcessReply = kill_process(multiprocessing_id, OmSimulationThreadList, DmSimulationThreadList
-                                                , taskMarkDict)
+                killProcessReply = kill_process(multiprocessing_id,
+                                                OmSimulationThreadList,
+                                                DmSimulationThreadList,
+                                                omcTaskMarkDict,
+                                                dymolaTaskMarkDict)
 
                 # 删除多轮仿真任务
 
@@ -213,18 +217,18 @@ if __name__ == '__main__':
                     if i.state == "stopped":
                         log.info("(OMC)" + i.request.simulateModelName + "仿真结束,线程关闭。")
                         OmSimulationThreadList.remove(i)
-                        del taskMarkDict[i.request.userName]
+                        del omcTaskMarkDict[i.request.userName]
                         # del i
                 for i in DmSimulationThreadList:
                     if i.state == "stopped":
                         log.info("(Dymola)" + i.request.simulateModelName + "仿真结束,线程关闭。")
                         DmSimulationThreadList.remove(i)
-                        del taskMarkDict[i.request.userName]
+                        del dymolaTaskMarkDict[i.request.userName]
                 # 取omc任务
                 i = 0
                 while i < len(omcTaskList):
                     userName = omcTaskList[i].userName
-                    if userName not in taskMarkDict:
+                    if userName not in omcTaskMarkDict:
                         data = omcTaskList.pop(i)
                         if data.taskType == "simulate":
                             # 找到空闲的端口号
@@ -242,13 +246,13 @@ if __name__ == '__main__':
                             om_threading = OmcRunThread(data)
                             om_threading.start()
                             OmSimulationThreadList.append(om_threading)
-                        taskMarkDict[userName] = True
+                        omcTaskMarkDict[userName] = True
                     i += 1
                 # 取 dymola任务
                 di = 0
                 while di < len(dymolaTaskList):
                     userName = dymolaTaskList[di].userName
-                    if userName not in taskMarkDict:
+                    if userName not in dymolaTaskMarkDict:
                         data = dymolaTaskList.pop(di)
                         if data.taskType == "simulate":
                             dm_threading = DmSimulation(data)
@@ -262,7 +266,7 @@ if __name__ == '__main__':
                             dm_threading = DmRunThread(data)
                             dm_threading.start()
                             DmSimulationThreadList.append(dm_threading)
-                        taskMarkDict[userName] = True
+                        dymolaTaskMarkDict[userName] = True
                     di += 1
 
 
