@@ -332,13 +332,13 @@ func GrpcRunResult(appPageId string, singleSimulationInputData map[string]float6
 	// 查询appPageId是否存在
 	err := DB.Where("id = ? ", appPageId).First(&appPageRecord).Error
 	if err != nil {
-		return errors.New("not found")
+		return errors.New("多轮仿真服务出错！请联系管理员！")
 	}
 	// 查询对应的数据源是否存在
 	var record DataBaseModel.AppDataSource
 	err = DB.Where("id = ? ", appPageRecord.DataSourceId).First(&record).Error
 	if err != nil {
-		return errors.New("not found")
+		return errors.New("数据源不存在！")
 	}
 	// 构建仿真参数
 	SimulationPraData := map[string]string{
@@ -352,13 +352,13 @@ func GrpcRunResult(appPageId string, singleSimulationInputData map[string]float6
 	var packageModel DataBaseModel.YssimModels
 	err = DB.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", record.PackageId, []string{"sys", record.UserName}, []string{"0", record.UserSpaceId}).First(&packageModel).Error
 	if err != nil {
-		return errors.New("not found")
+		return errors.New("模型不存在！")
 	}
 	// 获取依赖
 	var environmentModelData map[string]string
 	err = sonic.Unmarshal(record.EnvModelData, &environmentModelData)
 	if err != nil {
-		return errors.New("unmarshal error")
+		return errors.New("多轮仿真服务出错！请联系管理员！")
 	}
 
 	inputData := make(map[string][]float64)
@@ -367,7 +367,7 @@ func GrpcRunResult(appPageId string, singleSimulationInputData map[string]float6
 	var singleOrMultiple string
 	sonic.Unmarshal(appPageRecord.Output, &outputNames)
 	if singleSimulationInputData != nil {
-		log.Println("单次仿真！")
+		//log.Println("单次仿真！")
 		singleOrMultiple = "single"
 		for key, value := range singleSimulationInputData {
 			var newValues []float64
@@ -377,7 +377,7 @@ func GrpcRunResult(appPageId string, singleSimulationInputData map[string]float6
 		}
 	} else {
 		singleOrMultiple = "multiple"
-		log.Println("多轮仿真！")
+		//log.Println("多轮仿真！")
 		//查询数据库中的模型表
 		var componentRecord []DataBaseModel.AppPageComponent
 		DB.Where("page_id = ? AND type = ? AND input_name != ''", appPageId, "slider").Find(&componentRecord)
@@ -430,8 +430,11 @@ func GrpcRunResult(appPageId string, singleSimulationInputData map[string]float6
 		InputValData:     inputValData,
 	}
 	_, err = grpcPb.Client.SubmitTask(grpcPb.Ctx, GrpcBuildModelRequest)
-	return err
-
+	if err != nil {
+		return errors.New("多轮仿真服务出错！请联系管理员！")
+	} else {
+		return err
+	}
 }
 
 func DeleteSimulateTask(taskID, simulateType, SimulateModelResultPath string) {
