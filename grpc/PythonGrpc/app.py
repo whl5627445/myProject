@@ -13,6 +13,7 @@ from libs.translate.DmcTranslateThread import DmTranslateThread
 from libs.run_result.DmRunThread import DmRunThread
 
 from libs.function.find_port import findPort
+from libs.function.defs import update_app_pages_records
 from libs.function.grpc_log import log
 from libs.function.init import initOmTask, initDmTask
 import threading
@@ -63,6 +64,8 @@ if __name__ == '__main__':
             elif data.simulateType == "DM":
                 # 如果是DM仿真,将仿真请求体放到dymolaTaskList中
                 dymolaTaskList.append(data)
+            if data.pageId != '':
+                update_app_pages_records(data.pageId, mul_sim_state=5)
             return router_pb2.SubmitTaskReply(ok=True,
                                               msg="Task submitted successfully."
                                               )

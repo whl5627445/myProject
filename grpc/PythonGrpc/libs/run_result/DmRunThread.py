@@ -155,6 +155,10 @@ class DmRunThread(threading.Thread):
                     shutil.rmtree(mul_output_path)
                 # 创建新的文件夹
                 os.mkdir(mul_output_path)
+                log.info("(Dymola)结果时间数组长度：" + str(len(csv_data["time"])))
+                if len(csv_data["time"]) != len(self.input_data):
+                    log.info("(Dymola)输入与输出的结果数不一致！！！")
+                    return False, "多轮仿真失败", simulateResData["code"]
                 for i in range(len(csv_data["time"])):
                     temp = {}
                     for key, value in csv_data.items():
@@ -166,6 +170,7 @@ class DmRunThread(threading.Thread):
                         s = round(s, 6)
                         csv_file_name = csv_file_name + "_" + str(s)
                     df.to_csv(mul_output_path + '{}.csv'.format(csv_file_name), index=False)
+                    log.info("(Dymola)第" + str(i) + "个文件" + csv_file_name)
 
                 return True, None, simulateResData["code"]
             else:
@@ -176,7 +181,7 @@ class DmRunThread(threading.Thread):
         log.info("(Dymola)开启dymola仿真")
         update_app_pages_records(self.request.pageId, mul_sim_state=2)
         res, err, code = self.send_request()
-        log.info("(Dymola)send_request返回" + str(res) + str(err) + str(code))
+        log.info("(Dymola)send_request返回" + str(res) + "___" + str(err) + "___" + str(code))
         if res:
             update_app_pages_records(self.request.pageId,
                                      mul_sim_state=4,
@@ -189,7 +194,7 @@ class DmRunThread(threading.Thread):
             update_app_pages_records(self.request.pageId, mul_sim_state=3)
         update_app_pages_records(self.request.pageId,
                                  mul_sim_time=time.time(),
-                                 mul_sim_message_read=False,)
+                                 mul_sim_message_read=False, )
         log.info("(Dymola)仿真线程执行完毕")
         # delete_item_from_json(self.request.uuid)
         self.state = "stopped"

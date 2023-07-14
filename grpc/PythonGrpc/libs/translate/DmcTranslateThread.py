@@ -24,6 +24,7 @@ class DmTranslateThread(threading.Thread):
         threading.Thread.__init__(self)
         self.state = "init"
         self.request = request
+        self.uuid = request.uuid
 
     def send_request(self):
         log.info("(Dymola)发送请求")
