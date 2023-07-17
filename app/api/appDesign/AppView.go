@@ -1,6 +1,10 @@
 package API
 
 import (
+	"context"
+	"fmt"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"log"
 	"net/http"
 	"os"
@@ -19,6 +23,7 @@ import (
 )
 
 var DB = config.DB
+var MB = config.MB
 
 func MultipleSimulateView(c *gin.Context) {
 	/*
@@ -1623,5 +1628,77 @@ func GetPageAlignmentLineView(c *gin.Context) {
 	DB.Where("id = ? ", pageId).First(&page)
 
 	res.Data = page.AlignmentLine
+	c.JSON(http.StatusOK, res)
+}
+
+func GetAppPowView(c *gin.Context) {
+	/*
+		# 获取电网app数据接口
+	*/
+	var res responseData
+
+	//timeStr := c.Query("timeStr")
+	timeStr := "2023/7/6/15"
+	layout := "2006/1/2/15"
+	timeStr0 := "2023/1/1/0"
+	t, err := time.Parse(layout, timeStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "time format error")
+		return
+	}
+	t0, _ := time.Parse(layout, timeStr0)
+	dataNum := int((t.Sub(t0)) / time.Hour)
+	day := dataNum / 24
+	hour := dataNum % 24
+
+	//查数据库的集合
+	collection := MB.Database("micro_grid").Collection("result_data")
+	// 查找文档
+	var doc bson.M
+	err = collection.FindOne(context.Background(), bson.M{}).Decode(&doc)
+	// 检查错误
+	if err != nil {
+		fmt.Println("查询文档失败：", err)
+		return
+	}
+
+	var data []map[string]interface{}
+
+	// 遍历文档获取对应数据
+	for key, value := range doc {
+		if key != "过去24小时购电成本" && key != "_id" && key != "name" && key != "update_time" {
+			//fmt.Printf(" %#v", hour)
+			temp1, ok := value.(primitive.A)
+			if !ok {
+				fmt.Println(key)
+				fmt.Println("类型转换失败1")
+			}
+			temp2, ok := temp1[day].(primitive.A)
+			if !ok {
+				fmt.Println("类型转换失败2")
+			}
+			for i := 0; i <= hour; i++ {
+				data0 := map[string]interface{}{
+					"x":    i,
+					"y":    temp2[i],
+					"name": key,
+				}
+				data = append(data, data0)
+			}
+		}
+		//else if key == "过去24小时购电成本" {
+		//	temp, ok := value.(primitive.A)
+		//	if !ok {
+		//		fmt.Println("类型转换失败")
+		//	}
+		//	data0 := map[string]interface{}{
+		//		"x":    0,
+		//		"y":    temp[day],
+		//		"name": key,
+		//	}
+		//	data = append(data, data0)
+		//}
+	}
+	res.Data = data
 	c.JSON(http.StatusOK, res)
 }
