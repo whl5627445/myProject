@@ -408,11 +408,8 @@ func (m *modelParameters) getParameter(className string, varName string, p []int
 	dataDefault["name"] = varName
 	dataDefault["comment"] = p[4].(string)
 
-	//elementModifierData := m.elementModifierNamesMap[modifier] // 查找有没有标识符标记该组件或参数
-	//elementModifierValue := elementModifierData.value          // 如果有标记的话, 取出值
-	//delete(m.elementModifierNamesMap, modifier)
 	switch { // 根据参数是否被标识符标记, 参数所在模型的第几层父类判断是value还是默认值
-	case m.level > 0 && elementModifierData.value == "":
+	case m.level > 0 && elementModifierValue == "":
 		dataDefault["defaultvalue"] = parameterValue
 	case elementModifierValue != "" && elementModifierData.level > 0:
 		dataDefault["defaultvalue"] = elementModifierValue
@@ -515,13 +512,15 @@ func (m *modelParameters) getParameter(className string, varName string, p []int
 			}
 			return false
 		}()
-
-		value := omc.OMC.GetElementModifierValue(m.modelName, m.componentName+"."+dataDefault["name"].(string))
-		if value == "" {
+		value := ""
+		modifierValue := omc.OMC.GetElementModifierValue(m.modelName, m.componentName+"."+dataDefault["name"].(string))
+		if modifierValue == "" {
 			value = p[2].(string) + " - " + classInformation[1].(string)
+		} else {
+			value = modifierValue
 		}
 		dataDefault["value"] = value
-		if m.level != 0 {
+		if modifierValue == "" {
 			dataDefault["defaultvalue"] = value
 			dataDefault["value"] = ""
 		}
