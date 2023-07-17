@@ -534,6 +534,13 @@ func CopyClassView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
+	t := service.GetModelType(item.CopiedClassName)
+	if t == "package" {
+		res.Err = "包类型不允许复制，请继承使用"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
 	matchSpaceName1, _ := regexp.MatchString("^[_a-zA-Z0-9]+$", item.ModelName) // 字母、数字、下划线验证
 	matchSpaceName2, _ := regexp.MatchString("^[a-zA-Z_]", item.ModelName)      // 字母、下划线验证
 	if !matchSpaceName1 {
