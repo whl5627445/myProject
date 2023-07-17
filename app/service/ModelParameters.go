@@ -544,7 +544,7 @@ func (m *modelParameters) getParameter(className string, varName string, p []int
 		return dataDefault
 	}
 
-	if p[10] == "parameter" { // 处理parameter
+	if p[10] == "parameter" || DialogIndexOk { // 处理parameter
 		isEnumeration := omc.OMC.IsEnumeration(className)
 		if isEnumeration { // 处理枚举类型
 			Literals := omc.OMC.GetEnumerationLiterals(className)
