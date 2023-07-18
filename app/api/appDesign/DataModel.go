@@ -232,3 +232,8 @@ type ModelStateMessageReadData struct {
 	AppPageId   string `json:"app_page_id" binding:"required"`
 	MessageType string `json:"message_type" binding:"required"`
 }
+
+type GetAppPowData struct {
+	TimeStr string          `json:"time_str" binding:"required"`
+	Names   map[string]bool `json:"names" binding:"required"`
+}

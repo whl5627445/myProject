@@ -1636,9 +1636,16 @@ func GetAppPowView(c *gin.Context) {
 		# 获取电网app数据接口
 	*/
 	var res responseData
+	var item GetAppPowData
+	err := c.BindJSON(&item)
+	if err != nil {
+		log.Println("", err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	timeStr := item.TimeStr
+	names := item.Names
 
-	//timeStr := c.Query("timeStr")
-	timeStr := "2023/7/6/15"
 	layout := "2006/1/2/15"
 	timeStr0 := "2023/1/1/0"
 	t, err := time.Parse(layout, timeStr)
@@ -1663,41 +1670,47 @@ func GetAppPowView(c *gin.Context) {
 	}
 
 	var data []map[string]interface{}
-
 	// 遍历文档获取对应数据
 	for key, value := range doc {
-		if key != "过去24小时购电成本" && key != "_id" && key != "name" && key != "update_time" {
-			//fmt.Printf(" %#v", hour)
-			temp1, ok := value.(primitive.A)
-			if !ok {
-				fmt.Println(key)
-				fmt.Println("类型转换失败1")
-			}
-			temp2, ok := temp1[day].(primitive.A)
-			if !ok {
-				fmt.Println("类型转换失败2")
-			}
-			for i := 0; i <= hour; i++ {
-				data0 := map[string]interface{}{
-					"x":    i,
-					"y":    temp2[i],
-					"name": key,
+		if names[key] {
+			fmt.Println(key)
+			if key != "蓄电池充放电功率" && key != "蓄电池SOC" {
+				//fmt.Printf(" %#v", hour)
+				temp1, ok := value.(primitive.A)
+				if !ok {
+					fmt.Println(key)
+					fmt.Println("类型转换失败1")
 				}
-				data = append(data, data0)
+				temp2, ok := temp1[day].(primitive.A)
+				if !ok {
+					fmt.Println("类型转换失败2")
+				}
+				for i := 0; i <= hour; i++ {
+					data0 := map[string]interface{}{
+						"x":    i,
+						"y":    temp2[i],
+						"name": key,
+					}
+					data = append(data, data0)
+				}
+			} else {
+				tempy1, _ := doc["蓄电池充放电功率"].(primitive.A)
+				tempz1, _ := doc["蓄电池SOC"].(primitive.A)
+				tempy2, _ := tempy1[day].(primitive.A)
+				tempz2, _ := tempz1[day].(primitive.A)
+				for i := 0; i <= hour; i++ {
+					data0 := map[string]interface{}{
+						"x": i,
+						"y": tempy2[i],
+						"z": tempz2[i],
+					}
+					data = append(data, data0)
+				}
+				delete(names, "蓄电池充放电功率")
+				delete(names, "蓄电池SOC")
 			}
 		}
-		//else if key == "过去24小时购电成本" {
-		//	temp, ok := value.(primitive.A)
-		//	if !ok {
-		//		fmt.Println("类型转换失败")
-		//	}
-		//	data0 := map[string]interface{}{
-		//		"x":    0,
-		//		"y":    temp[day],
-		//		"name": key,
-		//	}
-		//	data = append(data, data0)
-		//}
+
 	}
 	res.Data = data
 	c.JSON(http.StatusOK, res)
