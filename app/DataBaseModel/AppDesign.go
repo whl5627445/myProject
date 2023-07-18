@@ -32,6 +32,7 @@ type AppDataSource struct {
 	ModelName         string         `gorm:"column:model_name;type:varchar(128)"`
 	CompileType       string         `gorm:"column:compile_type;type:varchar(128);default:\"OM\""`
 	CompilePath       string         `gorm:"column:compile_path;type:varchar(128)"`
+	ZipMoPath         string         `gorm:"column:zip_mo_path;type:varchar(128)"`
 	CompileStatus     int64          `gorm:"column:compile_status;type:int"`
 	CompileStartTime  int64          `gorm:"column:compile_start_time;type:int"`
 	CompileStopTime   int64          `gorm:"column:compile_stop_time;type:int"`

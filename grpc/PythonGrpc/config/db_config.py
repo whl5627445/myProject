@@ -95,6 +95,7 @@ class AppDataSources(Base):
     tolerance = Column(String)
     deleted_at = Column(DateTime)
     create_time = Column(DateTime)
+    zip_mo_path = Column(String)
 
 
 class AppPages(Base):
