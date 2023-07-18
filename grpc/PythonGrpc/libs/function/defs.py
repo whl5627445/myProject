@@ -86,7 +86,8 @@ def update_compile_records(uuid,
                            compile_status=None,
                            compile_start_time=None,
                            compile_stop_time=None,
-                           result_run_time=None
+                           result_run_time=None,
+                           zip_mo_path=None
                            ):
     with Session() as session:
         data_sources_record = session.query(AppDataSources).filter(
@@ -94,13 +95,28 @@ def update_compile_records(uuid,
         if compile_status:
             data_sources_record.compile_status = compile_status  # 更改状态
         if compile_start_time:
-            # if data_sources_record.compile_start_time == 0 or data_sources_record.compile_start_time is None :  # 仿真开始时间只会设置一次
             data_sources_record.compile_start_time = compile_start_time  # 仿真开始时间
         if compile_stop_time:
             data_sources_record.compile_stop_time = compile_stop_time  # 仿真结束时间
         if result_run_time:
             data_sources_record.result_run_time = result_run_time
+        if zip_mo_path:
+            data_sources_record.zip_mo_path = zip_mo_path
+            log.info("zip_mo_path:"+data_sources_record.zip_mo_path)
         session.commit()
+
+
+def del_data_sources_records(uuid):
+    with Session() as session:
+        data_source_to_delete = session.query(AppDataSources).filter(
+            AppDataSources.id == uuid).first()
+
+        if data_source_to_delete is not None:
+            session.delete(data_source_to_delete)
+            session.commit()
+            log.info("记录已成功删除。")
+        else:
+            log.info("未找到匹配的记录。无法删除。")
 
 
 def update_app_pages_records(pages_id, mul_result_path=None, mul_sim_state=None, release_state=None, release_time=None,

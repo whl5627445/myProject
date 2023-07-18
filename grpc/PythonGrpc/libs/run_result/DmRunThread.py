@@ -29,27 +29,26 @@ class DmRunThread(threading.Thread):
 
     def send_request(self):
         log.info("(Dymola)发送请求")
-        folders = []  # 所有要加载的用户模型的包文件地址
+        # folders = []  # 所有要加载的用户模型的包文件地址
         uploadResult = False
         # uploadFilePath = ""
         dymola_libraries = []
         now = datetime.now()
         timestamp = now.strftime("%Y%m%d%H%M%S")
-        # 新建zip文件地址
-        uploadFileName = adsPath + "static/tmp/" + timestamp + "/" + self.request.packageName + ".zip"
-        del_upload_fileName = adsPath + "static/tmp/" + timestamp
+        # zip文件地址
+        uploadFileName = adsPath + self.request.resultFilePath + self.request.simulateModelName + ".zip"
         # dymola服务器上新建的路径
-        params_url = self.request.userName + "/" + self.request.packageName + "/" + timestamp
+        params_url = self.request.userName + "/" + self.request.simulateModelName + "/" + timestamp
 
         for key, val in self.request.envModelData.items():
             # 初始化加载用户模型，key是名称，val是mo文件地址
             if "/" in val:
                 # 将路径分割  "static/UserFiles/UploadFile/songyi/20230427165917/Applications1/Applications1/package.mo"
-                front_path = "/".join(
-                    val.split("/")[:6])  # static/UserFiles/UploadFile/songyi/20230427165917/Applications1
+                # front_path = "/".join(
+                #     val.split("/")[:6])  # static/UserFiles/UploadFile/songyi/20230427165917/Applications1
                 behind_path = "/".join(val.split("/")[5:])  # Applications1/Applications1/package.mo
                 # 插入到zip文件列表
-                folders.append(adsPath + front_path)
+                # folders.append(adsPath + front_path)
                 dymola_libraries.append({
                     "libraryName": "",
                     "libraryVersion": "",
@@ -68,19 +67,19 @@ class DmRunThread(threading.Thread):
                 dymola_libraries.remove(d)
                 dymola_libraries.insert(0, d)
                 break
-        log.info("(Dymola)压缩文件:" + str(folders))
+        # log.info("(Dymola)压缩文件:" + str(folders))
         log.info("(Dymola)需要加载的依赖:" + str(dymola_libraries))
         log.info("(Dymola)上传的压缩文件:" + uploadFileName)
         log.info("(Dymola)服务器上新建的路径:" + params_url)
-
-        if self.request.packageFilePath != "":
-            # 不是系统模型,上传文件
-            zip_folders(folders, uploadFileName)
+        user_model = os.path.exists(uploadFileName) and self.request.packageFilePath != ""
+        if user_model:
+            # 是用户模型,上传文件
+            # zip_folders(folders, uploadFileName)
             url = DymolaSimulationConnect + "/file/upload"
             params = {"url": params_url}
             timeout = 600
             files = {
-                "file": (self.request.packageName + ".zip", open(uploadFileName, "rb"))
+                "file": (self.request.simulateModelName + ".zip", open(uploadFileName, "rb"))
             }
             try:
                 log.info("(Dymola)开始上传文件")
@@ -98,19 +97,19 @@ class DmRunThread(threading.Thread):
                 log.info("(Dymola)" + str(e))
                 return False, str(e), 0
             # 上传完删除zip文件
-            if os.path.exists(del_upload_fileName):
-                os.system('rm -rf ' + del_upload_fileName)
-                log.info("(Dymola)上传完成后，zip文件夹已成功删除！")
-            else:
-                log.info("(Dymola)zip文件夹不存在。")
+            # if os.path.exists(del_upload_fileName):
+            #     os.system('rm -rf ' + del_upload_fileName)
+            #     log.info("(Dymola)上传完成后，zip文件夹已成功删除！")
+            # else:
+            #     log.info("(Dymola)zip文件夹不存在。")
         else:
             # 系统模型的仿真要去掉用户模型
             dymola_libraries = [element for element in dymola_libraries if element['userFile'] == '']
             log.info("(Dymola)系统模型只加载系统库:" + str(dymola_libraries))
-        if uploadResult or self.request.packageFilePath == "":
+        if uploadResult or not user_model:
             fileName = ""
-            if self.request.packageFilePath != "":
-                fileName = params_url + "/" + "/".join(self.request.packageFilePath.split("/")[5:])
+            if user_model:
+                fileName = params_url + "/" + self.request.packageFilePath
             # array_initial_values = list(self.request.inputValData.values())
             # input_data_length = len(array_initial_values[0].inputObjList)
 
@@ -139,8 +138,8 @@ class DmRunThread(threading.Thread):
                                            DymolaSimulationConnect + "/dymola/simulateMulti",
                                            json=simulateReqData)
             simulateResData = simulateRes.json()
-
             log.info("(Dymola)dymola仿真结果：" + str(simulateResData["code"]))
+            log.info("(Dymola)dymola仿真结果：" + str(simulateResData["msg"]))
             mul_output_path = adsPath + self.request.mulResultPath + "preview/"
             if self.request.mulResultPath is None:
                 return False, "mulResultPath为空", ''
@@ -150,7 +149,6 @@ class DmRunThread(threading.Thread):
                                      mul_sim_err=simulateResData.get("log"))
             if simulateResData.get("code") == 200:
                 csv_data = simulateResData["data"]
-                log.info(type(csv_data))
                 if os.path.exists(mul_output_path):
                     shutil.rmtree(mul_output_path)
                 # 创建新的文件夹

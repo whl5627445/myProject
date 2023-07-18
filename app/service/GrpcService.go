@@ -349,11 +349,11 @@ func GrpcRunResult(appPageId string, singleSimulationInputData map[string]float6
 		"tolerance":         record.Tolerance,
 	}
 	//查询数据库中的模型表
-	var packageModel DataBaseModel.YssimModels
-	err = DB.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", record.PackageId, []string{"sys", record.UserName}, []string{"0", record.UserSpaceId}).First(&packageModel).Error
-	if err != nil {
-		return errors.New("模型不存在！")
-	}
+	//var packageModel DataBaseModel.YssimModels
+	//err = DB.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", record.PackageId, []string{"sys", record.UserName}, []string{"0", record.UserSpaceId}).First(&packageModel).Error
+	//if err != nil {
+	//	return errors.New("模型不存在！")
+	//}
 	// 获取依赖
 	var environmentModelData map[string]string
 	err = sonic.Unmarshal(record.EnvModelData, &environmentModelData)
@@ -418,8 +418,8 @@ func GrpcRunResult(appPageId string, singleSimulationInputData map[string]float6
 		EnvModelData:      environmentModelData,
 		SimulateType:      record.CompileType, // OM DM
 		// dm才会用到的参数
-		PackageName:     packageModel.PackageName,
-		PackageFilePath: packageModel.FilePath,
+		//PackageName:     packageModel.PackageName,
+		PackageFilePath: record.ZipMoPath,
 		// 任务类型"simulate " "translate " "run"三种
 		TaskType: "run",
 		// 多轮仿真用到的参数

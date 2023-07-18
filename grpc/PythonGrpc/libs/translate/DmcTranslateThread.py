@@ -3,7 +3,7 @@ import threading
 import time
 import zipfile
 from datetime import datetime
-from libs.function.defs import update_compile_records, zip_folders
+from libs.function.defs import update_compile_records, zip_folders,del_data_sources_records
 import requests
 from config.redis_config import R
 import json
@@ -34,9 +34,8 @@ class DmTranslateThread(threading.Thread):
         dymola_libraries = []
         now = datetime.now()
         timestamp = now.strftime("%Y%m%d%H%M%S")
-        # 新建zip文件地址
-        uploadFileName = adsPath + "static/tmp/" + timestamp + "/" + self.request.packageName + ".zip"
-        del_upload_fileName = adsPath + "static/tmp/" + timestamp
+        # zip文件地址
+        uploadFileName = adsPath + self.request.resultFilePath + self.request.packageName + ".zip"
         # dymola服务器上新建的路径
         params_url = self.request.userName + "/" + self.request.packageName + "/" + timestamp
 
@@ -97,19 +96,21 @@ class DmTranslateThread(threading.Thread):
                 log.info("(Dymola)"+str(e))
                 return False, None, 0
             # 上传完删除zip文件
-            if os.path.exists(del_upload_fileName):
-                os.system('rm -rf ' + del_upload_fileName)
-                log.info("(Dymola)上传完成后，zip文件夹已成功删除！")
-            else:
-                log.info("(Dymola)zip文件夹不存在。")
+            # if os.path.exists(del_upload_fileName):
+            #     os.system('rm -rf ' + del_upload_fileName)
+            #     log.info("(Dymola)上传完成后，zip文件夹已成功删除！")
+            # else:
+            #     log.info("(Dymola)zip文件夹不存在。")
         else:
             # 系统模型的仿真要去掉用户模型
             dymola_libraries = [element for element in dymola_libraries if element['userFile'] == '']
             log.info("(Dymola)系统模型只加载系统库:"+str(dymola_libraries))
         if uploadResult or self.request.packageFilePath == "":
             fileName = ""
+            zip_mo_path = ""
             if self.request.packageFilePath != "":
-                fileName = params_url + "/" + "/".join(self.request.packageFilePath.split("/")[5:])
+                zip_mo_path = "/".join(self.request.packageFilePath.split("/")[5:])
+                fileName = params_url + "/" + zip_mo_path
 
             compileReqData = {
                 "userName": self.request.userName,
@@ -160,6 +161,9 @@ class DmTranslateThread(threading.Thread):
                 absolute_path = adsPath + self.request.resultFilePath
                 log.info("(Dymola)结果地址：" + absolute_path)
                 if simulateResData.get("code") == 200:
+                    log.info(self.request.uuid)
+                    log.info(fileName)
+                    update_compile_records(uuid=self.request.uuid, zip_mo_path=zip_mo_path)
                     resFileUrl = DymolaSimulationConnect + "/file/download?fileName=" + simulateResData["msg"]
                     fmuFileUrl = DymolaSimulationConnect + "/file/download?fileName=" + compileResData["msg"]
 
@@ -208,6 +212,7 @@ class DmTranslateThread(threading.Thread):
                                    compile_status=3,
                                    compile_stop_time=int(time.time())
                                    )
+            del_data_sources_records(self.request.uuid)
             json_data = {"message": "(导出数据源)"+self.request.simulateModelName + " 终止任务"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
         else:
@@ -215,6 +220,7 @@ class DmTranslateThread(threading.Thread):
                                    compile_status=3,
                                    compile_stop_time=int(time.time())
                                    )
+            del_data_sources_records(self.request.uuid)
             json_data = {"message": "(导出数据源)"+self.request.simulateModelName + " 导出失败"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
         log.info("(Dymola)仿真线程执行完毕")

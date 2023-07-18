@@ -7,7 +7,7 @@ import os
 import subprocess
 from config.redis_config import R
 from libs.OMPython.OMCSessionZMQ import OMCSessionZMQ
-from libs.function.defs import update_compile_records, sendMessage
+from libs.function.defs import update_compile_records, sendMessage, del_data_sources_records
 from libs.function.grpc_log import log
 
 
@@ -99,6 +99,7 @@ class OmcTranslateThread(threading.Thread):
         if error:
             log.info("(OMC)仿真失败,error:"+str(error))
             update_compile_records(uuid=self.uuid, compile_status=3, compile_stop_time=int(time.time()))
+            del_data_sources_records(self.uuid)
             json_data = {"message": "(导出数据源)"+self.request.simulateModelName + " 导出失败"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
 
@@ -121,6 +122,7 @@ class OmcTranslateThread(threading.Thread):
                 json_data = {"message": "(导出数据源)"+self.request.simulateModelName + " 导出失败"}
                 R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
                 update_compile_records(uuid=self.uuid, compile_status=3, compile_stop_time=int(time.time()))
+                del_data_sources_records(self.uuid)
         # 仿真
         log.info("(OMC)仿真线程执行完毕")
         self.state = "stopped"
