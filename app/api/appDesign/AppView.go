@@ -1646,15 +1646,18 @@ func GetAppPowView(c *gin.Context) {
 	timeStr := item.TimeStr
 	names := item.Names
 
+	//时间格式的当前时间及2023年起始时间
 	layout := "2006/1/2/15"
-	timeStr0 := "2023/1/1/0"
-	t, err := time.Parse(layout, timeStr)
+	timeStrRefer := "2023/1/1/0"
+	timeNow, err := time.Parse(layout, timeStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "time format error")
 		return
 	}
-	t0, _ := time.Parse(layout, timeStr0)
-	dataNum := int((t.Sub(t0)) / time.Hour)
+	timeRefer, _ := time.Parse(layout, timeStrRefer)
+
+	//相较于2023/1/1/0的天数及当天的小时数，即为数据库二维数组的行和列
+	dataNum := int((timeNow.Sub(timeRefer)) / time.Hour)
 	day := dataNum / 24
 	hour := dataNum % 24
 
@@ -1670,10 +1673,9 @@ func GetAppPowView(c *gin.Context) {
 	}
 
 	var data []map[string]interface{}
-	// 遍历文档获取对应数据
+	// 遍历文档获取对应数据，"蓄电池充放电功率"及"蓄电池SOC"为双轴，其余为单轴
 	for key, value := range doc {
 		if names[key] {
-			fmt.Println(key)
 			if key != "蓄电池充放电功率" && key != "蓄电池SOC" {
 				//fmt.Printf(" %#v", hour)
 				temp1, ok := value.(primitive.A)
