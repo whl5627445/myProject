@@ -1631,12 +1631,12 @@ func GetPageAlignmentLineView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-func GetAppPowView(c *gin.Context) {
+func GetAppPowSingleView(c *gin.Context) {
 	/*
-		# 获取电网app数据接口
+		# 获取电网app单轴数据接口
 	*/
 	var res responseData
-	var item GetAppPowData
+	var item GetAppPowSingleData
 	err := c.BindJSON(&item)
 	if err != nil {
 		log.Println("", err)
@@ -1673,47 +1673,92 @@ func GetAppPowView(c *gin.Context) {
 	}
 
 	var data []map[string]interface{}
-	// 遍历文档获取对应数据，"蓄电池充放电功率"及"蓄电池SOC"为双轴，其余为单轴
+	// 遍历文档获取对应数据
 	for key, value := range doc {
 		if names[key] {
-			if key != "蓄电池充放电功率" && key != "蓄电池SOC" {
-				//fmt.Printf(" %#v", hour)
-				temp1, ok := value.(primitive.A)
-				if !ok {
-					fmt.Println(key)
-					fmt.Println("类型转换失败1")
+			//fmt.Printf(" %#v", hour)
+			temp1, ok := value.(primitive.A)
+			if !ok {
+				fmt.Println(key)
+				fmt.Println("类型转换失败1")
+			}
+			temp2, ok := temp1[day].(primitive.A)
+			if !ok {
+				fmt.Println("类型转换失败2")
+			}
+			for i := 0; i <= hour; i++ {
+				data0 := map[string]interface{}{
+					"x":    i,
+					"y":    temp2[i],
+					"name": key,
 				}
-				temp2, ok := temp1[day].(primitive.A)
-				if !ok {
-					fmt.Println("类型转换失败2")
-				}
-				for i := 0; i <= hour; i++ {
-					data0 := map[string]interface{}{
-						"x":    i,
-						"y":    temp2[i],
-						"name": key,
-					}
-					data = append(data, data0)
-				}
-			} else {
-				tempy1, _ := doc["蓄电池充放电功率"].(primitive.A)
-				tempz1, _ := doc["蓄电池SOC"].(primitive.A)
-				tempy2, _ := tempy1[day].(primitive.A)
-				tempz2, _ := tempz1[day].(primitive.A)
-				for i := 0; i <= hour; i++ {
-					data0 := map[string]interface{}{
-						"x": i,
-						"y": tempy2[i],
-						"z": tempz2[i],
-					}
-					data = append(data, data0)
-				}
-				delete(names, "蓄电池充放电功率")
-				delete(names, "蓄电池SOC")
+				data = append(data, data0)
 			}
 		}
 
 	}
+	res.Data = data
+	c.JSON(http.StatusOK, res)
+}
+
+func GetAppPowDoubleView(c *gin.Context) {
+	/*
+		# 获取电网app双轴数据接口（暂只有"蓄电池充放电功率"及"蓄电池SOC"为双轴）
+	*/
+	var res responseData
+	var item GetAppPowDoubleData
+	err := c.BindJSON(&item)
+	if err != nil {
+		log.Println("", err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	timeStr := item.TimeStr
+
+	//name暂时用不到
+	//names := item.Names
+
+	//时间格式的当前时间及2023年起始时间
+	layout := "2006/1/2/15"
+	timeStrRefer := "2023/1/1/0"
+	timeNow, err := time.Parse(layout, timeStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "time format error")
+		return
+	}
+	timeRefer, _ := time.Parse(layout, timeStrRefer)
+
+	//相较于2023/1/1/0的天数及当天的小时数，即为数据库二维数组的行和列
+	dataNum := int((timeNow.Sub(timeRefer)) / time.Hour)
+	day := dataNum / 24
+	hour := dataNum % 24
+
+	//查数据库的集合
+	collection := MB.Database("micro_grid").Collection("result_data")
+	// 查找文档
+	var doc bson.M
+	err = collection.FindOne(context.Background(), bson.M{}).Decode(&doc)
+	// 检查错误
+	if err != nil {
+		fmt.Println("查询文档失败：", err)
+		return
+	}
+
+	var data []map[string]interface{}
+	// "蓄电池充放电功率"及"蓄电池SOC"为双轴
+	tempy1, _ := doc["蓄电池充放电功率"].(primitive.A)
+	tempz1, _ := doc["蓄电池SOC"].(primitive.A)
+	tempy2, _ := tempy1[day].(primitive.A)
+	tempz2, _ := tempz1[day].(primitive.A)
+	for i := 0; i <= hour; i++ {
+		data0 := map[string]interface{}{
+			"x": i,
+			"y": tempy2[i],
+			"z": tempz2[i],
+		}
+		data = append(data, data0)
+	}
+
 	res.Data = data
 	c.JSON(http.StatusOK, res)
 }

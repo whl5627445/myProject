@@ -233,7 +233,12 @@ type ModelStateMessageReadData struct {
 	MessageType string `json:"message_type" binding:"required"`
 }
 
-type GetAppPowData struct {
+type GetAppPowSingleData struct {
+	TimeStr string          `json:"time_str" binding:"required"`
+	Names   map[string]bool `json:"names" binding:"required"`
+}
+
+type GetAppPowDoubleData struct {
 	TimeStr string          `json:"time_str" binding:"required"`
 	Names   map[string]bool `json:"names" binding:"required"`
 }
