@@ -45,7 +45,7 @@ type YssimExperimentRecord struct {
 	UserspaceId       string         `gorm:"column:userspace_id;type:varchar(128)"`
 	UserName          string         `gorm:"column:username;type:varchar(32)"`
 	ExperimentName    string         `gorm:"column:experiment_name;type:varchar(32)"`
-	ModelName         string         `gorm:"column:model_name;type:varchar(32)"`
+	ModelName         string         `gorm:"column:model_name;type:varchar(128)"`
 	ModelVarData      datatypes.JSON `gorm:"column:model_var_data;type:json"`
 	StartTime         string         `gorm:"column:start_time;type:varchar(32)"`
 	StopTime          string         `gorm:"column:stop_time;type:varchar(32)"`
