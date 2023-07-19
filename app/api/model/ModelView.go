@@ -1549,6 +1549,28 @@ func AppModelMarkView(c *gin.Context) {
 
 }
 
+func CADParseView(c *gin.Context) {
+	/*
+		解析CAD文件
+	*/
+	var model DataBaseModel.YssimModels
+	DB.Where("package_name = ? AND version = ?", "Modelica", "4.0.0").First(&model)
+	modelName := map[string]any{"straight_tube": map[string]any{"id": model.ID, "model_name": []string{"Modelica.Fluid.Pipes.StaticPipe", "Modelica.Fluid.Pipes.DynamicPipe"}}, "bendable_tube": map[string]any{"id": model.ID, "model_name": []string{"Modelica.Fluid.Fittings.Bends.CurvedBend"}}}
+	components := service.CADParseParts("test/CAD.xml")
+	var res responseData
+	res.Data = map[string]any{"components": components, "model": modelName}
+	c.JSON(http.StatusOK, res)
+}
+
+func CADMappingModelView(c *gin.Context) {
+	/*
+		利用前端传回的CAD解析数据进行模型映射
+	*/
+
+	var res responseData
+	c.JSON(http.StatusOK, res)
+}
+
 func Test1(c *gin.Context) {
 	/*
 		测试omc命令
