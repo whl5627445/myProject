@@ -63,6 +63,8 @@ type experimentDeleteData struct {
 }
 
 type experimentEditData struct {
+	PackageId       string            `json:"package_id" binding:"required"`
+	ModelName       string            `json:"model_name" binding:"required"`
 	ExperimentId    string            `json:"experiment_id" binding:"required"`
 	ExperimentName  string            `json:"experiment_name" binding:""`
 	SimulateVarData map[string]string `json:"simulate_var_data" binding:"required"`

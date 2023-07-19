@@ -583,7 +583,7 @@ func ExperimentEditView(c *gin.Context) {
 	username := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
 	var recordName DataBaseModel.YssimExperimentRecord
-	DB.Where("id != ? AND username =? AND userspace_id =? AND experiment_name =? ", item.ExperimentId, username, userSpaceId, item.ExperimentName).First(&recordName)
+	DB.Where("id != ? AND username =? AND userspace_id =? AND experiment_name =? AND model_name =? AND package_id =?", item.ExperimentId, username, userSpaceId, item.ExperimentName, item.ModelName, item.PackageId).First(&recordName)
 	if recordName.ExperimentName != "" {
 		res.Msg = "实验记录名称已存在，请更换。"
 		c.JSON(http.StatusOK, res)
