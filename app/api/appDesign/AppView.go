@@ -1763,3 +1763,72 @@ func GetAppPowDoubleView(c *gin.Context) {
 	res.Data = data
 	c.JSON(http.StatusOK, res)
 }
+
+func GetAppPowPieChartView(c *gin.Context) {
+	/*
+		# 获取电网app饼图数据接口（只返回该时刻数据）
+	*/
+	var res responseData
+	var item GetAppPowPieChartData
+	err := c.BindJSON(&item)
+	if err != nil {
+		log.Println("", err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	timeStr := item.TimeStr
+	names := item.Names
+
+	//时间格式的当前时间及2023年起始时间
+	layout := "2006/1/2/15"
+	timeStrRefer := "2023/1/1/0"
+	timeNow, err := time.Parse(layout, timeStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "time format error")
+		return
+	}
+	timeRefer, _ := time.Parse(layout, timeStrRefer)
+
+	//相较于2023/1/1/0的天数及当天的小时数，即为数据库二维数组的行和列
+	dataNum := int((timeNow.Sub(timeRefer)) / time.Hour)
+	day := dataNum / 24
+	hour := dataNum % 24
+
+	//查数据库的集合
+	collection := MB.Database("micro_grid").Collection("result_data")
+	// 查找文档
+	var doc bson.M
+	err = collection.FindOne(context.Background(), bson.M{}).Decode(&doc)
+	// 检查错误
+	if err != nil {
+		fmt.Println("查询文档失败：", err)
+		return
+	}
+
+	var data []map[string]interface{}
+	// 遍历文档获取对应数据
+	for key, value := range doc {
+		if names[key] {
+			//fmt.Printf(" %#v", hour)
+			temp1, ok := value.(primitive.A)
+			if !ok {
+				fmt.Println(key)
+				fmt.Println("类型转换失败1")
+			}
+			temp2, ok := temp1[day].(primitive.A)
+			if !ok {
+				fmt.Println("类型转换失败2")
+			}
+
+			data0 := map[string]interface{}{
+				"s": key,
+				"v": temp2[hour],
+			}
+			data = append(data, data0)
+
+		}
+
+	}
+	res.Data = data
+	c.JSON(http.StatusOK, res)
+}

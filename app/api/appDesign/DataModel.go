@@ -242,3 +242,8 @@ type GetAppPowDoubleData struct {
 	TimeStr string          `json:"time_str" binding:"required"`
 	Names   map[string]bool `json:"names" binding:"required"`
 }
+
+type GetAppPowPieChartData struct {
+	TimeStr string          `json:"time_str" binding:"required"`
+	Names   map[string]bool `json:"names" binding:"required"`
+}
