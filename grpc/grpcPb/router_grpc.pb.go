@@ -8,6 +8,7 @@ package grpcPb
 
 import (
 	context "context"
+
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -154,7 +155,7 @@ func RegisterGreeterServer(s grpc.ServiceRegistrar, srv GreeterServer) {
 	s.RegisterService(&Greeter_ServiceDesc, srv)
 }
 
-func _Greeter_GetProcessStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Greeter_GetProcessStatus_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(GetProcessStatusRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -166,13 +167,13 @@ func _Greeter_GetProcessStatus_Handler(srv interface{}, ctx context.Context, dec
 		Server:     srv,
 		FullMethod: "/Greeter/GetProcessStatus",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(GreeterServer).GetProcessStatus(ctx, req.(*GetProcessStatusRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Greeter_GetAllProcessNumber_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Greeter_GetAllProcessNumber_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(GetAllProcessNumberRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -184,13 +185,13 @@ func _Greeter_GetAllProcessNumber_Handler(srv interface{}, ctx context.Context, 
 		Server:     srv,
 		FullMethod: "/Greeter/GetAllProcessNumber",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(GreeterServer).GetAllProcessNumber(ctx, req.(*GetAllProcessNumberRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Greeter_GetResult_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Greeter_GetResult_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(GetResultRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -202,13 +203,13 @@ func _Greeter_GetResult_Handler(srv interface{}, ctx context.Context, dec func(i
 		Server:     srv,
 		FullMethod: "/Greeter/GetResult",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(GreeterServer).GetResult(ctx, req.(*GetResultRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Greeter_ProcessOperation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Greeter_ProcessOperation_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(ProcessOperationRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -220,13 +221,13 @@ func _Greeter_ProcessOperation_Handler(srv interface{}, ctx context.Context, dec
 		Server:     srv,
 		FullMethod: "/Greeter/ProcessOperation",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(GreeterServer).ProcessOperation(ctx, req.(*ProcessOperationRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Greeter_ReadSimulationResult_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Greeter_ReadSimulationResult_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(ReadSimulationResultRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -238,13 +239,13 @@ func _Greeter_ReadSimulationResult_Handler(srv interface{}, ctx context.Context,
 		Server:     srv,
 		FullMethod: "/Greeter/ReadSimulationResult",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(GreeterServer).ReadSimulationResult(ctx, req.(*ReadSimulationResultRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Greeter_CheckVarExist_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Greeter_CheckVarExist_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(CheckVarExistRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -256,13 +257,13 @@ func _Greeter_CheckVarExist_Handler(srv interface{}, ctx context.Context, dec fu
 		Server:     srv,
 		FullMethod: "/Greeter/CheckVarExist",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(GreeterServer).CheckVarExist(ctx, req.(*CheckVarExistRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Greeter_SubmitTask_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Greeter_SubmitTask_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(SubmitTaskRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -274,7 +275,7 @@ func _Greeter_SubmitTask_Handler(srv interface{}, ctx context.Context, dec func(
 		Server:     srv,
 		FullMethod: "/Greeter/SubmitTask",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(GreeterServer).SubmitTask(ctx, req.(*SubmitTaskRequest))
 	}
 	return interceptor(ctx, in, info, handler)

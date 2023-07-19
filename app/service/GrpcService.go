@@ -18,7 +18,7 @@ import (
 )
 
 type modelVarData struct {
-	FinalAttributesStr map[string]interface{} `json:"final_attributes_str"`
+	FinalAttributesStr map[string]any `json:"final_attributes_str"`
 }
 
 var DB = config.DB

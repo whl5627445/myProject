@@ -5,7 +5,7 @@ import (
 	"yssim-go/library/omc"
 )
 
-func GetGraphicsDataNew(modelName string) interface{} {
+func GetGraphicsDataNew(modelName string) any {
 	m := serviceType.ModelInstance{}
 	ok := omc.OMC.ModelInstance(modelName, &m)
 	if ok {

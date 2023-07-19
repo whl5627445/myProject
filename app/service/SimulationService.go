@@ -145,7 +145,7 @@ package service
 //		if task.Package.FilePath != "" {
 //			fileName = uploadFilePath
 //		}
-//		compileReqData := map[string]interface{}{
+//		compileReqData := map[string]any{
 //			"userName":  task.SRecord.UserName,
 //			"fileName":  fileName,
 //			"modelName": task.SRecord.SimulateModelName,
@@ -168,7 +168,7 @@ package service
 //
 //		if compileResData["code"].(float64) == 200 {
 //			MessageNotice(map[string]string{"message": task.SRecord.SimulateModelName + " 编译成功，开始仿真"})
-//			simulateReqData := map[string]interface{}{
+//			simulateReqData := map[string]any{
 //				"id":                0,
 //				"fileName":          fileName,
 //				"modelName":         task.SRecord.SimulateModelName,
@@ -227,7 +227,7 @@ package service
 //
 //func dymolaServiceStop(taskID string) error {
 //	req := url.NewRequest()
-//	req.Json = map[string]interface{}{"taskId": taskID}
+//	req.Json = map[string]any{"taskId": taskID}
 //	req.Timeout = 10 * time.Minute
 //	compileRes, err := requests.Post(config.DymolaSimutalionConnect+"/dymola/stopDymola", req)
 //	if err != nil {
@@ -258,7 +258,7 @@ package service
 ////	//	log.Printf("数据转换失败: %s", err)
 ////	//	return false
 ////	//}
-////	data := map[string]interface{}{
+////	data := map[string]any{
 ////		"start_time":       startTime,
 ////		"final_time":       finalTime,
 ////		"mo_path":          moFilePath,

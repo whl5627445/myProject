@@ -57,12 +57,12 @@ func GetUserSpaceNewView(c *gin.Context) {
 	db = db.Session(&gorm.Session{})
 	db.Order("create_time desc").Find(&allSpaceList)
 	db.Where("last_login_time <> ?", 0).Order("last_login_time desc").Limit(5).Find(&recentSpaceList)
-	allAppSpace := make([]map[string]interface{}, 0)
-	recentAppSpace := make([]map[string]interface{}, 0)
+	allAppSpace := make([]map[string]any, 0)
+	recentAppSpace := make([]map[string]any, 0)
 	for _, space := range allSpaceList {
 		updateTime := space.UpdatedAt.Local().Unix()
 		editTime := timeConvert.UseTimeFormatNew(int(updateTime), int(time.Now().Local().Unix()), 1)
-		d := map[string]interface{}{
+		d := map[string]any{
 			"id":          space.ID,
 			"name":        space.SpaceName,
 			"description": space.Description,
@@ -77,7 +77,7 @@ func GetUserSpaceNewView(c *gin.Context) {
 	for _, space := range recentSpaceList {
 		updateTime := space.UpdatedAt.Local().Unix()
 		editTime := timeConvert.UseTimeFormatNew(int(updateTime), int(time.Now().Local().Unix()), 1)
-		d := map[string]interface{}{
+		d := map[string]any{
 			"id":          space.ID,
 			"name":        space.SpaceName,
 			"description": space.Description,
@@ -89,7 +89,7 @@ func GetUserSpaceNewView(c *gin.Context) {
 		}
 		recentAppSpace = append(recentAppSpace, d)
 	}
-	data := map[string][]map[string]interface{}{
+	data := map[string][]map[string]any{
 		"all_space":    allAppSpace,
 		"recent_space": recentAppSpace,
 	}
@@ -282,7 +282,7 @@ func GetUserSettingsView(c *gin.Context) {
 	var setting DataBaseModel.YssimUserSettings
 	username := c.GetHeader("username")
 	DB.Where("username =? ", username).First(&setting)
-	oneData := map[string]interface{}{
+	oneData := map[string]any{
 		"grid_display": setting.GridDisplay,
 	}
 	res.Data = oneData

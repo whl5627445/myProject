@@ -14,12 +14,12 @@ func GetIcon(modelName, packageName, version string) string {
 	if len(imageBytes) == 0 {
 		iconData := omc.OMC.GetIconAnnotation(modelName)
 		if len(iconData) >= 8 {
-			bitmapData := iconData[8].([]interface{})
+			bitmapData := iconData[8].([]any)
 			for i := 0; i < len(bitmapData); i += 2 {
 				imageData := bitmapData[i]
 				if imageData == "Bitmap" {
-					image := bitmapData[i+1].([]interface{})[5].(string)
-					imageUri := bitmapData[i+1].([]interface{})[4].(string)
+					image := bitmapData[i+1].([]any)[5].(string)
+					imageUri := bitmapData[i+1].([]any)[4].(string)
 					if strings.HasPrefix(imageUri, "modelica://") {
 						imageFile := omc.OMC.UriToFilename(imageUri)
 						file, err := os.ReadFile(imageFile)

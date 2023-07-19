@@ -7,10 +7,10 @@ import (
 	"yssim-go/library/omc"
 )
 
-func GetElements(className, componentName string) []interface{} {
+func GetElements(className, componentName string) []any {
 	classNameList := GetICList(className)
-	var componentsData []interface{}
-	var annotationsData []interface{}
+	var componentsData []any
+	var annotationsData []any
 	for i := 0; i < len(classNameList); i++ {
 		classnameData := omc.OMC.GetElements(classNameList[i])
 		classnameAnnotationsData := omc.OMC.GetElementAnnotations(classNameList[i])
@@ -19,13 +19,13 @@ func GetElements(className, componentName string) []interface{} {
 
 	}
 
-	var componentData []interface{}
+	var componentData []any
 	for i := 0; i < len(componentsData); i++ {
-		cData := componentsData[i].([]interface{})
+		cData := componentsData[i].([]any)
 		switch {
 		case componentName != "" && cData[3] == componentName:
 			return cData
-		case !(cData[6] == "true" || len(annotationsData[i].([]interface{})) == 0 || annotationsData[i].([]interface{})[0].(string) != "Placement") && componentName == "":
+		case !(cData[6] == "true" || len(annotationsData[i].([]any)) == 0 || annotationsData[i].([]any)[0].(string) != "Placement") && componentName == "":
 			componentData = append(componentData, cData)
 		}
 	}
@@ -84,7 +84,7 @@ func addComponentVerification(oldComponentName, newComponentName, modelName stri
 	}
 	elementsData := omc.OMC.GetElements(modelName)
 	for _, e := range elementsData {
-		if e.([]interface{})[3] == newComponentName {
+		if e.([]any)[3] == newComponentName {
 			return false, "新增组件失败，名称 \"" + newComponentName + "\" 已经存在或是 Modelica 关键字。 请选择其他名称。"
 		}
 	}
@@ -112,7 +112,7 @@ func DeleteComponent(componentName, modelNameAll string) bool {
 	result := false
 	components := omc.OMC.GetComponents(modelNameAll)
 	for _, component := range components {
-		if componentName == component.([]interface{})[1].(string) {
+		if componentName == component.([]any)[1].(string) {
 			result = omc.OMC.DeleteComponent(componentName, modelNameAll)
 			break
 		}

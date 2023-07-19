@@ -22,9 +22,9 @@ func inheritanceModelNameFixes(copiedClassName, className string) {
 			inheritedNameFixesList = append(inheritedNameFixesList, inheritedClasses[i])
 		}
 	}
-	componentNameFixesMap := map[string][]interface{}{} // 组件名称修复Map，防止重复
+	componentNameFixesMap := map[string][]any{} // 组件名称修复Map，防止重复
 	for c := 0; c < len(components); c++ {
-		component := components[c].([]interface{})
+		component := components[c].([]any)
 		cname := component[2].(string)
 		if !strings.HasPrefix(cname, packageName) && !strings.HasPrefix(cname, "modelica") {
 			componentNameFixesMap[cname] = component // 查看组件名称是否以包名开始， 不是，则安排修复
@@ -160,7 +160,7 @@ func GetModelType(modelName string) string {
 	return modelType
 }
 
-func GetClassInformation(modelName string) []interface{} {
+func GetClassInformation(modelName string) []any {
 	classInformation := omc.OMC.GetClassInformation(modelName)
 	return classInformation
 }

@@ -6,8 +6,8 @@ import (
 	"yssim-go/library/omc"
 )
 
-func SearchModel(model DataBaseModel.YssimModels, keyWords, parentNode string) []map[string]interface{} {
-	var modelNameList []map[string]interface{}
+func SearchModel(model DataBaseModel.YssimModels, keyWords, parentNode string) []map[string]any {
+	var modelNameList []map[string]any
 	var nodeNames []string
 	searchModelMap := map[string]bool{}
 	words := strings.ToLower(keyWords)
@@ -38,7 +38,7 @@ func SearchModel(model DataBaseModel.YssimModels, keyWords, parentNode string) [
 				if !ok {
 					searchModelMap[nameParent] = true
 					modelType := omc.OMC.GetClassRestriction(nameParent)
-					data := map[string]interface{}{
+					data := map[string]any{
 						"name":         shortName,
 						"model_name":   nameParent,
 						"haschild":     false,
@@ -62,8 +62,8 @@ func SearchModel(model DataBaseModel.YssimModels, keyWords, parentNode string) [
 	return modelNameList
 }
 
-func SearchFunctionType(parentNode string) []map[string]interface{} {
-	var modelNameList []map[string]interface{}
+func SearchFunctionType(parentNode string) []map[string]any {
+	var modelNameList []map[string]any
 	searchMap := map[string]bool{}
 	parentNodePackageList := strings.Split(parentNode, ".")
 
@@ -78,7 +78,7 @@ func SearchFunctionType(parentNode string) []map[string]interface{} {
 			modelType := omc.OMC.GetClassRestriction(name)
 			if modelType == "function" {
 				searchMap[nameParent] = true
-				data := map[string]interface{}{
+				data := map[string]any{
 					"name":       shortName,
 					"model_name": nameParent,
 					"haschild":   false,
@@ -94,7 +94,7 @@ func SearchFunctionType(parentNode string) []map[string]interface{} {
 	return modelNameList
 }
 
-func SearchPackage(model DataBaseModel.YssimModels, keyWords string) map[string]interface{} {
+func SearchPackage(model DataBaseModel.YssimModels, keyWords string) map[string]any {
 	words := strings.ToLower(keyWords)
 	modelNames := omc.OMC.GetClassNames(model.PackageName, true)
 	for _, name := range modelNames {
@@ -104,7 +104,7 @@ func SearchPackage(model DataBaseModel.YssimModels, keyWords string) map[string]
 			shortName := nameListAll[0]
 			nameParent := shortName
 			modelType := omc.OMC.GetClassRestriction(nameParent)
-			data := map[string]interface{}{
+			data := map[string]any{
 				"name":            shortName,
 				"model_name":      nameParent,
 				"haschild":        false,

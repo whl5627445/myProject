@@ -42,7 +42,7 @@ func GetMessagesStringInternal() []map[string]string {
 	return messageList
 }
 
-func MessageNotice(mes interface{}) bool {
+func MessageNotice(mes any) bool {
 	mesJson, _ := sonic.Marshal(mes)
 	userName := config.USERNAME
 	reply, err := config.R.LPush(context.Background(), userName+"_"+"notification", mesJson).Result()

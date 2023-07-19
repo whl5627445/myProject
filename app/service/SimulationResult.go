@@ -270,7 +270,7 @@ func CheckNodeEmpty(path, parent string) bool {
 
 }
 
-func SimulationResultTree(path, parent, keyWords string) []map[string]interface{} {
+func SimulationResultTree(path, parent, keyWords string) []map[string]any {
 	v, ok := treeCache[path]
 	if !ok {
 		v = xmlInit{}
@@ -286,7 +286,7 @@ func SimulationResultTree(path, parent, keyWords string) []map[string]interface{
 	}
 	scalarVariableList := v.ModelVariables.ScalarVariable
 	scalarVariableMap := make(map[string]scalarVariable, 0)
-	var dataList []map[string]interface{}
+	var dataList []map[string]any
 	nameMap := map[string]bool{}
 	id := 0
 	for _, variable := range scalarVariableList {
@@ -302,7 +302,7 @@ func SimulationResultTree(path, parent, keyWords string) []map[string]interface{
 			}
 			//if !nameMap[splitName[0]] && !scalarVariableMap[name].HideResult && !scalarVariableMap[name].IsProtected {
 			if !nameMap[splitName[0]] && !scalarVariableMap[name].HideResult {
-				data := map[string]interface{}{
+				data := map[string]any{
 					"variables":           splitName[0],
 					"description":         scalarVariableMap[name].Description,
 					"display_unit":        scalarVariableMap[name].Real.DisplayUnit,
@@ -328,15 +328,15 @@ func SimulationResultTree(path, parent, keyWords string) []map[string]interface{
 	return dataList
 }
 
-func AppInputTree(compileType, path, parent, keyWords string) []map[string]interface{} {
-	var result []map[string]interface{}
+func AppInputTree(compileType, path, parent, keyWords string) []map[string]any {
+	var result []map[string]any
 	if compileType == "OM" {
 		result = SimulationResultTree(path, parent, keyWords)
 	}
 	if compileType == "DM" {
 		result = DymolaSimulationResultTree(path, parent, keyWords)
 	}
-	var filteredResult []map[string]interface{}
+	var filteredResult []map[string]any
 	parentName := ""
 	if parent != "" {
 		parentName = parent + "."
@@ -360,7 +360,7 @@ func AppInputTree(compileType, path, parent, keyWords string) []map[string]inter
 
 }
 
-func DymolaSimulationResultTree(path, parent, keyWords string) []map[string]interface{} {
+func DymolaSimulationResultTree(path, parent, keyWords string) []map[string]any {
 	// 读取xml文件
 	v := xmlInit{}
 	err := xmlOperation.ParseXML(path, &v)
@@ -381,7 +381,7 @@ func DymolaSimulationResultTree(path, parent, keyWords string) []map[string]inte
 
 	scalarVariableList := v.ModelVariables.ScalarVariable
 	scalarVariableMap := make(map[string]scalarVariable, 0)
-	var dataList []map[string]interface{}
+	var dataList []map[string]any
 	nameMap := map[string]bool{}
 	id := 0
 	for _, variable := range scalarVariableList {
@@ -410,7 +410,7 @@ func DymolaSimulationResultTree(path, parent, keyWords string) []map[string]inte
 				if scalarVariableMap[name].Causality == "parameter" || scalarVariableMap[name].Initial == "exact" {
 					isValueChangeable = true
 				}
-				data := map[string]interface{}{
+				data := map[string]any{
 					"variables":           splitName[0],
 					"description":         scalarVariableMap[name].Description,
 					"display_unit":        displayUnit,
@@ -437,7 +437,7 @@ func DymolaSimulationResultTree(path, parent, keyWords string) []map[string]inte
 	return dataList
 }
 
-func FmpySimulationResultTree(modelName, path, parent, keyWords string) []map[string]interface{} {
+func FmpySimulationResultTree(modelName, path, parent, keyWords string) []map[string]any {
 	_, err := os.Stat(path)
 	if os.IsNotExist(err) {
 		if res := omc.OMC.DumpXMLDAE(modelName); res[0].(string) == "true" {
@@ -450,7 +450,7 @@ func FmpySimulationResultTree(modelName, path, parent, keyWords string) []map[st
 		return nil
 	}
 	id := 0
-	var dataList []map[string]interface{}
+	var dataList []map[string]any
 	nameMap := map[string]bool{}
 	variables := doc.SelectElement("dae").SelectElement("variables")
 	//解析orderedVariables节点
@@ -479,7 +479,7 @@ func FmpySimulationResultTree(modelName, path, parent, keyWords string) []map[st
 		}
 	}
 	//获取没有子节点的变量名
-	var dataList2 []map[string]interface{}
+	var dataList2 []map[string]any
 	var dataNameList []string
 	for i := 0; i < len(dataList); i++ {
 		if dataList[i]["has_child"] == false {
@@ -511,9 +511,9 @@ func FmpySimulationResultTree(modelName, path, parent, keyWords string) []map[st
 	return dataList2
 }
 
-func AppSimulateResult(appPageId string, varNameList []string) ([]map[string]interface{}, error) {
+func AppSimulateResult(appPageId string, varNameList []string) ([]map[string]any, error) {
 	var appPageRecord DataBaseModel.AppPage
-	var resData []map[string]interface{}
+	var resData []map[string]any
 	// 查询appPageId是否存在
 	DB.Where("id = ? ", appPageId).First(&appPageRecord)
 	var appDataSourceRecord DataBaseModel.AppDataSource
@@ -546,7 +546,7 @@ func AppSimulateResult(appPageId string, varNameList []string) ([]map[string]int
 				ordinate = o
 				abscissa = a
 			}
-			oneData := map[string]interface{}{
+			oneData := map[string]any{
 				"variable": varNameList[i],
 				"abscissa": abscissa,
 				"ordinate": ordinate,
@@ -559,10 +559,10 @@ func AppSimulateResult(appPageId string, varNameList []string) ([]map[string]int
 
 }
 
-func AppReleaseResult(appPageId string) (map[string]interface{}, error) {
+func AppReleaseResult(appPageId string) (map[string]any, error) {
 	var appPageRecord DataBaseModel.AppPage
-	resData := make(map[string]interface{})
-	csvData := make(map[string]interface{})
+	resData := make(map[string]any)
+	csvData := make(map[string]any)
 	// 查询appPageId是否存在
 	DB.Where("id = ? ", appPageId).First(&appPageRecord)
 	var appDataSourceRecord DataBaseModel.AppDataSource
@@ -601,7 +601,7 @@ func AppReleaseResult(appPageId string) (map[string]interface{}, error) {
 				return nil, err
 			}
 			// 遍历每一列数据
-			resultMap := make(map[string]interface{})
+			resultMap := make(map[string]any)
 			for n := 0; n < len(records[0]); n++ {
 				var column []string
 				for _, record := range records {
@@ -630,10 +630,10 @@ func AppReleaseResult(appPageId string) (map[string]interface{}, error) {
 
 }
 
-func AppPreviewResult(appPageId string) (map[string]interface{}, error) {
+func AppPreviewResult(appPageId string) (map[string]any, error) {
 	var appPageRecord DataBaseModel.AppPage
-	resData := make(map[string]interface{})
-	csvData := make(map[string]interface{})
+	resData := make(map[string]any)
+	csvData := make(map[string]any)
 	// 查询appPageId是否存在
 	DB.Where("id = ? ", appPageId).First(&appPageRecord)
 	var appDataSourceRecord DataBaseModel.AppDataSource
@@ -672,7 +672,7 @@ func AppPreviewResult(appPageId string) (map[string]interface{}, error) {
 				return nil, err
 			}
 			// 遍历每一列数据
-			resultMap := make(map[string]interface{})
+			resultMap := make(map[string]any)
 			for n := 0; n < len(records[0]); n++ {
 				var column []string
 				for _, record := range records {

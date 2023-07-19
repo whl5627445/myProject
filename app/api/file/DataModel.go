@@ -1,10 +1,10 @@
 package API
 
 type responseData struct {
-	Data   interface{} `json:"data"`
-	Msg    string      `json:"msg"`
-	Status int         `json:"status"` // 正常是0，系统级错误是1， 用戶错误是2
-	Err    string      `json:"err"`
+	Data   any    `json:"data"`
+	Msg    string `json:"msg"`
+	Status int    `json:"status"` // 正常是0，系统级错误是1， 用戶错误是2
+	Err    string `json:"err"`
 }
 
 type updateModelPackageData struct {
@@ -35,12 +35,12 @@ type filterResultFileData struct {
 }
 
 type fmuExportData struct {
-	PackageId     string                 `json:"package_id" binding:"required"`
-	PackageName   string                 `json:"package_name" binding:"required"`
-	ModelName     string                 `json:"model_name" binding:"required"`
-	FmuName       string                 `json:"fmu_name" binding:"required"`
-	FmuPar        map[string]interface{} `json:"fmuPar" binding:"required"`
-	DownloadLocal bool                   `json:"download_local" binding:"required"`
+	PackageId     string         `json:"package_id" binding:"required"`
+	PackageName   string         `json:"package_name" binding:"required"`
+	ModelName     string         `json:"model_name" binding:"required"`
+	FmuName       string         `json:"fmu_name" binding:"required"`
+	FmuPar        map[string]any `json:"fmuPar" binding:"required"`
+	DownloadLocal bool           `json:"download_local" binding:"required"`
 }
 
 type packageFileData struct {

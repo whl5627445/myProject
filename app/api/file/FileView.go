@@ -83,7 +83,7 @@ func UploadModelPackageView(c *gin.Context) {
 			conflict, err := service.GetLoadPackageConflict(packageName, packageRecord.Version, packagePath+"/package.mo")
 			if len(conflict) > 0 && err != nil {
 				service.DeleteLibrary(packageName)
-				data := map[string]interface{}{}
+				data := map[string]any{}
 				data["package_id"] = packageRecord.ID
 				data["conflict"] = conflict
 				res.Data = data
@@ -326,11 +326,11 @@ func GetPackageFileListView(c *gin.Context) {
 	var res responseData
 	username := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
-	var packageRecord []map[string]interface{}
+	var packageRecord []map[string]any
 	DB.Raw("select m.id, m.package_name, m.create_time, m.update_time, s.space_name from yssim_models as m, yssim_user_spaces as s where m.sys_or_user = ? AND m.userspace_id = s.id AND m.deleted_at IS NULL AND s.deleted_at IS NULL AND s.id = ? ORDER BY create_time desc;", username, userSpaceId).Find(&packageRecord)
-	var dataList []map[string]interface{}
+	var dataList []map[string]any
 	for id, models := range packageRecord {
-		data := map[string]interface{}{
+		data := map[string]any{
 			"id":           id,
 			"package_id":   models["id"],
 			"space_name":   models["space_name"],
@@ -772,7 +772,7 @@ func DownloadResourcesFileView(c *gin.Context) {
 	filePathAll := service.GetResourcesDir(packageModel.PackageName, filePath)
 	//c.Header("content-disposition", `attachment;filename=`+url.QueryEscape(item.Path))
 	//c.Data(http.StatusOK, "application/octet-stream", fileData)
-	res.Data = map[string]interface{}{
+	res.Data = map[string]any{
 		"url": filePathAll,
 	}
 	c.JSON(http.StatusOK, res)

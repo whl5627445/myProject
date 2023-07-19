@@ -7,10 +7,11 @@
 package grpcPb
 
 import (
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
+
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 const (
@@ -1214,7 +1215,7 @@ func file_router_proto_rawDescGZIP() []byte {
 }
 
 var file_router_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
-var file_router_proto_goTypes = []interface{}{
+var file_router_proto_goTypes = []any{
 	(*GetProcessStatusRequest)(nil),      // 0: GetProcessStatusRequest
 	(*GetProcessStatusReply)(nil),        // 1: GetProcessStatusReply
 	(*GetAllProcessNumberRequest)(nil),   // 2: GetAllProcessNumberRequest
@@ -1270,7 +1271,7 @@ func file_router_proto_init() {
 		return
 	}
 	if !protoimpl.UnsafeEnabled {
-		file_router_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
+		file_router_proto_msgTypes[0].Exporter = func(v any, i int) any {
 			switch v := v.(*GetProcessStatusRequest); i {
 			case 0:
 				return &v.state
@@ -1282,7 +1283,7 @@ func file_router_proto_init() {
 				return nil
 			}
 		}
-		file_router_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+		file_router_proto_msgTypes[1].Exporter = func(v any, i int) any {
 			switch v := v.(*GetProcessStatusReply); i {
 			case 0:
 				return &v.state
@@ -1294,7 +1295,7 @@ func file_router_proto_init() {
 				return nil
 			}
 		}
-		file_router_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+		file_router_proto_msgTypes[2].Exporter = func(v any, i int) any {
 			switch v := v.(*GetAllProcessNumberRequest); i {
 			case 0:
 				return &v.state
@@ -1306,7 +1307,7 @@ func file_router_proto_init() {
 				return nil
 			}
 		}
-		file_router_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+		file_router_proto_msgTypes[3].Exporter = func(v any, i int) any {
 			switch v := v.(*GetAllProcessNumberReply); i {
 			case 0:
 				return &v.state
@@ -1318,7 +1319,7 @@ func file_router_proto_init() {
 				return nil
 			}
 		}
-		file_router_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+		file_router_proto_msgTypes[4].Exporter = func(v any, i int) any {
 			switch v := v.(*GetResultRequest); i {
 			case 0:
 				return &v.state
@@ -1330,7 +1331,7 @@ func file_router_proto_init() {
 				return nil
 			}
 		}
-		file_router_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+		file_router_proto_msgTypes[5].Exporter = func(v any, i int) any {
 			switch v := v.(*GetResultReply); i {
 			case 0:
 				return &v.state
@@ -1342,7 +1343,7 @@ func file_router_proto_init() {
 				return nil
 			}
 		}
-		file_router_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+		file_router_proto_msgTypes[6].Exporter = func(v any, i int) any {
 			switch v := v.(*ProcessOperationRequest); i {
 			case 0:
 				return &v.state
@@ -1354,7 +1355,7 @@ func file_router_proto_init() {
 				return nil
 			}
 		}
-		file_router_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
+		file_router_proto_msgTypes[7].Exporter = func(v any, i int) any {
 			switch v := v.(*ProcessOperationReply); i {
 			case 0:
 				return &v.state
@@ -1366,7 +1367,7 @@ func file_router_proto_init() {
 				return nil
 			}
 		}
-		file_router_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
+		file_router_proto_msgTypes[8].Exporter = func(v any, i int) any {
 			switch v := v.(*ReadSimulationResultRequest); i {
 			case 0:
 				return &v.state
@@ -1378,7 +1379,7 @@ func file_router_proto_init() {
 				return nil
 			}
 		}
-		file_router_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
+		file_router_proto_msgTypes[9].Exporter = func(v any, i int) any {
 			switch v := v.(*ReadSimulationResultReply); i {
 			case 0:
 				return &v.state
@@ -1390,7 +1391,7 @@ func file_router_proto_init() {
 				return nil
 			}
 		}
-		file_router_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
+		file_router_proto_msgTypes[10].Exporter = func(v any, i int) any {
 			switch v := v.(*CheckVarExistRequest); i {
 			case 0:
 				return &v.state
@@ -1402,7 +1403,7 @@ func file_router_proto_init() {
 				return nil
 			}
 		}
-		file_router_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
+		file_router_proto_msgTypes[11].Exporter = func(v any, i int) any {
 			switch v := v.(*CheckVarExistReply); i {
 			case 0:
 				return &v.state
@@ -1414,7 +1415,7 @@ func file_router_proto_init() {
 				return nil
 			}
 		}
-		file_router_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
+		file_router_proto_msgTypes[12].Exporter = func(v any, i int) any {
 			switch v := v.(*SubmitTaskRequest); i {
 			case 0:
 				return &v.state
@@ -1426,7 +1427,7 @@ func file_router_proto_init() {
 				return nil
 			}
 		}
-		file_router_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
+		file_router_proto_msgTypes[13].Exporter = func(v any, i int) any {
 			switch v := v.(*SubmitTaskReply); i {
 			case 0:
 				return &v.state
@@ -1438,7 +1439,7 @@ func file_router_proto_init() {
 				return nil
 			}
 		}
-		file_router_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
+		file_router_proto_msgTypes[14].Exporter = func(v any, i int) any {
 			switch v := v.(*ReadSimulationResultReplyEle); i {
 			case 0:
 				return &v.state
@@ -1450,7 +1451,7 @@ func file_router_proto_init() {
 				return nil
 			}
 		}
-		file_router_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
+		file_router_proto_msgTypes[19].Exporter = func(v any, i int) any {
 			switch v := v.(*SubmitTaskRequestInputObj); i {
 			case 0:
 				return &v.state

@@ -5,15 +5,15 @@ import (
 	"yssim-go/library/omc"
 )
 
-func GetModelChild(modelName string) []map[string]interface{} {
+func GetModelChild(modelName string) []map[string]any {
 	childAllList := omc.OMC.GetClassNames(modelName, false)
-	var dataList []map[string]interface{}
+	var dataList []map[string]any
 	if childAllList != nil {
 		for i := 0; i < len(childAllList); i++ {
 			modelChildName := modelName + "." + childAllList[i]
 			classInformation := GetClassInformation(modelChildName)
 			modelType := strings.TrimSpace(classInformation[0].(string))
-			data := map[string]interface{}{
+			data := map[string]any{
 				"name":       childAllList[i],
 				"model_name": modelChildName,
 				"haschild":   false,

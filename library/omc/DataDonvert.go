@@ -8,13 +8,13 @@ import (
 	"github.com/bytedance/sonic"
 )
 
-func dataToGo(oldData []byte) ([]interface{}, error) {
-	var resData []interface{}
+func dataToGo(oldData []byte) ([]any, error) {
+	var resData []any
 	data := replaceDynamicSelectData(oldData)
 	data = dialogErrorReplace(data)
 	resStr := parseString(data)
 	if resStr == "" {
-		return []interface{}{}, nil
+		return []any{}, nil
 	}
 	err := sonic.Unmarshal([]byte(resStr), &resData)
 	if err != nil {

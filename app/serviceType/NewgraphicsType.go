@@ -8,7 +8,7 @@ type ModelInstance struct {
 	Annotation  Annotation                 `json:"annotation,omitempty"`
 	Components  []Component                `json:"components,omitempty"`
 	Connections []Connections              `json:"connections,omitempty"`
-	//Source      map[string]interface{}   `json:"source,omitempty"`
+	//Source      map[string]any   `json:"source,omitempty"`
 }
 
 //type BaseClass struct {
@@ -44,21 +44,21 @@ type CoordinateSystem struct {
 }
 
 type Graphics struct {
-	Name     string        `json:"name,omitempty"`
-	Elements []interface{} `json:"elements,omitempty"`
+	Name     string `json:"name,omitempty"`
+	Elements []any  `json:"elements,omitempty"`
 }
 
 type Component struct {
-	Name       string                 `json:"name,omitempty"`
-	Type       ComponentType          `json:"type,omitempty"`
-	Extends    []ModelInstance        `json:"extends,omitempty"`
-	Modifiers  interface{}            `json:"modifiers,omitempty"`
-	Condition  interface{}            `json:"condition,omitempty"`
-	Dims       Dims                   `json:"dims,omitempty"`
-	Value      map[string]interface{} `json:"value,omitempty"`
-	Prefixes   Prefixes               `json:"prefixes,omitempty"`
-	Comment    string                 `json:"comment,omitempty"`
-	Annotation Annotation             `json:"annotation,omitempty"`
+	Name       string          `json:"name,omitempty"`
+	Type       ComponentType   `json:"type,omitempty"`
+	Extends    []ModelInstance `json:"extends,omitempty"`
+	Modifiers  any             `json:"modifiers,omitempty"`
+	Condition  any             `json:"condition,omitempty"`
+	Dims       Dims            `json:"dims,omitempty"`
+	Value      map[string]any  `json:"value,omitempty"`
+	Prefixes   Prefixes        `json:"prefixes,omitempty"`
+	Comment    string          `json:"comment,omitempty"`
+	Annotation Annotation      `json:"annotation,omitempty"`
 }
 
 type Dims struct {
@@ -69,7 +69,7 @@ type Dims struct {
 type ComponentType struct {
 	Name        string                     `json:"name,omitempty"`
 	Restriction string                     `json:"restriction,omitempty"`
-	Modifiers   map[string]interface{}     `json:"modifiers,omitempty"`
+	Modifiers   map[string]any             `json:"modifiers,omitempty"`
 	Extends     []map[string]ModelInstance `json:"extends,omitempty"`
 	Comment     string                     `json:"comment,omitempty"`
 	Annotation  ConnectionsAnnotation      `json:"annotation,omitempty"`

@@ -3,10 +3,10 @@ package API
 import "gorm.io/datatypes"
 
 type responseData struct {
-	Data   interface{} `json:"data"`
-	Msg    string      `json:"msg"`
-	Status int         `json:"status"` // 正常是0，系统级错误是1， 用戶错误是2
-	Err    string      `json:"err"`
+	Data   any    `json:"data"`
+	Msg    string `json:"msg"`
+	Status int    `json:"status"` // 正常是0，系统级错误是1， 用戶错误是2
+	Err    string `json:"err"`
 }
 
 type AppMultipleSimulateData struct {

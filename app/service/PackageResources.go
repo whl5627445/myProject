@@ -20,9 +20,9 @@ func GetResourcesImages(path string) []byte {
 }
 
 // GetResourcesImagesPath  递归获取所有文件和路径
-func GetResourcesImagesPath(packageName, keyWord string) []map[string]interface{} {
+func GetResourcesImagesPath(packageName, keyWord string) []map[string]any {
 	dirList := []string{""}
-	dataList := []map[string]interface{}{}
+	dataList := []map[string]any{}
 	for i := 0; i < len(dirList); i++ {
 		parent := dirList[i]
 		resourcesPath := resourcesDir(packageName, parent)
@@ -51,7 +51,7 @@ func GetResourcesImagesPath(packageName, keyWord string) []map[string]interface{
 			if parent == "" {
 				parent = "Resources"
 			}
-			dataList = append(dataList, map[string]interface{}{"images_path": d, "path_name": parent})
+			dataList = append(dataList, map[string]any{"images_path": d, "path_name": parent})
 		}
 	}
 	return dataList

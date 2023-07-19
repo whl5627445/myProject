@@ -27,18 +27,18 @@ func GetSysRootModelView(c *gin.Context) {
 	*/
 	var res responseData
 	keywords := c.Query("keywords")
-	var modelData []map[string]interface{}
+	var modelData []map[string]any
 	var packageModel []DataBaseModel.YssimModels
 	DB.Where("sys_or_user =  ? AND userspace_id = ?", "sys", "0").Find(&packageModel)
 	libraryAndVersions := service.GetLibraryAndVersions()
 	for i := 0; i < len(packageModel); i++ {
 		p, ok := libraryAndVersions[packageModel[i].PackageName]
 		if ok && p == packageModel[i].Version {
-			data := map[string]interface{}{}
+			data := map[string]any{}
 			if keywords != "" {
 				data = service.SearchPackage(packageModel[i], keywords)
 			} else {
-				data = map[string]interface{}{
+				data = map[string]any{
 					"package_id":      packageModel[i].ID,
 					"package_name":    packageModel[i].PackageName,
 					"package_version": packageModel[i].Version,
@@ -68,7 +68,7 @@ func GetUserRootModelView(c *gin.Context) {
 	}
 	keywords := c.Query("keywords")
 	var res responseData
-	var modelData []map[string]interface{}
+	var modelData []map[string]any
 	var packageModel []DataBaseModel.YssimModels
 	var space DataBaseModel.YssimUserSpace
 	DB.Where("id = ? AND username = ?", userSpaceId, userName).First(&space)
@@ -78,11 +78,11 @@ func GetUserRootModelView(c *gin.Context) {
 	for i := 0; i < len(packageModel); i++ {
 		loadVersions, ok := libraryAndVersions[packageModel[i].PackageName]
 		if ok && loadVersions == packageModel[i].Version {
-			data := map[string]interface{}{}
+			data := map[string]any{}
 			if keywords != "" {
 				data = service.SearchPackage(packageModel[i], keywords)
 			} else {
-				data = map[string]interface{}{
+				data = map[string]any{
 					"package_id":      packageModel[i].ID,
 					"package_name":    packageModel[i].PackageName,
 					"package_version": packageModel[i].Version,
@@ -113,14 +113,14 @@ func GetUserPackageView(c *gin.Context) {
 	userName := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
 	var res responseData
-	var modelData []map[string]interface{}
+	var modelData []map[string]any
 	var packageModel []DataBaseModel.YssimModels
 	DB.Where("sys_or_user = ? AND userspace_id = ?", userName, userSpaceId).Find(&packageModel)
 	libraryAndVersions := service.GetLibraryAndVersions()
 	for i := 0; i < len(packageModel); i++ {
 		loadVersions, ok := libraryAndVersions[packageModel[i].PackageName]
 		if ok && loadVersions == packageModel[i].Version && service.GetModelType(packageModel[i].PackageName) == "package" {
-			data := map[string]interface{}{
+			data := map[string]any{
 				"package_id":   packageModel[i].ID,
 				"package_name": packageModel[i].PackageName,
 			}
@@ -150,7 +150,7 @@ func GetListModelView(c *gin.Context) {
 	}
 	var res responseData
 	modelChildList := service.GetModelChild(modelName)
-	var modelChildListNew []map[string]interface{}
+	var modelChildListNew []map[string]any
 	for i := 0; i < len(modelChildList); i++ {
 		modelChildList[i]["image"] = service.GetIcon(modelName+"."+modelChildList[i]["name"].(string), packageModel.PackageName, packageModel.Version)
 		modelChildListNew = append(modelChildListNew, modelChildList[i])
@@ -158,7 +158,7 @@ func GetListModelView(c *gin.Context) {
 	// 如果父节点是包名称的话，追加静态资源管理文件夹节点
 	nameType := service.GetModelType(modelName)
 	if modelName == packageModel.PackageName && packageModel.SysUser != "sys" && nameType == "package" {
-		modelChildListNew = append(modelChildListNew, map[string]interface{}{
+		modelChildListNew = append(modelChildListNew, map[string]any{
 			"name":     "Resources",
 			"haschild": true,
 			"type":     "static",
@@ -259,11 +259,11 @@ func GetModelResourcesReferenceView(c *gin.Context) {
 	} else {
 		var packageModelList []DataBaseModel.YssimModels
 		DB.Where("sys_or_user = ? AND userspace_id = ?", userName, userSpaceId).Find(&packageModelList)
-		var data []map[string]interface{}
+		var data []map[string]any
 		for _, model := range packageModelList {
 			information := service.GetClassInformation(model.PackageName)
 			if len(information) > 0 && information[0] == "package" {
-				data = append(data, map[string]interface{}{"name": model.PackageName + ".Resources", "package_id": model.ID, "type": "dir"})
+				data = append(data, map[string]any{"name": model.PackageName + ".Resources", "package_id": model.ID, "type": "dir"})
 			}
 		}
 		res.Data = data
@@ -285,24 +285,24 @@ func GetModelParametersView(c *gin.Context) {
 	className := c.Query("class_name")
 
 	var res responseData
-	properties := make(map[string]interface{}, 0)
+	properties := make(map[string]any, 0)
 	parameters := service.GetModelParameters(modelName, componentName, className, "")
 	elements := service.GetElements(modelName, componentName)
 	if len(elements) > 0 && componentName != "" {
 		dimension := elements[len(elements)-1].(string)
-		properties = map[string]interface{}{
+		properties = map[string]any{
 			"model_name":     modelName,
 			"component_name": componentName,
 			"path":           elements[2],
 			"dimension":      dimension,
 			"annotation":     elements[4],
-			"Properties":     []interface{}{elements[6], elements[5], elements[9]},
+			"Properties":     []any{elements[6], elements[5], elements[9]},
 			"Variability":    elements[10],
 			"Inner/Outer":    elements[11],
 			"Causality":      elements[12],
 		}
 	}
-	res.Data = map[string]interface{}{"parameters": parameters, "properties": properties}
+	res.Data = map[string]any{"parameters": parameters, "properties": properties}
 	c.JSON(http.StatusOK, res)
 }
 
@@ -443,7 +443,7 @@ func GetComponentPropertiesView(c *gin.Context) {
 	result := service.GetElements(modelName, componentsName)
 	if len(result) > 0 {
 		dimension := result[len(result)-1].(string)
-		data := map[string]interface{}{
+		data := map[string]any{
 			"model_name":     modelName,
 			"component_name": componentsName,
 			"path":           result[2],
@@ -716,7 +716,7 @@ func AddModelComponentView(c *gin.Context) {
 	}
 	rotation := strconv.Itoa(item.Rotation)
 	data := service.GetIconNew(item.OldComponentName, false)
-	graphics := data["graphics"].(map[string]interface{})
+	graphics := data["graphics"].(map[string]any)
 	graphics["originDiagram"] = item.Origin
 	graphics["original_name"] = item.NewComponentName
 	graphics["name"] = item.NewComponentName
@@ -1036,9 +1036,9 @@ func GetComponentsView(c *gin.Context) {
 	var data []map[string]string
 	for _, e := range result {
 		component := map[string]string{
-			"component_model_name":  e.([]interface{})[2].(string),
-			"component_name":        e.([]interface{})[3].(string),
-			"component_description": e.([]interface{})[4].(string),
+			"component_model_name":  e.([]any)[2].(string),
+			"component_name":        e.([]any)[3].(string),
+			"component_description": e.([]any)[4].(string),
 		}
 		data = append(data, component)
 	}
@@ -1111,7 +1111,7 @@ func ConvertUnitsView(c *gin.Context) {
 	unitsCompatible, _ := strconv.ParseBool(result[0])
 	scaleFactor, _ := strconv.ParseFloat(result[1], 32)
 	offset, _ := strconv.ParseFloat(result[2], 32)
-	res.Data = map[string]interface{}{
+	res.Data = map[string]any{
 		"units_compatible": unitsCompatible,
 		"scale_factor":     scaleFactor,
 		"offset":           offset,
@@ -1190,8 +1190,8 @@ func GetCollectionModelView(c *gin.Context) {
 	username := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
 	var res responseData
-	var modelData []map[string]interface{}
-	var modelCollections []map[string]interface{}
+	var modelData []map[string]any
+	var modelCollections []map[string]any
 	DB.Raw("select mc.id, mc.package_id, m.package_name, mc.model_name, m.version, m.sys_or_user from yssim_models_collections as mc  left join yssim_models m on mc.package_id = m.id where mc.userspace_id = ?  and m.sys_or_user IN (?,\"sys\") and mc.deleted_at is NULL", userSpaceId, username).Scan(&modelCollections)
 	for i := 0; i < len(modelCollections); i++ {
 		modelName := modelCollections[i]["model_name"].(string)
@@ -1207,7 +1207,7 @@ func GetCollectionModelView(c *gin.Context) {
 			go DB.Delete(&modelCollections[i])
 			continue
 		}
-		data := map[string]interface{}{
+		data := map[string]any{
 			"id":           modelCollections[i]["id"],
 			"package_id":   modelCollections[i]["package_id"],
 			"package_name": modelCollections[i]["package_name"],
@@ -1257,7 +1257,7 @@ func SearchModelView(c *gin.Context) {
 	keywords := c.Query("keywords")
 	parent := c.Query("parent")
 	var res responseData
-	var data []map[string]interface{}
+	var data []map[string]any
 	var packageModel []DataBaseModel.YssimModels
 	libraryAndVersions := service.GetLibraryAndVersions()
 	if parent != "" {
@@ -1284,7 +1284,7 @@ func SearchFunctionTypeView(c *gin.Context) {
 	*/
 	parent := c.Query("parent")
 	var res responseData
-	var data []map[string]interface{}
+	var data []map[string]any
 	modelNameList := service.SearchFunctionType(parent)
 	data = append(data, modelNameList...)
 	res.Data = data
@@ -1475,7 +1475,7 @@ func Test(c *gin.Context) {
 	*/
 	cmd := c.Query("cmd")
 	NoParsed := c.Query("NoParsed")
-	var data interface{}
+	var data any
 	if NoParsed != "" {
 		data, _ = omc.OMC.SendExpression(cmd)
 	} else {

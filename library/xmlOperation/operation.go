@@ -3,13 +3,14 @@ package xmlOperation
 import (
 	"encoding/xml"
 	"errors"
-	"github.com/beevik/etree"
 	"io/ioutil"
 	"os"
 	"strings"
+
+	"github.com/beevik/etree"
 )
 
-func ParseXML(path string, obj interface{}) error {
+func ParseXML(path string, obj any) error {
 	file, err := os.Open(path)
 	if err != nil {
 		return errors.New("文件打开错误: " + err.Error())
@@ -23,8 +24,8 @@ func ParseXML(path string, obj interface{}) error {
 	return nil
 }
 
-func GetVarXml(orderedVariables *etree.Element, parent string, keyWords string, id int, nameMap map[string]bool) ([]map[string]interface{}, int, map[string]bool) {
-	var dataList []map[string]interface{}
+func GetVarXml(orderedVariables *etree.Element, parent string, keyWords string, id int, nameMap map[string]bool) ([]map[string]any, int, map[string]bool) {
+	var dataList []map[string]any
 	parentName := ""
 	if parent != "" {
 		parentName = parent + "."
@@ -58,7 +59,7 @@ func GetVarXml(orderedVariables *etree.Element, parent string, keyWords string, 
 					startString = bindExpression.SelectAttrValue("string", "")
 				}
 				if !nameMap[splitName[0]] {
-					data := map[string]interface{}{
+					data := map[string]any{
 						"variables":    splitName[0],
 						"description":  variable.SelectAttrValue("comment", ""),
 						"display_unit": displayUnitString,

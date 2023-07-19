@@ -12,7 +12,7 @@ import (
 func CheckOMC() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if !strings.HasPrefix(c.Request.URL.Path, "/static") && (!omc.OMCInstance.Start || omc.OMCInstance.Cmd == nil) {
-			res := map[string]interface{}{"data": nil, "msg": "", "err": "", "status": 3}
+			res := map[string]any{"data": nil, "msg": "", "err": "", "status": 3}
 			c.AbortWithStatusJSON(http.StatusOK, res)
 			return
 		} else {

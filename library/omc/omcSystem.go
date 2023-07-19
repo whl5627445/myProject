@@ -31,7 +31,7 @@ var userName = config.USERNAME
 var allModelCache = config.R
 
 // SendExpression 发送指令，获取数据
-func (o *ZmqObject) SendExpression(cmd string) ([]interface{}, bool) {
+func (o *ZmqObject) SendExpression(cmd string) ([]any, bool) {
 	//s := time.Now().UnixNano() / 1e6
 	var msg []byte
 	ctx := context.Background()
@@ -199,8 +199,8 @@ func (o *ZmqObject) GetInheritedClassesListAll(classNameList []string) []string 
 }
 
 // GetDiagramAnnotationList 获取给定切片当中模型的本身视图数据，多个模型的数据一起返回
-func (o *ZmqObject) GetDiagramAnnotationList(classNameList []string) []interface{} {
-	var dataList []interface{}
+func (o *ZmqObject) GetDiagramAnnotationList(classNameList []string) []any {
+	var dataList []any
 	for i := 0; i < len(classNameList); i++ {
 		cmd := "getDiagramAnnotation(" + classNameList[i] + ")"
 		diagramAnnotationData, ok := o.SendExpression(cmd)
@@ -214,7 +214,7 @@ func (o *ZmqObject) GetDiagramAnnotationList(classNameList []string) []interface
 }
 
 // GetDiagramAnnotation 获取模型的diagram注释信息
-func (o *ZmqObject) GetDiagramAnnotation(className string) []interface{} {
+func (o *ZmqObject) GetDiagramAnnotation(className string) []any {
 	cmd := "getDiagramAnnotation(" + className + ")"
 	diagramAnnotationData, ok := o.SendExpression(cmd)
 	if ok {
@@ -252,8 +252,8 @@ func (o *ZmqObject) GetNthConnection(className string, num int) []string {
 }
 
 // GetNthConnectionAnnotation 获取模型与数字对应连接线的画图数据
-func (o *ZmqObject) GetNthConnectionAnnotation(className string, num int) []interface{} {
-	var data []interface{}
+func (o *ZmqObject) GetNthConnectionAnnotation(className string, num int) []any {
+	var data []any
 	cmd := "getNthConnectionAnnotation(" + className + "," + strconv.Itoa(num) + ")"
 	NthConnectionAnnotationData, _ := o.SendExpression(cmd)
 	data = append(data, NthConnectionAnnotationData...)
@@ -261,21 +261,21 @@ func (o *ZmqObject) GetNthConnectionAnnotation(className string, num int) []inte
 }
 
 // GetComponents 获取给定模型的组成部分，包含组件信息，返回列表
-func (o *ZmqObject) GetComponents(className string) []interface{} {
+func (o *ZmqObject) GetComponents(className string) []any {
 	cmd := "getComponents(" + className + ")"
 	components, _ := o.SendExpression(cmd)
 	return components
 }
 
 // GetComponentsList 获取切片给定模型的组成部分，包含组件信息，返回二维列表
-func (o *ZmqObject) GetComponentsList(classNameList []string) [][]interface{} {
-	var dataList [][]interface{}
+func (o *ZmqObject) GetComponentsList(classNameList []string) [][]any {
+	var dataList [][]any
 	for i := 0; i < len(classNameList); i++ {
 		cmd := "getComponents(" + classNameList[i] + ")"
 		components, ok := o.SendExpression(cmd)
 		if ok {
 			for p := 0; p < len(components); p++ {
-				dataList = append(dataList, components[p].([]interface{}))
+				dataList = append(dataList, components[p].([]any))
 			}
 		}
 	}
@@ -294,7 +294,7 @@ func (o *ZmqObject) GetDefaultComponentName(className string) string {
 }
 
 // GetElements 获取给定模型的组成部分，包含组件信息,新API
-func (o *ZmqObject) GetElements(className string) []interface{} {
+func (o *ZmqObject) GetElements(className string) []any {
 	if className == "Real" || className == "" {
 		return nil
 	}
@@ -313,7 +313,7 @@ func (o *ZmqObject) GetElements(className string) []interface{} {
 		newStr := bytes.Join([][]byte{[]byte("\"$Any\",\"["), noSuffixAndPrefix, []byte("\"],[\"")}, []byte(""))
 		components = bytes.Replace(components, r, newStr, -1)
 	}
-	var resData []interface{}
+	var resData []any
 	if string(components) != "Error" && len(components) > 0 {
 		err := sonic.Unmarshal(components, &resData)
 		if err != nil {
@@ -327,8 +327,8 @@ func (o *ZmqObject) GetElements(className string) []interface{} {
 }
 
 // GetElementsList 获取切片给定模型的组成部分，包含组件信息,新API
-func (o *ZmqObject) GetElementsList(classNameList []string) [][]interface{} {
-	var dataList [][]interface{}
+func (o *ZmqObject) GetElementsList(classNameList []string) [][]any {
+	var dataList [][]any
 	for i := 0; i < len(classNameList); i++ {
 		if classNameList[i] == "Real" || classNameList[i] == "" {
 			continue
@@ -347,7 +347,7 @@ func (o *ZmqObject) GetElementsList(classNameList []string) [][]interface{} {
 			newStr := bytes.Join([][]byte{[]byte("\"$Any\",\"["), noSuffixAndPrefix, []byte("\"],[\"")}, []byte(""))
 			components = bytes.Replace(components, r, newStr, -1)
 		}
-		var resData []interface{}
+		var resData []any
 		err := sonic.Unmarshal(components, &resData)
 		if err != nil {
 			log.Println("getElements err: ", err)
@@ -357,7 +357,7 @@ func (o *ZmqObject) GetElementsList(classNameList []string) [][]interface{} {
 		}
 		if ok && len(resData) > 0 {
 			for p := 0; p < len(resData); p++ {
-				dataList = append(dataList, resData[p].([]interface{}))
+				dataList = append(dataList, resData[p].([]any))
 			}
 		}
 	}
@@ -365,14 +365,14 @@ func (o *ZmqObject) GetElementsList(classNameList []string) [][]interface{} {
 }
 
 // GetComponentAnnotationsList 获取切片给定模型的组件注释信息列表
-func (o *ZmqObject) GetComponentAnnotationsList(classNameList []string) [][]interface{} {
-	var dataList [][]interface{}
+func (o *ZmqObject) GetComponentAnnotationsList(classNameList []string) [][]any {
+	var dataList [][]any
 	for i := 0; i < len(classNameList); i++ {
 		cmd := "getComponentAnnotations(" + classNameList[i] + ")"
 		componentAnnotations, ok := o.SendExpression(cmd)
 		if ok {
 			for p := 0; p < len(componentAnnotations); p++ {
-				dataList = append(dataList, componentAnnotations[p].([]interface{}))
+				dataList = append(dataList, componentAnnotations[p].([]any))
 			}
 		}
 	}
@@ -380,8 +380,8 @@ func (o *ZmqObject) GetComponentAnnotationsList(classNameList []string) [][]inte
 }
 
 // GetElementAnnotations 获取给定模型名字模型的组件注释信息,新API
-func (o *ZmqObject) GetElementAnnotations(className string) []interface{} {
-	var componentAnnotations []interface{}
+func (o *ZmqObject) GetElementAnnotations(className string) []any {
+	var componentAnnotations []any
 	if className == "Real" {
 		return componentAnnotations
 	}
@@ -393,8 +393,8 @@ func (o *ZmqObject) GetElementAnnotations(className string) []interface{} {
 }
 
 // GetElementAnnotationsList 获取切片给定模型的组件注释信息列表,新API
-func (o *ZmqObject) GetElementAnnotationsList(classNameList []string) [][]interface{} {
-	var dataList [][]interface{}
+func (o *ZmqObject) GetElementAnnotationsList(classNameList []string) [][]any {
+	var dataList [][]any
 
 	for i := 0; i < len(classNameList); i++ {
 		if classNameList[i] == "Real" {
@@ -404,7 +404,7 @@ func (o *ZmqObject) GetElementAnnotationsList(classNameList []string) [][]interf
 		componentAnnotations, ok := o.SendExpression(cmd)
 		if ok {
 			for p := 0; p < len(componentAnnotations); p++ {
-				dataList = append(dataList, componentAnnotations[p].([]interface{}))
+				dataList = append(dataList, componentAnnotations[p].([]any))
 			}
 		}
 	}
@@ -412,8 +412,8 @@ func (o *ZmqObject) GetElementAnnotationsList(classNameList []string) [][]interf
 }
 
 // GetIconAnnotation 获取给定模型的图标注释数据
-func (o *ZmqObject) GetIconAnnotation(className string) []interface{} {
-	var dataList []interface{}
+func (o *ZmqObject) GetIconAnnotation(className string) []any {
+	var dataList []any
 	cmd := "getIconAnnotation(" + className + ")"
 	iconAnnotationData, ok := o.SendExpression(cmd)
 	if ok && len(iconAnnotationData) > 8 {
@@ -423,8 +423,8 @@ func (o *ZmqObject) GetIconAnnotation(className string) []interface{} {
 }
 
 // GetIconAnnotationLineData 获取给定模型的图标数据
-func (o *ZmqObject) GetIconAnnotationLineData(className string) []interface{} {
-	var dataList []interface{}
+func (o *ZmqObject) GetIconAnnotationLineData(className string) []any {
+	var dataList []any
 	cmd := "getIconAnnotation(" + className + ")"
 	iconAnnotationData, ok := o.SendExpression(cmd)
 	if ok && len(iconAnnotationData) > 8 {
@@ -434,14 +434,14 @@ func (o *ZmqObject) GetIconAnnotationLineData(className string) []interface{} {
 }
 
 // GetIconAnnotationList 获取给定切片模型的图标注释信息
-func (o *ZmqObject) GetIconAnnotationList(classNameList []string) []interface{} {
-	var dataList []interface{}
+func (o *ZmqObject) GetIconAnnotationList(classNameList []string) []any {
+	var dataList []any
 	for i := 0; i < len(classNameList); i++ {
 		cmd := "getIconAnnotation(" + classNameList[i] + ")"
 		iconAnnotationData, ok := o.SendExpression(cmd)
 		if ok && len(iconAnnotationData) > 8 {
 			data := iconAnnotationData[8]
-			dataList = append(dataList, data.([]interface{})...)
+			dataList = append(dataList, data.([]any)...)
 		}
 	}
 	return dataList
@@ -569,7 +569,7 @@ func (o *ZmqObject) GetDerivedClassModifierValue(className string, modifierName 
 }
 
 // GetDerivedClassModifierNames 获取模型派生类修饰符的值
-func (o *ZmqObject) GetDerivedClassModifierNames(className string) []interface{} {
+func (o *ZmqObject) GetDerivedClassModifierNames(className string) []any {
 	cmd := "getDerivedClassModifierNames(" + className + ")"
 	data, _ := o.SendExpression(cmd)
 	//data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
@@ -699,7 +699,7 @@ func (o *ZmqObject) ExistClass(className string) bool {
 }
 
 // GetClassInformation 获取模型的基本信息
-func (o *ZmqObject) GetClassInformation(className string) []interface{} {
+func (o *ZmqObject) GetClassInformation(className string) []any {
 	cmd := "getClassInformation(" + className + ")"
 	data, ok := o.SendExpression(cmd)
 	if ok {
@@ -882,7 +882,7 @@ func (o *ZmqObject) GetDocumentationAnnotation(className string) []string {
 		data = data[1 : len(data)-1]
 		data = append([]byte{'['}, data...)
 		data = append(data, ']')
-		var docData = []interface{}{"", "", ""}
+		var docData = []any{"", "", ""}
 		err := sonic.Unmarshal(data, &docData)
 		if err != nil {
 			log.Println("docData: ", string(data))
@@ -920,7 +920,7 @@ func (o *ZmqObject) UriToFilename(uri string) string {
 }
 
 // ConvertUnits 单位转换
-func (o *ZmqObject) ConvertUnits(s1, s2 string) []interface{} {
+func (o *ZmqObject) ConvertUnits(s1, s2 string) []any {
 	cmd := "convertUnits(\"" + s1 + "\",\"" + s2 + "\")"
 	data, _ := o.SendExpression(cmd)
 	return data
@@ -1149,7 +1149,7 @@ func (o *ZmqObject) SaveModel(fileName, className string) bool {
 }
 
 // GetAvailableLibraries 获取可用库
-func (o *ZmqObject) GetAvailableLibraries() []interface{} {
+func (o *ZmqObject) GetAvailableLibraries() []any {
 	cmd := "getAvailableLibraries()"
 	result, ok := o.SendExpression(cmd)
 	if ok {
@@ -1179,7 +1179,7 @@ func (o *ZmqObject) GetLoadedLibraries() []string {
 	if ok {
 		var data []string
 		for i := 0; i < len(result); i++ {
-			data = append(data, result[i].([]interface{})[0].(string))
+			data = append(data, result[i].([]any)[0].(string))
 		}
 		return data
 	}
@@ -1194,7 +1194,7 @@ func (o *ZmqObject) GetUses(packageName string) [][]string {
 		var data [][]string
 		for i := 0; i < len(result); i++ {
 			var d []string
-			for _, dd := range result[i].([]interface{}) {
+			for _, dd := range result[i].([]any) {
 				d = append(d, dd.(string))
 			}
 			data = append(data, d)
@@ -1205,23 +1205,23 @@ func (o *ZmqObject) GetUses(packageName string) [][]string {
 }
 
 // GetAllSubtypeOf 获取模板数据
-func (o *ZmqObject) GetAllSubtypeOf(baseClassName, className string) []interface{} {
+func (o *ZmqObject) GetAllSubtypeOf(baseClassName, className string) []any {
 	cmd := "getAllSubtypeOf(" + baseClassName + "," + className + ",false,false,false)"
 	result, ok := o.SendExpression(cmd)
 	if ok && len(result) > 0 {
 		return result
 	}
-	return make([]interface{}, 0)
+	return make([]any, 0)
 }
 
 // GcSetMaxHeapSize 设置使用的最大内存上限
-func (o *ZmqObject) GcSetMaxHeapSize(size string) []interface{} {
+func (o *ZmqObject) GcSetMaxHeapSize(size string) []any {
 	cmd := "GC_set_max_heap_size(" + size + ")"
 	result, ok := o.SendExpression(cmd)
 	if ok && len(result) > 0 {
 		return result
 	}
-	return make([]interface{}, 1)
+	return make([]any, 1)
 }
 
 // IsPackage 判断是否是包类型
@@ -1288,13 +1288,13 @@ func (o *ZmqObject) ModelInstance(modelName string, ModelInstance *serviceType.M
 }
 
 // DumpXMLDAE  生成result_init.xml文件
-func (o *ZmqObject) DumpXMLDAE(className string) []interface{} {
+func (o *ZmqObject) DumpXMLDAE(className string) []any {
 	cmd := "dumpXMLDAE(" + className + ")"
 	result, ok := o.SendExpression(cmd)
 	if ok {
 		return result
 	}
-	return make([]interface{}, 2)
+	return make([]any, 2)
 
 }
 
@@ -1335,8 +1335,8 @@ func (o *ZmqObject) DeleteComponentParameter(varName, className string) bool {
 	return true
 }
 
-func (o *ZmqObject) GetIconAndDiagramAnnotations(classNameList []string, isIcon bool) []interface{} {
-	var data []interface{}
+func (o *ZmqObject) GetIconAndDiagramAnnotations(classNameList []string, isIcon bool) []any {
+	var data []any
 	//ctx := context.Background()
 	//var msg []byte
 	for _, name := range classNameList {
@@ -1345,13 +1345,13 @@ func (o *ZmqObject) GetIconAndDiagramAnnotations(classNameList []string, isIcon 
 		//	msg, _ = allModelCache.HGet(ctx, userName+"-yssim-componentGraphicsData", name).Bytes()
 		//}
 		//if len(msg) > 0 && string(msg) != "null" {
-		//	var d []interface{}
+		//	var d []any
 		//	err := sonic.Unmarshal(msg, &d)
 		//	if err == nil && len(d) > 8 {
-		//		data = append(data, d[8].([]interface{})...)
+		//		data = append(data, d[8].([]any)...)
 		//	}
 		//}
-		result := make([]interface{}, 0)
+		result := make([]any, 0)
 		if (nType == "connector" || nType == "expandable connector") && !isIcon {
 			result = o.GetDiagramAnnotation(name)
 			if len(result) < 8 {
@@ -1363,17 +1363,17 @@ func (o *ZmqObject) GetIconAndDiagramAnnotations(classNameList []string, isIcon 
 			//allModelCache.HSet(ctx, userName+"-yssim-componentGraphicsData", name, setData)
 		}
 		if len(result) > 8 {
-			result = result[8].([]interface{})
+			result = result[8].([]any)
 			data = append(data, result...)
 		}
 	}
 	return data
 }
-func (o *ZmqObject) GetCoordinateSystem(className string, isIcon bool) []interface{} {
+func (o *ZmqObject) GetCoordinateSystem(className string, isIcon bool) []any {
 
 	nType := o.GetClassRestriction(className)
 
-	result := make([]interface{}, 0)
+	result := make([]any, 0)
 	if (nType == "connector" || nType == "expandable connector") && !isIcon {
 		result = o.GetDiagramAnnotation(className)
 		if len(result) < 8 {
@@ -1386,11 +1386,11 @@ func (o *ZmqObject) GetCoordinateSystem(className string, isIcon bool) []interfa
 	if len(result) > 0 {
 		return result[:8]
 	}
-	return []interface{}{"-100.0", "100.0", "-100.0", "100.0", "true", "-", "-", "-"}
+	return []any{"-100.0", "100.0", "-100.0", "100.0", "true", "-", "-", "-"}
 }
 
-func (o *ZmqObject) GetIconAnnotations(className string) []interface{} {
-	var data []interface{}
+func (o *ZmqObject) GetIconAnnotations(className string) []any {
+	var data []any
 	//ctx := context.Background()
 	//var msg []byte
 	//msg, _ = allModelCache.HGet(ctx, userName+"-yssim-IconGraphicsData", className).Bytes()

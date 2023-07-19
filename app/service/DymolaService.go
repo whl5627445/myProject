@@ -2,7 +2,6 @@ package service
 
 import (
 	"fmt"
-	"github.com/mholt/archiver/v3"
 	"log"
 	"os"
 	"path/filepath"
@@ -11,6 +10,8 @@ import (
 	"yssim-go/config"
 	"yssim-go/library/fileOperation"
 
+	"github.com/mholt/archiver/v3"
+
 	"github.com/google/uuid"
 
 	"github.com/wangluozhe/requests"
@@ -18,8 +19,8 @@ import (
 	"github.com/wangluozhe/requests/url"
 )
 
-//func DymolaFmuExport(fmuPar map[string]interface{}, token, userName, fmuName, packageName, modelName, fileName, filePath string) (string, bool) {
-//	data := map[string]interface{}{
+//func DymolaFmuExport(fmuPar map[string]any, token, userName, fmuName, packageName, modelName, fileName, filePath string) (string, bool) {
+//	data := map[string]any{
 //		"username":    userName,
 //		"fmuPar":      fmuPar,
 //		"modelName":   fmuName,
@@ -85,8 +86,8 @@ import (
 //	return newFilePath, true
 //}
 
-func DymolaFmuExportWithLibrary(fmuPar map[string]interface{}, envLibrary map[string]string, token, userName, fmuName, packageName, modelName, fileName, filePath string) (string, bool, string) {
-	data := map[string]interface{}{
+func DymolaFmuExportWithLibrary(fmuPar map[string]any, envLibrary map[string]string, token, userName, fmuName, packageName, modelName, fileName, filePath string) (string, bool, string) {
+	data := map[string]any{
 		"username":        userName,
 		"fmuPar":          fmuPar,
 		"modelName":       fmuName,

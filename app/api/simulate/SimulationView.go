@@ -146,7 +146,7 @@ func SimulateResultGraphicsView(c *gin.Context) {
 	}
 
 	var res responseData
-	var resData []map[string]interface{}
+	var resData []map[string]any
 
 	// 判断记录是否存在，有一条不存在就返回"not found"
 	recordIdList := item.RecordId
@@ -204,7 +204,7 @@ func SimulateResultGraphicsView(c *gin.Context) {
 					ordinate[p] = ordinate[p]*scaleFactor + offset
 				}
 			}
-			oneData := map[string]interface{}{
+			oneData := map[string]any{
 				"id":        recordDict[recordIdList[i]].ID,
 				"abscissa":  abscissa,
 				"ordinate":  ordinate,
@@ -256,7 +256,7 @@ func SimulateResultSingularView(c *gin.Context) {
 		recordDict[record.ID] = record
 	}
 	// 遍历items，依次获取变量结果
-	var resData []map[string]interface{}
+	var resData []map[string]any
 	for i := 0; i < len(items); i++ { //遍历items的每条记录，如果与数据库查询结果中的一条能对得上，则读取对应变量结果
 		var data [][]float64
 		var ok bool
@@ -291,7 +291,7 @@ func SimulateResultSingularView(c *gin.Context) {
 					ordinate[p] = ordinate[p]*scaleFactor + offset
 				}
 			}
-			oneData := map[string]interface{}{
+			oneData := map[string]any{
 				"id":        recordDict[items[i].RecordId].ID,
 				"variable":  items[i].Variable,
 				"abscissa":  abscissa,
@@ -324,9 +324,9 @@ func SimulateResultListView(c *gin.Context) {
 	pageNumInt, _ := strconv.Atoi(pageNumStr)
 	var totle int64 //总条数
 	var recordList []DataBaseModel.YssimSimulateRecord
-	var resData map[string]interface{}
-	resData = make(map[string]interface{})
-	var dataList []map[string]interface{}
+	var resData map[string]any
+	resData = make(map[string]any)
+	var dataList []map[string]any
 	if modelName != "" {
 		DB.Limit(10).Where("username = ? AND simulate_model_name = ? AND userspace_id = ? AND simulate_status = ?  AND package_id = ?", username, modelName, userSpaceId, "4", packageId).Order("create_time desc").Find(&recordList)
 	} else {
@@ -343,7 +343,7 @@ func SimulateResultListView(c *gin.Context) {
 			simulateRunTime = "-"
 			simulateStartTimeStr = "-"
 		}
-		data := map[string]interface{}{
+		data := map[string]any{
 			"index":               i + 1,
 			"id":                  recordList[i].ID,
 			"create_time":         recordList[i].CreatedAt.Format("2006-01-02 15:04:05"),
@@ -378,7 +378,7 @@ func SimulateResultDetailsView(c *gin.Context) {
 	DB.Where("id = ? AND username = ? AND userspace_id = ? AND simulate_status = ?", id, username, userSpaceId, "4").First(&simulateRecord)
 	var experimentRecord DataBaseModel.YssimExperimentRecord
 	DB.Where("id = ? AND username = ? AND userspace_id = ?", simulateRecord.ExperimentId, username, userSpaceId).First(&experimentRecord)
-	data := map[string]interface{}{"start_time": "", "stop_time": "", "step_size": "", "tolerance": "", "solver": "", "method": "", "number_intervals": "", "model_var_data": ""}
+	data := map[string]any{"start_time": "", "stop_time": "", "step_size": "", "tolerance": "", "solver": "", "method": "", "number_intervals": "", "model_var_data": ""}
 	data["start_time"] = simulateRecord.StartTime                 // 开始时间
 	data["stop_time"] = simulateRecord.StopTime                   // 结束时间
 	data["step_size"] = experimentRecord.Interval                 // 步长
@@ -781,9 +781,9 @@ func SnapshotGetListView(c *gin.Context) {
 
 	var snapshotList []DataBaseModel.YssimSnapshots
 	DB.Where("space_id = ? AND username = ? AND model_name = ? AND package_id = ?", userSpaceId, username, modelName, packageId).Find(&snapshotList)
-	var dataList []map[string]interface{}
+	var dataList []map[string]any
 	for _, record := range snapshotList {
-		data := make(map[string]interface{})
+		data := make(map[string]any)
 		data["id"] = record.ID
 		data["snapshot_name"] = record.SnapshotName
 		data["updated_time"] = record.UpdatedAt.Format("2006-01-02 15:04:05") // .Format("2006-01-02 15:04:05")

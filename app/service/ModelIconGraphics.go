@@ -9,22 +9,22 @@ import (
 	"yssim-go/library/stringOperation"
 )
 
-func GetIconNew(modelName string, icon bool) map[string]interface{} {
-	data := make(map[string]interface{}, 0)
+func GetIconNew(modelName string, icon bool) map[string]any {
+	data := make(map[string]any, 0)
 	iconData := omc.OMC.GetIconAnnotation(modelName)
 	nameType := omc.OMC.GetClassRestriction(modelName)
 	if len(iconData) > 8 {
-		bitmapData := iconData[8].([]interface{})
+		bitmapData := iconData[8].([]any)
 		Bitmap := getBitmapImage(bitmapData, modelName, nameType)
 		if Bitmap != nil {
-			data = map[string]interface{}{
+			data = map[string]any{
 				"type":     "base64",
 				"graphics": Bitmap,
 			}
 			return data
 		}
 	}
-	graphics := map[string]interface{}{}
+	graphics := map[string]any{}
 
 	if (nameType != "connector" && nameType != "expandable connector") || (icon && (nameType == "connector" || nameType == "expandable connector")) {
 		graphics = getIconAnnotationGraphics(modelName, nameType)
@@ -32,18 +32,18 @@ func GetIconNew(modelName string, icon bool) map[string]interface{} {
 		graphics = getDiagramAnnotationGraphics(modelName, nameType)
 	}
 
-	data = map[string]interface{}{
+	data = map[string]any{
 		"type":     "graphics",
 		"graphics": graphics,
 	}
 	return data
 }
 
-func getIconAnnotationGraphics(modelName, nameType string) map[string]interface{} {
+func getIconAnnotationGraphics(modelName, nameType string) map[string]any {
 	modelNameList := GetICList(modelName)
 	modelIconAnnotation := getIconAnnotation(modelNameList)
-	AnnotationConfig := []interface{}{}
-	data := map[string]interface{}{"extent1Diagram": "-,-", "extent2Diagram": "-,-", "initialScale": "0.1"}
+	AnnotationConfig := []any{}
+	data := map[string]any{"extent1Diagram": "-,-", "extent2Diagram": "-,-", "initialScale": "0.1"}
 	componentsData, componentAnnotationsData := getElementsAndModelName(modelNameList)
 	subShapes := iconSubShapes(modelIconAnnotation, modelName)
 	inputOutputs := iconInputOutputs(componentsData, componentAnnotationsData, modelName)
@@ -72,13 +72,13 @@ func getIconAnnotationGraphics(modelName, nameType string) map[string]interface{
 	return data
 }
 
-func getDiagramAnnotationGraphics(modelName, nameType string) map[string]interface{} {
+func getDiagramAnnotationGraphics(modelName, nameType string) map[string]any {
 	nameList := GetICList(modelName)
 	modelIconAnnotation := getDiagramAnnotation(nameList)
-	AnnotationConfig := []interface{}{}
-	data := map[string]interface{}{"extent1Diagram": "-,-", "extent2Diagram": "-,-", "initialScale": "0.1"}
+	AnnotationConfig := []any{}
+	data := map[string]any{"extent1Diagram": "-,-", "extent2Diagram": "-,-", "initialScale": "0.1"}
 
-	subShapes := make([]map[string]interface{}, 0)
+	subShapes := make([]map[string]any, 0)
 
 	subShapes = append(subShapes, iconSubShapes(modelIconAnnotation, modelName)...)
 	if len(subShapes) == 0 && len(modelIconAnnotation) == 0 {
@@ -103,26 +103,26 @@ func getDiagramAnnotationGraphics(modelName, nameType string) map[string]interfa
 	data["visible"] = "true"
 	data["mobility"] = true
 	data["rotation"] = "0"
-	data["inputOutputs"] = make([]interface{}, 0)
+	data["inputOutputs"] = make([]any, 0)
 	data["subShapes"] = subShapes
 	return data
 }
 
-func iconSubShapes(cData []interface{}, modelName string) []map[string]interface{} {
-	dataList := make([]map[string]interface{}, 0, 1)
+func iconSubShapes(cData []any, modelName string) []map[string]any {
+	dataList := make([]map[string]any, 0, 1)
 	if len(cData) < 8 {
 		return dataList
 	}
-	d := cData[8].([]interface{})
+	d := cData[8].([]any)
 	for i := 0; i < len(d); i += 2 {
-		data := map[string]interface{}{}
-		drawingDataList := d[i+1].([]interface{})
+		data := map[string]any{}
+		drawingDataList := d[i+1].([]any)
 		if drawingDataList[0].(string) != "true" {
 			continue
 		}
 		DynamicSelect := find(drawingDataList, "DynamicSelect")
 		if DynamicSelect {
-			var drawingDataListFilter []interface{}
+			var drawingDataListFilter []any
 			for _, i2 := range drawingDataList {
 				if i2 == "DynamicSelect" {
 					continue
@@ -138,7 +138,7 @@ func iconSubShapes(cData []interface{}, modelName string) []map[string]interface
 				data["visible"] = drawingDataList[0]
 				data["originalPoint"] = oneDimensionalProcessing(drawingDataList[1])
 				data["rotation"] = drawingDataList[2]
-				data["points"] = twoDimensionalProcessing(drawingDataList[3].([]interface{}))
+				data["points"] = twoDimensionalProcessing(drawingDataList[3].([]any))
 				dataImagePath := drawingDataList[4]
 				if drawingDataList[5] == "" {
 					imagePath := omc.OMC.UriToFilename(dataImagePath.(string))
@@ -168,7 +168,7 @@ func iconSubShapes(cData []interface{}, modelName string) []map[string]interface
 		data["lineThickness"] = drawingDataList[7]
 		switch dataType {
 		case "Polygon":
-			data["polygonPoints"] = twoDimensionalProcessing(drawingDataList[8].([]interface{}))
+			data["polygonPoints"] = twoDimensionalProcessing(drawingDataList[8].([]any))
 			ppData := data["polygonPoints"].([]string)
 			if len(ppData) < 4 {
 				data["polygonPoints"] = append(ppData, ppData[0])
@@ -177,7 +177,7 @@ func iconSubShapes(cData []interface{}, modelName string) []map[string]interface
 		case "Line":
 			delete(data, "fillColor")
 			delete(data, "fillPattern")
-			data["points"] = twoDimensionalProcessing(drawingDataList[3].([]interface{}))
+			data["points"] = twoDimensionalProcessing(drawingDataList[3].([]any))
 			data["color"] = oneDimensionalProcessing(drawingDataList[4])
 			data["lineThickness"] = drawingDataList[6]
 			data["arrow"] = oneDimensionalProcessing(drawingDataList[7])
@@ -185,8 +185,8 @@ func iconSubShapes(cData []interface{}, modelName string) []map[string]interface
 			data["smooth"] = drawingDataList[9]
 		case "Text":
 			data["fillPattern"] = drawingDataList[6]
-			data["extentsPoints"] = twoDimensionalProcessing(drawingDataList[8].([]interface{}))
-			typeOriginalTextString, ok := drawingDataList[9].([]interface{})
+			data["extentsPoints"] = twoDimensionalProcessing(drawingDataList[8].([]any))
+			typeOriginalTextString, ok := drawingDataList[9].([]any)
 			if ok {
 				data["originalTextString"] = typeOriginalTextString[0]
 			} else {
@@ -232,11 +232,11 @@ func iconSubShapes(cData []interface{}, modelName string) []map[string]interface
 		case "Rectangle":
 			data["fillPattern"] = drawingDataList[6]
 			data["borderPattern"] = drawingDataList[8]
-			data["extentsPoints"] = twoDimensionalProcessing(drawingDataList[9].([]interface{}))
+			data["extentsPoints"] = twoDimensionalProcessing(drawingDataList[9].([]any))
 			data["radius"] = drawingDataList[10]
 		case "Ellipse":
 			data["fillPattern"] = drawingDataList[6]
-			data["extentsPoints"] = twoDimensionalProcessing(drawingDataList[8].([]interface{}))
+			data["extentsPoints"] = twoDimensionalProcessing(drawingDataList[8].([]any))
 			data["startAngle"] = drawingDataList[9]
 			data["endAngle"] = drawingDataList[10]
 		}
@@ -245,10 +245,10 @@ func iconSubShapes(cData []interface{}, modelName string) []map[string]interface
 	return dataList
 }
 
-func iconInputOutputs(cData [][]interface{}, caData [][]interface{}, modelName string) []map[string]interface{} {
-	dataList := make([]map[string]interface{}, 0, 1)
-	var cDataFilter [][]interface{}
-	var caDataFilter [][]interface{}
+func iconInputOutputs(cData [][]any, caData [][]any, modelName string) []map[string]any {
+	dataList := make([]map[string]any, 0, 1)
+	var cDataFilter [][]any
+	var caDataFilter [][]any
 
 	for i := 0; i < len(cData); i++ {
 		nameType := omc.OMC.GetClassRestriction(cData[i][2].(string))
@@ -285,13 +285,13 @@ func iconInputOutputs(cData [][]interface{}, caData [][]interface{}, modelName s
 			if len(caDataFilter[i]) < 1 {
 				continue
 			}
-			caf := caDataFilter[i][placementIndex+1].([]interface{})
+			caf := caDataFilter[i][placementIndex+1].([]any)
 			if len(caf) < 7 || caf[0].(string) != "true" {
 				// 出现错误会使数据不可用， 长度小于预期，弃用
 				continue
 			}
 
-			data := map[string]interface{}{}
+			data := map[string]any{}
 
 			data["graphType"] = cDataFilter[i][17]
 			data["connector_sizing"] = cDataFilter[i][16]
@@ -345,11 +345,11 @@ func iconInputOutputs(cData [][]interface{}, caData [][]interface{}, modelName s
 	return dataList
 }
 
-func getBitmapImage(bitmapData []interface{}, modelName, nameType string) map[string]interface{} {
+func getBitmapImage(bitmapData []any, modelName, nameType string) map[string]any {
 	modelNameList := GetICList(modelName)
 	modelIconAnnotation := getIconAnnotation(modelNameList)
-	AnnotationConfig := []interface{}{}
-	data := map[string]interface{}{"extent1Diagram": "-,-", "extent2Diagram": "-,-", "initialScale": "0.1"}
+	AnnotationConfig := []any{}
+	data := map[string]any{"extent1Diagram": "-,-", "extent2Diagram": "-,-", "initialScale": "0.1"}
 	componentsData, componentAnnotationsData := getElementsAndModelName(modelNameList)
 	subShapes := iconSubShapes(modelIconAnnotation, modelName)
 	inputOutputs := iconInputOutputs(componentsData, componentAnnotationsData, modelName)
@@ -377,8 +377,8 @@ func getBitmapImage(bitmapData []interface{}, modelName, nameType string) map[st
 	for i := 0; i < len(bitmapData); i += 2 {
 		imageData := bitmapData[i]
 		if imageData == "Bitmap" {
-			image := bitmapData[i+1].([]interface{})[5].(string)
-			imageUri := bitmapData[i+1].([]interface{})[4].(string)
+			image := bitmapData[i+1].([]any)[5].(string)
+			imageUri := bitmapData[i+1].([]any)[4].(string)
 			if strings.HasPrefix(imageUri, "modelica://") {
 				imageFile := omc.OMC.UriToFilename(imageUri)
 				file, err := os.ReadFile(imageFile)
@@ -397,13 +397,13 @@ func getBitmapImage(bitmapData []interface{}, modelName, nameType string) map[st
 	return nil
 }
 
-func getIconAnnotation(modelNameList []string) []interface{} {
-	modelIconAnnotation := []interface{}{}
+func getIconAnnotation(modelNameList []string) []any {
+	modelIconAnnotation := []any{}
 	for i := 0; i < len(modelNameList); i++ {
 		IconAnnotation := omc.OMC.GetIconAnnotations(modelNameList[i])
 		if len(modelIconAnnotation) > 8 && len(IconAnnotation) > 8 {
 			for p := 0; p < len(IconAnnotation[8:]); p++ {
-				modelIconAnnotation[8] = append(modelIconAnnotation[8].([]interface{}), IconAnnotation[8:][p].([]interface{})...)
+				modelIconAnnotation[8] = append(modelIconAnnotation[8].([]any), IconAnnotation[8:][p].([]any)...)
 			}
 		} else {
 			modelIconAnnotation = append(modelIconAnnotation, IconAnnotation...)
@@ -412,14 +412,14 @@ func getIconAnnotation(modelNameList []string) []interface{} {
 	return modelIconAnnotation
 }
 
-func getDiagramAnnotation(nameList []string) []interface{} {
+func getDiagramAnnotation(nameList []string) []any {
 
-	modelIconAnnotation := []interface{}{}
+	modelIconAnnotation := []any{}
 	for _, name := range nameList {
 		IconAnnotation := omc.OMC.GetDiagramAnnotation(name)
 		if len(modelIconAnnotation) > 8 && len(IconAnnotation) > 8 {
 			for p := 0; p < len(IconAnnotation[8:]); p++ {
-				modelIconAnnotation[8] = append(modelIconAnnotation[8].([]interface{}), IconAnnotation[8:][p].([]interface{})...)
+				modelIconAnnotation[8] = append(modelIconAnnotation[8].([]any), IconAnnotation[8:][p].([]any)...)
 			}
 		} else {
 			modelIconAnnotation = append(modelIconAnnotation, IconAnnotation...)
