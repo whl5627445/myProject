@@ -256,7 +256,7 @@ func GetModelMulSimulateDetailsView(c *gin.Context) {
 	pageId := c.Query("page_id")
 	var page DataBaseModel.AppPage
 	DB.Where("id = ? AND username = ?", pageId, userName).First(&page)
-	res.Data = map[string]any{
+	res.Data = map[string]interface{}{
 		"details": page.MulSimulateErr,
 	}
 	c.JSON(http.StatusOK, res)
@@ -271,7 +271,7 @@ func GetModelStateView(c *gin.Context) {
 	var appPageRecord DataBaseModel.AppPage
 	DB.Where("id = ?", appPageId).First(&appPageRecord)
 	var res responseData
-	resData := map[string]any{
+	resData := map[string]interface{}{
 		"is_preview": appPageRecord.IsPreview,
 		"is_release": appPageRecord.Release,
 		//"release_state": appPageRecord.ReleaseState,
@@ -366,12 +366,12 @@ func GetAppSpaceView(c *gin.Context) {
 		db.Order("update_time desc")
 	}
 	db.Find(&allAppSpaceList)
-	allAppSpace := make([]map[string]any, 0)
-	recentAppSpace := make([]map[string]any, 0)
+	allAppSpace := make([]map[string]interface{}, 0)
+	recentAppSpace := make([]map[string]interface{}, 0)
 	for _, space := range allAppSpaceList {
 		updateTime := space.UpdatedAt.Local().Unix()
 		editTime := timeConvert.UseTimeFormatNew(int(updateTime), int(time.Now().Local().Unix()), 1)
-		d := map[string]any{
+		d := map[string]interface{}{
 			"id":          space.ID,
 			"name":        space.SpaceName,
 			"description": space.Description,
@@ -387,7 +387,7 @@ func GetAppSpaceView(c *gin.Context) {
 	for _, space := range recentAppSpaceList {
 		updateTime := space.UpdatedAt.Local().Unix()
 		editTime := timeConvert.UseTimeFormatNew(int(updateTime), int(time.Now().Local().Unix()), 1)
-		d := map[string]any{
+		d := map[string]interface{}{
 			"id":          space.ID,
 			"name":        space.SpaceName,
 			"description": space.Description,
@@ -399,7 +399,7 @@ func GetAppSpaceView(c *gin.Context) {
 		}
 		recentAppSpace = append(recentAppSpace, d)
 	}
-	data := map[string][]map[string]any{
+	data := map[string][]map[string]interface{}{
 		"all_space":    allAppSpace,
 		"recent_space": recentAppSpace,
 	}
@@ -518,7 +518,7 @@ func AppSpaceCollectView(c *gin.Context) {
 		return
 	}
 	var space DataBaseModel.AppSpace
-	err = DB.Model(&space).Where("id IN ? AND username = ?", item.SpaceId, userName).Updates(map[string]any{"collect": item.Collect}).Error
+	err = DB.Model(&space).Where("id IN ? AND username = ?", item.SpaceId, userName).Updates(map[string]interface{}{"collect": item.Collect}).Error
 	if err != nil {
 		log.Println("更新app空间时保存数据库出现错误：", err)
 		res.Err = "收藏失败"
@@ -654,9 +654,9 @@ func GetAppPageView(c *gin.Context) {
 	case release == "0":
 		db.Where("is_release = ?", false).Find(&pageList)
 	}
-	var pageDataList []map[string]any
+	var pageDataList []map[string]interface{}
 	for _, page := range pageList {
-		p := map[string]any{
+		p := map[string]interface{}{
 			"id":            page.ID,
 			"name":          page.PageName,
 			"create_time":   page.CreatedAt.Local().Format("2006年01月02日"),
@@ -667,7 +667,7 @@ func GetAppPageView(c *gin.Context) {
 		}
 		pageDataList = append(pageDataList, p)
 	}
-	res.Data = map[string]any{
+	res.Data = map[string]interface{}{
 		"data":             pageDataList,
 		"all_count":        releaseCount + noReleaseCount,
 		"release_count":    releaseCount,
@@ -687,7 +687,7 @@ func GetAppPageSpaceView(c *gin.Context) {
 	path := c.Query("path")
 	var page DataBaseModel.AppPage
 	DB.Where("username = ? AND app_space_id = ? AND page_path = ?", userName, spaceId, path).First(&page)
-	res.Data = map[string]any{"page_id": page.ID}
+	res.Data = map[string]interface{}{"page_id": page.ID}
 	c.JSON(http.StatusOK, res)
 }
 
@@ -897,10 +897,10 @@ func GetPageComponentView(c *gin.Context) {
 	DB.Where("id = ? AND app_space_id = ? AND username = ?", pageId, spaceId, userName).First(&page)
 	DB.Where("page_id = ?", page.ID).Find(&componentList)
 
-	var componentDataList []map[string]any
+	var componentDataList []map[string]interface{}
 
 	for _, component := range componentList {
-		p := map[string]any{
+		p := map[string]interface{}{
 			"id":                  component.ID,
 			"type":                component.Type,
 			"width":               component.Width,
@@ -928,9 +928,9 @@ func GetPageComponentView(c *gin.Context) {
 		}
 		componentDataList = append(componentDataList, p)
 	}
-	res.Data = map[string]any{
+	res.Data = map[string]interface{}{
 		"components": componentDataList,
-		"page": map[string]any{
+		"page": map[string]interface{}{
 			"background":       page.Background,
 			"background_color": page.BackgroundColor,
 			"height":           page.PageHeight,
@@ -962,7 +962,7 @@ func EditPageComponentView(c *gin.Context) {
 	}
 
 	//err = DB.Model(DataBaseModel.AppPageComponent{}).Select("*").Where("id = ? AND page_id = ?", item.Id, item.PageId).Updates(&item).Error
-	err = DB.Model(DataBaseModel.AppPageComponent{}).Where("id = ? AND page_id = ?", item.Id, item.PageId).Updates(map[string]any{
+	err = DB.Model(DataBaseModel.AppPageComponent{}).Where("id = ? AND page_id = ?", item.Id, item.PageId).Updates(map[string]interface{}{
 		"type":                item.Type,
 		"input_name":          item.InputName,
 		"width":               item.Width,
@@ -1023,7 +1023,7 @@ func ConfigEditPageComponentView(c *gin.Context) {
 	}
 
 	//err = DB.Model(DataBaseModel.AppPageComponent{}).Select("*").Where("id = ? AND page_id = ?", item.Id, item.PageId).Updates(&item).Error
-	err = DB.Model(DataBaseModel.AppPageComponent{}).Where("id = ? AND page_id = ?", item.Id, item.PageId).Updates(map[string]any{
+	err = DB.Model(DataBaseModel.AppPageComponent{}).Where("id = ? AND page_id = ?", item.Id, item.PageId).Updates(map[string]interface{}{
 		"type":                item.Type,
 		"width":               item.Width,
 		"height":              item.Height,
@@ -1080,7 +1080,7 @@ func DataEditPageComponentView(c *gin.Context) {
 	}
 
 	//err = DB.Model(DataBaseModel.AppPageComponent{}).Select("*").Where("id = ? AND page_id = ?", item.Id, item.PageId).Updates(&item).Error
-	err = DB.Model(DataBaseModel.AppPageComponent{}).Where("id = ? AND page_id = ?", item.Id, item.PageId).Updates(map[string]any{
+	err = DB.Model(DataBaseModel.AppPageComponent{}).Where("id = ? AND page_id = ?", item.Id, item.PageId).Updates(map[string]interface{}{
 		"input_name": item.InputName,
 		"option":     item.Option,
 		"max":        item.Max,
@@ -1148,11 +1148,11 @@ func GetDatasourceView(c *gin.Context) {
 	userName := c.GetHeader("username")
 	groupName := c.Query("group_name")
 	searchName := c.Query("search_name")
-	var dataList []map[string]any
+	var dataList []map[string]interface{}
 	var appDataSourceRecord []DataBaseModel.AppDataSource
 	DB.Where("username = ? AND group_name = ? AND compile_status = ? AND data_source_name LIKE ?", userName, groupName, 4, "%"+searchName+"%").Order("create_time desc").Find(&appDataSourceRecord)
 	for i := 0; i < len(appDataSourceRecord); i++ {
-		data := map[string]any{
+		data := map[string]interface{}{
 			"id":                 appDataSourceRecord[i].ID,
 			"source_name":        appDataSourceRecord[i].DataSourceName,
 			"compile_model_name": appDataSourceRecord[i].ModelName,
@@ -1297,7 +1297,7 @@ func GetPageInputOutputView(c *gin.Context) {
 	DB.Where("id = ? AND username = ?", pageId, userName).First(&page)
 	var dataSourceRecord DataBaseModel.AppDataSource
 	DB.Where("id = ?", page.DataSourceId).First(&dataSourceRecord)
-	data := map[string]any{
+	data := map[string]interface{}{
 		"input":            page.Input,
 		"output":           page.Output,
 		"data_source_id":   page.DataSourceId,
@@ -1363,16 +1363,16 @@ func GetPageComponentInputOutputView(c *gin.Context) {
 		return
 	}
 
-	input := map[string]any{
+	input := map[string]interface{}{
 		"inputName": component.InputName,
 		"max":       component.Max,
 		"min":       component.Min,
 		"interval":  component.Interval,
 	}
-	output := map[string]any{
+	output := map[string]interface{}{
 		"output": component.Output,
 	}
-	data := map[string]any{
+	data := map[string]interface{}{
 		"input":  input,
 		"output": output,
 	}
@@ -1432,14 +1432,14 @@ func AppPagePreviewView(c *gin.Context) {
 	DB.Where("id = ? AND username = ?", spaceId, userName).First(&space)
 	DB.Where("id = ? AND app_space_id = ?", pageId, space.ID).First(&page)
 	DB.Where("page_id = ?", page.ID).Find(&components)
-	pageData := make(map[string]any, 0)
+	pageData := make(map[string]interface{}, 0)
 	pageData["width"] = page.PageWidth
 	pageData["height"] = page.PageHeight
 	pageData["background"] = page.Background
 	pageData["color"] = page.Color
-	componentsData := make([]map[string]any, 0)
+	componentsData := make([]map[string]interface{}, 0)
 	for _, component := range components {
-		d := make(map[string]any, 0)
+		d := make(map[string]interface{}, 0)
 		d["id"] = component.ID
 		d["type"] = component.Type
 		d["input_name"] = component.InputName
@@ -1466,7 +1466,7 @@ func AppPagePreviewView(c *gin.Context) {
 		d["other_configuration"] = component.OtherConfiguration
 		componentsData = append(componentsData, d)
 	}
-	res.Data = map[string]any{
+	res.Data = map[string]interface{}{
 		"page":       pageData,
 		"components": componentsData,
 	}
@@ -1484,7 +1484,7 @@ func AppPagePreviewAccessView(c *gin.Context) {
 	var page DataBaseModel.AppPage
 	DB.Where("id = ? AND app_space_id = ? ", pageId, spaceId).First(&page)
 
-	result := map[string]any{}
+	result := map[string]interface{}{}
 	if page.PageType == "web-app" {
 		var components []DataBaseModel.AppPageComponentsPreview
 		DB.Where("page_id = ?", page.ID).Find(&components)
@@ -1496,15 +1496,15 @@ func AppPagePreviewAccessView(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, res)
 			return
 		}
-		pageData := map[string]any{"width": page.PageWidth, "height": page.PageHeight, "background": page.Background, "background_color": page.BackgroundColor, "page_type": page.PageType, "output": page.Output}
-		res.Data = map[string]any{"result": result, "component": components, "page": pageData}
+		pageData := map[string]interface{}{"width": page.PageWidth, "height": page.PageHeight, "background": page.Background, "background_color": page.BackgroundColor, "page_type": page.PageType}
+		res.Data = map[string]interface{}{"result": result, "component": components, "page": pageData}
 		c.JSON(http.StatusOK, res)
 	}
 	if page.PageType == "large-screen" {
 		var components []DataBaseModel.AppPageComponent
 		DB.Where("page_id = ?", page.ID).Find(&components)
-		pageData := map[string]any{"width": page.PageWidth, "height": page.PageHeight, "background": page.Background, "background_color": page.BackgroundColor, "page_type": page.PageType}
-		res.Data = map[string]any{"result": result, "component": components, "page": pageData}
+		pageData := map[string]interface{}{"width": page.PageWidth, "height": page.PageHeight, "background": page.Background, "background_color": page.BackgroundColor, "page_type": page.PageType}
+		res.Data = map[string]interface{}{"result": result, "component": components, "page": pageData}
 		c.JSON(http.StatusOK, res)
 	}
 }
@@ -1521,7 +1521,7 @@ func AppPageReleaseAccessView(c *gin.Context) {
 	DB.Where("id = ? AND app_space_id = ?  AND is_release = ?", pageId, spaceId, true).First(&page)
 	var components []DataBaseModel.AppPageComponentsRelease
 	DB.Where("page_id = ?", page.ID).Find(&components)
-	result := map[string]any{}
+	result := map[string]interface{}{}
 	if page.PageType == "web-app" {
 		var err error
 		result, err = service.AppReleaseResult(page.ID)
@@ -1532,8 +1532,8 @@ func AppPageReleaseAccessView(c *gin.Context) {
 			return
 		}
 	}
-	pageData := map[string]any{"width": page.PageWidth, "height": page.PageHeight, "background": page.Background, "background_color": page.BackgroundColor, "page_type": page.PageType, "output": page.Output}
-	res.Data = map[string]any{"result": result, "component": components, "page": pageData}
+	pageData := map[string]interface{}{"width": page.PageWidth, "height": page.PageHeight, "background": page.Background, "background_color": page.BackgroundColor, "page_type": page.PageType}
+	res.Data = map[string]interface{}{"result": result, "component": components, "page": pageData}
 	c.JSON(http.StatusOK, res)
 }
 
@@ -1575,7 +1575,7 @@ func SetComponentBasicInformationView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	data := map[string]any{
+	data := map[string]interface{}{
 		"componentId": component.ID,
 	}
 	res.Data = data
@@ -1634,163 +1634,25 @@ func GetPageAlignmentLineView(c *gin.Context) {
 
 func GetAppPowSingleView(c *gin.Context) {
 	/*
-		# 获取电网app单轴数据接口
+		# 获取电网app单轴数据接口（返回当天截止到当前时刻的所有数据）
 	*/
 	var res responseData
-	var item GetAppPowSingleData
+	var item GetAppPowData
 	err := c.BindJSON(&item)
 	if err != nil {
 		log.Println("", err)
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
-	timeStr := item.TimeStr
 	names := item.Names
 
-	//时间格式的当前时间及2023年起始时间
+	//时间格式的2023年起始时间
 	layout := "2006/1/2/15"
 	timeStrRefer := "2023/1/1/0"
-	timeNow, err := time.Parse(layout, timeStr)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, "time format error")
-		return
-	}
-	timeRefer, _ := time.Parse(layout, timeStrRefer)
+	timeRefer, _ := time.ParseInLocation(layout, timeStrRefer, time.Local)
 
 	//相较于2023/1/1/0的天数及当天的小时数，即为数据库二维数组的行和列
-	dataNum := int((timeNow.Sub(timeRefer)) / time.Hour)
-	day := dataNum / 24
-	hour := dataNum % 24
-
-	//查数据库的集合
-	collection := MB.Database("micro_grid").Collection("result_data")
-	// 查找文档
-	var doc bson.M
-	err = collection.FindOne(context.Background(), bson.M{}).Decode(&doc)
-	// 检查错误
-	if err != nil {
-		fmt.Println("查询文档失败：", err)
-		return
-	}
-
-	var data []map[string]any
-	// 遍历文档获取对应数据
-	for key, value := range doc {
-		if names[key] {
-			//fmt.Printf(" %#v", hour)
-			temp1, ok := value.(primitive.A)
-			if !ok {
-				fmt.Println(key)
-				fmt.Println("类型转换失败1")
-			}
-			temp2, ok := temp1[day].(primitive.A)
-			if !ok {
-				fmt.Println("类型转换失败2")
-			}
-			for i := 0; i <= hour; i++ {
-				data0 := map[string]any{
-					"x":    i,
-					"y":    temp2[i],
-					"name": key,
-				}
-				data = append(data, data0)
-			}
-		}
-
-	}
-	res.Data = data
-	c.JSON(http.StatusOK, res)
-}
-
-func GetAppPowDoubleView(c *gin.Context) {
-	/*
-		# 获取电网app双轴数据接口（暂只有"蓄电池充放电功率"及"蓄电池SOC"为双轴）
-	*/
-	var res responseData
-	var item GetAppPowDoubleData
-	err := c.BindJSON(&item)
-	if err != nil {
-		log.Println("", err)
-		c.JSON(http.StatusBadRequest, "")
-		return
-	}
-	timeStr := item.TimeStr
-
-	//name暂时用不到
-	//names := item.Names
-
-	//时间格式的当前时间及2023年起始时间
-	layout := "2006/1/2/15"
-	timeStrRefer := "2023/1/1/0"
-	timeNow, err := time.Parse(layout, timeStr)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, "time format error")
-		return
-	}
-	timeRefer, _ := time.Parse(layout, timeStrRefer)
-
-	//相较于2023/1/1/0的天数及当天的小时数，即为数据库二维数组的行和列
-	dataNum := int((timeNow.Sub(timeRefer)) / time.Hour)
-	day := dataNum / 24
-	hour := dataNum % 24
-
-	//查数据库的集合
-	collection := MB.Database("micro_grid").Collection("result_data")
-	// 查找文档
-	var doc bson.M
-	err = collection.FindOne(context.Background(), bson.M{}).Decode(&doc)
-	// 检查错误
-	if err != nil {
-		fmt.Println("查询文档失败：", err)
-		return
-	}
-
-	var data []map[string]any
-	// "蓄电池充放电功率"及"蓄电池SOC"为双轴
-	tempy1, _ := doc["蓄电池充放电功率"].(primitive.A)
-	tempz1, _ := doc["蓄电池SOC"].(primitive.A)
-	tempy2, _ := tempy1[day].(primitive.A)
-	tempz2, _ := tempz1[day].(primitive.A)
-	for i := 0; i <= hour; i++ {
-		data0 := map[string]any{
-			"x": i,
-			"y": tempy2[i],
-			"z": tempz2[i],
-		}
-		data = append(data, data0)
-	}
-
-	res.Data = data
-	c.JSON(http.StatusOK, res)
-}
-
-func GetAppPowPieChartView(c *gin.Context) {
-	/*
-		# 获取电网app饼图数据接口（只返回该时刻数据）
-	*/
-	var res responseData
-	var item GetAppPowPieChartData
-	err := c.BindJSON(&item)
-	if err != nil {
-		log.Println("", err)
-		c.JSON(http.StatusBadRequest, "")
-		return
-	}
-	timeStr := item.TimeStr
-	names := item.Names
-
-	//时间格式的当前时间及2023年起始时间
-	layout := "2006/1/2/15"
-	timeStrRefer := "2023/1/1/0"
-	timeNow, err := time.Parse(layout, timeStr)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, "time format error")
-		return
-	}
-	timeRefer, _ := time.Parse(layout, timeStrRefer)
-
-	//相较于2023/1/1/0的天数及当天的小时数，即为数据库二维数组的行和列
-	dataNum := int((timeNow.Sub(timeRefer)) / time.Hour)
+	dataNum := int((time.Now().Sub(timeRefer)) / time.Hour)
 	day := dataNum / 24
 	hour := dataNum % 24
 
@@ -1807,27 +1669,138 @@ func GetAppPowPieChartView(c *gin.Context) {
 
 	var data []map[string]interface{}
 	// 遍历文档获取对应数据
-	for key, value := range doc {
-		if names[key] {
-			//fmt.Printf(" %#v", hour)
-			temp1, ok := value.(primitive.A)
-			if !ok {
-				fmt.Println(key)
-				fmt.Println("类型转换失败1")
-			}
-			temp2, ok := temp1[day].(primitive.A)
-			if !ok {
-				fmt.Println("类型转换失败2")
-			}
-
+	for _, key := range names {
+		value := doc[key]
+		temp1, ok := value.(primitive.A)
+		if !ok {
+			fmt.Println("类型转换失败1")
+		}
+		temp2, ok := temp1[day].(primitive.A)
+		if !ok {
+			fmt.Println("类型转换失败2")
+		}
+		for i := 0; i <= hour; i++ {
 			data0 := map[string]interface{}{
-				"s": key,
-				"v": temp2[hour],
+				"x":    i,
+				"y":    temp2[i],
+				"name": key,
 			}
 			data = append(data, data0)
+		}
+	}
+	res.Data = data
+	c.JSON(http.StatusOK, res)
+}
 
+func GetAppPowDoubleView(c *gin.Context) {
+	/*
+		# 获取电网app双轴数据接口（暂只有"蓄电池充放电功率"及"蓄电池SOC"为双轴）
+	*/
+	var res responseData
+	var item GetAppPowData
+	err := c.BindJSON(&item)
+	if err != nil {
+		log.Println("", err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+
+	//name暂时用不到
+	//names := item.Names
+
+	//时间格式的2023年起始时间
+	layout := "2006/1/2/15"
+	timeStrRefer := "2023/1/1/0"
+	timeRefer, _ := time.ParseInLocation(layout, timeStrRefer, time.Local)
+
+	//相较于2023/1/1/0的天数及当天的小时数，即为数据库二维数组的行和列
+	dataNum := int((time.Now().Sub(timeRefer)) / time.Hour)
+	day := dataNum / 24
+	hour := dataNum % 24
+
+	//查数据库的集合
+	collection := MB.Database("micro_grid").Collection("result_data")
+	// 查找文档
+	var doc bson.M
+	err = collection.FindOne(context.Background(), bson.M{}).Decode(&doc)
+	// 检查错误
+	if err != nil {
+		fmt.Println("查询文档失败：", err)
+		return
+	}
+
+	var data []map[string]interface{}
+	// "蓄电池充放电功率"及"蓄电池SOC"为双轴
+	tempy1, _ := doc["蓄电池充放电功率"].(primitive.A)
+	tempz1, _ := doc["蓄电池SOC"].(primitive.A)
+	tempy2, _ := tempy1[day].(primitive.A)
+	tempz2, _ := tempz1[day].(primitive.A)
+	for i := 0; i <= hour; i++ {
+		data0 := map[string]interface{}{
+			"x": i,
+			"y": tempy2[i],
+			"z": tempz2[i],
+		}
+		data = append(data, data0)
+	}
+
+	res.Data = data
+	c.JSON(http.StatusOK, res)
+}
+
+func GetAppPowPieChartView(c *gin.Context) {
+	/*
+		# 获取电网app饼图数据接口（只返回当前时刻数据）
+	*/
+	var res responseData
+	var item GetAppPowData
+	err := c.BindJSON(&item)
+	if err != nil {
+		log.Println("", err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	names := item.Names
+
+	//时间格式的2023年起始时间
+	layout := "2006/1/2/15"
+	timeStrRefer := "2023/1/1/0"
+	timeRefer, _ := time.ParseInLocation(layout, timeStrRefer, time.Local)
+
+	//相较于2023/1/1/0的天数及当天的小时数，即为数据库二维数组的行和列
+	dataNum := int((time.Now().Sub(timeRefer)) / time.Hour)
+	day := dataNum / 24
+	hour := dataNum % 24
+
+	//查数据库的集合
+	collection := MB.Database("micro_grid").Collection("result_data")
+	// 查找文档
+	var doc bson.M
+	err = collection.FindOne(context.Background(), bson.M{}).Decode(&doc)
+	// 检查错误
+	if err != nil {
+		fmt.Println("查询文档失败：", err)
+		return
+	}
+
+	var data []map[string]interface{}
+	// 遍历文档获取对应数据
+	for _, name := range names {
+		value := doc[name]
+		temp1, ok := value.(primitive.A)
+		if !ok {
+			fmt.Println("类型转换失败1")
+		}
+		temp2, ok := temp1[day].(primitive.A)
+		if !ok {
+			fmt.Println("类型转换失败2")
 		}
 
+		data0 := map[string]interface{}{
+			"s": name,
+			"v": temp2[hour],
+		}
+		data = append(data, data0)
 	}
 	res.Data = data
 	c.JSON(http.StatusOK, res)
