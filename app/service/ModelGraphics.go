@@ -420,12 +420,12 @@ func (g *graphicsData) data02(cData [][]any, caData [][]any, isIcon bool, parent
 				t := cDataFilter[i][14].(string)
 				return t
 			}()
-			coordinateSystem := getCoordinateSystem(classname, isIcon)
+			coordinateSystem := getCoordinateSystemRecursion(nameList, isIcon)
 			data["coordinate_system"] = map[string]any{
-				"extent1":               []any{coordinateSystem[0], coordinateSystem[1]},
-				"extent2":               []any{coordinateSystem[2], coordinateSystem[3]},
-				"preserve_aspect_ratio": coordinateSystem[4],
-				"initialScale":          coordinateSystem[5],
+				"extent1":               coordinateSystem["extent1Diagram"],
+				"extent2":               coordinateSystem["extent2Diagram"],
+				"preserve_aspect_ratio": coordinateSystem["preserve_aspect_ratio"],
+				"initialScale":          coordinateSystem["initialScale"],
 			}
 			componentsData, componentAnnotationsData := getElementsAndModelName(nameList)
 			IconAnnotationData := getIconAndDiagramAnnotations(nameList, isIcon)
