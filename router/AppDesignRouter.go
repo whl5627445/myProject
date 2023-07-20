@@ -67,6 +67,7 @@ func AppDesignRouter(g *gin.Engine) {
 		Models.POST("/pow/single/get", API.GetAppPowSingleView)
 		Models.POST("/pow/double/get", API.GetAppPowDoubleView)
 		Models.POST("/pow/pie/get", API.GetAppPowPieChartView)
+		Models.GET("/pow/label/get", API.GetAppPowLabel)
 
 	}
 }

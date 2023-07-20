@@ -16,7 +16,6 @@ import (
 	"yssim-go/library/timeConvert"
 
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -1634,7 +1633,7 @@ func GetPageAlignmentLineView(c *gin.Context) {
 
 func GetAppPowSingleView(c *gin.Context) {
 	/*
-		# 获取电网app单轴数据接口（返回当天截止到当前时刻的所有数据）
+		# 获取电网app单轴数据接口（返回某天24小时所有数据）
 	*/
 	var res responseData
 	var item GetAppPowData
@@ -1646,16 +1645,6 @@ func GetAppPowSingleView(c *gin.Context) {
 	}
 	names := item.Names
 
-	//时间格式的2023年起始时间
-	layout := "2006/1/2/15"
-	timeStrRefer := "2023/1/1/0"
-	timeRefer, _ := time.ParseInLocation(layout, timeStrRefer, time.Local)
-
-	//相较于2023/1/1/0的天数及当天的小时数，即为数据库二维数组的行和列
-	dataNum := int((time.Now().Sub(timeRefer)) / time.Hour)
-	day := dataNum / 24
-	hour := dataNum % 24
-
 	//查数据库的集合
 	collection := MB.Database("micro_grid").Collection("result_data")
 	// 查找文档
@@ -1666,29 +1655,7 @@ func GetAppPowSingleView(c *gin.Context) {
 		fmt.Println("查询文档失败：", err)
 		return
 	}
-
-	var data []map[string]interface{}
-	// 遍历文档获取对应数据
-	for _, key := range names {
-		value := doc[key]
-		temp1, ok := value.(primitive.A)
-		if !ok {
-			fmt.Println("类型转换失败1")
-		}
-		temp2, ok := temp1[day].(primitive.A)
-		if !ok {
-			fmt.Println("类型转换失败2")
-		}
-		for i := 0; i <= hour; i++ {
-			data0 := map[string]interface{}{
-				"x":    i,
-				"y":    temp2[i],
-				"name": key,
-			}
-			data = append(data, data0)
-		}
-	}
-	res.Data = data
+	res.Data = service.GetAppPowSingleData(names, doc)
 	c.JSON(http.StatusOK, res)
 }
 
@@ -1708,16 +1675,6 @@ func GetAppPowDoubleView(c *gin.Context) {
 	//name暂时用不到
 	//names := item.Names
 
-	//时间格式的2023年起始时间
-	layout := "2006/1/2/15"
-	timeStrRefer := "2023/1/1/0"
-	timeRefer, _ := time.ParseInLocation(layout, timeStrRefer, time.Local)
-
-	//相较于2023/1/1/0的天数及当天的小时数，即为数据库二维数组的行和列
-	dataNum := int((time.Now().Sub(timeRefer)) / time.Hour)
-	day := dataNum / 24
-	hour := dataNum % 24
-
 	//查数据库的集合
 	collection := MB.Database("micro_grid").Collection("result_data")
 	// 查找文档
@@ -1729,28 +1686,13 @@ func GetAppPowDoubleView(c *gin.Context) {
 		return
 	}
 
-	var data []map[string]interface{}
-	// "蓄电池充放电功率"及"蓄电池SOC"为双轴
-	tempy1, _ := doc["蓄电池充放电功率"].(primitive.A)
-	tempz1, _ := doc["蓄电池SOC"].(primitive.A)
-	tempy2, _ := tempy1[day].(primitive.A)
-	tempz2, _ := tempz1[day].(primitive.A)
-	for i := 0; i <= hour; i++ {
-		data0 := map[string]interface{}{
-			"x": i,
-			"y": tempy2[i],
-			"z": tempz2[i],
-		}
-		data = append(data, data0)
-	}
-
-	res.Data = data
+	res.Data = service.GetAppPowDoubleData(doc)
 	c.JSON(http.StatusOK, res)
 }
 
 func GetAppPowPieChartView(c *gin.Context) {
 	/*
-		# 获取电网app饼图数据接口（只返回当前时刻数据）
+		# 获取电网app饼图数据接口（只返回某天某时刻数据）
 	*/
 	var res responseData
 	var item GetAppPowData
@@ -1761,17 +1703,6 @@ func GetAppPowPieChartView(c *gin.Context) {
 		return
 	}
 	names := item.Names
-
-	//时间格式的2023年起始时间
-	layout := "2006/1/2/15"
-	timeStrRefer := "2023/1/1/0"
-	timeRefer, _ := time.ParseInLocation(layout, timeStrRefer, time.Local)
-
-	//相较于2023/1/1/0的天数及当天的小时数，即为数据库二维数组的行和列
-	dataNum := int((time.Now().Sub(timeRefer)) / time.Hour)
-	day := dataNum / 24
-	hour := dataNum % 24
-
 	//查数据库的集合
 	collection := MB.Database("micro_grid").Collection("result_data")
 	// 查找文档
@@ -1782,26 +1713,18 @@ func GetAppPowPieChartView(c *gin.Context) {
 		fmt.Println("查询文档失败：", err)
 		return
 	}
+	res.Data = service.GetAppPowPieChartData(names, doc)
+	c.JSON(http.StatusOK, res)
+}
 
-	var data []map[string]interface{}
-	// 遍历文档获取对应数据
-	for _, name := range names {
-		value := doc[name]
-		temp1, ok := value.(primitive.A)
-		if !ok {
-			fmt.Println("类型转换失败1")
-		}
-		temp2, ok := temp1[day].(primitive.A)
-		if !ok {
-			fmt.Println("类型转换失败2")
-		}
-
-		data0 := map[string]interface{}{
-			"s": name,
-			"v": temp2[hour],
-		}
-		data = append(data, data0)
+func GetAppPowLabel(c *gin.Context) {
+	/*
+		# 获取电网app标签接口，将传入字符串以kv形式返回
+	*/
+	var res responseData
+	label := c.Query("label")
+	res.Data = map[string]string{
+		"label": label,
 	}
-	res.Data = data
 	c.JSON(http.StatusOK, res)
 }
