@@ -20,6 +20,10 @@ import (
 type modelVarData struct {
 	FinalAttributesStr map[string]any `json:"final_attributes_str"`
 }
+type OutputData struct {
+	Name string `json:"data"`
+	Unit string `json:"unit"`
+}
 
 var DB = config.DB
 
@@ -363,9 +367,16 @@ func GrpcRunResult(appPageId string, singleSimulationInputData map[string]float6
 
 	inputData := make(map[string][]float64)
 	// 获取数据库中的输出名称数组
+	var data []OutputData
+	err = sonic.Unmarshal(appPageRecord.Output, &data)
+	if err != nil {
+		return errors.New("多轮仿真服务出错！请联系管理员！")
+	}
 	var outputNames []string
+	for _, d := range data {
+		outputNames = append(outputNames, d.Name)
+	}
 	var singleOrMultiple string
-	sonic.Unmarshal(appPageRecord.Output, &outputNames)
 	if singleSimulationInputData != nil {
 		//log.Println("单次仿真！")
 		singleOrMultiple = "single"
