@@ -1496,7 +1496,7 @@ func AppPagePreviewAccessView(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, res)
 			return
 		}
-		pageData := map[string]any{"width": page.PageWidth, "height": page.PageHeight, "background": page.Background, "background_color": page.BackgroundColor, "page_type": page.PageType}
+		pageData := map[string]any{"width": page.PageWidth, "height": page.PageHeight, "background": page.Background, "background_color": page.BackgroundColor, "page_type": page.PageType, "output": page.Output}
 		res.Data = map[string]any{"result": result, "component": components, "page": pageData}
 		c.JSON(http.StatusOK, res)
 	}
@@ -1532,7 +1532,7 @@ func AppPageReleaseAccessView(c *gin.Context) {
 			return
 		}
 	}
-	pageData := map[string]any{"width": page.PageWidth, "height": page.PageHeight, "background": page.Background, "background_color": page.BackgroundColor, "page_type": page.PageType}
+	pageData := map[string]any{"width": page.PageWidth, "height": page.PageHeight, "background": page.Background, "background_color": page.BackgroundColor, "page_type": page.PageType, "output": page.Output}
 	res.Data = map[string]any{"result": result, "component": components, "page": pageData}
 	c.JSON(http.StatusOK, res)
 }
