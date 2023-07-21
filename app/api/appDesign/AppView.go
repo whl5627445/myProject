@@ -255,7 +255,7 @@ func GetModelMulSimulateDetailsView(c *gin.Context) {
 	pageId := c.Query("page_id")
 	var page DataBaseModel.AppPage
 	DB.Where("id = ? AND username = ?", pageId, userName).First(&page)
-	res.Data = map[string]interface{}{
+	res.Data = map[string]any{
 		"details": page.MulSimulateErr,
 	}
 	c.JSON(http.StatusOK, res)
@@ -270,7 +270,7 @@ func GetModelStateView(c *gin.Context) {
 	var appPageRecord DataBaseModel.AppPage
 	DB.Where("id = ?", appPageId).First(&appPageRecord)
 	var res responseData
-	resData := map[string]interface{}{
+	resData := map[string]any{
 		"is_preview": appPageRecord.IsPreview,
 		"is_release": appPageRecord.Release,
 		//"release_state": appPageRecord.ReleaseState,
@@ -365,12 +365,12 @@ func GetAppSpaceView(c *gin.Context) {
 		db.Order("update_time desc")
 	}
 	db.Find(&allAppSpaceList)
-	allAppSpace := make([]map[string]interface{}, 0)
-	recentAppSpace := make([]map[string]interface{}, 0)
+	allAppSpace := make([]map[string]any, 0)
+	recentAppSpace := make([]map[string]any, 0)
 	for _, space := range allAppSpaceList {
 		updateTime := space.UpdatedAt.Local().Unix()
 		editTime := timeConvert.UseTimeFormatNew(int(updateTime), int(time.Now().Local().Unix()), 1)
-		d := map[string]interface{}{
+		d := map[string]any{
 			"id":          space.ID,
 			"name":        space.SpaceName,
 			"description": space.Description,
@@ -386,7 +386,7 @@ func GetAppSpaceView(c *gin.Context) {
 	for _, space := range recentAppSpaceList {
 		updateTime := space.UpdatedAt.Local().Unix()
 		editTime := timeConvert.UseTimeFormatNew(int(updateTime), int(time.Now().Local().Unix()), 1)
-		d := map[string]interface{}{
+		d := map[string]any{
 			"id":          space.ID,
 			"name":        space.SpaceName,
 			"description": space.Description,
@@ -398,7 +398,7 @@ func GetAppSpaceView(c *gin.Context) {
 		}
 		recentAppSpace = append(recentAppSpace, d)
 	}
-	data := map[string][]map[string]interface{}{
+	data := map[string][]map[string]any{
 		"all_space":    allAppSpace,
 		"recent_space": recentAppSpace,
 	}
@@ -517,7 +517,7 @@ func AppSpaceCollectView(c *gin.Context) {
 		return
 	}
 	var space DataBaseModel.AppSpace
-	err = DB.Model(&space).Where("id IN ? AND username = ?", item.SpaceId, userName).Updates(map[string]interface{}{"collect": item.Collect}).Error
+	err = DB.Model(&space).Where("id IN ? AND username = ?", item.SpaceId, userName).Updates(map[string]any{"collect": item.Collect}).Error
 	if err != nil {
 		log.Println("更新app空间时保存数据库出现错误：", err)
 		res.Err = "收藏失败"
@@ -653,9 +653,9 @@ func GetAppPageView(c *gin.Context) {
 	case release == "0":
 		db.Where("is_release = ?", false).Find(&pageList)
 	}
-	var pageDataList []map[string]interface{}
+	var pageDataList []map[string]any
 	for _, page := range pageList {
-		p := map[string]interface{}{
+		p := map[string]any{
 			"id":            page.ID,
 			"name":          page.PageName,
 			"create_time":   page.CreatedAt.Local().Format("2006年01月02日"),
@@ -666,7 +666,7 @@ func GetAppPageView(c *gin.Context) {
 		}
 		pageDataList = append(pageDataList, p)
 	}
-	res.Data = map[string]interface{}{
+	res.Data = map[string]any{
 		"data":             pageDataList,
 		"all_count":        releaseCount + noReleaseCount,
 		"release_count":    releaseCount,
@@ -686,7 +686,7 @@ func GetAppPageSpaceView(c *gin.Context) {
 	path := c.Query("path")
 	var page DataBaseModel.AppPage
 	DB.Where("username = ? AND app_space_id = ? AND page_path = ?", userName, spaceId, path).First(&page)
-	res.Data = map[string]interface{}{"page_id": page.ID}
+	res.Data = map[string]any{"page_id": page.ID}
 	c.JSON(http.StatusOK, res)
 }
 
@@ -896,10 +896,10 @@ func GetPageComponentView(c *gin.Context) {
 	DB.Where("id = ? AND app_space_id = ? AND username = ?", pageId, spaceId, userName).First(&page)
 	DB.Where("page_id = ?", page.ID).Find(&componentList)
 
-	var componentDataList []map[string]interface{}
+	var componentDataList []map[string]any
 
 	for _, component := range componentList {
-		p := map[string]interface{}{
+		p := map[string]any{
 			"id":                  component.ID,
 			"type":                component.Type,
 			"width":               component.Width,
@@ -927,9 +927,9 @@ func GetPageComponentView(c *gin.Context) {
 		}
 		componentDataList = append(componentDataList, p)
 	}
-	res.Data = map[string]interface{}{
+	res.Data = map[string]any{
 		"components": componentDataList,
-		"page": map[string]interface{}{
+		"page": map[string]any{
 			"background":       page.Background,
 			"background_color": page.BackgroundColor,
 			"height":           page.PageHeight,
@@ -961,7 +961,7 @@ func EditPageComponentView(c *gin.Context) {
 	}
 
 	//err = DB.Model(DataBaseModel.AppPageComponent{}).Select("*").Where("id = ? AND page_id = ?", item.Id, item.PageId).Updates(&item).Error
-	err = DB.Model(DataBaseModel.AppPageComponent{}).Where("id = ? AND page_id = ?", item.Id, item.PageId).Updates(map[string]interface{}{
+	err = DB.Model(DataBaseModel.AppPageComponent{}).Where("id = ? AND page_id = ?", item.Id, item.PageId).Updates(map[string]any{
 		"type":                item.Type,
 		"input_name":          item.InputName,
 		"width":               item.Width,
@@ -1022,7 +1022,7 @@ func ConfigEditPageComponentView(c *gin.Context) {
 	}
 
 	//err = DB.Model(DataBaseModel.AppPageComponent{}).Select("*").Where("id = ? AND page_id = ?", item.Id, item.PageId).Updates(&item).Error
-	err = DB.Model(DataBaseModel.AppPageComponent{}).Where("id = ? AND page_id = ?", item.Id, item.PageId).Updates(map[string]interface{}{
+	err = DB.Model(DataBaseModel.AppPageComponent{}).Where("id = ? AND page_id = ?", item.Id, item.PageId).Updates(map[string]any{
 		"type":                item.Type,
 		"width":               item.Width,
 		"height":              item.Height,
@@ -1079,7 +1079,7 @@ func DataEditPageComponentView(c *gin.Context) {
 	}
 
 	//err = DB.Model(DataBaseModel.AppPageComponent{}).Select("*").Where("id = ? AND page_id = ?", item.Id, item.PageId).Updates(&item).Error
-	err = DB.Model(DataBaseModel.AppPageComponent{}).Where("id = ? AND page_id = ?", item.Id, item.PageId).Updates(map[string]interface{}{
+	err = DB.Model(DataBaseModel.AppPageComponent{}).Where("id = ? AND page_id = ?", item.Id, item.PageId).Updates(map[string]any{
 		"input_name": item.InputName,
 		"option":     item.Option,
 		"max":        item.Max,
@@ -1147,11 +1147,11 @@ func GetDatasourceView(c *gin.Context) {
 	userName := c.GetHeader("username")
 	groupName := c.Query("group_name")
 	searchName := c.Query("search_name")
-	var dataList []map[string]interface{}
+	var dataList []map[string]any
 	var appDataSourceRecord []DataBaseModel.AppDataSource
 	DB.Where("username = ? AND group_name = ? AND compile_status = ? AND data_source_name LIKE ?", userName, groupName, 4, "%"+searchName+"%").Order("create_time desc").Find(&appDataSourceRecord)
 	for i := 0; i < len(appDataSourceRecord); i++ {
-		data := map[string]interface{}{
+		data := map[string]any{
 			"id":                 appDataSourceRecord[i].ID,
 			"source_name":        appDataSourceRecord[i].DataSourceName,
 			"compile_model_name": appDataSourceRecord[i].ModelName,
@@ -1296,7 +1296,7 @@ func GetPageInputOutputView(c *gin.Context) {
 	DB.Where("id = ? AND username = ?", pageId, userName).First(&page)
 	var dataSourceRecord DataBaseModel.AppDataSource
 	DB.Where("id = ?", page.DataSourceId).First(&dataSourceRecord)
-	data := map[string]interface{}{
+	data := map[string]any{
 		"input":            page.Input,
 		"output":           page.Output,
 		"data_source_id":   page.DataSourceId,
@@ -1362,16 +1362,16 @@ func GetPageComponentInputOutputView(c *gin.Context) {
 		return
 	}
 
-	input := map[string]interface{}{
+	input := map[string]any{
 		"inputName": component.InputName,
 		"max":       component.Max,
 		"min":       component.Min,
 		"interval":  component.Interval,
 	}
-	output := map[string]interface{}{
+	output := map[string]any{
 		"output": component.Output,
 	}
-	data := map[string]interface{}{
+	data := map[string]any{
 		"input":  input,
 		"output": output,
 	}
@@ -1431,14 +1431,14 @@ func AppPagePreviewView(c *gin.Context) {
 	DB.Where("id = ? AND username = ?", spaceId, userName).First(&space)
 	DB.Where("id = ? AND app_space_id = ?", pageId, space.ID).First(&page)
 	DB.Where("page_id = ?", page.ID).Find(&components)
-	pageData := make(map[string]interface{}, 0)
+	pageData := make(map[string]any, 0)
 	pageData["width"] = page.PageWidth
 	pageData["height"] = page.PageHeight
 	pageData["background"] = page.Background
 	pageData["color"] = page.Color
-	componentsData := make([]map[string]interface{}, 0)
+	componentsData := make([]map[string]any, 0)
 	for _, component := range components {
-		d := make(map[string]interface{}, 0)
+		d := make(map[string]any, 0)
 		d["id"] = component.ID
 		d["type"] = component.Type
 		d["input_name"] = component.InputName
@@ -1465,7 +1465,7 @@ func AppPagePreviewView(c *gin.Context) {
 		d["other_configuration"] = component.OtherConfiguration
 		componentsData = append(componentsData, d)
 	}
-	res.Data = map[string]interface{}{
+	res.Data = map[string]any{
 		"page":       pageData,
 		"components": componentsData,
 	}
@@ -1483,7 +1483,7 @@ func AppPagePreviewAccessView(c *gin.Context) {
 	var page DataBaseModel.AppPage
 	DB.Where("id = ? AND app_space_id = ? ", pageId, spaceId).First(&page)
 
-	result := map[string]interface{}{}
+	result := map[string]any{}
 	if page.PageType == "web-app" {
 		var components []DataBaseModel.AppPageComponentsPreview
 		DB.Where("page_id = ?", page.ID).Find(&components)
@@ -1495,15 +1495,15 @@ func AppPagePreviewAccessView(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, res)
 			return
 		}
-		pageData := map[string]interface{}{"width": page.PageWidth, "height": page.PageHeight, "background": page.Background, "background_color": page.BackgroundColor, "page_type": page.PageType}
-		res.Data = map[string]interface{}{"result": result, "component": components, "page": pageData}
+		pageData := map[string]any{"width": page.PageWidth, "height": page.PageHeight, "background": page.Background, "background_color": page.BackgroundColor, "page_type": page.PageType}
+		res.Data = map[string]any{"result": result, "component": components, "page": pageData}
 		c.JSON(http.StatusOK, res)
 	}
 	if page.PageType == "large-screen" {
 		var components []DataBaseModel.AppPageComponent
 		DB.Where("page_id = ?", page.ID).Find(&components)
-		pageData := map[string]interface{}{"width": page.PageWidth, "height": page.PageHeight, "background": page.Background, "background_color": page.BackgroundColor, "page_type": page.PageType}
-		res.Data = map[string]interface{}{"result": result, "component": components, "page": pageData}
+		pageData := map[string]any{"width": page.PageWidth, "height": page.PageHeight, "background": page.Background, "background_color": page.BackgroundColor, "page_type": page.PageType}
+		res.Data = map[string]any{"result": result, "component": components, "page": pageData}
 		c.JSON(http.StatusOK, res)
 	}
 }
@@ -1520,7 +1520,7 @@ func AppPageReleaseAccessView(c *gin.Context) {
 	DB.Where("id = ? AND app_space_id = ?  AND is_release = ?", pageId, spaceId, true).First(&page)
 	var components []DataBaseModel.AppPageComponentsRelease
 	DB.Where("page_id = ?", page.ID).Find(&components)
-	result := map[string]interface{}{}
+	result := map[string]any{}
 	if page.PageType == "web-app" {
 		var err error
 		result, err = service.AppReleaseResult(page.ID)
@@ -1531,8 +1531,8 @@ func AppPageReleaseAccessView(c *gin.Context) {
 			return
 		}
 	}
-	pageData := map[string]interface{}{"width": page.PageWidth, "height": page.PageHeight, "background": page.Background, "background_color": page.BackgroundColor, "page_type": page.PageType}
-	res.Data = map[string]interface{}{"result": result, "component": components, "page": pageData}
+	pageData := map[string]any{"width": page.PageWidth, "height": page.PageHeight, "background": page.Background, "background_color": page.BackgroundColor, "page_type": page.PageType}
+	res.Data = map[string]any{"result": result, "component": components, "page": pageData}
 	c.JSON(http.StatusOK, res)
 }
 
@@ -1574,7 +1574,7 @@ func SetComponentBasicInformationView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	data := map[string]interface{}{
+	data := map[string]any{
 		"componentId": component.ID,
 	}
 	res.Data = data
