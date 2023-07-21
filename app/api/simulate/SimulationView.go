@@ -712,7 +712,7 @@ func CreateSnapshotView(c *gin.Context) {
 
 func DeleteSnapshotView(c *gin.Context) {
 	/*
-	   #xqd# 删除试图接口
+	   #xqd# 删除视图接口
 	*/
 	var res responseData
 	var item snapshotDeleteData
@@ -732,7 +732,7 @@ func DeleteSnapshotView(c *gin.Context) {
 
 func EditSnapshotView(c *gin.Context) {
 	/*
-	   #xqd# 修改试图接口
+	   #xqd# 修改视图接口
 	   #grom bug记录：snapshotEditData的字段数和名称必须和数据库模型YssimSnapshots一致。
 	*/
 	username := c.GetHeader("username")
@@ -749,7 +749,7 @@ func EditSnapshotView(c *gin.Context) {
 	var recordName DataBaseModel.YssimSnapshots
 	DB.Where("id != ? AND snapshot_name =? AND username =? AND space_id =? AND model_name =? AND package_id=?", item.ID, item.SnapshotName, username, userSpaceId, item.ModelName, item.PackageId).First(&recordName)
 	if recordName.SnapshotName != "" {
-		res.Msg = "试图记录名称已存在，请更换。"
+		res.Msg = "视图记录名称已存在，请更换。"
 		c.JSON(http.StatusOK, res)
 		return
 	}
@@ -764,14 +764,14 @@ func EditSnapshotView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	res.Msg = "试图记录已更新"
+	res.Msg = "视图记录已更新"
 	c.JSON(http.StatusOK, res)
 
 }
 
 func SnapshotGetListView(c *gin.Context) {
 	/*
-	   #xqd# 获取试图列表接口
+	   #xqd# 获取视图列表接口
 	*/
 
 	username := c.GetHeader("username")
