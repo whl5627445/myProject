@@ -3,6 +3,7 @@ package API
 import (
 	"context"
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson"
 	"log"
 	"net/http"
 	"os"
@@ -14,8 +15,6 @@ import (
 	"yssim-go/config"
 	"yssim-go/library/fileOperation"
 	"yssim-go/library/timeConvert"
-
-	"go.mongodb.org/mongo-driver/bson"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -1368,7 +1367,7 @@ func GetPageComponentInputOutputView(c *gin.Context) {
 		"min":       component.Min,
 		"interval":  component.Interval,
 	}
-	output := map[string]any{
+	output := map[string]interface{}{
 		"output": component.Output,
 	}
 	data := map[string]any{
@@ -1645,23 +1644,13 @@ func GetAppPowSingleView(c *gin.Context) {
 	}
 	names := item.Names
 
-	//查数据库的集合
-	collection := MB.Database("micro_grid").Collection("result_data")
-	// 查找文档
-	var doc bson.M
-	err = collection.FindOne(context.Background(), bson.M{}).Decode(&doc)
-	// 检查错误
-	if err != nil {
-		fmt.Println("查询文档失败：", err)
-		return
-	}
-	res.Data = service.GetAppPowSingleData(names, doc)
+	res.Data = service.GetAppPowSingleData(names)
 	c.JSON(http.StatusOK, res)
 }
 
 func GetAppPowDoubleView(c *gin.Context) {
 	/*
-		# 获取电网app双轴数据接口（暂只有"蓄电池充放电功率"及"蓄电池SOC"为双轴）
+		# 获取电网app双轴数据接口（返回某天24小时所有数据）
 	*/
 	var res responseData
 	var item GetAppPowData
@@ -1672,21 +1661,9 @@ func GetAppPowDoubleView(c *gin.Context) {
 		return
 	}
 
-	//name暂时用不到
-	//names := item.Names
+	names := item.Names
 
-	//查数据库的集合
-	collection := MB.Database("micro_grid").Collection("result_data")
-	// 查找文档
-	var doc bson.M
-	err = collection.FindOne(context.Background(), bson.M{}).Decode(&doc)
-	// 检查错误
-	if err != nil {
-		fmt.Println("查询文档失败：", err)
-		return
-	}
-
-	res.Data = service.GetAppPowDoubleData(doc)
+	res.Data = service.GetAppPowDoubleData(names)
 	c.JSON(http.StatusOK, res)
 }
 
@@ -1703,28 +1680,17 @@ func GetAppPowPieChartView(c *gin.Context) {
 		return
 	}
 	names := item.Names
-	//查数据库的集合
-	collection := MB.Database("micro_grid").Collection("result_data")
-	// 查找文档
-	var doc bson.M
-	err = collection.FindOne(context.Background(), bson.M{}).Decode(&doc)
-	// 检查错误
-	if err != nil {
-		fmt.Println("查询文档失败：", err)
-		return
-	}
-	res.Data = service.GetAppPowPieChartData(names, doc)
+
+	res.Data = service.GetAppPowPieChartData(names)
 	c.JSON(http.StatusOK, res)
 }
 
 func GetAppPowLabel(c *gin.Context) {
 	/*
-		# 获取电网app标签接口，将传入字符串以kv形式返回
+		# 获取电网app标签接口
 	*/
 	var res responseData
 	label := c.Query("label")
-	res.Data = map[string]string{
-		"label": label,
-	}
+	res.Data = service.GetAppPowLabelData(label)
 	c.JSON(http.StatusOK, res)
 }
