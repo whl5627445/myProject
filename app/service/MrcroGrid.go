@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 	"yssim-go/config"
 
@@ -15,6 +16,7 @@ var timeCur time.Time
 var MB = config.MB
 
 func GetAppPowSingleData(names []string) []map[string]any {
+	log.Println("微电网缓存时间：", timeCur)
 	//查数据库的集合
 	collection := MB.Database("micro_grid").Collection("result_data")
 	// 查找文档
@@ -59,6 +61,7 @@ func GetAppPowSingleData(names []string) []map[string]any {
 }
 
 func GetAppPowDoubleData(names []string) []map[string]any {
+	log.Println("微电网缓存时间：", timeCur)
 	//查数据库的集合
 	collection := MB.Database("micro_grid").Collection("result_data")
 	// 查找文档
@@ -96,6 +99,7 @@ func GetAppPowDoubleData(names []string) []map[string]any {
 }
 
 func GetAppPowPieChartData(names []string) []map[string]any {
+	log.Println("微电网缓存时间：", timeCur)
 	//查数据库的集合
 	collection := MB.Database("micro_grid").Collection("result_data")
 	// 查找文档
@@ -159,6 +163,7 @@ func updateCount() {
 }
 
 func GetAppPowLabelData(name string) map[string]interface{} {
+	log.Println("微电网缓存时间：", timeCur)
 	//查数据库的集合
 	collection := MB.Database("micro_grid").Collection("result_data")
 	// 查找文档

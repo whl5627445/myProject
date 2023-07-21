@@ -1,9 +1,6 @@
 package API
 
 import (
-	"context"
-	"fmt"
-	"go.mongodb.org/mongo-driver/bson"
 	"log"
 	"net/http"
 	"os"
@@ -22,7 +19,6 @@ import (
 )
 
 var DB = config.DB
-var MB = config.MB
 
 func MultipleSimulateView(c *gin.Context) {
 	/*
