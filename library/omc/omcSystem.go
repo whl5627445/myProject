@@ -1386,7 +1386,7 @@ func (o *ZmqObject) GetCoordinateSystem(className string, isIcon bool) []any {
 	if len(result) > 0 {
 		return result[:8]
 	}
-	return []any{"-100.0", "100.0", "-100.0", "100.0", "true", "-", "-", "-"}
+	return nil
 }
 
 func (o *ZmqObject) GetIconAnnotations(className string) []any {

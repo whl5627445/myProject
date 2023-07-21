@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 	"yssim-go/app/DataBaseModel"
+	"yssim-go/app/DataType"
 	"yssim-go/app/service"
 	"yssim-go/library/omc"
 
@@ -1568,6 +1569,28 @@ func CADMappingModelView(c *gin.Context) {
 	*/
 
 	var res responseData
+	userName := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
+	var item DataType.CADMappingModelData
+	err := c.BindJSON(&item)
+	if err != nil {
+		log.Println("导出数据源数据错误： ", err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	var packageModel DataBaseModel.YssimModels
+	DB.Where("sys_or_user = ?  AND userspace_id = ? AND id = ?", userName, userSpaceId, item.PackageId).First(&packageModel)
+	if packageModel.ID == "" {
+		res.Err = "建模失败， 请检查当前模型是否为您的自建模型"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	for i := 0; i < len(item.ModelMapping); i++ {
+		service.CADMappingModel(item.ModelName, item.ModelMapping[i].ModelName, item.Information[i])
+	}
+
+	res.Msg = "建模完成"
 	c.JSON(http.StatusOK, res)
 }
 

@@ -40,8 +40,8 @@ func GetIconNew(modelName string, icon bool) map[string]any {
 }
 
 // getCoordinateSystemRecursion 会根据提供的模型列表直到找到有数据为止
-func getCoordinateSystemRecursion(modelNameList []string, isIcon bool) map[string]any {
-	data := map[string]any{
+func getCoordinateSystemRecursion(modelNameList []string, isIcon bool) map[string]string {
+	data := map[string]string{
 		"extent1Diagram":        "-100.0,-100.0",
 		"extent2Diagram":        "100.0,100.0",
 		"preserve_aspect_ratio": "true",
@@ -52,13 +52,13 @@ func getCoordinateSystemRecursion(modelNameList []string, isIcon bool) map[strin
 		if len(coordinateSystem) >= 8 {
 			data["extent1"] = strings.Replace(strings.Join([]string{coordinateSystem[0].(string), coordinateSystem[1].(string)}, ","), "-,-", "-100.0,-100.0", 1)
 			data["extent1"] = strings.Replace(strings.Join([]string{coordinateSystem[2].(string), coordinateSystem[3].(string)}, ","), "-,-", "-100.0,-100.0", 1)
-			data["preserve_aspect_ratio"] = coordinateSystem[4]
+			data["preserve_aspect_ratio"] = coordinateSystem[4].(string)
 			data["initialScale"] = func() string {
 				if coordinateSystem[5] == "-" {
 					return "0.1"
 				}
 				return coordinateSystem[5].(string)
-			}
+			}()
 			return data
 		}
 	}
@@ -66,9 +66,10 @@ func getCoordinateSystemRecursion(modelNameList []string, isIcon bool) map[strin
 }
 
 func getIconAnnotationGraphics(modelName, nameType string) map[string]any {
+	data := map[string]any{}
 	modelNameList := GetICList(modelName)
 	modelIconAnnotation := getIconAnnotation(modelNameList)
-	data := getCoordinateSystemRecursion(modelNameList, false)
+	coordinateSystem := getCoordinateSystemRecursion(modelNameList, false)
 	componentsData, componentAnnotationsData := getElementsAndModelName(modelNameList)
 	subShapes := iconSubShapes(modelIconAnnotation, modelName)
 	inputOutputs := iconInputOutputs(componentsData, componentAnnotationsData, modelName)
@@ -84,13 +85,18 @@ func getIconAnnotationGraphics(modelName, nameType string) map[string]any {
 	data["rotation"] = "0"
 	data["inputOutputs"] = inputOutputs
 	data["subShapes"] = subShapes
+	data["extent1Diagram"] = coordinateSystem["extent1Diagram"]
+	data["extent2Diagram"] = coordinateSystem["extent2Diagram"]
+	data["preserve_aspect_ratio"] = coordinateSystem["preserve_aspect_ratio"]
+	data["initialScale"] = coordinateSystem["initialScale"]
 	return data
 }
 
 func getDiagramAnnotationGraphics(modelName, nameType string) map[string]any {
+	data := map[string]any{}
 	nameList := GetICList(modelName)
 	modelIconAnnotation := getDiagramAnnotation(nameList)
-	data := getCoordinateSystemRecursion(nameList, false)
+	coordinateSystem := getCoordinateSystemRecursion(nameList, false)
 	subShapes := make([]map[string]any, 0)
 	subShapes = append(subShapes, iconSubShapes(modelIconAnnotation, modelName)...)
 	if len(subShapes) == 0 && len(modelIconAnnotation) == 0 {
@@ -106,6 +112,10 @@ func getDiagramAnnotationGraphics(modelName, nameType string) map[string]any {
 	data["rotation"] = "0"
 	data["inputOutputs"] = make([]any, 0)
 	data["subShapes"] = subShapes
+	data["extent1Diagram"] = coordinateSystem["extent1Diagram"]
+	data["extent2Diagram"] = coordinateSystem["extent2Diagram"]
+	data["preserve_aspect_ratio"] = coordinateSystem["preserve_aspect_ratio"]
+	data["initialScale"] = coordinateSystem["initialScale"]
 	return data
 }
 

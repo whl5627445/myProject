@@ -7,8 +7,11 @@ import (
 	"math"
 	"os"
 	"strconv"
+	"strings"
+	"yssim-go/app/DataType"
+	"yssim-go/library/omc"
 
-	"github.com/bytedance/sonic"
+	"github.com/shopspring/decimal"
 )
 
 type root struct {
@@ -116,174 +119,258 @@ func CADParseParts(path string) []map[string]any {
 	}
 
 	var parts []map[string]any
-
 	for i := 0; i < len(v.Tube); i++ {
 		t := v.Tube[i]
-		var pList []map[string]any
-		pipeData := make([]map[string]any, 0)
-		bendsData := make([]map[string]any, 0)
-		data := map[string]any{"partnumber": t.Partnumber, "type": t.Type}
-		outsideDiameter := 0.0
-		insulationThickness := 0.0
-		diameter := 0.0
-		for _, attr := range t.Solid.Attributes.Attribute {
-			switch attr.AttrName {
-			case "OutsideDiameter":
-				outsideDiameter, _ = strconv.ParseFloat(attr.AttrValue[:len(attr.AttrValue)-2], 64)
-			case "Insulation thickness":
-				insulationThickness, _ = strconv.ParseFloat(attr.AttrValue[:len(attr.AttrValue)-2], 64)
+		if t.Type == "CATTubBendableTube" {
+			if len(t.Run.Points.Point) != len(t.Run.Segments.Segment)+1 {
+				continue
 			}
 		}
-		outsideDiameter = outsideDiameter / 1000
-		insulationThickness = insulationThickness / 1000
-		diameter = outsideDiameter - insulationThickness
+		var pList []map[string]any
+		data := map[string]any{"partnumber": t.Partnumber, "type": t.Type}
+		diameter := getAttributes(t.Solid.Attributes)
 		for _, p := range t.Run.Points.Point {
 			pData := map[string]any{"x": p.X.Value, "y": p.Y.Value}
 			pList = append(pList, pData)
 		}
 		data["points"] = pList
-		parts = append(parts, data)
 		sList := t.Run.Segments.Segment
-
-		for s := 0; s < len(sList); s++ {
-			sx := sList[s].PointStart.X.Value
-			sy := sList[s].PointStart.Y.Value
-			sz := sList[s].PointStart.Z.Value
-			ex := sList[s].PointEnd.X.Value
-			ey := sList[s].PointEnd.Y.Value
-			ez := sList[s].PointEnd.Z.Value
-			bendRadius := sList[s].PointEnd.Bendradius.Value
-			coordinate := map[string]float64{"x": ex - sx, "y": ey - sy, "z": ez - sz}
-			length := math.Sqrt((ex-sx)*(ex-sx)+(ey-sy)*(ey-sy)+(ez-sz)*(ez-sz)) - bendRadius
-			height := ez - sz
-
-			pipeData = append(pipeData, map[string]any{"length": length, "height_ab": height, "diameter": diameter, "bend_radius": bendRadius, "coordinate": coordinate})
-
-		}
-		for p := 0; p < len(pipeData)-1; p++ {
-			pipe := pipeData[p]
-			nextPipe := pipeData[p+1]
-			coordinate := pipe["coordinate"].(map[string]float64)
-			nextCoordinate := nextPipe["coordinate"].(map[string]float64)
-			pipeModulus := coordinate["x"]*coordinate["x"] + coordinate["y"]*coordinate["y"] + coordinate["z"]*coordinate["z"]
-			nextPipeModulus := nextCoordinate["x"]*nextCoordinate["x"] + nextCoordinate["y"]*nextCoordinate["y"] + nextCoordinate["z"]*nextCoordinate["z"]
-			delta := math.Acos((nextCoordinate["x"]*coordinate["x"] + nextCoordinate["y"]*coordinate["y"] + nextCoordinate["z"]*coordinate["z"]) / pipeModulus / nextPipeModulus)
-			R_0 := pipe["bend_radius"]
-			d_hyd := pipe["diameter"]
-			bendsData = append(bendsData, map[string]any{"delta": delta, "R_0": R_0, "d_hyd": d_hyd})
-		}
-
-		modelInformation := make([]map[string]any, 0)
-		if t.Type == "CATTubBendableTube" {
-			pointList := t.Run.Points.Point
-			for index, pointData := range pointList {
-				xNum := pointData.X.Value
-				yNum := pointData.Y.Value
-				pData := map[string]any{"rotation": 0, "yz": 1, "xz": 1}
-				pzData := map[string]any{"rotation": 0, "yz": 1, "xz": 1}
-				pData["originDiagram"] = []float64{xNum, yNum}
-
-				if index == len(pointList)-1 {
-					continue
-				}
-
-				if index == 0 {
-					if pointList[index+1].X.Value-xNum < 0 {
-						pData["xz"] = -1
-					}
-					if pointList[index+1].Y.Value-yNum > 0 {
-						pData["rotation"] = 90
-					}
-					if pointList[index+1].Y.Value-yNum < 0 {
-						pData["rotation"] = -90
-					}
-
-					modelInformation = append(modelInformation, pData)
-					continue
-				}
-				x_1Num := pointList[index-1].X.Value
-				y_1Num := pointList[index-1].Y.Value
-
-				x1Num := pointList[index+1].X.Value
-				y1Num := pointList[index+1].Y.Value
-
-				if yNum-y_1Num > 0 && x1Num-xNum > 0 {
-					pData["rotation"] = -90
-					pData["yz"] = -1
-					pzData["originDiagram"] = []float64{x1Num - (x1Num-xNum)/2, yNum}
-				}
-				if yNum-y_1Num > 0 && x1Num-xNum < 0 {
-					pData["rotation"] = 90
-					pzData["xz"] = -1
-					pzData["originDiagram"] = []float64{x1Num - (x1Num-xNum)/2, yNum}
-				}
-				if yNum-y_1Num < 0 && x1Num-xNum > 0 {
-					pData["rotation"] = -90
-					pzData["originDiagram"] = []float64{x1Num - (x1Num-xNum)/2, yNum}
-				}
-				if yNum-y_1Num < 0 && x1Num-xNum < 0 {
-					pData["rotation"] = -90
-					pData["yz"] = -1
-					pzData["xz"] = -1
-					pzData["originDiagram"] = []float64{x1Num - (x1Num-xNum)/2, yNum}
-				}
-				if xNum-x_1Num > 0 && y1Num-yNum > 0 {
-					pzData["rotation"] = 90
-					pzData["originDiagram"] = []float64{xNum, y1Num - (y1Num-yNum)/2}
-				}
-				if xNum-x_1Num < 0 && y1Num-yNum > 0 {
-					pData["rotation"] = 180
-					pData["yz"] = -1
-					pzData["rotation"] = 90
-					pzData["originDiagram"] = []float64{xNum, y1Num - (y1Num-yNum)/2}
-				}
-				if xNum-x_1Num > 0 && y1Num-yNum < 0 {
-					pData["yz"] = -1
-					pzData["rotation"] = -90
-					pzData["originDiagram"] = []float64{xNum, y1Num - (y1Num-yNum)/2}
-				}
-				if xNum-x_1Num < 0 && y1Num-yNum < 0 {
-					pData["rotation"] = 180
-					pzData["rotation"] = -90
-					pzData["originDiagram"] = []float64{xNum, y1Num - (y1Num-yNum)/2}
-				}
-				modelInformation = append(modelInformation, pData)
-				modelInformation = append(modelInformation, pzData)
-			}
-		} else {
-			pointList := t.Run.Points.Point
-			for index, pointData := range pointList {
-				xNum := pointData.X.Value
-				yNum := pointData.Y.Value
-				pData := map[string]any{"rotation": 0, "yz": 1, "xz": 1}
-				pData["originDiagram"] = []float64{xNum, yNum}
-				if index == 0 {
-					if pointList[index+1].X.Value-xNum < 0 {
-						pData["xz"] = -1
-					}
-					if pointList[index+1].Y.Value-yNum > 0 {
-						pData["rotation"] = 90
-					}
-					if pointList[index+1].Y.Value-yNum < 0 {
-						pData["rotation"] = -90
-					}
-					modelInformation = append(modelInformation, pData)
-					break
-				}
-			}
-		}
+		pipeData := getPipeData(diameter, sList)
+		bendsData := getBendsData(pipeData)
+		modelInformation := getModelInformationData(t, pipeData, bendsData)
 		data["model_information"] = modelInformation
-		data["pipes"] = pipeData
-		data["bends"] = bendsData
+		parts = append(parts, data)
 	}
 	return parts
 }
 
-func CADMappingModel() {
-	d := []map[string]any{}
+func getAttributes(Attribute attributes) float64 {
+	outsideDiameter := 0.0
+	insulationThickness := 0.0
 
-	a, _ := sonic.Marshal(d)
-	log.Println(string(a))
+	for _, attr := range Attribute.Attribute {
+		switch attr.AttrName {
+		case "OutsideDiameter":
+			outsideDiameterStr := strings.TrimSuffix(attr.AttrValue, "mm")
+			outsideDiameter, _ = strconv.ParseFloat(outsideDiameterStr, 64)
+		case "Insulation thickness":
+			insulationThicknessStr := strings.TrimSuffix(attr.AttrValue, "mm")
+			insulationThickness, _ = strconv.ParseFloat(insulationThicknessStr, 64)
+		}
+	}
+	outsideDiameterDecimal := decimal.NewFromFloat(outsideDiameter)
+	insulationThicknessDecimal := decimal.NewFromFloat(insulationThickness)
+	diameter, _ := outsideDiameterDecimal.Sub(insulationThicknessDecimal).Float64()
+	return diameter
+}
+
+func getPipeData(diameter float64, sList []segment) []map[string]any {
+	pipeData := []map[string]any{}
+	for s := 0; s < len(sList); s++ {
+		sx := sList[s].PointStart.X.Value
+		sy := sList[s].PointStart.Y.Value
+		sz := sList[s].PointStart.Z.Value
+		ex := sList[s].PointEnd.X.Value
+		ey := sList[s].PointEnd.Y.Value
+		ez := sList[s].PointEnd.Z.Value
+		bendRadius := sList[s].PointEnd.Bendradius.Value
+		coordinate := map[string]float64{"x": ex - sx, "y": ey - sy, "z": ez - sz}
+		length := math.Sqrt((ex-sx)*(ex-sx)+(ey-sy)*(ey-sy)+(ez-sz)*(ez-sz)) - bendRadius
+		height := ez - sz
+		pipeData = append(pipeData, map[string]any{"length": length, "height_ab": height, "diameter": diameter, "bend_radius": bendRadius, "coordinate": coordinate})
+	}
+	return pipeData
+}
+
+func getBendsData(pipeData []map[string]any) []map[string]any {
+	bendsData := []map[string]any{}
+	for p := 0; p < len(pipeData)-1; p++ {
+		pipe := pipeData[p]
+		nextPipe := pipeData[p+1]
+		coordinate := pipe["coordinate"].(map[string]float64)
+		nextCoordinate := nextPipe["coordinate"].(map[string]float64)
+		pipeModulus := coordinate["x"]*coordinate["x"] + coordinate["y"]*coordinate["y"] + coordinate["z"]*coordinate["z"]
+		nextPipeModulus := nextCoordinate["x"]*nextCoordinate["x"] + nextCoordinate["y"]*nextCoordinate["y"] + nextCoordinate["z"]*nextCoordinate["z"]
+		delta := math.Acos((nextCoordinate["x"]*coordinate["x"] + nextCoordinate["y"]*coordinate["y"] + nextCoordinate["z"]*coordinate["z"]) / pipeModulus / nextPipeModulus)
+		R0 := pipe["bend_radius"]
+		dHyd := pipe["diameter"]
+		bendsData = append(bendsData, map[string]any{"delta": delta, "R_0": R0, "d_hyd": dHyd})
+	}
+	return bendsData
+}
+
+func getModelInformationData(tube tube, pipeData []map[string]any, bendsData []map[string]any) []map[string]any {
+	modelInformation := make([]map[string]any, 0)
+	if tube.Type == "CATTubBendableTube" {
+		pointList := tube.Run.Points.Point
+		for index, pointData := range pointList {
+			xNum := pointData.X.Value
+			yNum := pointData.Y.Value
+			pData := map[string]any{"rotation": 0, "yz": 1, "xz": 1}
+			pzData := map[string]any{"rotation": 0, "yz": 1, "xz": 1}
+			pData["origin"] = []float64{xNum, yNum}
+
+			if index == len(pointList)-1 {
+				break
+			}
+			if index == 0 {
+				if pointList[index+1].X.Value-xNum < 0 {
+					pData["xz"] = -1
+				}
+				if pointList[index+1].Y.Value-yNum > 0 {
+					pData["rotation"] = 90
+				}
+				if pointList[index+1].Y.Value-yNum < 0 {
+					pData["rotation"] = -90
+				}
+				pData["geometry_data"] = pipeData[0]
+				pipeData = pipeData[1:]
+				modelInformation = append(modelInformation, pData)
+				continue
+			}
+			x_1Num := pointList[index-1].X.Value
+			y_1Num := pointList[index-1].Y.Value
+
+			x1Num := pointList[index+1].X.Value
+			y1Num := pointList[index+1].Y.Value
+
+			if yNum-y_1Num > 0 && x1Num-xNum > 0 {
+				pData["rotation"] = -90
+				pData["yz"] = -1
+				pzData["origin"] = []float64{x1Num - (x1Num-xNum)/2, yNum}
+				pzData["port_a"] = []float64{x1Num - (x1Num-xNum)/2, yNum}
+			}
+			if yNum-y_1Num > 0 && x1Num-xNum < 0 {
+				pData["rotation"] = 90
+				pzData["xz"] = -1
+				pzData["origin"] = []float64{x1Num - (x1Num-xNum)/2, yNum}
+			}
+			if yNum-y_1Num < 0 && x1Num-xNum > 0 {
+				pData["rotation"] = -90
+				pzData["origin"] = []float64{x1Num - (x1Num-xNum)/2, yNum}
+			}
+			if yNum-y_1Num < 0 && x1Num-xNum < 0 {
+				pData["rotation"] = -90
+				pData["yz"] = -1
+				pzData["xz"] = -1
+				pzData["origin"] = []float64{x1Num - (x1Num-xNum)/2, yNum}
+			}
+			if xNum-x_1Num > 0 && y1Num-yNum > 0 {
+				pzData["rotation"] = 90
+				pzData["origin"] = []float64{xNum, y1Num - (y1Num-yNum)/2}
+			}
+			if xNum-x_1Num < 0 && y1Num-yNum > 0 {
+				pData["rotation"] = 180
+				pData["yz"] = -1
+				pzData["rotation"] = 90
+				pzData["origin"] = []float64{xNum, y1Num - (y1Num-yNum)/2}
+			}
+			if xNum-x_1Num > 0 && y1Num-yNum < 0 {
+				pData["yz"] = -1
+				pzData["rotation"] = -90
+				pzData["origin"] = []float64{xNum, y1Num - (y1Num-yNum)/2}
+			}
+			if xNum-x_1Num < 0 && y1Num-yNum < 0 {
+				pData["rotation"] = 180
+				pzData["rotation"] = -90
+				pzData["origin"] = []float64{xNum, y1Num - (y1Num-yNum)/2}
+			}
+			pzData["geometry_data"] = pipeData[0]
+			pipeData = pipeData[1:]
+			pData["geometry_data"] = bendsData[0]
+			bendsData = bendsData[1:]
+			modelInformation = append(modelInformation, pData)
+			modelInformation = append(modelInformation, pzData)
+		}
+	} else {
+		pointList := tube.Run.Points.Point
+		for index, pointData := range pointList {
+			xNum := pointData.X.Value
+			yNum := pointData.Y.Value
+			pData := map[string]any{"rotation": 0, "yz": 1, "xz": 1}
+			pData["origin"] = []float64{xNum, yNum}
+			pData["geometry_data"] = pipeData[0]
+			if index == 0 {
+				if pointList[index+1].X.Value-xNum < 0 {
+					pData["xz"] = -1
+				}
+				if pointList[index+1].Y.Value-yNum > 0 {
+					pData["rotation"] = 90
+				}
+				if pointList[index+1].Y.Value-yNum < 0 {
+					pData["rotation"] = -90
+				}
+				modelInformation = append(modelInformation, pData)
+				break
+			}
+		}
+	}
+	return modelInformation
+}
+
+func CADMappingModel(modelName string, classNameList []string, modelInformationList DataType.CadMappingModelInformation) {
+	componentNames := []map[string]string{}
+	for index, className := range classNameList {
+		component := map[string]string{}
+		componentName := GetComponentName(modelName, className)
+		modelInformation := modelInformationList.ModelInformation[index]
+		originX := strconv.FormatFloat(modelInformation.OriginDiagram[0], 'f', -1, 64)
+		originY := strconv.FormatFloat(modelInformation.OriginDiagram[1], 'f', -1, 64)
+		origin := strings.Join([]string{originX, originY}, ",")
+		rotation := strconv.FormatFloat(modelInformation.Rotation, 'f', -1, 64)
+		extent := getExtents(className, modelInformation.Xz, modelInformation.Yz)
+		AddComponent(componentName, className, modelName, origin, rotation, extent)
+		if (index+1)%2 == 1 {
+			length := strconv.FormatFloat(modelInformation.GeometryData.Length, 'f', -1, 64)
+			heightAb := strconv.FormatFloat(modelInformation.GeometryData.HeightAb, 'f', -1, 64)
+			diameter := strconv.FormatFloat(modelInformation.GeometryData.Diameter, 'f', -1, 64)
+			omc.OMC.SetElementModifierValue(modelName, componentName+".length", length)
+			omc.OMC.SetElementModifierValue(modelName, componentName+".height_ab", heightAb)
+			omc.OMC.SetElementModifierValue(modelName, componentName+".diameter", diameter)
+
+		} else {
+			DHyd := strconv.FormatFloat(modelInformation.GeometryData.DHyd, 'f', -1, 64)
+			R0 := strconv.FormatFloat(modelInformation.GeometryData.R0, 'f', -1, 64)
+			Delta := strconv.FormatFloat(modelInformation.GeometryData.Delta, 'f', -1, 64)
+			parameters := "geometry(d_hyd=" + DHyd + ", R_0=" + R0 + ", delta=" + Delta + ")"
+			omc.OMC.SetElementModifierValue(modelName, componentName+".geometry", parameters)
+		}
+		component["name"] = componentName
+		component["origin"] = origin
+		componentNames = append(componentNames, component)
+	}
+	if len(classNameList) > 1 {
+		for i := 0; i < len(componentNames)-1; i++ {
+			startName := componentNames[i]["name"] + ".port_b"
+			endName := componentNames[i+1]["name"] + ".port_a"
+			startCoordinate := componentNames[i]["origin"]
+			endCoordinate := componentNames[i+1]["origin"]
+			AddConnection(modelName, startName, endName, "0,127,255", []string{startCoordinate, endCoordinate})
+		}
+	}
+}
+
+func getExtents(className string, Xz, Yz float64) []string {
+	classICList := GetICList(className)
+	coordinateSystem := getCoordinateSystemRecursion(classICList, false)
+	extent1Diagram := strings.Split(coordinateSystem["extent1Diagram"], ",")
+	extent2Diagram := strings.Split(coordinateSystem["extent2Diagram"], ",")
+	initialScale, _ := strconv.ParseFloat(coordinateSystem["initialScale"], 64)
+	extent1 := parseFloatListAndCalculate(extent1Diagram, initialScale, []float64{Xz, Yz})
+	extent2 := parseFloatListAndCalculate(extent2Diagram, initialScale, []float64{Xz, Yz})
+
+	return []string{strings.Join(extent1, ","), strings.Join(extent2, ",")}
+}
+
+func parseFloatListAndCalculate(strList []string, initialScale float64, flip []float64) []string {
+	data := []string{}
+	for index, s := range strList {
+		f, _ := strconv.ParseFloat(s, 64)
+		f = f * initialScale * flip[index]
+		fStr := strconv.FormatFloat(f, 'f', -1, 64)
+		data = append(data, fStr)
+	}
+	return data
 }
 
 func parseXML(path string, obj any) error {
