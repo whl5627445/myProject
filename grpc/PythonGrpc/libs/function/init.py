@@ -64,7 +64,7 @@ def initOmTask():
         log.info("(OMC)未完成的导出数据源记录：" + str([k.id for k in record_list]))
         for i in record_list:
             yssim_model = session.query(YssimModels).filter(
-                YssimModels.userspace_id.in_([i.userspace_id, '0']),
+                YssimModels.userspace_id.in_([i.user_space_id, '0']),
                 YssimModels.id == i.package_id,
                 YssimModels.deleted_at.is_(None)
             ).first()
