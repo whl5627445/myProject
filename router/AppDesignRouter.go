@@ -42,7 +42,7 @@ func AppDesignRouter(g *gin.Engine) {
 		Models.POST("/page/components/create", API.CreatePageComponentView)
 		Models.POST("/page/components/edit", API.EditPageComponentView)
 		Models.POST("/page/components/config/edit", API.ConfigEditPageComponentView)
-		Models.POST("/page/components/data/edit", API.DataEditPageComponentView)
+		Models.POST("/page/components/data/edit", API.EditPageComponentDataView)
 		Models.POST("/page/components/delete", API.DeletePageComponentView)
 
 		Models.GET("/page/components/input-output/get", API.GetPageComponentInputOutputView)

@@ -1,17 +1,10 @@
-package API
+package DataType
 
 import (
 	"gorm.io/datatypes"
 )
 
-type responseData struct {
-	Data   any    `json:"data"`
-	Msg    string `json:"msg"`
-	Status int    `json:"status"` // 正常是0，系统级错误是1， 用戶错误是2
-	Err    string `json:"err"`
-}
-
-type setSimulationOptionsData struct {
+type SetSimulationOptionsData struct {
 	PackageId         string `json:"package_id" binding:"required"`
 	ModelName         string `json:"model_name" binding:"required"`
 	StartTime         string `json:"startTime" binding:"required"`
@@ -23,7 +16,7 @@ type setSimulationOptionsData struct {
 	SimulateType      string `json:"simulate_type" binding:"required"`
 }
 
-type modelSimulateData struct {
+type ModelSimulateData struct {
 	PackageId         string `json:"package_id" binding:"required"`
 	ModelName         string `json:"model_name" binding:"required"`
 	SimulateType      string `json:"simulate_type" binding:"required"`
@@ -36,21 +29,21 @@ type modelSimulateData struct {
 	ExperimentId      string `json:"experiment_id" binding:""`
 }
 
-type modelSimulateResultData struct {
+type ModelSimulateResultData struct {
 	RecordId []string `json:"id" binding:"required"`
 	Variable string   `json:"variable" binding:"required"`
 	S1       string   `json:"s1" binding:""`
 	S2       string   `json:"s2" binding:""`
 }
 
-type modelSimulateResultSingularData struct {
+type ModelSimulateResultSingularData struct {
 	RecordId string `json:"id" binding:"required"`
 	Variable string `json:"variable" binding:"required"`
 	S1       string `json:"s1" binding:""`
 	S2       string `json:"s2" binding:""`
 }
 
-type experimentCreateData struct {
+type ExperimentCreateData struct {
 	PackageId       string            `json:"package_id" binding:"required"`
 	ModelName       string            `json:"model_name" binding:"required"`
 	ExperimentName  string            `json:"experiment_name" binding:"required"`
@@ -58,11 +51,11 @@ type experimentCreateData struct {
 	ModelVarData    datatypes.JSON    `json:"model_var_data" binding:""`
 }
 
-type experimentDeleteData struct {
+type ExperimentDeleteData struct {
 	ExperimentId string `json:"experiment_id" binding:"required"`
 }
 
-type experimentEditData struct {
+type ExperimentEditData struct {
 	PackageId       string            `json:"package_id" binding:"required"`
 	ModelName       string            `json:"model_name" binding:"required"`
 	ExperimentId    string            `json:"experiment_id" binding:"required"`
@@ -71,12 +64,7 @@ type experimentEditData struct {
 	ModelVarData    datatypes.JSON    `json:"model_var_data" binding:""`
 }
 
-type modelCodeSaveData struct {
-	PackageId string `json:"package_id" binding:"required"`
-	// PackageName string `json:"package_name" binding:"required"`
-}
-
-type snapshotCreatData struct {
+type SnapshotCreatData struct {
 	SnapshotName      string         `json:"snapshot_name" binding:"required"`
 	ModelName         string         `json:"model_name" binding:"required"`
 	ComponentName     string         `json:"component_name" binding:""`
@@ -88,12 +76,12 @@ type snapshotCreatData struct {
 	SimulateResultObj datatypes.JSON `json:"simulate_result_obj" binding:""`
 }
 
-type snapshotDeleteData struct {
+type SnapshotDeleteData struct {
 	SnapshotId string `json:"snapshot_id" binding:"required"`
 }
 
-// snapshotEditData的字段数和名称必须和数据库模型YssimSnapshots一致
-type snapshotEditData struct {
+// SnapshotEditData 的字段数和名称必须和数据库模型YssimSnapshots一致
+type SnapshotEditData struct {
 	ID                string         `json:"snapshot_id"  binding:"required"`
 	SpaceId           string         `json:"space_id"  binding:""`
 	SnapshotName      string         `json:"snapshot_name" binding:"required"`
@@ -108,7 +96,7 @@ type snapshotEditData struct {
 	ModelVarData      datatypes.JSON `json:"model_var_data" binding:""`
 }
 
-type recordRenameData struct {
+type RecordRenameData struct {
 	RecordId       string `json:"record_id" binding:"required"`
 	NewAnotherName string `json:"new_another_name" binding:"required"`
 }

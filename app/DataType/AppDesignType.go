@@ -1,13 +1,6 @@
-package API
+package DataType
 
 import "gorm.io/datatypes"
-
-type responseData struct {
-	Data   any    `json:"data"`
-	Msg    string `json:"msg"`
-	Status int    `json:"status"` // 正常是0，系统级错误是1， 用戶错误是2
-	Err    string `json:"err"`
-}
 
 type AppMultipleSimulateData struct {
 	AppPageId                 string             `json:"app_page_id" binding:"required"`
@@ -110,7 +103,7 @@ type CreatePageComponentData struct {
 	Interval           float64        `json:"interval" binding:""`
 }
 
-type EditPageComponentData struct {
+type EditPageComponent struct {
 	Id                 string         `json:"id" binding:"required"`
 	SpaceId            string         `json:"space_id" binding:"required"`
 	PageId             string         `json:"page_id" binding:"required"`
@@ -164,7 +157,7 @@ type ConfigEditPageComponentData struct {
 	IsGroup            bool           `json:"is_group,omitempty" binding:""`
 }
 
-type DataEditPageComponentData struct {
+type EditPageComponentData struct {
 	Id        string         `json:"id" binding:"required"`
 	SpaceId   string         `json:"space_id" binding:"required"`
 	PageId    string         `json:"page_id" binding:"required"`

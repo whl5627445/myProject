@@ -1,4 +1,4 @@
-package API
+package file
 
 import (
 	"encoding/base64"
@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 	"yssim-go/app/DataBaseModel"
+	"yssim-go/app/DataType"
 	"yssim-go/app/service"
 	"yssim-go/config"
 
@@ -25,7 +26,7 @@ func UploadModelPackageView(c *gin.Context) {
 	/*
 		# 上传模型包文件，支持.mo与rar、zip两种压缩格式
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	userName := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
 
@@ -113,8 +114,8 @@ func UpdateModelPackageView(c *gin.Context) {
 		## package_name: 要更新内容的模型或包名，必须是全名
 		## package_id: 包的id
 	*/
-	var res responseData
-	var item updateModelPackageData
+	var res DataType.ResponseData
+	var item DataType.UpdateModelPackageData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "not found")
@@ -175,8 +176,8 @@ func CreateModelPackageView(c *gin.Context) {
 		##     "state": False 状态
 		##     }
 	*/
-	var res responseData
-	var item createModelPackageData
+	var res DataType.ResponseData
+	var item DataType.CreateModelPackageData
 	err := c.BindJSON(&item)
 	if err != nil {
 		log.Println(err)
@@ -274,7 +275,7 @@ func UploadModelIconView(c *gin.Context) {
 		## model_name: 模型名称
 		## package_id: 包id
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	username := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
 	modelName := c.PostForm("model_name")
@@ -323,7 +324,7 @@ func GetPackageFileListView(c *gin.Context) {
 	   # 用户获取mo文件信息接口， 可以进行下载
 	   ## return: 包id， 包名， 上传时间， 修改时间
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	username := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
 	var packageRecord []map[string]any
@@ -349,9 +350,9 @@ func GetPackageFileView(c *gin.Context) {
 	/*
 	   # 用户mo文件下载
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	username := c.GetHeader("username")
-	var item packageFileData
+	var item DataType.PackageFileData
 	err := c.BindJSON(&item)
 	if err != nil {
 		log.Println(err)
@@ -375,10 +376,10 @@ func GetResultFileView(c *gin.Context) {
 	/*
 	   # 用户仿真结果文件下载
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	username := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
-	var item resultFileData
+	var item DataType.ResultFileData
 	err := c.BindJSON(&item)
 	if err != nil {
 		log.Println(err)
@@ -402,10 +403,10 @@ func GetFilterResultFileView(c *gin.Context) {
 	/*
 	   # 用户筛选仿真结果文件下载
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	username := c.GetHeader("username")
 	//userSpaceId := c.GetHeader("space_id")
-	var items []filterResultFileData
+	var items []DataType.FilterResultFileData
 	err := c.BindJSON(&items)
 	if err != nil {
 		log.Println(err)
@@ -466,8 +467,8 @@ func FmuExportModelView(c *gin.Context) {
 	   ## fmu_par： fmu导出的参数
 	   ## download_local： 是否下载到本地
 	*/
-	var res responseData
-	var item fmuExportData
+	var res DataType.ResponseData
+	var item DataType.FmuExportData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err)
@@ -510,8 +511,8 @@ func ModelCodeSaveView(c *gin.Context) {
 	   ## package_id: 包的id
 	   ## package_name： 包的名称
 	*/
-	var res responseData
-	var item modelCodeSaveData
+	var res DataType.ResponseData
+	var item DataType.ModelCodeSaveData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
@@ -542,7 +543,7 @@ func UploadModelVarFileView(c *gin.Context) {
 		## model_name: 模型名称
 		## package_id: 包id
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	userName := c.GetHeader("username")
 	packageId := c.PostForm("package_id")
 	userSpaceId := c.GetHeader("space_id")
@@ -580,7 +581,7 @@ func GetPackageResourcesList(c *gin.Context) {
 		## parent: 需要查询的节点父级路径
 		## path: 被查询节点
 	*/
-	var item packageResourcesData
+	var item DataType.PackageResourcesData
 	err := c.BindJSON(&item)
 	if err != nil {
 		log.Println(err)
@@ -609,7 +610,7 @@ func GetPackageResourcesList(c *gin.Context) {
 		}
 		d["path"] = basePath
 	}
-	var res responseData
+	var res DataType.ResponseData
 	res.Data = data
 	c.JSON(http.StatusOK, res)
 }
@@ -621,7 +622,7 @@ func UploadResourcesFileView(c *gin.Context) {
 		## model_name: 模型名称
 		## parent: 保存文件的父节点
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	userName := c.GetHeader("username")
 	packageId := c.PostForm("package_id")
 	parent := c.PostForm("parent")
@@ -678,10 +679,10 @@ func CreateResourcesDirView(c *gin.Context) {
 		## package_id: 包id
 		## parent: 创建文件夹的父节点
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	userName := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
-	var item packageResourcesData
+	var item DataType.PackageResourcesData
 	err := c.BindJSON(&item)
 	if err != nil {
 		log.Println(err)
@@ -717,10 +718,10 @@ func DeleteResourcesDirAndFileView(c *gin.Context) {
 		# 静态资源文件夹删除子级文件夹与文件接口
 		## package_id: 包id
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	userName := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
-	var item packageResourcesData
+	var item DataType.PackageResourcesData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "not found")
@@ -748,10 +749,10 @@ func DownloadResourcesFileView(c *gin.Context) {
 		# 静态资源文件的下载
 		## package_id: 包id
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	userName := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
-	var item packageResourcesData
+	var item DataType.PackageResourcesData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "not found")
@@ -785,10 +786,10 @@ func ResourcesImagesPathGetView(c *gin.Context) {
 		## package_id: 包id
 		## keyWord: 筛选关键字
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	userName := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
-	var item resourcesImagesPathData
+	var item DataType.ResourcesImagesPathData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "not found")
@@ -829,10 +830,10 @@ func ModelIconSetView(c *gin.Context) {
 		## model_name: 模型名称
 		## package_id: 包id
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	username := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
-	var item setResourcesImagesIconData
+	var item DataType.SetResourcesImagesIconData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "not found")

@@ -1,4 +1,4 @@
-package API
+package simulate
 
 import (
 	"fmt"
@@ -10,6 +10,7 @@ import (
 	"yssim-go/library/timeConvert"
 
 	"yssim-go/app/DataBaseModel"
+	"yssim-go/app/DataType"
 	"yssim-go/app/service"
 	"yssim-go/config"
 
@@ -25,7 +26,7 @@ func GetSimulationOptionsView(c *gin.Context) {
 		## model_name: 模型名称，
 	*/
 	modelName := c.Query("model_name")
-	var res responseData
+	var res DataType.ResponseData
 	result := service.GetSimulationOptions(modelName)
 	res.Data = result
 	c.JSON(http.StatusOK, res)
@@ -42,13 +43,13 @@ func SetSimulationOptionsView(c *gin.Context) {
 		## numberOfIntervals：间隔数，
 		## interval：间隔时间，秒计数
 	*/
-	var item setSimulationOptionsData
+	var item DataType.SetSimulationOptionsData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
-	var res responseData
+	var res DataType.ResponseData
 	result := service.SetSimulationOptions(item.ModelName, item.StartTime, item.StopTime, item.Interval, item.SimulationFlags, item.SimulateType)
 	if !result {
 		res.Err = "设置失败，请稍后再试"
@@ -74,7 +75,7 @@ func GetModelStateView(c *gin.Context) {
 	modelName := c.Query("model_name")
 	var modelRecord DataBaseModel.YssimSimulateRecord
 	DB.Where("package_id = ? AND username = ? AND simulate_model_name = ? AND simulate_start = ? AND userspace_id = ?", packageId, userName, modelName, true, userSpaceId).First(&modelRecord)
-	var res responseData
+	var res DataType.ResponseData
 	if modelRecord.ID != "" {
 		res.Data = 2
 	} else {
@@ -96,7 +97,7 @@ func ModelSimulateView(c *gin.Context) {
 	*/
 	userName := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
-	var item modelSimulateData
+	var item DataType.ModelSimulateData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
@@ -120,7 +121,7 @@ func ModelSimulateView(c *gin.Context) {
 	if err != nil {
 		fmt.Println("调用(GrpcSimulation)出错：", err)
 	}
-	var res responseData
+	var res DataType.ResponseData
 	res.Msg = "仿真任务正在准备，请等待仿真完成"
 	res.Data = map[string]string{"id": replyId}
 	c.JSON(http.StatusOK, res)
@@ -138,14 +139,14 @@ func SimulateResultGraphicsView(c *gin.Context) {
 
 	userName := c.GetHeader("username")
 
-	var item modelSimulateResultData
+	var item DataType.ModelSimulateResultData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
 
-	var res responseData
+	var res DataType.ResponseData
 	var resData []map[string]any
 
 	// 判断记录是否存在，有一条不存在就返回"not found"
@@ -228,14 +229,14 @@ func SimulateResultSingularView(c *gin.Context) {
 	*/
 
 	username := c.GetHeader("username")
-	var items []modelSimulateResultSingularData
+	var items []DataType.ModelSimulateResultSingularData
 	err := c.BindJSON(&items)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
 
-	var res responseData
+	var res DataType.ResponseData
 	// 遍历获取所有recordId
 	var recordIdList []string
 	for i := 0; i < len(items); i++ {
@@ -359,7 +360,7 @@ func SimulateResultListView(c *gin.Context) {
 	resData["resultList"] = dataList
 	resData["pageCount"] = pageCount
 	resData["totle"] = totle
-	var res responseData
+	var res DataType.ResponseData
 	res.Data = resData
 	c.JSON(http.StatusOK, res)
 
@@ -388,7 +389,7 @@ func SimulateResultDetailsView(c *gin.Context) {
 	data["number_intervals"] = experimentRecord.NumberOfIntervals // 间隔
 	data["model_var_data"] = experimentRecord.ModelVarData        // 模型组件相关参数属性
 
-	var res responseData
+	var res DataType.ResponseData
 	res.Data = data
 
 	c.JSON(http.StatusOK, res)
@@ -413,7 +414,7 @@ func SimulateResultTreeView(c *gin.Context) {
 		return
 	}
 
-	var res responseData
+	var res DataType.ResponseData
 	if record.SimulateModelResultPath != "" && record.SimulateStart == false {
 		if record.SimulateType == "FmPy" {
 			//FmPy的结果树用的xml是用omc的DumpXMLDAE方法生成的xml，入参record.SimulateModelName用于输出指定模型的xml文件
@@ -445,7 +446,7 @@ func SimulateResultDeleteView(c *gin.Context) {
 	recordId := c.Query("record_id")
 	var resultRecord DataBaseModel.YssimSimulateRecord
 	DB.Where("id = ? AND username = ? AND userspace_id = ? ", recordId, username, userSpaceId).First(&resultRecord)
-	var res responseData
+	var res DataType.ResponseData
 
 	resultRecord.SimulateStatus = "5"
 	config.DB.Save(&resultRecord)
@@ -462,14 +463,14 @@ func SimulateResultRenameView(c *gin.Context) {
 	*/
 	//username := c.GetHeader("username")
 	//userSpaceId := c.GetHeader("space_id")
-	var item recordRenameData
+	var item DataType.RecordRenameData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
 
-	var res responseData
+	var res DataType.ResponseData
 	err = DB.Model(&DataBaseModel.YssimSimulateRecord{}).Where("id = ?", item.RecordId).Update("another_name", item.NewAnotherName).Error
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "修改失败")
@@ -488,8 +489,8 @@ func ExperimentCreateView(c *gin.Context) {
 	   ## simulate_var_data: 模型仿真选项数据
 	   ## experiment_name: 实验名称
 	*/
-	var res responseData
-	var item experimentCreateData
+	var res DataType.ResponseData
+	var item DataType.ExperimentCreateData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
@@ -547,8 +548,8 @@ func ExperimentDeleteView(c *gin.Context) {
 	   ## id: 实验id，此接口其他值无须传入
 	*/
 
-	var res responseData
-	var item experimentDeleteData
+	var res DataType.ResponseData
+	var item DataType.ExperimentDeleteData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
@@ -573,8 +574,8 @@ func ExperimentEditView(c *gin.Context) {
 	   ## experiment_name: 实验名称
 	*/
 
-	var res responseData
-	var item experimentEditData
+	var res DataType.ResponseData
+	var item DataType.ExperimentEditData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
@@ -640,7 +641,7 @@ func ExperimentGetView(c *gin.Context) {
 		}
 		dataList = append(dataList, data)
 	}
-	var res responseData
+	var res DataType.ResponseData
 	res.Data = dataList
 	c.JSON(http.StatusOK, res)
 }
@@ -654,7 +655,7 @@ func ExperimentParametersView(c *gin.Context) {
 	var record DataBaseModel.YssimExperimentRecord
 	DB.Where("id =?", experimentId).First(&record)
 
-	var res responseData
+	var res DataType.ResponseData
 	res.Data = record.ModelVarData
 	c.JSON(http.StatusOK, res)
 }
@@ -662,8 +663,8 @@ func CreateSnapshotView(c *gin.Context) {
 	/*
 		#xqd#创建视图(快照)接口
 	*/
-	var res responseData
-	var item snapshotCreatData
+	var res DataType.ResponseData
+	var item DataType.SnapshotCreatData
 	var snapshotRecord DataBaseModel.YssimSnapshots
 	err := c.BindJSON(&item)
 	if err != nil {
@@ -714,8 +715,8 @@ func DeleteSnapshotView(c *gin.Context) {
 	/*
 	   #xqd# 删除视图接口
 	*/
-	var res responseData
-	var item snapshotDeleteData
+	var res DataType.ResponseData
+	var item DataType.SnapshotDeleteData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
@@ -737,8 +738,8 @@ func EditSnapshotView(c *gin.Context) {
 	*/
 	username := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
-	var res responseData
-	var item snapshotEditData
+	var res DataType.ResponseData
+	var item DataType.SnapshotEditData
 
 	err := c.BindJSON(&item)
 	if err != nil {
@@ -796,7 +797,7 @@ func SnapshotGetListView(c *gin.Context) {
 		dataList = append(dataList, data)
 	}
 
-	var res responseData
+	var res DataType.ResponseData
 	res.Data = dataList
 	c.JSON(http.StatusOK, res)
 }

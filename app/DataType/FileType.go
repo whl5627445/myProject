@@ -1,19 +1,12 @@
-package API
+package DataType
 
-type responseData struct {
-	Data   any    `json:"data"`
-	Msg    string `json:"msg"`
-	Status int    `json:"status"` // 正常是0，系统级错误是1， 用戶错误是2
-	Err    string `json:"err"`
-}
-
-type updateModelPackageData struct {
+type UpdateModelPackageData struct {
 	PackageId string `json:"package_id" binding:"required"`
 	ModelName string `json:"model_name" binding:"required"`
 	ModelStr  string `json:"model_str" binding:"required"`
 }
 
-type createModelPackageDataVars struct {
+type CreateModelPackageDataVars struct {
 	Encapsulated bool   `json:"encapsulated" binding:""`
 	Expand       string `json:"expand" binding:""`
 	InsertTo     string `json:"insert_to" binding:""`
@@ -21,20 +14,20 @@ type createModelPackageDataVars struct {
 	State        bool   `json:"state" binding:""`
 }
 
-type createModelPackageData struct {
+type CreateModelPackageData struct {
 	PackageId string                     `json:"package_id" binding:""`
 	Name      string                     `json:"package_name" binding:"required"`
 	Comment   string                     `json:"comment" binding:""`
 	StrType   string                     `json:"str_type" binding:"required"`
-	Vars      createModelPackageDataVars `json:"vars" binding:"required"`
+	Vars      CreateModelPackageDataVars `json:"vars" binding:"required"`
 }
 
-type filterResultFileData struct {
+type FilterResultFileData struct {
 	RecordId string   `json:"record_id" binding:"required"`
 	VarList  []string `json:"var_list" binding:"required"`
 }
 
-type fmuExportData struct {
+type FmuExportData struct {
 	PackageId     string         `json:"package_id" binding:"required"`
 	PackageName   string         `json:"package_name" binding:"required"`
 	ModelName     string         `json:"model_name" binding:"required"`
@@ -43,35 +36,35 @@ type fmuExportData struct {
 	DownloadLocal bool           `json:"download_local" binding:"required"`
 }
 
-type packageFileData struct {
+type PackageFileData struct {
 	PackageId string `json:"package_id" binding:"required"`
 }
 
-type resultFileData struct {
+type ResultFileData struct {
 	RecordId string `json:"record_id" binding:"required"`
 }
 
-type modelCodeSaveData struct {
+type ModelCodeSaveData struct {
 	PackageId string `json:"package_id" binding:"required"`
 	//ModelName string `json:"model_name" binding:"required"`
 }
 
-type packageResourcesData struct {
+type PackageResourcesData struct {
 	PackageId string `json:"package_id" binding:"required"`
 	Parent    string `json:"parent" binding:""`
 	Path      string `json:"path" binding:""`
 }
 
-type resourcesImagesPathData struct {
+type ResourcesImagesPathData struct {
 	PackageId string `json:"package_id" binding:"required"`
 	KeyWord   string `json:"key_word" binding:""`
 }
 
-type getResourcesImagesData struct {
+type GetResourcesImagesData struct {
 	Path string `json:"path" binding:"required"`
 }
 
-type setResourcesImagesIconData struct {
+type SetResourcesImagesIconData struct {
 	PackageId string `json:"package_id" binding:"required"`
 	ModelName string `json:"model_name" binding:"required"`
 	Path      string `json:"path" binding:"required"`

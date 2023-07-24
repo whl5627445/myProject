@@ -1,4 +1,4 @@
-package API
+package appDesign
 
 import (
 	"log"
@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 	"yssim-go/app/DataBaseModel"
+	"yssim-go/app/DataType"
 	"yssim-go/app/service"
 	"yssim-go/config"
 	"yssim-go/library/fileOperation"
@@ -25,10 +26,10 @@ func MultipleSimulateView(c *gin.Context) {
 		# 多轮仿真接口
 		开发人： 徐庆达
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	//userName := c.GetHeader("username")
 	//userSpaceId := c.GetHeader("space_id")
-	var item AppMultipleSimulateData
+	var item DataType.AppMultipleSimulateData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
@@ -58,7 +59,7 @@ func MultipleSimulateKillView(c *gin.Context) {
 		   # 取消多轮仿真任务
 			开发人： 宋义
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	pageId := c.Query("app_page_id")
 
 	replyVar, err := service.GrpcSimulationProcessOperation(pageId, "kill", "")
@@ -76,8 +77,8 @@ func AppReleaseView(c *gin.Context) {
 		# 发布接口
 		开发人： 徐庆达
 	*/
-	var res responseData
-	var item ReleaseData
+	var res DataType.ResponseData
+	var item DataType.ReleaseData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
@@ -222,8 +223,8 @@ func GetAppSimulateResultView(c *gin.Context) {
 		# 读取AppPage仿真结果
 		开发人： 徐庆达
 	*/
-	var res responseData
-	var item GetSimResData
+	var res DataType.ResponseData
+	var item DataType.GetSimResData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
@@ -245,7 +246,7 @@ func GetModelMulSimulateDetailsView(c *gin.Context) {
 	/*
 		# 读取单次仿真输出的详细信息
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	userName := c.GetHeader("username")
 	pageId := c.Query("page_id")
 	var page DataBaseModel.AppPage
@@ -264,7 +265,7 @@ func GetModelStateView(c *gin.Context) {
 	appPageId := c.Query("app_page_id")
 	var appPageRecord DataBaseModel.AppPage
 	DB.Where("id = ?", appPageId).First(&appPageRecord)
-	var res responseData
+	var res DataType.ResponseData
 	resData := map[string]any{
 		"is_preview": appPageRecord.IsPreview,
 		"is_release": appPageRecord.Release,
@@ -283,7 +284,7 @@ func ModelStateMessageReadView(c *gin.Context) {
 	/*
 	   ## 告知服务器页面仿真或发布状态消息已被读取
 	*/
-	var item ModelStateMessageReadData
+	var item DataType.ModelStateMessageReadData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
@@ -291,7 +292,7 @@ func ModelStateMessageReadView(c *gin.Context) {
 	}
 	var appPageRecord DataBaseModel.AppPage
 	DB.Where("id = ?", item.AppPageId).First(&appPageRecord)
-	var res responseData
+	var res DataType.ResponseData
 	switch {
 	case item.MessageType == "mul_simulate":
 		appPageRecord.MulSimulateMessageRead = true
@@ -307,7 +308,7 @@ func GetDataSourceGroupView(c *gin.Context) {
 		# 获取用户数据源分组
 		开发人： 徐庆达
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	userName := c.GetHeader("username")
 	var group []DataBaseModel.AppDataSource
 	DB.Select("group_name").Where("username = ? AND compile_status = ?", userName, 4).Group("group_name").Find(&group)
@@ -324,7 +325,7 @@ func GetAppSpaceView(c *gin.Context) {
 	/*
 		# 获取用户所有的应用空间条目
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	userName := c.GetHeader("username")
 	//userSpaceId := c.GetHeader("space_id")
 	keyWords := c.Query("keywords")
@@ -405,9 +406,9 @@ func CreateAppSpaceView(c *gin.Context) {
 	/*
 		# 创建应用空间条目
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	userName := c.GetHeader("username")
-	var item CreateAppSpaceData
+	var item DataType.CreateAppSpaceData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
@@ -455,9 +456,9 @@ func EditAppSpaceView(c *gin.Context) {
 	/*
 		# 修改app应用空间条目
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	userName := c.GetHeader("username")
-	var item EditAppSpaceData
+	var item DataType.EditAppSpaceData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
@@ -503,9 +504,9 @@ func AppSpaceCollectView(c *gin.Context) {
 	/*
 		# 收藏app应用空间条目
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	userName := c.GetHeader("username")
-	var item AppSpaceCollectData
+	var item DataType.AppSpaceCollectData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
@@ -532,9 +533,9 @@ func DeleteAppSpaceView(c *gin.Context) {
 	/*
 		# 删除app应用空间条目
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	userName := c.GetHeader("username")
-	var item DeleteAppSpaceData
+	var item DataType.DeleteAppSpaceData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
@@ -558,9 +559,9 @@ func CreateAppPageView(c *gin.Context) {
 	/*
 		# 创建app应用空间中的页面
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	userName := c.GetHeader("username")
-	var item CreateAppPageData
+	var item DataType.CreateAppPageData
 	err := c.BindJSON(&item)
 	if err != nil {
 		log.Println("创建页面时验证数据出错：", err)
@@ -619,7 +620,7 @@ func GetAppPageView(c *gin.Context) {
 		# 查询app应用空间中的页面
 	*/
 
-	var res responseData
+	var res DataType.ResponseData
 	userName := c.GetHeader("username")
 	release := c.Query("release")
 	spaceId := c.Query("space_id")
@@ -675,7 +676,7 @@ func GetAppPageSpaceView(c *gin.Context) {
 		# 查询app应用空间中的页面
 	*/
 
-	var res responseData
+	var res DataType.ResponseData
 	userName := c.GetHeader("username")
 	spaceId := c.Query("space_id")
 	path := c.Query("path")
@@ -689,9 +690,9 @@ func EditAppPageView(c *gin.Context) {
 	/*
 		# 修改app应用空间中的页面、web设计器页面
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	userName := c.GetHeader("username")
-	var item EditAppPageData
+	var item DataType.EditAppPageData
 	err := c.BindJSON(&item)
 	if err != nil {
 		log.Println("编辑app空间页面时出现数据错误：", err)
@@ -745,9 +746,9 @@ func DeleteAppPageView(c *gin.Context) {
 	/*
 		# 删除app应用空间中的页面
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	userName := c.GetHeader("username")
-	var item DeleteAppPageData
+	var item DataType.DeleteAppPageData
 	err := c.BindJSON(&item)
 	if err != nil {
 		log.Println("DeleteAppPageView err", err)
@@ -780,9 +781,9 @@ func EditAppPageDesignView(c *gin.Context) {
 	/*
 		# 更新app设计器基础数据
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	userName := c.GetHeader("username")
-	var item EditAppPageDesignData
+	var item DataType.EditAppPageDesignData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
@@ -816,10 +817,10 @@ func CreatePageComponentView(c *gin.Context) {
 	/*
 		# app应用页面新增组件
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	userName := c.GetHeader("username")
 	//spaceId := c.GetHeader("space_id")
-	var item CreatePageComponentData
+	var item DataType.CreatePageComponentData
 	err := c.BindJSON(&item)
 	if err != nil {
 		log.Println("数据错误：", err)
@@ -882,7 +883,7 @@ func GetPageComponentView(c *gin.Context) {
 	/*
 		# app应用页面组件查询组件
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	userName := c.GetHeader("username")
 	spaceId := c.Query("space_id")
 	pageId := c.Query("page_id")
@@ -939,9 +940,9 @@ func EditPageComponentView(c *gin.Context) {
 	/*
 		# app应用页面编辑组件
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	userName := c.GetHeader("username")
-	var item EditPageComponentData
+	var item DataType.EditPageComponent
 	err := c.BindJSON(&item)
 	if err != nil {
 		log.Println("", err)
@@ -998,11 +999,11 @@ func EditPageComponentView(c *gin.Context) {
 
 func ConfigEditPageComponentView(c *gin.Context) {
 	/*
-		# app应用页面编辑组件
+		# 应用空间页面编辑组件配置接口
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	userName := c.GetHeader("username")
-	var item ConfigEditPageComponentData
+	var item DataType.ConfigEditPageComponentData
 	err := c.BindJSON(&item)
 	if err != nil {
 		log.Println("", err)
@@ -1053,13 +1054,13 @@ func ConfigEditPageComponentView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-func DataEditPageComponentView(c *gin.Context) {
+func EditPageComponentDataView(c *gin.Context) {
 	/*
-		# app应用页面编辑组件
+		# 应用空间页面编辑组件数据接口
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	userName := c.GetHeader("username")
-	var item DataEditPageComponentData
+	var item DataType.EditPageComponentData
 	err := c.BindJSON(&item)
 	if err != nil {
 		log.Println("", err)
@@ -1102,9 +1103,9 @@ func DeletePageComponentView(c *gin.Context) {
 	/*
 		# app应用页面删除组件
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	userName := c.GetHeader("username")
-	var item DeletePageComponentData
+	var item DataType.DeletePageComponentData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
@@ -1138,7 +1139,7 @@ func GetDatasourceView(c *gin.Context) {
 		# 获取数据源相关信息
 		开发人： 徐庆达
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	userName := c.GetHeader("username")
 	groupName := c.Query("group_name")
 	searchName := c.Query("search_name")
@@ -1164,8 +1165,8 @@ func DatasourceDeleteView(c *gin.Context) {
 		开发人： 徐庆达
 	*/
 	userName := c.GetHeader("username")
-	var res responseData
-	var item DeleteDatasourceData
+	var res DataType.ResponseData
+	var item DataType.DeleteDatasourceData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
@@ -1196,14 +1197,14 @@ func DataSourceRenameView(c *gin.Context) {
 		# 重命名数据源
 		开发人： 徐庆达
 	*/
-	var item DataSourceRenameData
+	var item DataType.DataSourceRenameData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
 
-	var res responseData
+	var res DataType.ResponseData
 	err = DB.Model(&DataBaseModel.AppDataSource{}).Where("id = ?", item.DataSourceID).Update("data_source_name", item.NewName).Error
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "修改失败")
@@ -1232,7 +1233,7 @@ func GetDatasourceInputView(c *gin.Context) {
 		return
 	}
 
-	var res responseData
+	var res DataType.ResponseData
 	if record.CompilePath != "" {
 		result := service.AppInputTree(record.CompileType, record.CompilePath+"result_init.xml", parentNode, keyWords)
 		res.Data = result
@@ -1261,7 +1262,7 @@ func GetDatasourceOutputView(c *gin.Context) {
 		return
 	}
 
-	var res responseData
+	var res DataType.ResponseData
 	if record.CompilePath != "" {
 		if record.CompileType == "DM" {
 			//DM生成的fmu解压后的xml文件
@@ -1284,7 +1285,7 @@ func GetPageInputOutputView(c *gin.Context) {
 	/*
 		# 获取app应用页面的数据源输入与输出接口
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	userName := c.GetHeader("username")
 	pageId := c.Query("id")
 	var page DataBaseModel.AppPage
@@ -1307,9 +1308,9 @@ func SetPageInputOutputView(c *gin.Context) {
 	/*
 		# 设置app应用页面的数据源输入与输出接口
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	userName := c.GetHeader("username")
-	var item SetPageInputOutputData
+	var item DataType.SetPageInputOutputData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
@@ -1338,7 +1339,7 @@ func GetPageComponentInputOutputView(c *gin.Context) {
 	/*
 		# app应用页面组件的数据源输入与输出查询接口
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	id := c.Query("id")
 	pageId := c.Query("page_id")
 	spaceId := c.Query("space_id")
@@ -1378,10 +1379,10 @@ func SetPageComponentInputOutputView(c *gin.Context) {
 	/*
 		# app应用页面组件的数据源输入与输出绑定接口
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	var component DataBaseModel.AppPageComponent
 
-	var item SetPageComponentsInputOutputData
+	var item DataType.SetPageComponentsInputOutputData
 	err := c.BindJSON(&item)
 	if err != nil {
 		log.Println(err)
@@ -1416,7 +1417,7 @@ func AppPagePreviewView(c *gin.Context) {
 	/*
 		# 预览页面组件相关接口
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	userName := c.GetHeader("username")
 	spaceId := c.Query("space_id")
 	pageId := c.Query("page_id")
@@ -1471,7 +1472,7 @@ func AppPagePreviewAccessView(c *gin.Context) {
 	/*
 		# 预览的页面数据获取接口
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	//userName := c.GetHeader("username")
 	spaceId := c.Query("space_id")
 	pageId := c.Query("page_id")
@@ -1507,7 +1508,7 @@ func AppPageReleaseAccessView(c *gin.Context) {
 	/*
 		# 访问发布成功的页面数据获取接口
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	//userName := c.GetHeader("username")
 	spaceId := c.Query("space_id")
 	pageId := c.Query("page_id")
@@ -1535,9 +1536,9 @@ func SetComponentBasicInformationView(c *gin.Context) {
 	/*
 		# 设置web应用页面基础组件接口
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	//userName := c.GetHeader("username")
-	var item CreateComponentBasesData
+	var item DataType.CreateComponentBasesData
 	err := c.BindJSON(&item)
 	if err != nil {
 		log.Println("", err)
@@ -1581,7 +1582,7 @@ func GetComponentBasicInformationView(c *gin.Context) {
 	/*
 		# 获取web应用页面基础组件接口
 	*/
-	var res responseData
+	var res DataType.ResponseData
 
 	var component []DataBaseModel.AppComponentBases
 	DB.Find(&component)
@@ -1595,9 +1596,9 @@ func SetPageAlignmentLineView(c *gin.Context) {
 		# 设置web应用页面对齐线
 	*/
 
-	var res responseData
+	var res DataType.ResponseData
 	//userName := c.GetHeader("username")
-	var item SetPageAlignmentLineData
+	var item DataType.SetPageAlignmentLineData
 	err := c.BindJSON(&item)
 	if err != nil {
 		log.Println("", err)
@@ -1616,7 +1617,7 @@ func GetPageAlignmentLineView(c *gin.Context) {
 	/*
 		# 获取web应用页面对齐线
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	pageId := c.Query("page_id")
 
 	var page DataBaseModel.AppPage
@@ -1630,8 +1631,8 @@ func GetAppPowSingleView(c *gin.Context) {
 	/*
 		# 获取电网app单轴数据接口（返回某天24小时所有数据）
 	*/
-	var res responseData
-	var item GetAppPowData
+	var res DataType.ResponseData
+	var item DataType.GetAppPowData
 	err := c.BindJSON(&item)
 	if err != nil {
 		log.Println("", err)
@@ -1648,8 +1649,8 @@ func GetAppPowDoubleView(c *gin.Context) {
 	/*
 		# 获取电网app双轴数据接口（返回某天24小时所有数据）
 	*/
-	var res responseData
-	var item GetAppPowData
+	var res DataType.ResponseData
+	var item DataType.GetAppPowData
 	err := c.BindJSON(&item)
 	if err != nil {
 		log.Println("", err)
@@ -1667,8 +1668,8 @@ func GetAppPowPieChartView(c *gin.Context) {
 	/*
 		# 获取电网app饼图数据接口（只返回某天某时刻数据）
 	*/
-	var res responseData
-	var item GetAppPowData
+	var res DataType.ResponseData
+	var item DataType.GetAppPowData
 	err := c.BindJSON(&item)
 	if err != nil {
 		log.Println("", err)
@@ -1685,7 +1686,7 @@ func GetAppPowLabel(c *gin.Context) {
 	/*
 		# 获取电网app标签接口
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	label := c.Query("label")
 	res.Data = service.GetAppPowLabelData(label)
 	c.JSON(http.StatusOK, res)

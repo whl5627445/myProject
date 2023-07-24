@@ -1,4 +1,4 @@
-package API
+package user
 
 import (
 	"log"
@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 	"yssim-go/app/DataBaseModel"
+	"yssim-go/app/DataType"
 	"yssim-go/app/service"
 	"yssim-go/config"
 	"yssim-go/library/timeConvert"
@@ -17,17 +18,17 @@ import (
 	"github.com/google/uuid"
 )
 
-var DB = config.DB
+var dbUser = config.DB
 
 func GetUserSpaceView(c *gin.Context) {
 	/*
 		# 获取用户所有的用户空间条目
 	*/
 	userName := c.GetHeader("username")
-	var res responseData
+	var res DataType.ResponseData
 	var modelData []map[string]string
 	var userSpace []DataBaseModel.YssimUserSpace
-	_ = DB.Where("username = ?", userName).Find(&userSpace)
+	_ = dbUser.Where("username = ?", userName).Find(&userSpace)
 	for _, space := range userSpace {
 		modelData = append(modelData, map[string]string{"id": space.ID, "name": space.SpaceName})
 	}
@@ -41,13 +42,13 @@ func GetUserSpaceNewView(c *gin.Context) {
 		# 获取用户所有的用户空间条目
 	*/
 
-	var res responseData
+	var res DataType.ResponseData
 	userName := c.GetHeader("username")
 	keyWords := c.Query("keywords")
 	collect := c.Query("collect")
 	var recentSpaceList []DataBaseModel.YssimUserSpace
 	var allSpaceList []DataBaseModel.YssimUserSpace
-	db := DB.Where("username = ?", userName)
+	db := dbUser.Where("username = ?", userName)
 	if keyWords != "" {
 		db.Where("space_name LIKE ?", "%"+keyWords+"%")
 	}
@@ -102,8 +103,8 @@ func CreateUserSpaceView(c *gin.Context) {
 		# 创建用户空间
 	*/
 	userName := c.GetHeader("username")
-	var res responseData
-	var item CreateUserSpaceModel
+	var res DataType.ResponseData
+	var item DataType.CreateUserSpaceModel
 	err := c.BindJSON(&item)
 	if err != nil {
 		return
@@ -116,7 +117,7 @@ func CreateUserSpaceView(c *gin.Context) {
 		return
 	}
 	var space DataBaseModel.YssimUserSpace
-	DB.Where("username = ? AND space_name = ?", userName, item.SpaceName).First(&space)
+	dbUser.Where("username = ? AND space_name = ?", userName, item.SpaceName).First(&space)
 	if space.ID != "" {
 		res.Err = "工作空间名称已存在"
 		res.Status = 2
@@ -131,7 +132,7 @@ func CreateUserSpaceView(c *gin.Context) {
 	space.Icon = item.Icon
 	space.IconColor = item.IconColor
 	space.Collect = false
-	err = DB.Create(&space).Error
+	err = dbUser.Create(&space).Error
 	res.Data = map[string]string{
 		"id":   space.ID,
 		"name": space.SpaceName,
@@ -146,10 +147,10 @@ func CreateUserSpaceView(c *gin.Context) {
 			UserSpaceId: space.ID,
 			Default:     true,
 		}
-		err = DB.Create(&defaultWorkSpacePackage).Error
+		err = dbUser.Create(&defaultWorkSpacePackage).Error
 	}
 	if err != nil || !ok {
-		DB.Delete(&space)
+		dbUser.Delete(&space)
 		res.Err = "创建失败，请稍后再试"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
@@ -164,8 +165,8 @@ func EditUserSpaceView(c *gin.Context) {
 		# 编辑用户空间
 	*/
 	userName := c.GetHeader("username")
-	var res responseData
-	var item EditUserSpaceModel
+	var res DataType.ResponseData
+	var item DataType.EditUserSpaceModel
 	err := c.BindJSON(&item)
 	if err != nil {
 
@@ -179,14 +180,14 @@ func EditUserSpaceView(c *gin.Context) {
 		return
 	}
 	var space DataBaseModel.YssimUserSpace
-	DB.Where("space_name = ? AND username = ? AND id <> ?", item.SpaceName, userName, item.SpaceId).First(&space)
+	dbUser.Where("space_name = ? AND username = ? AND id <> ?", item.SpaceName, userName, item.SpaceId).First(&space)
 	if space.ID != "" {
 		res.Err = "工作空间名称已存在"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	err = DB.Model(&space).Where("username = ? AND id = ?", userName, item.SpaceId).Updates(item).Error
+	err = dbUser.Model(&space).Where("username = ? AND id = ?", userName, item.SpaceId).Updates(item).Error
 	if err != nil {
 		log.Println("建模空间更新数据库失败，错误： ", err)
 		res.Err = "编辑失败，请重试"
@@ -203,14 +204,14 @@ func CollectUserSpaceView(c *gin.Context) {
 		# 收藏用户空间
 	*/
 	userName := c.GetHeader("username")
-	var res responseData
-	var item CollectUserSpaceData
+	var res DataType.ResponseData
+	var item DataType.CollectUserSpaceData
 	err := c.BindJSON(&item)
 	if err != nil {
 		return
 	}
 	var space DataBaseModel.YssimUserSpace
-	err = DB.Model(&space).Where("id IN ? AND username = ? ", item.SpaceId, userName).Update("collect", item.Collect).Error
+	err = dbUser.Model(&space).Where("id IN ? AND username = ? ", item.SpaceId, userName).Update("collect", item.Collect).Error
 	if err != nil {
 		log.Println("建模空间更新数据库失败，错误： ", err)
 		res.Err = "编辑失败，请重试"
@@ -230,8 +231,8 @@ func DeleteUserSpaceView(c *gin.Context) {
 		# 删除用户空间
 	*/
 	userName := c.GetHeader("username")
-	var res responseData
-	var item DeleteUserSpaceModel
+	var res DataType.ResponseData
+	var item DataType.DeleteUserSpaceModel
 	err := c.BindJSON(&item)
 	if err != nil {
 		return
@@ -243,7 +244,7 @@ func DeleteUserSpaceView(c *gin.Context) {
 	//		service.Clear()
 	//	}
 	//}
-	DB.Model(&space).Where("id IN ? AND username = ?", item.SpaceId, userName).Delete(&space)
+	dbUser.Model(&space).Where("id IN ? AND username = ?", item.SpaceId, userName).Delete(&space)
 	res.Msg = "删除成功"
 	c.JSON(http.StatusOK, res)
 
@@ -254,10 +255,10 @@ func GetUserRecentlyOpenedView(c *gin.Context) {
 		#获取用户空间的最近打开
 	*/
 	userName := c.GetHeader("username")
-	var res responseData
+	var res DataType.ResponseData
 	var modelData []map[string]string
 	var userSpace []DataBaseModel.YssimUserSpace
-	DB.Where("username = ?", userName).Order("last_login_time desc").Find(&userSpace)
+	dbUser.Where("username = ?", userName).Order("last_login_time desc").Find(&userSpace)
 	for _, space := range userSpace {
 		modelData = append(modelData, map[string]string{"id": space.ID, "name": space.SpaceName})
 	}
@@ -269,7 +270,7 @@ func ExamplesView(c *gin.Context) {
 	/*
 		# 获取示例
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	//res.Data = config.EXAMPLES
 	c.JSON(http.StatusOK, res)
 }
@@ -278,10 +279,10 @@ func GetUserSettingsView(c *gin.Context) {
 	/*
 		# 获取用户配置
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	var setting DataBaseModel.YssimUserSettings
 	username := c.GetHeader("username")
-	DB.Where("username =? ", username).First(&setting)
+	dbUser.Where("username =? ", username).First(&setting)
 	oneData := map[string]any{
 		"grid_display": setting.GridDisplay,
 	}
@@ -293,9 +294,9 @@ func SetUserSettingsView(c *gin.Context) {
 	/*
 		# 设置用户配置
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	username := c.GetHeader("username")
-	var setting userSettingsModel
+	var setting DataType.UserSettingsModel
 	var settingRecord DataBaseModel.YssimUserSettings
 	err := c.BindJSON(&setting)
 	if err != nil {
@@ -303,11 +304,11 @@ func SetUserSettingsView(c *gin.Context) {
 		return
 	}
 	res.Data = true
-	DB.Where("username =? ", username).First(&settingRecord)
+	dbUser.Where("username =? ", username).First(&settingRecord)
 	if settingRecord.ID != "" { //存在则修改
 		res.Msg = "修改成功。"
 		settingRecord.GridDisplay = setting.GridDisplay
-		err := DB.Where("username =? ", username).Save(&settingRecord).Error
+		err := dbUser.Where("username =? ", username).Save(&settingRecord).Error
 		if err != nil {
 			log.Println("err:", err)
 			res.Data = false
@@ -322,7 +323,7 @@ func SetUserSettingsView(c *gin.Context) {
 			GridDisplay: setting.GridDisplay,
 		}
 		res.Msg = "创建成功。"
-		err := DB.Create(&settingNew).Error
+		err := dbUser.Create(&settingNew).Error
 		if err != nil {
 			log.Println("err", err)
 			res.Data = false
@@ -339,7 +340,7 @@ func BackgroundUploadView(c *gin.Context) {
 		# 上传背景图接口
 		## path: 文件相对路径
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	userName := c.GetHeader("username")
 	varFile, err := c.FormFile("file")
 	if !strings.HasSuffix(varFile.Filename, ".jpg") && !strings.HasSuffix(varFile.Filename, ".jpeg") && !strings.HasSuffix(varFile.Filename, ".png") &&
@@ -380,7 +381,7 @@ func StartOMCView(c *gin.Context) {
 	/*
 		# 启动用户的omc实例并连接
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	result := service.StartOMC()
 	if result {
 		res.Msg = "服务启动成功"
@@ -395,7 +396,7 @@ func StopOMCView(c *gin.Context) {
 	/*
 		# 暂停用户的omc实例并连接
 	*/
-	var res responseData
+	var res DataType.ResponseData
 	service.StopOMC()
 	res.Msg = "服务暂停成功"
 	c.JSON(http.StatusOK, res)

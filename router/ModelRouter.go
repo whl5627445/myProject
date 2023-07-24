@@ -1,7 +1,7 @@
 package router
 
 import (
-	ModelAPI "yssim-go/app/api/model"
+	API "yssim-go/app/api/model"
 
 	"github.com/gin-gonic/gin"
 )
@@ -9,63 +9,63 @@ import (
 func ModelRouter(g *gin.Engine) {
 	var Models = g.Group("/model")
 	{
-		Models.GET("/root_library/sys", ModelAPI.GetSysRootModelView)
-		Models.GET("/root_library/user", ModelAPI.GetUserRootModelView)
-		Models.GET("/user/get", ModelAPI.GetUserPackageView)
-		Models.GET("/list_library", ModelAPI.GetListModelView)
+		Models.GET("/root_library/sys", API.GetSysRootModelView)
+		Models.GET("/root_library/user", API.GetUserRootModelView)
+		Models.GET("/user/get", API.GetUserPackageView)
+		Models.GET("/list_library", API.GetListModelView)
 
-		Models.POST("/graphics", ModelAPI.GetGraphicsDataView)
-		Models.POST("/icon/graphics", ModelAPI.GetGraphicsDataView)
-		Models.POST("/icon/graphics/new", ModelAPI.GetIconView)
-		Models.GET("/code", ModelAPI.GetModelCodeView)
+		Models.POST("/graphics", API.GetGraphicsDataView)
+		Models.POST("/icon/graphics", API.GetGraphicsDataView)
+		Models.POST("/icon/graphics/new", API.GetIconView)
+		Models.GET("/code", API.GetModelCodeView)
 
-		Models.GET("/parameters/get", ModelAPI.GetModelParametersView)
-		Models.POST("/parameters/set", ModelAPI.SetModelParametersView)
-		Models.POST("/parameters/add", ModelAPI.AddModelParametersView)
-		Models.POST("/parameters/delete", ModelAPI.DeleteModelParametersView)
-		Models.GET("/properties/get", ModelAPI.GetComponentPropertiesView)
-		Models.POST("/properties/set", ModelAPI.SetComponentPropertiesView)
+		Models.GET("/parameters/get", API.GetModelParametersView)
+		Models.POST("/parameters/set", API.SetModelParametersView)
+		Models.POST("/parameters/add", API.AddModelParametersView)
+		Models.POST("/parameters/delete", API.DeleteModelParametersView)
+		Models.GET("/properties/get", API.GetComponentPropertiesView)
+		Models.POST("/properties/set", API.SetComponentPropertiesView)
 
-		Models.POST("/class/copy", ModelAPI.CopyClassView)
+		Models.POST("/class/copy", API.CopyClassView)
 
-		Models.POST("/package/delete", ModelAPI.DeletePackageAndModelView)
-		Models.POST("/package/load", ModelAPI.LoadModelView)
-		Models.POST("/package/unload", ModelAPI.UnLoadModelView)
-		Models.GET("/package/get/all", ModelAPI.GetPackageAndVersionView)
+		Models.POST("/package/delete", API.DeletePackageAndModelView)
+		Models.POST("/package/load", API.LoadModelView)
+		Models.POST("/package/unload", API.UnLoadModelView)
+		Models.GET("/package/get/all", API.GetPackageAndVersionView)
 
-		Models.GET("/component/name", ModelAPI.GetComponentNameView)
-		Models.POST("/component/add", ModelAPI.AddModelComponentView)
-		Models.POST("/component/delete", ModelAPI.DeleteModelComponentView)
-		Models.POST("/component/update", ModelAPI.UpdateModelComponentView)
+		Models.GET("/component/name", API.GetComponentNameView)
+		Models.POST("/component/add", API.AddModelComponentView)
+		Models.POST("/component/delete", API.DeleteModelComponentView)
+		Models.POST("/component/update", API.UpdateModelComponentView)
 
-		Models.POST("/connection/create", ModelAPI.CreateConnectionAnnotationView)
-		Models.POST("/connection/delete", ModelAPI.DeleteConnectionAnnotationView)
-		Models.POST("/connection/update", ModelAPI.UpdateConnectionAnnotationView)
-		Models.POST("/connection/name", ModelAPI.UpdateConnectionNamesView)
+		Models.POST("/connection/create", API.CreateConnectionAnnotationView)
+		Models.POST("/connection/delete", API.DeleteConnectionAnnotationView)
+		Models.POST("/connection/update", API.UpdateConnectionAnnotationView)
+		Models.POST("/connection/name", API.UpdateConnectionNamesView)
 
-		Models.GET("/exists", ModelAPI.ExistsView)
-		Models.GET("/check", ModelAPI.CheckView)
-		Models.GET("/components/get", ModelAPI.GetComponentsView)
-		Models.GET("/document/get", ModelAPI.GetModelDocumentView)
-		Models.POST("/document/set", ModelAPI.SetModelDocumentView)
-		Models.POST("/units/convert", ModelAPI.ConvertUnitsView)
+		Models.GET("/exists", API.ExistsView)
+		Models.GET("/check", API.CheckView)
+		Models.GET("/components/get", API.GetComponentsView)
+		Models.GET("/document/get", API.GetModelDocumentView)
+		Models.POST("/document/set", API.SetModelDocumentView)
+		Models.POST("/units/convert", API.ConvertUnitsView)
 
-		Models.POST("/collection/create", ModelAPI.CreateCollectionModelView)
-		Models.GET("/collection/get", ModelAPI.GetCollectionModelView)
-		Models.GET("/collection/delete", ModelAPI.DeleteCollectionModelView)
-		Models.GET("/search", ModelAPI.SearchModelView)
-		Models.GET("/function/search", ModelAPI.SearchFunctionTypeView)
+		Models.POST("/collection/create", API.CreateCollectionModelView)
+		Models.GET("/collection/get", API.GetCollectionModelView)
+		Models.GET("/collection/delete", API.DeleteCollectionModelView)
+		Models.GET("/search", API.SearchModelView)
+		Models.GET("/function/search", API.SearchFunctionTypeView)
 
-		Models.POST("/reference/resources", ModelAPI.GetModelResourcesReferenceView)
+		Models.POST("/reference/resources", API.GetModelResourcesReferenceView)
 
-		Models.POST("/userspace/login", ModelAPI.LoginUserSpaceView)
-		Models.POST("/mark", ModelAPI.AppModelMarkView)
+		Models.POST("/userspace/login", API.LoginUserSpaceView)
+		Models.POST("/mark", API.AppModelMarkView)
 
-		Models.POST("/CAD/upload", ModelAPI.CADParseView)
-		Models.POST("/CAD/parse", ModelAPI.CADParseView)
-		Models.POST("/CAD/mapping", ModelAPI.CADMappingModelView)
+		Models.POST("/CAD/upload", API.CADParseView)
+		Models.POST("/CAD/parse", API.CADParseView)
+		Models.POST("/CAD/mapping", API.CADMappingModelView)
 
 	}
-	g.POST("/test", ModelAPI.Test)
-	g.POST("/test1", ModelAPI.Test1)
+	g.POST("/test", API.Test)
+	g.POST("/test1", API.Test1)
 }

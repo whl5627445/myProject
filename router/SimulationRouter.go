@@ -1,7 +1,7 @@
 package router
 
 import (
-	SimulationAPI "yssim-go/app/api/simulate"
+	API "yssim-go/app/api/simulate"
 
 	"github.com/gin-gonic/gin"
 )
@@ -9,27 +9,27 @@ import (
 func SimulateRouter(g *gin.Engine) {
 	var Models = g.Group("/simulation")
 	{
-		Models.GET("/options/get", SimulationAPI.GetSimulationOptionsView)
-		Models.POST("/options/set", SimulationAPI.SetSimulationOptionsView)
-		Models.GET("/state/get", SimulationAPI.GetModelStateView)
-		Models.POST("/simulate", SimulationAPI.ModelSimulateView)
-		Models.POST("/result/singular", SimulationAPI.SimulateResultSingularView)
-		Models.POST("/result", SimulationAPI.SimulateResultGraphicsView)
-		Models.GET("/record/list", SimulationAPI.SimulateResultListView)
-		Models.GET("/record/details", SimulationAPI.SimulateResultDetailsView)
-		Models.GET("/record/tree", SimulationAPI.SimulateResultTreeView)
-		Models.GET("/record/delete", SimulationAPI.SimulateResultDeleteView)
-		Models.POST("/record/rename", SimulationAPI.SimulateResultRenameView)
-		Models.POST("/experiment/create", SimulationAPI.ExperimentCreateView)
-		Models.POST("/experiment/delete", SimulationAPI.ExperimentDeleteView)
-		Models.POST("/experiment/edit", SimulationAPI.ExperimentEditView)
-		Models.GET("/experiment/list", SimulationAPI.ExperimentGetView)
-		Models.GET("/experiment/parameters", SimulationAPI.ExperimentParametersView)
+		Models.GET("/options/get", API.GetSimulationOptionsView)
+		Models.POST("/options/set", API.SetSimulationOptionsView)
+		Models.GET("/state/get", API.GetModelStateView)
+		Models.POST("/simulate", API.ModelSimulateView)
+		Models.POST("/result/singular", API.SimulateResultSingularView)
+		Models.POST("/result", API.SimulateResultGraphicsView)
+		Models.GET("/record/list", API.SimulateResultListView)
+		Models.GET("/record/details", API.SimulateResultDetailsView)
+		Models.GET("/record/tree", API.SimulateResultTreeView)
+		Models.GET("/record/delete", API.SimulateResultDeleteView)
+		Models.POST("/record/rename", API.SimulateResultRenameView)
+		Models.POST("/experiment/create", API.ExperimentCreateView)
+		Models.POST("/experiment/delete", API.ExperimentDeleteView)
+		Models.POST("/experiment/edit", API.ExperimentEditView)
+		Models.GET("/experiment/list", API.ExperimentGetView)
+		Models.GET("/experiment/parameters", API.ExperimentParametersView)
 
-		Models.POST("/snapshot/create", SimulationAPI.CreateSnapshotView)
-		Models.POST("/snapshot/delete", SimulationAPI.DeleteSnapshotView)
-		Models.POST("/snapshot/edit", SimulationAPI.EditSnapshotView)
-		Models.GET("/snapshot/list", SimulationAPI.SnapshotGetListView)
+		Models.POST("/snapshot/create", API.CreateSnapshotView)
+		Models.POST("/snapshot/delete", API.DeleteSnapshotView)
+		Models.POST("/snapshot/edit", API.EditSnapshotView)
+		Models.GET("/snapshot/list", API.SnapshotGetListView)
 
 	}
 }

@@ -1,7 +1,7 @@
 package router
 
 import (
-	UserAPI "yssim-go/app/api/user"
+	API "yssim-go/app/api/user"
 
 	"github.com/gin-gonic/gin"
 )
@@ -9,23 +9,23 @@ import (
 func UserRouter(g *gin.Engine) {
 	var Models = g.Group("/user")
 	{
-		Models.GET("/userspace/get", UserAPI.GetUserSpaceView)
-		Models.GET("/userspace/get/new", UserAPI.GetUserSpaceNewView)
-		Models.POST("/userspace/create", UserAPI.CreateUserSpaceView)
-		Models.POST("/userspace/edit", UserAPI.EditUserSpaceView)
-		Models.POST("/userspace/delete", UserAPI.DeleteUserSpaceView)
-		Models.GET("/userspace/recent", UserAPI.GetUserRecentlyOpenedView)
+		Models.GET("/userspace/get", API.GetUserSpaceView)
+		Models.GET("/userspace/get/new", API.GetUserSpaceNewView)
+		Models.POST("/userspace/create", API.CreateUserSpaceView)
+		Models.POST("/userspace/edit", API.EditUserSpaceView)
+		Models.POST("/userspace/delete", API.DeleteUserSpaceView)
+		Models.GET("/userspace/recent", API.GetUserRecentlyOpenedView)
 
-		Models.POST("/userspace/collect", UserAPI.CollectUserSpaceView)
+		Models.POST("/userspace/collect", API.CollectUserSpaceView)
 
-		Models.GET("/examples", UserAPI.ExamplesView)
+		Models.GET("/examples", API.ExamplesView)
 
-		Models.GET("/settings/get", UserAPI.GetUserSettingsView)
-		Models.POST("/settings/set", UserAPI.SetUserSettingsView)
+		Models.GET("/settings/get", API.GetUserSettingsView)
+		Models.POST("/settings/set", API.SetUserSettingsView)
 
-		Models.POST("/background/upload", UserAPI.BackgroundUploadView)
+		Models.POST("/background/upload", API.BackgroundUploadView)
 
-		Models.POST("/service/start", UserAPI.StartOMCView)
-		Models.POST("/service/stop", UserAPI.StopOMCView)
+		Models.POST("/service/start", API.StartOMCView)
+		Models.POST("/service/stop", API.StopOMCView)
 	}
 }
