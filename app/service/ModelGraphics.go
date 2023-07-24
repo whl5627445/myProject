@@ -30,7 +30,7 @@ func GetGraphicsData(modelName, permissions string) []any {
 	g.data[1] = make([]map[string]any, 0)
 	g.data[2] = make(map[string]any, 0)
 	//ctx := context.Background()
-	//g.permissions = permissions
+
 	//if permissions == "sys" {
 	//	msg, _ := allModelCache.HGet(ctx, config.USERNAME+"-yssim-modelGraphicsData", modelName).Bytes()
 	//	msg := []byte{}
@@ -423,8 +423,8 @@ func (g *graphicsData) data02(cData [][]any, caData [][]any, isIcon bool, parent
 			}()
 			coordinateSystem := getCoordinateSystemRecursion(nameList, isIcon)
 			data["coordinate_system"] = map[string]any{
-				"extent1":               coordinateSystem["extent1Diagram"],
-				"extent2":               coordinateSystem["extent2Diagram"],
+				"extent1Diagram":        coordinateSystem["extent1Diagram"],
+				"extent2Diagram":        coordinateSystem["extent2Diagram"],
 				"preserve_aspect_ratio": coordinateSystem["preserve_aspect_ratio"],
 				"initialScale":          coordinateSystem["initialScale"],
 			}
@@ -577,17 +577,18 @@ func (g *graphicsData) getConnectorComponentDiagram(components, componentAnnotat
 	if componentAnnotationsData[0] == "Placement" {
 		data := make(map[string]any, 0)
 		interfaceGraphicsData := getIconAndDiagramAnnotations([]string{className}, false)
-		coordinateSystem := interfaceGraphicsData[:8]
+		coordinateSystem := getCoordinateSystemRecursion([]string{className}, false)
 		data["coordinate_system"] = map[string]any{
-			"extent1":               []any{coordinateSystem[0], coordinateSystem[1]},
-			"extent2":               []any{coordinateSystem[2], coordinateSystem[3]},
-			"preserve_aspect_ratio": coordinateSystem[4],
+			"extent1Diagram":        coordinateSystem["extent1Diagram"],
+			"extent2Diagram":        coordinateSystem["extent2Diagram"],
+			"preserve_aspect_ratio": coordinateSystem["preserve_aspect_ratio"],
+			"initialScale":          coordinateSystem["initialScale"],
 		}
 		caf := componentAnnotationsData[1].([]any)
 		data["ID"] = "0"
 		data["classname"] = className
-		data["extent1Diagram"] = strings.Replace(caf[3].(string)+","+caf[4].(string), "-,-", "-100.0,-100.0", 1)
-		data["extent2Diagram"] = strings.Replace(caf[5].(string)+","+caf[6].(string), "-,-", "100.0,100.0", 1)
+		//data["extent1Diagram"] = strings.Replace(caf[3].(string)+","+caf[4].(string), "-,-", "-100.0,-100.0", 1)
+		//data["extent2Diagram"] = strings.Replace(caf[5].(string)+","+caf[6].(string), "-,-", "100.0,100.0", 1)
 		data["graphType"] = "connector"
 		data["mobility"] = true
 		data["name"] = componentName
@@ -612,11 +613,12 @@ func (g *graphicsData) getConnectorModelDiagram(modelName string) []any {
 	if len(interfaceDiagramAnnotationData) > 8 {
 		interfaceGraphicsData := interfaceDiagramAnnotationData[8].([]any)
 		data := make(map[string]any, 0)
-		coordinateSystem := interfaceDiagramAnnotationData[:8]
+		coordinateSystem := getCoordinateSystemRecursion([]string{modelName}, false)
 		data["coordinate_system"] = map[string]any{
-			"extent1":               []any{coordinateSystem[0], coordinateSystem[1]},
-			"extent2":               []any{coordinateSystem[2], coordinateSystem[3]},
-			"preserve_aspect_ratio": coordinateSystem[4],
+			"extent1":               coordinateSystem["extent1Diagram"],
+			"extent2":               coordinateSystem["extent2Diagram"],
+			"preserve_aspect_ratio": coordinateSystem["preserve_aspect_ratio"],
+			"initialScale":          coordinateSystem["initialScale"],
 		}
 		data["ID"] = "0"
 		data["classname"] = modelName
