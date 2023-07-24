@@ -23,6 +23,7 @@ var allModelCache = config.R
 
 func GetGraphicsData(modelName, permissions string) []any {
 	var g = graphicsData{}
+	g.permissions = permissions
 	//g.data = [][]map[string]any{{}, {}}
 	g.data = make([]any, 3)
 	g.data[0] = make([]map[string]any, 0)
