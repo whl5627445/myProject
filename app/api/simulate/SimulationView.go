@@ -508,7 +508,8 @@ func ExperimentCreateView(c *gin.Context) {
 	var models DataBaseModel.YssimModels
 	err = DB.Where("id = ?", item.PackageId).First(&models).Error
 	if models.UserSpaceId == "0" && models.SysUser == "sys" {
-		res.Msg = "系统模型不支持创建实验!"
+		res.Err = "系统模型不支持创建实验"
+		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
 	}
