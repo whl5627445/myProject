@@ -178,7 +178,7 @@ type scalarVariable struct {
 	ClassIndex        string   `xml:"classIndex,attr"`
 	ClassType         string   `xml:"classType,attr"`
 	IsProtected       bool     `xml:"isProtected,attr"`
-	HideResult        bool     `xml:"hideResult,attr"`
+	HideResult        string   `xml:"hideResult,attr"`
 	FileName          string   `xml:"fileName,attr"`
 	StartLine         string   `xml:"startLine,attr"`
 	StartColumn       string   `xml:"startColumn,attr"`
@@ -255,7 +255,7 @@ func CheckNodeEmpty(path, parent string) bool {
 		if strings.HasPrefix(name, parentName) {
 			scalarVariableMap[name] = variable
 			// omc的xml判断
-			if !scalarVariableMap[name].HideResult && scalarVariableMap[name].IsValueChangeable {
+			if scalarVariableMap[name].HideResult != "true" && scalarVariableMap[name].IsValueChangeable {
 				res = true
 				break
 			}
@@ -300,32 +300,43 @@ func SimulationResultTree(path, parent, keyWords string) []map[string]any {
 			} else {
 				continue
 			}
-			//if !nameMap[splitName[0]] && !scalarVariableMap[name].HideResult && !scalarVariableMap[name].IsProtected {
-			if !nameMap[splitName[0]] && !scalarVariableMap[name].HideResult {
-				data := map[string]any{
-					"variables":           splitName[0],
-					"description":         scalarVariableMap[name].Description,
-					"display_unit":        scalarVariableMap[name].Real.DisplayUnit,
-					"has_child":           false,
-					"id":                  id,
-					"is_value_changeable": scalarVariableMap[name].IsValueChangeable,
-					"start":               scalarVariableMap[name].Real.Start,
-					"unit":                scalarVariableMap[name].Real.Unit,
+			if !nameMap[splitName[0]] {
+				if scalarVariableMap[name].HideResult == "false" {
+					if scalarVariableMap[name].IsProtected {
+						dataList = append(dataList, SetResultTree(splitName, scalarVariableMap[name], id, nameMap))
+					}
+				} else if scalarVariableMap[name].HideResult == "" {
+					if !scalarVariableMap[name].IsProtected {
+						dataList = append(dataList, SetResultTree(splitName, scalarVariableMap[name], id, nameMap))
+					}
 				}
-				if len(splitName) > 1 {
-					data["has_child"] = true
-					data["unit"] = ""
-					data["is_value_changeable"] = false
-					data["display_unit"] = ""
-				}
-				id += 1
-				nameMap[splitName[0]] = true
-
-				dataList = append(dataList, data)
 			}
 		}
 	}
 	return dataList
+}
+
+func SetResultTree(splitName []string, scalarVariableMap scalarVariable, id int, nameMap map[string]bool) map[string]interface{} {
+	data := map[string]interface{}{
+		"variables":           splitName[0],
+		"description":         scalarVariableMap.Description,
+		"display_unit":        scalarVariableMap.Real.DisplayUnit,
+		"has_child":           false,
+		"id":                  id,
+		"is_value_changeable": scalarVariableMap.IsValueChangeable,
+		"start":               scalarVariableMap.Real.Start,
+		"unit":                scalarVariableMap.Real.Unit,
+	}
+	if len(splitName) > 1 {
+		data["has_child"] = true
+		data["unit"] = ""
+		data["is_value_changeable"] = false
+		data["display_unit"] = ""
+	}
+	id += 1
+	nameMap[splitName[0]] = true
+
+	return data
 }
 
 func AppInputTree(compileType, path, parent, keyWords string) []map[string]any {
