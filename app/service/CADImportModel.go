@@ -355,18 +355,18 @@ func getExtents(className string, Xz, Yz float64) []string {
 	coordinateSystem := getCoordinateSystemRecursion(classICList, false)
 	extent1Diagram := strings.Split(coordinateSystem["extent1Diagram"], ",")
 	extent2Diagram := strings.Split(coordinateSystem["extent2Diagram"], ",")
-	initialScale, _ := strconv.ParseFloat(coordinateSystem["initialScale"], 64)
-	extent1 := parseFloatListAndCalculate(extent1Diagram, initialScale, []float64{Xz, Yz})
-	extent2 := parseFloatListAndCalculate(extent2Diagram, initialScale, []float64{Xz, Yz})
+	//initialScale, _ := strconv.ParseFloat(coordinateSystem["initialScale"], 64)
+	extent1 := parseFloatListAndCalculate(extent1Diagram, []float64{Xz, Yz})
+	extent2 := parseFloatListAndCalculate(extent2Diagram, []float64{Xz, Yz})
 
 	return []string{strings.Join(extent1, ","), strings.Join(extent2, ",")}
 }
 
-func parseFloatListAndCalculate(strList []string, initialScale float64, flip []float64) []string {
+func parseFloatListAndCalculate(strList []string, flip []float64) []string {
 	data := []string{}
 	for index, s := range strList {
 		f, _ := strconv.ParseFloat(s, 64)
-		f = f * initialScale * flip[index]
+		f = f * flip[index]
 		fStr := strconv.FormatFloat(f, 'f', -1, 64)
 		data = append(data, fStr)
 	}
