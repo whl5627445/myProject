@@ -50,7 +50,7 @@ func getCoordinateSystemRecursion(modelNameList []string, isIcon bool) map[strin
 	}
 	for i := len(modelNameList) - 1; i >= 0; i-- {
 		coordinateSystem := getCoordinateSystem(modelNameList[i], isIcon)
-		if len(coordinateSystem) >= 8 {
+		if len(coordinateSystem) == 8 && coordinateSystem[0] != "-" {
 			data["preserve_aspect_ratio"] = coordinateSystem[4].(string)
 			data["initialScale"] = func() string {
 				if coordinateSystem[5] == "-" {
@@ -96,17 +96,14 @@ func getIconAnnotationGraphics(modelName, nameType string) map[string]any {
 	data["rotation"] = "0"
 	data["inputOutputs"] = inputOutputs
 	data["subShapes"] = subShapes
-
-	data["extent1Diagram"] = coordinateSystem["extent1Diagram"]
-	data["extent2Diagram"] = coordinateSystem["extent2Diagram"]
-	data["preserve_aspect_ratio"] = coordinateSystem["preserve_aspect_ratio"]
-	data["initialScale"] = coordinateSystem["initialScale"]
-	//data["coordinate_system"] = map[string]any{
-	//	"extent1":               coordinateSystem["extent1Diagram"],
-	//	"extent2":               coordinateSystem["extent2Diagram"],
-	//	"preserve_aspect_ratio": coordinateSystem["preserve_aspect_ratio"],
-	//	"initialScale":          coordinateSystem["initialScale"],
-	//}
+	data["extent1Diagram"] = "-100,-100"
+	data["extent2Diagram"] = "100,100"
+	data["coordinate_system"] = map[string]any{
+		"extent1":               coordinateSystem["extent1Diagram"],
+		"extent2":               coordinateSystem["extent2Diagram"],
+		"preserve_aspect_ratio": coordinateSystem["preserve_aspect_ratio"],
+		"initialScale":          coordinateSystem["initialScale"],
+	}
 	return data
 }
 
@@ -130,16 +127,14 @@ func getDiagramAnnotationGraphics(modelName, nameType string) map[string]any {
 	data["rotation"] = "0"
 	data["inputOutputs"] = make([]any, 0)
 	data["subShapes"] = subShapes
-	data["extent1Diagram"] = coordinateSystem["extent1Diagram"]
-	data["extent2Diagram"] = coordinateSystem["extent2Diagram"]
-	data["preserve_aspect_ratio"] = coordinateSystem["preserve_aspect_ratio"]
-	data["initialScale"] = coordinateSystem["initialScale"]
-	//data["coordinate_system"] = map[string]any{
-	//	"extent1":               coordinateSystem["extent1Diagram"],
-	//	"extent2":               coordinateSystem["extent2Diagram"],
-	//	"preserve_aspect_ratio": coordinateSystem["preserve_aspect_ratio"],
-	//	"initialScale":          coordinateSystem["initialScale"],
-	//}
+	data["extent1Diagram"] = "-100,-100"
+	data["extent2Diagram"] = "100,100"
+	data["coordinate_system"] = map[string]any{
+		"extent1":               coordinateSystem["extent1Diagram"],
+		"extent2":               coordinateSystem["extent2Diagram"],
+		"preserve_aspect_ratio": coordinateSystem["preserve_aspect_ratio"],
+		"initialScale":          coordinateSystem["initialScale"],
+	}
 	return data
 }
 
