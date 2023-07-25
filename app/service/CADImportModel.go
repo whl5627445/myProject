@@ -177,7 +177,7 @@ func getPipeData(diameter float64, sList []segment) []map[string]any {
 		coordinate := map[string]float64{"x": ex - sx, "y": ey - sy, "z": ez - sz}
 		length := math.Sqrt((ex-sx)*(ex-sx)+(ey-sy)*(ey-sy)+(ez-sz)*(ez-sz)) - bendRadius
 		height := ez - sz
-		pipeData = append(pipeData, map[string]any{"length": length, "height_ab": height, "diameter": diameter, "bend_radius": bendRadius, "coordinate": coordinate})
+		pipeData = append(pipeData, map[string]any{"length": length / 1000, "height_ab": height / 1000, "diameter": diameter / 1000, "bend_radius": bendRadius, "coordinate": coordinate})
 	}
 	return pipeData
 }
