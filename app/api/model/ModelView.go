@@ -1253,8 +1253,8 @@ func SearchModelView(c *gin.Context) {
 		## parent: 需要搜索的关键字的父节点
 	*/
 	username := c.GetHeader("username")
-	//userSpaceId := c.GetHeader("space_id")
-	userSpaceId := c.Query("space_id")
+	userSpaceId := c.GetHeader("space_id")
+	//userSpaceId := c.Query("space_id")
 	keywords := c.Query("keywords")
 	parent := c.Query("parent")
 	var res DataType.ResponseData
