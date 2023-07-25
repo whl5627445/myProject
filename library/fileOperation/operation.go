@@ -148,7 +148,7 @@ func unZip(zipFile string, destDir string) error {
 	defer zipReader.Close()
 	var decodeName string
 	for _, f := range zipReader.File {
-		if f.Flags == 0 {
+		if f.Flags == 0 || f.Flags == 8 {
 			//如果标致位是0  则是默认的本地编码   默认为gbk
 			i := bytes.NewReader([]byte(f.Name))
 			decoder := transform.NewReader(i, simplifiedchinese.GBK.NewDecoder())
