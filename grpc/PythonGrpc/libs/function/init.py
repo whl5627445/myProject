@@ -27,7 +27,7 @@ def initOmTask():
                 i.package_file_path = yssim_model.file_path
                 task_record_list.append(i)
             else:
-                log.info("(OMC)重新开始仿真，模型不存在："+yssim_model.package_name+"，退出线程。")
+                log.info("(OMC)重新开始仿真，模型不存在："+i.simulate_model_name+"，退出线程。")
                 i.simulate_status = "3"
                 session.commit()
 
@@ -74,7 +74,7 @@ def initOmTask():
                 i.package_file_path = yssim_model.file_path
                 task_record_list.append(i)
             else:
-                log.info("(OMC)重新开始导出数据源，模型不存在：" + yssim_model.package_name + "，退出线程。")
+                log.info("(OMC)重新开始导出数据源，模型不存在：" + i.simulate_model_name + "，退出线程。")
                 i.compile_status = "3"
                 session.commit()
     # 编译任务列表
@@ -156,7 +156,7 @@ def initDmTask():
                 i.package_file_path = yssim_model.file_path
                 task_record_list.append(i)
             else:
-                log.info("(Dymola)重新开始仿真，模型不存在：" + yssim_model.package_name + "，退出线程。")
+                log.info("(Dymola)重新开始仿真，模型不存在：" + i.simulate_model_name + "，退出线程。")
                 i.simulate_status = "3"
                 session.commit()
 
@@ -206,7 +206,7 @@ def initDmTask():
                 i.package_file_path = yssim_model.file_path
                 task_record_list.append(i)
             else:
-                log.info("(Dymola)重新开始导出数据源，模型不存在：" + yssim_model.package_name + "，退出线程。")
+                log.info("(Dymola)重新开始导出数据源，模型不存在：" + i.simulate_model_name + "，退出线程。")
                 i.compile_status = "3"
                 session.commit()
     # 编译任务列表

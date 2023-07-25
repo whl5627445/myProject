@@ -86,7 +86,7 @@ class OmcSimulation(threading.Thread):
         else:
             update_simulate_records(uuid=self.uuid, simulate_status="3",
                                     simulate_start="0",
-                                    simulate_result_str="编译失败",
+                                    simulate_result_str="翻译失败",
                                     # simulate_start_time=str(self.processStartTime),
                                     simulate_end_time=int(time.time()))
             self.state = "stopped"
