@@ -64,10 +64,5 @@ func AppDesignRouter(g *gin.Engine) {
 		Models.POST("/page/alignment-line/set", API.SetPageAlignmentLineView)
 		Models.GET("/page/alignment-line/get", API.GetPageAlignmentLineView)
 
-		Models.POST("/pow/single/get", API.GetAppPowSingleView)
-		Models.POST("/pow/double/get", API.GetAppPowDoubleView)
-		Models.POST("/pow/pie/get", API.GetAppPowPieChartView)
-		Models.GET("/pow/label/get", API.GetAppPowLabel)
-
 	}
 }
