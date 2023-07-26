@@ -724,25 +724,23 @@ func AddModelComponentView(c *gin.Context) {
 	graphics["type"] = "Transformation"
 	graphics["ID"] = "0"
 	graphics["rotateAngle"] = graphics["rotation"]
-	//if graphics["extent1Diagram"] != "-,-" && graphics["extent2Diagram"] != "-,-" && graphics["initialScale"] != "-" {
-	//	l1 := strings.Split(graphics["extent1Diagram"].(string), ",")
-	//	l2 := strings.Split(graphics["extent2Diagram"].(string), ",")
-	//	initialScale, _ := strconv.ParseFloat(graphics["initialScale"].(string), 64)
-	//	x1, _ := strconv.ParseFloat(l1[0], 64)
-	//	y1, _ := strconv.ParseFloat(l1[1], 64)
-	//	x2, _ := strconv.ParseFloat(l2[0], 64)
-	//	y2, _ := strconv.ParseFloat(l2[1], 64)
-	//	x1, y1, x2, y2 = x1*initialScale, y1*initialScale, x2*initialScale, y2*initialScale
-	//	x1Str := strconv.FormatFloat(x1, 'f', 1, 64)
-	//	y1Str := strconv.FormatFloat(y1, 'f', 1, 64)
-	//	x2Str := strconv.FormatFloat(x2, 'f', 1, 64)
-	//	y2Str := strconv.FormatFloat(y2, 'f', 1, 64)
-	//
-	//	graphics["extent1Diagram"] = strings.Join([]string{x1Str, y1Str}, ",")
-	//	graphics["extent2Diagram"] = strings.Join([]string{x2Str, y2Str}, ",")
-	//}
+	l1 := graphics["coordinate_system"].(map[string]any)["extent1Diagram"]
+	l2 := graphics["coordinate_system"].(map[string]any)["extent2Diagram"]
+	initialScale := graphics["coordinate_system"].(map[string]any)["initialScale"].(float64)
+	x1 := l1.([]float64)[0]
+	y1 := l1.([]float64)[1]
+	x2 := l2.([]float64)[0]
+	y2 := l2.([]float64)[1]
+	x1, y1, x2, y2 = x1*initialScale, y1*initialScale, x2*initialScale, y2*initialScale
+	x1Str := strconv.FormatFloat(x1, 'f', 1, 64)
+	y1Str := strconv.FormatFloat(y1, 'f', 1, 64)
+	x2Str := strconv.FormatFloat(x2, 'f', 1, 64)
+	y2Str := strconv.FormatFloat(y2, 'f', 1, 64)
+
+	extent1Diagram := strings.Join([]string{x1Str, y1Str}, ",")
+	extent2Diagram := strings.Join([]string{x2Str, y2Str}, ",")
 	data["graphics"] = graphics
-	result, msg := service.AddComponent(item.NewComponentName, item.OldComponentName, item.ModelName, item.Origin, rotation, []string{graphics["extent1Diagram"].(string), graphics["extent2Diagram"].(string)})
+	result, msg := service.AddComponent(item.NewComponentName, item.OldComponentName, item.ModelName, item.Origin, rotation, []string{extent1Diagram, extent2Diagram})
 	if !result {
 		res.Err = msg
 		res.Status = 2

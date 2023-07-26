@@ -67,13 +67,13 @@ type DeleteClassData struct {
 }
 
 type AddComponentData struct {
-	PackageId        string   `json:"package_id" binding:"required"`
-	NewComponentName string   `json:"new_component_name" binding:"required"`
-	OldComponentName string   `json:"old_component_name" binding:"required"`
-	ModelName        string   `json:"model_name" binding:"required"`
-	Origin           string   `json:"origin" binding:"required"`
-	Extent           []string `json:"extent" binding:"required"`
-	Rotation         int      `json:"rotation" binding:""`
+	PackageId        string `json:"package_id" binding:"required"`
+	NewComponentName string `json:"new_component_name" binding:"required"`
+	OldComponentName string `json:"old_component_name" binding:"required"`
+	ModelName        string `json:"model_name" binding:"required"`
+	Origin           string `json:"origin" binding:"required"`
+	//Extent           []string `json:"extent" binding:"required"`
+	Rotation int `json:"rotation" binding:""`
 }
 
 type DeleteComponentMap struct {

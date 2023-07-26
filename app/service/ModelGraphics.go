@@ -422,12 +422,7 @@ func (g *graphicsData) data02(cData [][]any, caData [][]any, isIcon bool, parent
 				return t
 			}()
 			coordinateSystem := getCoordinateSystemRecursion(nameList, isIcon)
-			data["coordinate_system"] = map[string]any{
-				"extent1Diagram":        coordinateSystem["extent1Diagram"],
-				"extent2Diagram":        coordinateSystem["extent2Diagram"],
-				"preserve_aspect_ratio": coordinateSystem["preserve_aspect_ratio"],
-				"initialScale":          coordinateSystem["initialScale"],
-			}
+			data["coordinate_system"] = coordinateSystem
 			componentsData, componentAnnotationsData := getElementsAndModelName(nameList)
 			IconAnnotationData := getIconAndDiagramAnnotations(nameList, isIcon)
 			data["inputOutputs"] = g.data02(componentsData, componentAnnotationsData, true, data["name"].(string), false)
@@ -578,12 +573,7 @@ func (g *graphicsData) getConnectorComponentDiagram(components, componentAnnotat
 		data := make(map[string]any, 0)
 		interfaceGraphicsData := getIconAndDiagramAnnotations([]string{className}, false)
 		coordinateSystem := getCoordinateSystemRecursion([]string{className}, false)
-		data["coordinate_system"] = map[string]any{
-			"extent1Diagram":        coordinateSystem["extent1Diagram"],
-			"extent2Diagram":        coordinateSystem["extent2Diagram"],
-			"preserve_aspect_ratio": coordinateSystem["preserve_aspect_ratio"],
-			"initialScale":          coordinateSystem["initialScale"],
-		}
+		data["coordinate_system"] = coordinateSystem
 		caf := componentAnnotationsData[1].([]any)
 		data["ID"] = "0"
 		data["classname"] = className
@@ -614,12 +604,7 @@ func (g *graphicsData) getConnectorModelDiagram(modelName string) []any {
 		interfaceGraphicsData := interfaceDiagramAnnotationData[8].([]any)
 		data := make(map[string]any, 0)
 		coordinateSystem := getCoordinateSystemRecursion([]string{modelName}, false)
-		data["coordinate_system"] = map[string]any{
-			"extent1":               coordinateSystem["extent1Diagram"],
-			"extent2":               coordinateSystem["extent2Diagram"],
-			"preserve_aspect_ratio": coordinateSystem["preserve_aspect_ratio"],
-			"initialScale":          coordinateSystem["initialScale"],
-		}
+		data["coordinate_system"] = coordinateSystem
 		data["ID"] = "0"
 		data["classname"] = modelName
 		data["extent1Diagram"] = strings.Replace(interfaceDiagramAnnotationData[0].(string)+","+interfaceDiagramAnnotationData[1].(string), "-,-", "-100.0,-100.0", 1)

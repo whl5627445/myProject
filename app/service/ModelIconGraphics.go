@@ -40,36 +40,50 @@ func GetIconNew(modelName string, icon bool) map[string]any {
 	return data
 }
 
+type coordinateSystemData struct {
+	Extent1Diagram      []float64 `json:"extent_1_diagram,omitempty"`
+	Extent2Diagram      []float64 `json:"extent_2_diagram,omitempty"`
+	PreserveAspectRatio bool      `json:"preserve_aspect_ratio,omitempty"`
+	InitialScale        float64   `json:"initial_scale,omitempty"`
+}
+
 // getCoordinateSystemRecursion 会根据提供的模型列表直到找到有数据为止
-func getCoordinateSystemRecursion(modelNameList []string, isIcon bool) map[string]string {
-	data := map[string]string{
-		"extent1Diagram":        "-10.0,-10.0",
-		"extent2Diagram":        "10.0,10.0",
-		"preserve_aspect_ratio": "true",
-		"initialScale":          "0.1",
+func getCoordinateSystemRecursion(modelNameList []string, isIcon bool) coordinateSystemData {
+	data := coordinateSystemData{
+		[]float64{-100, -100},
+		[]float64{100, 100},
+		true,
+		0.1,
 	}
 	for i := len(modelNameList) - 1; i >= 0; i-- {
 		coordinateSystem := getCoordinateSystem(modelNameList[i], isIcon)
 		if len(coordinateSystem) == 8 && coordinateSystem[0] != "-" {
-			data["preserve_aspect_ratio"] = coordinateSystem[4].(string)
-			data["initialScale"] = func() string {
+			data.PreserveAspectRatio, _ = strconv.ParseBool(coordinateSystem[4].(string))
+			data.InitialScale = func() float64 {
 				if coordinateSystem[5] == "-" {
-					return "0.1"
+					return 0.1
 				}
-				return coordinateSystem[5].(string)
+				InitialScale, _ := strconv.ParseFloat(coordinateSystem[5].(string), 64)
+				return InitialScale
 			}()
-			initialScale, _ := strconv.ParseFloat(data["initialScale"], 64)
+			//initialScale, _ := strconv.ParseFloat(data["initialScale"], 64)
+			//x1, _ := strconv.ParseFloat(coordinateSystem[0].(string), 64)
+			//y1, _ := strconv.ParseFloat(coordinateSystem[1].(string), 64)
+			//x2, _ := strconv.ParseFloat(coordinateSystem[2].(string), 64)
+			//y2, _ := strconv.ParseFloat(coordinateSystem[3].(string), 64)
+			//x1, y1, x2, y2 = x1*initialScale, y1*initialScale, x2*initialScale, y2*initialScale
+			//x1Str := strconv.FormatFloat(x1, 'f', 1, 64)
+			//y1Str := strconv.FormatFloat(y1, 'f', 1, 64)
+			//x2Str := strconv.FormatFloat(x2, 'f', 1, 64)
+			//y2Str := strconv.FormatFloat(y2, 'f', 1, 64)
+			//data["extent1Diagram"] = strings.Join([]string{x1Str, y1Str}, ",")
 			x1, _ := strconv.ParseFloat(coordinateSystem[0].(string), 64)
 			y1, _ := strconv.ParseFloat(coordinateSystem[1].(string), 64)
 			x2, _ := strconv.ParseFloat(coordinateSystem[2].(string), 64)
 			y2, _ := strconv.ParseFloat(coordinateSystem[3].(string), 64)
-			x1, y1, x2, y2 = x1*initialScale, y1*initialScale, x2*initialScale, y2*initialScale
-			x1Str := strconv.FormatFloat(x1, 'f', 1, 64)
-			y1Str := strconv.FormatFloat(y1, 'f', 1, 64)
-			x2Str := strconv.FormatFloat(x2, 'f', 1, 64)
-			y2Str := strconv.FormatFloat(y2, 'f', 1, 64)
-			data["extent1Diagram"] = strings.Join([]string{x1Str, y1Str}, ",")
-			data["extent2Diagram"] = strings.Join([]string{x2Str, y2Str}, ",")
+			data.Extent1Diagram = []float64{x1, y1}
+			//data["extent2Diagram"] = strings.Join([]string{x2Str, y2Str}, ",")
+			data.Extent2Diagram = []float64{x2, y2}
 			return data
 		}
 	}
@@ -96,13 +110,27 @@ func getIconAnnotationGraphics(modelName, nameType string) map[string]any {
 	data["rotation"] = "0"
 	data["inputOutputs"] = inputOutputs
 	data["subShapes"] = subShapes
-	data["extent1Diagram"] = "-100,-100"
-	data["extent2Diagram"] = "100,100"
+	data["extent1Diagram"] = func() string {
+		d := []string{}
+		for _, p := range coordinateSystem.Extent1Diagram {
+			f := strconv.FormatFloat(p*coordinateSystem.InitialScale, 'f', -1, 64)
+			d = append(d, f)
+		}
+		return strings.Join(d, ",")
+	}()
+	data["extent2Diagram"] = func() string {
+		d := []string{}
+		for _, p := range coordinateSystem.Extent2Diagram {
+			f := strconv.FormatFloat(p*coordinateSystem.InitialScale, 'f', -1, 64)
+			d = append(d, f)
+		}
+		return strings.Join(d, ",")
+	}()
 	data["coordinate_system"] = map[string]any{
-		"extent1":               coordinateSystem["extent1Diagram"],
-		"extent2":               coordinateSystem["extent2Diagram"],
-		"preserve_aspect_ratio": coordinateSystem["preserve_aspect_ratio"],
-		"initialScale":          coordinateSystem["initialScale"],
+		"extent1Diagram":        coordinateSystem.Extent1Diagram,
+		"extent2Diagram":        coordinateSystem.Extent2Diagram,
+		"preserve_aspect_ratio": coordinateSystem.PreserveAspectRatio,
+		"initialScale":          coordinateSystem.InitialScale,
 	}
 	return data
 }
@@ -127,13 +155,25 @@ func getDiagramAnnotationGraphics(modelName, nameType string) map[string]any {
 	data["rotation"] = "0"
 	data["inputOutputs"] = make([]any, 0)
 	data["subShapes"] = subShapes
-	data["extent1Diagram"] = "-100,-100"
-	data["extent2Diagram"] = "100,100"
+	data["extent1Diagram"] = func() []float64 {
+		d := []float64{}
+		for _, p := range coordinateSystem.Extent2Diagram {
+			d = append(d, p*coordinateSystem.InitialScale)
+		}
+		return d
+	}()
+	data["extent2Diagram"] = func() []float64 {
+		d := []float64{}
+		for _, p := range coordinateSystem.Extent2Diagram {
+			d = append(d, p*coordinateSystem.InitialScale)
+		}
+		return d
+	}()
 	data["coordinate_system"] = map[string]any{
-		"extent1":               coordinateSystem["extent1Diagram"],
-		"extent2":               coordinateSystem["extent2Diagram"],
-		"preserve_aspect_ratio": coordinateSystem["preserve_aspect_ratio"],
-		"initialScale":          coordinateSystem["initialScale"],
+		"extent1Diagram":        coordinateSystem.Extent1Diagram,
+		"extent2Diagram":        coordinateSystem.Extent2Diagram,
+		"preserve_aspect_ratio": coordinateSystem.PreserveAspectRatio,
+		"initialScale":          coordinateSystem.InitialScale,
 	}
 	return data
 }
