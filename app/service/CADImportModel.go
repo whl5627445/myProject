@@ -353,8 +353,8 @@ func CADMappingModel(modelName string, classNameList []string, modelInformationL
 func getExtents(className string, Xz, Yz float64) []string {
 	classICList := GetICList(className)
 	coordinateSystem := getCoordinateSystemRecursion(classICList, false)
-	extent1Diagram := strings.Split(coordinateSystem["extent1Diagram"], ",")
-	extent2Diagram := strings.Split(coordinateSystem["extent2Diagram"], ",")
+	extent1Diagram := coordinateSystem.Extent1Diagram
+	extent2Diagram := coordinateSystem.Extent2Diagram
 	//initialScale, _ := strconv.ParseFloat(coordinateSystem["initialScale"], 64)
 	extent1 := parseFloatListAndCalculate(extent1Diagram, []float64{Xz, Yz})
 	extent2 := parseFloatListAndCalculate(extent2Diagram, []float64{Xz, Yz})
@@ -362,11 +362,11 @@ func getExtents(className string, Xz, Yz float64) []string {
 	return []string{strings.Join(extent1, ","), strings.Join(extent2, ",")}
 }
 
-func parseFloatListAndCalculate(strList []string, flip []float64) []string {
+func parseFloatListAndCalculate(strList []float64, flip []float64) []string {
 	data := []string{}
 	for index, s := range strList {
-		f, _ := strconv.ParseFloat(s, 64)
-		f = f * flip[index]
+		//f, _ := strconv.ParseFloat(s, 64)
+		f := s * flip[index]
 		fStr := strconv.FormatFloat(f, 'f', -1, 64)
 		data = append(data, fStr)
 	}
