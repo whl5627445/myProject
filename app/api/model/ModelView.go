@@ -1554,7 +1554,7 @@ func CADParseView(c *gin.Context) {
 	*/
 	var res DataType.ResponseData
 	var model DataBaseModel.YssimModels
-	header := c.GetHeader("username")
+	username := c.GetHeader("username")
 	dbModel.Where("package_name = ? AND version = ?", "Modelica", "4.0.0").First(&model)
 
 	form, err := c.MultipartForm()
@@ -1564,7 +1564,7 @@ func CADParseView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, res)
 		return
 	}
-	data := service.GetXmlData(form, header)
+	data := service.GetXmlData(form, username)
 	if data == "" {
 		res.Err = "文件上传失败"
 		res.Status = 2
@@ -1730,6 +1730,19 @@ func GetDependencyLibraryView(c *gin.Context) {
 	res.Msg = "查询成功"
 	res.Data = data
 	c.JSON(http.StatusOK, res)
+}
+
+func GetAvailableLibrariesView(c *gin.Context) {
+	/*
+		根据username used 查询可用库列表  0未占用 1占用  查询used为0
+	*/
+	var res DataType.ResponseData
+	username := c.Query("username")
+	var userLibraries []DataBaseModel.UserLibrary
+	dbModel.Where("username = ? AND used = 0 ", username).Find(&userLibraries)
+	res.Data = userLibraries
+	c.JSON(http.StatusOK, res)
+
 }
 
 func Test1(c *gin.Context) {
