@@ -208,13 +208,13 @@ type cadMappingGeometry struct {
 }
 
 type CreateDependencyLibraryData struct {
-	PackageName    string `json:"package_name" binding:""`
+	PackageName    string `json:"package_name" binding:"required"`
 	Version        string `json:"version" binding:""`
-	SysUser        string `json:"sys_or_user" binding:""`
+	SysUser        string `json:"sys_or_user" binding:"required"`
 	FilePath       string `json:"file_path" binding:""`
-	UserSpaceId    string `json:"userspace_id" binding:""`
-	VersionControl bool   `json:"version_control" binding:""`
-	VersionBranch  string `json:"version_branch" binding:""`
+	UserSpaceId    string `json:"userspace_id" binding:"required"`
+	VersionControl bool   `json:"version_control" binding:"required"`
+	VersionBranch  string `json:"version_branch" binding:"required"`
 	VersionTag     string `json:"version_tag" binding:""`
-	Default        bool   `json:"default_version" binding:""`
+	Default        bool   `json:"default_version" binding:"required"`
 }

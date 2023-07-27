@@ -1611,13 +1611,25 @@ func GetSystemLibraryView(c *gin.Context) {
 	var system []DataBaseModel.SystemLibrary
 	err := dbModel.Find(&system).Error
 	if err != nil {
-		res.Status = 1
-		res.Msg = "未查询到系统模型"
-		c.JSON(http.StatusOK, res)
+		res.Status = 2
+		res.Err = "未查询到系统模型"
+		c.JSON(http.StatusBadRequest, res)
 		return
 	}
+	var data []map[string]any
+	for i := 0; i < len(system); i++ {
+		d := map[string]any{
+			"user_name":       system[i].UserName,
+			"package_name":    system[i].PackageName,
+			"file_path":       system[i].FilePath,
+			"version_control": system[i].VersionControl,
+			"version_branch":  system[i].VersionBranch,
+			"version_tag":     system[i].VersionTag,
+		}
+		data = append(data, d)
+	}
 	res.Msg = "查询成功"
-	res.Data = system
+	res.Data = data
 	c.JSON(http.StatusOK, res)
 }
 
@@ -1628,8 +1640,8 @@ func DeleteDependencyLibraryView(c *gin.Context) {
 	err := dbModel.Where("id = ?", id).First(&model).Error
 	if err != nil {
 		res.Status = 2
-		res.Msg = "删除失败，查看id是否正确"
-		c.JSON(http.StatusOK, res)
+		res.Err = "删除失败，查看id是否正确"
+		c.JSON(http.StatusBadRequest, res)
 		return
 	}
 	dbModel.Delete(&model)
@@ -1662,8 +1674,8 @@ func CreateDependencyLibraryView(c *gin.Context) {
 	err = dbModel.Create(&newDependencyLibrary).Error
 	if err != nil {
 		res.Status = 2
-		res.Msg = "创建失败"
-		c.JSON(http.StatusOK, res)
+		res.Err = "创建失败"
+		c.JSON(http.StatusBadRequest, res)
 		return
 	}
 	res.Msg = "创建成功"
@@ -1678,12 +1690,27 @@ func GetDependencyLibraryView(c *gin.Context) {
 	err := dbModel.Where("userspace_id = ? AND sys_or_user != ? AND sys_or_user = ?", userSpaceId, "sys", userName).Find(&model).Error
 	if err != nil {
 		res.Status = 2
-		res.Msg = "无依赖模型"
-		c.JSON(http.StatusOK, res)
+		res.Err = "无依赖模型"
+		c.JSON(http.StatusBadRequest, res)
 		return
 	}
+	var data []map[string]any
+	for i := 0; i < len(model); i++ {
+		d := map[string]any{
+			"id":              model[i].ID,
+			"package_name":    model[i].PackageName,
+			"version":         model[i].Version,
+			"sys_or_user":     model[i].SysUser,
+			"file_path":       model[i].FilePath,
+			"version_control": model[i].VersionControl,
+			"version_branch":  model[i].VersionBranch,
+			"version_tag":     model[i].VersionTag,
+			"default_version": model[i].Default,
+		}
+		data = append(data, d)
+	}
 	res.Msg = "查询成功"
-	res.Data = model
+	res.Data = data
 	c.JSON(http.StatusOK, res)
 }
 
