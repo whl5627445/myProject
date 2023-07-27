@@ -41,10 +41,10 @@ func GetIconNew(modelName string, icon bool) map[string]any {
 }
 
 type coordinateSystemData struct {
-	Extent1Diagram      []float64 `json:"extent_1_diagram,omitempty"`
-	Extent2Diagram      []float64 `json:"extent_2_diagram,omitempty"`
-	PreserveAspectRatio bool      `json:"preserve_aspect_ratio,omitempty"`
-	InitialScale        float64   `json:"initial_scale,omitempty"`
+	Extent1Diagram      []float64 `json:"extent1_diagram"`
+	Extent2Diagram      []float64 `json:"extent2_diagram"`
+	PreserveAspectRatio bool      `json:"preserve_aspect_ratio"`
+	InitialScale        float64   `json:"initial_scale"`
 }
 
 // getCoordinateSystemRecursion 会根据提供的模型列表直到找到有数据为止
@@ -126,12 +126,7 @@ func getIconAnnotationGraphics(modelName, nameType string) map[string]any {
 		}
 		return strings.Join(d, ",")
 	}()
-	data["coordinate_system"] = map[string]any{
-		"extent1Diagram":        coordinateSystem.Extent1Diagram,
-		"extent2Diagram":        coordinateSystem.Extent2Diagram,
-		"preserve_aspect_ratio": coordinateSystem.PreserveAspectRatio,
-		"initialScale":          coordinateSystem.InitialScale,
-	}
+	data["coordinate_system"] = coordinateSystem
 	return data
 }
 
@@ -169,12 +164,7 @@ func getDiagramAnnotationGraphics(modelName, nameType string) map[string]any {
 		}
 		return d
 	}()
-	data["coordinate_system"] = map[string]any{
-		"extent1Diagram":        coordinateSystem.Extent1Diagram,
-		"extent2Diagram":        coordinateSystem.Extent2Diagram,
-		"preserve_aspect_ratio": coordinateSystem.PreserveAspectRatio,
-		"initialScale":          coordinateSystem.InitialScale,
-	}
+	data["coordinate_system"] = coordinateSystem
 	return data
 }
 
