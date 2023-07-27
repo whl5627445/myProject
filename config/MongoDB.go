@@ -10,7 +10,7 @@ import (
 
 func openMangoDB() *mongo.Client {
 	// 设置客户端连接配置
-	clientOptions := options.Client().ApplyURI("mongodb://root:simtek_cloud_sim@mongodb:27017/")
+	clientOptions := options.Client().ApplyURI("mongodb://root:simtek_cloud_sim@124.70.211.127:27017/")
 
 	// 连接到 MongoDB
 	ctx := context.Background()

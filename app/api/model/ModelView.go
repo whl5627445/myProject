@@ -1790,7 +1790,19 @@ func GetExtendedModelView(c *gin.Context) {
 		res.Msg = "此模型没有父类"
 		res.Status = 2
 	}
+	c.JSON(http.StatusOK, res)
+}
 
+func GetNoVersionAvailableLibrariesView(c *gin.Context) {
+	/*
+		根据sys_or_user  userspace_id  version_control 查询可编辑无版本的模型库
+	*/
+	var res DataType.ResponseData
+	sysOrUser := c.Query("sys_or_user")
+	userspaceId := c.Query("userspace_id")
+	var yssimModels []DataBaseModel.YssimModels
+	dbModel.Where("sys_or_user = ? AND userspace_id = ? AND version_control = 0", sysOrUser, userspaceId).Find(&yssimModels)
+	res.Data = yssimModels
 	c.JSON(http.StatusOK, res)
 
 }
