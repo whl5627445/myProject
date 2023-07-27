@@ -1606,6 +1606,87 @@ func CADMappingModelView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+func GetSystemLibraryView(c *gin.Context) {
+	var res DataType.ResponseData
+	var system []DataBaseModel.SystemLibrary
+	err := dbModel.Find(&system).Error
+	if err != nil {
+		res.Status = 1
+		res.Msg = "未查询到系统模型"
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	res.Msg = "查询成功"
+	res.Data = system
+	c.JSON(http.StatusOK, res)
+}
+
+func DeleteDependencyLibraryView(c *gin.Context) {
+	var res DataType.ResponseData
+	var model DataBaseModel.YssimModels
+	var id = c.Query("id")
+	err := dbModel.Where("id = ?", id).First(&model).Error
+	if err != nil {
+		res.Status = 2
+		res.Msg = "删除失败，查看id是否正确"
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	dbModel.Delete(&model)
+	res.Msg = "删除成功"
+	c.JSON(http.StatusOK, res)
+}
+
+func CreateDependencyLibraryView(c *gin.Context) {
+	var res DataType.ResponseData
+	var item DataType.CreateDependencyLibraryData
+	userName := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	var newDependencyLibrary = DataBaseModel.YssimModels{
+		ID:             uuid.New().String(),
+		PackageName:    item.PackageName,
+		Version:        item.Version,
+		SysUser:        userName,
+		FilePath:       item.FilePath,
+		UserSpaceId:    userSpaceId,
+		VersionControl: item.VersionControl,
+		VersionBranch:  item.VersionBranch,
+		VersionTag:     item.VersionTag,
+		Default:        item.Default,
+	}
+	err = dbModel.Create(&newDependencyLibrary).Error
+	if err != nil {
+		res.Status = 2
+		res.Msg = "创建失败"
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	res.Msg = "创建成功"
+	c.JSON(http.StatusOK, res)
+}
+
+func GetDependencyLibraryView(c *gin.Context) {
+	var res DataType.ResponseData
+	var model []DataBaseModel.YssimModels
+	userName := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
+	err := dbModel.Where("userspace_id = ? AND sys_or_user != ? AND sys_or_user = ?", userSpaceId, "sys", userName).Find(&model).Error
+	if err != nil {
+		res.Status = 2
+		res.Msg = "无依赖模型"
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	res.Msg = "查询成功"
+	res.Data = model
+	c.JSON(http.StatusOK, res)
+}
+
 func Test1(c *gin.Context) {
 	/*
 		测试omc命令

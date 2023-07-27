@@ -206,3 +206,15 @@ type cadMappingGeometry struct {
 	DHyd       float64            `json:"d_hyd" binding:""`
 	Delta      float64            `json:"delta" binding:""`
 }
+
+type CreateDependencyLibraryData struct {
+	PackageName    string `json:"package_name" binding:""`
+	Version        string `json:"version" binding:""`
+	SysUser        string `json:"sys_or_user" binding:""`
+	FilePath       string `json:"file_path" binding:""`
+	UserSpaceId    string `json:"userspace_id" binding:""`
+	VersionControl bool   `json:"version_control" binding:""`
+	VersionBranch  string `json:"version_branch" binding:""`
+	VersionTag     string `json:"version_tag" binding:""`
+	Default        bool   `json:"default_version" binding:""`
+}
