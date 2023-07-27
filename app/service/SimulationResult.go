@@ -301,14 +301,11 @@ func SimulationResultTree(path, parent, keyWords string) []map[string]any {
 				continue
 			}
 			if !nameMap[splitName[0]] {
-				if scalarVariableMap[name].HideResult == "false" {
-					if scalarVariableMap[name].IsProtected {
-						dataList = append(dataList, SetResultTree(splitName, scalarVariableMap[name], id, nameMap))
-					}
-				} else if scalarVariableMap[name].HideResult == "" {
-					if !scalarVariableMap[name].IsProtected {
-						dataList = append(dataList, SetResultTree(splitName, scalarVariableMap[name], id, nameMap))
-					}
+				switch {
+				case scalarVariableMap[name].HideResult == "false" && scalarVariableMap[name].IsProtected:
+					dataList = append(dataList, SetResultTree(splitName, scalarVariableMap[name], id, nameMap))
+				case scalarVariableMap[name].HideResult == "" && !scalarVariableMap[name].IsProtected:
+					dataList = append(dataList, SetResultTree(splitName, scalarVariableMap[name], id, nameMap))
 				}
 			}
 		}
