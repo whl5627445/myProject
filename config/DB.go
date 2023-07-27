@@ -41,11 +41,13 @@ func init() {
 	DB.AutoMigrate(
 		&DataBaseModel.YssimExperimentRecord{},
 		&DataBaseModel.YssimSimulateRecord{},
-		&DataBaseModel.YssimModels{},
 		&DataBaseModel.YssimModelsCollection{},
 		&DataBaseModel.YssimSnapshots{},
 		&DataBaseModel.YssimUserSpace{},
 		&DataBaseModel.YssimUserSettings{},
+		&DataBaseModel.YssimModels{},
+		&DataBaseModel.SystemLibrary{},
+		&DataBaseModel.UserLibrary{},
 
 		&DataBaseModel.AppDataSource{},
 		&DataBaseModel.AppSpace{},
