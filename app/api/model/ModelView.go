@@ -1830,11 +1830,11 @@ func GetExtendedModelView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	var data []map[string]interface{}
+	var data []map[string]any
 	dataList := service.GetExtendedModel(modelName)
 	if dataList != nil {
 		for _, str := range dataList {
-			temp := map[string]interface{}{"model_name": str}
+			temp := map[string]any{"model_name": str}
 			dataList2 := service.GetExtendedModel(str)
 			if dataList2 != nil {
 				temp["flag"] = true

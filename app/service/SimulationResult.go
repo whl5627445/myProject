@@ -313,8 +313,8 @@ func SimulationResultTree(path, parent, keyWords string) []map[string]any {
 	return dataList
 }
 
-func SetResultTree(splitName []string, scalarVariableMap scalarVariable, id int, nameMap map[string]bool) map[string]interface{} {
-	data := map[string]interface{}{
+func SetResultTree(splitName []string, scalarVariableMap scalarVariable, id int, nameMap map[string]bool) map[string]any {
+	data := map[string]any{
 		"variables":           splitName[0],
 		"description":         scalarVariableMap.Description,
 		"display_unit":        scalarVariableMap.Real.DisplayUnit,

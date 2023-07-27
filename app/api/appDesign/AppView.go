@@ -1364,7 +1364,7 @@ func GetPageComponentInputOutputView(c *gin.Context) {
 		"min":       component.Min,
 		"interval":  component.Interval,
 	}
-	output := map[string]interface{}{
+	output := map[string]any{
 		"output": component.Output,
 	}
 	data := map[string]any{
