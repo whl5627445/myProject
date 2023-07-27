@@ -1807,6 +1807,29 @@ func GetNoVersionAvailableLibrariesView(c *gin.Context) {
 
 }
 
+func DeleteNoVersionAvailableLibrariesView(c *gin.Context) {
+	/*
+		根据sys_or_user  userspace_id  version_control 删除可编辑无版本的模型库
+	*/
+	var res DataType.ResponseData
+	var item DataBaseModel.YssimModels
+	err := c.BindJSON(&item)
+	if err != nil {
+		return
+	}
+	err = dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id = ?  AND version_control = 0", item.ID, item.SysUser, item.UserSpaceId).Find(&item).Error
+	if err != nil {
+		res.Status = 2
+		res.Err = "删除失败，未查询到该模型"
+		c.JSON(http.StatusBadRequest, res)
+		return
+	}
+	dbModel.Delete(&item)
+	res.Msg = "删除成功"
+	c.JSON(http.StatusOK, res)
+
+}
+
 func GetVersionAvailableLibrariesView(c *gin.Context) {
 	/*
 		根据sys_or_user  userspace_id  version_control 查询可编辑有版本的模型库
