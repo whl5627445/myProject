@@ -1806,3 +1806,17 @@ func GetNoVersionAvailableLibrariesView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 
 }
+
+func GetVersionAvailableLibrariesView(c *gin.Context) {
+	/*
+		根据sys_or_user  userspace_id  version_control 查询可编辑有版本的模型库
+	*/
+	var res DataType.ResponseData
+	sysOrUser := c.Query("sys_or_user")
+	userspaceId := c.Query("userspace_id")
+	var yssimModels []DataBaseModel.YssimModels
+	dbModel.Where("sys_or_user = ? AND userspace_id = ? AND version_control = 1", sysOrUser, userspaceId).Find(&yssimModels)
+	res.Data = yssimModels
+	c.JSON(http.StatusOK, res)
+
+}

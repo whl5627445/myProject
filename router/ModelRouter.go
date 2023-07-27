@@ -66,6 +66,7 @@ func ModelRouter(g *gin.Engine) {
 
 		Models.GET("/availableLibraries/get", API.GetAvailableLibrariesView)
 		Models.GET("/noVersionAvailableLibraries/get", API.GetNoVersionAvailableLibrariesView)
+		Models.GET("/versionAvailableLibraries/get", API.GetVersionAvailableLibrariesView)
 
 		Models.GET("/extend/get", API.GetExtendedModelView)
 
