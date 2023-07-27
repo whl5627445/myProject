@@ -61,7 +61,6 @@ func ModelRouter(g *gin.Engine) {
 		Models.POST("/userspace/login", API.LoginUserSpaceView)
 		Models.POST("/mark", API.AppModelMarkView)
 
-		Models.POST("/CAD/upload", API.CADParseView)
 		Models.POST("/CAD/parse", API.CADParseView)
 		Models.POST("/CAD/mapping", API.CADMappingModelView)
 
