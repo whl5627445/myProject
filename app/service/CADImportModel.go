@@ -17,6 +17,8 @@ import (
 type root struct {
 	XMLName xml.Name `xml:"Root"`
 	Tube    []tube   `xml:"tube"`
+	Result  string   `xml:"result,attr"`
+	Message string   `xml:"message,attr"`
 }
 
 type tube struct {
