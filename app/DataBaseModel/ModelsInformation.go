@@ -7,46 +7,46 @@ import (
 )
 
 type YssimModels struct {
-	ID             string         `gorm:"primaryKey;type:varchar(128)"`
-	PackageName    string         `gorm:"column:package_name;type:varchar(128)"`
-	Version        string         `gorm:"column:version;default:\"\";type:varchar(32)"`
-	SysUser        string         `gorm:"column:sys_or_user;default:\"\";type:varchar(32)"`
-	FilePath       string         `gorm:"column:file_path;default:\"\";type:varchar(256)"`
-	CreatedAt      *time.Time     `gorm:"column:create_time;autoCreateTime"`
-	UpdatedAt      *time.Time     `gorm:"column:update_time"`
-	UserSpaceId    string         `gorm:"column:userspace_id;default:\"\";type:varchar(128)"`
-	VersionControl bool           `gorm:"column:version_control;default:false;type:bool"`
-	VersionBranch  string         `gorm:"column:version_branch;default:\"master\";type:varchar(128)"`
-	VersionTag     string         `gorm:"column:version_tag;default:\"\";type:varchar(128)"`
-	Deleted        gorm.DeletedAt `gorm:"column:deleted_at"`
-	Default        bool           `gorm:"column:default_version;default:0;type:bool"`
+	ID             string         `gorm:"primaryKey;type:varchar(128);comment:package唯一标识"`
+	PackageName    string         `gorm:"column:package_name;type:varchar(128);comment:package名称，一般称为包名或库的名字"`
+	Version        string         `gorm:"column:version;default:\"\";type:varchar(32);comment:package版本号"`
+	SysUser        string         `gorm:"column:sys_or_user;default:\"\";type:varchar(32);comment:是用户模型的话则为用户名，系统模型则是sys"`
+	FilePath       string         `gorm:"column:file_path;default:\"\";type:varchar(256);comment:用户模型所在路径，常驻系统模型则为空"`
+	CreatedAt      *time.Time     `gorm:"column:create_time;autoCreateTime;comment:创建时间"`
+	UpdatedAt      *time.Time     `gorm:"column:update_time;comment:更新时间"`
+	UserSpaceId    string         `gorm:"column:userspace_id;default:\"\";type:varchar(128);comment:package所在用户空间的唯一识别标识"`
+	VersionControl bool           `gorm:"column:version_control;default:false;type:bool;comment:是否有版本控制"`
+	VersionBranch  string         `gorm:"column:version_branch;default:\"master\";type:varchar(128);comment:版本控制分支"`
+	VersionTag     string         `gorm:"column:version_tag;default:\"\";type:varchar(128);comment:版本控制tag"`
+	Deleted        gorm.DeletedAt `gorm:"column:deleted_at;comment:删除时间"`
+	Default        bool           `gorm:"column:default_version;default:0;type:bool;comment:是否默认加载"`
 }
 
 type SystemLibrary struct {
-	ID             string         `gorm:"primaryKey;type:varchar(128)"`
-	UserName       string         `gorm:"column:username;type:varchar(128)"`
-	PackageName    string         `gorm:"column:package_name;type:varchar(128)"`
-	Version        string         `gorm:"column:version;default:\"\";type:varchar(32)"`
-	FilePath       string         `gorm:"column:file_path;default:\"\";type:varchar(256)"`
-	VersionControl bool           `gorm:"column:version_control;default:false;type:bool"`
-	VersionBranch  string         `gorm:"column:version_branch;default:\"master\";type:varchar(128)"`
-	VersionTag     string         `gorm:"column:version_tag;default:\"\";type:varchar(128)"`
-	CreatedAt      *time.Time     `gorm:"column:create_time;autoCreateTime"`
-	UpdatedAt      *time.Time     `gorm:"column:update_time"`
-	Deleted        gorm.DeletedAt `gorm:"column:deleted_at"`
+	ID             string         `gorm:"primaryKey;type:varchar(128);comment:package唯一标识"`
+	UserName       string         `gorm:"column:username;type:varchar(128);comment:用户名"`
+	PackageName    string         `gorm:"column:package_name;type:varchar(128);comment:package名称，一般称为包名或库的名字"`
+	Version        string         `gorm:"column:version;default:\"\";type:varchar(32);comment:package版本号"`
+	FilePath       string         `gorm:"column:file_path;default:\"\";type:varchar(256);comment:package所在路径"`
+	VersionControl bool           `gorm:"column:version_control;default:false;type:bool;comment:是否有版本控制"`
+	VersionBranch  string         `gorm:"column:version_branch;default:\"master\";type:varchar(128);comment:版本控制分支"`
+	VersionTag     string         `gorm:"column:version_tag;default:\"\";type:varchar(128);comment:版本控制tag"`
+	CreatedAt      *time.Time     `gorm:"column:create_time;autoCreateTime;comment:创建时间"`
+	UpdatedAt      *time.Time     `gorm:"column:update_time;comment:更新时间"`
+	Deleted        gorm.DeletedAt `gorm:"column:deleted_at;comment:删除时间"`
 }
 
 type UserLibrary struct {
-	ID             string         `gorm:"primaryKey;type:varchar(128)"`
-	UserName       string         `gorm:"column:username;type:varchar(128)"`
-	PackageName    string         `gorm:"column:package_name;type:varchar(128)"`
-	Version        string         `gorm:"column:version;default:\"\";type:varchar(32)"`
-	FilePath       string         `gorm:"column:file_path;default:\"\";type:varchar(256)"`
-	VersionControl bool           `gorm:"column:version_control;default:false;type:bool"`
-	VersionBranch  string         `gorm:"column:version_branch;default:\"master\";type:varchar(128)"`
-	VersionTag     string         `gorm:"column:version_tag;default:\"\";type:varchar(128)"`
-	Used           bool           `gorm:"column:used;type:bool"`
-	CreatedAt      *time.Time     `gorm:"column:create_time;autoCreateTime"`
-	UpdatedAt      *time.Time     `gorm:"column:update_time"`
-	Deleted        gorm.DeletedAt `gorm:"column:deleted_at"`
+	ID             string         `gorm:"primaryKey;type:varchar(128);comment:package唯一标识"`
+	UserName       string         `gorm:"column:username;type:varchar(128);comment:用户名"`
+	PackageName    string         `gorm:"column:package_name;type:varchar(128);comment:package名称，一般称为包名或库的名字"`
+	Version        string         `gorm:"column:version;default:\"\";type:varchar(32);comment:package版本号"`
+	Used           bool           `gorm:"column:used;type:bool;comment:该package是否已经被某空间使用"`
+	FilePath       string         `gorm:"column:file_path;default:\"\";type:varchar(256);comment:package所在路径"`
+	VersionControl bool           `gorm:"column:version_control;default:false;type:bool;comment:是否有版本控制"`
+	VersionBranch  string         `gorm:"column:version_branch;default:\"master\";type:varchar(128);comment:版本控制分支"`
+	VersionTag     string         `gorm:"column:version_tag;default:\"\";type:varchar(128);comment:版本控制tag"`
+	CreatedAt      *time.Time     `gorm:"column:create_time;autoCreateTime;comment:创建时间"`
+	UpdatedAt      *time.Time     `gorm:"column:update_time;comment:更新时间"`
+	Deleted        gorm.DeletedAt `gorm:"column:deleted_at;comment:删除时间"`
 }
