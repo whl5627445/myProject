@@ -68,6 +68,11 @@ func ModelRouter(g *gin.Engine) {
 		Models.POST("/library/dependency/delete", API.DeleteDependencyLibraryView)
 		Models.POST("/library/dependency/create", API.CreateDependencyLibraryView)
 		Models.GET("/library/dependency/get", API.GetDependencyLibraryView)
+
+		Models.GET("/availableLibraries/get", API.GetAvailableLibrariesView)
+
+		Models.GET("/extend/get", API.GetExtendedModelView)
+
 	}
 	g.POST("/test", API.Test)
 	g.POST("/test1", API.Test1)

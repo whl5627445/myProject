@@ -1756,3 +1756,41 @@ func Test1(c *gin.Context) {
 	res.Data = data
 	c.JSON(http.StatusOK, res)
 }
+
+func GetExtendedModelView(c *gin.Context) {
+	/*
+		# 获取模型继承的父类
+		## 开发者： 宋义
+	*/
+
+	var res DataType.ResponseData
+	modelName := c.Query("model_name")
+	if strings.TrimSpace(modelName) == "" {
+		res.Err = "参数为空"
+		res.Status = 2
+		c.JSON(http.StatusBadRequest, res)
+		return
+	}
+	var data []map[string]interface{}
+	dataList := service.GetExtendedModel(modelName)
+	if dataList != nil {
+		for _, str := range dataList {
+			temp := map[string]interface{}{"model_name": str}
+			dataList2 := service.GetExtendedModel(str)
+			if dataList2 != nil {
+				temp["flag"] = true
+			} else {
+				temp["flag"] = false
+			}
+			data = append(data, temp)
+		}
+		res.Data = data
+		res.Msg = "查询成功"
+	} else {
+		res.Msg = "此模型没有父类"
+		res.Status = 2
+	}
+
+	c.JSON(http.StatusOK, res)
+
+}

@@ -159,3 +159,13 @@ func GetICList(name string) []string {
 	}
 	return dataList
 }
+
+func GetExtendedModel(className string) []string {
+	dataList := omc.OMC.GetInheritedClasses(className)
+	if dataList != nil {
+		return dataList
+	} else {
+		return nil
+	}
+
+}
