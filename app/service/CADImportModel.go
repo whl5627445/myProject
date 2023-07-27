@@ -1,11 +1,19 @@
 package service
 
 import (
+	"bytes"
 	"encoding/xml"
 	"errors"
+	"fmt"
+	"github.com/bytedance/sonic"
+	"io"
+	"io/ioutil"
 	"log"
 	"math"
+	"mime/multipart"
+	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"yssim-go/app/DataType"
@@ -111,6 +119,61 @@ type attribute struct {
 	AttrValue string   `xml:"attr-value,attr"`
 }
 
+func GetXmlData(form *multipart.Form, header string) string {
+
+	files := form.File["files"] // 获取名为 "files" 的文件数组
+	bodyBuf := &bytes.Buffer{}
+	bodyWriter := multipart.NewWriter(bodyBuf)
+
+	for _, file := range files {
+		currentDir, _ := os.Getwd()
+		filePath := currentDir + "/static/UserFiles/CAD/"
+		fileName := file.Filename
+		fileWriter, _ := bodyWriter.CreateFormFile("file", filePath+fileName)
+
+		// 打开文件并将内容复制到fileWriter
+		file, _ := file.Open()
+		_, _ = io.Copy(fileWriter, file)
+		_ = file.Close()
+		_ = os.RemoveAll(filePath)
+	}
+	_ = bodyWriter.WriteField("url", header+"/xml")
+	// 完成multipart/form-data表单
+	contentType := bodyWriter.FormDataContentType()
+	err := bodyWriter.Close()
+
+	// 创建一个POST请求，并设置请求头和请求体
+	req, err := http.NewRequest("POST", "http://192.168.1.200:8081/file/batch", bodyBuf)
+	if err != nil {
+		fmt.Println("error creating request")
+		return ""
+	}
+
+	// 设置请求头中的Content-Type字段
+	req.Header.Set("Content-Type", contentType)
+
+	// 发送HTTP请求
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("error sending request")
+		return ""
+	}
+
+	// 读取响应的内容
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("读取响应失败:", err)
+		return ""
+	}
+
+	// 关闭响应的 Body
+	_ = resp.Body.Close()
+	var data DataType.CadData
+	_ = sonic.Unmarshal(body, &data)
+	return data.Data
+}
+
 func CADParseParts(path string) []map[string]any {
 
 	v := root{}
@@ -119,7 +182,10 @@ func CADParseParts(path string) []map[string]any {
 		log.Printf("CADxml文件解析有误 err: %#v", err)
 		return nil
 	}
-
+	if v.Result != "success" {
+		log.Printf("CADxml文件解析有误 err: 解析失败")
+		return nil
+	}
 	var parts []map[string]any
 	for i := 0; i < len(v.Tube); i++ {
 		t := v.Tube[i]
@@ -377,13 +443,21 @@ func parseFloatListAndCalculate(strList []float64, flip []float64) []string {
 
 func parseXML(path string, obj any) error {
 
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return errors.New("读取消息错误错误：" + err.Error())
+	if !filepath.IsAbs(path) {
+		err := xml.Unmarshal([]byte(path), obj)
+		if err != nil {
+			return errors.New("反序列化错误：" + err.Error())
+		}
+	} else {
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return errors.New("读取消息错误错误：" + err.Error())
+		}
+		err = xml.Unmarshal(data, obj)
+		if err != nil {
+			return errors.New("反序列化错误：" + err.Error())
+		}
 	}
-	err = xml.Unmarshal(data, obj)
-	if err != nil {
-		return errors.New("反序列化错误：" + err.Error())
-	}
+
 	return nil
 }

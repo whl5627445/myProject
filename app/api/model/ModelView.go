@@ -1552,12 +1552,30 @@ func CADParseView(c *gin.Context) {
 	/*
 		解析CAD文件
 	*/
-	var model DataBaseModel.YssimModels
-	dbModel.Where("package_name = ? AND version = ?", "Modelica", "4.0.0").First(&model)
-	modelName := map[string]any{"straight_tube": map[string]any{"id": model.ID, "model_name": []string{"Modelica.Fluid.Pipes.StaticPipe", "Modelica.Fluid.Pipes.DynamicPipe"}}, "bendable_tube": map[string]any{"id": model.ID, "model_name": []string{"Modelica.Fluid.Fittings.Bends.CurvedBend"}}}
-	components := service.CADParseParts("test/CAD.xml")
 	var res DataType.ResponseData
+	var model DataBaseModel.YssimModels
+	header := c.GetHeader("username")
+	dbModel.Where("package_name = ? AND version = ?", "Modelica", "4.0.0").First(&model)
+
+	form, err := c.MultipartForm()
+	if err != nil {
+		res.Err = "文件获取失败"
+		res.Status = 2
+		c.JSON(http.StatusBadRequest, res)
+		return
+	}
+	data := service.GetXmlData(form, header)
+	if data == "" {
+		res.Err = "文件上传失败"
+		res.Status = 2
+		c.JSON(http.StatusBadRequest, res)
+		return
+	}
+	modelName := map[string]any{"straight_tube": map[string]any{"id": model.ID, "model_name": []string{"Modelica.Fluid.Pipes.StaticPipe", "Modelica.Fluid.Pipes.DynamicPipe"}}, "bendable_tube": map[string]any{"id": model.ID, "model_name": []string{"Modelica.Fluid.Fittings.Bends.CurvedBend"}}}
+	components := service.CADParseParts(data)
+
 	res.Data = map[string]any{"components": components, "model": modelName}
+
 	c.JSON(http.StatusOK, res)
 }
 

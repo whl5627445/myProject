@@ -189,6 +189,12 @@ type CadMappingModelInformation struct {
 	Type             string           `json:"type" binding:"required"`
 }
 
+type CadData struct {
+	Msg  string `json:"msg" binding:""`
+	Code int    `json:"code" binding:""`
+	Data string `json:"data" binding:""`
+}
+
 type CadInformation struct {
 	GeometryData  cadMappingGeometry `json:"geometry_data" binding:"required"`
 	OriginDiagram []float64          `json:"origin" binding:"required"`
