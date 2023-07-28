@@ -1843,8 +1843,8 @@ func DeleteVersionAvailableLibrariesView(c *gin.Context) {
 	var username = c.GetHeader("username")
 	var spaceId = c.GetHeader("space_id")
 	var userLibrary DataBaseModel.UserLibrary
-	err := dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id = ? ", id, username, spaceId).Find(&userLibrary).Error
-	if err != nil {
+	dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id = ? ", id, username, spaceId).First(&userLibrary)
+	if userLibrary.ID == "" {
 		res.Status = 2
 		res.Err = "删除失败，未查询到该模型"
 		c.JSON(http.StatusBadRequest, res)
