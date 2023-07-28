@@ -1737,7 +1737,7 @@ func GetAvailableLibrariesView(c *gin.Context) {
 		根据username used 查询可用库列表  0未占用 1占用  查询used为0
 	*/
 	var res DataType.ResponseData
-	username := c.Query("username")
+	username := c.GetHeader("username")
 	var userLibraries []DataBaseModel.UserLibrary
 	dbModel.Where("username = ? AND used = 0 ", username).Find(&userLibraries)
 	res.Data = userLibraries
@@ -1793,20 +1793,6 @@ func GetExtendedModelView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-func GetNoVersionAvailableLibrariesView(c *gin.Context) {
-	/*
-		根据sys_or_user  userspace_id  version_control 查询可编辑无版本的模型库
-	*/
-	var res DataType.ResponseData
-	sysOrUser := c.Query("sys_or_user")
-	userspaceId := c.Query("userspace_id")
-	var yssimModels []DataBaseModel.YssimModels
-	dbModel.Where("sys_or_user = ? AND userspace_id = ? AND version_control = 0", sysOrUser, userspaceId).Find(&yssimModels)
-	res.Data = yssimModels
-	c.JSON(http.StatusOK, res)
-
-}
-
 func DeleteNoVersionAvailableLibrariesView(c *gin.Context) {
 	/*
 		根据sys_or_user  userspace_id  version_control 删除可编辑无版本的模型库
@@ -1835,11 +1821,22 @@ func GetVersionAvailableLibrariesView(c *gin.Context) {
 		根据sys_or_user  userspace_id  version_control 查询可编辑有版本的模型库
 	*/
 	var res DataType.ResponseData
-	sysOrUser := c.Query("sys_or_user")
-	userspaceId := c.Query("userspace_id")
+	sysOrUser := c.GetHeader("username")
+	userspaceId := c.GetHeader("space_id")
 	var yssimModels []DataBaseModel.YssimModels
-	dbModel.Where("sys_or_user = ? AND userspace_id = ? AND version_control = 1", sysOrUser, userspaceId).Find(&yssimModels)
-	res.Data = yssimModels
+
+	dbModel.Where("sys_or_user = ? AND userspace_id = ?", sysOrUser, userspaceId).Find(&yssimModels)
+	result := make(map[string][]DataBaseModel.YssimModels)
+	result["version"] = []DataBaseModel.YssimModels{}
+	result["noVersion"] = []DataBaseModel.YssimModels{}
+	for _, model := range yssimModels {
+		if model.VersionControl {
+			result["version"] = append(result["version"], model)
+		} else {
+			result["noVersion"] = append(result["noVersion"], model)
+		}
+	}
+	res.Data = result
 	c.JSON(http.StatusOK, res)
 
 }

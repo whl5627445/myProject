@@ -65,7 +65,6 @@ func ModelRouter(g *gin.Engine) {
 		Models.POST("/CAD/mapping", API.CADMappingModelView)
 
 		Models.GET("/library/available/get", API.GetAvailableLibrariesView)
-		Models.GET("/library/noVersion/get", API.GetNoVersionAvailableLibrariesView)
 		Models.POST("/library/noVersion/delete", API.DeleteNoVersionAvailableLibrariesView)
 		Models.GET("/library/version/get", API.GetVersionAvailableLibrariesView)
 		Models.POST("/library/version/delete", API.DeleteVersionAvailableLibrariesView)
