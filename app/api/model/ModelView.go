@@ -1739,10 +1739,19 @@ func GetAvailableLibrariesView(c *gin.Context) {
 	var res DataType.ResponseData
 	username := c.GetHeader("username")
 	var userLibraries []DataBaseModel.UserLibrary
-	dbModel.Where("username = ? AND used = 0 ", username).Find(&userLibraries)
-	res.Data = userLibraries
+	dbModel.Where("username = ? AND used = ?", username, false).Find(&userLibraries)
+	var data []map[string]any
+	for _, library := range userLibraries {
+		d := map[string]any{
+			"id":             library.ID,
+			"package_name":   library.PackageName,
+			"version_branch": library.VersionBranch,
+		}
+		data = append(data, d)
+	}
+	res.Msg = "查询成功"
+	res.Data = data
 	c.JSON(http.StatusOK, res)
-
 }
 
 func Test1(c *gin.Context) {
@@ -1793,72 +1802,55 @@ func GetExtendedModelView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-func DeleteNoVersionAvailableLibrariesView(c *gin.Context) {
-	/*
-		根据sys_or_user  userspace_id  version_control 删除可编辑无版本的模型库
-	*/
-	var res DataType.ResponseData
-	var item DataType.DeleteIsHaveVersionLibraryData
-	err := c.BindJSON(&item)
-	if err != nil {
-		return
-	}
-	err = dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id = ?  AND version_control = 0", item.Id, item.SysUser, item.UserSpaceId).Find(&item).Error
-	if err != nil {
-		res.Status = 2
-		res.Err = "删除失败，未查询到该模型"
-		c.JSON(http.StatusBadRequest, res)
-		return
-	}
-	dbModel.Delete(&item)
-	res.Msg = "删除成功"
-	c.JSON(http.StatusOK, res)
-
-}
-
 func GetVersionAvailableLibrariesView(c *gin.Context) {
 	/*
-		根据sys_or_user  userspace_id  version_control 查询可编辑有版本的模型库
+		根据sys_or_user  userspace_id   查询可编辑有版本的模型库
 	*/
 	var res DataType.ResponseData
 	sysOrUser := c.GetHeader("username")
 	userspaceId := c.GetHeader("space_id")
 	var yssimModels []DataBaseModel.YssimModels
-
 	dbModel.Where("sys_or_user = ? AND userspace_id = ?", sysOrUser, userspaceId).Find(&yssimModels)
-	result := make(map[string][]DataBaseModel.YssimModels)
-	result["version"] = []DataBaseModel.YssimModels{}
-	result["noVersion"] = []DataBaseModel.YssimModels{}
+	result := make(map[string][]DataType.GetVersionLibraryData)
+	result["version"] = []DataType.GetVersionLibraryData{}
+	result["noVersion"] = []DataType.GetVersionLibraryData{}
 	for _, model := range yssimModels {
+		versionLibraryData := DataType.GetVersionLibraryData{
+			Id:          model.ID,
+			PackageName: model.PackageName,
+		}
 		if model.VersionControl {
-			result["version"] = append(result["version"], model)
+			versionLibraryData.VersionControl = model.VersionControl
+			versionLibraryData.VersionBranch = model.VersionBranch
+			versionLibraryData.Version = model.Version
+			result["version"] = append(result["version"], versionLibraryData)
 		} else {
-			result["noVersion"] = append(result["noVersion"], model)
+			versionLibraryData.VersionControl = model.VersionControl
+			versionLibraryData.VersionBranch = model.VersionBranch
+			result["noVersion"] = append(result["noVersion"], versionLibraryData)
 		}
 	}
 	res.Data = result
 	c.JSON(http.StatusOK, res)
-
 }
 
 func DeleteVersionAvailableLibrariesView(c *gin.Context) {
 	/*
-		根据sys_or_user  userspace_id  version_control 删除可编辑有版本的模型库
+		根据sys_or_user  userspace_id  删除可编辑模型库
 	*/
 	var res DataType.ResponseData
-	var item DataType.DeleteIsHaveVersionLibraryData
-	err := c.BindJSON(&item)
-	if err != nil {
-		return
-	}
-	err = dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id = ?  AND version_control = 1", item.Id, item.SysUser, item.UserSpaceId).Find(&item).Error
+	var id = c.Query("id")
+	var username = c.GetHeader("username")
+	var spaceId = c.GetHeader("space_id")
+	var userLibrary DataBaseModel.UserLibrary
+	err := dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id = ? ", id, username, spaceId).Find(&userLibrary).Error
 	if err != nil {
 		res.Status = 2
 		res.Err = "删除失败，未查询到该模型"
 		c.JSON(http.StatusBadRequest, res)
 		return
 	}
-	dbModel.Delete(&item)
+	dbModel.Delete(&userLibrary)
 	res.Msg = "删除成功"
 	c.JSON(http.StatusOK, res)
 
@@ -1869,36 +1861,36 @@ func CreateVersionAvailableLibrariesView(c *gin.Context) {
 		创建可编辑有版本的模型库
 	*/
 	var res DataType.ResponseData
-	var item DataType.CreateVersionLibraryData
-
-	err := c.BindJSON(&item)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, "绑定json数据失败")
+	var id = c.Query("id")
+	var username = c.GetHeader("username")
+	var spaceId = c.GetHeader("space_id")
+	var userLibrary DataBaseModel.UserLibrary
+	dbModel.Where("id = ? AND username = ? ", id, username).First(&userLibrary)
+	if userLibrary.ID == "" {
+		res.Status = 2
+		res.Err = "未查询到该模型,添加失败"
+		c.JSON(http.StatusBadRequest, res)
 		return
 	}
 	var newVersionLibrary = DataBaseModel.YssimModels{
 		ID:             uuid.New().String(),
-		PackageName:    item.PackageName,
-		Version:        item.Version,
-		SysUser:        item.SysUser,
-		FilePath:       item.FilePath,
-		UserSpaceId:    item.UserSpaceId,
-		VersionControl: item.VersionControl,
-		VersionBranch:  item.VersionBranch,
-		VersionTag:     item.VersionTag,
-		Default:        item.Default,
+		PackageName:    userLibrary.PackageName,
+		Version:        userLibrary.Version,
+		SysUser:        username,
+		FilePath:       userLibrary.FilePath,
+		UserSpaceId:    spaceId,
+		VersionControl: userLibrary.VersionControl,
+		VersionBranch:  userLibrary.VersionBranch,
+		VersionTag:     userLibrary.VersionTag,
 	}
-	err = dbModel.Create(&newVersionLibrary).Error
+	err := dbModel.Create(&newVersionLibrary).Error
 	if err != nil {
 		res.Status = 2
 		res.Err = "创建失败"
 		c.JSON(http.StatusBadRequest, res)
 		return
 	}
-	var update DataBaseModel.UserLibrary
-	dbModel.First(&update, "id = ?", item.AvailableId).Update("used", true)
-
+	dbModel.First(&userLibrary, "id = ?", id).Update("used", true)
 	res.Msg = "创建成功"
 	c.JSON(http.StatusOK, res)
-
 }
