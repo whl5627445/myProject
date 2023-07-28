@@ -69,6 +69,7 @@ func ModelRouter(g *gin.Engine) {
 		Models.POST("/library/noVersion/delete", API.DeleteNoVersionAvailableLibrariesView)
 		Models.GET("/library/version/get", API.GetVersionAvailableLibrariesView)
 		Models.POST("/library/version/delete", API.DeleteVersionAvailableLibrariesView)
+		Models.POST("/library/version/create", API.CreateVersionAvailableLibrariesView)
 
 		Models.GET("/extend/get", API.GetExtendedModelView)
 

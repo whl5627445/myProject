@@ -1866,3 +1866,42 @@ func DeleteVersionAvailableLibrariesView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 
 }
+
+func CreateVersionAvailableLibrariesView(c *gin.Context) {
+	/*
+		创建可编辑有版本的模型库
+	*/
+	var res DataType.ResponseData
+	var item DataType.CreateVersionLibraryData
+
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "绑定json数据失败")
+		return
+	}
+	var newVersionLibrary = DataBaseModel.YssimModels{
+		ID:             uuid.New().String(),
+		PackageName:    item.PackageName,
+		Version:        item.Version,
+		SysUser:        item.SysUser,
+		FilePath:       item.FilePath,
+		UserSpaceId:    item.UserSpaceId,
+		VersionControl: item.VersionControl,
+		VersionBranch:  item.VersionBranch,
+		VersionTag:     item.VersionTag,
+		Default:        item.Default,
+	}
+	err = dbModel.Create(&newVersionLibrary).Error
+	if err != nil {
+		res.Status = 2
+		res.Err = "创建失败"
+		c.JSON(http.StatusBadRequest, res)
+		return
+	}
+	var update DataBaseModel.UserLibrary
+	dbModel.First(&update, "id = ?", item.AvailableId).Update("used", true)
+
+	res.Msg = "创建成功"
+	c.JSON(http.StatusOK, res)
+
+}

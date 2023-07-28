@@ -230,3 +230,16 @@ type DeleteIsHaveVersionLibraryData struct {
 	SysUser     string `json:"sys_or_user" binding:"required"`
 	UserSpaceId string `json:"userspace_id" binding:"required"`
 }
+
+type CreateVersionLibraryData struct {
+	AvailableId    string `json:"available_id" binding:"required"`
+	PackageName    string `json:"package_name" binding:"required"`
+	Version        string `json:"version" binding:""`
+	SysUser        string `json:"sys_or_user" binding:"required"`
+	FilePath       string `json:"file_path" binding:""`
+	UserSpaceId    string `json:"userspace_id" binding:"required"`
+	VersionBranch  string `json:"version_branch" binding:"required"`
+	VersionTag     string `json:"version_tag" binding:""`
+	Default        bool   `json:"default_version" binding:""`
+	VersionControl bool   `json:"version_control" binding:""`
+}
