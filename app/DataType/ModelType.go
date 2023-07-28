@@ -238,3 +238,7 @@ type GetVersionLibraryData struct {
 	VersionControl bool   `json:"version_control" binding:""`
 	VersionBranch  string `json:"version_branch" binding:"required"`
 }
+
+type DeleteVersionLibraryData struct {
+	Id string `json:"id" binding:"required"`
+}

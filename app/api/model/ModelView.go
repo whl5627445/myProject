@@ -1839,11 +1839,16 @@ func DeleteVersionAvailableLibrariesView(c *gin.Context) {
 		根据sys_or_user  userspace_id  删除可编辑模型库
 	*/
 	var res DataType.ResponseData
-	var id = c.Query("id")
 	var username = c.GetHeader("username")
 	var spaceId = c.GetHeader("space_id")
-	var userLibrary DataBaseModel.UserLibrary
-	dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id = ? ", id, username, spaceId).First(&userLibrary)
+	var deleteLibrary DataType.DeleteVersionLibraryData
+	err := c.BindJSON(&deleteLibrary)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	var userLibrary DataBaseModel.YssimModels
+	dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id = ? ", deleteLibrary.Id, username, spaceId).First(&userLibrary)
 	if userLibrary.ID == "" {
 		res.Status = 2
 		res.Err = "删除失败，未查询到该模型"
@@ -1861,11 +1866,17 @@ func CreateVersionAvailableLibrariesView(c *gin.Context) {
 		创建可编辑有版本的模型库
 	*/
 	var res DataType.ResponseData
-	var id = c.Query("id")
+
 	var username = c.GetHeader("username")
 	var spaceId = c.GetHeader("space_id")
+	var deleteLibrary DataType.DeleteVersionLibraryData
+	err := c.BindJSON(&deleteLibrary)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
 	var userLibrary DataBaseModel.UserLibrary
-	dbModel.Where("id = ? AND username = ? ", id, username).First(&userLibrary)
+	dbModel.Where("id = ? AND username = ? ", deleteLibrary.Id, username).First(&userLibrary)
 	if userLibrary.ID == "" {
 		res.Status = 2
 		res.Err = "未查询到该模型,添加失败"
@@ -1873,7 +1884,7 @@ func CreateVersionAvailableLibrariesView(c *gin.Context) {
 		return
 	}
 	var newVersionLibrary = DataBaseModel.YssimModels{
-		ID:             uuid.New().String(),
+		ID:             userLibrary.ID,
 		PackageName:    userLibrary.PackageName,
 		Version:        userLibrary.Version,
 		SysUser:        username,
@@ -1883,14 +1894,14 @@ func CreateVersionAvailableLibrariesView(c *gin.Context) {
 		VersionBranch:  userLibrary.VersionBranch,
 		VersionTag:     userLibrary.VersionTag,
 	}
-	err := dbModel.Create(&newVersionLibrary).Error
+	err = dbModel.Create(&newVersionLibrary).Error
 	if err != nil {
 		res.Status = 2
 		res.Err = "创建失败"
 		c.JSON(http.StatusBadRequest, res)
 		return
 	}
-	dbModel.First(&userLibrary, "id = ?", id).Update("used", true)
+	dbModel.Model(&userLibrary).Update("used", true)
 	res.Msg = "创建成功"
 	c.JSON(http.StatusOK, res)
 }
