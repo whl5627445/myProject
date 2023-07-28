@@ -132,9 +132,9 @@ func GetXmlData(form *multipart.Form, header string) string {
 		fileWriter, _ := bodyWriter.CreateFormFile("file", filePath+fileName)
 
 		// 打开文件并将内容复制到fileWriter
-		file, _ := file.Open()
-		_, _ = io.Copy(fileWriter, file)
-		_ = file.Close()
+		fileCopy, _ := file.Open()
+		_, _ = io.Copy(fileWriter, fileCopy)
+		_ = fileCopy.Close()
 		_ = os.RemoveAll(filePath)
 	}
 	_ = bodyWriter.WriteField("url", header+"/xml")
