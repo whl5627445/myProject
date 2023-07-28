@@ -224,3 +224,9 @@ type CreateDependencyLibraryData struct {
 	VersionTag     string `json:"version_tag" binding:""`
 	Default        bool   `json:"default_version" binding:"required"`
 }
+
+type DeleteIsHaveVersionLibraryData struct {
+	Id          string `json:"id" binding:"required"`
+	SysUser     string `json:"sys_or_user" binding:"required"`
+	UserSpaceId string `json:"userspace_id" binding:"required"`
+}
