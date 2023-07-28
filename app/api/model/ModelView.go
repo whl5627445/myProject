@@ -1561,14 +1561,14 @@ func CADParseView(c *gin.Context) {
 	if err != nil {
 		res.Err = "文件获取失败"
 		res.Status = 2
-		c.JSON(http.StatusBadRequest, res)
+		c.JSON(http.StatusOK, res)
 		return
 	}
 	data := service.GetXmlData(form, username)
 	if data == "" {
 		res.Err = "文件上传失败"
 		res.Status = 2
-		c.JSON(http.StatusBadRequest, res)
+		c.JSON(http.StatusOK, res)
 		return
 	}
 	modelName := map[string]any{"straight_tube": map[string]any{"id": model.ID, "model_name": []string{"Modelica.Fluid.Pipes.StaticPipe", "Modelica.Fluid.Pipes.DynamicPipe"}}, "bendable_tube": map[string]any{"id": model.ID, "model_name": []string{"Modelica.Fluid.Fittings.Bends.CurvedBend"}}}
@@ -1631,7 +1631,7 @@ func GetSystemLibraryView(c *gin.Context) {
 	if err != nil {
 		res.Status = 2
 		res.Err = "未查询到系统模型"
-		c.JSON(http.StatusBadRequest, res)
+		c.JSON(http.StatusOK, res)
 		return
 	}
 	var data []map[string]any
@@ -1659,7 +1659,7 @@ func DeleteDependencyLibraryView(c *gin.Context) {
 	if err != nil {
 		res.Status = 2
 		res.Err = "删除失败，查看id是否正确"
-		c.JSON(http.StatusBadRequest, res)
+		c.JSON(http.StatusOK, res)
 		return
 	}
 	dbModel.Delete(&model)
@@ -1693,7 +1693,7 @@ func CreateDependencyLibraryView(c *gin.Context) {
 	if err != nil {
 		res.Status = 2
 		res.Err = "创建失败"
-		c.JSON(http.StatusBadRequest, res)
+		c.JSON(http.StatusOK, res)
 		return
 	}
 	res.Msg = "创建成功"
@@ -1709,7 +1709,7 @@ func GetDependencyLibraryView(c *gin.Context) {
 	if err != nil {
 		res.Status = 2
 		res.Err = "无依赖模型"
-		c.JSON(http.StatusBadRequest, res)
+		c.JSON(http.StatusOK, res)
 		return
 	}
 	var data []map[string]any
@@ -1777,7 +1777,7 @@ func GetExtendedModelView(c *gin.Context) {
 	if strings.TrimSpace(modelName) == "" {
 		res.Err = "参数为空"
 		res.Status = 2
-		c.JSON(http.StatusBadRequest, res)
+		c.JSON(http.StatusOK, res)
 		return
 	}
 	var data []map[string]interface{}
@@ -1852,7 +1852,7 @@ func DeleteVersionAvailableLibrariesView(c *gin.Context) {
 	if userLibrary.ID == "" {
 		res.Status = 2
 		res.Err = "删除失败，未查询到该模型"
-		c.JSON(http.StatusBadRequest, res)
+		c.JSON(http.StatusOK, res)
 		return
 	}
 	dbModel.Delete(&userLibrary)
@@ -1880,7 +1880,7 @@ func CreateVersionAvailableLibrariesView(c *gin.Context) {
 	if userLibrary.ID == "" {
 		res.Status = 2
 		res.Err = "未查询到该模型,添加失败"
-		c.JSON(http.StatusBadRequest, res)
+		c.JSON(http.StatusOK, res)
 		return
 	}
 	var newVersionLibrary = DataBaseModel.YssimModels{
@@ -1898,7 +1898,7 @@ func CreateVersionAvailableLibrariesView(c *gin.Context) {
 	if err != nil {
 		res.Status = 2
 		res.Err = "创建失败"
-		c.JSON(http.StatusBadRequest, res)
+		c.JSON(http.StatusOK, res)
 		return
 	}
 	dbModel.Model(&userLibrary).Update("used", true)
