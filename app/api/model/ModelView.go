@@ -1769,7 +1769,6 @@ func Test1(c *gin.Context) {
 func GetExtendedModelView(c *gin.Context) {
 	/*
 		# 获取模型继承的父类
-		## 开发者： 宋义
 	*/
 
 	var res DataType.ResponseData
@@ -1804,11 +1803,11 @@ func GetExtendedModelView(c *gin.Context) {
 
 func GetVersionAvailableLibrariesView(c *gin.Context) {
 	/*
-		根据sys_or_user  userspace_id   查询可编辑有版本的模型库
+		根据sys_or_user  userspace_id   查询可编辑的模型库
 	*/
 	var res DataType.ResponseData
 	sysOrUser := c.GetHeader("username")
-	userspaceId := c.GetHeader("space_id")
+	userspaceId := c.Query("space_id")
 	var yssimModels []DataBaseModel.YssimModels
 	dbModel.Where("sys_or_user = ? AND userspace_id = ?", sysOrUser, userspaceId).Find(&yssimModels)
 	result := make(map[string][]DataType.GetVersionLibraryData)
@@ -1840,7 +1839,6 @@ func DeleteVersionAvailableLibrariesView(c *gin.Context) {
 	*/
 	var res DataType.ResponseData
 	var username = c.GetHeader("username")
-	var spaceId = c.GetHeader("space_id")
 	var deleteLibrary DataType.DeleteVersionLibraryData
 	err := c.BindJSON(&deleteLibrary)
 	if err != nil {
@@ -1848,7 +1846,7 @@ func DeleteVersionAvailableLibrariesView(c *gin.Context) {
 		return
 	}
 	var userLibrary DataBaseModel.YssimModels
-	dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id = ? ", deleteLibrary.Id, username, spaceId).First(&userLibrary)
+	dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id = ? ", deleteLibrary.Id, username, deleteLibrary.SpaceId).First(&userLibrary)
 	if userLibrary.ID == "" {
 		res.Status = 2
 		res.Err = "删除失败，未查询到该模型"
@@ -1868,15 +1866,15 @@ func CreateVersionAvailableLibrariesView(c *gin.Context) {
 	var res DataType.ResponseData
 
 	var username = c.GetHeader("username")
-	var spaceId = c.GetHeader("space_id")
-	var deleteLibrary DataType.DeleteVersionLibraryData
-	err := c.BindJSON(&deleteLibrary)
+
+	var createLibrary DataType.CreateVersionLibraryData
+	err := c.BindJSON(&createLibrary)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
 	var userLibrary DataBaseModel.UserLibrary
-	dbModel.Where("id = ? AND username = ? ", deleteLibrary.Id, username).First(&userLibrary)
+	dbModel.Where("id = ? AND username = ? ", createLibrary.Id, username).First(&userLibrary)
 	if userLibrary.ID == "" {
 		res.Status = 2
 		res.Err = "未查询到该模型,添加失败"
@@ -1889,7 +1887,7 @@ func CreateVersionAvailableLibrariesView(c *gin.Context) {
 		Version:        userLibrary.Version,
 		SysUser:        username,
 		FilePath:       userLibrary.FilePath,
-		UserSpaceId:    spaceId,
+		UserSpaceId:    createLibrary.SpaceId,
 		VersionControl: userLibrary.VersionControl,
 		VersionBranch:  userLibrary.VersionBranch,
 		VersionTag:     userLibrary.VersionTag,
