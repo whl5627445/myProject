@@ -700,6 +700,7 @@ func CreateResourcesDirView(c *gin.Context) {
 	userName := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
 	var item DataType.PackageResourcesData
+	var packageModel DataBaseModel.YssimModels
 	err := c.BindJSON(&item)
 	if err != nil {
 		log.Println(err)
@@ -712,8 +713,16 @@ func CreateResourcesDirView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	var packageModel DataBaseModel.YssimModels
 	DB.Where("id = ? AND sys_or_user = ? AND userspace_id = ?", item.PackageId, userName, userSpaceId).First(&packageModel)
+	list := service.GetResourcesList(packageModel.PackageName, item.Parent)
+	for _, name := range list {
+		if name["name"] == item.Path {
+			res.Status = 2
+			res.Err = "文件夹名称重复"
+			c.JSON(http.StatusOK, res)
+			return
+		}
+	}
 	if packageModel.ID == "" {
 		log.Println(err)
 		c.JSON(http.StatusBadRequest, "not found")
