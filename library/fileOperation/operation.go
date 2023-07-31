@@ -213,10 +213,11 @@ func FindFile(fileName, rootPath string) (string, error) {
 	queue := list.New()
 	queue.PushBack(rootPath)
 	for queue.Len() > 0 {
-		files, _ := os.ReadDir(queue.Front().Value.(string))
+		dir := queue.Front().Value.(string)
+		files, _ := os.ReadDir(dir)
 		for _, file := range files {
 			if file.IsDir() {
-				queue.PushBack(filepath.Join(rootPath, file.Name()))
+				queue.PushBack(filepath.Join(dir, file.Name()))
 			} else {
 				if file.Name() == fileName {
 					return queue.Front().Value.(string), nil
