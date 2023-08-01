@@ -1,0 +1,8 @@
+
+124
+sudo docker run -it -d --name=omc_grpc --network=yssim-net -p 50052:50052 \
+-v /home/yssim/simtek/yssim-go:/home/simtek/code \
+-v  /home/yssim/simtek/yssim-go/omlibrary:/usr/lib/omlibrary  \
+omc-v1  /home/simtek/code/grpc/GoOmcGrpc/docker/start.sh
+
+
