@@ -37,9 +37,22 @@ func ParseFile(filePath string) (string, bool) {
 	}
 	replyData, err := Client.ParseFile(Ctx, requestData)
 	if err != nil {
-		fmt.Println("调用grpc服务(GitPackageVersion)出错：", err)
+		fmt.Println("调用grpc服务(ParseFile)出错：", err)
 		return "", false
 	} else {
 		return replyData.PackageName, replyData.ParseRes
+	}
+}
+
+func DeleteClass(packageName string) bool {
+	requestData := &grpcInterface.DeleteClassRequest{
+		PackageName: packageName,
+	}
+	replyData, err := Client.DeleteClass(Ctx, requestData)
+	if err != nil {
+		fmt.Println("调用grpc服务(DeleteClass)出错：", err)
+		return false
+	} else {
+		return replyData.DeleteRes
 	}
 }

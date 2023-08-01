@@ -22,9 +22,10 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type OmcGreeterClient interface {
-	ParseFile(ctx context.Context, in *ParseFileRequest, opts ...grpc.CallOption) (*ParseFileReply, error)
 	LoadFile(ctx context.Context, in *LoadFileRequest, opts ...grpc.CallOption) (*LoadFileReply, error)
 	GitPackageVersion(ctx context.Context, in *GitPackageVersionRequest, opts ...grpc.CallOption) (*GitPackageVersionReply, error)
+	ParseFile(ctx context.Context, in *ParseFileRequest, opts ...grpc.CallOption) (*ParseFileReply, error)
+	DeleteClass(ctx context.Context, in *DeleteClassRequest, opts ...grpc.CallOption) (*DeleteClassReply, error)
 }
 
 type omcGreeterClient struct {
@@ -33,15 +34,6 @@ type omcGreeterClient struct {
 
 func NewOmcGreeterClient(cc grpc.ClientConnInterface) OmcGreeterClient {
 	return &omcGreeterClient{cc}
-}
-
-func (c *omcGreeterClient) ParseFile(ctx context.Context, in *ParseFileRequest, opts ...grpc.CallOption) (*ParseFileReply, error) {
-	out := new(ParseFileReply)
-	err := c.cc.Invoke(ctx, "/OmcGreeter/ParseFile", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *omcGreeterClient) LoadFile(ctx context.Context, in *LoadFileRequest, opts ...grpc.CallOption) (*LoadFileReply, error) {
@@ -62,13 +54,32 @@ func (c *omcGreeterClient) GitPackageVersion(ctx context.Context, in *GitPackage
 	return out, nil
 }
 
+func (c *omcGreeterClient) ParseFile(ctx context.Context, in *ParseFileRequest, opts ...grpc.CallOption) (*ParseFileReply, error) {
+	out := new(ParseFileReply)
+	err := c.cc.Invoke(ctx, "/OmcGreeter/ParseFile", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *omcGreeterClient) DeleteClass(ctx context.Context, in *DeleteClassRequest, opts ...grpc.CallOption) (*DeleteClassReply, error) {
+	out := new(DeleteClassReply)
+	err := c.cc.Invoke(ctx, "/OmcGreeter/DeleteClass", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // OmcGreeterServer is the server API for OmcGreeter service.
 // All implementations must embed UnimplementedOmcGreeterServer
 // for forward compatibility
 type OmcGreeterServer interface {
-	ParseFile(context.Context, *ParseFileRequest) (*ParseFileReply, error)
 	LoadFile(context.Context, *LoadFileRequest) (*LoadFileReply, error)
 	GitPackageVersion(context.Context, *GitPackageVersionRequest) (*GitPackageVersionReply, error)
+	ParseFile(context.Context, *ParseFileRequest) (*ParseFileReply, error)
+	DeleteClass(context.Context, *DeleteClassRequest) (*DeleteClassReply, error)
 	mustEmbedUnimplementedOmcGreeterServer()
 }
 
@@ -76,14 +87,17 @@ type OmcGreeterServer interface {
 type UnimplementedOmcGreeterServer struct {
 }
 
-func (UnimplementedOmcGreeterServer) ParseFile(context.Context, *ParseFileRequest) (*ParseFileReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ParseFile not implemented")
-}
 func (UnimplementedOmcGreeterServer) LoadFile(context.Context, *LoadFileRequest) (*LoadFileReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LoadFile not implemented")
 }
 func (UnimplementedOmcGreeterServer) GitPackageVersion(context.Context, *GitPackageVersionRequest) (*GitPackageVersionReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GitPackageVersion not implemented")
+}
+func (UnimplementedOmcGreeterServer) ParseFile(context.Context, *ParseFileRequest) (*ParseFileReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ParseFile not implemented")
+}
+func (UnimplementedOmcGreeterServer) DeleteClass(context.Context, *DeleteClassRequest) (*DeleteClassReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteClass not implemented")
 }
 func (UnimplementedOmcGreeterServer) mustEmbedUnimplementedOmcGreeterServer() {}
 
@@ -96,24 +110,6 @@ type UnsafeOmcGreeterServer interface {
 
 func RegisterOmcGreeterServer(s grpc.ServiceRegistrar, srv OmcGreeterServer) {
 	s.RegisterService(&OmcGreeter_ServiceDesc, srv)
-}
-
-func _OmcGreeter_ParseFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ParseFileRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(OmcGreeterServer).ParseFile(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/OmcGreeter/ParseFile",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OmcGreeterServer).ParseFile(ctx, req.(*ParseFileRequest))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _OmcGreeter_LoadFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -152,6 +148,42 @@ func _OmcGreeter_GitPackageVersion_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _OmcGreeter_ParseFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ParseFileRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OmcGreeterServer).ParseFile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/OmcGreeter/ParseFile",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OmcGreeterServer).ParseFile(ctx, req.(*ParseFileRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OmcGreeter_DeleteClass_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteClassRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OmcGreeterServer).DeleteClass(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/OmcGreeter/DeleteClass",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OmcGreeterServer).DeleteClass(ctx, req.(*DeleteClassRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // OmcGreeter_ServiceDesc is the grpc.ServiceDesc for OmcGreeter service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -160,16 +192,20 @@ var OmcGreeter_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*OmcGreeterServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "ParseFile",
-			Handler:    _OmcGreeter_ParseFile_Handler,
-		},
-		{
 			MethodName: "LoadFile",
 			Handler:    _OmcGreeter_LoadFile_Handler,
 		},
 		{
 			MethodName: "GitPackageVersion",
 			Handler:    _OmcGreeter_GitPackageVersion_Handler,
+		},
+		{
+			MethodName: "ParseFile",
+			Handler:    _OmcGreeter_ParseFile_Handler,
+		},
+		{
+			MethodName: "DeleteClass",
+			Handler:    _OmcGreeter_DeleteClass_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

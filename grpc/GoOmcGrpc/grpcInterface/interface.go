@@ -30,3 +30,10 @@ func (s *MyServer) ParseFile(ctx context.Context, in *ParseFileRequest) (*ParseF
 	packageName, res := omc.OMC.ParseFile(in.FilePath)
 	return &ParseFileReply{PackageName: packageName, ParseRes: res}, nil
 }
+
+// DeleteClass 实现接口
+func (s *MyServer) DeleteClass(ctx context.Context, in *DeleteClassRequest) (*DeleteClassReply, error) {
+	log.Println(in.PackageName)
+	res := omc.OMC.DeleteClass(in.PackageName)
+	return &DeleteClassReply{DeleteRes: res}, nil
+}

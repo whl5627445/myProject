@@ -6,6 +6,13 @@ service OmcGreeter {
   rpc LoadFile (LoadFileRequest) returns (LoadFileReply) {}
   rpc GitPackageVersion (GitPackageVersionRequest) returns (GitPackageVersionReply) {}
   rpc ParseFile (ParseFileRequest) returns (ParseFileReply) {}
+  rpc DeleteClass (DeleteClassRequest) returns (DeleteClassReply) {}
+}
+message DeleteClassRequest{
+    string  packageName  =1;
+}
+message DeleteClassReply {
+  bool deleteRes = 1;
 }
 
 message GitPackageVersionRequest {
