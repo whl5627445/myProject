@@ -114,7 +114,7 @@ func (x *DeleteClassReply) GetDeleteRes() bool {
 	return false
 }
 
-type GitPackageVersionRequest struct {
+type GetPackageVersionRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -122,8 +122,8 @@ type GitPackageVersionRequest struct {
 	PackageName string `protobuf:"bytes,1,opt,name=packageName,proto3" json:"packageName,omitempty"`
 }
 
-func (x *GitPackageVersionRequest) Reset() {
-	*x = GitPackageVersionRequest{}
+func (x *GetPackageVersionRequest) Reset() {
+	*x = GetPackageVersionRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_server_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -131,13 +131,13 @@ func (x *GitPackageVersionRequest) Reset() {
 	}
 }
 
-func (x *GitPackageVersionRequest) String() string {
+func (x *GetPackageVersionRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GitPackageVersionRequest) ProtoMessage() {}
+func (*GetPackageVersionRequest) ProtoMessage() {}
 
-func (x *GitPackageVersionRequest) ProtoReflect() protoreflect.Message {
+func (x *GetPackageVersionRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_server_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -149,19 +149,19 @@ func (x *GitPackageVersionRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GitPackageVersionRequest.ProtoReflect.Descriptor instead.
-func (*GitPackageVersionRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetPackageVersionRequest.ProtoReflect.Descriptor instead.
+func (*GetPackageVersionRequest) Descriptor() ([]byte, []int) {
 	return file_server_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *GitPackageVersionRequest) GetPackageName() string {
+func (x *GetPackageVersionRequest) GetPackageName() string {
 	if x != nil {
 		return x.PackageName
 	}
 	return ""
 }
 
-type GitPackageVersionReply struct {
+type GetPackageVersionReply struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -169,8 +169,8 @@ type GitPackageVersionReply struct {
 	Version string `protobuf:"bytes,1,opt,name=version,proto3" json:"version,omitempty"`
 }
 
-func (x *GitPackageVersionReply) Reset() {
-	*x = GitPackageVersionReply{}
+func (x *GetPackageVersionReply) Reset() {
+	*x = GetPackageVersionReply{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_server_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -178,13 +178,13 @@ func (x *GitPackageVersionReply) Reset() {
 	}
 }
 
-func (x *GitPackageVersionReply) String() string {
+func (x *GetPackageVersionReply) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GitPackageVersionReply) ProtoMessage() {}
+func (*GetPackageVersionReply) ProtoMessage() {}
 
-func (x *GitPackageVersionReply) ProtoReflect() protoreflect.Message {
+func (x *GetPackageVersionReply) ProtoReflect() protoreflect.Message {
 	mi := &file_server_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -196,12 +196,12 @@ func (x *GitPackageVersionReply) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GitPackageVersionReply.ProtoReflect.Descriptor instead.
-func (*GitPackageVersionReply) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetPackageVersionReply.ProtoReflect.Descriptor instead.
+func (*GetPackageVersionReply) Descriptor() ([]byte, []int) {
 	return file_server_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *GitPackageVersionReply) GetVersion() string {
+func (x *GetPackageVersionReply) GetVersion() string {
 	if x != nil {
 		return x.Version
 	}
@@ -414,11 +414,11 @@ var file_server_proto_rawDesc = []byte{
 	0x67, 0x65, 0x4e, 0x61, 0x6d, 0x65, 0x22, 0x30, 0x0a, 0x10, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65,
 	0x43, 0x6c, 0x61, 0x73, 0x73, 0x52, 0x65, 0x70, 0x6c, 0x79, 0x12, 0x1c, 0x0a, 0x09, 0x64, 0x65,
 	0x6c, 0x65, 0x74, 0x65, 0x52, 0x65, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x09, 0x64,
-	0x65, 0x6c, 0x65, 0x74, 0x65, 0x52, 0x65, 0x73, 0x22, 0x3c, 0x0a, 0x18, 0x47, 0x69, 0x74, 0x50,
+	0x65, 0x6c, 0x65, 0x74, 0x65, 0x52, 0x65, 0x73, 0x22, 0x3c, 0x0a, 0x18, 0x47, 0x65, 0x74, 0x50,
 	0x61, 0x63, 0x6b, 0x61, 0x67, 0x65, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71,
 	0x75, 0x65, 0x73, 0x74, 0x12, 0x20, 0x0a, 0x0b, 0x70, 0x61, 0x63, 0x6b, 0x61, 0x67, 0x65, 0x4e,
 	0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x70, 0x61, 0x63, 0x6b, 0x61,
-	0x67, 0x65, 0x4e, 0x61, 0x6d, 0x65, 0x22, 0x32, 0x0a, 0x16, 0x47, 0x69, 0x74, 0x50, 0x61, 0x63,
+	0x67, 0x65, 0x4e, 0x61, 0x6d, 0x65, 0x22, 0x32, 0x0a, 0x16, 0x47, 0x65, 0x74, 0x50, 0x61, 0x63,
 	0x6b, 0x61, 0x67, 0x65, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x70, 0x6c, 0x79,
 	0x12, 0x18, 0x0a, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28,
 	0x09, 0x52, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x22, 0x33, 0x0a, 0x0f, 0x4c, 0x6f,
@@ -440,10 +440,10 @@ var file_server_proto_rawDesc = []byte{
 	0x72, 0x12, 0x2e, 0x0a, 0x08, 0x4c, 0x6f, 0x61, 0x64, 0x46, 0x69, 0x6c, 0x65, 0x12, 0x10, 0x2e,
 	0x4c, 0x6f, 0x61, 0x64, 0x46, 0x69, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
 	0x0e, 0x2e, 0x4c, 0x6f, 0x61, 0x64, 0x46, 0x69, 0x6c, 0x65, 0x52, 0x65, 0x70, 0x6c, 0x79, 0x22,
-	0x00, 0x12, 0x49, 0x0a, 0x11, 0x47, 0x69, 0x74, 0x50, 0x61, 0x63, 0x6b, 0x61, 0x67, 0x65, 0x56,
-	0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x12, 0x19, 0x2e, 0x47, 0x69, 0x74, 0x50, 0x61, 0x63, 0x6b,
+	0x00, 0x12, 0x49, 0x0a, 0x11, 0x47, 0x65, 0x74, 0x50, 0x61, 0x63, 0x6b, 0x61, 0x67, 0x65, 0x56,
+	0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x12, 0x19, 0x2e, 0x47, 0x65, 0x74, 0x50, 0x61, 0x63, 0x6b,
 	0x61, 0x67, 0x65, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x1a, 0x17, 0x2e, 0x47, 0x69, 0x74, 0x50, 0x61, 0x63, 0x6b, 0x61, 0x67, 0x65, 0x56, 0x65,
+	0x74, 0x1a, 0x17, 0x2e, 0x47, 0x65, 0x74, 0x50, 0x61, 0x63, 0x6b, 0x61, 0x67, 0x65, 0x56, 0x65,
 	0x72, 0x73, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x70, 0x6c, 0x79, 0x22, 0x00, 0x12, 0x31, 0x0a, 0x09,
 	0x50, 0x61, 0x72, 0x73, 0x65, 0x46, 0x69, 0x6c, 0x65, 0x12, 0x11, 0x2e, 0x50, 0x61, 0x72, 0x73,
 	0x65, 0x46, 0x69, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x0f, 0x2e, 0x50,
@@ -472,8 +472,8 @@ var file_server_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_server_proto_goTypes = []interface{}{
 	(*DeleteClassRequest)(nil),       // 0: DeleteClassRequest
 	(*DeleteClassReply)(nil),         // 1: DeleteClassReply
-	(*GitPackageVersionRequest)(nil), // 2: GitPackageVersionRequest
-	(*GitPackageVersionReply)(nil),   // 3: GitPackageVersionReply
+	(*GetPackageVersionRequest)(nil), // 2: GetPackageVersionRequest
+	(*GetPackageVersionReply)(nil),   // 3: GetPackageVersionReply
 	(*LoadFileRequest)(nil),          // 4: LoadFileRequest
 	(*LoadFileReply)(nil),            // 5: LoadFileReply
 	(*ParseFileRequest)(nil),         // 6: ParseFileRequest
@@ -481,11 +481,11 @@ var file_server_proto_goTypes = []interface{}{
 }
 var file_server_proto_depIdxs = []int32{
 	4, // 0: OmcGreeter.LoadFile:input_type -> LoadFileRequest
-	2, // 1: OmcGreeter.GitPackageVersion:input_type -> GitPackageVersionRequest
+	2, // 1: OmcGreeter.GetPackageVersion:input_type -> GetPackageVersionRequest
 	6, // 2: OmcGreeter.ParseFile:input_type -> ParseFileRequest
 	0, // 3: OmcGreeter.DeleteClass:input_type -> DeleteClassRequest
 	5, // 4: OmcGreeter.LoadFile:output_type -> LoadFileReply
-	3, // 5: OmcGreeter.GitPackageVersion:output_type -> GitPackageVersionReply
+	3, // 5: OmcGreeter.GetPackageVersion:output_type -> GetPackageVersionReply
 	7, // 6: OmcGreeter.ParseFile:output_type -> ParseFileReply
 	1, // 7: OmcGreeter.DeleteClass:output_type -> DeleteClassReply
 	4, // [4:8] is the sub-list for method output_type
@@ -526,7 +526,7 @@ func file_server_proto_init() {
 			}
 		}
 		file_server_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GitPackageVersionRequest); i {
+			switch v := v.(*GetPackageVersionRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -538,7 +538,7 @@ func file_server_proto_init() {
 			}
 		}
 		file_server_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GitPackageVersionReply); i {
+			switch v := v.(*GetPackageVersionReply); i {
 			case 0:
 				return &v.state
 			case 1:

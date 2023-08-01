@@ -4,7 +4,7 @@ option go_package = "./grpcInterface" ;
 
 service OmcGreeter {
   rpc LoadFile (LoadFileRequest) returns (LoadFileReply) {}
-  rpc GitPackageVersion (GitPackageVersionRequest) returns (GitPackageVersionReply) {}
+  rpc GetPackageVersion (GetPackageVersionRequest) returns (GetPackageVersionReply) {}
   rpc ParseFile (ParseFileRequest) returns (ParseFileReply) {}
   rpc DeleteClass (DeleteClassRequest) returns (DeleteClassReply) {}
 }
@@ -15,10 +15,10 @@ message DeleteClassReply {
   bool deleteRes = 1;
 }
 
-message GitPackageVersionRequest {
+message GetPackageVersionRequest {
   string packageName = 1;
 }
-message GitPackageVersionReply {
+message GetPackageVersionReply {
   string version = 1;
 }
 

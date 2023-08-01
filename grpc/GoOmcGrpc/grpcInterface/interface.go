@@ -11,10 +11,10 @@ type MyServer struct {
 	UnimplementedOmcGreeterServer
 }
 
-// GitPackageVersion 实现接口
-func (s *MyServer) GitPackageVersion(ctx context.Context, in *GitPackageVersionRequest) (*GitPackageVersionReply, error) {
+// GetPackageVersion 实现接口
+func (s *MyServer) GetPackageVersion(ctx context.Context, in *GetPackageVersionRequest) (*GetPackageVersionReply, error) {
 	libraryVersion := omc.OMC.GetClassInformation(in.PackageName)[14].(string)
-	return &GitPackageVersionReply{Version: libraryVersion}, nil
+	return &GetPackageVersionReply{Version: libraryVersion}, nil
 }
 
 // LoadFile 实现接口

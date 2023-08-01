@@ -23,7 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type OmcGreeterClient interface {
 	LoadFile(ctx context.Context, in *LoadFileRequest, opts ...grpc.CallOption) (*LoadFileReply, error)
-	GitPackageVersion(ctx context.Context, in *GitPackageVersionRequest, opts ...grpc.CallOption) (*GitPackageVersionReply, error)
+	GetPackageVersion(ctx context.Context, in *GetPackageVersionRequest, opts ...grpc.CallOption) (*GetPackageVersionReply, error)
 	ParseFile(ctx context.Context, in *ParseFileRequest, opts ...grpc.CallOption) (*ParseFileReply, error)
 	DeleteClass(ctx context.Context, in *DeleteClassRequest, opts ...grpc.CallOption) (*DeleteClassReply, error)
 }
@@ -45,9 +45,9 @@ func (c *omcGreeterClient) LoadFile(ctx context.Context, in *LoadFileRequest, op
 	return out, nil
 }
 
-func (c *omcGreeterClient) GitPackageVersion(ctx context.Context, in *GitPackageVersionRequest, opts ...grpc.CallOption) (*GitPackageVersionReply, error) {
-	out := new(GitPackageVersionReply)
-	err := c.cc.Invoke(ctx, "/OmcGreeter/GitPackageVersion", in, out, opts...)
+func (c *omcGreeterClient) GetPackageVersion(ctx context.Context, in *GetPackageVersionRequest, opts ...grpc.CallOption) (*GetPackageVersionReply, error) {
+	out := new(GetPackageVersionReply)
+	err := c.cc.Invoke(ctx, "/OmcGreeter/GetPackageVersion", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +77,7 @@ func (c *omcGreeterClient) DeleteClass(ctx context.Context, in *DeleteClassReque
 // for forward compatibility
 type OmcGreeterServer interface {
 	LoadFile(context.Context, *LoadFileRequest) (*LoadFileReply, error)
-	GitPackageVersion(context.Context, *GitPackageVersionRequest) (*GitPackageVersionReply, error)
+	GetPackageVersion(context.Context, *GetPackageVersionRequest) (*GetPackageVersionReply, error)
 	ParseFile(context.Context, *ParseFileRequest) (*ParseFileReply, error)
 	DeleteClass(context.Context, *DeleteClassRequest) (*DeleteClassReply, error)
 	mustEmbedUnimplementedOmcGreeterServer()
@@ -90,8 +90,8 @@ type UnimplementedOmcGreeterServer struct {
 func (UnimplementedOmcGreeterServer) LoadFile(context.Context, *LoadFileRequest) (*LoadFileReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LoadFile not implemented")
 }
-func (UnimplementedOmcGreeterServer) GitPackageVersion(context.Context, *GitPackageVersionRequest) (*GitPackageVersionReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GitPackageVersion not implemented")
+func (UnimplementedOmcGreeterServer) GetPackageVersion(context.Context, *GetPackageVersionRequest) (*GetPackageVersionReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetPackageVersion not implemented")
 }
 func (UnimplementedOmcGreeterServer) ParseFile(context.Context, *ParseFileRequest) (*ParseFileReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ParseFile not implemented")
@@ -130,20 +130,20 @@ func _OmcGreeter_LoadFile_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-func _OmcGreeter_GitPackageVersion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GitPackageVersionRequest)
+func _OmcGreeter_GetPackageVersion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetPackageVersionRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(OmcGreeterServer).GitPackageVersion(ctx, in)
+		return srv.(OmcGreeterServer).GetPackageVersion(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/OmcGreeter/GitPackageVersion",
+		FullMethod: "/OmcGreeter/GetPackageVersion",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OmcGreeterServer).GitPackageVersion(ctx, req.(*GitPackageVersionRequest))
+		return srv.(OmcGreeterServer).GetPackageVersion(ctx, req.(*GetPackageVersionRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -196,8 +196,8 @@ var OmcGreeter_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _OmcGreeter_LoadFile_Handler,
 		},
 		{
-			MethodName: "GitPackageVersion",
-			Handler:    _OmcGreeter_GitPackageVersion_Handler,
+			MethodName: "GetPackageVersion",
+			Handler:    _OmcGreeter_GetPackageVersion_Handler,
 		},
 		{
 			MethodName: "ParseFile",

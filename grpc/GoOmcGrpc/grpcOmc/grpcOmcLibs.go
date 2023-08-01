@@ -18,11 +18,11 @@ func LoadFile(path string) bool {
 	}
 }
 
-func GitPackageVersion(PackageName string) string {
-	requestData := &grpcInterface.GitPackageVersionRequest{
+func GetPackageVersion(PackageName string) string {
+	requestData := &grpcInterface.GetPackageVersionRequest{
 		PackageName: PackageName,
 	}
-	replyData, err := Client.GitPackageVersion(Ctx, requestData)
+	replyData, err := Client.GetPackageVersion(Ctx, requestData)
 	if err != nil {
 		fmt.Println("调用grpc服务(GitPackageVersion)出错：", err)
 		return ""
