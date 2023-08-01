@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+option go_package = "./grpcInterface" ;
+
+service OmcGreeter {
+  rpc LoadFile (LoadFileRequest) returns (LoadFileReply) {}
+  rpc GitPackageVersion (GitPackageVersionRequest) returns (GitPackageVersionReply) {}
+  rpc ParseFile (ParseFileRequest) returns (ParseFileReply) {}
+}
+
+message GitPackageVersionRequest {
+  string packageName = 1;
+}
+message GitPackageVersionReply {
+  string version = 1;
+}
+
+message LoadFileRequest{
+  string packagePath = 1;
+}
+message LoadFileReply{
+  bool  loadFileRes = 1;
+}
+
+message ParseFileRequest{
+  string filePath = 1;
+}
+message ParseFileReply{
+  string packageName = 1;
+  bool parseRes = 2;
+}
