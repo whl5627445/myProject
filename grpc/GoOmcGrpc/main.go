@@ -20,7 +20,7 @@ func StartOMC() bool {
 
 func main() {
 	// 监听127.0.0.1:50051地址
-	lis, err := net.Listen("tcp", "127.0.0.1:50052")
+	lis, err := net.Listen("tcp", "0.0.0.0:50052")
 	if err != nil {
 		log.Println("failed to listen: %v", err)
 	} else {

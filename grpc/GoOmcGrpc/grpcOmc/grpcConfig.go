@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	address = "127.0.0.1:50052"
+	address = "omc_grpc:50052"
 )
 
 func StartGrpc() (grpcInterface.OmcGreeterClient, context.Context) {
