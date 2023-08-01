@@ -9,7 +9,7 @@ import (
 	"time"
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/config"
-	"yssim-go/grpc/grpcPb"
+	"yssim-go/grpc/PythonGrpc/grpcPb"
 	"yssim-go/library/fileOperation"
 	"yssim-go/library/mapProcessing"
 
