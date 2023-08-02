@@ -1,6 +1,7 @@
 package API
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"regexp"
@@ -10,6 +11,7 @@ import (
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/DataType"
 	"yssim-go/app/service"
+	"yssim-go/library/fileOperation"
 	"yssim-go/library/omc"
 
 	"github.com/bytedance/sonic"
@@ -1902,4 +1904,80 @@ func CreateVersionAvailableLibrariesView(c *gin.Context) {
 	dbModel.Model(&userLibrary).Update("used", true)
 	res.Msg = "创建成功"
 	c.JSON(http.StatusOK, res)
+}
+
+func RepositoryCloneView(c *gin.Context) {
+	var res DataType.ResponseData
+	var item DataType.RepositoryCloneData
+	userName := c.GetHeader("username")
+	//userSpaceId := c.GetHeader("space_id")
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	// 获取这个储存库的名称
+	repoName, err := service.GetRepositoryName(item.RepositoryAddress)
+	if err != nil {
+		fmt.Println("储存库的名称解析错误:", err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	// 检查是否已经存在
+	var record DataBaseModel.UserLibrary
+	dbModel.Where("username = ? AND repository_address = ?", userName, item.RepositoryAddress).First(&record)
+	if record.ID != "" {
+		res.Err = "该存储库已经存在！"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	// 创建本地存储库路径
+	repositoryPath := "static/UserFiles/UploadFile/" + userName + "/" + time.Now().Local().Format("20060102150405") + "/" + repoName + "/"
+	fileOperation.CreateFilePath(repositoryPath)
+	log.Println("repositoryPath:", repositoryPath)
+	// 克隆到本地
+	cloneRes := service.RepositoryClone(item.RepositoryAddress, repositoryPath, item.Branch)
+	log.Println("克隆结果：", cloneRes)
+
+	if cloneRes { //克隆成功
+		//分支名称默认是master
+		versionBranch := "master"
+		if item.Branch != "" {
+			versionBranch = item.Branch
+		}
+		// 获取克隆到本地的存储库的tag
+		versionTag := service.GetTag(repositoryPath)
+		log.Println("versionTag", versionTag)
+		// 获取
+		packageName, packagePath, packageVersion, msg, ok := service.GitPackageFileParse(repoName, repositoryPath)
+		log.Println("GitPackageFileParse返回结果：", packageName, packagePath, msg, ok)
+		if ok { // 创建数据库记录
+			record := DataBaseModel.UserLibrary{
+				ID:          uuid.New().String(),
+				UserName:    userName,
+				PackageName: packageName,    //package名称，一般称为包名或库的名字
+				Version:     packageVersion, //package版本号
+				//Used:           bool           			//是否已经被某空间使用
+				FilePath:          packagePath,            //package所在路径
+				VersionControl:    true,                   //是否有版本控制
+				VersionBranch:     versionBranch,          //版本控制分支
+				VersionTag:        versionTag,             //版本控制tag
+				AnotherName:       item.Name,              // 别名
+				RepositoryAddress: item.RepositoryAddress, //存储库地址
+
+			}
+			err = dbModel.Create(&record).Error
+			res.Msg = "拉取成功"
+			c.JSON(http.StatusOK, res)
+			return
+		} else {
+			log.Println(msg)
+		}
+
+	}
+	res.Msg = "拉取失败"
+	res.Status = 2
+	c.JSON(http.StatusOK, res)
+
 }

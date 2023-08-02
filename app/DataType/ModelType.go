@@ -248,3 +248,9 @@ type CreateVersionLibraryData struct {
 	Id      string `json:"id" binding:"required"`
 	SpaceId string `json:"space_id" binding:"required"`
 }
+
+type RepositoryCloneData struct {
+	RepositoryAddress string `json:"repository_address" binding:"required"`
+	Name              string `json:"name" binding:"required"`
+	Branch            string `json:"branch" binding:""`
+}
