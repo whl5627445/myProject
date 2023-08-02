@@ -256,3 +256,7 @@ type RepositoryCloneData struct {
 	Name              string `json:"name" binding:"required"`
 	Branch            string `json:"branch" binding:""`
 }
+
+type RepositoryDeleteData struct {
+	RepositoryAddress string `json:"repository_address" binding:"required"`
+}

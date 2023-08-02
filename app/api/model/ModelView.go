@@ -10,6 +10,7 @@ import (
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/DataType"
 	"yssim-go/app/service"
+	"yssim-go/library/fileOperation"
 	"yssim-go/library/omc"
 
 	"github.com/bytedance/sonic"
@@ -1901,12 +1902,99 @@ func CreateVersionAvailableLibrariesView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-func GetUMLView(c *gin.Context) {
+func RepositoryCloneView(c *gin.Context) {
 	var res DataType.ResponseData
-	var className = c.Query("className")
-	var componentName string
-	componentData := service.GetElements(className, componentName)
-	res.Msg = "创建成功"
-	res.Data = componentData
+	var item DataType.RepositoryCloneData
+	userName := c.GetHeader("username")
+	//userSpaceId := c.GetHeader("space_id")
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	// 获取这个储存库的名称
+	repoName, err := service.GetRepositoryName(item.RepositoryAddress)
+	if err != nil {
+		log.Println("储存库的名称解析错误:", err)
+		c.JSON(http.StatusBadRequest, "储存库的名称解析错误")
+		return
+	}
+	// 检查是否已经存在
+	var record DataBaseModel.UserLibrary
+	dbModel.Where("username = ? AND repository_address = ?", userName, item.RepositoryAddress).First(&record)
+	if record.ID != "" {
+		res.Err = "该存储库已经存在！"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	// 创建本地存储库路径
+	repositoryPath := "static/UserFiles/UploadFile/" + userName + "/" + time.Now().Local().Format("20060102150405") + "/" + repoName + "/"
+	fileOperation.CreateFilePath(repositoryPath)
+
+	// 克隆到本地
+	cloneRes := service.RepositoryClone(item.RepositoryAddress, repositoryPath, item.Branch)
+
+	if cloneRes { //克隆成功
+		//分支名称默认是master
+		versionBranch := "master"
+		if item.Branch != "" {
+			versionBranch = item.Branch
+		}
+		// 获取克隆到本地的存储库的tag
+		versionTag := service.GetTag(repositoryPath)
+
+		// 解析包文件
+		packageName, packagePath, packageVersion, _, ok := service.GitPackageFileParse(repoName, repositoryPath)
+
+		if ok { // 创建数据库记录
+			libraryRecord := DataBaseModel.UserLibrary{
+				ID:          uuid.New().String(),
+				UserName:    userName,
+				PackageName: packageName,    //package名称，一般称为包名或库的名字
+				Version:     packageVersion, //package版本号
+				//Used:           bool           			//是否已经被某空间使用
+				FilePath:          packagePath,            //package所在路径
+				VersionControl:    true,                   //是否有版本控制
+				VersionBranch:     versionBranch,          //版本控制分支
+				VersionTag:        versionTag,             //版本控制tag
+				AnotherName:       item.Name,              // 别名
+				RepositoryAddress: item.RepositoryAddress, //存储库地址
+
+			}
+			err = dbModel.Create(&libraryRecord).Error
+			res.Msg = "拉取成功"
+			c.JSON(http.StatusOK, res)
+			return
+		}
+	}
+	res.Err = "拉取失败"
+	res.Status = 2
 	c.JSON(http.StatusOK, res)
+
+}
+
+func RepositoryDeleteView(c *gin.Context) {
+	var res DataType.ResponseData
+	var item DataType.RepositoryDeleteData
+	userName := c.GetHeader("username")
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	// 删除数据库记录
+	var record DataBaseModel.UserLibrary
+	dbModel.Where("username = ? AND repository_address = ?", userName, item.RepositoryAddress).First(&record)
+	err = dbModel.Delete(&record).Error
+	// 删除本地文件
+	if err != nil {
+		res.Err = "删除失败"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+	} else {
+		res.Msg = "删除成功"
+		c.JSON(http.StatusOK, res)
+	}
+
 }
