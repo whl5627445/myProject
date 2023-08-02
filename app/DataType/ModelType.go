@@ -258,5 +258,5 @@ type RepositoryCloneData struct {
 }
 
 type RepositoryDeleteData struct {
-	RepositoryAddress string `json:"repository_address" binding:"required"`
+	ID string `json:"id" binding:"required"`
 }

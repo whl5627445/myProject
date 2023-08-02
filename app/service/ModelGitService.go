@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log"
 	"path/filepath"
+	"time"
 	"yssim-go/grpc/GoOmcGrpc/grpcOmc"
 	"yssim-go/library/fileOperation"
 	"yssim-go/library/goGit"
@@ -21,15 +22,23 @@ func GetRepositoryName(cloneURL string) (string, error) {
 	return repoName, nil
 }
 
-func RepositoryClone(address, FilePath, branchName string) bool {
-
-	res, _ := goGit.GitPlainClone(address, FilePath, branchName)
-	if res {
-		return true
-	} else {
-		return false
+func RepositoryClone(address, branchName, userName string) (string, string, bool) {
+	// 获取这个储存库的名称
+	repositoryName, err := GetRepositoryName(address)
+	if err != nil {
+		log.Println("储存库的名称解析错误:", err)
+		return "", "", false
 	}
-	// omc解析
+	// 创建本地存储库路径
+	repositoryPath := "static/UserFiles/UploadFile/" + userName + "/" + time.Now().Local().Format("20060102150405") + "/" + repositoryName + "/"
+	fileOperation.CreateFilePath(repositoryPath)
+	// 克隆到本地
+	res, _ := goGit.GitPlainClone(address, repositoryPath, branchName)
+	if res {
+		return repositoryPath, repositoryName, true
+	} else {
+		return "", "", false
+	}
 
 }
 

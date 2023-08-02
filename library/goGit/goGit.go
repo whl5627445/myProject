@@ -48,7 +48,6 @@ func GetLastTag(path string) (string, error) {
 	// 遍历标签引用并打印标签名
 	tagRefs.ForEach(func(tagRef *plumbing.Reference) error {
 		tag = tagRef.Name().Short()
-		log.Println("打印标签名:", tag)
 		return nil
 	})
 	return tag, nil

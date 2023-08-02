@@ -78,6 +78,7 @@ func ModelRouter(g *gin.Engine) {
 
 		Models.POST("/repository/clone", API.RepositoryCloneView)
 		Models.POST("/repository/delete", API.RepositoryDeleteView)
+		Models.GET("/repository/get", API.RepositoryGetView)
 	}
 	g.POST("/test", API.Test)
 	g.POST("/test1", API.Test1)

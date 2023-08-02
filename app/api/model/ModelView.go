@@ -10,7 +10,6 @@ import (
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/DataType"
 	"yssim-go/app/service"
-	"yssim-go/library/fileOperation"
 	"yssim-go/library/omc"
 
 	"github.com/bytedance/sonic"
@@ -1912,13 +1911,7 @@ func RepositoryCloneView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
-	// 获取这个储存库的名称
-	repoName, err := service.GetRepositoryName(item.RepositoryAddress)
-	if err != nil {
-		log.Println("储存库的名称解析错误:", err)
-		c.JSON(http.StatusBadRequest, "储存库的名称解析错误")
-		return
-	}
+
 	// 检查是否已经存在
 	var record DataBaseModel.UserLibrary
 	dbModel.Where("username = ? AND repository_address = ?", userName, item.RepositoryAddress).First(&record)
@@ -1928,12 +1921,8 @@ func RepositoryCloneView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	// 创建本地存储库路径
-	repositoryPath := "static/UserFiles/UploadFile/" + userName + "/" + time.Now().Local().Format("20060102150405") + "/" + repoName + "/"
-	fileOperation.CreateFilePath(repositoryPath)
-
 	// 克隆到本地
-	cloneRes := service.RepositoryClone(item.RepositoryAddress, repositoryPath, item.Branch)
+	repositoryPath, repositoryName, cloneRes := service.RepositoryClone(item.RepositoryAddress, item.Branch, userName)
 
 	if cloneRes { //克隆成功
 		//分支名称默认是master
@@ -1945,7 +1934,7 @@ func RepositoryCloneView(c *gin.Context) {
 		versionTag := service.GetTag(repositoryPath)
 
 		// 解析包文件
-		packageName, packagePath, packageVersion, _, ok := service.GitPackageFileParse(repoName, repositoryPath)
+		packageName, packagePath, packageVersion, _, ok := service.GitPackageFileParse(repositoryName, repositoryPath)
 
 		if ok { // 创建数据库记录
 			libraryRecord := DataBaseModel.UserLibrary{
@@ -1977,7 +1966,6 @@ func RepositoryCloneView(c *gin.Context) {
 func RepositoryDeleteView(c *gin.Context) {
 	var res DataType.ResponseData
 	var item DataType.RepositoryDeleteData
-	userName := c.GetHeader("username")
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
@@ -1985,16 +1973,32 @@ func RepositoryDeleteView(c *gin.Context) {
 	}
 	// 删除数据库记录
 	var record DataBaseModel.UserLibrary
-	dbModel.Where("username = ? AND repository_address = ?", userName, item.RepositoryAddress).First(&record)
-	err = dbModel.Delete(&record).Error
-	// 删除本地文件
-	if err != nil {
-		res.Err = "删除失败"
-		res.Status = 2
-		c.JSON(http.StatusOK, res)
-	} else {
-		res.Msg = "删除成功"
-		c.JSON(http.StatusOK, res)
+	dbModel.Where("id = ?", item.ID).First(&record)
+	dbModel.Delete(&record)
+	res.Msg = "删除成功"
+	c.JSON(http.StatusOK, res)
+}
+
+func RepositoryGetView(c *gin.Context) {
+	var res DataType.ResponseData
+	userName := c.GetHeader("username")
+
+	// 删除数据库记录
+	var records []DataBaseModel.UserLibrary
+	dbModel.Where("username = ? ", userName).Find(&records)
+	var data []map[string]any
+	for i := 0; i < len(records); i++ {
+		d := map[string]any{
+			"id":                 records[i].ID,
+			"package_name":       records[i].PackageName,
+			"version":            records[i].Version,
+			"another_name":       records[i].AnotherName,
+			"repository_address": records[i].RepositoryAddress,
+		}
+		data = append(data, d)
 	}
+	res.Msg = "查询成功"
+	res.Data = data
+	c.JSON(http.StatusOK, res)
 
 }
