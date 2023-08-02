@@ -69,6 +69,16 @@ func UploadModelPackageView(c *gin.Context) {
 			c.JSON(http.StatusOK, res)
 			return
 		}
+		var encryptionPackage DataBaseModel.SystemLibrary
+		if strings.HasSuffix(fileName, ".sk") {
+			encryptionPackage.ID = uuid.New().String()
+			encryptionPackage.UserName = userName
+			encryptionPackage.PackageName = packageName
+			encryptionPackage.Version = service.GetVersion(packageName)
+			encryptionPackage.FilePath = packagePath
+			encryptionPackage.Encryption = true
+			DB.Create(&encryptionPackage)
+		}
 		packageRecord := DataBaseModel.YssimModels{
 			ID:          uuid.New().String(),
 			PackageName: packageName,
@@ -76,6 +86,8 @@ func UploadModelPackageView(c *gin.Context) {
 			FilePath:    packagePath,
 			UserSpaceId: userSpaceId,
 			Version:     service.GetVersion(packageName),
+			Encryption:  encryptionPackage.Encryption,
+			LibraryId:   encryptionPackage.ID,
 		}
 		err = DB.Create(&packageRecord).Error
 		if err != nil {
@@ -97,7 +109,7 @@ func UploadModelPackageView(c *gin.Context) {
 			packageInformation := service.GetPackageInformation()
 			packageInformationJson, _ := sonic.Marshal(packageInformation)
 			DB.Model(DataBaseModel.YssimUserSpace{}).Where("id = ? AND username = ?", userSpaceId, userName).Update("package_information", packageInformationJson)
-			res.Msg = packageName + " 上传成功"
+			res.Msg = "上传成功"
 		}
 		c.JSON(http.StatusOK, res)
 		return

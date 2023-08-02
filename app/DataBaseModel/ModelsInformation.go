@@ -17,10 +17,11 @@ type YssimModels struct {
 	UpdatedAt      *time.Time     `gorm:"column:update_time;comment:更新时间"`
 	UserSpaceId    string         `gorm:"column:userspace_id;default:\"\";type:varchar(128);comment:package所在用户空间的唯一识别标识"`
 	VersionControl bool           `gorm:"column:version_control;default:false;type:bool;comment:是否有版本控制"`
-	VersionBranch  string         `gorm:"column:version_branch;default:\"master\";type:varchar(128);comment:版本控制分支"`
+	VersionBranch  string         `gorm:"column:version_branch;default:\"\";type:varchar(128);comment:版本控制分支"`
 	VersionTag     string         `gorm:"column:version_tag;default:\"\";type:varchar(128);comment:版本控制tag"`
 	Deleted        gorm.DeletedAt `gorm:"column:deleted_at;comment:删除时间"`
 	Default        bool           `gorm:"column:default_version;default:0;type:bool;comment:是否默认加载"`
+	Encryption     bool           `gorm:"column:encryption;default:0;type:bool;comment:是否是加密模型"`
 }
 
 type SystemLibrary struct {
@@ -30,11 +31,12 @@ type SystemLibrary struct {
 	Version        string         `gorm:"column:version;default:\"\";type:varchar(32);comment:package版本号"`
 	FilePath       string         `gorm:"column:file_path;default:\"\";type:varchar(256);comment:package所在路径"`
 	VersionControl bool           `gorm:"column:version_control;default:false;type:bool;comment:是否有版本控制"`
-	VersionBranch  string         `gorm:"column:version_branch;default:\"master\";type:varchar(128);comment:版本控制分支"`
+	VersionBranch  string         `gorm:"column:version_branch;default:\"\";type:varchar(128);comment:版本控制分支"`
 	VersionTag     string         `gorm:"column:version_tag;default:\"\";type:varchar(128);comment:版本控制tag"`
 	CreatedAt      *time.Time     `gorm:"column:create_time;autoCreateTime;comment:创建时间"`
 	UpdatedAt      *time.Time     `gorm:"column:update_time;comment:更新时间"`
 	Deleted        gorm.DeletedAt `gorm:"column:deleted_at;comment:删除时间"`
+	Encryption     bool           `gorm:"column:encryption;default:0;type:bool;comment:是否是加密模型"`
 }
 
 type UserLibrary struct {

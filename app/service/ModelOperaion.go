@@ -154,12 +154,14 @@ func ExistClass(className string) bool {
 	return omc.OMC.ExistClass(className)
 }
 
+// 获取模型类型
 func GetModelType(modelName string) string {
 	modelType := omc.OMC.GetClassRestriction(modelName)
 	modelType = strings.TrimSpace(modelType)
 	return modelType
 }
 
+// 获取模型信息
 func GetClassInformation(modelName string) []any {
 	classInformation := omc.OMC.GetClassInformation(modelName)
 	return classInformation

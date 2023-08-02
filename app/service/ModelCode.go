@@ -89,30 +89,39 @@ func DeletePackageFile(path string) error {
 func PackageFileParse(fileName, saveFilePathBase string, file io.Reader) (string, string, string, bool) {
 	dirName := strings.Split(fileName, ".")[0]
 	saveFilePath := saveFilePathBase + "/" + dirName
-	zipPackagePath := saveFilePath + "/" + fileName
-	fileOperation.CreateFilePath(saveFilePath)
-	fileData, _ := io.ReadAll(file)
-	fileOperation.WriteFile(zipPackagePath, string(fileData))
-
+	if strings.HasSuffix(fileName, ".sk") {
+		fileName = strings.TrimSuffix(fileName, ".sk") + ".zip"
+		FileDecrypt(file, saveFilePath+"/"+fileName)
+	} else {
+		fileOperation.CreateFilePath(saveFilePath)
+		fileData, _ := io.ReadAll(file)
+		fileOperation.WriteFile(saveFilePath+"/"+fileName, string(fileData))
+	}
 	packagePath := ""
 	packageFilePath := ""
 	if strings.HasSuffix(fileName, ".mo") {
-		pathList := strings.Split(zipPackagePath, "/")
-		packagePath = zipPackagePath
+		pathList := strings.Split(saveFilePath+"/"+fileName, "/")
+		packagePath = saveFilePath + "/" + fileName
 		packageFilePath = strings.Join(pathList[:len(pathList)-1], "/")
 	} else {
-		err := fileOperation.UnZip(zipPackagePath, saveFilePath)
+		err := fileOperation.UnZip(saveFilePath+"/"+fileName, saveFilePath)
+		os.Remove(saveFilePath + "/" + fileName)
+		// 解压成功后确认是单文件还是多文件package，然后解析
 		if err != nil {
 			log.Println("UnZip err", err)
 			return "", "", "", false
 		}
-		os.Remove(zipPackagePath)
-		packageFilePath, err = fileOperation.FindFile("package.mo", saveFilePath)
-		if err != nil {
-			log.Println("FindFile err", err)
-			return "", "", "未找到package", false
+		filePath, ok := FindPackageFile(saveFilePath)
+		if ok {
+			packagePath = filePath
+		} else {
+			packageFilePath, err = fileOperation.FindFile("package.mo", saveFilePath)
+			if err != nil {
+				log.Println("FindFile err", err)
+				return "", "", "未找到package", false
+			}
+			packagePath = packageFilePath + "/package.mo"
 		}
-		packagePath = packageFilePath + "/package.mo"
 	}
 	packageName, ok := omc.OMC.ParseFile(packagePath)
 	msg := ""
@@ -219,4 +228,28 @@ func ZipPackageStream(packageName, path string) (string, error) {
 	}
 	//os.Remove(tmpPath)
 	return tmpPath, nil
+}
+
+func ZipPackageEncrypt(packageName, path string) (string, error) {
+	packagePathList := strings.Split(path, "/")
+	packagePath := strings.Join(packagePathList[:len(packagePathList)-1], "/") + "/" + packageName + ".sk"
+	d, _ := os.ReadFile(path)
+	data := ModelEncrypt(d)
+	res := fileOperation.WriteFileByte(packagePath, data)
+	if !res {
+		return "", errors.New("写入文件出错，路径：" + packagePath)
+	}
+	return packagePath, nil
+}
+
+func FindPackageFile(rootPath string) (string, bool) {
+	files, _ := os.ReadDir(rootPath)
+	if len(files) == 1 && files[0].IsDir() {
+		file, _ := os.ReadDir(rootPath + "/" + files[0].Name())
+		if len(file) == 1 && !file[0].IsDir() && strings.HasSuffix(file[0].Name(), ".mo") {
+			packagePath := rootPath + "/" + files[0].Name() + "/" + file[0].Name()
+			return packagePath, true
+		}
+	}
+	return "", false
 }
