@@ -1832,15 +1832,17 @@ func DeleteVersionAvailableLibrariesView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
-	var userLibrary DataBaseModel.UserLibrary
-	dbModel.Where("id = ? AND username = ?", deleteLibrary.LibraryId, username).First(&userLibrary)
-	if userLibrary.ID == "" {
-		res.Status = 2
-		res.Err = "删除失败,未查询到该模型"
-		c.JSON(http.StatusOK, res)
-		return
+	if deleteLibrary.VersionControl {
+		var userLibrary DataBaseModel.UserLibrary
+		dbModel.Where("id = ? AND username = ?", deleteLibrary.LibraryId, username).First(&userLibrary)
+		if userLibrary.ID == "" {
+			res.Status = 2
+			res.Err = "删除失败,未查询到该模型"
+			c.JSON(http.StatusOK, res)
+			return
+		}
+		dbModel.Model(&userLibrary).Update("used", false)
 	}
-	dbModel.Model(&userLibrary).Update("used", false)
 	var yssimModel DataBaseModel.YssimModels
 	dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id = ? ", deleteLibrary.Id, username, deleteLibrary.SpaceId).First(&yssimModel)
 	if yssimModel.ID == "" {
