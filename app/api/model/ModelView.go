@@ -1628,6 +1628,9 @@ func CADMappingModelView(c *gin.Context) {
 func GetSystemLibraryView(c *gin.Context) {
 	var res DataType.ResponseData
 	var system []DataBaseModel.SystemLibrary
+	var models DataBaseModel.YssimModels
+	userName := c.GetHeader("username")
+	spaceId := c.Query("space_id")
 	err := dbModel.Find(&system).Error
 	if err != nil {
 		res.Status = 2
@@ -1637,16 +1640,19 @@ func GetSystemLibraryView(c *gin.Context) {
 	}
 	var data []map[string]any
 	for i := 0; i < len(system); i++ {
-		d := map[string]any{
-			"id":              system[i].ID,
-			"user_name":       system[i].UserName,
-			"package_name":    system[i].PackageName,
-			"file_path":       system[i].FilePath,
-			"version_control": system[i].VersionControl,
-			"version_branch":  system[i].VersionBranch,
-			"version_tag":     system[i].VersionTag,
+		dbModel.Where("library_id = ? AND sys_or_user = ? AND userspace_id = ?", system[i].ID, userName, spaceId).First(&models)
+		if models.LibraryId != system[i].ID {
+			d := map[string]any{
+				"id":              system[i].ID,
+				"user_name":       system[i].UserName,
+				"package_name":    system[i].PackageName,
+				"file_path":       system[i].FilePath,
+				"version_control": system[i].VersionControl,
+				"version_branch":  system[i].VersionBranch,
+				"version_tag":     system[i].VersionTag,
+			}
+			data = append(data, d)
 		}
-		data = append(data, d)
 	}
 	res.Msg = "查询成功"
 	res.Data = data
