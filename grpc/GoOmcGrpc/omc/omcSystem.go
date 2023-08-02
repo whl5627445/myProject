@@ -992,7 +992,8 @@ func (o *ZmqObject) ReadSimulationResult(varNameList []string, path string) ([][
 
 // ParseFile 解析mo文件
 func (o *ZmqObject) ParseFile(path string) (string, bool) {
-	pwd, _ := os.Getwd()
+	//pwd, _ := os.Getwd()
+	pwd := "/home/simtek/code"
 	cmd := "parseFile(\"" + pwd + "/" + path + "\",\"UTF-8\")"
 	result, ok := o.SendExpressionNoParsed(cmd)
 	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
@@ -1005,7 +1006,8 @@ func (o *ZmqObject) ParseFile(path string) (string, bool) {
 
 // LoadFile 加载mo文件
 func (o *ZmqObject) LoadFile(path string) bool {
-	pwd, _ := os.Getwd()
+	//pwd, _ := os.Getwd()
+	pwd := "/home/simtek/code"
 	cmd := "loadFile(\"" + pwd + "/" + path + "\")"
 	log.Println("cmd:", cmd)
 	result, ok := o.SendExpressionNoParsed(cmd)

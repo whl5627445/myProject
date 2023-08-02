@@ -15,7 +15,6 @@ func GitPlainClone(address, FilePath, branchName string) (bool, error) {
 			URL: address,
 		})
 	} else {
-		log.Println("分支名称：", branchName)
 		_, err = git.PlainClone(FilePath, false, &git.CloneOptions{
 			URL:           address,
 			ReferenceName: plumbing.NewBranchReferenceName(branchName), // 指定要克隆的分支
