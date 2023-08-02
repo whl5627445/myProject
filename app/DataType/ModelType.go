@@ -214,15 +214,12 @@ type cadMappingGeometry struct {
 }
 
 type CreateDependencyLibraryData struct {
-	PackageName    string `json:"package_name" binding:"required"`
-	Version        string `json:"version" binding:""`
-	SysUser        string `json:"sys_or_user" binding:"required"`
-	FilePath       string `json:"file_path" binding:""`
-	UserSpaceId    string `json:"userspace_id" binding:"required"`
-	VersionControl bool   `json:"version_control" binding:"required"`
-	VersionBranch  string `json:"version_branch" binding:"required"`
-	VersionTag     string `json:"version_tag" binding:""`
-	Default        bool   `json:"default_version" binding:"required"`
+	ID       string `json:"id" binding:"required"`
+	UserName string `json:"user_name" binding:"required"`
+}
+
+type DeleteDependencyLibraryData struct {
+	Ids []string `json:"id" binding:"required"`
 }
 
 type DeleteIsHaveVersionLibraryData struct {
@@ -260,4 +257,8 @@ type RepositoryCloneData struct {
 
 type RepositoryDeleteData struct {
 	ID string `json:"id" binding:"required"`
+}
+
+type FilePathData struct {
+	FilePath []string `json:"file_path" binding:"required"`
 }

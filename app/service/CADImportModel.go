@@ -17,6 +17,7 @@ import (
 	"strconv"
 	"strings"
 	"yssim-go/app/DataType"
+	"yssim-go/library/fileOperation"
 	"yssim-go/library/omc"
 
 	"github.com/shopspring/decimal"
@@ -119,47 +120,81 @@ type attribute struct {
 	AttrValue string   `xml:"attr-value,attr"`
 }
 
-func GetXmlData(form *multipart.Form, header string) string {
-
+func CadFilesUpload(form *multipart.Form, userName string) []string {
 	files := form.File["files"] // 获取名为 "files" 的文件数组
-	bodyBuf := &bytes.Buffer{}
-	bodyWriter := multipart.NewWriter(bodyBuf)
-
+	var filePath []string
 	for _, file := range files {
 		currentDir, _ := os.Getwd()
-		filePath := currentDir + "/static/UserFiles/CAD/"
-		fileName := file.Filename
-		fileWriter, _ := bodyWriter.CreateFormFile("file", filePath+fileName)
+		relativePath := "/static/UserFiles/CAD/" + userName + "/"
+		src, err := file.Open()
+		fileData, _ := io.ReadAll(src)
+		//fileSavePath := resourcesDir(relativePath, userName)
 
-		// 打开文件并将内容复制到fileWriter
-		fileCopy, _ := file.Open()
-		_, _ = io.Copy(fileWriter, fileCopy)
-		_ = fileCopy.Close()
-		_ = os.RemoveAll(filePath)
+		if err != nil {
+			log.Printf("文件打开失败")
+		}
+		os.MkdirAll(currentDir+relativePath, os.ModePerm)
+		dst, err := os.Create(currentDir + relativePath + file.Filename)
+		if err != nil {
+			// 处理错误
+			log.Printf("文件创建失败")
+		}
+		_ = dst.Close()
+
+		// 将上传的文件内容复制到目标文件
+		_, err = io.Copy(dst, src)
+		if err != nil {
+			// 处理错误
+			log.Printf("拷贝文件失败")
+		}
+		fileOperation.WriteFileByte(currentDir+relativePath+file.Filename, fileData)
+		filePath = append(filePath, relativePath+file.Filename)
 	}
-	_ = bodyWriter.WriteField("url", header+"/xml")
+	return filePath
+}
+
+func GetXmlData(files []string, header string) string {
+
+	bodyBuf := &bytes.Buffer{}
+	bodyWriter := multipart.NewWriter(bodyBuf)
+	currentDir, _ := os.Getwd()
+	for _, filePath := range files {
+		fileWriter, err := bodyWriter.CreateFormFile("file", currentDir+filePath)
+		if err != nil {
+			fmt.Println("error writing to buffer")
+		}
+		// 打开文件并将内容复制到fileWriter
+		file, err := os.Open(currentDir + filePath)
+		if err != nil {
+			fmt.Println("error opening file")
+		}
+		defer file.Close()
+
+		_, err = io.Copy(fileWriter, file)
+		if err != nil {
+			fmt.Println("error copying file")
+		}
+	}
+
 	// 完成multipart/form-data表单
-	contentType := bodyWriter.FormDataContentType()
-	err := bodyWriter.Close()
+	_ = bodyWriter.WriteField("url", header+"/xml")
+	_ = bodyWriter.Close()
 
 	// 创建一个POST请求，并设置请求头和请求体
 	req, err := http.NewRequest("POST", "http://192.168.1.200:8081/file/batch", bodyBuf)
 	if err != nil {
 		fmt.Println("error creating request")
-		return ""
 	}
 
-	// 设置请求头中的Content-Type字段
-	req.Header.Set("Content-Type", contentType)
+	req.Header.Set("Content-Type", bodyWriter.FormDataContentType())
 
 	// 发送HTTP请求
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println("error sending request")
-		return ""
 	}
-
+	defer resp.Body.Close()
 	// 读取响应的内容
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -168,9 +203,12 @@ func GetXmlData(form *multipart.Form, header string) string {
 	}
 
 	// 关闭响应的 Body
-	_ = resp.Body.Close()
+	defer resp.Body.Close()
 	var data DataType.CadData
 	_ = sonic.Unmarshal(body, &data)
+	fmt.Println(data.Msg)
+	fmt.Println(data.Code)
+	fmt.Println(data.Data)
 	return data.Data
 }
 

@@ -1542,17 +1542,16 @@ func CADParseView(c *gin.Context) {
 	var model DataBaseModel.YssimModels
 	username := c.GetHeader("username")
 	dbModel.Where("package_name = ? AND version = ?", "Modelica", "4.0.0").First(&model)
-
-	form, err := c.MultipartForm()
+	var item DataType.FilePathData
+	err := c.BindJSON(&item)
 	if err != nil {
-		res.Err = "文件获取失败"
-		res.Status = 2
-		c.JSON(http.StatusOK, res)
+		log.Println("参数验证失败： ", err)
+		c.JSON(http.StatusBadRequest, "参数错误")
 		return
 	}
-	data := service.GetXmlData(form, username)
+	data := service.GetXmlData(item.FilePath, username)
 	if data == "" {
-		res.Err = "文件上传失败"
+		res.Err = "文件解析失败"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
@@ -1562,6 +1561,22 @@ func CADParseView(c *gin.Context) {
 
 	res.Data = map[string]any{"components": components, "model": modelName}
 
+	c.JSON(http.StatusOK, res)
+}
+
+func CADFilesUploadView(c *gin.Context) {
+	var res DataType.ResponseData
+	userName := c.GetHeader("username")
+	form, err := c.MultipartForm()
+	if err != nil {
+		res.Err = "文件上传失败"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	res.Data = service.CadFilesUpload(form, userName)
+	res.Msg = "文件上传成功"
 	c.JSON(http.StatusOK, res)
 }
 
@@ -1623,6 +1638,7 @@ func GetSystemLibraryView(c *gin.Context) {
 	var data []map[string]any
 	for i := 0; i < len(system); i++ {
 		d := map[string]any{
+			"id":              system[i].ID,
 			"user_name":       system[i].UserName,
 			"package_name":    system[i].PackageName,
 			"file_path":       system[i].FilePath,
@@ -1639,9 +1655,14 @@ func GetSystemLibraryView(c *gin.Context) {
 
 func DeleteDependencyLibraryView(c *gin.Context) {
 	var res DataType.ResponseData
-	var model DataBaseModel.YssimModels
-	var id = c.Query("id")
-	err := dbModel.Where("id = ?", id).First(&model).Error
+	var model []DataBaseModel.YssimModels
+	var item DataType.DeleteDependencyLibraryData
+	e := c.BindJSON(&item)
+	if e != nil {
+		c.JSON(http.StatusBadRequest, "参数验证失败")
+		return
+	}
+	err := dbModel.Where("id IN (?)", item.Ids).Find(&model).Error
 	if err != nil {
 		res.Status = 2
 		res.Err = "删除失败，查看id是否正确"
@@ -1656,24 +1677,34 @@ func DeleteDependencyLibraryView(c *gin.Context) {
 func CreateDependencyLibraryView(c *gin.Context) {
 	var res DataType.ResponseData
 	var item DataType.CreateDependencyLibraryData
+	var models DataBaseModel.YssimModels
+	var system DataBaseModel.SystemLibrary
+	spaceId := c.GetHeader("space_id")
 	userName := c.GetHeader("username")
-	userSpaceId := c.GetHeader("space_id")
 	err := c.BindJSON(&item)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, "")
+		c.JSON(http.StatusBadRequest, "参数验证失败")
+		return
+	}
+	dbModel.Where("id = ? AND username = ?", item.ID, item.UserName).First(&system)
+	dbModel.Where("sys_or_user = ? AND id = ? AND userspace_id = ?", userName, item.ID, spaceId).First(&models)
+	if models.ID != "" {
+		res.Err = "模型已存在"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
 		return
 	}
 	var newDependencyLibrary = DataBaseModel.YssimModels{
 		ID:             uuid.New().String(),
-		PackageName:    item.PackageName,
-		Version:        item.Version,
+		LibraryId:      system.ID,
+		PackageName:    system.PackageName,
+		Version:        system.Version,
 		SysUser:        userName,
-		FilePath:       item.FilePath,
-		UserSpaceId:    userSpaceId,
-		VersionControl: item.VersionControl,
-		VersionBranch:  item.VersionBranch,
-		VersionTag:     item.VersionTag,
-		Default:        item.Default,
+		FilePath:       system.FilePath,
+		UserSpaceId:    spaceId,
+		VersionControl: system.VersionControl,
+		VersionBranch:  system.VersionBranch,
+		VersionTag:     system.VersionTag,
 	}
 	err = dbModel.Create(&newDependencyLibrary).Error
 	if err != nil {
@@ -1690,7 +1721,7 @@ func GetDependencyLibraryView(c *gin.Context) {
 	var res DataType.ResponseData
 	var model []DataBaseModel.YssimModels
 	userName := c.GetHeader("username")
-	userSpaceId := c.GetHeader("space_id")
+	userSpaceId := c.Query("space_id")
 	err := dbModel.Where("userspace_id = ? AND sys_or_user != ? AND sys_or_user = ?", userSpaceId, "sys", userName).Find(&model).Error
 	if err != nil {
 		res.Status = 2
@@ -1803,7 +1834,6 @@ func GetVersionAvailableLibrariesView(c *gin.Context) {
 		versionLibraryData := DataType.GetVersionLibraryData{
 			Id:          model.ID,
 			PackageName: model.PackageName,
-			LibraryId:   model.LibraryId,
 		}
 		if model.VersionControl {
 			versionLibraryData.VersionControl = model.VersionControl
@@ -1832,26 +1862,15 @@ func DeleteVersionAvailableLibrariesView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
-	if deleteLibrary.VersionControl {
-		var userLibrary DataBaseModel.UserLibrary
-		dbModel.Where("id = ? AND username = ?", deleteLibrary.LibraryId, username).First(&userLibrary)
-		if userLibrary.ID == "" {
-			res.Status = 2
-			res.Err = "删除失败,未查询到该模型"
-			c.JSON(http.StatusOK, res)
-			return
-		}
-		dbModel.Model(&userLibrary).Update("used", false)
-	}
-	var yssimModel DataBaseModel.YssimModels
-	dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id = ? ", deleteLibrary.Id, username, deleteLibrary.SpaceId).First(&yssimModel)
-	if yssimModel.ID == "" {
+	var userLibrary DataBaseModel.YssimModels
+	dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id = ? ", deleteLibrary.Id, username, deleteLibrary.SpaceId).First(&userLibrary)
+	if userLibrary.ID == "" {
 		res.Status = 2
 		res.Err = "删除失败，未查询到该模型"
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	dbModel.Delete(&yssimModel)
+	dbModel.Delete(&userLibrary)
 	res.Msg = "删除成功"
 	c.JSON(http.StatusOK, res)
 
@@ -1880,8 +1899,7 @@ func CreateVersionAvailableLibrariesView(c *gin.Context) {
 		return
 	}
 	var newVersionLibrary = DataBaseModel.YssimModels{
-		ID:             uuid.New().String(),
-		LibraryId:      userLibrary.ID,
+		ID:             userLibrary.ID,
 		PackageName:    userLibrary.PackageName,
 		Version:        userLibrary.Version,
 		SysUser:        username,
@@ -1901,106 +1919,4 @@ func CreateVersionAvailableLibrariesView(c *gin.Context) {
 	dbModel.Model(&userLibrary).Update("used", true)
 	res.Msg = "创建成功"
 	c.JSON(http.StatusOK, res)
-}
-
-func RepositoryCloneView(c *gin.Context) {
-	var res DataType.ResponseData
-	var item DataType.RepositoryCloneData
-	userName := c.GetHeader("username")
-	//userSpaceId := c.GetHeader("space_id")
-	err := c.BindJSON(&item)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, "")
-		return
-	}
-
-	// 检查是否已经存在
-	var record DataBaseModel.UserLibrary
-	dbModel.Where("username = ? AND repository_address = ?", userName, item.RepositoryAddress).First(&record)
-	if record.ID != "" {
-		res.Err = "该存储库已经存在！"
-		res.Status = 2
-		c.JSON(http.StatusOK, res)
-		return
-	}
-	// 克隆到本地
-	repositoryPath, repositoryName, cloneRes := service.RepositoryClone(item.RepositoryAddress, item.Branch, userName)
-
-	if cloneRes { //克隆成功
-		//分支名称默认是master
-		versionBranch := "master"
-		if item.Branch != "" {
-			versionBranch = item.Branch
-		}
-		// 获取克隆到本地的存储库的tag
-		versionTag := service.GetTag(repositoryPath)
-
-		// 解析包文件
-		packageName, packagePath, packageVersion, _, ok := service.GitPackageFileParse(repositoryName, repositoryPath)
-
-		if ok { // 创建数据库记录
-			libraryRecord := DataBaseModel.UserLibrary{
-				ID:          uuid.New().String(),
-				UserName:    userName,
-				PackageName: packageName,    //package名称，一般称为包名或库的名字
-				Version:     packageVersion, //package版本号
-				//Used:           bool           			//是否已经被某空间使用
-				FilePath:          packagePath,            //package所在路径
-				VersionControl:    true,                   //是否有版本控制
-				VersionBranch:     versionBranch,          //版本控制分支
-				VersionTag:        versionTag,             //版本控制tag
-				AnotherName:       item.Name,              // 别名
-				RepositoryAddress: item.RepositoryAddress, //存储库地址
-
-			}
-			err = dbModel.Create(&libraryRecord).Error
-			res.Msg = "拉取成功"
-			c.JSON(http.StatusOK, res)
-			return
-		}
-	}
-	res.Err = "拉取失败"
-	res.Status = 2
-	c.JSON(http.StatusOK, res)
-
-}
-
-func RepositoryDeleteView(c *gin.Context) {
-	var res DataType.ResponseData
-	var item DataType.RepositoryDeleteData
-	err := c.BindJSON(&item)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, "")
-		return
-	}
-	// 删除数据库记录
-	var record DataBaseModel.UserLibrary
-	dbModel.Where("id = ?", item.ID).First(&record)
-	dbModel.Delete(&record)
-	res.Msg = "删除成功"
-	c.JSON(http.StatusOK, res)
-}
-
-func RepositoryGetView(c *gin.Context) {
-	var res DataType.ResponseData
-	userName := c.GetHeader("username")
-
-	// 删除数据库记录
-	var records []DataBaseModel.UserLibrary
-	dbModel.Where("username = ? ", userName).Find(&records)
-	var data []map[string]any
-	for i := 0; i < len(records); i++ {
-		d := map[string]any{
-			"id":                 records[i].ID,
-			"package_name":       records[i].PackageName,
-			"version":            records[i].Version,
-			"another_name":       records[i].AnotherName,
-			"repository_address": records[i].RepositoryAddress,
-		}
-		data = append(data, d)
-	}
-	res.Msg = "查询成功"
-	res.Data = data
-	c.JSON(http.StatusOK, res)
-
 }

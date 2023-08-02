@@ -63,6 +63,7 @@ func ModelRouter(g *gin.Engine) {
 
 		Models.POST("/CAD/parse", API.CADParseView)
 		Models.POST("/CAD/mapping", API.CADMappingModelView)
+		Models.POST("/CAD/files/upload", API.CADFilesUploadView)
 
 		Models.GET("/library/available/get", API.GetAvailableLibrariesView)
 		Models.GET("/library/version/get", API.GetVersionAvailableLibrariesView)
