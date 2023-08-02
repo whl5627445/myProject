@@ -72,15 +72,15 @@ type AppPage struct {
 	MulSimulateMessageRead bool           `gorm:"column:mul_sim_message_read;type:bool;default:true;comment:多轮仿真日志信息是否读取"`
 	MulSimulateErr         string         `gorm:"column:mul_sim_err;type:longtext;comment:多轮仿真错误信息"`
 	MulSimulateTime        int            `gorm:"column:mul_sim_time;type:int;comment:多轮仿真结束时的时间"`
-	//ReleaseMessageRead     bool           `gorm:"column:release_message_read;type:bool;default:true"`
-	//ReleaseErr             string         `gorm:"column:release_err;type:longtext"`
-	//ReleaseState           int            `gorm:"column:release_state;type:int;default:0"`
-	ReleaseTime   int            `gorm:"column:release_time;type:int;comment:发布时间"`
-	NamingOrder   datatypes.JSON `gorm:"column:naming_order;type:json;comment:多轮仿真的文件名的命名顺序"`
-	AlignmentLine datatypes.JSON `gorm:"column:alignment_line;type:json"`
-	CreatedAt     *time.Time     `gorm:"column:create_time;autoCreateTime"`
-	UpdatedAt     *time.Time     `gorm:"column:update_time"`
-	Deleted       gorm.DeletedAt `gorm:"column:deleted_at"`
+	ReleaseMessageRead     bool           `gorm:"column:release_message_read;type:bool;default:true;comment:发布消息是否读取"`
+	ReleaseErr             string         `gorm:"column:release_err;type:longtext;comment:发布错误信息"`
+	ReleaseState           int            `gorm:"column:release_state;type:int;default:0;comment:发布状态"`
+	ReleaseTime            int            `gorm:"column:release_time;type:int;comment:发布时间"`
+	NamingOrder            datatypes.JSON `gorm:"column:naming_order;type:json;comment:多轮仿真的文件名的命名顺序"`
+	AlignmentLine          datatypes.JSON `gorm:"column:alignment_line;type:json"`
+	CreatedAt              *time.Time     `gorm:"column:create_time;autoCreateTime"`
+	UpdatedAt              *time.Time     `gorm:"column:update_time"`
+	Deleted                gorm.DeletedAt `gorm:"column:deleted_at"`
 }
 
 type AppComponentBases struct {
