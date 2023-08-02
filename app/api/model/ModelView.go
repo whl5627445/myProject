@@ -1834,6 +1834,7 @@ func GetVersionAvailableLibrariesView(c *gin.Context) {
 		versionLibraryData := DataType.GetVersionLibraryData{
 			Id:          model.ID,
 			PackageName: model.PackageName,
+			LibraryId:   model.LibraryId,
 		}
 		if model.VersionControl {
 			versionLibraryData.VersionControl = model.VersionControl
@@ -1862,15 +1863,27 @@ func DeleteVersionAvailableLibrariesView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
-	var userLibrary DataBaseModel.YssimModels
-	dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id = ? ", deleteLibrary.Id, username, deleteLibrary.SpaceId).First(&userLibrary)
-	if userLibrary.ID == "" {
+	if deleteLibrary.VersionControl {
+		var userLibrary DataBaseModel.UserLibrary
+		dbModel.Where("id = ? AND username = ?", deleteLibrary.LibraryId, username).First(&userLibrary)
+		if userLibrary.ID == "" {
+			res.Status = 2
+			res.Err = "删除失败,未查询到该模型"
+			c.JSON(http.StatusOK, res)
+			return
+		}
+		dbModel.Model(&userLibrary).Update("used", false)
+	}
+	var yssimModel DataBaseModel.YssimModels
+	dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id = ? ", deleteLibrary.Id, username, deleteLibrary.SpaceId).First(&yssimModel)
+	if yssimModel.ID == "" {
 		res.Status = 2
 		res.Err = "删除失败，未查询到该模型"
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	dbModel.Delete(&userLibrary)
+	dbModel.Delete(&yssimModel)
+	service.DeleteLibrary(yssimModel.PackageName)
 	res.Msg = "删除成功"
 	c.JSON(http.StatusOK, res)
 
@@ -1899,7 +1912,8 @@ func CreateVersionAvailableLibrariesView(c *gin.Context) {
 		return
 	}
 	var newVersionLibrary = DataBaseModel.YssimModels{
-		ID:             userLibrary.ID,
+		ID:             uuid.New().String(),
+		LibraryId:      userLibrary.ID,
 		PackageName:    userLibrary.PackageName,
 		Version:        userLibrary.Version,
 		SysUser:        username,
