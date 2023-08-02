@@ -234,14 +234,16 @@ type DeleteIsHaveVersionLibraryData struct {
 type GetVersionLibraryData struct {
 	Id             string `json:"id" binding:"required"`
 	PackageName    string `json:"package_name" binding:"required"`
+	LibraryId      string `json:"library_id" binding:"required"`
 	Version        string `json:"version" binding:""`
 	VersionControl bool   `json:"version_control" binding:""`
 	VersionBranch  string `json:"version_branch" binding:"required"`
 }
 
 type DeleteVersionLibraryData struct {
-	Id      string `json:"id" binding:"required"`
-	SpaceId string `json:"space_id" binding:"required"`
+	Id        string `json:"id" binding:"required"`
+	LibraryId string `json:"library_id" binding:"required"`
+	SpaceId   string `json:"space_id" binding:"required"`
 }
 
 type CreateVersionLibraryData struct {
