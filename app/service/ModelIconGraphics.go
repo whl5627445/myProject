@@ -47,6 +47,29 @@ type coordinateSystemData struct {
 	InitialScale        float64   `json:"initial_scale"`
 }
 
+func GetModelExtent(coordinateSystem any) (float64, float64, float64, float64) {
+	coordinate := coordinateSystem.(coordinateSystemData)
+	initialScale := coordinate.InitialScale
+	x1 := coordinate.Extent1Diagram[0]
+	y1 := coordinate.Extent1Diagram[1]
+	x2 := coordinate.Extent2Diagram[0]
+	y2 := coordinate.Extent2Diagram[1]
+	x1, y1, x2, y2 = x1*initialScale, y1*initialScale, x2*initialScale, y2*initialScale
+	return x1, y1, x2, y2
+}
+
+func GetModelExtentToString(coordinateSystem any) []string {
+	x1, y1, x2, y2 := GetModelExtent(coordinateSystem)
+	x1Str := strconv.FormatFloat(x1, 'f', 1, 64)
+	y1Str := strconv.FormatFloat(y1, 'f', 1, 64)
+	x2Str := strconv.FormatFloat(x2, 'f', 1, 64)
+	y2Str := strconv.FormatFloat(y2, 'f', 1, 64)
+
+	extent1Diagram := strings.Join([]string{x1Str, y1Str}, ",")
+	extent2Diagram := strings.Join([]string{x2Str, y2Str}, ",")
+	return []string{extent1Diagram, extent2Diagram}
+}
+
 // getCoordinateSystemRecursion 会根据提供的模型列表直到找到有数据为止
 func getCoordinateSystemRecursion(modelNameList []string, isIcon bool) coordinateSystemData {
 	data := coordinateSystemData{
