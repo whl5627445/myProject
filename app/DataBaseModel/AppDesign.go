@@ -9,9 +9,9 @@ import (
 )
 
 type AppSpace struct {
-	ID            string         `gorm:"primaryKey;type:varchar(128);comment:应用空间唯一识别标识"`
+	ID            string         `gorm:"index;primaryKey;type:varchar(128);comment:应用空间唯一识别标识"`
 	SpaceName     string         `gorm:"column:space_name;type:varchar(32);comment:应用空间名称"`
-	UserName      string         `gorm:"column:username;type:varchar(32);comment:用户名"`
+	UserName      string         `gorm:"index;column:username;type:varchar(32);comment:用户名"`
 	Description   string         `gorm:"column:description;type:varchar(128);comment:应用空间描述简介"`
 	Background    string         `gorm:"column:background;default:\"static/UserFiles/Images/default_back_ground.png\";type:varchar(128);comment:应用空间背景图片"`
 	Icon          string         `gorm:"column:icon;type:varchar(32);comment:应用空间图标"`
@@ -25,10 +25,10 @@ type AppSpace struct {
 }
 
 type AppDataSource struct {
-	ID                string         `gorm:"primaryKey;type:varchar(128);comment:应用数据源唯一识别标识"`
-	UserName          string         `gorm:"column:username;type:varchar(32);comment:用户名"`
-	UserSpaceId       string         `gorm:"column:user_space_id;type:varchar(128);comment:用户空间唯一识别标识"`
-	PackageId         string         `gorm:"column:package_id;type:varchar(128);comment:导出数据源模型所在package的唯一识别标识"`
+	ID                string         `gorm:"index;primaryKey;type:varchar(128);comment:应用数据源唯一识别标识"`
+	UserName          string         `gorm:"index;column:username;type:varchar(32);comment:用户名"`
+	UserSpaceId       string         `gorm:"index;column:user_space_id;type:varchar(128);comment:用户空间唯一识别标识"`
+	PackageId         string         `gorm:"index;column:package_id;type:varchar(128);comment:导出数据源模型所在package的唯一识别标识"`
 	ModelName         string         `gorm:"column:model_name;type:varchar(128);comment:导出数据源的模型名称"`
 	CompileType       string         `gorm:"column:compile_type;type:varchar(128);default:\"OM\";comment:导出数据源所用的编译器类型，有OM与dymola"`
 	CompilePath       string         `gorm:"column:compile_path;type:varchar(128);comment:编译好的文件存放路径"`
@@ -50,10 +50,10 @@ type AppDataSource struct {
 }
 
 type AppPage struct {
-	ID                     string         `gorm:"primaryKey;type:varchar(128);comment:应用页面唯一标识"`
-	UserName               string         `gorm:"column:username;type:varchar(32);comment:用户名"`
+	ID                     string         `gorm:"index;primaryKey;type:varchar(128);comment:应用页面唯一标识"`
+	UserName               string         `gorm:"index;column:username;type:varchar(32);comment:用户名"`
 	PageType               string         `gorm:"column:page_type;type:varchar(32);comment:页面类型"`
-	AppSpaceId             string         `gorm:"column:app_space_id;type:varchar(128);comment:页面所属应用的唯一标识"`
+	AppSpaceId             string         `gorm:"index;column:app_space_id;type:varchar(128);comment:页面所属应用的唯一标识"`
 	Input                  datatypes.JSON `gorm:"column:input;type:json;comment:页面的输入相关数据，在webApp类型页面中使用"`
 	Output                 datatypes.JSON `gorm:"column:output;type:json;comment:页面的输入相关数据，在webApp类型页面中使用"`
 	PageName               string         `gorm:"column:page_name;type:varchar(32);comment:页面的输入相关数据，在webApp类型页面中使用"`
@@ -84,7 +84,7 @@ type AppPage struct {
 }
 
 type AppComponentBases struct {
-	ID                 string         `gorm:"primaryKey;type:varchar(128)"`
+	ID                 string         `gorm:"index;primaryKey;type:varchar(128)"`
 	TopLevelName       string         `gorm:"column:top_level _name;type:varchar(32)"`
 	SecondLevelName    string         `gorm:"column:second_level_name;type:varchar(32)"`
 	Type               string         `gorm:"column:type;type:varchar(32)"`
@@ -104,8 +104,8 @@ type AppComponentBases struct {
 }
 
 type AppPageComponent struct {
-	ID                 string         `gorm:"primaryKey;type:varchar(128);comment:组件唯一标识"`
-	PageId             string         `gorm:"column:page_id;type:varchar(128);comment:页面id"`
+	ID                 string         `gorm:"index;primaryKey;type:varchar(128);comment:组件唯一标识"`
+	PageId             string         `gorm:"index;column:page_id;type:varchar(128);comment:页面id"`
 	InputName          string         `gorm:"column:input_name;type:varchar(32);comment:输入变量名"`
 	Output             datatypes.JSON `gorm:"column:output;type:json;comment:输出变量名"`
 	Max                float64        `gorm:"column:max;type:float;comment:最大值"`
@@ -136,8 +136,8 @@ type AppPageComponent struct {
 }
 
 type AppPageComponentsPreview struct { //多轮仿真完copy一次组件
-	ID                 string         `gorm:"primaryKey;type:varchar(128);comment:组件唯一标识"`
-	PageId             string         `gorm:"column:page_id;type:varchar(128);comment:页面id"`
+	ID                 string         `gorm:"index;primaryKey;type:varchar(128);comment:组件唯一标识"`
+	PageId             string         `gorm:"index;column:page_id;type:varchar(128);comment:页面id"`
 	InputName          string         `gorm:"column:input_name;type:varchar(32);comment:输入变量名"`
 	Output             datatypes.JSON `gorm:"column:output;type:json;comment:输出变量名"`
 	Max                float64        `gorm:"column:max;type:float;comment:最大值"`
@@ -166,8 +166,8 @@ type AppPageComponentsPreview struct { //多轮仿真完copy一次组件
 }
 
 type AppPageComponentsRelease struct { // 发布的时候copy一次组件
-	ID                 string         `gorm:"primaryKey;type:varchar(128);comment:组件唯一标识"`
-	PageId             string         `gorm:"column:page_id;type:varchar(128);comment:页面id"`
+	ID                 string         `gorm:"index;primaryKey;type:varchar(128);comment:组件唯一标识"`
+	PageId             string         `gorm:"index;column:page_id;type:varchar(128);comment:页面id"`
 	InputName          string         `gorm:"column:input_name;type:varchar(32);comment:输入变量名"`
 	Output             datatypes.JSON `gorm:"column:output;type:json;comment:输出变量名"`
 	Max                float64        `gorm:"column:max;type:float;comment:最大值"`

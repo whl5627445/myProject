@@ -7,11 +7,11 @@ import (
 )
 
 type YssimModels struct {
-	ID             string         `gorm:"primaryKey;type:varchar(128);comment:package唯一标识"`
-	LibraryId      string         `gorm:"column:library_id;type:varchar(128);comment:library库唯一标识"`
-	PackageName    string         `gorm:"column:package_name;type:varchar(128);comment:package名称，一般称为包名或库的名字"`
+	ID             string         `gorm:"index;primaryKey;type:varchar(128);comment:package唯一标识"`
+	LibraryId      string         `gorm:"index;column:library_id;type:varchar(128);comment:library库唯一标识"`
+	PackageName    string         `gorm:"index;column:package_name;type:varchar(128);comment:package名称，一般称为包名或库的名字"`
 	Version        string         `gorm:"column:version;default:\"\";type:varchar(32);comment:package版本号"`
-	SysUser        string         `gorm:"column:sys_or_user;default:\"\";type:varchar(32);comment:是用户模型的话则为用户名，系统模型则是sys"`
+	SysUser        string         `gorm:"index;column:sys_or_user;default:\"\";type:varchar(32);comment:是用户模型的话则为用户名，系统模型则是sys"`
 	FilePath       string         `gorm:"column:file_path;default:\"\";type:varchar(256);comment:用户模型所在路径，常驻系统模型则为空"`
 	CreatedAt      *time.Time     `gorm:"column:create_time;autoCreateTime;comment:创建时间"`
 	UpdatedAt      *time.Time     `gorm:"column:update_time;comment:更新时间"`
@@ -25,9 +25,9 @@ type YssimModels struct {
 }
 
 type SystemLibrary struct {
-	ID             string         `gorm:"primaryKey;type:varchar(128);comment:package唯一标识"`
-	UserName       string         `gorm:"column:username;type:varchar(128);comment:用户名"`
-	PackageName    string         `gorm:"column:package_name;type:varchar(128);comment:package名称，一般称为包名或库的名字"`
+	ID             string         `gorm:"index;primaryKey;type:varchar(128);comment:package唯一标识"`
+	UserName       string         `gorm:"index;column:username;type:varchar(128);comment:用户名"`
+	PackageName    string         `gorm:"index;column:package_name;type:varchar(128);comment:package名称，一般称为包名或库的名字"`
 	Version        string         `gorm:"column:version;default:\"\";type:varchar(32);comment:package版本号"`
 	FilePath       string         `gorm:"column:file_path;default:\"\";type:varchar(256);comment:package所在路径"`
 	VersionControl bool           `gorm:"column:version_control;default:false;type:bool;comment:是否有版本控制"`
@@ -40,9 +40,9 @@ type SystemLibrary struct {
 }
 
 type UserLibrary struct {
-	ID                string         `gorm:"primaryKey;type:varchar(128);comment:package唯一标识"`
-	UserName          string         `gorm:"column:username;type:varchar(128);comment:用户名"`
-	PackageName       string         `gorm:"column:package_name;type:varchar(128);comment:package名称，一般称为包名或库的名字"`
+	ID                string         `gorm:"index;primaryKey;type:varchar(128);comment:package唯一标识"`
+	UserName          string         `gorm:"index;column:username;type:varchar(128);comment:用户名"`
+	PackageName       string         `gorm:"index;column:package_name;type:varchar(128);comment:package名称，一般称为包名或库的名字"`
 	Version           string         `gorm:"column:version;default:\"\";type:varchar(32);comment:package版本号"`
 	Used              bool           `gorm:"column:used;type:bool;comment:该package是否已经被某空间使用"`
 	FilePath          string         `gorm:"column:file_path;default:\"\";type:varchar(256);comment:package所在路径"`

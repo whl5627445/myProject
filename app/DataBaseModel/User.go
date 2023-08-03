@@ -9,9 +9,9 @@ import (
 )
 
 type YssimUserSpace struct {
-	ID                 string         `gorm:"primaryKey;type:varchar(128);comment:用户空间唯一标识"`
+	ID                 string         `gorm:"index;primaryKey;type:varchar(128);comment:用户空间唯一标识"`
 	SpaceName          string         `gorm:"column:space_name;type:varchar(128);comment:用户空间名称"`
-	UserName           string         `gorm:"column:username;type:varchar(32);comment:用户名"`
+	UserName           string         `gorm:"index;column:username;type:varchar(32);comment:用户名"`
 	Description        string         `gorm:"column:description;type:varchar(128);comment:空间描述简介"`
 	Background         string         `gorm:"column:background;type:varchar(128);comment:空间背景图所在目录"`
 	IconColor          string         `gorm:"column:icon_color;type:varchar(128);comment:空间图标颜色"`
@@ -25,7 +25,7 @@ type YssimUserSpace struct {
 }
 
 type YssimUserSettings struct {
-	ID          string     `gorm:"primaryKey;comment:用户配置的唯一标识"`
+	ID          string     `gorm:"index;primaryKey;comment:用户配置的唯一标识"`
 	UserName    string     `gorm:"column:username;type:varchar(32);comment:用户名"`
 	GridDisplay bool       `gorm:"column:grid_display;type:bool;comment:栅格是否显示"`
 	CreatedAt   *time.Time `gorm:"column:create_time;autoCreateTime;comment:创建时间"`

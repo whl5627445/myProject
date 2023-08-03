@@ -8,11 +8,11 @@ import (
 )
 
 type YssimSimulateRecord struct {
-	ID                      string         `gorm:"primaryKey;type:varchar(128);comment:仿真记录唯一识别标识"`
-	PackageId               string         `gorm:"column:package_id;type:varchar(128);comment:package唯一识别标识"`
-	UserspaceId             string         `gorm:"column:userspace_id;type:varchar(128);comment:用户空间唯一识别标识"`
-	ExperimentId            string         `gorm:"column:experiment_id;type:varchar(128);comment:仿真实验唯一识别标识"`
-	UserName                string         `gorm:"column:username;type:varchar(32);comment:用户名"`
+	ID                      string         `gorm:"index;primaryKey;type:varchar(128);comment:仿真记录唯一识别标识"`
+	PackageId               string         `gorm:"index;column:package_id;type:varchar(128);comment:package唯一识别标识"`
+	UserspaceId             string         `gorm:"index;column:userspace_id;type:varchar(128);comment:用户空间唯一识别标识"`
+	ExperimentId            string         `gorm:"index;column:experiment_id;type:varchar(128);comment:仿真实验唯一识别标识"`
+	UserName                string         `gorm:"index;column:username;type:varchar(32);comment:用户名"`
 	SimulateModelName       string         `gorm:"column:simulate_model_name;type:varchar(128);comment:仿真模型名称"`
 	SimulateModelResultPath string         `gorm:"column:simulate_model_result_path;type:varchar(256);comment:仿真结果存储路径"`
 	SimulateResultStr       string         `gorm:"column:simulate_result_str;comment:仿真结果输出字符串"`
@@ -40,10 +40,10 @@ type YssimSimulateRecord struct {
 }
 
 type YssimExperimentRecord struct {
-	ID                string         `gorm:"primaryKey;type:varchar(128);comment:仿真实验记录唯一标识"`
-	PackageId         string         `gorm:"column:package_id;type:varchar(128);comment:package唯一标识"`
-	UserspaceId       string         `gorm:"column:userspace_id;type:varchar(128);comment:用户空间唯一标识"`
-	UserName          string         `gorm:"column:username;type:varchar(32);comment:用户名"`
+	ID                string         `gorm:"index;primaryKey;type:varchar(128);comment:仿真实验记录唯一标识"`
+	PackageId         string         `gorm:"index;column:package_id;type:varchar(128);comment:package唯一标识"`
+	UserspaceId       string         `gorm:"index;column:userspace_id;type:varchar(128);comment:用户空间唯一标识"`
+	UserName          string         `gorm:"index;column:username;type:varchar(32);comment:用户名"`
 	ExperimentName    string         `gorm:"column:experiment_name;type:varchar(32);comment:仿真实验名称"`
 	ModelName         string         `gorm:"column:model_name;type:varchar(128);comment:模型名称"`
 	ModelVarData      datatypes.JSON `gorm:"column:model_var_data;type:json;comment:模型参数数据"`
