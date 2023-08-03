@@ -28,9 +28,11 @@ func GetSysRootModelView(c *gin.Context) {
 	*/
 	var res DataType.ResponseData
 	keywords := c.Query("keywords")
+	userName := c.Query("username")
+	userSpaceId := c.Query("space_id")
 	var modelData []map[string]any
 	var packageModel []DataBaseModel.YssimModels
-	dbModel.Where("sys_or_user =  ? AND userspace_id = ?", "sys", "0").Find(&packageModel)
+	dbModel.Where("sys_or_user =  ? AND userspace_id = ?", "sys", "0").Or("sys_or_user =  ? AND userspace_id = ? AND encryption = ?", userName, userSpaceId, true).Find(&packageModel)
 	libraryAndVersions := service.GetLibraryAndVersions()
 	for i := 0; i < len(packageModel); i++ {
 		p, ok := libraryAndVersions[packageModel[i].PackageName]
@@ -47,6 +49,7 @@ func GetSysRootModelView(c *gin.Context) {
 					"haschild":        service.GetModelHasChild(packageModel[i].PackageName),
 					"image":           "",
 					"type":            service.GetModelType(packageModel[i].PackageName),
+					"encryption":      packageModel[i].Encryption,
 				}
 			}
 			if data != nil {
