@@ -49,12 +49,14 @@ func UploadModelPackageView(c *gin.Context) {
 		return
 	}
 	fileName := modelFile.Filename
-	if !strings.HasSuffix(modelFile.Filename, ".rar") && !strings.HasSuffix(modelFile.Filename, ".mo") && !strings.HasSuffix(modelFile.Filename, ".zip") {
-		res.Msg = "请上传后缀为：mo与rar、zip三种格式的文件"
+
+	if !strings.HasSuffix(fileName, ".rar") && !strings.HasSuffix(fileName, ".mo") && !strings.HasSuffix(fileName, ".zip") && !strings.HasSuffix(fileName, ".sk") {
+		res.Msg = "请上传后缀为：mo与rar、zip、sk四种格式的文件"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
 	}
+
 	saveFilePathBase := "static/UserFiles/UploadFile/" + userName + "/" + time.Now().Local().Format("20060102150405")
 	packageName, packagePath, msg, ok := service.PackageFileParse(fileName, saveFilePathBase, file)
 	if ok {
@@ -363,6 +365,9 @@ func GetPackageFileView(c *gin.Context) {
 	DB.Where("id = ? AND sys_or_user = ?", item.PackageId, username).First(&packageRecord)
 
 	filePath, err := service.ZipPackageStream(packageRecord.PackageName, packageRecord.FilePath)
+	if packageRecord.Encryption {
+		filePath, err = service.ZipPackageEncrypt(packageRecord.PackageName, filePath)
+	}
 	if err != nil {
 		res.Err = "导出模型库失败，请稍后再试"
 		res.Status = 2

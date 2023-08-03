@@ -1,6 +1,7 @@
 package config
 
 import (
+	_ "embed"
 	"os"
 )
 
@@ -35,3 +36,9 @@ var Solver = map[string]string{"OM": "默认", "DM": "dymola", "JM": "第三方"
 var RedisCacheKey = USERNAME + "-yssim-GraphicsData"
 var UserSpaceId = ""
 var ModelCodeChan = make(chan string, 100)
+
+//go:embed key/private_key.pem
+var PrivateKey []byte
+
+//go:embed key/public_key.pem
+var PublicKey []byte
