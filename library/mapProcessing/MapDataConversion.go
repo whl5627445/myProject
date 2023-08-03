@@ -3,6 +3,7 @@ package mapProcessing
 import (
 	"fmt"
 	"reflect"
+	"yssim-go/app/DataType"
 )
 
 //func MapDataConversion(m map[string]any, mode string) map[string]string {
@@ -39,4 +40,28 @@ func MapDataConversion(m map[string]any) map[string]string {
 		}
 	}
 	return resMap
+}
+
+func IsExistKey(resultData []map[string]*DataType.GetUMLData, className string, rootExtendsModelData DataType.ExtendsModelData) bool {
+
+	for _, m := range resultData {
+		if value, ok := m[className]; ok {
+			extendsModelList := value.ExtendsModelData
+			flag := false
+			index := 0
+			for i := 0; i < len(extendsModelList); i++ {
+				if extendsModelList[i].ClassName == rootExtendsModelData.ClassName {
+					flag = true
+					index = i
+				}
+			}
+			if flag {
+				extendsModelList[index].Count = extendsModelList[index].Count + 1
+			} else {
+				value.ExtendsModelData = append(value.ExtendsModelData, rootExtendsModelData)
+			}
+			return ok
+		}
+	}
+	return false
 }

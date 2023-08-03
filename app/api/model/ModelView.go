@@ -216,7 +216,7 @@ func GetGraphicsDataView(c *gin.Context) {
 func GetModelCodeView(c *gin.Context) {
 	/*
 		# 获取模型的源码数据，一次性返回
-		//## package_id: 模型包的id
+		## package_id: 模型包的id
 		## modelname: 需要查询的模型名称，全称， 例如“Modelica.Blocks.Examples.PID_Controller”
 	*/
 	modelName := c.Query("model_name")
@@ -602,6 +602,7 @@ func CopyClassView(c *gin.Context) {
 		return
 	}
 	if packageModel.PackageName == item.ModelName {
+		log.Println(packageModel.ID)
 		res.Msg = "模型名称已存在"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
@@ -1754,7 +1755,17 @@ func CreateDependencyLibraryView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+func GetUMLView(c *gin.Context) {
+	var res DataType.ResponseData
+	var className = c.Query("className")
+	finalResultData := service.GetModelUMLData(className)
+	res.Msg = "获取成功"
+	res.Data = finalResultData
+	c.JSON(http.StatusOK, res)
+}
+
 func GetDependencyLibraryView(c *gin.Context) {
+
 	var res DataType.ResponseData
 	var model []DataBaseModel.YssimModels
 	userName := c.GetHeader("username")

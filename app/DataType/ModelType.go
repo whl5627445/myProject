@@ -239,7 +239,7 @@ type GetVersionLibraryData struct {
 
 type DeleteVersionLibraryData struct {
 	Id             string `json:"id" binding:"required"`
-	LibraryId      string `json:"library_id" binding:"required"`
+	LibraryId      string `json:"library_id" binding:""`
 	SpaceId        string `json:"space_id" binding:"required"`
 	VersionControl bool   `json:"version_control" binding:""`
 }
@@ -247,6 +247,19 @@ type DeleteVersionLibraryData struct {
 type CreateVersionLibraryData struct {
 	Id      string `json:"id" binding:"required"`
 	SpaceId string `json:"space_id" binding:"required"`
+}
+
+type GetUMLData struct {
+	ClassName        string             `json:"class_name" binding:""`
+	ModelType        string             `json:"model_type" binding:""`
+	Description      string             `json:"description" binding:""`
+	Level            int                `json:"level" binding:""`
+	ExtendsModelData []ExtendsModelData `json:"extends_model_data" binding:""`
+}
+
+type ExtendsModelData struct {
+	ClassName string `json:"class_name" binding:""`
+	Count     int    `json:"count" binding:""`
 }
 
 type RepositoryCloneData struct {

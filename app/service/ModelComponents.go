@@ -3,8 +3,11 @@ package service
 import (
 	"strconv"
 	"strings"
+	"yssim-go/app/DataType"
 	"yssim-go/config"
+	"yssim-go/library/mapProcessing"
 	"yssim-go/library/omc"
+	"yssim-go/library/stringOperation"
 )
 
 func GetElements(className, componentName string) []any {
@@ -160,6 +163,7 @@ func GetICList(name string) []string {
 	return dataList
 }
 
+// GetExtendedModel 获取父类列表
 func GetExtendedModel(className string) []string {
 	dataList := omc.OMC.GetInheritedClasses(className)
 	if dataList != nil {
@@ -167,5 +171,103 @@ func GetExtendedModel(className string) []string {
 	} else {
 		return nil
 	}
+}
 
+func GetUMLElements(className string) []any {
+	classnameData := omc.OMC.GetElements(className)
+	return classnameData
+}
+
+func GetModelUMLData(className string) []map[string]*DataType.GetUMLData {
+	var classNameList []string
+	classNameList = append(classNameList, className)
+	rootInformation := GetClassInformation(className)
+	rootUmlData := &DataType.GetUMLData{
+		ClassName:   stringOperation.GetLastModelName(className),
+		ModelType:   "root",
+		Description: rootInformation[1].(string),
+		Level:       1,
+	}
+	var finalResultData []map[string]*DataType.GetUMLData
+	rootMap := map[string]*DataType.GetUMLData{
+		rootUmlData.ClassName: rootUmlData,
+	}
+	finalResultData = append(finalResultData, rootMap)
+
+	GetSubUMLData(className, rootUmlData, &finalResultData, &classNameList)
+
+	GetExtendUml(className, rootUmlData, &finalResultData, &classNameList)
+	return finalResultData
+}
+
+func GetSubUMLData(className string, rootUmlData *DataType.GetUMLData, finalResultData *[]map[string]*DataType.GetUMLData, classNameList *[]string) {
+	componentDataList := GetUMLElements(className)
+	for i := 0; i < len(componentDataList); i++ {
+		var extendsModelData []DataType.ExtendsModelData
+		rootExtendsModelData := DataType.ExtendsModelData{
+			ClassName: rootUmlData.ClassName,
+			Count:     1,
+		}
+		extendsModelData = append(extendsModelData, rootExtendsModelData)
+		cData := componentDataList[i].([]any)
+		subInformation := GetClassInformation(cData[2].(string))
+		subClassName := stringOperation.Distinct(cData[2].(string), classNameList)
+		subUmlData := &DataType.GetUMLData{
+			ClassName:        subClassName,
+			Level:            rootUmlData.Level - 1,
+			ExtendsModelData: extendsModelData,
+		}
+		if !(subInformation[0].(string) == "model") {
+			subUmlData.ModelType = subInformation[0].(string)
+		}
+
+		if subInformation[2].(string) == "true" {
+			subUmlData.ModelType = "partial"
+		}
+
+		ok := mapProcessing.IsExistKey(*finalResultData, subUmlData.ClassName, rootExtendsModelData)
+		if !ok {
+			subUmlResultData := map[string]*DataType.GetUMLData{
+				subUmlData.ClassName: subUmlData,
+			}
+			*finalResultData = append(*finalResultData, subUmlResultData)
+		}
+	}
+}
+
+func GetExtendUml(className string, rootUmlData *DataType.GetUMLData, resultData *[]map[string]*DataType.GetUMLData, classNameList *[]string) {
+	rootExtendModelNameList := GetExtendedModel(className)
+	var extendsModelData []DataType.ExtendsModelData
+	for _, extendModelName := range rootExtendModelNameList {
+		extendsModelInformation := GetClassInformation(extendModelName)
+		extendClassName := stringOperation.Distinct(extendModelName, classNameList)
+		rootExtendModel := DataType.ExtendsModelData{
+			ClassName: extendClassName,
+		}
+		extendsModelData = append(extendsModelData, rootExtendModel)
+		for _, m := range *resultData {
+			// 检查是否存在指定的键
+			if value, ok := m[rootUmlData.ClassName]; ok {
+				value.ExtendsModelData = extendsModelData
+			}
+		}
+		extendsModelUmlData := &DataType.GetUMLData{
+			ClassName: extendClassName,
+			Level:     rootUmlData.Level + 1,
+		}
+
+		if !(extendsModelInformation[0].(string) == "model") {
+			extendsModelUmlData.ModelType = extendsModelInformation[0].(string)
+		}
+		if extendsModelInformation[2].(string) == "true" {
+			extendsModelUmlData.ModelType = "partial"
+		}
+
+		extendsModelUmlDataMap := map[string]*DataType.GetUMLData{
+			extendsModelUmlData.ClassName: extendsModelUmlData,
+		}
+		*resultData = append(*resultData, extendsModelUmlDataMap)
+		GetSubUMLData(extendModelName, extendsModelUmlData, resultData, classNameList)
+		GetExtendUml(extendModelName, extendsModelUmlData, resultData, classNameList)
+	}
 }
