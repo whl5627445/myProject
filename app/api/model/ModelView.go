@@ -1940,3 +1940,105 @@ func CreateVersionAvailableLibrariesView(c *gin.Context) {
 	res.Msg = "创建成功"
 	c.JSON(http.StatusOK, res)
 }
+
+func RepositoryCloneView(c *gin.Context) {
+	var res DataType.ResponseData
+	var item DataType.RepositoryCloneData
+	userName := c.GetHeader("username")
+	//userSpaceId := c.GetHeader("space_id")
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+
+	// 检查是否已经存在
+	var record DataBaseModel.UserLibrary
+	dbModel.Where("username = ? AND repository_address = ?", userName, item.RepositoryAddress).First(&record)
+	if record.ID != "" {
+		res.Err = "该存储库已经存在！"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	// 克隆到本地
+	repositoryPath, repositoryName, cloneRes := service.RepositoryClone(item.RepositoryAddress, item.Branch, userName)
+
+	if cloneRes { //克隆成功
+		//分支名称默认是master
+		versionBranch := "master"
+		if item.Branch != "" {
+			versionBranch = item.Branch
+		}
+		// 获取克隆到本地的存储库的tag
+		versionTag := service.GetTag(repositoryPath)
+
+		// 解析包文件
+		packageName, packagePath, packageVersion, _, ok := service.GitPackageFileParse(repositoryName, repositoryPath)
+
+		if ok { // 创建数据库记录
+			libraryRecord := DataBaseModel.UserLibrary{
+				ID:          uuid.New().String(),
+				UserName:    userName,
+				PackageName: packageName,    //package名称，一般称为包名或库的名字
+				Version:     packageVersion, //package版本号
+				//Used:           bool           			//是否已经被某空间使用
+				FilePath:          packagePath,            //package所在路径
+				VersionControl:    true,                   //是否有版本控制
+				VersionBranch:     versionBranch,          //版本控制分支
+				VersionTag:        versionTag,             //版本控制tag
+				AnotherName:       item.Name,              // 别名
+				RepositoryAddress: item.RepositoryAddress, //存储库地址
+
+			}
+			err = dbModel.Create(&libraryRecord).Error
+			res.Msg = "拉取成功"
+			c.JSON(http.StatusOK, res)
+			return
+		}
+	}
+	res.Err = "拉取失败"
+	res.Status = 2
+	c.JSON(http.StatusOK, res)
+
+}
+
+func RepositoryDeleteView(c *gin.Context) {
+	var res DataType.ResponseData
+	var item DataType.RepositoryDeleteData
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	// 删除数据库记录
+	var record DataBaseModel.UserLibrary
+	dbModel.Where("id = ?", item.ID).First(&record)
+	dbModel.Delete(&record)
+	res.Msg = "删除成功"
+	c.JSON(http.StatusOK, res)
+}
+
+func RepositoryGetView(c *gin.Context) {
+	var res DataType.ResponseData
+	userName := c.GetHeader("username")
+
+	// 删除数据库记录
+	var records []DataBaseModel.UserLibrary
+	dbModel.Where("username = ? ", userName).Find(&records)
+	var data []map[string]any
+	for i := 0; i < len(records); i++ {
+		d := map[string]any{
+			"id":                 records[i].ID,
+			"package_name":       records[i].PackageName,
+			"version":            records[i].Version,
+			"another_name":       records[i].AnotherName,
+			"repository_address": records[i].RepositoryAddress,
+		}
+		data = append(data, d)
+	}
+	res.Msg = "查询成功"
+	res.Data = data
+	c.JSON(http.StatusOK, res)
+
+}
