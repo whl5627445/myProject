@@ -194,7 +194,11 @@ func GetGraphicsDataView(c *gin.Context) {
 	var res DataType.ResponseData
 	var graphicsData any
 	if item.ComponentName == "" {
-		graphicsData = service.GetGraphicsData(item.ModelName, packageModel.SysUser)
+		permissions := userName
+		if packageModel.Encryption || packageModel.SysUser == "sys" {
+			permissions = "sys"
+		}
+		graphicsData = service.GetGraphicsData(item.ModelName, permissions)
 	} else {
 		graphicsData = service.GetComponentGraphicsData(item.ModelName, item.ComponentName)
 	}
