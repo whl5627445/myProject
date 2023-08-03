@@ -205,11 +205,25 @@ func GetGraphicsDataView(c *gin.Context) {
 func GetModelCodeView(c *gin.Context) {
 	/*
 		# 获取模型的源码数据，一次性返回
-		## package_id: 模型包的id
+		//## package_id: 模型包的id
 		## modelname: 需要查询的模型名称，全称， 例如“Modelica.Blocks.Examples.PID_Controller”
 	*/
 	modelName := c.Query("model_name")
+	userSpaceId := c.Query("space_id")
+	userName := c.GetHeader("username")
 	var res DataType.ResponseData
+	if modelName == "" || userSpaceId == "" {
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	packageName := strings.Split(modelName, ".")[0]
+	version := service.GetVersion(packageName)
+	var encryptionPackage DataBaseModel.YssimModels
+	dbModel.Where("userspace_id = ?  AND sys_or_user = ? AND  encryption = ? AND package_name = ? AND version = ?", userSpaceId, userName, true, packageName, version).First(&encryptionPackage)
+	if encryptionPackage.Encryption {
+		c.JSON(http.StatusOK, res)
+		return
+	}
 	modelCode := service.GetModelCode(modelName)
 	res.Data = modelCode
 	c.JSON(http.StatusOK, res)
