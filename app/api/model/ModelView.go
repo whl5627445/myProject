@@ -734,7 +734,7 @@ func AddModelComponentView(c *gin.Context) {
 	packageName := nameList[0]
 	var modelPackage DataBaseModel.YssimModels
 	dbModel.Where("package_name = ?", packageName).First(&modelPackage)
-	if modelPackage.SysUser == "sys" {
+	if modelPackage.SysUser == "sys" || modelPackage.Encryption {
 		res.Err = "该模型不允许此操作"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
@@ -778,7 +778,7 @@ func DeleteModelComponentView(c *gin.Context) {
 	}
 	var modelPackage DataBaseModel.YssimModels
 	dbModel.Where("id = ?", item.PackageId).First(&modelPackage)
-	if modelPackage.SysUser == "sys" {
+	if modelPackage.SysUser == "sys" || modelPackage.Encryption {
 		res.Err = "该模型不允许此操作"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
@@ -829,7 +829,7 @@ func UpdateModelComponentView(c *gin.Context) {
 	packageName := nameList[0]
 	var modelPackage DataBaseModel.YssimModels
 	dbModel.Where("package_name = ?", packageName).First(&modelPackage)
-	if modelPackage.SysUser == "sys" {
+	if modelPackage.SysUser == "sys" || modelPackage.Encryption {
 		res.Err = "该模型不允许此操作"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
@@ -872,7 +872,7 @@ func CreateConnectionAnnotationView(c *gin.Context) {
 	packageName := nameList[0]
 	var modelPackage DataBaseModel.YssimModels
 	dbModel.Where("package_name = ?", packageName).First(&modelPackage)
-	if modelPackage.SysUser == "sys" {
+	if modelPackage.SysUser == "sys" || modelPackage.Encryption {
 		res.Err = "该模型不允许此操作"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
@@ -948,7 +948,7 @@ func DeleteConnectionAnnotationView(c *gin.Context) {
 	packageName := nameList[0]
 	var modelPackage DataBaseModel.YssimModels
 	dbModel.Where("package_name = ?", packageName).First(&modelPackage)
-	if modelPackage.SysUser == "sys" {
+	if modelPackage.SysUser == "sys" || modelPackage.Encryption {
 		res.Err = "该模型不允许此操作"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
@@ -987,7 +987,7 @@ func UpdateConnectionAnnotationView(c *gin.Context) {
 	packageName := nameList[0]
 	var modelPackage DataBaseModel.YssimModels
 	dbModel.Where("package_name = ?", packageName).First(&modelPackage)
-	if modelPackage.SysUser == "sys" {
+	if modelPackage.SysUser == "sys" || modelPackage.Encryption {
 		res.Err = "该模型不允许此操作"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
