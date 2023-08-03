@@ -560,7 +560,14 @@ func CopyClassView(c *gin.Context) {
 	if item.ParentName != "" {
 		packageName = strings.Split(item.ParentName, ".")[0]
 	}
-
+	var encryptionPackage DataBaseModel.YssimModels
+	dbModel.Where("sys_or_user = ? AND userspace_id = ? AND id = ? AND encryption = ?", userName, userSpaceId, item.PackageId, true).Or("sys_or_user = ? AND userspace_id = ? AND package_name = ?", userName, userSpaceId, packageName).First(&encryptionPackage)
+	if encryptionPackage.Encryption {
+		res.Msg = "加密库不允许复制与插入模型"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
 	var packageModel DataBaseModel.YssimModels
 	dbModel.Where("package_name = ? AND userspace_id = ?", packageName, "0").Or("sys_or_user = ? AND userspace_id = ? AND package_name = ?", userName, userSpaceId, packageName).First(&packageModel)
 	if packageModel.SysUser == "sys" && item.ParentName != "" {
