@@ -356,6 +356,7 @@ func SimulateResultListView(c *gin.Context) {
 			"simulate_model_name": recordList[i].SimulateModelName,
 			"simulate_run_time":   simulateRunTime,
 			"another_name":        recordList[i].AnotherName,
+			"simulate_percentage": recordList[i].Percentage,
 		}
 		dataList = append(dataList, data)
 	}

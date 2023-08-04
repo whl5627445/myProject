@@ -19,6 +19,7 @@ type YssimSimulateRecord struct {
 	SimulateStatus          string         `gorm:"column:simulate_status;type:varchar(32);comment:仿真状态"`
 	SimulateStartTime       int64          `gorm:"column:simulate_start_time;type:int;comment:仿真动作开始执行时间"`
 	SimulateEndTime         int64          `gorm:"column:simulate_end_time;type:int;comment:仿真动作结束执行时间"`
+	Percentage              int64          `gorm:"column:percentage;type:int;comment:仿真进度(0-100)"`
 	StartTime               string         `gorm:"column:start_time;default:\"\";type:varchar(32);comment:仿真配置参数中的开始时间"`
 	StopTime                string         `gorm:"column:stop_time;default:\"\";type:varchar(32);comment:仿真配置参数中的结束时间"`
 	Method                  string         `gorm:"column:method;default:\"\";type:varchar(32);comment:仿真方法"`
