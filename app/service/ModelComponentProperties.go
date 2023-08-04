@@ -12,7 +12,7 @@ func renameComponentInClass(className, oldComponentName, newComponentName string
 		return false, "名称为关键字，请更换另一个名称"
 	}
 	for i := 0; i < len(data); i++ {
-		if data[i].([]any)[3].(string) == newComponentName && data[i].([]any)[3].(string) != oldComponentName {
+		if data[i].([]any)[3].(string) == newComponentName && data[i].([]any)[3].(string) != oldComponentName && oldComponentName != newComponentName {
 			return false, "名称重复，请更换另一个名称"
 		}
 	}
