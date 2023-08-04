@@ -510,21 +510,24 @@ func ExperimentCreateView(c *gin.Context) {
 	}
 	username := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
-	var record DataBaseModel.YssimExperimentRecord
-	DB.Where("package_id = ? AND experiment_name = ? AND username =? AND userspace_id =? AND model_name =?", item.PackageId, item.ExperimentName, username, userSpaceId, item.ModelName).First(&record)
-	if record.ExperimentName != "" {
-		res.Msg = "实验记录名称已存在，请更换。"
-		c.JSON(http.StatusOK, res)
-		return
-	}
 	var models DataBaseModel.YssimModels
 	err = DB.Where("id = ?", item.PackageId).First(&models).Error
-	if models.UserSpaceId == "0" && models.SysUser == "sys" {
-		res.Err = "系统模型不支持创建实验"
+	if models.UserSpaceId == "0" && models.SysUser == "sys" || (models.Encryption == true) {
+		res.Err = "该模型不支持创建实验"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
 	}
+
+	var record DataBaseModel.YssimExperimentRecord
+	DB.Where("package_id = ? AND experiment_name = ? AND username =? AND userspace_id =? AND model_name =?", item.PackageId, item.ExperimentName, username, userSpaceId, item.ModelName).First(&record)
+	if record.ExperimentName != "" {
+		res.Err = "实验记录名称已存在，请更换。"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
 	experimentRecord := DataBaseModel.YssimExperimentRecord{
 		ID:                uuid.New().String(),
 		PackageId:         item.PackageId,
