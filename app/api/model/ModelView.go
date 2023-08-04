@@ -34,7 +34,9 @@ func GetSysRootModelView(c *gin.Context) {
 	userSpaceId := c.GetHeader("space_id")
 	var modelData []map[string]any
 	var packageModel []DataBaseModel.YssimModels
-	dbModel.Where("sys_or_user =  ? AND userspace_id = ?", "sys", "0").Or("sys_or_user =  ? AND userspace_id = ? AND encryption = ?", userName, userSpaceId, true).Find(&packageModel)
+	subQuery := dbModel.Model(&DataBaseModel.SystemLibrary{}).Where("username = ? AND encryption = ?", userName, true).Or("encryption = ?", false).Select("id")
+	dbModel.Where("sys_or_user IN (?) AND userspace_id = ?", "sys", "0").Or("sys_or_user =  ? AND userspace_id = ? AND encryption = ?", userName, userSpaceId, true).
+		Or("sys_or_user =  ? AND userspace_id = ? AND library_id IN (?)", userName, userSpaceId, subQuery).Find(&packageModel)
 	libraryAndVersions := service.GetLibraryAndVersions()
 	for i := 0; i < len(packageModel); i++ {
 		p, ok := libraryAndVersions[packageModel[i].PackageName]
@@ -1658,10 +1660,10 @@ func CADMappingModelView(c *gin.Context) {
 func GetSystemLibraryView(c *gin.Context) {
 	var res DataType.ResponseData
 	var system []DataBaseModel.SystemLibrary
-	var models DataBaseModel.YssimModels
 	userName := c.GetHeader("username")
 	spaceId := c.Query("space_id")
-	err := dbModel.Find(&system).Error
+	subQuery := dbModel.Model(&DataBaseModel.YssimModels{}).Where("sys_or_user = ? AND userspace_id = ? AND library_id IS NOT NULL AND library_id != ?", userName, spaceId, "").Select("library_id")
+	err := dbModel.Where("encryption = ? AND id NOT IN (?)", false, subQuery).Or("username = ? AND id NOT IN (?)", userName, subQuery).Find(&system).Error
 	if err != nil {
 		res.Status = 2
 		res.Err = "未查询到系统模型"
@@ -1670,19 +1672,17 @@ func GetSystemLibraryView(c *gin.Context) {
 	}
 	var data []map[string]any
 	for i := 0; i < len(system); i++ {
-		dbModel.Where("library_id = ? AND sys_or_user = ? AND userspace_id = ?", system[i].ID, userName, spaceId).First(&models)
-		if models.LibraryId != system[i].ID {
-			d := map[string]any{
-				"id":              system[i].ID,
-				"user_name":       system[i].UserName,
-				"package_name":    system[i].PackageName,
-				"file_path":       system[i].FilePath,
-				"version_control": system[i].VersionControl,
-				"version_branch":  system[i].VersionBranch,
-				"version_tag":     system[i].VersionTag,
-			}
-			data = append(data, d)
+		d := map[string]any{
+			"id":              system[i].ID,
+			"user_name":       system[i].UserName,
+			"package_name":    system[i].PackageName,
+			"file_path":       system[i].FilePath,
+			"version_control": system[i].VersionControl,
+			"version_branch":  system[i].VersionBranch,
+			"version_tag":     system[i].VersionTag,
+			"encryption":      system[i].Encryption,
 		}
+		data = append(data, d)
 	}
 	res.Msg = "查询成功"
 	res.Data = data
@@ -1723,7 +1723,7 @@ func CreateDependencyLibraryView(c *gin.Context) {
 		return
 	}
 	dbModel.Where("id = ? AND username = ?", item.ID, item.UserName).First(&system)
-	dbModel.Where("sys_or_user = ? AND id = ? AND userspace_id = ?", userName, item.ID, spaceId).First(&models)
+	dbModel.Where("sys_or_user = ? AND library_id = ? AND userspace_id = ?", userName, system.ID, spaceId).First(&models)
 	if models.ID != "" {
 		res.Err = "模型已存在"
 		res.Status = 2
@@ -1741,6 +1741,7 @@ func CreateDependencyLibraryView(c *gin.Context) {
 		VersionControl: system.VersionControl,
 		VersionBranch:  system.VersionBranch,
 		VersionTag:     system.VersionTag,
+		Encryption:     system.Encryption,
 	}
 	err = dbModel.Create(&newDependencyLibrary).Error
 	if err != nil {
@@ -1825,6 +1826,9 @@ func GetExtendedModelView(c *gin.Context) {
 	*/
 
 	var res DataType.ResponseData
+	var models DataBaseModel.YssimModels
+	userName := c.GetHeader("username")
+	spaceId := c.GetHeader("space_id")
 	modelName := c.Query("model_name")
 	if strings.TrimSpace(modelName) == "" {
 		res.Err = "参数为空"
@@ -1832,23 +1836,39 @@ func GetExtendedModelView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	var data []map[string]any
 	dataList := service.GetExtendedModel(modelName)
+	if strings.Contains(modelName, ".") {
+		modelName = strings.Split(modelName, ".")[0]
+	}
+	err := dbModel.Where("package_name = ? AND sys_or_user IN (?) AND userspace_id IN (?)", modelName, []string{userName, "sys"}, []string{spaceId, "0"}).First(&models).Error
+	if err != nil {
+		res.Err = "未查询到模型"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	var data []map[string]interface{}
 	if dataList != nil {
 		for _, str := range dataList {
-			temp := map[string]any{"model_name": str}
 			dataList2 := service.GetExtendedModel(str)
-			if dataList2 != nil {
-				temp["flag"] = true
+			temp := map[string]interface{}{
+				"model_name": str,
+				"flag":       dataList2 != nil,
+				"version":    models.Version,
+				"models_id":  models.ID,
+				"user_name":  models.SysUser,
+			}
+			if models.UserSpaceId == "0" {
+				temp["tag"] = "sys"
 			} else {
-				temp["flag"] = false
+				temp["tag"] = "user"
 			}
 			data = append(data, temp)
 		}
 		res.Data = data
 		res.Msg = "查询成功"
 	} else {
-		res.Msg = "此模型没有父类"
+		res.Err = "此模型没有父类"
 		res.Status = 2
 	}
 	c.JSON(http.StatusOK, res)
