@@ -25,6 +25,16 @@ class DmSimulation(threading.Thread):
         self.uuid = request.uuid
         self.request = request
         self.processStartTime = None
+        self.percentage = 0
+
+    def update_percentage(self):
+        while self.state != "stopped":
+            if 30 <= self.percentage <= 98:
+                # 仿真进度到达30之后,每一秒增加增加1,增加到99停止
+                self.percentage += 1
+                update_simulate_records(uuid=self.request.uuid, percentage=self.percentage)
+                log.info("更新数据库进度为:{}".format(self.percentage))
+            time.sleep(1)
 
     def send_request(self):
         log.info("(Dymola)发送请求")
@@ -83,10 +93,10 @@ class DmSimulation(threading.Thread):
             }
             try:
                 log.info("(Dymola)开始上传文件")
-                log.info("(Dymola)url:"+url)
+                log.info("(Dymola)url:" + url)
                 response = requests.post(url, data=params, files=files, timeout=timeout)
                 uploadRes = response.json()
-                log.info("(Dymola)上传文件:"+str(uploadRes))
+                log.info("(Dymola)上传文件:" + str(uploadRes))
                 if uploadRes["code"] == 200:
                     uploadResult = True
                     log.info('(Dymola)上传文件成功')
@@ -94,7 +104,7 @@ class DmSimulation(threading.Thread):
                 else:
                     return False, None, 0
             except Exception as e:
-                log.info("(Dymola)"+str(e))
+                log.info("(Dymola)" + str(e))
                 return False, None, 0
             # 上传完删除zip文件
             if os.path.exists(del_upload_fileName):
@@ -106,7 +116,7 @@ class DmSimulation(threading.Thread):
         else:
             # 系统模型的仿真要去掉用户模型
             dymola_libraries = [element for element in dymola_libraries if element['userFile'] == '']
-            log.info("(Dymola)系统模型只加载系统库:"+str(dymola_libraries))
+            log.info("(Dymola)系统模型只加载系统库:" + str(dymola_libraries))
         if uploadResult or self.request.packageFilePath == "":
             fileName = ""
             if self.request.packageFilePath != "":
@@ -120,20 +130,28 @@ class DmSimulation(threading.Thread):
                 "dymolaLibraries": dymola_libraries
             }
             log.info('(Dymola)开始编译')
-            log.info("(Dymola)编译请求体："+str(compileReqData))
+            log.info("(Dymola)编译请求体：" + str(compileReqData))
             json_data = {"message": self.request.simulateModelName + " 模型开始编译"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
-            update_simulate_records(uuid=self.request.uuid, simulate_status="6", simulate_start_time=time.time())
+            update_simulate_records(uuid=self.request.uuid,
+                                    simulate_status="6",
+                                    simulate_start_time=time.time(),
+                                    percentage=20)
+            self.percentage = 20
             compileRes = requests.request("post", DymolaSimulationConnect + "/dymola/translate",
                                           json=compileReqData,
                                           timeout=600)
             if compileRes.status_code != 200:
-                log.info("(Dymola)服务编译错误: "+str(compileRes.reason))
+                log.info("(Dymola)服务编译错误: " + str(compileRes.reason))
                 return False, None, compileRes.status_code
             compileResData = compileRes.json()
-            log.info("(Dymola)服务编译结果："+str(compileResData))
+            log.info("(Dymola)服务编译结果：" + str(compileResData))
             if compileResData["code"] == 200:
-                update_simulate_records(uuid=self.request.uuid, simulate_status="2", simulate_start="1")
+                update_simulate_records(uuid=self.request.uuid,
+                                        simulate_status="2",
+                                        simulate_start="1",
+                                        percentage=30)
+                self.percentage = 30
                 json_data = {"message": self.request.simulateModelName + " 编译成功，开始仿真"}
                 R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
                 simulateReqData = {
@@ -152,15 +170,15 @@ class DmSimulation(threading.Thread):
                     "dymolaLibraries": dymola_libraries
                 }
 
-                log.info("(Dymola)仿真请求体："+str(simulateReqData))
+                log.info("(Dymola)仿真请求体：" + str(simulateReqData))
                 simulateRes = requests.request('post',
                                                DymolaSimulationConnect + "/dymola/simulate",
                                                json=simulateReqData)
                 simulateResData = simulateRes.json()
 
-                log.info("(Dymola)仿真结果："+str(simulateResData))
+                log.info("(Dymola)仿真结果：" + str(simulateResData))
                 absolute_path = adsPath + self.request.resultFilePath
-                log.info("(Dymola)结果地址："+absolute_path)
+                log.info("(Dymola)结果地址：" + absolute_path)
                 if simulateResData.get("code") == 200:
                     resFileUrl = DymolaSimulationConnect + "/file/download?fileName=" + simulateResData["msg"]
                     fmuFileUrl = DymolaSimulationConnect + "/file/download?fileName=" + compileResData["msg"]
@@ -189,18 +207,29 @@ class DmSimulation(threading.Thread):
     def run(self):
         self.state = "running"
         log.info("(Dymola)开启dymola仿真")
-        update_simulate_records(uuid=self.request.uuid, simulate_start_time=time.time(), simulate_start=True)
+        update_simulate_records(uuid=self.request.uuid,
+                                simulate_start_time=time.time(),
+                                simulate_start=True,
+                                percentage=10)
+        self.percentage = 10
         res, err, code = self.send_request()
-        log.info("(Dymola)返回"+str(res)+str(err)+str(code))
+        # 开启假的进度增加线程
+        fake_update_percentage = threading.Thread(target=self.update_percentage)
+        fake_update_percentage.start()
+
+        log.info("(Dymola)返回" + str(res) + str(err) + str(code))
         if res:
             update_simulate_records(uuid=self.request.uuid,
                                     simulate_status="4",
                                     simulate_result_str="DM",
                                     simulate_start="0",
                                     simulate_end_time=str(time.time()),
-                                    another_name=new_another_name(self.request.userName, self.request.simulateModelName, self.request.simulatePackageId, self.request.userSpaceId)
-
+                                    another_name=new_another_name(self.request.userName, self.request.simulateModelName,
+                                                                  self.request.simulatePackageId,
+                                                                  self.request.userSpaceId),
+                                    percentage=100
                                     )
+            self.percentage = 100
             json_data = {"message": self.request.simulateModelName + " 模型仿真完成"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
         elif code == 300:

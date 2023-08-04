@@ -37,6 +37,7 @@ class YssimSimulateRecords(Base):
     simulate_start_time = Column(Integer)
     simulate_end_time = Column(Integer)
     simulate_result_str = Column(Text)
+    percentage = Column(Integer)
     fmi_version = Column(String)
     description = Column(String)
     start_time = Column(String)

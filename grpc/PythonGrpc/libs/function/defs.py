@@ -56,28 +56,31 @@ def update_app_spaces_records(page_id):
 def update_simulate_records(uuid, simulate_status=None, simulate_result_str=None, simulate_start=None,
                             simulate_start_time=None,
                             simulate_end_time=None, simulate_model_result_path=None, another_name=None,
-                            result_run_time=None
+                            result_run_time=None, percentage=None
                             ):
     with Session() as session:
-        processDetails = session.query(YssimSimulateRecords).filter(
+        simulate_record = session.query(YssimSimulateRecords).filter(
             YssimSimulateRecords.id == uuid).first()
         if simulate_status:
-            processDetails.simulate_status = simulate_status  # 更改状态
+            simulate_record.simulate_status = simulate_status  # 更改状态
         if simulate_result_str:
-            processDetails.simulate_result_str = simulate_result_str  # 更改仿真结果字符串
+            simulate_record.simulate_result_str = simulate_result_str  # 更改仿真结果字符串
         if simulate_start:
-            processDetails.simulate_start = simulate_start  # 仿真开始标致
+            simulate_record.simulate_start = simulate_start  # 仿真开始标致
         if simulate_start_time:
-            if processDetails.simulate_start_time == 0:  # 仿真开始时间只会设置一次
-                processDetails.simulate_start_time = simulate_start_time  # 仿真开始时间
+            if simulate_record.simulate_start_time == 0:  # 仿真开始时间只会设置一次
+                simulate_record.simulate_start_time = simulate_start_time  # 仿真开始时间
         if simulate_end_time:
-            processDetails.simulate_end_time = simulate_end_time  # 仿真结束时间
+            simulate_record.simulate_end_time = simulate_end_time  # 仿真结束时间
         if simulate_model_result_path:
-            processDetails.simulate_model_result_path = simulate_model_result_path  # 仿真结果文件路径
+            simulate_record.simulate_model_result_path = simulate_model_result_path  # 仿真结果文件路径
         if another_name:
-            processDetails.another_name = another_name  # 结果记录别名
+            simulate_record.another_name = another_name  # 结果记录别名
         if result_run_time:
-            processDetails.result_run_time = result_run_time  # 可执行文件的运行时间
+            simulate_record.result_run_time = result_run_time  # 可执行文件的运行时间
+        if percentage:
+            if percentage > simulate_record.percentage:
+                simulate_record.percentage = percentage  # 仿真进度
 
         session.commit()
 
@@ -102,7 +105,7 @@ def update_compile_records(uuid,
             data_sources_record.result_run_time = result_run_time
         if zip_mo_path:
             data_sources_record.zip_mo_path = zip_mo_path
-            log.info("zip_mo_path:"+data_sources_record.zip_mo_path)
+            log.info("zip_mo_path:" + data_sources_record.zip_mo_path)
         session.commit()
 
 
@@ -306,3 +309,12 @@ def result_step(arr):
         step = len(arr) // 50  # 计算步长
         new_arr = [arr[i] for i in range(0, len(arr), step)]  # 等间距取值
         return new_arr
+
+
+def find_max_number(input_str):
+    numbers = re.findall(r'\d+', input_str)  # 查找字符串中所有连续的数字
+    if numbers:
+        max_number = max(map(int, numbers))  # 将数字字符串转换为整数并找到最大值
+        return max_number
+    else:
+        return None

@@ -7,7 +7,9 @@ import psutil
 from config.redis_config import R
 from libs.OMPython.OMCSessionZMQ import OMCSessionZMQ
 from libs.function.defs import update_simulate_records, new_another_name, sendMessage
+from libs.function.find_port import findPort
 from libs.function.grpc_log import log
+from libs.function.progress_server import TcpServer
 
 
 class OmcSimulation(threading.Thread):
@@ -68,6 +70,7 @@ class OmcSimulation(threading.Thread):
         log.info("(OMC)仿真模型名：" + self.request.simulateModelName)
         log.info("(OMC)仿真参数：" + str(self.request.simulationPraData))
         log.info("(OMC)OMC进程参数：" + str(self.omc_obj.__dict__))
+        update_simulate_records(uuid=self.uuid, percentage=10)
         translateModelRes = self.omc_obj.translateModel(className=self.request.simulateModelName,
                                                         fileNamePrefix=absolute_path,
                                                         translate_parameters_data=self.request.simulationPraData
@@ -81,6 +84,7 @@ class OmcSimulation(threading.Thread):
         os.kill(self.omc_obj.omc_process.pid, 9)
 
         if translateModelRes:
+            update_simulate_records(uuid=self.uuid, percentage=20)
             json_data = {"message": self.request.simulateModelName + " 模型代码转换c代码完成，准备编译"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
         else:
@@ -100,7 +104,7 @@ class OmcSimulation(threading.Thread):
         if "make: ***" not in make_result and translateModelRes == True:
             # 改数据库状态为2
             log.info("(OMC)编译成功")
-            update_simulate_records(uuid=self.uuid, simulate_status="2", simulate_start="1")
+            update_simulate_records(uuid=self.uuid, simulate_status="2", simulate_start="1",percentage=30)
             json_data = {"message": self.request.simulateModelName + " 模型编译完成，准备仿真"}
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
         else:
@@ -120,13 +124,18 @@ class OmcSimulation(threading.Thread):
 
         # 仿真
         self.state = "running"
+        socket_port = findPort(49200)
         time1 = time.time()
-        cmd = [absolute_path]
+        tcpServer = TcpServer(socket_port, self.uuid)
+        tcpServer.start()
+        time.sleep(1)
+        cmd = [absolute_path, "-port=" + str(socket_port)]
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         self.run_pid = process.pid
         # 获取命令行输出结果
         output, error = process.communicate()
         time2 = time.time()
+        tcpServer.stop()
         if error:
             log.info("(OMC)仿真失败,error:" + str(error))
             update_simulate_records(uuid=self.uuid,
@@ -155,7 +164,8 @@ class OmcSimulation(threading.Thread):
                                         another_name=new_another_name(self.request.userName,
                                                                       self.request.simulateModelName,
                                                                       self.request.simulatePackageId,
-                                                                      self.request.userSpaceId)
+                                                                      self.request.userSpaceId),
+                                        percentage=100
                                         )
 
             else:
