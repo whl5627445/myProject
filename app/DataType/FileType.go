@@ -50,7 +50,7 @@ type ModelCodeSaveData struct {
 }
 
 type PackageResourcesData struct {
-	PackageId string `json:"package_id" binding:"required"`
+	PackageId string `json:"package_id" binding:""`
 	Parent    string `json:"parent" binding:""`
 	Path      string `json:"path" binding:""`
 }
