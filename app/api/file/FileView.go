@@ -504,7 +504,7 @@ func FmuExportModelView(c *gin.Context) {
 		fileName = packageModel.PackageName
 	}
 	// 获取依赖
-	envLibrary := service.GetEnvLibrary(username, userSpaceId)
+	envLibrary := service.GetEnvLibrary(packageModel.PackageName, username, userSpaceId)
 	newFileName, ok, errTips := service.DymolaFmuExportWithLibrary(item.FmuPar, envLibrary, token, username, item.FmuName, item.PackageName, item.ModelName, fileName, filePath)
 	//newFileName, ok := service.DymolaFmuExport(item.FmuPar, token, username, item.FmuName, item.PackageName, item.ModelName, fileName, filePath)
 

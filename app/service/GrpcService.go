@@ -27,29 +27,38 @@ type OutputData struct {
 
 var DB = config.DB
 
-func GetEnvLibrary(userName, spaceId string) map[string]string {
+func GetEnvLibrary(modelName, userName, spaceId string) map[string]string {
+	environmentModelData := make(map[string]string)
+	var p DataBaseModel.YssimModels
+	// 获取需要仿真的模型名
+	DB.Where("package_name = ? AND sys_or_user = ? AND userspace_id = ?", modelName, userName, spaceId).First(&p)
+	if p.ID != "" {
+		environmentModelData[p.PackageName] = p.FilePath
+	}
+
+	// 获取需要加载的用户模型
+	dependentLibrary := GetPackageUses(modelName)
+	for i := 0; i < len(dependentLibrary); i++ {
+		var usedModel DataBaseModel.YssimModels
+		DB.Where("package_name = ? AND version = ? AND sys_or_user = ? AND userspace_id = ?", dependentLibrary[i][0], dependentLibrary[i][1], userName, spaceId).First(&usedModel)
+		if usedModel.ID != "" {
+			if usedModel.FilePath != "" {
+				environmentModelData[usedModel.PackageName] = usedModel.FilePath
+			}
+		}
+	}
 
 	// 获取需要加载的系统模型
-	environmentModelData := make(map[string]string)
 	var envPackageModel []DataBaseModel.YssimModels
 	DB.Where("sys_or_user =  ? AND userspace_id = ?", "sys", "0").Find(&envPackageModel)
 	libraryAndVersions := GetLibraryAndVersions()
 	for i := 0; i < len(envPackageModel); i++ {
-		p, ok := libraryAndVersions[envPackageModel[i].PackageName]
-		if ok && p == envPackageModel[i].Version {
+		packageVersion, ok := libraryAndVersions[envPackageModel[i].PackageName]
+		if ok && packageVersion == envPackageModel[i].Version {
 			environmentModelData[envPackageModel[i].PackageName] = envPackageModel[i].Version
 		}
 	}
-	// 获取需要加载的用户模型
-	DB.Where("sys_or_user = ? AND userspace_id = ?", userName, spaceId).Find(&envPackageModel)
-	for i := 0; i < len(envPackageModel); i++ {
-		loadVersions, ok := libraryAndVersions[envPackageModel[i].PackageName]
-		if ok && loadVersions == envPackageModel[i].Version {
-			environmentModelData[envPackageModel[i].PackageName] = envPackageModel[i].FilePath
-		}
-	}
 	return environmentModelData
-
 }
 
 //func GrpcReadSimulationResult(VarList []string, SimulateModelResultPath string) ([][]float64, bool) {
@@ -208,8 +217,8 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 		"tolerance":         record.Tolerance,
 	}
 
-	// 获取需要加载的系统模型
-	environmentModelData := GetEnvLibrary(itemMap["username"], itemMap["space_id"])
+	// 获取依赖模型和系统库
+	environmentModelData := GetEnvLibrary(itemMap["model_name"], itemMap["username"], itemMap["space_id"])
 	// 转为json，保存到数据库
 	jsonEnvData, err := sonic.Marshal(environmentModelData)
 	if err != nil {
@@ -297,8 +306,8 @@ func GrpcTranslate(record DataBaseModel.AppDataSource) (string, error) {
 		"tolerance":         record.Tolerance,
 	}
 
-	// 获取需要加载的系统模型
-	environmentModelData := GetEnvLibrary(record.UserName, record.UserSpaceId)
+	// 获取依赖模型和系统库
+	environmentModelData := GetEnvLibrary(record.ModelName, record.UserName, record.UserSpaceId)
 	// 转为json，保存到数据库
 	jsonEnvData, err := sonic.Marshal(environmentModelData)
 	if err != nil {
