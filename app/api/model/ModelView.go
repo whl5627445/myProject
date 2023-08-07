@@ -1899,6 +1899,7 @@ func GetExtendedModelView(c *gin.Context) {
 				"version":    models.Version,
 				"models_id":  models.ID,
 				"user_name":  models.SysUser,
+				"encryption": models.Encryption,
 			}
 			if models.UserSpaceId == "0" {
 				temp["tag"] = "sys"
