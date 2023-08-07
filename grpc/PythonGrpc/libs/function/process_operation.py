@@ -93,10 +93,12 @@ def kill_process(multiprocessing_id, om_process_list, dm_process_list, om_task_m
             with Session() as session:
                 simulate_records = session.query(YssimSimulateRecords).filter(
                     YssimSimulateRecords.id == multiprocessing_id).first()
+                if simulate_records:
+                    simulate_records.simulate_status = "3"  # 杀死进程
                 app_pages_record = session.query(AppPages).filter(
                     AppPages.id == multiprocessing_id).first()
-                simulate_records.simulate_status = "3"  # 杀死进程
-                app_pages_record.release_state = 3  # 杀死进程
+                if app_pages_record:
+                    app_pages_record.release_state = 3  # 杀死进程
                 session.commit()
             return {"msg": "End Process:{}".format(multiprocessing_id)}
 
@@ -120,19 +122,21 @@ def kill_process(multiprocessing_id, om_process_list, dm_process_list, om_task_m
             if response.status_code == 200:
                 result = response.json()
                 log.info("(Dymola)请求返回的结果："+str(result))
-                if result["code"] == 200:
-                    i.state = "stopped"
-                    del dymola_task_mark_dict[i.request.userName]
-                    dm_process_list.remove(i)
-                    del i
-                    log.info("(Dymola)杀死线程，数据库id:" + multiprocessing_id)
-                    with Session() as session:
-                        processDetails = session.query(YssimSimulateRecords).filter(
-                            YssimSimulateRecords.id == multiprocessing_id).first()
-                        app_pages_record = session.query(AppPages).filter(
-                            AppPages.id == multiprocessing_id).first()
+
+                i.state = "stopped"
+                del dymola_task_mark_dict[i.request.userName]
+                dm_process_list.remove(i)
+                del i
+                log.info("(Dymola)杀死线程，数据库id:" + multiprocessing_id)
+                with Session() as session:
+                    processDetails = session.query(YssimSimulateRecords).filter(
+                        YssimSimulateRecords.id == multiprocessing_id).first()
+                    if processDetails:
                         processDetails.simulate_status = "3"  # 杀死进程
+                    app_pages_record = session.query(AppPages).filter(
+                        AppPages.id == multiprocessing_id).first()
+                    if app_pages_record:
                         app_pages_record.simulate_state = 3  # 杀死进程
-                        session.commit()
-                    return {"msg": "End Process:{}".format(multiprocessing_id)}
+                    session.commit()
+                return {"msg": "End Process:{}".format(multiprocessing_id)}
     return {"msg": "The process is not found or has ended or failed:{}".format(multiprocessing_id)}

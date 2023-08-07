@@ -88,6 +88,9 @@ class DmSimulation(threading.Thread):
             url = DymolaSimulationConnect + "/file/upload"
             params = {"url": params_url}
             timeout = 600
+            if not os.path.exists(uploadFileName):
+                log.info("(Dymola)zip文件不存在,仿真失败:" + uploadFileName)
+                return False, None, 0
             files = {
                 "file": (self.request.packageName + ".zip", open(uploadFileName, "rb"))
             }
