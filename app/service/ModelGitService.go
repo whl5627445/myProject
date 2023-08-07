@@ -5,9 +5,9 @@ import (
 	"log"
 	"path/filepath"
 	"time"
-	"yssim-go/grpc/GoOmcGrpc/grpcOmc"
 	"yssim-go/library/fileOperation"
 	"yssim-go/library/goGit"
+	"yssim-go/library/omc"
 )
 
 func GetRepositoryName(cloneURL string) (string, error) {
@@ -37,7 +37,7 @@ func RepositoryClone(address, branchName, userName string) (string, string, bool
 	if res {
 		return repositoryPath, repositoryName, true
 	} else {
-		return "", "", false
+		return repositoryPath, repositoryName, false
 	}
 
 }
@@ -50,7 +50,7 @@ func GetTag(path string) string {
 	return tag
 }
 
-func GitPackageFileParse(repositoryName, repositoryPath string) (string, string, string, string, bool) {
+func GitPackageFileParse(repositoryName, repositoryPath string) (string, string, string, bool) {
 	packagePath := ""
 	if fileOperation.Exists(repositoryPath + "/" + repositoryName + ".mo") {
 		packagePath = repositoryPath + repositoryName + ".mo"
@@ -58,23 +58,23 @@ func GitPackageFileParse(repositoryName, repositoryPath string) (string, string,
 		packageFilePath, err := fileOperation.FindFile("package.mo", repositoryPath)
 		if err != nil {
 			log.Println("FindFile err", err)
-			return "", "", "", "未找到package", false
+			return "", "", "未找到package", false
 		}
 		packagePath = packageFilePath + "package.mo"
 	}
 
-	packageName, ok := grpcOmc.ParseFile(packagePath)
+	packageName, ok := omc.OMC.ParseFile(packagePath)
 	msg := ""
-	packageVersion := ""
-	if ok {
-		ok = grpcOmc.LoadFile(packagePath)
-		packageVersion = grpcOmc.GetPackageVersion(packageName)
-		grpcOmc.DeleteClass(packageName)
-	}
+	//packageVersion := ""
+	//if ok {
+	//	ok = grpcOmc.LoadFile(packagePath)
+	//	packageVersion = grpcOmc.GetPackageVersion(packageName)
+	//	grpcOmc.DeleteClass(packageName)
+	//}
 	if !ok {
 		msg = "语法错误，请重新检查后上传"
 	}
 
-	return packageName, packagePath, packageVersion, msg, ok
+	return packageName, packagePath, msg, ok
 
 }

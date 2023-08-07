@@ -1,21 +1,27 @@
 package goGit
 
 import (
+	"context"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"time"
 
 	"log"
 )
 
 func GitPlainClone(address, FilePath, branchName string) (bool, error) {
+	ctx := context.TODO()
+	ctx, cancel := context.WithTimeout(ctx, 180*time.Second)
+	defer cancel()
+
 	err := error(nil)
 	// 克隆远程仓库到本地
 	if branchName == "" {
-		_, err = git.PlainClone(FilePath, false, &git.CloneOptions{
+		_, err = git.PlainCloneContext(ctx, FilePath, false, &git.CloneOptions{
 			URL: address,
 		})
 	} else {
-		_, err = git.PlainClone(FilePath, false, &git.CloneOptions{
+		_, err = git.PlainCloneContext(ctx, FilePath, false, &git.CloneOptions{
 			URL:           address,
 			ReferenceName: plumbing.NewBranchReferenceName(branchName), // 指定要克隆的分支
 			SingleBranch:  true,                                        // 只拉取指定分支

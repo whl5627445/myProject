@@ -3,6 +3,7 @@ package API
 import (
 	"log"
 	"net/http"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -2035,14 +2036,14 @@ func RepositoryCloneView(c *gin.Context) {
 		versionTag := service.GetTag(repositoryPath)
 
 		// 解析包文件
-		packageName, packagePath, packageVersion, _, ok := service.GitPackageFileParse(repositoryName, repositoryPath)
+		packageName, packagePath, _, ok := service.GitPackageFileParse(repositoryName, repositoryPath)
 
 		if ok { // 创建数据库记录
 			libraryRecord := DataBaseModel.UserLibrary{
 				ID:          uuid.New().String(),
 				UserName:    userName,
-				PackageName: packageName,    //package名称，一般称为包名或库的名字
-				Version:     packageVersion, //package版本号
+				PackageName: packageName, //package名称，一般称为包名或库的名字
+				//Version:     packageVersion, //package版本号
 				//Used:           bool           			//是否已经被某空间使用
 				FilePath:          packagePath,            //package所在路径
 				VersionControl:    true,                   //是否有版本控制
@@ -2056,6 +2057,13 @@ func RepositoryCloneView(c *gin.Context) {
 			res.Msg = "拉取成功"
 			c.JSON(http.StatusOK, res)
 			return
+		}
+	}
+	if repositoryPath != "" {
+		//克隆失败清除垃圾文件
+		err = os.RemoveAll(repositoryPath)
+		if err != nil {
+			log.Println("删除本地存储库路径出错:", err)
 		}
 	}
 	res.Err = "拉取失败"
