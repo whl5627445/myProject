@@ -212,6 +212,31 @@ func GetXmlData(files []string, header string) string {
 	return data.Data
 }
 
+func HandleXMLUpload(from *multipart.FileHeader) string {
+	open, err2 := from.Open()
+	if err2 != nil {
+
+	}
+	defer open.Close()
+
+	// 解析XML文件
+	data, err := ioutil.ReadAll(open)
+	if err != nil {
+		fmt.Println("读取文件失败")
+		return ""
+	}
+	var xmlData string
+	if err := xml.Unmarshal(data, &xmlData); err != nil {
+		fmt.Println("文件转换失败")
+		return ""
+	}
+
+	//
+	fmt.Println("zfc", string(data))
+	fmt.Println("解析后的xml", xmlData)
+	return string(data)
+}
+
 func CADParseParts(path string) []map[string]any {
 
 	v := root{}

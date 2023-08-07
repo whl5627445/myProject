@@ -3,7 +3,6 @@ package API
 import (
 	"log"
 	"net/http"
-	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -1598,6 +1597,36 @@ func CADParseView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+func CADParseXmlView(c *gin.Context) {
+	/*
+		解析CAD文件
+	*/
+	var res DataType.ResponseData
+	var model DataBaseModel.YssimModels
+	file, err := c.FormFile("xmlFile")
+	if err != nil {
+		res.Err = "文件上传失败"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	xml := service.HandleXMLUpload(file)
+	if xml == "" {
+		res.Err = "文件解析失败"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	dbModel.Where("package_name = ? AND version = ?", "Modelica", "4.0.0").First(&model)
+	modelName := map[string]any{"straight_tube": map[string]any{"id": model.ID, "model_name": []string{"Modelica.Fluid.Pipes.StaticPipe", "Modelica.Fluid.Pipes.DynamicPipe"}}, "bendable_tube": map[string]any{"id": model.ID, "model_name": []string{"Modelica.Fluid.Fittings.Bends.CurvedBend"}}}
+
+	components := service.CADParseParts(xml)
+
+	res.Data = map[string]any{"components": components, "model": modelName}
+
+	c.JSON(http.StatusOK, res)
+}
+
 func CADFilesUploadView(c *gin.Context) {
 	var res DataType.ResponseData
 	userName := c.GetHeader("username")
@@ -1757,18 +1786,8 @@ func CreateDependencyLibraryView(c *gin.Context) {
 }
 
 func GetUMLView(c *gin.Context) {
-	/*
-		获取模型的uml视图信息
-	*/
 	var res DataType.ResponseData
 	var className = c.Query("className")
-	modelType := service.GetModelType(className)
-	if modelType == "package" {
-		res.Err = "暂不支持获取包类型的UML图，请继承使用"
-		res.Status = 2
-		c.JSON(http.StatusOK, res)
-		return
-	}
 	finalResultData := service.GetModelUMLData(className)
 	res.Msg = "获取成功"
 	res.Data = finalResultData
@@ -1781,7 +1800,7 @@ func GetDependencyLibraryView(c *gin.Context) {
 	var model []DataBaseModel.YssimModels
 	userName := c.GetHeader("username")
 	userSpaceId := c.Query("space_id")
-	err := dbModel.Where("userspace_id = ? AND sys_or_user != ? AND sys_or_user = ?", userSpaceId, "sys", userName).Find(&model).Error
+	err := dbModel.Where("userspace_id = ? AND sys_or_user != ? AND sys_or_user = ? AND library_id IS NOT NULL AND library_id != ?", userSpaceId, "sys", userName, "").Find(&model).Error
 	if err != nil {
 		res.Status = 2
 		res.Err = "无依赖模型"
@@ -2046,14 +2065,14 @@ func RepositoryCloneView(c *gin.Context) {
 		versionTag := service.GetTag(repositoryPath)
 
 		// 解析包文件
-		packageName, packagePath, _, ok := service.GitPackageFileParse(repositoryName, repositoryPath)
+		packageName, packagePath, packageVersion, _, ok := service.GitPackageFileParse(repositoryName, repositoryPath)
 
 		if ok { // 创建数据库记录
 			libraryRecord := DataBaseModel.UserLibrary{
 				ID:          uuid.New().String(),
 				UserName:    userName,
-				PackageName: packageName, //package名称，一般称为包名或库的名字
-				//Version:     packageVersion, //package版本号
+				PackageName: packageName,    //package名称，一般称为包名或库的名字
+				Version:     packageVersion, //package版本号
 				//Used:           bool           			//是否已经被某空间使用
 				FilePath:          packagePath,            //package所在路径
 				VersionControl:    true,                   //是否有版本控制
@@ -2067,13 +2086,6 @@ func RepositoryCloneView(c *gin.Context) {
 			res.Msg = "拉取成功"
 			c.JSON(http.StatusOK, res)
 			return
-		}
-	}
-	if repositoryPath != "" {
-		//克隆失败清除垃圾文件
-		err = os.RemoveAll(repositoryPath)
-		if err != nil {
-			log.Println("删除本地存储库路径出错:", err)
 		}
 	}
 	res.Err = "拉取失败"
@@ -2104,16 +2116,16 @@ func RepositoryGetView(c *gin.Context) {
 
 	// 删除数据库记录
 	var records []DataBaseModel.UserLibrary
-	dbModel.Where("username = ? ", userName).Order("create_time desc").Find(&records)
+	dbModel.Where("username = ? ", userName).Find(&records)
 	var data []map[string]any
 	for i := 0; i < len(records); i++ {
 		d := map[string]any{
-			"id":           records[i].ID,
-			"package_name": records[i].PackageName,
-			//"version":            records[i].Version,
+			"id":                 records[i].ID,
+			"package_name":       records[i].PackageName,
+			"version":            records[i].Version,
 			"another_name":       records[i].AnotherName,
 			"repository_address": records[i].RepositoryAddress,
-			//"create_time":        records[i].CreatedAt,
+			"create_time":        records[i].CreatedAt,
 		}
 		data = append(data, d)
 	}
