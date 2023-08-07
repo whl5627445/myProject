@@ -1800,7 +1800,8 @@ func GetDependencyLibraryView(c *gin.Context) {
 	var model []DataBaseModel.YssimModels
 	userName := c.GetHeader("username")
 	userSpaceId := c.Query("space_id")
-	err := dbModel.Where("userspace_id = ? AND sys_or_user != ? AND sys_or_user = ? AND library_id IS NOT NULL AND library_id != ?", userSpaceId, "sys", userName, "").Find(&model).Error
+	subQuery := dbModel.Model(&DataBaseModel.SystemLibrary{}).Where("username = ? AND encryption = ?", userName, true).Or("encryption = ?", false).Select("id")
+	err := dbModel.Where("userspace_id = ? AND sys_or_user != ? AND sys_or_user = ? AND library_id IS NOT NULL AND library_id != ? AND library_id IN (?)", userSpaceId, "sys", userName, "", subQuery).Find(&model).Error
 	if err != nil {
 		res.Status = 2
 		res.Err = "无依赖模型"

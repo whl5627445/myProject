@@ -231,9 +231,6 @@ func HandleXMLUpload(from *multipart.FileHeader) string {
 		return ""
 	}
 
-	//
-	fmt.Println("zfc", string(data))
-	fmt.Println("解析后的xml", xmlData)
 	return string(data)
 }
 
