@@ -2095,6 +2095,7 @@ func RepositoryGetView(c *gin.Context) {
 			"version":            records[i].Version,
 			"another_name":       records[i].AnotherName,
 			"repository_address": records[i].RepositoryAddress,
+			"create_time":        records[i].CreatedAt,
 		}
 		data = append(data, d)
 	}
