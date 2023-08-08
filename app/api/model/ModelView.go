@@ -2080,8 +2080,9 @@ func RepositoryCloneView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
+	var errorMessage string
 	// 克隆到本地
-	repositoryPath, repositoryName, cloneRes := service.RepositoryClone(item.RepositoryAddress, item.Branch, userName)
+	repositoryPath, repositoryName, errorMessage, cloneRes := service.RepositoryClone(item.RepositoryAddress, item.Branch, userName)
 
 	if cloneRes { //克隆成功
 		//分支名称默认是master
@@ -2093,7 +2094,8 @@ func RepositoryCloneView(c *gin.Context) {
 		versionTag := service.GetTag(repositoryPath)
 
 		// 解析包文件
-		packageName, packagePath, _, ok := service.GitPackageFileParse(repositoryName, repositoryPath)
+		packageName, packagePath, msg_, ok := service.GitPackageFileParse(repositoryName, repositoryPath)
+		errorMessage = msg_
 
 		if ok { // 创建数据库记录
 			libraryRecord := DataBaseModel.UserLibrary{
@@ -2116,7 +2118,7 @@ func RepositoryCloneView(c *gin.Context) {
 			return
 		}
 	}
-	res.Err = "拉取失败"
+	res.Err = errorMessage
 	res.Status = 2
 	c.JSON(http.StatusOK, res)
 
