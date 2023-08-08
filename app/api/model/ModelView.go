@@ -2035,6 +2035,7 @@ func CreateVersionAvailableLibrariesView(c *gin.Context) {
 }
 
 func RepositoryCloneView(c *gin.Context) {
+
 	var res DataType.ResponseData
 	var item DataType.RepositoryCloneData
 	userName := c.GetHeader("username")
@@ -2067,21 +2068,21 @@ func RepositoryCloneView(c *gin.Context) {
 		versionTag := service.GetTag(repositoryPath)
 
 		// 解析包文件
-		packageName, packagePath, packageVersion, _, ok := service.GitPackageFileParse(repositoryName, repositoryPath)
+		packageName, packagePath, _, ok := service.GitPackageFileParse(repositoryName, repositoryPath)
 
 		if ok { // 创建数据库记录
 			libraryRecord := DataBaseModel.UserLibrary{
-				ID:          uuid.New().String(),
-				UserName:    userName,
-				PackageName: packageName,    //package名称，一般称为包名或库的名字
-				Version:     packageVersion, //package版本号
-				//Used:           bool           			//是否已经被某空间使用
+				ID:                uuid.New().String(),
+				UserName:          userName,
+				PackageName:       packageName,            //package名称，一般称为包名或库的名字
 				FilePath:          packagePath,            //package所在路径
 				VersionControl:    true,                   //是否有版本控制
 				VersionBranch:     versionBranch,          //版本控制分支
 				VersionTag:        versionTag,             //版本控制tag
 				AnotherName:       item.Name,              // 别名
 				RepositoryAddress: item.RepositoryAddress, //存储库地址
+				//Version:     packageVersion, //package版本号
+				//Used:           bool           			//是否已经被某空间使用
 
 			}
 			err = dbModel.Create(&libraryRecord).Error
