@@ -2012,6 +2012,16 @@ func CreateVersionAvailableLibrariesView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
+	var yssimModels []DataBaseModel.YssimModels
+	dbModel.Where("sys_or_user = ? AND userspace_id = ?", username, createLibrary.SpaceId).Find(&yssimModels)
+	for _, model := range yssimModels {
+		if model.PackageName == userLibrary.PackageName {
+			res.Status = 2
+			res.Err = "该空间下已有同名的模型"
+			c.JSON(http.StatusOK, res)
+			return
+		}
+	}
 	flag := service.ExistClass(userLibrary.PackageName)
 	if flag {
 		service.DeleteLibrary(userLibrary.PackageName)
