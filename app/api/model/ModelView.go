@@ -693,10 +693,9 @@ func DeletePackageAndModelView(c *gin.Context) {
 		var modelCollection []DataBaseModel.YssimModelsCollection
 		dbModel.Where("package_id = ? AND model_name = ? AND userspace_id = ?", packageModel.ID, item.ModelName, userSpaceId).Find(&modelCollection)
 		dbModel.Delete(&modelCollection)
-		//删除对应的实验记录 暂且搁置
-		//var experimentRecord []DataBaseModel.YssimExperimentRecord
-		//dbModel.Where("username =? AND userspace_id =? AND model_name =?", username, userSpaceId, item.ModelName).Find(&experimentRecord)
-		//dbModel.Delete(&experimentRecord)
+		packageInformation := service.GetPackageInformation()
+		packageInformationJson, _ := sonic.Marshal(packageInformation)
+		dbModel.Model(DataBaseModel.YssimUserSpace{}).Where("id = ? AND username = ?", userSpaceId, userName).Update("package_information", packageInformationJson)
 	} else {
 		res.Msg = msg
 		res.Status = 2
