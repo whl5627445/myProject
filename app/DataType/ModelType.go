@@ -260,6 +260,7 @@ type GetUMLData struct {
 type ExtendsModelData struct {
 	ClassName string `json:"class_name" binding:""`
 	Count     int    `json:"count" binding:""`
+	Flag      bool   `json:"flag" binding:""`
 }
 
 type RepositoryCloneData struct {

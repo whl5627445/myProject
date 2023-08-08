@@ -180,6 +180,7 @@ func GetUMLElements(className string) []any {
 
 func GetModelUMLData(className string) []map[string]*DataType.GetUMLData {
 	var classNameList []string
+	var secondClassNameList []string
 	classNameList = append(classNameList, className)
 	rootInformation := GetClassInformation(className)
 	rootUmlData := &DataType.GetUMLData{
@@ -194,13 +195,13 @@ func GetModelUMLData(className string) []map[string]*DataType.GetUMLData {
 	}
 	finalResultData = append(finalResultData, rootMap)
 
-	GetSubUMLData(className, rootUmlData, &finalResultData, &classNameList)
+	GetSubUMLData(className, rootUmlData, &finalResultData, &classNameList, &secondClassNameList)
 
-	GetExtendUml(className, rootUmlData, &finalResultData, &classNameList)
+	GetExtendUml(className, rootUmlData, &finalResultData, &classNameList, &secondClassNameList)
 	return finalResultData
 }
 
-func GetSubUMLData(className string, rootUmlData *DataType.GetUMLData, finalResultData *[]map[string]*DataType.GetUMLData, classNameList *[]string) {
+func GetSubUMLData(className string, rootUmlData *DataType.GetUMLData, finalResultData *[]map[string]*DataType.GetUMLData, classNameList, secondClassNameList *[]string) {
 	componentDataList := GetUMLElements(className)
 	for i := 0; i < len(componentDataList); i++ {
 		var extendsModelData []DataType.ExtendsModelData
@@ -211,14 +212,21 @@ func GetSubUMLData(className string, rootUmlData *DataType.GetUMLData, finalResu
 		extendsModelData = append(extendsModelData, rootExtendsModelData)
 		cData := componentDataList[i].([]any)
 		subInformation := GetClassInformation(cData[2].(string))
-		subClassName := stringOperation.Distinct(cData[2].(string), classNameList)
+		if subInformation[0].(string) == "type" || subInformation[0].(string) == "" {
+			continue
+		}
+		subClassName := stringOperation.Distinct(cData[2].(string), classNameList, secondClassNameList)
 		subUmlData := &DataType.GetUMLData{
 			ClassName:        subClassName,
 			Level:            rootUmlData.Level - 1,
 			ExtendsModelData: extendsModelData,
 		}
 		if !(subInformation[0].(string) == "model") {
-			subUmlData.ModelType = subInformation[0].(string)
+			if strings.ContainsRune(subInformation[0].(string), ' ') {
+				subUmlData.ModelType = stringOperation.GetComponentType(subInformation[0].(string))
+			} else {
+				subUmlData.ModelType = subInformation[0].(string)
+			}
 		}
 
 		if subInformation[2].(string) == "true" {
@@ -235,14 +243,15 @@ func GetSubUMLData(className string, rootUmlData *DataType.GetUMLData, finalResu
 	}
 }
 
-func GetExtendUml(className string, rootUmlData *DataType.GetUMLData, resultData *[]map[string]*DataType.GetUMLData, classNameList *[]string) {
+func GetExtendUml(className string, rootUmlData *DataType.GetUMLData, resultData *[]map[string]*DataType.GetUMLData, classNameList, secondClassNameList *[]string) {
 	rootExtendModelNameList := GetExtendedModel(className)
 	var extendsModelData []DataType.ExtendsModelData
 	for _, extendModelName := range rootExtendModelNameList {
 		extendsModelInformation := GetClassInformation(extendModelName)
-		extendClassName := stringOperation.Distinct(extendModelName, classNameList)
+		extendClassName := stringOperation.Distinct(extendModelName, classNameList, secondClassNameList)
 		rootExtendModel := DataType.ExtendsModelData{
 			ClassName: extendClassName,
+			Flag:      true,
 		}
 		extendsModelData = append(extendsModelData, rootExtendModel)
 		for _, m := range *resultData {
@@ -267,7 +276,7 @@ func GetExtendUml(className string, rootUmlData *DataType.GetUMLData, resultData
 			extendsModelUmlData.ClassName: extendsModelUmlData,
 		}
 		*resultData = append(*resultData, extendsModelUmlDataMap)
-		GetSubUMLData(extendModelName, extendsModelUmlData, resultData, classNameList)
-		GetExtendUml(extendModelName, extendsModelUmlData, resultData, classNameList)
+		GetSubUMLData(extendModelName, extendsModelUmlData, resultData, classNameList, secondClassNameList)
+		GetExtendUml(extendModelName, extendsModelUmlData, resultData, classNameList, secondClassNameList)
 	}
 }

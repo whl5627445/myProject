@@ -1757,8 +1757,18 @@ func CreateDependencyLibraryView(c *gin.Context) {
 }
 
 func GetUMLView(c *gin.Context) {
+	/*
+		获取模型的uml视图信息
+	*/
 	var res DataType.ResponseData
 	var className = c.Query("className")
+	modelType := service.GetModelType(className)
+	if modelType == "package" {
+		res.Err = "暂不支持获取包类型的UML图，请继承使用"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
 	finalResultData := service.GetModelUMLData(className)
 	res.Msg = "获取成功"
 	res.Data = finalResultData

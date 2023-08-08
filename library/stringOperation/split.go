@@ -23,6 +23,16 @@ func GetSecondLastModelName(className string) string {
 	return strings.Join(name[len(name)-2:], ".")
 }
 
+func GetThirdLastModelName(className string) string {
+	name := strings.Split(className, ".")
+	return strings.Join(name[len(name)-3:], ".")
+}
+
+func GetComponentType(modelType string) string {
+	modelTypeList := strings.Split(modelType, " ")
+	return modelTypeList[len(modelTypeList)-1]
+}
+
 func in(target string, strArray []string) bool {
 	sort.Strings(strArray)
 	index := sort.SearchStrings(strArray, target)
@@ -32,13 +42,24 @@ func in(target string, strArray []string) bool {
 	return false
 }
 
-func Distinct(target string, strArray *[]string) string {
+func Distinct(target string, strArray, secondStrArray *[]string) string {
 	ok := in(target, *strArray)
 	if ok {
 		return GetLastModelName(target)
 	} else {
 		for _, s := range *strArray {
 			if strings.HasSuffix(s, GetLastModelName(target)) {
+				ok = in(target, *secondStrArray)
+				if ok {
+					return GetSecondLastModelName(target)
+				} else {
+					for _, s2 := range *secondStrArray {
+						if strings.HasSuffix(s2, GetSecondLastModelName(target)) {
+							return GetThirdLastModelName(target)
+						}
+					}
+				}
+				*secondStrArray = append(*secondStrArray, target)
 				return GetSecondLastModelName(target)
 			}
 		}
