@@ -1990,7 +1990,9 @@ func DeleteVersionAvailableLibrariesView(c *gin.Context) {
 
 func CreateVersionAvailableLibrariesView(c *gin.Context) {
 	/*
-		创建可编辑有版本的模型库
+			创建可编辑有版本的模型库
+			先检查模型是否已加载，如果已加载，就卸载掉
+		    加载mo文件，获取版本号，如果获取成功更新数据库，获取失败，返回解析mo文件失败
 	*/
 	var res DataType.ResponseData
 
@@ -2010,11 +2012,23 @@ func CreateVersionAvailableLibrariesView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
+	flag := service.ExistClass(userLibrary.PackageName)
+	if flag {
+		service.DeleteLibrary(userLibrary.PackageName)
+	}
+	flag = service.LoadPackage(userLibrary.PackageName, "", userLibrary.FilePath)
+	if !flag {
+		res.Status = 2
+		res.Err = "加载模型失败"
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	version := service.GetVersion(userLibrary.PackageName)
 	var newVersionLibrary = DataBaseModel.YssimModels{
 		ID:             uuid.New().String(),
 		LibraryId:      userLibrary.ID,
 		PackageName:    userLibrary.PackageName,
-		Version:        userLibrary.Version,
+		Version:        version,
 		SysUser:        username,
 		FilePath:       userLibrary.FilePath,
 		UserSpaceId:    createLibrary.SpaceId,
