@@ -1,7 +1,6 @@
 package API
 
 import (
-	"github.com/bytedance/sonic"
 	"log"
 	"net/http"
 	"regexp"
@@ -13,6 +12,8 @@ import (
 	"yssim-go/app/service"
 	"yssim-go/library/fileOperation"
 	"yssim-go/library/omc"
+
+	"github.com/bytedance/sonic"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -219,18 +220,17 @@ func GetModelCodeView(c *gin.Context) {
 		## package_id: 模型包的id
 		## modelname: 需要查询的模型名称，全称， 例如“Modelica.Blocks.Examples.PID_Controller”
 	*/
-	modelName := c.Query("model_name")
-	userSpaceId := c.Query("space_id")
 	userName := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
+	modelName := c.Query("model_name")
+	packageId := c.Query("package_id")
 	var res DataType.ResponseData
 	if modelName == "" || userSpaceId == "" {
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	packageName := strings.Split(modelName, ".")[0]
-	version := service.GetVersion(packageName)
 	var encryptionPackage DataBaseModel.YssimModels
-	dbModel.Where("userspace_id = ?  AND sys_or_user = ? AND  encryption = ? AND package_name = ? AND version = ?", userSpaceId, userName, true, packageName, version).First(&encryptionPackage)
+	dbModel.Where("userspace_id = ?  AND sys_or_user = ? AND id = ?", userSpaceId, userName, packageId).First(&encryptionPackage)
 	if encryptionPackage.Encryption {
 		c.JSON(http.StatusOK, res)
 		return
