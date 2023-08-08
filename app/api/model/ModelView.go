@@ -1,6 +1,7 @@
 package API
 
 import (
+	"github.com/bytedance/sonic"
 	"log"
 	"net/http"
 	"regexp"
@@ -10,9 +11,8 @@ import (
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/DataType"
 	"yssim-go/app/service"
+	"yssim-go/library/fileOperation"
 	"yssim-go/library/omc"
-
-	"github.com/bytedance/sonic"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -2124,10 +2124,16 @@ func RepositoryDeleteView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
-	// 删除数据库记录
-	var record DataBaseModel.UserLibrary
-	dbModel.Where("id = ?", item.ID).First(&record)
-	dbModel.Delete(&record)
+	// 删除UserLibrary数据库记录
+	var userLibraryRecord DataBaseModel.UserLibrary
+	dbModel.Where("id = ?", item.ID).First(&userLibraryRecord)
+	dbModel.Delete(&userLibraryRecord)
+	// 删除YssimModels数据库记录
+	var yssimModelsRecord []DataBaseModel.YssimModels
+	dbModel.Where("library_id = ?", item.ID).Find(&yssimModelsRecord)
+	dbModel.Delete(&yssimModelsRecord)
+	// 删除包文件
+	fileOperation.DeleteProjectPath(userLibraryRecord.FilePath)
 	res.Msg = "删除成功"
 	c.JSON(http.StatusOK, res)
 }

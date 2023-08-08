@@ -37,7 +37,20 @@ func IsDir(path string) bool {
 	}
 	return s.IsDir()
 }
+func DeleteProjectPath(filePath string) bool {
+	filePathList := strings.Split(filePath, "/")
+	path := strings.Join(filePathList[:6], "/")
+	exists := Exists(path)
+	if exists {
+		err := os.RemoveAll(path)
+		if err != nil {
+			log.Println("删除文件夹出错， err: ", err)
+			return false
+		}
+	}
+	return false
 
+}
 func DeletePathAndFile(path string) bool {
 	exists := Exists(path)
 	if !exists {
