@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 	"log"
+	"os"
 	"path/filepath"
 	"time"
 	"yssim-go/library/fileOperation"
@@ -37,7 +38,12 @@ func RepositoryClone(address, branchName, userName string) (string, string, bool
 	if res {
 		return repositoryPath, repositoryName, true
 	} else {
-		return repositoryPath, repositoryName, false
+		//克隆失败清除垃圾文件
+		err = os.RemoveAll(repositoryPath)
+		if err != nil {
+			log.Println("删除本地存储库路径出错:", err)
+		}
+		return "", "", false
 	}
 
 }

@@ -30,6 +30,7 @@ var DB = config.DB
 func GetEnvLibrary(modelName, userName, spaceId string) map[string]string {
 	environmentModelData := make(map[string]string)
 	var p DataBaseModel.YssimModels
+	libraryAndVersions := GetLibraryAndVersions()
 	// 获取需要仿真的模型名
 	DB.Where("package_name = ? AND sys_or_user = ? AND userspace_id = ?", modelName, userName, spaceId).First(&p)
 	if p.ID != "" {
@@ -41,17 +42,16 @@ func GetEnvLibrary(modelName, userName, spaceId string) map[string]string {
 	for i := 0; i < len(dependentLibrary); i++ {
 		var usedModel DataBaseModel.YssimModels
 		DB.Where("package_name = ? AND version = ? AND sys_or_user = ? AND userspace_id = ?", dependentLibrary[i][0], dependentLibrary[i][1], userName, spaceId).First(&usedModel)
-		if usedModel.ID != "" {
-			if usedModel.FilePath != "" {
-				environmentModelData[usedModel.PackageName] = usedModel.FilePath
-			}
+		l, ok := libraryAndVersions[usedModel.PackageName]
+		// 数据库你存在且FilePath不为空，并且yssim已经加载。
+		if usedModel.ID != "" && ok && l == usedModel.Version && usedModel.FilePath != "" {
+			environmentModelData[usedModel.PackageName] = usedModel.FilePath
 		}
 	}
 
 	// 获取需要加载的系统模型
 	var envPackageModel []DataBaseModel.YssimModels
 	DB.Where("sys_or_user =  ? AND userspace_id = ?", "sys", "0").Find(&envPackageModel)
-	libraryAndVersions := GetLibraryAndVersions()
 	for i := 0; i < len(envPackageModel); i++ {
 		packageVersion, ok := libraryAndVersions[envPackageModel[i].PackageName]
 		if ok && packageVersion == envPackageModel[i].Version {

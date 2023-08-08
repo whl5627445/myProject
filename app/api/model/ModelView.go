@@ -2035,7 +2035,9 @@ func CreateVersionAvailableLibrariesView(c *gin.Context) {
 }
 
 func RepositoryCloneView(c *gin.Context) {
-
+	/*
+		添加存储库接口：根据git地址拉去存储库
+	*/
 	var res DataType.ResponseData
 	var item DataType.RepositoryCloneData
 	userName := c.GetHeader("username")
@@ -2098,6 +2100,9 @@ func RepositoryCloneView(c *gin.Context) {
 }
 
 func RepositoryDeleteView(c *gin.Context) {
+	/*
+		删除存储库
+	*/
 	var res DataType.ResponseData
 	var item DataType.RepositoryDeleteData
 	err := c.BindJSON(&item)
@@ -2114,6 +2119,9 @@ func RepositoryDeleteView(c *gin.Context) {
 }
 
 func RepositoryGetView(c *gin.Context) {
+	/*
+		获取存储库列表
+	*/
 	var res DataType.ResponseData
 	userName := c.GetHeader("username")
 
