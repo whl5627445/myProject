@@ -407,13 +407,14 @@ func GetPackageEncryptView(c *gin.Context) {
 	packageId := c.Query("package_id")
 	spaceId := c.Query("space_id")
 	var packageRecord DataBaseModel.YssimModels
-	DB.Where("id = ? AND userspace_id = ? AND sys_or_user = ?", packageId, spaceId, username).First(&packageRecord)
+	DB.Where("id = ? AND userspace_id IN ? AND sys_or_user IN ?", packageId, []string{spaceId, "0"}, []string{username, "sys"}).First(&packageRecord)
 	if packageRecord.ID == "" {
 		res.Err = "导出模型库失败，请稍后再试"
 		res.Status = 2
 		c.JSON(http.StatusBadRequest, res)
 	}
-	filePath, err := service.ZipPackageStream(packageRecord.PackageName, packageRecord.FilePath)
+	packagePath := service.GetSourceFile(packageRecord.PackageName)
+	filePath, err := service.ZipPackageStream(packageRecord.PackageName, packagePath)
 	filePath, err = service.ZipPackageEncrypt(packageRecord.PackageName, filePath)
 	if err != nil {
 		res.Err = "导出模型库失败，请稍后再试"
