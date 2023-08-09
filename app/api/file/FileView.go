@@ -70,14 +70,23 @@ func UploadModelPackageView(c *gin.Context) {
 			return
 		}
 		var encryptionPackage DataBaseModel.SystemLibrary
+
 		if strings.HasSuffix(fileName, ".sk") {
-			encryptionPackage.ID = uuid.New().String()
-			encryptionPackage.UserName = userName
-			encryptionPackage.PackageName = packageName
-			encryptionPackage.Version = service.GetVersion(packageName)
-			encryptionPackage.FilePath = packagePath
-			encryptionPackage.Encryption = true
-			DB.Create(&encryptionPackage)
+			DB.Where("username = ? AND package_name = ? AND encryption = ?", userName, packageName, true).First(&encryptionPackage)
+			if encryptionPackage.ID != "" {
+				encryptionPackage.Version = service.GetVersion(packageName)
+				encryptionPackage.FilePath = packagePath
+				DB.Save(&encryptionPackage)
+				res.Msg = "加密模型库 \"" + packageName + "\" 已更新"
+			} else {
+				encryptionPackage.ID = uuid.New().String()
+				encryptionPackage.UserName = userName
+				encryptionPackage.PackageName = packageName
+				encryptionPackage.Version = service.GetVersion(packageName)
+				encryptionPackage.FilePath = packagePath
+				encryptionPackage.Encryption = true
+				DB.Create(&encryptionPackage)
+			}
 		}
 		packageRecord := DataBaseModel.YssimModels{
 			ID:          uuid.New().String(),
@@ -115,7 +124,7 @@ func UploadModelPackageView(c *gin.Context) {
 		return
 	}
 	service.DeleteLibrary(packageName)
-	res.Err = msg + ", 压缩包只适用于多层级package，单文件请上传mo后缀的单文件。"
+	res.Err = msg
 	res.Status = 2
 	c.JSON(http.StatusOK, res)
 
