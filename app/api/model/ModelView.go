@@ -1744,7 +1744,6 @@ func CreateDependencyLibraryView(c *gin.Context) {
 	var item DataType.CreateDependencyLibraryData
 	var models DataBaseModel.YssimModels
 	var system DataBaseModel.SystemLibrary
-	spaceId := c.GetHeader("space_id")
 	userName := c.GetHeader("username")
 	err := c.BindJSON(&item)
 	if err != nil {
@@ -1752,7 +1751,7 @@ func CreateDependencyLibraryView(c *gin.Context) {
 		return
 	}
 	dbModel.Where("id = ? AND username = ?", item.ID, item.UserName).First(&system)
-	dbModel.Where("sys_or_user = ? AND library_id = ? AND userspace_id = ?", userName, system.ID, spaceId).First(&models)
+	dbModel.Where("sys_or_user = ? AND library_id = ? AND userspace_id = ?", userName, system.ID, item.SpaceId).First(&models)
 	if models.ID != "" {
 		res.Err = "模型已存在"
 		res.Status = 2
@@ -1766,7 +1765,7 @@ func CreateDependencyLibraryView(c *gin.Context) {
 		Version:        system.Version,
 		SysUser:        userName,
 		FilePath:       system.FilePath,
-		UserSpaceId:    spaceId,
+		UserSpaceId:    item.SpaceId,
 		VersionControl: system.VersionControl,
 		VersionBranch:  system.VersionBranch,
 		VersionTag:     system.VersionTag,

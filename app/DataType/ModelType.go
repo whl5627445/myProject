@@ -217,6 +217,7 @@ type cadMappingGeometry struct {
 type CreateDependencyLibraryData struct {
 	ID       string `json:"id" binding:"required"`
 	UserName string `json:"user_name" binding:"required"`
+	SpaceId  string `json:"space_id" binding:"required"`
 }
 
 type DeleteDependencyLibraryData struct {
