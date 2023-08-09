@@ -78,9 +78,8 @@ def update_simulate_records(uuid, simulate_status=None, simulate_result_str=None
             simulate_record.another_name = another_name  # 结果记录别名
         if result_run_time:
             simulate_record.result_run_time = result_run_time  # 可执行文件的运行时间
-        if percentage:
-            if percentage > simulate_record.percentage:
-                simulate_record.percentage = percentage  # 仿真进度
+        if percentage is not None:
+            simulate_record.percentage = percentage  # 仿真进度
 
         session.commit()
 
