@@ -586,7 +586,7 @@ func CopyClassView(c *gin.Context) {
 		packageName = strings.Split(item.ParentName, ".")[0]
 	}
 	var encryptionPackage DataBaseModel.YssimModels
-	dbModel.Where("sys_or_user = ? AND userspace_id = ? AND id = ? AND encryption = ?", userName, userSpaceId, item.PackageId, true).Or("sys_or_user = ? AND userspace_id = ? AND package_name = ?", userName, userSpaceId, packageName).First(&encryptionPackage)
+	dbModel.Where("sys_or_user = ? AND userspace_id = ? AND id = ? AND encryption = ?", userName, userSpaceId, item.FromPackageId, true).Or("sys_or_user = ? AND userspace_id = ? AND id = ? AND encryption = ?", userName, userSpaceId, item.ToPackageId, true).First(&encryptionPackage)
 	if encryptionPackage.Encryption {
 		res.Msg = "加密库不允许复制与插入模型"
 		res.Status = 2
@@ -602,7 +602,6 @@ func CopyClassView(c *gin.Context) {
 		return
 	}
 	if packageModel.PackageName == item.ModelName {
-		log.Println(packageModel.ID)
 		res.Msg = "模型名称已存在"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)

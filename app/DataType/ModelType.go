@@ -54,7 +54,8 @@ type SetComponentPropertiesData struct {
 }
 
 type CopyClassData struct {
-	PackageId       string `json:"package_id" binding:""`
+	FromPackageId   string `json:"from_package_id" binding:"required"`
+	ToPackageId     string `json:"to_package_id" binding:""`
 	ParentName      string `json:"parent_name" binding:""`
 	ModelName       string `json:"model_name" binding:"required"`
 	CopiedClassName string `json:"copied_class_name" binding:"required"`
