@@ -33,7 +33,7 @@ class TcpServer(threading.Thread):  # TCP服务
             time.sleep(0.5)
 
     def stop(self):
-        log.info("关闭读取进度的socket,进度更新到:"+str(self.percentage))
+        log.info("关闭读取进度的socket,进度更新到:"+str(self.percentage[-1]))
         self.stop_flag = False
         self.s.close()
         if self.conn:
@@ -73,14 +73,13 @@ class TcpServer(threading.Thread):  # TCP服务
                         break
                     info = data.decode()
                     percent = find_max_number(info)
-                    log.info("仿真进度:"+str(percent/100))
                     self.percentage.append(percent/100)
 
                     # 发送请求数据
                     self.conn.send(f'服务端接收到信息{info}'.encode())
                     # log.info('发送返回完毕！！！')
                 except Exception as e:
-                    log.info(str(e))
+                    log.info("读取进度socket断开："+str(e))
                     return
 
 

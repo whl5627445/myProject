@@ -23,6 +23,7 @@ class OmcSimulation(threading.Thread):
         threading.Thread.__init__(self)
         update_simulate_records(uuid=self.uuid, simulate_status="6", simulate_start_time=int(time.time()))
         self.omc_obj = OMCSessionZMQ(port=port)
+        self.tcpServer = None
 
     def load_dependent_library(self):
         for key, val in self.request.envModelData.items():
@@ -126,8 +127,8 @@ class OmcSimulation(threading.Thread):
         self.state = "running"
         socket_port = findPort(49200)
         time1 = time.time()
-        tcpServer = TcpServer(socket_port, self.uuid)
-        tcpServer.start()
+        self.tcpServer = TcpServer(socket_port, self.uuid)
+        self.tcpServer.start()
         time.sleep(1)
         cmd = [absolute_path, "-port=" + str(socket_port)]
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -135,7 +136,7 @@ class OmcSimulation(threading.Thread):
         # 获取命令行输出结果
         output, error = process.communicate()
         time2 = time.time()
-        tcpServer.stop()
+        self.tcpServer.stop()
         if error:
             log.info("(OMC)仿真失败,error:" + str(error))
             update_simulate_records(uuid=self.uuid,

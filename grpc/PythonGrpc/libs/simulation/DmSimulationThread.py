@@ -209,6 +209,9 @@ class DmSimulation(threading.Thread):
 
     def run(self):
         self.state = "running"
+        # 开启假的进度增加线程
+        fake_update_percentage = threading.Thread(target=self.update_percentage)
+        fake_update_percentage.start()
         log.info("(Dymola)开启dymola仿真")
         update_simulate_records(uuid=self.request.uuid,
                                 simulate_start_time=time.time(),
@@ -216,9 +219,6 @@ class DmSimulation(threading.Thread):
                                 percentage=10)
         self.percentage = 10
         res, err, code = self.send_request()
-        # 开启假的进度增加线程
-        fake_update_percentage = threading.Thread(target=self.update_percentage)
-        fake_update_percentage.start()
 
         log.info("(Dymola)返回" + str(res) + str(err) + str(code))
         if res:
