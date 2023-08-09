@@ -17,8 +17,11 @@ func FileRouter(g *gin.Engine) {
 
 		Models.GET("/package/list", FileAPI.GetPackageFileListView)
 		Models.POST("/package/get", FileAPI.GetPackageFileView)
+		Models.GET("/package/encrypt/export", FileAPI.GetPackageEncryptView)
+
 		Models.POST("/result/all/get", FileAPI.GetResultFileView)
 		Models.POST("/result/filter/get", FileAPI.GetFilterResultFileView)
+
 		Models.POST("/fmu/export", FileAPI.FmuExportModelView)
 		Models.POST("/code/save", FileAPI.ModelCodeSaveView)
 		Models.POST("/upload/var", FileAPI.UploadModelVarFileView)
@@ -30,6 +33,8 @@ func FileRouter(g *gin.Engine) {
 		Models.POST("/package/resources/dir/delete", FileAPI.DeleteResourcesDirAndFileView)
 		Models.POST("/package/resources/images/path/get", FileAPI.ResourcesImagesPathGetView)
 		Models.GET("/package/resources/images/get", FileAPI.ResourcesImagesGetView)
+
+		Models.POST("/package/", FileAPI.ResourcesImagesPathGetView)
 
 		Models.POST("/icon/set", FileAPI.ModelIconSetView)
 

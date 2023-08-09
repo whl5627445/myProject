@@ -389,6 +389,32 @@ func GetPackageFileView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+func GetPackageEncryptView(c *gin.Context) {
+	/*
+	   # 用户mo文件加密后下载
+	*/
+	var res DataType.ResponseData
+	username := c.GetHeader("username")
+	packageId := c.Query("package_id")
+	spaceId := c.Query("space_id")
+	var packageRecord DataBaseModel.YssimModels
+	DB.Where("id = ? AND userspace_id = ? AND sys_or_user = ?", packageId, spaceId, username).First(&packageRecord)
+	if packageRecord.ID == "" {
+		res.Err = "导出模型库失败，请稍后再试"
+		res.Status = 2
+		c.JSON(http.StatusBadRequest, res)
+	}
+	filePath, err := service.ZipPackageStream(packageRecord.PackageName, packageRecord.FilePath)
+	filePath, err = service.ZipPackageEncrypt(packageRecord.PackageName, filePath)
+	if err != nil {
+		res.Err = "导出模型库失败，请稍后再试"
+		res.Status = 2
+		c.JSON(http.StatusInternalServerError, res)
+	}
+	res.Data = map[string]string{"url": filePath}
+	c.JSON(http.StatusOK, res)
+}
+
 func GetResultFileView(c *gin.Context) {
 	/*
 	   # 用户仿真结果文件下载
