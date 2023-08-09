@@ -58,6 +58,16 @@ func GetEnvLibrary(packageName, userName, spaceId string) map[string]string {
 			environmentModelData[envPackageModel[i].PackageName] = envPackageModel[i].Version
 		}
 	}
+
+	// 获取需要加载的加密模型
+	var encryptionPackageModel []DataBaseModel.YssimModels
+	DB.Where("sys_or_user =  ? AND userspace_id = ? AND encryption = ?", userName, spaceId, 1).Find(&encryptionPackageModel)
+	for i := 0; i < len(encryptionPackageModel); i++ {
+		packageVersion, ok := libraryAndVersions[encryptionPackageModel[i].PackageName]
+		if ok && packageVersion == encryptionPackageModel[i].Version {
+			environmentModelData[encryptionPackageModel[i].PackageName] = encryptionPackageModel[i].FilePath
+		}
+	}
 	return environmentModelData
 }
 
