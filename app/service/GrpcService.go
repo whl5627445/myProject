@@ -27,18 +27,18 @@ type OutputData struct {
 
 var DB = config.DB
 
-func GetEnvLibrary(modelName, userName, spaceId string) map[string]string {
+func GetEnvLibrary(packageName, userName, spaceId string) map[string]string {
 	environmentModelData := make(map[string]string)
 	var p DataBaseModel.YssimModels
 	libraryAndVersions := GetLibraryAndVersions()
 	// 获取需要仿真的模型名
-	DB.Where("package_name = ? AND sys_or_user = ? AND userspace_id = ?", modelName, userName, spaceId).First(&p)
+	DB.Where("package_name = ? AND sys_or_user = ? AND userspace_id = ?", packageName, userName, spaceId).First(&p)
 	if p.ID != "" {
 		environmentModelData[p.PackageName] = p.FilePath
 	}
 
 	// 获取需要加载的用户模型
-	dependentLibrary := GetPackageUses(modelName)
+	dependentLibrary := GetPackageUses(packageName)
 	for i := 0; i < len(dependentLibrary); i++ {
 		var usedModel DataBaseModel.YssimModels
 		DB.Where("package_name = ? AND version = ? AND sys_or_user = ? AND userspace_id = ?", dependentLibrary[i][0], dependentLibrary[i][1], userName, spaceId).First(&usedModel)
@@ -218,7 +218,7 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 	}
 
 	// 获取依赖模型和系统库
-	environmentModelData := GetEnvLibrary(itemMap["model_name"], itemMap["username"], itemMap["space_id"])
+	environmentModelData := GetEnvLibrary(packageModel.PackageName, itemMap["username"], itemMap["space_id"])
 	// 转为json，保存到数据库
 	jsonEnvData, err := sonic.Marshal(environmentModelData)
 	if err != nil {
