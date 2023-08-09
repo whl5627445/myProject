@@ -82,6 +82,7 @@ func SearchFunctionType(parentNode string) []map[string]any {
 					"name":       shortName,
 					"model_name": nameParent,
 					"haschild":   false,
+					"modelType":  modelType,
 				}
 				childList := omc.OMC.GetClassNames(nameParent, false)
 				if len(childList) > 0 {
