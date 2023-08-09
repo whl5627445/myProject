@@ -1921,27 +1921,34 @@ func GetVersionAvailableLibrariesView(c *gin.Context) {
 	var res DataType.ResponseData
 	sysOrUser := c.GetHeader("username")
 	userspaceId := c.Query("space_id")
-	var yssimModels []DataBaseModel.YssimModels
-	dbModel.Where("sys_or_user = ? AND userspace_id = ?", sysOrUser, userspaceId).Find(&yssimModels)
+	var versionModels []DataBaseModel.YssimModels
+	var noVersionModels []DataBaseModel.YssimModels
+	subQuery := dbModel.Model(&DataBaseModel.SystemLibrary{}).Where("username = ? AND encryption = ?", sysOrUser, true).Or("encryption = ?", false).Select("id")
+	dbModel.Where("sys_or_user = ? AND userspace_id = ? AND version_control = ? AND library_id not in(?)", sysOrUser, userspaceId, true, subQuery).Find(&versionModels)
+	dbModel.Where("sys_or_user = ? AND userspace_id = ? AND  library_id = ?", sysOrUser, userspaceId, "").Find(&noVersionModels)
+
 	result := make(map[string][]DataType.GetVersionLibraryData)
 	result["version"] = []DataType.GetVersionLibraryData{}
 	result["noVersion"] = []DataType.GetVersionLibraryData{}
-	for _, model := range yssimModels {
+	for _, model := range versionModels {
 		versionLibraryData := DataType.GetVersionLibraryData{
-			Id:          model.ID,
-			PackageName: model.PackageName,
-			LibraryId:   model.LibraryId,
+			Id:             model.ID,
+			PackageName:    model.PackageName,
+			LibraryId:      model.LibraryId,
+			VersionControl: model.VersionControl,
+			VersionBranch:  model.VersionBranch,
+			Version:        model.Version,
 		}
-		if model.VersionControl {
-			versionLibraryData.VersionControl = model.VersionControl
-			versionLibraryData.VersionBranch = model.VersionBranch
-			versionLibraryData.Version = model.Version
-			result["version"] = append(result["version"], versionLibraryData)
-		} else {
-			versionLibraryData.VersionControl = model.VersionControl
-			versionLibraryData.VersionBranch = model.VersionBranch
-			result["noVersion"] = append(result["noVersion"], versionLibraryData)
+		result["version"] = append(result["version"], versionLibraryData)
+	}
+	for _, model := range noVersionModels {
+		versionLibraryData := DataType.GetVersionLibraryData{
+			Id:             model.ID,
+			PackageName:    model.PackageName,
+			VersionControl: model.VersionControl,
+			VersionBranch:  model.VersionBranch,
 		}
+		result["noVersion"] = append(result["noVersion"], versionLibraryData)
 	}
 	res.Data = result
 	c.JSON(http.StatusOK, res)
