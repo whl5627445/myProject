@@ -75,6 +75,7 @@ func SearchFunctionType(parentNode string) []map[string]any {
 		nameParent := strings.Join(nameListAll[:len(parentNodePackageList)+1], ".")
 		_, ok := searchMap[nameParent]
 		if !ok {
+
 			modelType := omc.OMC.GetClassRestriction(name)
 			if modelType == "function" || modelType == "record" {
 				searchMap[nameParent] = true
