@@ -2210,16 +2210,17 @@ func RepositoryGetView(c *gin.Context) {
 
 	// 删除数据库记录
 	var records []DataBaseModel.UserLibrary
-	dbModel.Where("username = ? ", userName).Find(&records)
+	dbModel.Where("username = ? ", userName).Order("create_time desc").Find(&records)
 	var data []map[string]any
 	for i := 0; i < len(records); i++ {
 		d := map[string]any{
-			"id":                 records[i].ID,
-			"package_name":       records[i].PackageName,
-			"version":            records[i].Version,
+			"id":           records[i].ID,
+			"package_name": records[i].PackageName,
+			//"version":            records[i].Version,
 			"another_name":       records[i].AnotherName,
 			"repository_address": records[i].RepositoryAddress,
-			"create_time":        records[i].CreatedAt,
+			"version_branch":     records[i].VersionBranch,
+			//"create_time":        records[i].CreatedAt,
 		}
 		data = append(data, d)
 	}
