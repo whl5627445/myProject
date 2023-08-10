@@ -1300,9 +1300,34 @@ func SearchFunctionTypeView(c *gin.Context) {
 	*/
 	parent := c.Query("parent")
 	var res DataType.ResponseData
+	var models []DataBaseModel.YssimModels
+	userName := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
 	var data []map[string]any
-	modelNameList := service.SearchFunctionType(parent)
-	data = append(data, modelNameList...)
+	libraryAndVersions := service.GetLibraryAndVersions()
+	if parent == "" {
+		dbModel.Where("sys_or_user IN (?) AND userspace_id IN (?)", []string{userName, "sys"}, []string{userSpaceId, "0"}).Find(&models)
+
+		for _, model := range models {
+			p, ok := libraryAndVersions[model.PackageName]
+			if ok && p == model.Version {
+				modelType := omc.OMC.GetClassRestriction(model.PackageName)
+				if modelType == "package" || modelType == "function" || modelType == "record" {
+					top := map[string]any{
+						"name":       model.PackageName,
+						"model_name": model.PackageName,
+						"haschild":   true,
+						"type":       modelType,
+					}
+					data = append(data, top)
+				}
+			}
+		}
+	} else {
+		modelNameList := service.SearchFunctionType(parent)
+		data = append(data, modelNameList...)
+	}
+
 	res.Data = data
 	c.JSON(http.StatusOK, res)
 }
@@ -1404,7 +1429,9 @@ func GetPackageAndVersionView(c *gin.Context) {
 	username := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
 	var packageModel []DataBaseModel.YssimModels
+	var ids []string
 	dbModel.Where("sys_or_user IN ? AND userspace_id IN ?", []string{"sys", username}, []string{"0", userSpaceId}).Order("create_time desc").Find(&packageModel)
+	dbModel.Model(&DataBaseModel.SystemLibrary{}).Where("username = ? AND encryption = ?", username, true).Or("encryption = ?", false).Select("id").Scan(&ids)
 	var res DataType.ResponseData
 	var data []map[string]string
 	for i := 0; i < len(packageModel); i++ {
@@ -1412,10 +1439,18 @@ func GetPackageAndVersionView(c *gin.Context) {
 			"package_id":   packageModel[i].ID,
 			"package_name": packageModel[i].PackageName,
 			"version":      packageModel[i].Version,
-			"sys_user":     packageModel[i].SysUser,
 			"update_time":  packageModel[i].UpdatedAt.Format("06-01-02 15:04"),
 		}
-		if packageModel[i].SysUser == "sys" {
+		for _, id := range ids {
+			libraryId := packageModel[i].LibraryId
+			if libraryId == id {
+				d["sys_user"] = "sys"
+				break
+			} else {
+				d["sys_user"] = packageModel[i].SysUser
+			}
+		}
+		if packageModel[i].SysUser == "sys" || d["sys_user"] == "sys" {
 			d["update_time"] = "-"
 		}
 		data = append(data, d)
@@ -1691,8 +1726,14 @@ func GetSystemLibraryView(c *gin.Context) {
 	var system []DataBaseModel.SystemLibrary
 	userName := c.GetHeader("username")
 	spaceId := c.Query("space_id")
+	if spaceId == "" {
+		res.Err = "参数不能为空"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
 	subQuery := dbModel.Model(&DataBaseModel.YssimModels{}).Where("sys_or_user = ? AND userspace_id = ? AND library_id IS NOT NULL AND library_id != ?", userName, spaceId, "").Select("library_id")
-	err := dbModel.Where("encryption = ? AND id NOT IN (?)", false, subQuery).Or("username = ? AND id NOT IN (?)", userName, subQuery).Find(&system).Error
+	err := dbModel.Where("encryption = ? AND id NOT IN (?)", false, subQuery).Or("username = ? AND id NOT IN (?)", userName, subQuery).Order("create_time desc").Find(&system).Error
 	if err != nil {
 		res.Status = 2
 		res.Err = "未查询到系统模型"
@@ -1797,8 +1838,14 @@ func GetDependencyLibraryView(c *gin.Context) {
 	var model []DataBaseModel.YssimModels
 	userName := c.GetHeader("username")
 	userSpaceId := c.Query("space_id")
+	if userSpaceId == "" {
+		res.Err = "参数不能为空"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
 	subQuery := dbModel.Model(&DataBaseModel.SystemLibrary{}).Where("username = ? AND encryption = ?", userName, true).Or("encryption = ?", false).Select("id")
-	err := dbModel.Where("userspace_id = ? AND sys_or_user != ? AND sys_or_user = ? AND library_id IS NOT NULL AND library_id != ? AND library_id IN (?)", userSpaceId, "sys", userName, "", subQuery).Find(&model).Error
+	err := dbModel.Where("userspace_id = ? AND sys_or_user != ? AND sys_or_user = ? AND library_id IS NOT NULL AND library_id != ? AND library_id IN (?)", userSpaceId, "sys", userName, "", subQuery).Order("create_time desc").Find(&model).Error
 	if err != nil {
 		res.Status = 2
 		res.Err = "无依赖模型"
@@ -2163,17 +2210,16 @@ func RepositoryGetView(c *gin.Context) {
 
 	// 删除数据库记录
 	var records []DataBaseModel.UserLibrary
-	dbModel.Where("username = ? ", userName).Order("create_time desc").Find(&records)
+	dbModel.Where("username = ? ", userName).Find(&records)
 	var data []map[string]any
 	for i := 0; i < len(records); i++ {
 		d := map[string]any{
-			"id":           records[i].ID,
-			"package_name": records[i].PackageName,
-			//"version":            records[i].Version,
+			"id":                 records[i].ID,
+			"package_name":       records[i].PackageName,
+			"version":            records[i].Version,
 			"another_name":       records[i].AnotherName,
 			"repository_address": records[i].RepositoryAddress,
-			"version_branch":     records[i].VersionBranch,
-			//"create_time":        records[i].CreatedAt,
+			"create_time":        records[i].CreatedAt,
 		}
 		data = append(data, d)
 	}
