@@ -91,7 +91,10 @@ func PackageFileParse(fileName, saveFilePathBase string, file io.Reader) (string
 	saveFilePath := saveFilePathBase + "/" + dirName
 	if strings.HasSuffix(fileName, ".sk") {
 		fileName = strings.TrimSuffix(fileName, ".sk") + ".zip"
-		FileDecrypt(file, saveFilePath+"/"+fileName)
+		res := FileDecrypt(file, saveFilePath+"/"+fileName)
+		if !res {
+			return "", "", "未解析到package", false
+		}
 	} else {
 		fileOperation.CreateFilePath(saveFilePath)
 		fileData, _ := io.ReadAll(file)
@@ -109,7 +112,7 @@ func PackageFileParse(fileName, saveFilePathBase string, file io.Reader) (string
 		// 解压成功后确认是单文件还是多文件package，然后解析
 		if err != nil {
 			log.Println("UnZip err", err)
-			return "", "", "", false
+			return "", "", "未解析到package", false
 		}
 		filePath, ok := FindPackageFile(saveFilePath)
 		if ok {
@@ -118,7 +121,7 @@ func PackageFileParse(fileName, saveFilePathBase string, file io.Reader) (string
 			packageFilePath, err = fileOperation.FindFile("package.mo", saveFilePath)
 			if err != nil {
 				log.Println("FindFile err", err)
-				return "", "", "未找到package", false
+				return "", "", "未解析到package", false
 			}
 			packagePath = packageFilePath + "/package.mo"
 		}
