@@ -8,7 +8,7 @@ import (
 
 type YssimModels struct {
 	ID             string         `gorm:"index;primaryKey;type:varchar(128);comment:package唯一标识"`
-	LibraryId      string         `gorm:"index;column:library_id;type:varchar(128);comment:library库唯一标识"`
+	LibraryId      string         `gorm:"index;column:library_id;type:varchar(128);default:\"\";comment:library库唯一标识"`
 	PackageName    string         `gorm:"index;column:package_name;type:varchar(128);comment:package名称，一般称为包名或库的名字"`
 	Version        string         `gorm:"column:version;default:\"\";type:varchar(32);comment:package版本号"`
 	SysUser        string         `gorm:"index;column:sys_or_user;default:\"\";type:varchar(32);comment:是用户模型的话则为用户名，系统模型则是sys"`
