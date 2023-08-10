@@ -81,8 +81,10 @@ func GetUserRootModelView(c *gin.Context) {
 	var packageModel []DataBaseModel.YssimModels
 	var space DataBaseModel.YssimUserSpace
 	dbModel.Where("id = ? AND username = ?", userSpaceId, userName).First(&space)
-
-	dbModel.Where("sys_or_user = ? AND userspace_id = ? AND encryption = ?", userName, userSpaceId, false).Find(&packageModel)
+	subQuery := dbModel.Model(&DataBaseModel.SystemLibrary{}).Where("encryption = ?", false).Select("id")
+	dbModel.Where("sys_or_user = ? AND userspace_id = ? AND encryption = ? AND library_id IS NULL ", userName, userSpaceId, false).
+		Or("sys_or_user = ? AND userspace_id = ? AND encryption = ? AND library_id = ?", userName, userSpaceId, false, "").
+		Or("sys_or_user = ? AND userspace_id = ? AND library_id NOT IN (?) AND library_id != '' AND library_id IS NOT NULL", userName, userSpaceId, subQuery).Find(&packageModel)
 	libraryAndVersions := service.GetLibraryAndVersions()
 	for i := 0; i < len(packageModel); i++ {
 		loadVersions, ok := libraryAndVersions[packageModel[i].PackageName]
@@ -112,7 +114,6 @@ func GetUserRootModelView(c *gin.Context) {
 	}
 	res.Data = modelData
 	c.JSON(http.StatusOK, res)
-
 }
 
 func GetUserPackageView(c *gin.Context) {
