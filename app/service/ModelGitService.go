@@ -75,6 +75,11 @@ func GitPackageFileParse(repositoryName, repositoryPath string) (string, string,
 	packageName, ok := omc.OMC.ParseFile(packagePath)
 	msg := ""
 	if !ok {
+		//克隆失败清除垃圾文件
+		err_ := os.RemoveAll(repositoryPath)
+		if err_ != nil {
+			log.Println("删除本地存储库路径出错:", err_)
+		}
 		msg = "语法错误，请检查模型！"
 	}
 
