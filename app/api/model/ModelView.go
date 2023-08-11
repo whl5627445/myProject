@@ -1334,6 +1334,7 @@ func SearchFunctionTypeView(c *gin.Context) {
 						"model_name": model.PackageName,
 						"haschild":   true,
 						"type":       modelType,
+						"package_id": model.ID,
 					}
 					data = append(data, top)
 				}
