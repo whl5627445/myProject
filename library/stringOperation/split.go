@@ -67,3 +67,13 @@ func Distinct(target string, strArray, secondStrArray *[]string) string {
 		return GetLastModelName(target)
 	}
 }
+
+func ContainsString(target string) bool {
+	collection := []string{"function", "package"}
+	for _, str := range collection {
+		if str == target {
+			return true
+		}
+	}
+	return false
+}

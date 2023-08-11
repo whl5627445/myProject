@@ -215,7 +215,17 @@ func GetSubUMLData(className string, rootUmlData *DataType.GetUMLData, finalResu
 		if subInformation[0].(string) == "type" || subInformation[0].(string) == "" {
 			continue
 		}
-		subClassName := stringOperation.Distinct(cData[2].(string), classNameList, secondClassNameList)
+		if cData[5].(string) == "protected" {
+			if !strings.Contains(subInformation[0].(string), "expandable") {
+				continue
+			}
+		}
+		var subClassName string
+		if stringOperation.ContainsString(subInformation[0].(string)) {
+			subClassName = className + "." + cData[3].(string)
+		} else {
+			subClassName = stringOperation.Distinct(cData[2].(string), classNameList, secondClassNameList)
+		}
 		subUmlData := &DataType.GetUMLData{
 			ClassName:        subClassName,
 			Level:            rootUmlData.Level - 1,
