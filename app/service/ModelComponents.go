@@ -173,6 +173,7 @@ func GetExtendedModel(className string) []string {
 	}
 }
 
+// GetUMLElements 获取模型里的组件
 func GetUMLElements(className string) []any {
 	classnameData := omc.OMC.GetElements(className)
 	return classnameData
@@ -201,6 +202,7 @@ func GetModelUMLData(className string) []map[string]*DataType.GetUMLData {
 	return finalResultData
 }
 
+// GetSubUMLData 获取子节点
 func GetSubUMLData(className string, rootUmlData *DataType.GetUMLData, finalResultData *[]map[string]*DataType.GetUMLData, classNameList, secondClassNameList *[]string) {
 	componentDataList := GetUMLElements(className)
 	for i := 0; i < len(componentDataList); i++ {
@@ -212,14 +214,17 @@ func GetSubUMLData(className string, rootUmlData *DataType.GetUMLData, finalResu
 		extendsModelData = append(extendsModelData, rootExtendsModelData)
 		cData := componentDataList[i].([]any)
 		subInformation := GetClassInformation(cData[2].(string))
+		//节点类型是type或者“”，过滤掉
 		if subInformation[0].(string) == "type" || subInformation[0].(string) == "" {
 			continue
 		}
+		//节点属性是protected但不是expandable过滤掉
 		if cData[5].(string) == "protected" {
 			if !strings.Contains(subInformation[0].(string), "expandable") {
 				continue
 			}
 		}
+		//获取子节点名
 		var subClassName string
 		if stringOperation.ContainsString(subInformation[0].(string)) {
 			subClassName = className + "." + cData[3].(string)
@@ -231,6 +236,7 @@ func GetSubUMLData(className string, rootUmlData *DataType.GetUMLData, finalResu
 			Level:            rootUmlData.Level - 1,
 			ExtendsModelData: extendsModelData,
 		}
+		//模型类型为model，则无修饰，多个形容词取最后一个，若组件信息第三个值为true，则修饰词为partial
 		if !(subInformation[0].(string) == "model") {
 			if strings.ContainsRune(subInformation[0].(string), ' ') {
 				subUmlData.ModelType = stringOperation.GetComponentType(subInformation[0].(string))
@@ -243,6 +249,8 @@ func GetSubUMLData(className string, rootUmlData *DataType.GetUMLData, finalResu
 			subUmlData.ModelType = "partial"
 		}
 
+		//根据子节点的名称判断finalResult是否存在该子节点，存在则在子节点的被指向的节点的数量加1或增加被指向的节点
+		//不存在则直接在finalResult中添加该子节点
 		ok := mapProcessing.IsExistKey(*finalResultData, subUmlData.ClassName, rootExtendsModelData)
 		if !ok {
 			subUmlResultData := map[string]*DataType.GetUMLData{
@@ -253,6 +261,7 @@ func GetSubUMLData(className string, rootUmlData *DataType.GetUMLData, finalResu
 	}
 }
 
+// GetExtendUml 获取父类节点
 func GetExtendUml(className string, rootUmlData *DataType.GetUMLData, resultData *[]map[string]*DataType.GetUMLData, classNameList, secondClassNameList *[]string) {
 	rootExtendModelNameList := GetExtendedModel(className)
 	var extendsModelData []DataType.ExtendsModelData
@@ -274,9 +283,13 @@ func GetExtendUml(className string, rootUmlData *DataType.GetUMLData, resultData
 			ClassName: extendClassName,
 			Level:     rootUmlData.Level + 1,
 		}
-
+		//模型类型为model，则无修饰，多个形容词取最后一个，若组件信息第三个值为true，则修饰词为partial
 		if !(extendsModelInformation[0].(string) == "model") {
-			extendsModelUmlData.ModelType = extendsModelInformation[0].(string)
+			if strings.ContainsRune(extendsModelInformation[0].(string), ' ') {
+				extendsModelUmlData.ModelType = stringOperation.GetComponentType(extendsModelInformation[0].(string))
+			} else {
+				extendsModelUmlData.ModelType = extendsModelInformation[0].(string)
+			}
 		}
 		if extendsModelInformation[2].(string) == "true" {
 			extendsModelUmlData.ModelType = "partial"
@@ -301,24 +314,33 @@ func GetThirdLastModelName(className string) string {
 	return strings.Join(name[len(name)-3:], ".")
 }
 
+// distinct  解决节点名重复的问题
 func distinct(target string, strArray, secondStrArray *[]string) string {
+
+	//Modelica.Blocks.Examples.PID_Controller 字符串存在数组strArray中，则截取最后一位小数点后的内容
 	if stringOperation.SliceIndexString(target, *strArray) {
 		return GetLastModelName(target)
 	}
+	//不存在，则判断数组中是否有以GetLastModelName(target)结尾的字符串
 	for _, s := range *strArray {
 		if strings.HasSuffix(s, GetLastModelName(target)) {
+			//Modelica.Blocks.Examples.PID_Controller 字符串存在数组strArray中，则截取最后第二位小数点后的内容
 			if stringOperation.SliceIndexString(target, *secondStrArray) {
 				return GetSecondLastModelName(target)
 			}
+			//不存在，则判断数组secondStrArray中是否有以GetLastModelName(target)结尾的字符串
 			for _, s2 := range *secondStrArray {
 				if strings.HasSuffix(s2, GetSecondLastModelName(target)) {
+					//若有以GetLastModelName(target)结尾的字符串，则返回GetThirdLastModelName
 					return GetThirdLastModelName(target)
 				}
 			}
+			//没有以GetSecondLastModelName(target)结尾的，则将字符串添加到数组中，并返回GetSecondLastModelName
 			*secondStrArray = append(*secondStrArray, target)
 			return GetSecondLastModelName(target)
 		}
 	}
+	//没有以GetLastModelName(target)结尾的，则将字符串添加到数组中，并返回GetLastModelName
 	*strArray = append(*strArray, target)
 	return GetLastModelName(target)
 }

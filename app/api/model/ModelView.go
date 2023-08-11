@@ -1841,6 +1841,9 @@ func CreateDependencyLibraryView(c *gin.Context) {
 }
 
 func GetUMLView(c *gin.Context) {
+	/*
+		根据路径名获取模型的uml图
+	*/
 	var res DataType.ResponseData
 	var className = c.Query("className")
 	finalResultData := service.GetModelUMLData(className)
