@@ -109,7 +109,6 @@ func GetUserRootModelView(c *gin.Context) {
 				modelData = append(modelData, data)
 			}
 		}
-
 	}
 	res.Data = modelData
 	c.JSON(http.StatusOK, res)
@@ -166,7 +165,7 @@ func GetListModelView(c *gin.Context) {
 	}
 	// 如果父节点是包名称的话，追加静态资源管理文件夹节点
 	nameType := service.GetModelType(modelName)
-	if modelName == packageModel.PackageName && packageModel.SysUser != "sys" && nameType == "package" {
+	if modelName == packageModel.PackageName && packageModel.SysUser != "sys" && nameType == "package" && !packageModel.Encryption {
 		modelChildListNew = append(modelChildListNew, map[string]any{
 			"name":     "Resources",
 			"haschild": true,
@@ -248,6 +247,9 @@ func GetModelResourcesReferenceView(c *gin.Context) {
 		## parent: 需要查询的节点父级路径
 		## path: 被查询节点
 	*/
+	userName := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
+	var res DataType.ResponseData
 	var item DataType.PackageResourcesData
 	err := c.BindJSON(&item)
 	if err != nil {
@@ -255,10 +257,6 @@ func GetModelResourcesReferenceView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
-	var res DataType.ResponseData
-
-	userName := c.GetHeader("username")
-	userSpaceId := c.GetHeader("space_id")
 	if item.PackageId != "" {
 		var packageModel DataBaseModel.YssimModels
 		dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id = ?", item.PackageId, userName, userSpaceId).First(&packageModel)
@@ -341,19 +339,18 @@ func SetModelParametersView(c *gin.Context) {
 		## parameter_value: 需要设置的变量和新的值，全称，例如{"PID.k": "200"}， k是模型的组件别名和变量名字的组成， 类似于“别名.变量名”
 	*/
 	var item DataType.SetComponentModifierValueData
+	var res DataType.ResponseData
+	userName := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
 	err := c.BindJSON(&item)
 	if err != nil {
 		log.Println(err)
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
-
-	var res DataType.ResponseData
-	nameList := strings.Split(item.ModelName, ".")
-	packageName := nameList[0]
 	var modelPackage DataBaseModel.YssimModels
-	dbModel.Where("package_name = ?", packageName).First(&modelPackage)
-	if modelPackage.SysUser == "sys" || modelPackage.ID == "" {
+	dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id IN ?", item.PackageId, []string{userName, "sys"}, []string{userSpaceId, "0"}).First(&modelPackage)
+	if modelPackage.SysUser == "sys" || modelPackage.Encryption {
 		res.Err = "该模型不允许此操作"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
@@ -389,6 +386,9 @@ func AddModelParametersView(c *gin.Context) {
 		## model_name: 需要设置参数的模型名称，全称，例如“ENN.Examples.Scenario1_Status”
 		## parameter_name: 参数名称
 	*/
+	var res DataType.ResponseData
+	userName := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
 	var item DataType.AddComponentParametersData
 	err := c.BindJSON(&item)
 	if err != nil {
@@ -396,13 +396,9 @@ func AddModelParametersView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
-
-	var res DataType.ResponseData
-	nameList := strings.Split(item.ModelName, ".")
-	packageName := nameList[0]
 	var modelPackage DataBaseModel.YssimModels
-	dbModel.Where("package_name = ?", packageName).First(&modelPackage)
-	if modelPackage.SysUser == "sys" || modelPackage.ID == "" {
+	dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id IN ?", item.PackageId, []string{userName, "sys"}, []string{userSpaceId, "0"}).First(&modelPackage)
+	if modelPackage.SysUser == "sys" || modelPackage.Encryption {
 		res.Err = "该模型不允许此操作"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
@@ -428,19 +424,18 @@ func DeleteModelParametersView(c *gin.Context) {
 		## parameter_name: 参数名称
 	*/
 	var item DataType.DeleteComponentParametersData
+	var res DataType.ResponseData
+	userName := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
 	err := c.BindJSON(&item)
 	if err != nil {
 		log.Println(err)
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
-
-	var res DataType.ResponseData
-	nameList := strings.Split(item.ModelName, ".")
-	packageName := nameList[0]
 	var modelPackage DataBaseModel.YssimModels
-	dbModel.Where("package_name = ?", packageName).First(&modelPackage)
-	if modelPackage.SysUser == "sys" || modelPackage.ID == "" {
+	dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id IN ?", item.PackageId, []string{userName, "sys"}, []string{userSpaceId, "0"}).First(&modelPackage)
+	if modelPackage.SysUser == "sys" || modelPackage.Encryption {
 		res.Err = "该模型不允许此操作"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
@@ -502,6 +497,8 @@ func SetComponentPropertiesView(c *gin.Context) {
 	*/
 	var res DataType.ResponseData
 	var item DataType.SetComponentPropertiesData
+	userName := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
 	err := c.BindJSON(&item)
 	if err != nil {
 		res.Status = 2
@@ -510,11 +507,9 @@ func SetComponentPropertiesView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, res)
 		return
 	}
-	userName := c.GetHeader("username")
-	userSpaceId := c.GetHeader("space_id")
 	var packageModel DataBaseModel.YssimModels
 	err = dbModel.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", item.PackageId, []string{"sys", userName}, []string{"0", userSpaceId}).First(&packageModel).Error
-	if err != nil || packageModel.SysUser == "sys" {
+	if err != nil || packageModel.SysUser == "sys" || packageModel.Encryption {
 		res.Status = 2
 		res.Err = "设置失败"
 		c.JSON(http.StatusBadRequest, res)
@@ -729,6 +724,8 @@ func AddModelComponentView(c *gin.Context) {
 		## extent: 范围坐标, 例如["-10,-10", "10,10"]
 		## rotation: 旋转角度, 例如"0"，不旋转`
 	*/
+	userName := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
 	var res DataType.ResponseData
 	var item DataType.AddComponentData
 	err := c.BindJSON(&item)
@@ -737,10 +734,8 @@ func AddModelComponentView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
-	nameList := strings.Split(item.ModelName, ".")
-	packageName := nameList[0]
 	var modelPackage DataBaseModel.YssimModels
-	dbModel.Where("package_name = ?", packageName).First(&modelPackage)
+	dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id IN ?", item.PackageId, []string{userName, "sys"}, []string{userSpaceId, "0"}).First(&modelPackage)
 	if modelPackage.SysUser == "sys" || modelPackage.Encryption {
 		res.Err = "该模型不允许此操作"
 		res.Status = 2
@@ -776,6 +771,8 @@ func DeleteModelComponentView(c *gin.Context) {
 		## package_id： 包id
 		## component_list：需要删除的数据数组(delete_type：删除类型，component_name：删除的组件名字，model_name：模型名称，connect_start：连线类型起点，connect_end：终点)
 	*/
+	userName := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
 	var res DataType.ResponseData
 	var item DataType.DeleteComponentData
 	err := c.BindJSON(&item)
@@ -783,8 +780,9 @@ func DeleteModelComponentView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
+
 	var modelPackage DataBaseModel.YssimModels
-	dbModel.Where("id = ?", item.PackageId).First(&modelPackage)
+	dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id IN ?", item.PackageId, []string{userName, "sys"}, []string{userSpaceId, "0"}).First(&modelPackage)
 	if modelPackage.SysUser == "sys" || modelPackage.Encryption {
 		res.Err = "该模型不允许此操作"
 		res.Status = 2
@@ -825,6 +823,8 @@ func UpdateModelComponentView(c *gin.Context) {
 		## extent: 范围坐标, 例如["-10,-10", "10,10"]
 		## rotation: 旋转角度, 例如"0"，不旋转
 	*/
+	userName := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
 	var res DataType.ResponseData
 	var item DataType.UpdateComponentData
 	err := c.BindJSON(&item)
@@ -832,10 +832,10 @@ func UpdateModelComponentView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
-	nameList := strings.Split(item.ModelName, ".")
-	packageName := nameList[0]
+
 	var modelPackage DataBaseModel.YssimModels
-	dbModel.Where("package_name = ?", packageName).First(&modelPackage)
+	dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id IN ?", item.PackageId, []string{userName, "sys"}, []string{userSpaceId, "0"}).First(&modelPackage)
+
 	if modelPackage.SysUser == "sys" || modelPackage.Encryption {
 		res.Err = "该模型不允许此操作"
 		res.Status = 2
@@ -868,6 +868,8 @@ func CreateConnectionAnnotationView(c *gin.Context) {
 		## color：连线颜色， 例如"0,0,127"
 		## line_points：连线拐点坐标，包含起始点坐标，从起点开始到终点 例如["213,-38","-163.25,-38","-163.25,-4"]
 	*/
+	userName := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
 	var res DataType.ResponseData
 	var item DataType.UpdateConnectionAnnotationData
 	err := c.BindJSON(&item)
@@ -875,10 +877,10 @@ func CreateConnectionAnnotationView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
-	nameList := strings.Split(item.ModelName, ".")
-	packageName := nameList[0]
+
 	var modelPackage DataBaseModel.YssimModels
-	dbModel.Where("package_name = ?", packageName).First(&modelPackage)
+	dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id IN ?", item.PackageId, []string{userName, "sys"}, []string{userSpaceId, "0"}).First(&modelPackage)
+
 	if modelPackage.SysUser == "sys" || modelPackage.Encryption {
 		res.Err = "该模型不允许此操作"
 		res.Status = 2
@@ -907,6 +909,8 @@ func UpdateConnectionNamesView(c *gin.Context) {
 		## from_name_new：连线起点， 输出点， 例如"sum1new.y"
 		## to_name_new：连线终点， 输入点， 例如"sum2new.y"
 	*/
+	userName := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
 	var res DataType.ResponseData
 	var item DataType.UpdateConnectionNamesData
 	err := c.BindJSON(&item)
@@ -914,11 +918,11 @@ func UpdateConnectionNamesView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
-	nameList := strings.Split(item.ModelName, ".")
-	packageName := nameList[0]
+
 	var modelPackage DataBaseModel.YssimModels
-	dbModel.Where("package_name = ?", packageName).First(&modelPackage)
-	if modelPackage.SysUser == "sys" {
+	dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id IN ?", item.PackageId, []string{userName, "sys"}, []string{userSpaceId, "0"}).First(&modelPackage)
+
+	if modelPackage.SysUser == "sys" || modelPackage.Encryption {
 		res.Err = "该模型不允许此操作"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
@@ -944,6 +948,8 @@ func DeleteConnectionAnnotationView(c *gin.Context) {
 		## connect_start： 连线起始位置
 		## connect_end： 连线终止位置
 	*/
+	userName := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
 	var res DataType.ResponseData
 	var item DataType.DeleteConnectionData
 	err := c.BindJSON(&item)
@@ -951,10 +957,10 @@ func DeleteConnectionAnnotationView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
-	nameList := strings.Split(item.ModelName, ".")
-	packageName := nameList[0]
+
 	var modelPackage DataBaseModel.YssimModels
-	dbModel.Where("package_name = ?", packageName).First(&modelPackage)
+	dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id IN ?", item.PackageId, []string{userName, "sys"}, []string{userSpaceId, "0"}).First(&modelPackage)
+
 	if modelPackage.SysUser == "sys" || modelPackage.Encryption {
 		res.Err = "该模型不允许此操作"
 		res.Status = 2
@@ -983,6 +989,8 @@ func UpdateConnectionAnnotationView(c *gin.Context) {
 		## color：连线颜色， 例如"0,0,127"
 		## line_points：连线拐点坐标，包含起始点坐标，从起点开始到终点 例如["213,-38","-163.25,-38","-163.25,-4"]
 	*/
+	userName := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
 	var res DataType.ResponseData
 	var item DataType.UpdateConnectionAnnotationData
 	err := c.BindJSON(&item)
@@ -990,10 +998,10 @@ func UpdateConnectionAnnotationView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
-	nameList := strings.Split(item.ModelName, ".")
-	packageName := nameList[0]
+
 	var modelPackage DataBaseModel.YssimModels
-	dbModel.Where("package_name = ?", packageName).First(&modelPackage)
+	dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id IN ?", item.PackageId, []string{userName, "sys"}, []string{userSpaceId, "0"}).First(&modelPackage)
+
 	if modelPackage.SysUser == "sys" || modelPackage.Encryption {
 		res.Err = "该模型不允许此操作"
 		res.Status = 2
@@ -1087,6 +1095,8 @@ func SetModelDocumentView(c *gin.Context) {
 		##  document: 文档内容
 		##  package_id: 所属package的id值，例如“1”
 	*/
+	userName := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
 	var res DataType.ResponseData
 	var item DataType.SetModelDocumentData
 	err := c.BindJSON(&item)
@@ -1094,11 +1104,16 @@ func SetModelDocumentView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
-	username := c.GetHeader("username")
-	userSpaceId := c.GetHeader("space_id")
-	var packageModel DataBaseModel.YssimModels
-	dbModel.Where("sys_or_user = ? AND userspace_id = ?", username, userSpaceId).First(&packageModel)
 
+	var packageModel DataBaseModel.YssimModels
+	dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id IN ?", item.PackageId, []string{userName, "sys"}, []string{userSpaceId, "0"}).First(&packageModel)
+
+	if packageModel.SysUser == "sys" || packageModel.Encryption {
+		res.Err = "该模型不允许此操作"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
 	result := service.SetModelDocument(item.ModelName, item.Document, item.Revisions)
 	if !result {
 		res.Status = 2
