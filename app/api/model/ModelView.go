@@ -210,7 +210,8 @@ func GetGraphicsDataView(c *gin.Context) {
 	} else {
 		graphicsData = service.GetComponentGraphicsData(item.ModelName, item.ComponentName)
 	}
-	res.Data = graphicsData
+
+	res.Data = map[string]any{"encryption": packageModel.Encryption, "graphics": graphicsData}
 	c.JSON(http.StatusOK, res)
 }
 
