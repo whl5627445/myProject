@@ -81,8 +81,9 @@ func GetUserRootModelView(c *gin.Context) {
 	var packageModel []DataBaseModel.YssimModels
 	var space DataBaseModel.YssimUserSpace
 	dbModel.Where("id = ? AND username = ?", userSpaceId, userName).First(&space)
-
-	dbModel.Where("sys_or_user = ? AND userspace_id = ? AND encryption = ?", userName, userSpaceId, false).Find(&packageModel)
+	subQuery := dbModel.Model(&DataBaseModel.SystemLibrary{}).Where("encryption = ?", false).Or("encryption = ? AND username = ?", true, userName).Select("id")
+	dbModel.Where("sys_or_user = ? AND userspace_id = ? AND encryption = ? AND library_id = ''", userName, userSpaceId, false).
+		Or("sys_or_user = ? AND userspace_id = ? AND library_id NOT IN (?)", userName, userSpaceId, subQuery).Find(&packageModel)
 	libraryAndVersions := service.GetLibraryAndVersions()
 	for i := 0; i < len(packageModel); i++ {
 		loadVersions, ok := libraryAndVersions[packageModel[i].PackageName]
@@ -112,7 +113,6 @@ func GetUserRootModelView(c *gin.Context) {
 	}
 	res.Data = modelData
 	c.JSON(http.StatusOK, res)
-
 }
 
 func GetUserPackageView(c *gin.Context) {
@@ -210,7 +210,8 @@ func GetGraphicsDataView(c *gin.Context) {
 	} else {
 		graphicsData = service.GetComponentGraphicsData(item.ModelName, item.ComponentName)
 	}
-	res.Data = graphicsData
+
+	res.Data = map[string]any{"encryption": packageModel.Encryption, "graphics": graphicsData}
 	c.JSON(http.StatusOK, res)
 }
 
