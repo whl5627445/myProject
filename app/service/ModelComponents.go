@@ -184,7 +184,7 @@ func GetModelUMLData(className string) []map[string]*DataType.GetUMLData {
 	classNameList = append(classNameList, className)
 	rootInformation := GetClassInformation(className)
 	rootUmlData := &DataType.GetUMLData{
-		ClassName:   stringOperation.GetLastModelName(className),
+		ClassName:   GetLastModelName(className),
 		ModelType:   "root",
 		Description: rootInformation[1].(string),
 		Level:       1,
@@ -224,7 +224,7 @@ func GetSubUMLData(className string, rootUmlData *DataType.GetUMLData, finalResu
 		if stringOperation.ContainsString(subInformation[0].(string)) {
 			subClassName = className + "." + cData[3].(string)
 		} else {
-			subClassName = stringOperation.Distinct(cData[2].(string), classNameList, secondClassNameList)
+			subClassName = distinct(cData[2].(string), classNameList, secondClassNameList)
 		}
 		subUmlData := &DataType.GetUMLData{
 			ClassName:        subClassName,
@@ -258,7 +258,7 @@ func GetExtendUml(className string, rootUmlData *DataType.GetUMLData, resultData
 	var extendsModelData []DataType.ExtendsModelData
 	for _, extendModelName := range rootExtendModelNameList {
 		extendsModelInformation := GetClassInformation(extendModelName)
-		extendClassName := stringOperation.Distinct(extendModelName, classNameList, secondClassNameList)
+		extendClassName := distinct(extendModelName, classNameList, secondClassNameList)
 		rootExtendModel := DataType.ExtendsModelData{
 			ClassName: extendClassName,
 			Flag:      true,
@@ -289,4 +289,41 @@ func GetExtendUml(className string, rootUmlData *DataType.GetUMLData, resultData
 		GetSubUMLData(extendModelName, extendsModelUmlData, resultData, classNameList, secondClassNameList)
 		GetExtendUml(extendModelName, extendsModelUmlData, resultData, classNameList, secondClassNameList)
 	}
+}
+
+func GetSecondLastModelName(className string) string {
+	name := strings.Split(className, ".")
+	return strings.Join(name[len(name)-2:], ".")
+}
+
+func GetThirdLastModelName(className string) string {
+	name := strings.Split(className, ".")
+	return strings.Join(name[len(name)-3:], ".")
+}
+
+func distinct(target string, strArray, secondStrArray *[]string) string {
+	if stringOperation.SliceIndexString(target, *strArray) {
+		return GetLastModelName(target)
+	}
+	for _, s := range *strArray {
+		if strings.HasSuffix(s, GetLastModelName(target)) {
+			if stringOperation.SliceIndexString(target, *secondStrArray) {
+				return GetSecondLastModelName(target)
+			}
+			for _, s2 := range *secondStrArray {
+				if strings.HasSuffix(s2, GetSecondLastModelName(target)) {
+					return GetThirdLastModelName(target)
+				}
+			}
+			*secondStrArray = append(*secondStrArray, target)
+			return GetSecondLastModelName(target)
+		}
+	}
+	*strArray = append(*strArray, target)
+	return GetLastModelName(target)
+}
+
+// GetLastModelName 获取Modelica.Blocks.Examples.PID_Controller中PID_Controller
+func GetLastModelName(className string) string {
+	return className[strings.LastIndex(className, ".")+1:]
 }
