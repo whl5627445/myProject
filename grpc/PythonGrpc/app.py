@@ -77,12 +77,16 @@ if __name__ == '__main__':
             operationName = request.operationName
             if operationName == "kill":
                 # 删除在在排队的任务
-                for i in range(len(omcTaskList)):
+                i = 0
+                while i < len(omcTaskList):
                     if omcTaskList[i].uuid == multiprocessing_id:
                         omcTaskList.pop(i)
-                for i in range(len(dymolaTaskList)):
-                    if dymolaTaskList[i].uuid == multiprocessing_id:
-                        dymolaTaskList.pop(i)
+                    i += 1
+                j = 0
+                while j < len(dymolaTaskList):
+                    if dymolaTaskList[j].uuid == multiprocessing_id:
+                        dymolaTaskList.pop(j)
+                    j += 1
                 # OmSimulationThreadList   DmSimulationThreadList
                 # 删除仿真任务
                 killProcessReply = kill_process(multiprocessing_id,
