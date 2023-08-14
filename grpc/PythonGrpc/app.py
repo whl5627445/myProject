@@ -202,27 +202,21 @@ if __name__ == '__main__':
                         [{j.request.simulateModelName: j.state,
                           "user_name": j.request.userName,
                           "id": j.uuid,
-                          "socket进度": j.tcpServer.percentage[-1] if j.tcpServer is not None else 0
-                          } for j in
-                         OmSimulationThreadList]))
+                          } for j in OmSimulationThreadList]))
                 if len(omcTaskList) > 0:
                     log.info("(OMC)正在排队的任务数：{}".format(len(omcTaskList)))
                     log.info("(OMC)正在排队的任务：" + str(
-                        [{"model_name": j.simulateModelName, "user_name": j.userName} for j in
-                         omcTaskList]))
+                        [{"model_name": j.simulateModelName, "user_name": j.userName} for j in omcTaskList]))
                 if len(DmSimulationThreadList) > 0:
                     log.info("(Dymola)正在运行的任务数：{}".format(len(DmSimulationThreadList)))
                     log.info("(Dymola)正在运行的任务：" + str(
                         [{j.request.simulateModelName: j.state,
                           "user_name": j.request.userName,
-                          "id": j.uuid,
-                          "仿真进度": j.percentage} for j in
-                         DmSimulationThreadList]))
+                          "id": j.uuid} for j in DmSimulationThreadList]))
                 if len(dymolaTaskList) > 0:
                     log.info("(Dymola)未执行任务队列剩余数量：{}".format(len(dymolaTaskList)))
                     log.info("(Dymola)正在排队的任务：" + str(
-                        [{"model_name": j.simulateModelName, "user_name": j.userName} for j in
-                         dymolaTaskList]))
+                        [{"model_name": j.simulateModelName, "user_name": j.userName} for j in dymolaTaskList]))
                 # 任务状态为"stopped"的移除队列
                 for i in OmSimulationThreadList:
                     if i.state == "stopped":
