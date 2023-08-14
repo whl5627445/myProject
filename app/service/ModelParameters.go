@@ -377,7 +377,7 @@ func (m *modelParameters) getParameter(className string, varName string, p []any
 	if m.extendComponent {
 		isExtend = m.extend
 	}
-	dataDefault := map[string]any{"tab": "General", "type": "Normal", "group": "Parameters", "defaultvalue": "", "unit": []string{getUnit(className)}, "is_extend": isExtend, "extend_name": m.extendLevel2Name}
+	dataDefault := map[string]any{"tab": "General", "type": "Normal", "group": "Parameters", "defaultvalue": "", "value": "", "unit": []string{getUnit(className)}, "is_extend": isExtend, "extend_name": m.extendLevel2Name}
 	dataDefault["unit_related"] = getDerivedClassModifierNamesAndValues(className)
 	modifier := m.componentName + "." + varName
 	elementModifierData := m.elementModifierNamesMap[modifier] // 查找有没有标识符标记该组件或参数
