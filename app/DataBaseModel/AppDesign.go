@@ -104,65 +104,65 @@ type AppComponentBases struct {
 }
 
 type AppPageComponent struct {
-	ID                 string         `gorm:"index;primaryKey;type:varchar(128);comment:组件唯一标识"`
-	PageId             string         `gorm:"index;column:page_id;type:varchar(128);comment:页面id"`
-	InputName          string         `gorm:"column:input_name;type:varchar(32);comment:输入变量名"`
-	Output             datatypes.JSON `gorm:"column:output;type:json;comment:输出变量名"`
-	Max                float64        `gorm:"column:max;type:float;comment:最大值"`
-	Min                float64        `gorm:"column:min;type:float;comment:最小值"`
-	Interval           float64        `gorm:"column:interval;type:float;comment:间隔"`
-	Type               string         `gorm:"column:type;type:varchar(32);comment:组件类型"`
-	Width              int            `gorm:"column:width;type:int;comment:组件宽度"`
-	Height             int            `gorm:"column:height;type:int;comment:组件高度"`
-	PositionX          int            `gorm:"column:position_x;type:int;comment:组件x轴相对位置"`
-	PositionY          int            `gorm:"column:position_y;type:int;comment:组件y轴相对位置"`
-	Angle              int            `gorm:"column:angle;type:int"`
-	HorizontalFlip     bool           `gorm:"column:horizontal_flip;type:bool"`
-	VerticalFlip       bool           `gorm:"column:vertical_flip;type:bool"`
-	Opacity            int            `gorm:"column:opacity;type:int"`
-	OtherConfiguration datatypes.JSON `gorm:"column:other_configuration;type:json"`
+	ID                 string         `gorm:"index;primaryKey;type:varchar(128);comment:组件唯一标识" json:"id,omitempty"`
+	PageId             string         `gorm:"index;column:page_id;type:varchar(128);comment:页面id" json:"page_id,omitempty"`
+	InputName          string         `gorm:"column:input_name;type:varchar(32);comment:输入变量名" json:"input_name,omitempty"`
+	Output             datatypes.JSON `gorm:"column:output;type:json;comment:输出变量名" json:"output,omitempty"`
+	Max                float64        `gorm:"column:max;type:float;comment:最大值" json:"max,omitempty"`
+	Min                float64        `gorm:"column:min;type:float;comment:最小值" json:"min,omitempty"`
+	Interval           float64        `gorm:"column:interval;type:float;comment:间隔" json:"interval,omitempty"`
+	Type               string         `gorm:"column:type;type:varchar(32);comment:组件类型" json:"type,omitempty"`
+	Width              int            `gorm:"column:width;type:int;comment:组件宽度" json:"width,omitempty"`
+	Height             int            `gorm:"column:height;type:int;comment:组件高度" json:"height,omitempty"`
+	PositionX          int            `gorm:"column:position_x;type:int;comment:组件x轴相对位置" json:"position_x,omitempty"`
+	PositionY          int            `gorm:"column:position_y;type:int;comment:组件y轴相对位置" json:"position_y,omitempty"`
+	Angle              int            `gorm:"column:angle;type:int" json:"angle,omitempty"`
+	HorizontalFlip     bool           `gorm:"column:horizontal_flip;type:bool" json:"horizontal_flip,omitempty"`
+	VerticalFlip       bool           `gorm:"column:vertical_flip;type:bool" json:"vertical_flip,omitempty"`
+	Opacity            int            `gorm:"column:opacity;type:int" json:"opacity,omitempty"`
+	OtherConfiguration datatypes.JSON `gorm:"column:other_configuration;type:json" json:"other_configuration,omitempty"`
 	CreatedAt          *time.Time     `gorm:"column:create_time;autoCreateTime"`
 	UpdatedAt          *time.Time     `gorm:"column:update_time"`
 	Deleted            gorm.DeletedAt `gorm:"column:deleted_at"`
-	ZIndex             int            `gorm:"column:z_index;type:int"`
-	Styles             datatypes.JSON `gorm:"column:styles;type:json"`
-	Events             datatypes.JSON `gorm:"column:events;type:json"`
-	ChartConfig        datatypes.JSON `gorm:"column:chart_config;type:json"`
-	Option             datatypes.JSON `gorm:"column:option;type:json"`
-	ComponentPath      string         `gorm:"column:component_path;type:varchar(32)"`
-	Hide               bool           `gorm:"column:hide;type:bool"`
-	Lock               bool           `gorm:"column:lock;type:bool"`
-	IsGroup            bool           `gorm:"column:is_group;type:bool"`
+	ZIndex             int            `gorm:"column:z_index;type:int" json:"z_index,omitempty"`
+	Styles             datatypes.JSON `gorm:"column:styles;type:json" json:"styles,omitempty"`
+	Events             datatypes.JSON `gorm:"column:events;type:json" json:"events,omitempty"`
+	ChartConfig        datatypes.JSON `gorm:"column:chart_config;type:json" json:"chart_config,omitempty"`
+	Option             datatypes.JSON `gorm:"column:option;type:json" json:"option,omitempty"`
+	ComponentPath      string         `gorm:"column:component_path;type:varchar(32)" json:"component_path,omitempty"`
+	Hide               bool           `gorm:"column:hide;type:bool" json:"hide,omitempty"`
+	Lock               bool           `gorm:"column:lock;type:bool" json:"lock,omitempty"`
+	IsGroup            bool           `gorm:"column:is_group;type:bool" json:"is_group,omitempty"`
 }
 
 type AppPageComponentsPreview struct { //多轮仿真完copy一次组件
-	ID                 string         `gorm:"index;primaryKey;type:varchar(128);comment:组件唯一标识"`
-	PageId             string         `gorm:"index;column:page_id;type:varchar(128);comment:页面id"`
-	InputName          string         `gorm:"column:input_name;type:varchar(32);comment:输入变量名"`
-	Output             datatypes.JSON `gorm:"column:output;type:json;comment:输出变量名"`
-	Max                float64        `gorm:"column:max;type:float;comment:最大值"`
-	Min                float64        `gorm:"column:min;type:float;comment:最小值"`
-	Interval           float64        `gorm:"column:interval;type:float;comment:间隔"`
-	Type               string         `gorm:"column:type;type:varchar(32);comment:组件类型"`
-	Width              int            `gorm:"column:width;type:int;comment:组件宽度"`
-	Height             int            `gorm:"column:height;type:int;comment:组件高度"`
-	PositionX          int            `gorm:"column:position_x;type:int;comment:组件x轴相对位置"`
-	PositionY          int            `gorm:"column:position_y;type:int;comment:组件y轴相对位置"`
-	Angle              int            `gorm:"column:angle;type:int"`
-	HorizontalFlip     bool           `gorm:"column:horizontal_flip;type:bool"`
-	VerticalFlip       bool           `gorm:"column:vertical_flip;type:bool"`
-	Opacity            int            `gorm:"column:opacity;type:int"`
-	OtherConfiguration datatypes.JSON `gorm:"column:other_configuration;type:json"`
+	ID                 string         `gorm:"index;primaryKey;type:varchar(128);comment:组件唯一标识" json:"id,omitempty"`
+	PageId             string         `gorm:"index;column:page_id;type:varchar(128);comment:页面id" json:"page_id,omitempty"`
+	InputName          string         `gorm:"column:input_name;type:varchar(32);comment:输入变量名" json:"input_name,omitempty"`
+	Output             datatypes.JSON `gorm:"column:output;type:json;comment:输出变量名" json:"output,omitempty"`
+	Max                float64        `gorm:"column:max;type:float;comment:最大值" json:"max,omitempty"`
+	Min                float64        `gorm:"column:min;type:float;comment:最小值" json:"min,omitempty"`
+	Interval           float64        `gorm:"column:interval;type:float;comment:间隔" json:"interval,omitempty"`
+	Type               string         `gorm:"column:type;type:varchar(32);comment:组件类型" json:"type,omitempty"`
+	Width              int            `gorm:"column:width;type:int;comment:组件宽度" json:"width,omitempty"`
+	Height             int            `gorm:"column:height;type:int;comment:组件高度" json:"height,omitempty"`
+	PositionX          int            `gorm:"column:position_x;type:int;comment:组件x轴相对位置" json:"position_x,omitempty"`
+	PositionY          int            `gorm:"column:position_y;type:int;comment:组件y轴相对位置" json:"position_y,omitempty"`
+	Angle              int            `gorm:"column:angle;type:int" json:"angle,omitempty"`
+	HorizontalFlip     bool           `gorm:"column:horizontal_flip;type:bool" json:"horizontal_flip,omitempty"`
+	VerticalFlip       bool           `gorm:"column:vertical_flip;type:bool" json:"vertical_flip,omitempty"`
+	Opacity            int            `gorm:"column:opacity;type:int" json:"opacity,omitempty"`
+	OtherConfiguration datatypes.JSON `gorm:"column:other_configuration;type:json" json:"other_configuration,omitempty"`
 	CreatedAt          *time.Time     `gorm:"column:create_time;autoCreateTime"`
-	ZIndex             int            `gorm:"column:z_index;type:int"`
-	Styles             datatypes.JSON `gorm:"column:styles;type:json"`
-	Events             datatypes.JSON `gorm:"column:events;type:json"`
-	ChartConfig        datatypes.JSON `gorm:"column:chart_config;type:json"`
-	Option             datatypes.JSON `gorm:"column:option;type:json"`
-	ComponentPath      string         `gorm:"column:component_path;type:varchar(32)"`
-	Hide               bool           `gorm:"column:hide;type:bool"`
-	Lock               bool           `gorm:"column:lock;type:bool"`
-	IsGroup            bool           `gorm:"column:is_group;type:bool"`
+	ZIndex             int            `gorm:"column:z_index;type:int" json:"z_index,omitempty"`
+	Styles             datatypes.JSON `gorm:"column:styles;type:json" json:"styles,omitempty"`
+	Events             datatypes.JSON `gorm:"column:events;type:json" json:"events,omitempty"`
+	ChartConfig        datatypes.JSON `gorm:"column:chart_config;type:json" json:"chart_config,omitempty"`
+	Option             datatypes.JSON `gorm:"column:option;type:json" json:"option,omitempty"`
+	ComponentPath      string         `gorm:"column:component_path;type:varchar(32)" json:"component_path,omitempty"`
+	Hide               bool           `gorm:"column:hide;type:bool" json:"hide,omitempty"`
+	Lock               bool           `gorm:"column:lock;type:bool" json:"lock,omitempty"`
+	IsGroup            bool           `gorm:"column:is_group;type:bool" json:"is_group,omitempty"`
 }
 
 type AppPageComponentsRelease struct { // 发布的时候copy一次组件
