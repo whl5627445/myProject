@@ -522,8 +522,11 @@ func (o *ZmqObject) GetElementModifierValue(className string, modifierName strin
 	cmd := "getElementModifierValue(" + className + "," + modifierName + ")"
 	data, _ := o.SendExpressionNoParsed(cmd)
 	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
-	data = bytes.ReplaceAll(data, []byte("\""), []byte(""))
+	//data = bytes.ReplaceAll(data, []byte("\""), []byte(""))
 	data = bytes.ReplaceAll(data, []byte("\\"), []byte(""))
+	if len(data) > 0 {
+		data = data[1 : len(data)-1]
+	}
 	return string(data)
 }
 
