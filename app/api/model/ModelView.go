@@ -1327,12 +1327,12 @@ func SearchFunctionTypeView(c *gin.Context) {
 		for _, model := range models {
 			p, ok := libraryAndVersions[model.PackageName]
 			if ok && p == model.Version {
-				modelType := omc.OMC.GetClassRestriction(model.PackageName)
+				modelType := service.GetModelType(model.PackageName)
 				if modelType == "package" || modelType == "function" || modelType == "record" {
 					top := map[string]any{
 						"name":       model.PackageName,
 						"model_name": model.PackageName,
-						"haschild":   true,
+						"haschild":   modelType == "package",
 						"type":       modelType,
 						"package_id": model.ID,
 					}

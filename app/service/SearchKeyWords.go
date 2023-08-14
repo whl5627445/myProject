@@ -76,14 +76,14 @@ func SearchFunctionType(parentNode string) []map[string]any {
 		_, ok := searchMap[nameParent]
 		if !ok {
 
-			modelType := omc.OMC.GetClassRestriction(name)
+			modelType := GetModelType(name)
 			if modelType == "function" || modelType == "record" {
 				searchMap[nameParent] = true
 				data := map[string]any{
 					"name":       shortName,
 					"model_name": nameParent,
 					"haschild":   false,
-					"type":       modelType,
+					"type":       GetModelType(nameParent),
 				}
 				childList := omc.OMC.GetClassNames(nameParent, false)
 				if len(childList) > 0 {
