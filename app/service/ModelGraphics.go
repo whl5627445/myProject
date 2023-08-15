@@ -13,10 +13,10 @@ import (
 )
 
 type graphicsData struct {
-	data          []any
-	modelName     string
-	modelNameList []string
-	permissions   string
+	data          []any    //  图形数据切片
+	modelName     string   //  模型名称
+	modelNameList []string //  模型继承父类的切片，包含自己
+	permissions   string   //  模型权限，系统模型还是用户模型
 }
 
 var allModelCache = config.R
@@ -25,10 +25,10 @@ func GetGraphicsData(modelName, permissions string) []any {
 	var g = graphicsData{}
 	g.permissions = permissions
 	//g.data = [][]map[string]any{{}, {}}
-	g.data = make([]any, 3)
-	g.data[0] = make([]map[string]any, 0)
-	g.data[1] = make([]map[string]any, 0)
-	g.data[2] = make(map[string]any, 0)
+	g.data = make([]any, 3)               // 定义返回数据切片
+	g.data[0] = make([]map[string]any, 0) // 该切片返回图形的连线数据以及Diagram数据
+	g.data[1] = make([]map[string]any, 0) // 该切片返回图形的组件绘图数据
+	g.data[2] = make(map[string]any, 0)   // 该切片返回模型的坐标系数据
 	//ctx := context.Background()
 
 	//if permissions == "sys" {
@@ -46,12 +46,12 @@ func GetGraphicsData(modelName, permissions string) []any {
 	g.modelName = modelName
 	nameType := omc.OMC.GetClassRestriction(modelName)
 	if nameType == "connector" || nameType == "expandable connector" {
-		g.data = g.getConnectorModelDiagram(modelName)
+		g.data = g.getConnectorModelDiagram(modelName) // 如果是连接器类型，进行特殊处理，与普通模型不同
 	} else {
-		g.modelNameList = g.getICList(modelName)
-		g.getDiagramAnnotationData()
-		g.getnthconnectionData()
-		g.getData02()
+		g.modelNameList = g.getICList(modelName) // 获取模型继承了哪些父类，以切片形式传递，包括模型本身
+		g.getDiagramAnnotationData()             // 获取模型Diagram数据
+		g.getnthconnectionData()                 // 获取模型连线数据
+		g.getData02()                            // 获取模型组件数据
 	}
 	//if permissions == "sys" {
 	//	redisData, _ := sonic.Marshal(g.data)
@@ -99,7 +99,7 @@ func (g *graphicsData) getData02() {
 	// nameList第一个名字是模型自身的名字，之后是继承的模型名字
 	for i := len(g.modelNameList) - 1; i >= 0; i-- {
 		var data2 []map[string]any
-		mobility := false
+		mobility := false //  标记该图形是否可以移动
 		if i == len(g.modelNameList)-1 && g.permissions != "sys" {
 			mobility = true
 		}
