@@ -182,7 +182,6 @@ func GetUMLElements(className string) []any {
 func GetModelUMLData(className string) []map[string]*DataType.GetUMLData {
 	var classNameList []string
 	var secondClassNameList []string
-	var referenceLibraries []string
 	classNameList = append(classNameList, className)
 	rootInformation := GetClassInformation(className)
 	rootUmlData := &DataType.GetUMLData{
@@ -190,7 +189,7 @@ func GetModelUMLData(className string) []map[string]*DataType.GetUMLData {
 		ModelType:   "root",
 		Description: rootInformation[1].(string),
 		Level:       1,
-		Library:     referenceLibraries,
+		Library:     GetReferenceLibraries(className),
 	}
 	var finalResultData []map[string]*DataType.GetUMLData
 	rootMap := map[string]*DataType.GetUMLData{
@@ -198,19 +197,16 @@ func GetModelUMLData(className string) []map[string]*DataType.GetUMLData {
 	}
 	finalResultData = append(finalResultData, rootMap)
 	//获取子节点
-	GetSubUMLData(className, className, rootUmlData, &finalResultData, &classNameList, &secondClassNameList, &referenceLibraries)
+	GetSubUMLData(className, className, rootUmlData, &finalResultData, &classNameList, &secondClassNameList)
 	//获取父节点
-	GetExtendUml(className, className, rootUmlData, &finalResultData, &classNameList, &secondClassNameList, &referenceLibraries)
-	//设置依赖库
-	SetReferenceLibraries(finalResultData, rootUmlData.ClassName, referenceLibraries)
+	GetExtendUml(className, className, rootUmlData, &finalResultData, &classNameList, &secondClassNameList)
 	return finalResultData
 }
 
 // GetSubUMLData 获取子节点
-func GetSubUMLData(className, initialName string, rootUmlData *DataType.GetUMLData, finalResultData *[]map[string]*DataType.GetUMLData, classNameList, secondClassNameList, referenceLibraries *[]string) {
+func GetSubUMLData(className, initialName string, rootUmlData *DataType.GetUMLData, finalResultData *[]map[string]*DataType.GetUMLData, classNameList, secondClassNameList *[]string) {
 	componentDataList := GetUMLElements(className)
 	for i := 0; i < len(componentDataList); i++ {
-
 		cData := componentDataList[i].([]any)
 		subInformation := GetClassInformation(cData[2].(string))
 		//节点类型是type或者“”，过滤掉
@@ -236,14 +232,11 @@ func GetSubUMLData(className, initialName string, rootUmlData *DataType.GetUMLDa
 			rootExtendsModelData.RelationShip = "relevance"
 			if className != initialName {
 				continue
-			} else {
-				GetReferenceLibraries(cData[2].(string), referenceLibraries)
 			}
 		} else {
 			subClassName = distinct(cData[2].(string), classNameList, secondClassNameList)
 			rootExtendsModelData.RelationShip = "polymerization"
 		}
-
 		extendsModelData = append(extendsModelData, rootExtendsModelData)
 		subUmlData := &DataType.GetUMLData{
 			ClassName:        subClassName,
@@ -275,7 +268,7 @@ func GetSubUMLData(className, initialName string, rootUmlData *DataType.GetUMLDa
 }
 
 // GetExtendUml 获取父类节点
-func GetExtendUml(className, initialName string, rootUmlData *DataType.GetUMLData, resultData *[]map[string]*DataType.GetUMLData, classNameList, secondClassNameList, referenceLibraries *[]string) {
+func GetExtendUml(className, initialName string, rootUmlData *DataType.GetUMLData, resultData *[]map[string]*DataType.GetUMLData, classNameList, secondClassNameList *[]string) {
 	rootExtendModelNameList := GetExtendedModel(className)
 	var extendsModelData []DataType.ExtendsModelData
 	for _, extendModelName := range rootExtendModelNameList {
@@ -312,8 +305,8 @@ func GetExtendUml(className, initialName string, rootUmlData *DataType.GetUMLDat
 			extendsModelUmlData.ClassName: extendsModelUmlData,
 		}
 		*resultData = append(*resultData, extendsModelUmlDataMap)
-		GetSubUMLData(extendModelName, initialName, extendsModelUmlData, resultData, classNameList, secondClassNameList, referenceLibraries)
-		GetExtendUml(extendModelName, initialName, extendsModelUmlData, resultData, classNameList, secondClassNameList, referenceLibraries)
+		GetSubUMLData(extendModelName, initialName, extendsModelUmlData, resultData, classNameList, secondClassNameList)
+		GetExtendUml(extendModelName, initialName, extendsModelUmlData, resultData, classNameList, secondClassNameList)
 	}
 }
 
@@ -328,33 +321,33 @@ func GetThirdLastModelName(className string) string {
 }
 
 // distinct  解决节点名重复的问题
-func distinct(target string, strArray, secondStrArray *[]string) string {
+func distinct(target string, classNameList, secondClassNameList *[]string) string {
 
 	//Modelica.Blocks.Examples.PID_Controller 字符串存在数组strArray中，则截取最后一位小数点后的内容
-	if stringOperation.SliceIndexString(target, *strArray) {
+	if stringOperation.SliceIndexString(target, *classNameList) {
 		return GetLastModelName(target)
 	}
 	//不存在，则判断数组中是否有以GetLastModelName(target)结尾的字符串
-	for _, s := range *strArray {
+	for _, s := range *classNameList {
 		if strings.HasSuffix(s, GetLastModelName(target)) {
 			//Modelica.Blocks.Examples.PID_Controller 字符串存在数组strArray中，则截取最后第二位小数点后的内容
-			if stringOperation.SliceIndexString(target, *secondStrArray) {
+			if stringOperation.SliceIndexString(target, *secondClassNameList) {
 				return GetSecondLastModelName(target)
 			}
 			//不存在，则判断数组secondStrArray中是否有以GetLastModelName(target)结尾的字符串
-			for _, s2 := range *secondStrArray {
+			for _, s2 := range *secondClassNameList {
 				if strings.HasSuffix(s2, GetSecondLastModelName(target)) {
 					//若有以GetLastModelName(target)结尾的字符串，则返回GetThirdLastModelName
 					return GetThirdLastModelName(target)
 				}
 			}
 			//没有以GetSecondLastModelName(target)结尾的，则将字符串添加到数组中，并返回GetSecondLastModelName
-			*secondStrArray = append(*secondStrArray, target)
+			*secondClassNameList = append(*secondClassNameList, target)
 			return GetSecondLastModelName(target)
 		}
 	}
 	//没有以GetLastModelName(target)结尾的，则将字符串添加到数组中，并返回GetLastModelName
-	*strArray = append(*strArray, target)
+	*classNameList = append(*classNameList, target)
 	return GetLastModelName(target)
 }
 
@@ -363,26 +356,18 @@ func GetLastModelName(className string) string {
 	return className[strings.LastIndex(className, ".")+1:]
 }
 
-// GetReferenceLibraries 获取依赖库
-func GetReferenceLibraries(str string, array *[]string) {
-	if strings.ContainsRune(str, '.') {
-		str = str[:strings.Index(str, ".")]
-		if len(*array) == 0 {
-			*array = append(*array, str)
-		} else {
-			if !stringOperation.SliceIndexString(str, *array) {
-				*array = append(*array, str)
-			}
+func GetReferenceLibraries(className string) []string {
+	var referencedLibraries []string
+	var packageUse [][]string
+	if strings.Contains(className, ".") {
+		packageUse = GetPackageUses(className[:strings.Index(className, ".")])
+	} else {
+		packageUse = GetPackageUses(className)
+	}
+	for _, modelLibrary := range packageUse {
+		if modelLibrary[0] != "Complex" && modelLibrary[0] != "ModelicaServices" {
+			referencedLibraries = append(referencedLibraries, modelLibrary[0])
 		}
 	}
-}
-
-// SetReferenceLibraries 设置依赖库
-func SetReferenceLibraries(resultData []map[string]*DataType.GetUMLData, className string, referenceLibraries []string) {
-
-	for _, m := range resultData {
-		if value, ok := m[className]; ok {
-			value.Library = referenceLibraries
-		}
-	}
+	return referencedLibraries
 }
