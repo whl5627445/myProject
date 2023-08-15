@@ -26,7 +26,6 @@ func GetIconNew(modelName string, icon bool) map[string]any {
 		}
 	}
 	graphics := map[string]any{}
-
 	if (nameType != "connector" && nameType != "expandable connector") || (icon && (nameType == "connector" || nameType == "expandable connector")) {
 		graphics = getIconAnnotationGraphics(modelName, nameType)
 	} else {
@@ -171,6 +170,7 @@ func getDiagramAnnotationGraphics(modelName, nameType string) map[string]any {
 	data["visible"] = "true"
 	data["mobility"] = true
 	data["rotation"] = "0"
+	data["visibleList"] = GetConnectionOption(modelName)
 	data["inputOutputs"] = make([]any, 0)
 	data["subShapes"] = subShapes
 	data["extent1Diagram"] = func() []float64 {

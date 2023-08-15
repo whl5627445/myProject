@@ -582,6 +582,7 @@ func (g *graphicsData) getConnectorComponentDiagram(components, componentAnnotat
 		data["graphType"] = "connector"
 		data["mobility"] = true
 		data["name"] = componentName
+		data["visibleList"] = GetConnectionOption(className)
 		data["originDiagram"] = strings.Join([]string{caf[1].(string), caf[2].(string)}, ",")
 		data["original_name"] = componentName
 		data["output_type"] = "[]"
@@ -611,6 +612,7 @@ func (g *graphicsData) getConnectorModelDiagram(modelName string) []any {
 		data["extent2Diagram"] = strings.Replace(interfaceDiagramAnnotationData[2].(string)+","+interfaceDiagramAnnotationData[3].(string), "-,-", "100.0,100.0", 1)
 		data["graphType"] = "model"
 		data["mobility"] = false
+		data["visibleList"] = GetConnectionOption(modelName)
 		data["name"] = ""
 		data["originDiagram"] = "0.0,0.0"
 		data["original_name"] = ""
@@ -627,6 +629,25 @@ func (g *graphicsData) getConnectorModelDiagram(modelName string) []any {
 		g.data[1] = append(g.data[1].([]map[string]any), data)
 	}
 	return g.data
+}
+
+func GetConnectionOption(modelName string) []map[string]any {
+	elements := omc.OMC.GetElements(modelName)
+	variable := make([]map[string]any, 0)
+	for _, v := range elements {
+		arr := v.([]interface{})
+		typeName := arr[2]
+		option := GetConnectionOption(typeName.(string))
+		ser := map[string]any{
+			"variableName": arr[3],
+			"variableType": typeName,
+			"hasChild":     len(option) > 0,
+			"option":       option,
+		}
+		variable = append(variable, ser)
+	}
+
+	return variable
 }
 
 var rectangleDefault = map[string]any{"borderPattern": "BorderPattern.None", "color": "0,0,127", "extentsPoints": []string{"-100.0,-100.0", "100.0,100.0"},
