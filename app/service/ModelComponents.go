@@ -5,7 +5,6 @@ import (
 	"strings"
 	"yssim-go/app/DataType"
 	"yssim-go/config"
-	"yssim-go/library/mapProcessing"
 	"yssim-go/library/omc"
 	"yssim-go/library/stringOperation"
 )
@@ -179,10 +178,16 @@ func GetUMLElements(className string) []any {
 	return classnameData
 }
 
+type getUMLData struct {
+	classNameList       []string
+	secondClassNameList []string
+	finalResultData     []map[string]*DataType.GetUMLData
+	rootUmlData         DataType.GetUMLData
+}
+
 func GetModelUMLData(className string) []map[string]*DataType.GetUMLData {
-	var classNameList []string
-	var secondClassNameList []string
-	classNameList = append(classNameList, className)
+	var umlData = getUMLData{}
+	umlData.classNameList = append(umlData.classNameList, className)
 	rootInformation := GetClassInformation(className)
 	rootUmlData := &DataType.GetUMLData{
 		ClassName:   GetLastModelName(className),
@@ -196,15 +201,17 @@ func GetModelUMLData(className string) []map[string]*DataType.GetUMLData {
 		rootUmlData.ClassName: rootUmlData,
 	}
 	finalResultData = append(finalResultData, rootMap)
+	umlData.rootUmlData = *rootUmlData
+	umlData.finalResultData = finalResultData
 	//获取子节点
-	GetSubUMLData(className, className, rootUmlData, &finalResultData, &classNameList, &secondClassNameList)
+	umlData.GetSubUMLData(className, className)
 	//获取父节点
-	GetExtendUml(className, className, rootUmlData, &finalResultData, &classNameList, &secondClassNameList)
-	return finalResultData
+	umlData.GetExtendUml(className, className)
+	return umlData.finalResultData
 }
 
 // GetSubUMLData 获取子节点
-func GetSubUMLData(className, initialName string, rootUmlData *DataType.GetUMLData, finalResultData *[]map[string]*DataType.GetUMLData, classNameList, secondClassNameList *[]string) {
+func (umlData *getUMLData) GetSubUMLData(className, initialName string) {
 	componentDataList := GetUMLElements(className)
 	for i := 0; i < len(componentDataList); i++ {
 		cData := componentDataList[i].([]any)
@@ -221,7 +228,7 @@ func GetSubUMLData(className, initialName string, rootUmlData *DataType.GetUMLDa
 		}
 		var extendsModelData []DataType.ExtendsModelData
 		rootExtendsModelData := DataType.ExtendsModelData{
-			ClassName: rootUmlData.ClassName,
+			ClassName: umlData.rootUmlData.ClassName,
 			Count:     1,
 		}
 
@@ -234,13 +241,13 @@ func GetSubUMLData(className, initialName string, rootUmlData *DataType.GetUMLDa
 				continue
 			}
 		} else {
-			subClassName = distinct(cData[2].(string), classNameList, secondClassNameList)
+			subClassName = umlData.distinct(cData[2].(string))
 			rootExtendsModelData.RelationShip = "polymerization"
 		}
 		extendsModelData = append(extendsModelData, rootExtendsModelData)
 		subUmlData := &DataType.GetUMLData{
 			ClassName:        subClassName,
-			Level:            rootUmlData.Level - 1,
+			Level:            umlData.rootUmlData.Level - 1,
 			ExtendsModelData: extendsModelData,
 		}
 		//模型类型为model，则无修饰，多个形容词取最后一个，若组件信息第三个值为true，则修饰词为partial
@@ -257,37 +264,37 @@ func GetSubUMLData(className, initialName string, rootUmlData *DataType.GetUMLDa
 
 		//根据子节点的名称判断finalResult是否存在该子节点，存在则在子节点的被指向的节点的数量加1或增加被指向的节点
 		//不存在则直接在finalResult中添加该子节点
-		ok := mapProcessing.IsExistKey(*finalResultData, subUmlData.ClassName, rootExtendsModelData)
+		ok := umlData.IsExistKey(subUmlData.ClassName, rootExtendsModelData)
 		if !ok {
 			subUmlResultData := map[string]*DataType.GetUMLData{
 				subUmlData.ClassName: subUmlData,
 			}
-			*finalResultData = append(*finalResultData, subUmlResultData)
+			umlData.finalResultData = append(umlData.finalResultData, subUmlResultData)
 		}
 	}
 }
 
 // GetExtendUml 获取父类节点
-func GetExtendUml(className, initialName string, rootUmlData *DataType.GetUMLData, resultData *[]map[string]*DataType.GetUMLData, classNameList, secondClassNameList *[]string) {
+func (umlData *getUMLData) GetExtendUml(className, initialName string) {
 	rootExtendModelNameList := GetExtendedModel(className)
 	var extendsModelData []DataType.ExtendsModelData
 	for _, extendModelName := range rootExtendModelNameList {
 		extendsModelInformation := GetClassInformation(extendModelName)
-		extendClassName := distinct(extendModelName, classNameList, secondClassNameList)
+		extendClassName := umlData.distinct(extendModelName)
 		rootExtendModel := DataType.ExtendsModelData{
 			ClassName:    extendClassName,
 			RelationShip: "inherit",
 		}
 		extendsModelData = append(extendsModelData, rootExtendModel)
-		for _, m := range *resultData {
+		for _, m := range umlData.finalResultData {
 			// 检查是否存在指定的键
-			if value, ok := m[rootUmlData.ClassName]; ok {
+			if value, ok := m[umlData.rootUmlData.ClassName]; ok {
 				value.ExtendsModelData = extendsModelData
 			}
 		}
 		extendsModelUmlData := &DataType.GetUMLData{
 			ClassName: extendClassName,
-			Level:     rootUmlData.Level + 1,
+			Level:     umlData.rootUmlData.Level + 1,
 		}
 		//模型类型为model，则无修饰，多个形容词取最后一个，若组件信息第三个值为true，则修饰词为partial
 		if !(extendsModelInformation[0].(string) == "model") {
@@ -304,9 +311,9 @@ func GetExtendUml(className, initialName string, rootUmlData *DataType.GetUMLDat
 		extendsModelUmlDataMap := map[string]*DataType.GetUMLData{
 			extendsModelUmlData.ClassName: extendsModelUmlData,
 		}
-		*resultData = append(*resultData, extendsModelUmlDataMap)
-		GetSubUMLData(extendModelName, initialName, extendsModelUmlData, resultData, classNameList, secondClassNameList)
-		GetExtendUml(extendModelName, initialName, extendsModelUmlData, resultData, classNameList, secondClassNameList)
+		umlData.finalResultData = append(umlData.finalResultData, extendsModelUmlDataMap)
+		umlData.GetSubUMLData(extendModelName, initialName)
+		umlData.GetExtendUml(extendModelName, initialName)
 	}
 }
 
@@ -321,33 +328,33 @@ func GetThirdLastModelName(className string) string {
 }
 
 // distinct  解决节点名重复的问题
-func distinct(target string, classNameList, secondClassNameList *[]string) string {
+func (umlData *getUMLData) distinct(target string) string {
 
 	//Modelica.Blocks.Examples.PID_Controller 字符串存在数组strArray中，则截取最后一位小数点后的内容
-	if stringOperation.SliceIndexString(target, *classNameList) {
+	if stringOperation.SliceIndexString(target, umlData.classNameList) {
 		return GetLastModelName(target)
 	}
 	//不存在，则判断数组中是否有以GetLastModelName(target)结尾的字符串
-	for _, s := range *classNameList {
+	for _, s := range umlData.classNameList {
 		if strings.HasSuffix(s, GetLastModelName(target)) {
 			//Modelica.Blocks.Examples.PID_Controller 字符串存在数组strArray中，则截取最后第二位小数点后的内容
-			if stringOperation.SliceIndexString(target, *secondClassNameList) {
+			if stringOperation.SliceIndexString(target, umlData.secondClassNameList) {
 				return GetSecondLastModelName(target)
 			}
 			//不存在，则判断数组secondStrArray中是否有以GetLastModelName(target)结尾的字符串
-			for _, s2 := range *secondClassNameList {
+			for _, s2 := range umlData.secondClassNameList {
 				if strings.HasSuffix(s2, GetSecondLastModelName(target)) {
 					//若有以GetLastModelName(target)结尾的字符串，则返回GetThirdLastModelName
 					return GetThirdLastModelName(target)
 				}
 			}
 			//没有以GetSecondLastModelName(target)结尾的，则将字符串添加到数组中，并返回GetSecondLastModelName
-			*secondClassNameList = append(*secondClassNameList, target)
+			umlData.secondClassNameList = append(umlData.secondClassNameList, target)
 			return GetSecondLastModelName(target)
 		}
 	}
 	//没有以GetLastModelName(target)结尾的，则将字符串添加到数组中，并返回GetLastModelName
-	*classNameList = append(*classNameList, target)
+	umlData.classNameList = append(umlData.classNameList, target)
 	return GetLastModelName(target)
 }
 
@@ -356,6 +363,7 @@ func GetLastModelName(className string) string {
 	return className[strings.LastIndex(className, ".")+1:]
 }
 
+// GetReferenceLibraries 获取模型依赖库
 func GetReferenceLibraries(className string) []string {
 	var referencedLibraries []string
 	var packageUse [][]string
@@ -370,4 +378,29 @@ func GetReferenceLibraries(className string) []string {
 		}
 	}
 	return referencedLibraries
+}
+
+// IsExistKey 判断最终结果finalResultData是否存在这个key
+func (umlData *getUMLData) IsExistKey(className string, rootExtendsModelData DataType.ExtendsModelData) bool {
+
+	for _, m := range umlData.finalResultData {
+		if value, ok := m[className]; ok {
+			extendsModelList := value.ExtendsModelData
+			flag := false
+			index := 0
+			for i := 0; i < len(extendsModelList); i++ {
+				if extendsModelList[i].ClassName == rootExtendsModelData.ClassName {
+					flag = true
+					index = i
+				}
+			}
+			if flag {
+				extendsModelList[index].Count = extendsModelList[index].Count + 1
+			} else {
+				value.ExtendsModelData = append(value.ExtendsModelData, rootExtendsModelData)
+			}
+			return ok
+		}
+	}
+	return false
 }
