@@ -182,6 +182,7 @@ func GetUMLElements(className string) []any {
 func GetModelUMLData(className string) []map[string]*DataType.GetUMLData {
 	var classNameList []string
 	var secondClassNameList []string
+	var referenceLibraries []string
 	classNameList = append(classNameList, className)
 	rootInformation := GetClassInformation(className)
 	rootUmlData := &DataType.GetUMLData{
@@ -189,29 +190,27 @@ func GetModelUMLData(className string) []map[string]*DataType.GetUMLData {
 		ModelType:   "root",
 		Description: rootInformation[1].(string),
 		Level:       1,
+		Library:     referenceLibraries,
 	}
 	var finalResultData []map[string]*DataType.GetUMLData
 	rootMap := map[string]*DataType.GetUMLData{
 		rootUmlData.ClassName: rootUmlData,
 	}
 	finalResultData = append(finalResultData, rootMap)
-
-	GetSubUMLData(className, rootUmlData, &finalResultData, &classNameList, &secondClassNameList)
-
-	GetExtendUml(className, rootUmlData, &finalResultData, &classNameList, &secondClassNameList)
+	//获取子节点
+	GetSubUMLData(className, className, rootUmlData, &finalResultData, &classNameList, &secondClassNameList, &referenceLibraries)
+	//获取父节点
+	GetExtendUml(className, className, rootUmlData, &finalResultData, &classNameList, &secondClassNameList, &referenceLibraries)
+	//设置依赖库
+	SetReferenceLibraries(finalResultData, rootUmlData.ClassName, referenceLibraries)
 	return finalResultData
 }
 
 // GetSubUMLData 获取子节点
-func GetSubUMLData(className string, rootUmlData *DataType.GetUMLData, finalResultData *[]map[string]*DataType.GetUMLData, classNameList, secondClassNameList *[]string) {
+func GetSubUMLData(className, initialName string, rootUmlData *DataType.GetUMLData, finalResultData *[]map[string]*DataType.GetUMLData, classNameList, secondClassNameList, referenceLibraries *[]string) {
 	componentDataList := GetUMLElements(className)
 	for i := 0; i < len(componentDataList); i++ {
-		var extendsModelData []DataType.ExtendsModelData
-		rootExtendsModelData := DataType.ExtendsModelData{
-			ClassName: rootUmlData.ClassName,
-			Count:     1,
-		}
-		extendsModelData = append(extendsModelData, rootExtendsModelData)
+
 		cData := componentDataList[i].([]any)
 		subInformation := GetClassInformation(cData[2].(string))
 		//节点类型是type或者“”，过滤掉
@@ -224,13 +223,28 @@ func GetSubUMLData(className string, rootUmlData *DataType.GetUMLData, finalResu
 				continue
 			}
 		}
+		var extendsModelData []DataType.ExtendsModelData
+		rootExtendsModelData := DataType.ExtendsModelData{
+			ClassName: rootUmlData.ClassName,
+			Count:     1,
+		}
+
 		//获取子节点名
 		var subClassName string
 		if stringOperation.ContainsString(subInformation[0].(string)) {
 			subClassName = className + "." + cData[3].(string)
+			rootExtendsModelData.RelationShip = "relevance"
+			if className != initialName {
+				continue
+			} else {
+				GetReferenceLibraries(cData[2].(string), referenceLibraries)
+			}
 		} else {
 			subClassName = distinct(cData[2].(string), classNameList, secondClassNameList)
+			rootExtendsModelData.RelationShip = "polymerization"
 		}
+
+		extendsModelData = append(extendsModelData, rootExtendsModelData)
 		subUmlData := &DataType.GetUMLData{
 			ClassName:        subClassName,
 			Level:            rootUmlData.Level - 1,
@@ -244,7 +258,6 @@ func GetSubUMLData(className string, rootUmlData *DataType.GetUMLData, finalResu
 				subUmlData.ModelType = subInformation[0].(string)
 			}
 		}
-
 		if subInformation[2].(string) == "true" {
 			subUmlData.ModelType = "partial"
 		}
@@ -262,15 +275,15 @@ func GetSubUMLData(className string, rootUmlData *DataType.GetUMLData, finalResu
 }
 
 // GetExtendUml 获取父类节点
-func GetExtendUml(className string, rootUmlData *DataType.GetUMLData, resultData *[]map[string]*DataType.GetUMLData, classNameList, secondClassNameList *[]string) {
+func GetExtendUml(className, initialName string, rootUmlData *DataType.GetUMLData, resultData *[]map[string]*DataType.GetUMLData, classNameList, secondClassNameList, referenceLibraries *[]string) {
 	rootExtendModelNameList := GetExtendedModel(className)
 	var extendsModelData []DataType.ExtendsModelData
 	for _, extendModelName := range rootExtendModelNameList {
 		extendsModelInformation := GetClassInformation(extendModelName)
 		extendClassName := distinct(extendModelName, classNameList, secondClassNameList)
 		rootExtendModel := DataType.ExtendsModelData{
-			ClassName: extendClassName,
-			Flag:      true,
+			ClassName:    extendClassName,
+			RelationShip: "inherit",
 		}
 		extendsModelData = append(extendsModelData, rootExtendModel)
 		for _, m := range *resultData {
@@ -299,8 +312,8 @@ func GetExtendUml(className string, rootUmlData *DataType.GetUMLData, resultData
 			extendsModelUmlData.ClassName: extendsModelUmlData,
 		}
 		*resultData = append(*resultData, extendsModelUmlDataMap)
-		GetSubUMLData(extendModelName, extendsModelUmlData, resultData, classNameList, secondClassNameList)
-		GetExtendUml(extendModelName, extendsModelUmlData, resultData, classNameList, secondClassNameList)
+		GetSubUMLData(extendModelName, initialName, extendsModelUmlData, resultData, classNameList, secondClassNameList, referenceLibraries)
+		GetExtendUml(extendModelName, initialName, extendsModelUmlData, resultData, classNameList, secondClassNameList, referenceLibraries)
 	}
 }
 
@@ -348,4 +361,28 @@ func distinct(target string, strArray, secondStrArray *[]string) string {
 // GetLastModelName 获取Modelica.Blocks.Examples.PID_Controller中PID_Controller
 func GetLastModelName(className string) string {
 	return className[strings.LastIndex(className, ".")+1:]
+}
+
+// GetReferenceLibraries 获取依赖库
+func GetReferenceLibraries(str string, array *[]string) {
+	if strings.ContainsRune(str, '.') {
+		str = str[:strings.Index(str, ".")]
+		if len(*array) == 0 {
+			*array = append(*array, str)
+		} else {
+			if !stringOperation.SliceIndexString(str, *array) {
+				*array = append(*array, str)
+			}
+		}
+	}
+}
+
+// SetReferenceLibraries 设置依赖库
+func SetReferenceLibraries(resultData []map[string]*DataType.GetUMLData, className string, referenceLibraries []string) {
+
+	for _, m := range resultData {
+		if value, ok := m[className]; ok {
+			value.Library = referenceLibraries
+		}
+	}
 }

@@ -255,14 +255,15 @@ type GetUMLData struct {
 	ClassName        string             `json:"class_name" binding:""`
 	ModelType        string             `json:"model_type" binding:""`
 	Description      string             `json:"description" binding:""`
+	Library          []string           `json:"library" binding:""`
 	Level            int                `json:"level" binding:""`
 	ExtendsModelData []ExtendsModelData `json:"extends_model_data" binding:""`
 }
 
 type ExtendsModelData struct {
-	ClassName string `json:"class_name" binding:""`
-	Count     int    `json:"count" binding:""`
-	Flag      bool   `json:"flag" binding:""`
+	ClassName    string `json:"class_name" binding:""`
+	Count        int    `json:"count" binding:""`
+	RelationShip string `json:"relation_ship" binding:""`
 }
 
 type RepositoryCloneData struct {
