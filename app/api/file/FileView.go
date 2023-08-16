@@ -692,8 +692,9 @@ func UploadResourcesFileView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
-	if !strings.HasSuffix(varFile.Filename, ".txt") && !strings.HasSuffix(varFile.Filename, ".csv") && !strings.HasSuffix(varFile.Filename, ".png") {
-		res.Err = "暂时只支持*.txt、*.csv、*.png格式文件上传"
+	if !strings.HasSuffix(varFile.Filename, ".txt") && !strings.HasSuffix(varFile.Filename, ".csv") && !strings.HasSuffix(varFile.Filename, ".png") &&
+		!strings.HasSuffix(varFile.Filename, ".mos") {
+		res.Err = "暂时只支持*.txt、*.csv、*.png、*.mos格式文件上传"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
