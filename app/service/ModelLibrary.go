@@ -262,7 +262,7 @@ func GetPackageInformation() map[string]map[string]string {
 }
 
 func LibraryInitialization(LibraryMap map[string]map[string]string, packageModel []DataBaseModel.YssimModels) {
-	if LibraryMap == nil {
+	if LibraryMap == nil || len(LibraryMap) == 0 {
 		DefaultLibraryInitialization(packageModel)
 		return
 	}

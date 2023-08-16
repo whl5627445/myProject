@@ -2053,7 +2053,12 @@ func DeleteVersionAvailableLibrariesView(c *gin.Context) {
 		return
 	}
 	dbModel.Delete(&yssimModel)
+	packageInformation := service.GetPackageInformation()
 	service.DeleteLibrary(yssimModel.PackageName)
+	delete(packageInformation, yssimModel.PackageName)
+	packageInformationJson, _ := sonic.Marshal(packageInformation)
+	dbModel.Model(DataBaseModel.YssimUserSpace{}).Where("id = ? AND username = ?", deleteLibrary.SpaceId, username).Update("package_information", packageInformationJson)
+
 	res.Msg = "删除成功"
 	c.JSON(http.StatusOK, res)
 
