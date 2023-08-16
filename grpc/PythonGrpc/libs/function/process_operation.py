@@ -77,7 +77,13 @@ def kill_process(multiprocessing_id, om_process_list, dm_process_list, om_task_m
         if i.uuid == multiprocessing_id:
             try:
                 if hasattr(i, 'omc_obj'):
+                    log.info("(OMC)杀死的进程id："+str(i.omc_obj.omc_process.pid))
+                    parent_proc = psutil.Process(i.omc_obj.omc_process.pid)
+                    for child_proc in parent_proc.children(recursive=True):
+                        log.info("(OMC)关闭子进程："+str(child_proc.pid))
+                        os.kill(child_proc.pid, 9)
                     os.kill(i.omc_obj.omc_process.pid, 9)
+                    log.info("(OMC)关闭omc进程成功")
                 # os.killpg(os.getpgid(i.omc_obj.omc_process.pid), signal.SIGUSR1)
                 if i.run_pid:
                     os.kill(i.run_pid, 9)
