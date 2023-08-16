@@ -1,7 +1,10 @@
+import time
+
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine, Column, String, Integer, Text, DateTime, JSON, Boolean, Float
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import QueuePool
+from libs.function.grpc_log import log
 
 HOST = 'mysql'  # 127.0.0.1/localhost 124.70.211.127
 PORT = 3306
@@ -14,14 +17,22 @@ PWD = 'simtek_cloud_sim'
 
 DB_URI = f'mysql+pymysql://{USER}:{PWD}@{HOST}:{PORT}/{DATA_BASE}'
 
-engine = create_engine(DB_URI,
-                       poolclass=QueuePool,
-                       pool_size=50,  # 最大连接数  124 3个  119 50个
-                       max_overflow=10,  # 连接池溢出后允许的最大连接数
-                       pool_timeout=15,  # 请求超时时间（秒）
-                       pool_pre_ping=True,  # 每次从连接池中取连接的时候，都会验证一下与数据库是否连接正常
-                       pool_recycle=25200,  # 主动回收mysql连接的时间
-                       )
+while True:
+    try:
+        engine = create_engine(DB_URI,
+                               poolclass=QueuePool,
+                               pool_size=50,  # 最大连接数  124 3个  119 50个
+                               max_overflow=10,  # 连接池溢出后允许的最大连接数
+                               pool_timeout=15,  # 请求超时时间（秒）
+                               pool_pre_ping=True,  # 每次从连接池中取连接的时候，都会验证一下与数据库是否连接正常
+                               pool_recycle=25200,  # 主动回收mysql连接的时间
+                               )
+        log.info("连接数据库成功！")
+        break
+    except Exception as e:
+        log.info("连接数据库失败："+str(e))
+        time.sleep(3)
+
 Base = declarative_base(engine)
 Session = sessionmaker(engine)
 
