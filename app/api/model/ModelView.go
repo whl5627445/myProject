@@ -164,8 +164,8 @@ func GetListModelView(c *gin.Context) {
 		modelChildListNew = append(modelChildListNew, modelChildList[i])
 	}
 	// 如果父节点是包名称的话，追加静态资源管理文件夹节点
-	nameType := service.GetModelType(modelName)
-	if modelName == packageModel.PackageName && packageModel.SysUser != "sys" && nameType == "package" && !packageModel.Encryption {
+	modelType := service.GetModelType(modelName)
+	if modelName == packageModel.PackageName && packageModel.SysUser != "sys" && modelType == "package" && !packageModel.Encryption {
 		modelChildListNew = append(modelChildListNew, map[string]any{
 			"name":     "Resources",
 			"haschild": true,

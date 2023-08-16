@@ -13,10 +13,10 @@ import (
 func GetIconNew(modelName string, icon bool) map[string]any {
 	data := make(map[string]any, 0)
 	iconData := omc.OMC.GetIconAnnotation(modelName)
-	nameType := omc.OMC.GetClassRestriction(modelName)
+	modelType := omc.OMC.GetClassRestriction(modelName)
 	if len(iconData) > 8 {
 		bitmapData := iconData[8].([]any)
-		Bitmap := getBitmapImage(bitmapData, modelName, nameType)
+		Bitmap := getBitmapImage(bitmapData, modelName, modelType)
 		if Bitmap != nil {
 			data = map[string]any{
 				"type":     "base64",
@@ -26,10 +26,10 @@ func GetIconNew(modelName string, icon bool) map[string]any {
 		}
 	}
 	graphics := map[string]any{}
-	if (nameType != "connector" && nameType != "expandable connector") || (icon && (nameType == "connector" || nameType == "expandable connector")) {
-		graphics = getIconAnnotationGraphics(modelName, nameType)
+	if (modelType != "connector" && modelType != "expandable connector") || (icon && (modelType == "connector" || modelType == "expandable connector")) {
+		graphics = getIconAnnotationGraphics(modelName, modelType)
 	} else {
-		graphics = getDiagramAnnotationGraphics(modelName, nameType)
+		graphics = getDiagramAnnotationGraphics(modelName, modelType)
 	}
 
 	data = map[string]any{
@@ -112,7 +112,7 @@ func getCoordinateSystemRecursion(modelNameList []string, isIcon bool) coordinat
 	return data
 }
 
-func getIconAnnotationGraphics(modelName, nameType string) map[string]any {
+func getIconAnnotationGraphics(modelName, modelType string) map[string]any {
 	data := map[string]any{}
 	modelNameList := GetICList(modelName)
 	modelIconAnnotation := getIconAnnotation(modelNameList)
@@ -124,7 +124,7 @@ func getIconAnnotationGraphics(modelName, nameType string) map[string]any {
 		return nil
 	}
 	data["output_type"] = "[]"
-	data["graphType"] = nameType
+	data["graphType"] = modelType
 	data["classname"] = modelName
 	data["parent"] = ""
 	data["visible"] = "true"
@@ -152,7 +152,7 @@ func getIconAnnotationGraphics(modelName, nameType string) map[string]any {
 	return data
 }
 
-func getDiagramAnnotationGraphics(modelName, nameType string) map[string]any {
+func getDiagramAnnotationGraphics(modelName, modelType string) map[string]any {
 	data := map[string]any{}
 	nameList := GetICList(modelName)
 	modelIconAnnotation := getDiagramAnnotation(nameList)
@@ -164,13 +164,13 @@ func getDiagramAnnotationGraphics(modelName, nameType string) map[string]any {
 	}
 
 	data["output_type"] = "[]"
-	data["graphType"] = nameType
+	data["graphType"] = modelType
 	data["classname"] = modelName
 	data["parent"] = ""
 	data["visible"] = "true"
 	data["mobility"] = true
 	data["rotation"] = "0"
-	data["visibleList"] = GetConnectionOption(modelName)
+	data["visibleList"] = GetConnectionOption(modelName, modelType)
 	data["inputOutputs"] = make([]any, 0)
 	data["subShapes"] = subShapes
 	data["extent1Diagram"] = func() []float64 {
@@ -334,9 +334,9 @@ func iconInputOutputs(cData [][]any, caData [][]any, modelName string) []map[str
 	var caDataFilter [][]any
 
 	for i := 0; i < len(cData); i++ {
-		nameType := omc.OMC.GetClassRestriction(cData[i][2].(string))
-		if nameType == "connector" || nameType == "expandable connector" {
-			cData[i] = append(cData[i], nameType)
+		modelType := omc.OMC.GetClassRestriction(cData[i][2].(string))
+		if modelType == "connector" || modelType == "expandable connector" {
+			cData[i] = append(cData[i], modelType)
 			cDataFilter = append(cDataFilter, cData[i])
 			caDataFilter = append(caDataFilter, caData[i])
 		}
@@ -428,7 +428,7 @@ func iconInputOutputs(cData [][]any, caData [][]any, modelName string) []map[str
 	return dataList
 }
 
-func getBitmapImage(bitmapData []any, modelName, nameType string) map[string]any {
+func getBitmapImage(bitmapData []any, modelName, modelType string) map[string]any {
 	modelNameList := GetICList(modelName)
 	modelIconAnnotation := getIconAnnotation(modelNameList)
 	AnnotationConfig := []any{}
@@ -449,7 +449,7 @@ func getBitmapImage(bitmapData []any, modelName, nameType string) map[string]any
 		}
 	}
 	data["output_type"] = "[]"
-	data["graphType"] = nameType
+	data["graphType"] = modelType
 	data["classname"] = modelName
 	data["parent"] = ""
 	data["visible"] = "true"

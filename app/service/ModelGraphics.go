@@ -44,8 +44,8 @@ func GetGraphicsData(modelName, permissions string) []any {
 	//}
 	//}
 	g.modelName = modelName
-	nameType := omc.OMC.GetClassRestriction(modelName)
-	if nameType == "connector" || nameType == "expandable connector" {
+	modelType := omc.OMC.GetClassRestriction(modelName)
+	if modelType == "connector" || modelType == "expandable connector" {
 		g.data = g.getConnectorModelDiagram(modelName) // 如果是连接器类型，进行特殊处理，与普通模型不同
 	} else {
 		g.modelNameList = g.getICList(modelName) // 获取模型继承了哪些父类，以切片形式传递，包括模型本身
@@ -74,8 +74,8 @@ func GetComponentGraphicsData(modelName, componentName string) []any {
 	for i := 0; i < len(components); i++ {
 		if components[i] != nil {
 			if components[i][3] == componentName {
-				nameType := omc.OMC.GetClassRestriction(components[i][2].(string))
-				if nameType == "connector" || nameType == "expandable connector" {
+				modelType := omc.OMC.GetClassRestriction(components[i][2].(string))
+				if modelType == "connector" || modelType == "expandable connector" {
 					data := g.getConnectorComponentDiagram(components[i], componentAnnotations[i])
 					return data
 				}
@@ -324,15 +324,15 @@ func (g *graphicsData) data02(cData [][]any, caData [][]any, isIcon bool, parent
 
 	for i := 0; i < len(cData); i++ {
 
-		nameType := omc.OMC.GetClassRestriction(cData[i][2].(string))
+		modelType := omc.OMC.GetClassRestriction(cData[i][2].(string))
 		if isIcon && cData != nil && caData != nil {
-			if nameType == "connector" || nameType == "expandable connector" {
-				cData[i] = append(cData[i], nameType)
+			if modelType == "connector" || modelType == "expandable connector" {
+				cData[i] = append(cData[i], modelType)
 				cDataFilter = append(cDataFilter, cData[i])
 				caDataFilter = append(caDataFilter, caData[i])
 			}
 		} else {
-			cData[i] = append(cData[i], nameType)
+			cData[i] = append(cData[i], modelType)
 			cDataFilter = append(cDataFilter, cData[i])
 			caDataFilter = append(caDataFilter, caData[i])
 		}
@@ -383,7 +383,7 @@ func (g *graphicsData) data02(cData [][]any, caData [][]any, isIcon bool, parent
 			data["name"] = cDataFilter[i][3]
 			data["original_name"] = cDataFilter[i][3]
 			data["extend_name"] = modelName
-			data["visibleList"] = GetConnectionOption(classname)
+			data["visibleList"] = GetConnectionOption(classname, cDataFilter[i][17].(string))
 			data["is_extend"] = func() bool {
 				if g.modelName == modelName {
 					return false
@@ -574,16 +574,17 @@ func (g *graphicsData) getConnectorComponentDiagram(components, componentAnnotat
 		data := make(map[string]any, 0)
 		interfaceGraphicsData := getIconAndDiagramAnnotations([]string{className}, false)
 		coordinateSystem := getCoordinateSystemRecursion([]string{className}, false)
+		modelType := omc.OMC.GetClassRestriction(className)
 		data["coordinate_system"] = coordinateSystem
 		caf := componentAnnotationsData[1].([]any)
 		data["ID"] = "0"
 		data["classname"] = className
 		//data["extent1Diagram"] = strings.Replace(caf[3].(string)+","+caf[4].(string), "-,-", "-100.0,-100.0", 1)
 		//data["extent2Diagram"] = strings.Replace(caf[5].(string)+","+caf[6].(string), "-,-", "100.0,100.0", 1)
-		data["graphType"] = "connector"
+		data["graphType"] = modelType
 		data["mobility"] = true
 		data["name"] = componentName
-		data["visibleList"] = GetConnectionOption(className)
+		data["visibleList"] = GetConnectionOption(className, modelType)
 		data["originDiagram"] = strings.Join([]string{caf[1].(string), caf[2].(string)}, ",")
 		data["original_name"] = componentName
 		data["output_type"] = "[]"
@@ -606,14 +607,15 @@ func (g *graphicsData) getConnectorModelDiagram(modelName string) []any {
 		interfaceGraphicsData := interfaceDiagramAnnotationData[8].([]any)
 		data := make(map[string]any, 0)
 		coordinateSystem := getCoordinateSystemRecursion([]string{modelName}, false)
+		modelType := omc.OMC.GetClassRestriction(modelName)
 		data["coordinate_system"] = coordinateSystem
 		data["ID"] = "0"
 		data["classname"] = modelName
 		data["extent1Diagram"] = strings.Replace(interfaceDiagramAnnotationData[0].(string)+","+interfaceDiagramAnnotationData[1].(string), "-,-", "-100.0,-100.0", 1)
 		data["extent2Diagram"] = strings.Replace(interfaceDiagramAnnotationData[2].(string)+","+interfaceDiagramAnnotationData[3].(string), "-,-", "100.0,100.0", 1)
-		data["graphType"] = "model"
+		data["graphType"] = modelType
 		data["mobility"] = false
-		data["visibleList"] = GetConnectionOption(modelName)
+		data["visibleList"] = GetConnectionOption(modelName, modelType)
 		data["name"] = ""
 		data["originDiagram"] = "0.0,0.0"
 		data["original_name"] = ""
@@ -632,22 +634,22 @@ func (g *graphicsData) getConnectorModelDiagram(modelName string) []any {
 	return g.data
 }
 
-func GetConnectionOption(modelName string) []map[string]any {
-	nameType := omc.OMC.GetClassRestriction(modelName)
-	if nameType != "expandable connector" {
+func GetConnectionOption(modelName, modelType string) []map[string]any {
+	if modelType != "expandable connector" {
 		return nil
 	}
 	elements := omc.OMC.GetElements(modelName)
 	variable := make([]map[string]any, 0)
 	for _, v := range elements {
 		arr := v.([]interface{})
-		typeName := arr[2]
-		option := GetConnectionOption(typeName.(string))
+		typeName := arr[2].(string)
+		modelType = omc.OMC.GetClassRestriction(typeName)
+		option := GetConnectionOption(typeName, modelType)
 		ser := map[string]any{
 			"variableName": arr[3],
-			"variableType": typeName,
-			"hasChild":     len(option) > 0,
-			"option":       option,
+			//"variableType": typeName,
+			"hasChild": len(option) > 0,
+			"option":   option,
 		}
 		variable = append(variable, ser)
 	}
