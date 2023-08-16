@@ -383,6 +383,7 @@ func (g *graphicsData) data02(cData [][]any, caData [][]any, isIcon bool, parent
 			data["name"] = cDataFilter[i][3]
 			data["original_name"] = cDataFilter[i][3]
 			data["extend_name"] = modelName
+			data["visibleList"] = GetConnectionOption(classname)
 			data["is_extend"] = func() bool {
 				if g.modelName == modelName {
 					return false
@@ -632,6 +633,10 @@ func (g *graphicsData) getConnectorModelDiagram(modelName string) []any {
 }
 
 func GetConnectionOption(modelName string) []map[string]any {
+	nameType := omc.OMC.GetClassRestriction(modelName)
+	if nameType != "expandable connector" {
+		return nil
+	}
 	elements := omc.OMC.GetElements(modelName)
 	variable := make([]map[string]any, 0)
 	for _, v := range elements {
