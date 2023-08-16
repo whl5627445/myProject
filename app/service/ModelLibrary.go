@@ -266,6 +266,8 @@ func LibraryInitialization(LibraryMap map[string]map[string]string, packageModel
 		DefaultLibraryInitialization(packageModel)
 		return
 	}
+	StopOMC()
+	StartOMC()
 	for name, information := range LibraryMap {
 		version := information["version"]
 		ok := omc.OMC.LoadFileNoPwd(information["file"])
