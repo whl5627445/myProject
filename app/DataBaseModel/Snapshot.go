@@ -14,7 +14,7 @@ type YssimSnapshots struct {
 	ExperimentId      string         `gorm:"index;column:experiment_id;type:varchar(128);comment:实验id"`
 	SnapshotName      string         `gorm:"column:snapshot_name;type:varchar(32);comment:快照名称"`
 	UserName          string         `gorm:"index;column:username;type:varchar(32);comment:用户名"`
-	ModelName         string         `gorm:"column:model_name;type:varchar(128);comment:模型名"`
+	ModelName         string         `gorm:"column:model_name;type:varchar(256);comment:模型名"`
 	ComponentName     string         `gorm:"column:component_name;type:varchar(128);comment:组件名"`
 	SimulateResultId  string         `gorm:"index;column:simulate_result_id;type:varchar(128);comment:实验结果id"`
 	SimulateResultObj datatypes.JSON `gorm:"column:simulate_result_obj;type:json;comment:视图的仿真结果数据"`

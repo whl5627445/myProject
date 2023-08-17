@@ -29,7 +29,7 @@ type AppDataSource struct {
 	UserName          string         `gorm:"index;column:username;type:varchar(32);comment:用户名"`
 	UserSpaceId       string         `gorm:"index;column:user_space_id;type:varchar(128);comment:用户空间唯一识别标识"`
 	PackageId         string         `gorm:"index;column:package_id;type:varchar(128);comment:导出数据源模型所在package的唯一识别标识"`
-	ModelName         string         `gorm:"column:model_name;type:varchar(128);comment:导出数据源的模型名称"`
+	ModelName         string         `gorm:"column:model_name;type:varchar(256);comment:导出数据源的模型名称"`
 	CompileType       string         `gorm:"column:compile_type;type:varchar(128);default:\"OM\";comment:导出数据源所用的编译器类型，有OM与dymola"`
 	CompilePath       string         `gorm:"column:compile_path;type:varchar(128);comment:编译好的文件存放路径"`
 	ZipMoPath         string         `gorm:"column:zip_mo_path;type:varchar(128);comment:数据源模型所在的mo文件路径"`
