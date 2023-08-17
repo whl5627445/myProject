@@ -88,7 +88,6 @@ func FilterSimulationResult(items map[string][]string, recordDict map[string]Dat
 	var csvData [][]string
 	headFlag := 1
 	for key, value := range items {
-		var ok bool
 		var result [][]float64
 		// 定义csv的第一行
 		headFlagName := recordDict[key].AnotherName + "." //标记
@@ -97,10 +96,18 @@ func FilterSimulationResult(items map[string][]string, recordDict map[string]Dat
 			headRow = append(headRow, headFlagName+value[i])
 		}
 		// 获取结果数据
-		result, ok = ReadSimulationResult(value, recordDict[key].SimulateModelResultPath+"result_res.mat")
-		if !ok {
-			return false
+		for i := 0; i < len(value); i++ {
+			singleRes, ok := ReadSimulationResult([]string{value[i]}, recordDict[key].SimulateModelResultPath+"result_res.mat")
+			if !ok {
+				return false
+			}
+			if i == 0 {
+				// 一个结果只插入一列时间
+				result = append(result, singleRes[0])
+			}
+			result = append(result, singleRes[1])
 		}
+
 		var csvDataOne [][]string
 		csvDataOne = append(csvDataOne, headRow) //先写入第一行变量名
 		for i := 0; i < len(result[0]); i++ {    //逐行写入
@@ -122,10 +129,11 @@ func FilterSimulationResult(items map[string][]string, recordDict map[string]Dat
 	nfs, ok := fileOperation.CreateFile(newFileName)
 	if ok {
 		defer nfs.Close()
+		bom := []byte{0xef, 0xbb, 0xbf} // 写入 UTF-8 BOM 防止中文乱码
+		nfs.Write(bom)
 		w := csv.NewWriter(nfs)
 		w.Comma = ','
 		w.UseCRLF = true
-		w.Write([]string{string([]byte{0xEF, 0xBB, 0xBF})}) // 写入 UTF-8 BOM
 		err := w.WriteAll(csvData)
 		if err != nil {
 			return false
