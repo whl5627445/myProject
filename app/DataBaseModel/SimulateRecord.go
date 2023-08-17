@@ -13,7 +13,7 @@ type YssimSimulateRecord struct {
 	UserspaceId             string         `gorm:"index;column:userspace_id;type:varchar(128);comment:用户空间唯一识别标识"`
 	ExperimentId            string         `gorm:"index;column:experiment_id;type:varchar(128);comment:仿真实验唯一识别标识"`
 	UserName                string         `gorm:"index;column:username;type:varchar(32);comment:用户名"`
-	SimulateModelName       string         `gorm:"column:simulate_model_name;type:varchar(128);comment:仿真模型名称"`
+	SimulateModelName       string         `gorm:"column:simulate_model_name;type:varchar(256);comment:仿真模型名称"`
 	SimulateModelResultPath string         `gorm:"column:simulate_model_result_path;type:varchar(256);comment:仿真结果存储路径"`
 	SimulateResultStr       string         `gorm:"column:simulate_result_str;comment:仿真结果输出字符串"`
 	SimulateStatus          string         `gorm:"column:simulate_status;type:varchar(32);comment:仿真状态"`
