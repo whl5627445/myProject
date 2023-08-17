@@ -27,40 +27,43 @@ type OutputData struct {
 
 var DB = config.DB
 
-func GetEnvLibraryAll(userName, spaceId string) map[string]string {
+// GetEnvLibraryAll 获取当前环境下的所有已经加载的包和系统库
+//func GetEnvLibraryAll(userName, spaceId string) map[string]string {
+//
+//	// 获取系统模型
+//	environmentModelData := make(map[string]string)
+//	var envPackageModel []DataBaseModel.YssimModels
+//	DB.Where("sys_or_user =  ? AND userspace_id = ?", "sys", "0").Find(&envPackageModel)
+//	libraryAndVersions := GetLibraryAndVersions()
+//	for i := 0; i < len(envPackageModel); i++ {
+//		p, ok := libraryAndVersions[envPackageModel[i].PackageName]
+//		if ok && p == envPackageModel[i].Version {
+//			environmentModelData[envPackageModel[i].PackageName] = envPackageModel[i].Version
+//		}
+//	}
+//	// 获取用户模型
+//	DB.Where("sys_or_user = ? AND userspace_id = ?", userName, spaceId).Find(&envPackageModel)
+//	for i := 0; i < len(envPackageModel); i++ {
+//		loadVersions, ok := libraryAndVersions[envPackageModel[i].PackageName]
+//		if ok && loadVersions == envPackageModel[i].Version {
+//			environmentModelData[envPackageModel[i].PackageName] = envPackageModel[i].FilePath
+//		}
+//	}
+//
+//	// 获取加密模型
+//	var encryptionPackageModel []DataBaseModel.YssimModels
+//	DB.Where("sys_or_user =  ? AND userspace_id = ? AND encryption = ?", userName, spaceId, 1).Find(&encryptionPackageModel)
+//	for i := 0; i < len(encryptionPackageModel); i++ {
+//		packageVersion, ok := libraryAndVersions[encryptionPackageModel[i].PackageName]
+//		if ok && packageVersion == encryptionPackageModel[i].Version {
+//			environmentModelData[encryptionPackageModel[i].PackageName] = encryptionPackageModel[i].FilePath
+//		}
+//	}
+//	return environmentModelData
+//
+//}
 
-	// 获取系统模型
-	environmentModelData := make(map[string]string)
-	var envPackageModel []DataBaseModel.YssimModels
-	DB.Where("sys_or_user =  ? AND userspace_id = ?", "sys", "0").Find(&envPackageModel)
-	libraryAndVersions := GetLibraryAndVersions()
-	for i := 0; i < len(envPackageModel); i++ {
-		p, ok := libraryAndVersions[envPackageModel[i].PackageName]
-		if ok && p == envPackageModel[i].Version {
-			environmentModelData[envPackageModel[i].PackageName] = envPackageModel[i].Version
-		}
-	}
-	// 获取用户模型
-	DB.Where("sys_or_user = ? AND userspace_id = ?", userName, spaceId).Find(&envPackageModel)
-	for i := 0; i < len(envPackageModel); i++ {
-		loadVersions, ok := libraryAndVersions[envPackageModel[i].PackageName]
-		if ok && loadVersions == envPackageModel[i].Version {
-			environmentModelData[envPackageModel[i].PackageName] = envPackageModel[i].FilePath
-		}
-	}
-
-	// 获取加密模型
-	var encryptionPackageModel []DataBaseModel.YssimModels
-	DB.Where("sys_or_user =  ? AND userspace_id = ? AND encryption = ?", userName, spaceId, 1).Find(&encryptionPackageModel)
-	for i := 0; i < len(encryptionPackageModel); i++ {
-		packageVersion, ok := libraryAndVersions[encryptionPackageModel[i].PackageName]
-		if ok && packageVersion == encryptionPackageModel[i].Version {
-			environmentModelData[encryptionPackageModel[i].PackageName] = encryptionPackageModel[i].FilePath
-		}
-	}
-	return environmentModelData
-
-}
+// GetEnvLibrary 获取已经加载的依赖包和系统库
 func GetEnvLibrary(packageName, userName, spaceId string) map[string]string {
 	environmentModelData := make(map[string]string)
 	var p DataBaseModel.YssimModels
@@ -262,7 +265,7 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 	}
 
 	// 获取依赖模型和系统库
-	environmentModelData := GetEnvLibraryAll(itemMap["username"], itemMap["space_id"])
+	environmentModelData := GetEnvLibrary(packageModel.PackageName, itemMap["username"], itemMap["space_id"])
 	// 转为json，保存到数据库
 	jsonEnvData, err := sonic.Marshal(environmentModelData)
 	if err != nil {
