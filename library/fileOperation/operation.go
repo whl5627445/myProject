@@ -99,7 +99,8 @@ func CreateFile(filePath string) (io.ReadWriteCloser, bool) {
 	}
 	nfs, err := os.Create(filePath)
 	if err != nil {
-		panic(err)
+		log.Println("创建文件失败: ", err)
+		return nil, false
 	}
 	err = os.Chmod(filePath, 0777)
 	if err != nil {
