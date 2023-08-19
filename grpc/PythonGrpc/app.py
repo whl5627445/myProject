@@ -206,7 +206,9 @@ if __name__ == '__main__':
                         [{j.request.simulateModelName: j.state,
                           "user_name": j.request.userName,
                           "id": j.uuid,
-                          } for j in OmSimulationThreadList]))
+                          "socket进度": j.tcpServer.percentage[-1] if (hasattr(j, "tcpServer") and j.tcpServer is not None) else 0
+                          } for j in
+                         OmSimulationThreadList]))
                 if len(omcTaskList) > 0:
                     log.info("(OMC)正在排队的任务数：{}".format(len(omcTaskList)))
                     log.info("(OMC)正在排队的任务：" + str(

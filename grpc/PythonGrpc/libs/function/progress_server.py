@@ -25,12 +25,16 @@ class TcpServer(threading.Thread):  # TCP服务
         self.percentage = [0]
 
     def update_db(self):
+        percent_flag = 0
         while self.stop_flag:
             # 将仿真百分数转换为30-100之间
-            percent = (self.percentage[-1]/100)*70+30
-            update_simulate_records(uuid=self.db_id, percentage=percent)
-            # log.info("更新数据库进度为:{}".format(percent))
-            time.sleep(0.5)
+            percent = int((self.percentage[-1]/100)*70+30)
+            if percent != percent_flag:
+                percent_flag = percent
+                log.info("(OMC)更新数据库进度："+str(percent))
+                update_simulate_records(uuid=self.db_id, percentage=percent)
+                # log.info("更新数据库进度为:{}".format(percent))
+                time.sleep(0.5)
 
     def stop(self):
         log.info("关闭读取进度的socket,进度更新到:"+str(self.percentage[-1]))

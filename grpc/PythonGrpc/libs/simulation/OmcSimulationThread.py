@@ -150,8 +150,13 @@ class OmcSimulation(threading.Thread):
             R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
 
         else:
-            simulate_result_str = output.decode('utf-8')
-            if "successfully" in simulate_result_str:
+            simulate_result_log = output.decode('utf-8')
+            if len(simulate_result_log) > 800:
+                simulate_result_str = simulate_result_log[:200] + "... ..." + simulate_result_log[-200:]
+            else:
+                simulate_result_str = simulate_result_log
+            # simulate_result_log只用来判断，不用来保存和打印，防止simulate_result_log文件太大带来的异常
+            if "successfully" in simulate_result_log:
                 log.info("(OMC)模型仿真成功完成")
                 json_data = {"message": self.request.simulateModelName + " 模型仿真完成"}
                 R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
