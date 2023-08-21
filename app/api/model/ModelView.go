@@ -1846,9 +1846,19 @@ func GetUMLView(c *gin.Context) {
 	*/
 	var res DataType.ResponseData
 	var className = c.Query("className")
-	finalResultData := service.GetModelUMLData(className)
+	var result = map[string]interface{}{}
+	modelType := service.GetModelType(className)
+	if modelType == "package" {
+		result["dataType"] = "package"
+		resultData := service.GetPackageUMLData(className)
+		result["resultData"] = resultData
+	} else {
+		result["dataType"] = "model"
+		finalResultData := service.GetModelUMLData(className)
+		result["resultData"] = finalResultData
+	}
 	res.Msg = "获取成功"
-	res.Data = finalResultData
+	res.Data = result
 	c.JSON(http.StatusOK, res)
 }
 

@@ -182,7 +182,7 @@ type getUMLData struct {
 	classNameList       []string
 	secondClassNameList []string
 	finalResultData     []map[string]*DataType.GetUMLData
-	rootUmlData         DataType.GetUMLData
+	rootUmlData         *DataType.GetUMLData
 }
 
 func GetModelUMLData(className string) []map[string]*DataType.GetUMLData {
@@ -201,19 +201,20 @@ func GetModelUMLData(className string) []map[string]*DataType.GetUMLData {
 		rootUmlData.ClassName: rootUmlData,
 	}
 	finalResultData = append(finalResultData, rootMap)
-	umlData.rootUmlData = *rootUmlData
+	umlData.rootUmlData = rootUmlData
 	umlData.finalResultData = finalResultData
 	//获取子节点
-	umlData.GetSubUMLData(className, className)
+	umlData.GetSubUMLData(className, className, rootUmlData)
 	//获取父节点
-	umlData.GetExtendUml(className, className)
+	umlData.GetExtendUml(className, className, rootUmlData)
 	return umlData.finalResultData
 }
 
 // GetSubUMLData 获取子节点
-func (umlData *getUMLData) GetSubUMLData(className, initialName string) {
+func (umlData *getUMLData) GetSubUMLData(className, initialName string, rootUmlData *DataType.GetUMLData) {
 	componentDataList := GetUMLElements(className)
 	for i := 0; i < len(componentDataList); i++ {
+		umlData.rootUmlData = rootUmlData
 		cData := componentDataList[i].([]any)
 		subInformation := GetClassInformation(cData[2].(string))
 		//节点类型是type或者“”，过滤掉
@@ -275,10 +276,11 @@ func (umlData *getUMLData) GetSubUMLData(className, initialName string) {
 }
 
 // GetExtendUml 获取父类节点
-func (umlData *getUMLData) GetExtendUml(className, initialName string) {
+func (umlData *getUMLData) GetExtendUml(className, initialName string, rootUmlData *DataType.GetUMLData) {
 	rootExtendModelNameList := GetExtendedModel(className)
 	var extendsModelData []DataType.ExtendsModelData
 	for _, extendModelName := range rootExtendModelNameList {
+		umlData.rootUmlData = rootUmlData
 		extendsModelInformation := GetClassInformation(extendModelName)
 		extendClassName := umlData.distinct(extendModelName)
 		rootExtendModel := DataType.ExtendsModelData{
@@ -312,8 +314,8 @@ func (umlData *getUMLData) GetExtendUml(className, initialName string) {
 			extendsModelUmlData.ClassName: extendsModelUmlData,
 		}
 		umlData.finalResultData = append(umlData.finalResultData, extendsModelUmlDataMap)
-		umlData.GetSubUMLData(extendModelName, initialName)
-		umlData.GetExtendUml(extendModelName, initialName)
+		umlData.GetSubUMLData(extendModelName, initialName, extendsModelUmlData)
+		umlData.GetExtendUml(extendModelName, initialName, extendsModelUmlData)
 	}
 }
 
@@ -400,6 +402,139 @@ func (umlData *getUMLData) IsExistKey(className string, rootExtendsModelData Dat
 				value.ExtendsModelData = append(value.ExtendsModelData, rootExtendsModelData)
 			}
 			return ok
+		}
+	}
+	return false
+}
+
+func GetPackageUMLData(className string) DataType.GetPackageUMLData {
+	var packageUMLData = DataType.GetPackageUMLData{}
+	rootInformation := GetClassInformation(className)
+	packageUMLData = DataType.GetPackageUMLData{
+		ClassName:   GetLastModelName(className),
+		ModelType:   "root",
+		Description: rootInformation[1].(string),
+		Library:     GetReferenceLibraries(className),
+	}
+	GetChildPackageUMLData(className, &packageUMLData)
+	GetParentPackageUMLData(className, &packageUMLData)
+	return packageUMLData
+}
+
+func GetChildPackageUMLData(className string, packageUMLData *DataType.GetPackageUMLData) {
+	childNameList := omc.OMC.GetClassNames(className, false)
+	for _, childName := range childNameList {
+		integrityName := className + "." + childName
+		childInformation := GetClassInformation(integrityName)
+		var childPackageUMLData = DataType.GetPackageUMLData{
+			ClassName:    childName,
+			RelationShip: "relevance",
+		}
+
+		if childInformation[0].(string) == "type" {
+			var childTypeUMLData = DataType.GetPackageUMLData{
+				RelationShip: "relevance",
+			}
+			if strings.HasPrefix(childInformation[1].(string), "Enumeration") {
+				childTypeUMLData.ClassName = integrityName + ".Integer"
+			}
+			childPackageUMLData.ChildNode = append(childPackageUMLData.ChildNode, childTypeUMLData)
+		}
+
+		//模型类型为model，则无修饰，多个形容词取最后一个，若组件信息第三个值为true，则修饰词为partial
+		if !GetModelUMLType(childInformation[0].(string)) {
+			if strings.ContainsRune(childInformation[0].(string), ' ') {
+				childPackageUMLData.ModelType = stringOperation.GetComponentType(childInformation[0].(string))
+			} else {
+				childPackageUMLData.ModelType = childInformation[0].(string)
+			}
+		}
+		if childInformation[2].(string) == "true" {
+			childPackageUMLData.ModelType = "partial"
+		}
+		if GetModelType(integrityName) == "package" {
+			GetChildPackageUMLData(integrityName, &childPackageUMLData)
+		} else {
+			GetChildNotPackageUMLData(integrityName, &childPackageUMLData)
+		}
+		packageUMLData.ChildNode = append(packageUMLData.ChildNode, childPackageUMLData)
+	}
+}
+
+func GetChildNotPackageUMLData(className string, packageUMLData *DataType.GetPackageUMLData) {
+	componentDataList := GetUMLElements(className)
+	for i := 0; i < len(componentDataList); i++ {
+		cData := componentDataList[i].([]any)
+		cDataInformation := GetClassInformation(cData[2].(string))
+		var childPackageUMLData = DataType.GetPackageUMLData{
+			RelationShip: "relevance",
+		}
+
+		//模型类型为model，则无修饰，多个形容词取最后一个，若组件信息第三个值为true，则修饰词为partial
+		if !GetModelUMLType(cDataInformation[0].(string)) {
+			if strings.ContainsRune(cDataInformation[0].(string), ' ') {
+				childPackageUMLData.ModelType = stringOperation.GetComponentType(cDataInformation[0].(string))
+			} else {
+				childPackageUMLData.ModelType = cDataInformation[0].(string)
+			}
+		}
+		if cDataInformation[2].(string) == "true" {
+			childPackageUMLData.ModelType = "partial"
+		}
+
+		if cDataInformation[12].(string) == "true" || (strings.HasPrefix(cData[2].(string), className+".") && cData[1].(string) != "-") || (cData[9].(bool) && cData[1].(string) != "model") || cData[1].(string) == "package" || (cData[9].(bool) && cData[1].(string) == "model" && cData[0].(string) == "cl") {
+			if cDataInformation[12].(string) == "true" && strings.HasPrefix(cData[2].(string), className+".") && GetModelUMLType(cDataInformation[0].(string)) {
+				childPackageUMLData.ClassName = cData[2].(string)
+			} else {
+				switch cDataInformation[0].(string) {
+				case "connector":
+					childPackageUMLData.ClassName = GetLastModelName(cData[2].(string))
+				case "model":
+					if cData[0].(string) == "cl" {
+						childPackageUMLData.ClassName = className + "." + cData[3].(string)
+					} else {
+						childPackageUMLData.ClassName = GetLastModelName(cData[2].(string))
+					}
+				case "package":
+					childPackageUMLData.ClassName = className + "." + cData[3].(string)
+				default:
+					childPackageUMLData.ClassName = cData[3].(string)
+				}
+			}
+			packageUMLData.ChildNode = append(packageUMLData.ChildNode, childPackageUMLData)
+		}
+	}
+}
+
+func GetParentPackageUMLData(className string, packageUMLData *DataType.GetPackageUMLData) {
+	parentModelNameList := GetExtendedModel(className)
+	for _, parentModelName := range parentModelNameList {
+		parentNodeInformation := GetClassInformation(parentModelName)
+		var parentPackageUMLData = DataType.GetPackageUMLData{
+			ClassName:    GetLastModelName(parentModelName),
+			RelationShip: "inherit",
+		}
+		//模型类型为model，则无修饰，多个形容词取最后一个，若组件信息第三个值为true，则修饰词为partial
+		if !GetModelUMLType(parentNodeInformation[0].(string)) {
+			if strings.ContainsRune(parentNodeInformation[0].(string), ' ') {
+				parentPackageUMLData.ModelType = stringOperation.GetComponentType(parentNodeInformation[0].(string))
+			} else {
+				parentPackageUMLData.ModelType = parentNodeInformation[0].(string)
+			}
+		}
+		if parentNodeInformation[2].(string) == "true" {
+			parentPackageUMLData.ModelType = "partial"
+		}
+		GetParentPackageUMLData(parentModelName, &parentPackageUMLData)
+		packageUMLData.ParentNode = append(packageUMLData.ParentNode, parentPackageUMLData)
+	}
+}
+
+func GetModelUMLType(modelType string) bool {
+	var typeList = []string{"model", "class", "package"}
+	for _, typeStr := range typeList {
+		if typeStr == modelType {
+			return true
 		}
 	}
 	return false

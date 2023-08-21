@@ -279,3 +279,13 @@ type RepositoryDeleteData struct {
 type FilePathData struct {
 	FilePath []string `json:"file_path" binding:"required"`
 }
+
+type GetPackageUMLData struct {
+	ClassName    string              `json:"class_name" binding:""`
+	Description  string              `json:"description"`
+	Library      []string            `json:"library"`
+	ModelType    string              `json:"model_type" binding:""`
+	ParentNode   []GetPackageUMLData `json:"parent_node"`
+	ChildNode    []GetPackageUMLData `json:"child_node"`
+	RelationShip string              `json:"relation_ship" binding:""`
+}
