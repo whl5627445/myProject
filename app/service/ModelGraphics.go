@@ -381,6 +381,7 @@ func (g *graphicsData) data02(cData [][]any, caData [][]any, isIcon bool, parent
 			//data["ID"] = strconv.Itoa(i)
 			data["classname"] = classname
 			data["name"] = cDataFilter[i][3]
+			data["comment"] = cDataFilter[i][4]
 			data["original_name"] = cDataFilter[i][3]
 			data["extend_name"] = modelName
 			data["visibleList"] = GetConnectionOption(classname, cDataFilter[i][17].(string))
