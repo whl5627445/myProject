@@ -416,7 +416,19 @@ func GetPackageUMLData(className string) DataType.GetPackageUMLData {
 		Description: rootInformation[1].(string),
 		Library:     GetReferenceLibraries(className),
 	}
-	GetChildPackageUMLData(className, &packageUMLData)
+	switch rootInformation[0].(string) {
+	case "type":
+		if strings.HasPrefix(rootInformation[1].(string), "Enumeration") {
+			var childTypeUMLData = DataType.GetPackageUMLData{
+				RelationShip: "relevance",
+				ClassName:    className + ".Integer",
+			}
+			packageUMLData.ChildNode = append(packageUMLData.ChildNode, childTypeUMLData)
+		}
+	default:
+		GetChildPackageUMLData(className, &packageUMLData)
+	}
+
 	GetParentPackageUMLData(className, &packageUMLData)
 	return packageUMLData
 }
@@ -531,7 +543,7 @@ func GetParentPackageUMLData(className string, packageUMLData *DataType.GetPacka
 }
 
 func GetModelUMLType(modelType string) bool {
-	var typeList = []string{"model", "class", "package"}
+	var typeList = []string{"model", "class", "package", "type"}
 	for _, typeStr := range typeList {
 		if typeStr == modelType {
 			return true
