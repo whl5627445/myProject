@@ -216,6 +216,9 @@ func (umlData *getUMLData) GetSubUMLData(className, initialName string, rootUmlD
 	for i := 0; i < len(componentDataList); i++ {
 		umlData.rootUmlData = rootUmlData
 		cData := componentDataList[i].([]any)
+		if !cData[9].(bool) {
+			continue
+		}
 		subInformation := GetClassInformation(cData[2].(string))
 		//节点类型是type或者“”，过滤掉
 		if subInformation[0].(string) == "type" || subInformation[0].(string) == "" {

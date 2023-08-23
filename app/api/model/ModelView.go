@@ -1848,7 +1848,7 @@ func GetUMLView(c *gin.Context) {
 	var className = c.Query("className")
 	var result = map[string]interface{}{}
 	modelType := service.GetModelType(className)
-	if modelType == "model" || modelType == "block" || modelType == "connector" {
+	if modelType == "model" || modelType == "block" || modelType == "connector" || modelType == "record" {
 		result["dataType"] = "model"
 		finalResultData := service.GetModelUMLData(className)
 		result["resultData"] = finalResultData
