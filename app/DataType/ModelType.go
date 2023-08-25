@@ -261,9 +261,9 @@ type GetUMLData struct {
 }
 
 type ExtendsModelData struct {
-	ClassName    string `json:"class_name" binding:""`
-	Count        int    `json:"count" binding:""`
-	RelationShip string `json:"relation_ship" binding:""`
+	ClassName    string   `json:"class_name" binding:""`
+	Count        int      `json:"count" binding:""`
+	RelationShip []string `json:"relation_ship" binding:""`
 }
 
 type RepositoryCloneData struct {

@@ -216,19 +216,16 @@ func (umlData *getUMLData) GetSubUMLData(className, initialName string, rootUmlD
 	for i := 0; i < len(componentDataList); i++ {
 		umlData.rootUmlData = rootUmlData
 		cData := componentDataList[i].([]any)
-		if !cData[9].(bool) {
-			continue
-		}
 		subInformation := GetClassInformation(cData[2].(string))
 		//节点类型是type或者“”，过滤掉
 		if subInformation[0].(string) == "type" || subInformation[0].(string) == "" {
 			continue
 		}
-		//节点属性是protected但不是expandable过滤掉
-		if cData[5].(string) == "protected" {
-			if !strings.Contains(subInformation[0].(string), "expandable") {
-				continue
-			}
+		if !(subInformation[12].(string) == "true" || subInformation[0].(string) == "connector" || subInformation[0].(string) == "model" || subInformation[0].(string) == "block") {
+			continue
+		}
+		if cData[5].(string) == "protected" && subInformation[12].(string) == "false" {
+			continue
 		}
 		var extendsModelData []DataType.ExtendsModelData
 		rootExtendsModelData := DataType.ExtendsModelData{
@@ -238,15 +235,24 @@ func (umlData *getUMLData) GetSubUMLData(className, initialName string, rootUmlD
 
 		//获取子节点名
 		var subClassName string
-		if stringOperation.ContainsString(subInformation[0].(string)) {
-			subClassName = className + "." + cData[3].(string)
-			rootExtendsModelData.RelationShip = "relevance"
+		if strings.HasPrefix(cData[2].(string), className) {
+
+			if subInformation[0].(string) == "connector" {
+				subClassName = umlData.distinct(cData[2].(string))
+				rootExtendsModelData.RelationShip = []string{"polymerization"}
+				if subInformation[12].(string) == "true" {
+					rootExtendsModelData.RelationShip = append(rootExtendsModelData.RelationShip, "relevance")
+				}
+			} else {
+				rootExtendsModelData.RelationShip = []string{"relevance"}
+				subClassName = className + "." + cData[3].(string)
+			}
 			if className != initialName {
 				continue
 			}
 		} else {
 			subClassName = umlData.distinct(cData[2].(string))
-			rootExtendsModelData.RelationShip = "polymerization"
+			rootExtendsModelData.RelationShip = []string{"polymerization"}
 		}
 		extendsModelData = append(extendsModelData, rootExtendsModelData)
 		subUmlData := &DataType.GetUMLData{
@@ -265,7 +271,6 @@ func (umlData *getUMLData) GetSubUMLData(className, initialName string, rootUmlD
 		if subInformation[2].(string) == "true" {
 			subUmlData.ModelType = "partial"
 		}
-
 		//根据子节点的名称判断finalResult是否存在该子节点，存在则在子节点的被指向的节点的数量加1或增加被指向的节点
 		//不存在则直接在finalResult中添加该子节点
 		ok := umlData.IsExistKey(subUmlData.ClassName, rootExtendsModelData)
@@ -288,7 +293,7 @@ func (umlData *getUMLData) GetExtendUml(className, initialName string, rootUmlDa
 		extendClassName := umlData.distinct(extendModelName)
 		rootExtendModel := DataType.ExtendsModelData{
 			ClassName:    extendClassName,
-			RelationShip: "inherit",
+			RelationShip: []string{"inherit"},
 		}
 		extendsModelData = append(extendsModelData, rootExtendModel)
 		for _, m := range umlData.finalResultData {
