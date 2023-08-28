@@ -428,7 +428,7 @@ func GetPackageUMLData(className string) DataType.GetPackageUMLData {
 	case "type":
 		if strings.HasPrefix(rootInformation[1].(string), "Enumeration") {
 			var childTypeUMLData = DataType.GetPackageUMLData{
-				RelationShip: "relevance",
+				RelationShip: []string{"relevance"},
 				ClassName:    className + ".Integer",
 			}
 			packageUMLData.ChildNode = append(packageUMLData.ChildNode, childTypeUMLData)
@@ -448,12 +448,12 @@ func GetChildPackageUMLData(className string, packageUMLData *DataType.GetPackag
 		childInformation := GetClassInformation(integrityName)
 		var childPackageUMLData = DataType.GetPackageUMLData{
 			ClassName:    childName,
-			RelationShip: "relevance",
+			RelationShip: []string{"relevance"},
 		}
 
 		if childInformation[0].(string) == "type" {
 			var childTypeUMLData = DataType.GetPackageUMLData{
-				RelationShip: "relevance",
+				RelationShip: []string{"relevance"},
 			}
 			if strings.HasPrefix(childInformation[1].(string), "Enumeration") {
 				childTypeUMLData.ClassName = integrityName + ".Integer"
@@ -487,7 +487,7 @@ func GetChildNotPackageUMLData(className string, packageUMLData *DataType.GetPac
 		cData := componentDataList[i].([]any)
 		cDataInformation := GetClassInformation(cData[2].(string))
 		var childPackageUMLData = DataType.GetPackageUMLData{
-			RelationShip: "relevance",
+			RelationShip: []string{"relevance"},
 		}
 
 		//模型类型为model，则无修饰，多个形容词取最后一个，若组件信息第三个值为true，则修饰词为partial
@@ -532,7 +532,7 @@ func GetParentPackageUMLData(className string, packageUMLData *DataType.GetPacka
 		parentNodeInformation := GetClassInformation(parentModelName)
 		var parentPackageUMLData = DataType.GetPackageUMLData{
 			ClassName:    GetLastModelName(parentModelName),
-			RelationShip: "inherit",
+			RelationShip: []string{"inherit"},
 		}
 		//模型类型为model，则无修饰，多个形容词取最后一个，若组件信息第三个值为true，则修饰词为partial
 		if !GetModelUMLType(parentNodeInformation[0].(string)) {

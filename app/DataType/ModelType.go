@@ -287,5 +287,5 @@ type GetPackageUMLData struct {
 	ModelType    string              `json:"model_type" binding:""`
 	ParentNode   []GetPackageUMLData `json:"parent_node"`
 	ChildNode    []GetPackageUMLData `json:"child_node"`
-	RelationShip string              `json:"relation_ship" binding:""`
+	RelationShip []string            `json:"relation_ship" binding:""`
 }
