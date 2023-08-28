@@ -289,3 +289,28 @@ type GetPackageUMLData struct {
 	ChildNode    []GetPackageUMLData `json:"child_node"`
 	RelationShip []string            `json:"relation_ship" binding:""`
 }
+
+type UMLClassInformation struct {
+	TypeName             string        `json:"type_name" binding:"required"`
+	Comment              string        `json:"comment" binding:"required"`
+	PartialPrefix        string        `json:"partial_prefix" binding:"required"`
+	FinalPrefix          string        `json:"final_prefix" binding:"required"`
+	EncapsulatedPrefix   string        `json:"encapsulated_prefix" binding:"required"`
+	FileName             string        `json:"file_name" binding:"required" `
+	FileReadOnly         string        `json:"file_read_only" binding:"required"`
+	LineNumberStart      string        `json:"line_number_start"`
+	ColumnNumberStart    string        `json:"column_number_start"`
+	LineNumberEnd        string        `json:"line_number_end"`
+	ColumnNumberEnd      string        `json:"column_number_end"`
+	Dimensions           []interface{} `json:"dimensions"`
+	IsProtectedClass     string        `json:"is_protected_class" binding:"required"`
+	IsDocumentationClass string        `json:"is_documentation_class" binding:"required"`
+	Version              string        `json:"version"`
+	PreferredView        string        `json:"preferred_view"`
+	State                string        `json:"state" binding:"required"`
+	Access               string        `json:"access"`
+	VersionDate          string        `json:"version_date"`
+	VersionBuild         string        `json:"version_build"`
+	DateModified         string        `json:"date_modified"`
+	RevisionId           string        `json:"revision_id"`
+}

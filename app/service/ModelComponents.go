@@ -172,6 +172,53 @@ func GetExtendedModel(className string) []string {
 	}
 }
 
+type umlClassInformation struct {
+	TypeName             string
+	Comment              string
+	PartialPrefix        string
+	FinalPrefix          string
+	EncapsulatedPrefix   string
+	FileName             string
+	FileReadOnly         string
+	LineNumberStart      string
+	ColumnNumberStart    string
+	LineNumberEnd        string
+	ColumnNumberEnd      string
+	Dimensions           []any
+	IsProtectedClass     string
+	IsDocumentationClass string
+	Version              string
+	PreferredView        string
+	State                string
+	Access               string
+}
+
+// GetUMLClassInformation 获取模型信息
+func GetUMLClassInformation(modelName string) umlClassInformation {
+	classInformation := omc.OMC.GetClassInformation(modelName)
+	var umlClassInformation = umlClassInformation{
+		TypeName:             classInformation[0].(string),
+		Comment:              classInformation[1].(string),
+		PartialPrefix:        classInformation[2].(string),
+		FinalPrefix:          classInformation[3].(string),
+		EncapsulatedPrefix:   classInformation[4].(string),
+		FileName:             classInformation[5].(string),
+		FileReadOnly:         classInformation[6].(string),
+		LineNumberStart:      classInformation[7].(string),
+		ColumnNumberStart:    classInformation[8].(string),
+		LineNumberEnd:        classInformation[9].(string),
+		ColumnNumberEnd:      classInformation[10].(string),
+		Dimensions:           classInformation[11].([]interface{}),
+		IsProtectedClass:     classInformation[12].(string),
+		IsDocumentationClass: classInformation[13].(string),
+		Version:              classInformation[14].(string),
+		PreferredView:        classInformation[15].(string),
+		State:                classInformation[16].(string),
+		Access:               classInformation[17].(string),
+	}
+	return umlClassInformation
+}
+
 // GetUMLElements 获取模型里的组件
 func GetUMLElements(className string) []any {
 	classnameData := omc.OMC.GetElements(className)
@@ -188,11 +235,11 @@ type getUMLData struct {
 func GetModelUMLData(className string) []map[string]*DataType.GetUMLData {
 	var umlData = getUMLData{}
 	umlData.classNameList = append(umlData.classNameList, className)
-	rootInformation := GetClassInformation(className)
+	rootInformation := GetUMLClassInformation(className)
 	rootUmlData := &DataType.GetUMLData{
 		ClassName:   GetLastModelName(className),
 		ModelType:   "root",
-		Description: rootInformation[1].(string),
+		Description: rootInformation.Comment,
 		Level:       1,
 		Library:     GetReferenceLibraries(className),
 	}
@@ -216,15 +263,15 @@ func (umlData *getUMLData) GetSubUMLData(className, initialName string, rootUmlD
 	for i := 0; i < len(componentDataList); i++ {
 		umlData.rootUmlData = rootUmlData
 		cData := componentDataList[i].([]any)
-		subInformation := GetClassInformation(cData[2].(string))
+		subInformation := GetUMLClassInformation(cData[2].(string))
 		//节点类型是type或者“”，过滤掉
-		if subInformation[0].(string) == "type" || subInformation[0].(string) == "" {
+		if subInformation.TypeName == "type" || subInformation.TypeName == "" {
 			continue
 		}
-		if !(subInformation[12].(string) == "true" || subInformation[0].(string) == "connector" || subInformation[0].(string) == "model" || subInformation[0].(string) == "block") {
+		if !(subInformation.IsProtectedClass == "true" || subInformation.TypeName == "connector" || subInformation.TypeName == "model" || subInformation.TypeName == "block") {
 			continue
 		}
-		if cData[5].(string) == "protected" && subInformation[12].(string) == "false" {
+		if cData[5].(string) == "protected" && subInformation.IsProtectedClass == "false" {
 			continue
 		}
 		var extendsModelData []DataType.ExtendsModelData
@@ -236,11 +283,10 @@ func (umlData *getUMLData) GetSubUMLData(className, initialName string, rootUmlD
 		//获取子节点名
 		var subClassName string
 		if strings.HasPrefix(cData[2].(string), className) {
-
-			if subInformation[0].(string) == "connector" {
+			if subInformation.TypeName == "connector" {
 				subClassName = umlData.distinct(cData[2].(string))
 				rootExtendsModelData.RelationShip = []string{"polymerization"}
-				if subInformation[12].(string) == "true" {
+				if subInformation.IsProtectedClass == "true" {
 					rootExtendsModelData.RelationShip = append(rootExtendsModelData.RelationShip, "relevance")
 				}
 			} else {
@@ -261,14 +307,14 @@ func (umlData *getUMLData) GetSubUMLData(className, initialName string, rootUmlD
 			ExtendsModelData: extendsModelData,
 		}
 		//模型类型为model，则无修饰，多个形容词取最后一个，若组件信息第三个值为true，则修饰词为partial
-		if !(subInformation[0].(string) == "model") {
-			if strings.ContainsRune(subInformation[0].(string), ' ') {
-				subUmlData.ModelType = stringOperation.GetComponentType(subInformation[0].(string))
+		if !(subInformation.TypeName == "model") {
+			if strings.ContainsRune(subInformation.TypeName, ' ') {
+				subUmlData.ModelType = stringOperation.GetComponentType(subInformation.TypeName)
 			} else {
-				subUmlData.ModelType = subInformation[0].(string)
+				subUmlData.ModelType = subInformation.TypeName
 			}
 		}
-		if subInformation[2].(string) == "true" {
+		if subInformation.PartialPrefix == "true" {
 			subUmlData.ModelType = "partial"
 		}
 		//根据子节点的名称判断finalResult是否存在该子节点，存在则在子节点的被指向的节点的数量加1或增加被指向的节点
@@ -289,7 +335,7 @@ func (umlData *getUMLData) GetExtendUml(className, initialName string, rootUmlDa
 	var extendsModelData []DataType.ExtendsModelData
 	for _, extendModelName := range rootExtendModelNameList {
 		umlData.rootUmlData = rootUmlData
-		extendsModelInformation := GetClassInformation(extendModelName)
+		extendsModelInformation := GetUMLClassInformation(extendModelName)
 		extendClassName := umlData.distinct(extendModelName)
 		rootExtendModel := DataType.ExtendsModelData{
 			ClassName:    extendClassName,
@@ -307,14 +353,14 @@ func (umlData *getUMLData) GetExtendUml(className, initialName string, rootUmlDa
 			Level:     umlData.rootUmlData.Level + 1,
 		}
 		//模型类型为model，则无修饰，多个形容词取最后一个，若组件信息第三个值为true，则修饰词为partial
-		if !(extendsModelInformation[0].(string) == "model") {
-			if strings.ContainsRune(extendsModelInformation[0].(string), ' ') {
-				extendsModelUmlData.ModelType = stringOperation.GetComponentType(extendsModelInformation[0].(string))
+		if !(extendsModelInformation.TypeName == "model") {
+			if strings.ContainsRune(extendsModelInformation.TypeName, ' ') {
+				extendsModelUmlData.ModelType = stringOperation.GetComponentType(extendsModelInformation.TypeName)
 			} else {
-				extendsModelUmlData.ModelType = extendsModelInformation[0].(string)
+				extendsModelUmlData.ModelType = extendsModelInformation.TypeName
 			}
 		}
-		if extendsModelInformation[2].(string) == "true" {
+		if extendsModelInformation.PartialPrefix == "true" {
 			extendsModelUmlData.ModelType = "partial"
 		}
 
@@ -417,16 +463,16 @@ func (umlData *getUMLData) IsExistKey(className string, rootExtendsModelData Dat
 
 func GetPackageUMLData(className string) DataType.GetPackageUMLData {
 	var packageUMLData = DataType.GetPackageUMLData{}
-	rootInformation := GetClassInformation(className)
+	rootInformation := GetUMLClassInformation(className)
 	packageUMLData = DataType.GetPackageUMLData{
 		ClassName:   GetLastModelName(className),
 		ModelType:   "root",
-		Description: rootInformation[1].(string),
+		Description: rootInformation.Comment,
 		Library:     GetReferenceLibraries(className),
 	}
-	switch rootInformation[0].(string) {
+	switch rootInformation.TypeName {
 	case "type":
-		if strings.HasPrefix(rootInformation[1].(string), "Enumeration") {
+		if strings.HasPrefix(rootInformation.Comment, "Enumeration") {
 			var childTypeUMLData = DataType.GetPackageUMLData{
 				RelationShip: []string{"relevance"},
 				ClassName:    className + ".Integer",
@@ -445,31 +491,31 @@ func GetChildPackageUMLData(className string, packageUMLData *DataType.GetPackag
 	childNameList := omc.OMC.GetClassNames(className, false)
 	for _, childName := range childNameList {
 		integrityName := className + "." + childName
-		childInformation := GetClassInformation(integrityName)
+		childInformation := GetUMLClassInformation(integrityName)
 		var childPackageUMLData = DataType.GetPackageUMLData{
 			ClassName:    childName,
 			RelationShip: []string{"relevance"},
 		}
 
-		if childInformation[0].(string) == "type" {
+		if childInformation.TypeName == "type" {
 			var childTypeUMLData = DataType.GetPackageUMLData{
 				RelationShip: []string{"relevance"},
 			}
-			if strings.HasPrefix(childInformation[1].(string), "Enumeration") {
+			if strings.HasPrefix(childInformation.Comment, "Enumeration") {
 				childTypeUMLData.ClassName = integrityName + ".Integer"
 			}
 			childPackageUMLData.ChildNode = append(childPackageUMLData.ChildNode, childTypeUMLData)
 		}
 
 		//模型类型为model，则无修饰，多个形容词取最后一个，若组件信息第三个值为true，则修饰词为partial
-		if !GetModelUMLType(childInformation[0].(string)) {
-			if strings.ContainsRune(childInformation[0].(string), ' ') {
-				childPackageUMLData.ModelType = stringOperation.GetComponentType(childInformation[0].(string))
+		if !GetModelUMLType(childInformation.TypeName) {
+			if strings.ContainsRune(childInformation.TypeName, ' ') {
+				childPackageUMLData.ModelType = stringOperation.GetComponentType(childInformation.TypeName)
 			} else {
-				childPackageUMLData.ModelType = childInformation[0].(string)
+				childPackageUMLData.ModelType = childInformation.TypeName
 			}
 		}
-		if childInformation[2].(string) == "true" {
+		if childInformation.PartialPrefix == "true" {
 			childPackageUMLData.ModelType = "partial"
 		}
 		if GetModelType(integrityName) == "package" {
@@ -485,28 +531,31 @@ func GetChildNotPackageUMLData(className string, packageUMLData *DataType.GetPac
 	componentDataList := GetUMLElements(className)
 	for i := 0; i < len(componentDataList); i++ {
 		cData := componentDataList[i].([]any)
-		cDataInformation := GetClassInformation(cData[2].(string))
+		if !strings.Contains(cData[2].(string), ".") {
+			continue
+		}
+		cDataInformation := GetUMLClassInformation(cData[2].(string))
 		var childPackageUMLData = DataType.GetPackageUMLData{
 			RelationShip: []string{"relevance"},
 		}
 
 		//模型类型为model，则无修饰，多个形容词取最后一个，若组件信息第三个值为true，则修饰词为partial
-		if !GetModelUMLType(cDataInformation[0].(string)) {
-			if strings.ContainsRune(cDataInformation[0].(string), ' ') {
-				childPackageUMLData.ModelType = stringOperation.GetComponentType(cDataInformation[0].(string))
+		if !GetModelUMLType(cDataInformation.TypeName) {
+			if strings.ContainsRune(cDataInformation.TypeName, ' ') {
+				childPackageUMLData.ModelType = stringOperation.GetComponentType(cDataInformation.TypeName)
 			} else {
-				childPackageUMLData.ModelType = cDataInformation[0].(string)
+				childPackageUMLData.ModelType = cDataInformation.TypeName
 			}
 		}
-		if cDataInformation[2].(string) == "true" {
+		if cDataInformation.TypeName == "true" {
 			childPackageUMLData.ModelType = "partial"
 		}
 
-		if cDataInformation[12].(string) == "true" || (strings.HasPrefix(cData[2].(string), className+".") && cData[1].(string) != "-") || (cData[9].(bool) && cData[1].(string) != "model") || cData[1].(string) == "package" || (cData[9].(bool) && cData[1].(string) == "model" && cData[0].(string) == "cl") {
-			if cDataInformation[12].(string) == "true" && strings.HasPrefix(cData[2].(string), className+".") && GetModelUMLType(cDataInformation[0].(string)) {
+		if cDataInformation.PartialPrefix == "true" || (strings.HasPrefix(cData[2].(string), className+".") && cData[1].(string) != "-") || (cData[9].(bool) && cData[1].(string) != "model") || cData[1].(string) == "package" || (cData[9].(bool) && cData[1].(string) == "model" && cData[0].(string) == "cl") {
+			if cDataInformation.PartialPrefix == "true" && strings.HasPrefix(cData[2].(string), className+".") && GetModelUMLType(cDataInformation.TypeName) {
 				childPackageUMLData.ClassName = cData[2].(string)
 			} else {
-				switch cDataInformation[0].(string) {
+				switch cDataInformation.TypeName {
 				case "connector":
 					childPackageUMLData.ClassName = GetLastModelName(cData[2].(string))
 				case "model":
@@ -529,20 +578,20 @@ func GetChildNotPackageUMLData(className string, packageUMLData *DataType.GetPac
 func GetParentPackageUMLData(className string, packageUMLData *DataType.GetPackageUMLData) {
 	parentModelNameList := GetExtendedModel(className)
 	for _, parentModelName := range parentModelNameList {
-		parentNodeInformation := GetClassInformation(parentModelName)
+		parentNodeInformation := GetUMLClassInformation(parentModelName)
 		var parentPackageUMLData = DataType.GetPackageUMLData{
 			ClassName:    GetLastModelName(parentModelName),
 			RelationShip: []string{"inherit"},
 		}
 		//模型类型为model，则无修饰，多个形容词取最后一个，若组件信息第三个值为true，则修饰词为partial
-		if !GetModelUMLType(parentNodeInformation[0].(string)) {
-			if strings.ContainsRune(parentNodeInformation[0].(string), ' ') {
-				parentPackageUMLData.ModelType = stringOperation.GetComponentType(parentNodeInformation[0].(string))
+		if !GetModelUMLType(parentNodeInformation.TypeName) {
+			if strings.ContainsRune(parentNodeInformation.TypeName, ' ') {
+				parentPackageUMLData.ModelType = stringOperation.GetComponentType(parentNodeInformation.TypeName)
 			} else {
-				parentPackageUMLData.ModelType = parentNodeInformation[0].(string)
+				parentPackageUMLData.ModelType = parentNodeInformation.TypeName
 			}
 		}
-		if parentNodeInformation[2].(string) == "true" {
+		if parentNodeInformation.PartialPrefix == "true" {
 			parentPackageUMLData.ModelType = "partial"
 		}
 		GetParentPackageUMLData(parentModelName, &parentPackageUMLData)
