@@ -27,6 +27,8 @@ func GetMessagesStringInternal() []map[string]string {
 				continue
 			case strings.Contains(jl, "Automatically ") || strings.Contains(jl, "Lexer "):
 				continue
+			case strings.Contains(jl, "openModelica") || strings.Contains(jl, "OMC"):
+				continue
 			case strings.HasPrefix(jl, "message"):
 				mes := strings.ReplaceAll(jl, "message = ", "")
 				messageMap["message"] = mes[1 : len(mes)-1]
