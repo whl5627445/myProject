@@ -81,6 +81,7 @@ type AppPage struct {
 	CreatedAt              *time.Time     `gorm:"column:create_time;autoCreateTime"`
 	UpdatedAt              *time.Time     `gorm:"column:update_time"`
 	Deleted                gorm.DeletedAt `gorm:"column:deleted_at"`
+	GlobalInformation      datatypes.JSON `gorm:"column:global_information;type:json;comment:页面全局数据源信息"`
 }
 
 type AppComponentBases struct {

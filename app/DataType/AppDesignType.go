@@ -55,10 +55,11 @@ type CreateAppPageData struct {
 }
 
 type EditAppPageData struct {
-	SpaceId  string `json:"space_id" binding:"required"`
-	PageId   string `json:"page_id" binding:"required"`
-	PageName string `json:"page_name,omitempty" binding:""`
-	Tag      string `json:"tag,omitempty" binding:""`
+	SpaceId           string         `json:"space_id" binding:"required"`
+	PageId            string         `json:"page_id" binding:"required"`
+	PageName          string         `json:"page_name,omitempty" binding:""`
+	Tag               string         `json:"tag,omitempty" binding:""`
+	GlobalInformation datatypes.JSON `json:"global_information,omitempty" binding:""`
 }
 
 type EditAppPageDesignData struct {

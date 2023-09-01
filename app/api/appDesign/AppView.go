@@ -728,6 +728,7 @@ func EditAppPageView(c *gin.Context) {
 	}
 	page.PageName = item.PageName
 	page.PagePath = item.Tag
+	page.GlobalInformation = item.GlobalInformation
 	err = DB.Save(&page).Error
 	if err != nil {
 		log.Println("设置app空间页面时保存数据库出现错误：", err)
@@ -926,11 +927,12 @@ func GetPageComponentView(c *gin.Context) {
 	res.Data = map[string]any{
 		"components": componentDataList,
 		"page": map[string]any{
-			"background":       page.Background,
-			"background_color": page.BackgroundColor,
-			"height":           page.PageHeight,
-			"width":            page.PageWidth,
-			"release":          page.Release,
+			"background":         page.Background,
+			"background_color":   page.BackgroundColor,
+			"height":             page.PageHeight,
+			"width":              page.PageWidth,
+			"release":            page.Release,
+			"global_information": page.GlobalInformation,
 		},
 	}
 	c.JSON(http.StatusOK, res)
