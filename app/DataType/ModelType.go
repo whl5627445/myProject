@@ -307,7 +307,7 @@ type SetConditionParametersData struct {
 	ID                      string                `json:"id" binding:"required"`
 	PackageId               string                `json:"package_id" binding:"required"`
 	ModelName               string                `json:"model_name" binding:"required"`
-	ConditionParametersList []conditionParameters `json:"rated_condition_list" binding:"required"`
+	ConditionParametersList []conditionParameters `json:"condition_parameters_list" binding:"required"`
 }
 
 type conditionParameters struct {

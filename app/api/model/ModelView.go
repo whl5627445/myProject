@@ -2383,10 +2383,12 @@ func SetConditionParametersView(c *gin.Context) {
 	var item DataType.SetConditionParametersData
 	err := c.BindJSON(&item)
 	if err != nil {
+		log.Println(err)
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
-	dbModel.Model(DataBaseModel.ParameterCalibrationRecord{}).Where("id = ? AND package_id = ? AND username = ?", item.ID, item.PackageId, userName).UpdateColumn("condition_parameters", item.ConditionParametersList)
+	conditionParametersList, _ := sonic.Marshal(&item.ConditionParametersList)
+	dbModel.Model(DataBaseModel.ParameterCalibrationRecord{}).Where("id = ? AND package_id = ? AND username = ?", item.ID, item.PackageId, userName).UpdateColumn("condition_parameters", conditionParametersList)
 	var res DataType.ResponseData
 	c.JSON(http.StatusOK, res)
 }
@@ -2396,7 +2398,7 @@ func GetVariableParameterView(c *gin.Context) {
 	  # 获取参数标定功能模型的额定工况参数与条件参数节点
 	*/
 
-	recordId := c.Query("record_id")
+	recordId := c.Query("id")
 	packageId := c.Query("package_id")
 	parentNode := c.Query("parent")
 	var record DataBaseModel.ParameterCalibrationRecord
