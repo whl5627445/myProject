@@ -2459,7 +2459,8 @@ func SetAssociatedParametersView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
-	dbModel.Model(DataBaseModel.ParameterCalibrationRecord{}).Where("id = ? AND package_id = ? AND username = ?", item.ID, item.PackageId, userName).UpdateColumn("associated_parameters", item.Parameters)
+	parameters, _ := sonic.Marshal(&item.Parameters)
+	dbModel.Model(DataBaseModel.ParameterCalibrationRecord{}).Where("id = ? AND package_id = ? AND username = ?", item.ID, item.PackageId, userName).UpdateColumn("associated_parameters", parameters)
 	var res DataType.ResponseData
 	c.JSON(http.StatusOK, res)
 }
