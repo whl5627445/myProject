@@ -2348,7 +2348,7 @@ func GetParameterCalibrationRecordView(c *gin.Context) {
 	}).Attrs(DataBaseModel.ParameterCalibrationRecord{
 		ID:                uuid.New().String(),
 		StartTime:         simulationOptions["startTime"],
-		EndTime:           simulationOptions["stopTime"],
+		StopTime:          simulationOptions["stopTime"],
 		Tolerance:         simulationOptions["tolerance"],
 		NumberOfIntervals: simulationOptions["numberOfIntervals"],
 		Interval:          simulationOptions["interval"],
@@ -2461,6 +2461,24 @@ func SetAssociatedParametersView(c *gin.Context) {
 	}
 	parameters, _ := sonic.Marshal(&item.Parameters)
 	dbModel.Model(DataBaseModel.ParameterCalibrationRecord{}).Where("id = ? AND package_id = ? AND username = ?", item.ID, item.PackageId, userName).UpdateColumn("associated_parameters", parameters)
+	var res DataType.ResponseData
+	c.JSON(http.StatusOK, res)
+}
+
+func SetParameterCalibrationSimulationOptionsView(c *gin.Context) {
+	/*
+		# 设置某模型的参数标定的仿真求解设置信息
+	*/
+	var item DataType.SimulationOptionsData
+	err := c.BindJSON(&item)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+
+	dbModel.Model(DataBaseModel.ParameterCalibrationRecord{}).Where("id = ? AND package_id = ? AND model_name = ? AND username = ?", item.ID, item.PackageId, item.ModelName, userName).
+		Updates(&item.Options)
 	var res DataType.ResponseData
 	c.JSON(http.StatusOK, res)
 }

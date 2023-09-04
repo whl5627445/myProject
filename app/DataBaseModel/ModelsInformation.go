@@ -70,9 +70,9 @@ type ParameterCalibrationRecord struct {
 	SimulateResultStr       string         `gorm:"column:simulate_result_str;comment:仿真结果输出字符串" json:"-"`
 	SimulateStatus          string         `gorm:"column:simulate_status;default:\"0\";type:varchar(32);comment:仿真状态" json:"simulate_status"`
 	StartTime               string         `gorm:"column:start_time;type:varchar(32);comment:仿真开始时间" json:"start_time,omitempty"`
-	EndTime                 string         `gorm:"column:end_time;type:varchar(32);comment:仿真结束时间" json:"end_time,omitempty"`
+	StopTime                string         `gorm:"column:stop_time;type:varchar(32);comment:仿真结束时间" json:"end_time,omitempty"`
 	Tolerance               string         `gorm:"column:tolerance;type:varchar(32);comment:仿真积分误差" json:"tolerance,omitempty"`
-	NumberOfIntervals       string         `gorm:"column:numberOfIntervals;type:varchar(32);comment:仿真间隔数" json:"number_of_intervals,omitempty"`
+	NumberOfIntervals       string         `gorm:"column:number_of_intervals;type:varchar(32);comment:仿真间隔数" json:"number_of_intervals,omitempty"`
 	Interval                string         `gorm:"column:interval;type:varchar(32);comment:仿真时间间隔" json:"interval,omitempty"`
 	Method                  string         `gorm:"column:method;type:varchar(32);comment:仿真积分方法" json:"method,omitempty"`
 	Percentage              int64          `gorm:"column:percentage;default:0;type:int;comment:仿真进度(0-100)" json:"percentage"`

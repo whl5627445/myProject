@@ -332,3 +332,18 @@ type associated struct {
 	FormulaVariable  string `json:"formula_variable" binding:"required"`
 	MeasuredVariable string `json:"measured_variable" binding:"required"`
 }
+
+type SimulationOptionsData struct {
+	ID        string   `json:"id" binding:"required"`
+	PackageId string   `json:"package_id" binding:"required"`
+	ModelName string   `json:"model_name" binding:"required"`
+	Options   sOptions `json:"options" binding:"required"`
+}
+type sOptions struct {
+	StartTime         string `json:"start_time" binding:"required"`
+	StopTime          string `json:"stop_time" binding:"required"`
+	Tolerance         string `json:"tolerance" binding:"required"`
+	NumberOfIntervals string `json:"number_of_intervals" binding:"required"`
+	Interval          string `json:"interval" binding:"required"`
+	Method            string `json:"method" binding:"required"`
+}
