@@ -131,7 +131,7 @@ func (f *FormulaAnalysis) formulaParse() {
 			data["formula"] = strings.Join(formulaList[1:], " * ")
 		}
 		f.getVariable(formulaList[1:])
-		f.formulaData = append(f.formulaData)
+		f.formulaData = append(f.formulaData, data)
 	}
 }
 

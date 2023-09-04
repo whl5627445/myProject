@@ -2277,9 +2277,9 @@ func GetParameterCalibrationRootView(c *gin.Context) {
 	}
 	var modelData []map[string]any
 	var packageModel []DataBaseModel.YssimModels
-	var space DataBaseModel.YssimUserSpace
-	dbModel.Where("id = ? AND username = ?", userSpaceId, userName).First(&space)
-	subQuery := dbModel.Model(&DataBaseModel.SystemLibrary{}).Where("encryption = ?", false).Or("encryption = ? AND username = ?", false, userName).Select("id")
+	//var space DataBaseModel.YssimUserSpace
+	//dbModel.Where("id = ? AND username = ?", userSpaceId, userName).First(&space)
+	subQuery := dbModel.Model(&DataBaseModel.SystemLibrary{}).Where("encryption = ?", true).Or("encryption = ? AND username = ?", false, userName).Select("id")
 	dbModel.Where("sys_or_user = ? AND userspace_id = ? AND encryption = ? AND library_id = ''", userName, userSpaceId, false).
 		Or("sys_or_user = ? AND userspace_id = ? AND library_id NOT IN (?)", userName, userSpaceId, subQuery).Find(&packageModel)
 	libraryAndVersions := service.GetLibraryAndVersions()
@@ -2441,9 +2441,10 @@ func ParameterCalibrationFormulaParserView(c *gin.Context) {
 		return
 	}
 	formulaData, variableList := service.GetFormulaList(item.FormulaStr)
-	dbModel.Model(DataBaseModel.ParameterCalibrationRecord{}).Where("id = ? AND package_id = ? AND username = ?", item.ID, item.PackageId, userName).UpdateColumn("formula", map[string]any{"formula": formulaData, "variable": variableList})
+	formula, _ := sonic.Marshal(map[string]any{"formula": formulaData, "variable": variableList})
+	dbModel.Model(DataBaseModel.ParameterCalibrationRecord{}).Where("id = ? AND package_id = ? AND username = ?", item.ID, item.PackageId, userName).UpdateColumn("formula", formula)
 	var res DataType.ResponseData
-	res.Data = variableList
+	res.Data = map[string]any{"variable": variableList, "formula": formulaData}
 	c.JSON(http.StatusOK, res)
 }
 
