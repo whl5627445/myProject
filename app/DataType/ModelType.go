@@ -290,27 +290,45 @@ type GetPackageUMLData struct {
 	RelationShip []string            `json:"relation_ship" binding:""`
 }
 
-type UMLClassInformation struct {
-	TypeName             string        `json:"type_name" binding:"required"`
-	Comment              string        `json:"comment" binding:"required"`
-	PartialPrefix        string        `json:"partial_prefix" binding:"required"`
-	FinalPrefix          string        `json:"final_prefix" binding:"required"`
-	EncapsulatedPrefix   string        `json:"encapsulated_prefix" binding:"required"`
-	FileName             string        `json:"file_name" binding:"required" `
-	FileReadOnly         string        `json:"file_read_only" binding:"required"`
-	LineNumberStart      string        `json:"line_number_start"`
-	ColumnNumberStart    string        `json:"column_number_start"`
-	LineNumberEnd        string        `json:"line_number_end"`
-	ColumnNumberEnd      string        `json:"column_number_end"`
-	Dimensions           []interface{} `json:"dimensions"`
-	IsProtectedClass     string        `json:"is_protected_class" binding:"required"`
-	IsDocumentationClass string        `json:"is_documentation_class" binding:"required"`
-	Version              string        `json:"version"`
-	PreferredView        string        `json:"preferred_view"`
-	State                string        `json:"state" binding:"required"`
-	Access               string        `json:"access"`
-	VersionDate          string        `json:"version_date"`
-	VersionBuild         string        `json:"version_build"`
-	DateModified         string        `json:"date_modified"`
-	RevisionId           string        `json:"revision_id"`
+type SetRatedConditionData struct {
+	ID                 string           `json:"id" binding:"required"`
+	PackageId          string           `json:"package_id" binding:"required"`
+	ModelName          string           `json:"model_name" binding:"required"`
+	RatedConditionList []ratedCondition `json:"rated_condition_list" binding:"required"`
+	//RatedConditionList datatypes.JSON `json:"rated_condition_list" binding:"required"`
+}
+type ratedCondition struct {
+	Name         string `json:"name" binding:"required"`
+	Value        string `json:"value" binding:"required"`
+	DefaultValue string `json:"default_value" binding:"required"`
+}
+
+type SetConditionParametersData struct {
+	ID                      string                `json:"id" binding:"required"`
+	PackageId               string                `json:"package_id" binding:"required"`
+	ModelName               string                `json:"model_name" binding:"required"`
+	ConditionParametersList []conditionParameters `json:"rated_condition_list" binding:"required"`
+}
+
+type conditionParameters struct {
+	Name  string   `json:"name" binding:"required"`
+	Value []string `json:"value" binding:"required"`
+}
+
+type FormulaParserData struct {
+	ID         string `json:"id" binding:"required"`
+	PackageId  string `json:"package_id" binding:"required"`
+	ModelName  string `json:"model_name" binding:"required"`
+	FormulaStr string `json:"formula" binding:"required"`
+}
+
+type AssociatedParametersData struct {
+	ID         string       `json:"id" binding:"required"`
+	PackageId  string       `json:"package_id" binding:"required"`
+	ModelName  string       `json:"model_name" binding:"required"`
+	Parameters []associated `json:"parameters" binding:"required"`
+}
+type associated struct {
+	FormulaVariable  string `json:"formula_variable" binding:"required"`
+	MeasuredVariable string `json:"measured_variable" binding:"required"`
 }

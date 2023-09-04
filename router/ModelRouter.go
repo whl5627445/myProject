@@ -82,6 +82,16 @@ func ModelRouter(g *gin.Engine) {
 		Models.POST("/repository/clone", API.RepositoryCloneView)
 		Models.POST("/repository/delete", API.RepositoryDeleteView)
 		Models.GET("/repository/get", API.RepositoryGetView)
+
+		Models.GET("/parameter/calibration/record/get", API.GetParameterCalibrationRecordView)
+		Models.GET("/parameter/calibration/root/get", API.GetParameterCalibrationRootView)
+		Models.GET("/parameter/calibration/list/get", API.GetParameterCalibrationListView)
+		Models.POST("/parameter/calibration/rated_condition/set", API.SetRatedConditionView)
+		Models.POST("/parameter/calibration/condition_parameters/set", API.SetConditionParametersView)
+		Models.GET("/parameter/calibration/variable_parameter/get", API.GetVariableParameterView)
+		Models.POST("/parameter/calibration/formula/parser", API.ParameterCalibrationFormulaParserView)
+		Models.POST("/parameter/calibration/associated_parameter/set", API.SetAssociatedParametersView)
+
 	}
 	g.POST("/test", API.Test)
 	g.POST("/test1", API.Test1)
