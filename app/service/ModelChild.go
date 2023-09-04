@@ -5,23 +5,30 @@ import (
 	"yssim-go/library/omc"
 )
 
-func GetModelChild(modelName string) []map[string]any {
+type modelChild struct {
+	Name      string `json:"name,omitempty"`
+	ModelName string `json:"model_name,omitempty"`
+	HasChild  bool   `json:"haschild,omitempty"`
+	Type      string `json:"type,omitempty"`
+}
+
+func GetModelChild(modelName string) []modelChild {
 	childAllList := omc.OMC.GetClassNames(modelName, false)
-	var dataList []map[string]any
+	var dataList []modelChild
 	if childAllList != nil {
 		for i := 0; i < len(childAllList); i++ {
 			modelChildName := modelName + "." + childAllList[i]
 			classInformation := GetClassInformation(modelChildName)
 			modelType := strings.TrimSpace(classInformation[0].(string))
-			data := map[string]any{
-				"name":       childAllList[i],
-				"model_name": modelChildName,
-				"haschild":   false,
-				"type":       modelType,
+			data := modelChild{
+				Name:      childAllList[i],
+				ModelName: modelChildName,
+				HasChild:  false,
+				Type:      modelType,
 			}
 			childList := omc.OMC.GetClassNames(modelChildName, false)
 			if len(childList) > 0 {
-				data["haschild"] = true
+				data.HasChild = true
 			}
 			dataList = append(dataList, data)
 		}

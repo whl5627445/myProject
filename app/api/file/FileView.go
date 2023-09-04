@@ -247,7 +247,7 @@ func CreateModelPackageView(c *gin.Context) {
 		createPackageNameALL = item.Vars.InsertTo + "." + item.Name
 		modelChildList := service.GetModelChild(item.Vars.InsertTo)
 		for i := 0; i < len(modelChildList); i++ {
-			if modelChildList[i]["name"] == item.Name {
+			if modelChildList[i].Name == item.Name {
 				res.Err = "名称已存在，请修改后再试。"
 				res.Status = 2
 				c.JSON(http.StatusOK, res)
