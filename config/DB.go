@@ -48,6 +48,7 @@ func init() {
 		&DataBaseModel.YssimModels{},
 		&DataBaseModel.SystemLibrary{},
 		&DataBaseModel.UserLibrary{},
+		&DataBaseModel.ParameterCalibrationRecord{},
 
 		&DataBaseModel.AppDataSource{},
 		&DataBaseModel.AppSpace{},
