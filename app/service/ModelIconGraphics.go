@@ -173,20 +173,36 @@ func getDiagramAnnotationGraphics(modelName, modelType string) map[string]any {
 	data["visibleList"] = GetConnectionOption(modelName, modelType)
 	data["inputOutputs"] = make([]any, 0)
 	data["subShapes"] = subShapes
-	data["extent1Diagram"] = func() []float64 {
-		d := []float64{}
-		for _, p := range coordinateSystem.Extent2Diagram {
-			d = append(d, p*coordinateSystem.InitialScale)
+	data["extent1Diagram"] = func() string {
+		d := []string{}
+		for _, p := range coordinateSystem.Extent1Diagram {
+			f := strconv.FormatFloat(p*coordinateSystem.InitialScale, 'f', -1, 64)
+			d = append(d, f)
 		}
-		return d
+		return strings.Join(d, ",")
 	}()
-	data["extent2Diagram"] = func() []float64 {
-		d := []float64{}
+	data["extent2Diagram"] = func() string {
+		d := []string{}
 		for _, p := range coordinateSystem.Extent2Diagram {
-			d = append(d, p*coordinateSystem.InitialScale)
+			f := strconv.FormatFloat(p*coordinateSystem.InitialScale, 'f', -1, 64)
+			d = append(d, f)
 		}
-		return d
+		return strings.Join(d, ",")
 	}()
+	//data["extent1Diagram"] = func() []float64 {
+	//	d := []float64{}
+	//	for _, p := range coordinateSystem.Extent2Diagram {
+	//		d = append(d, p*coordinateSystem.InitialScale)
+	//	}
+	//	return d
+	//}()
+	//data["extent2Diagram"] = func() []float64 {
+	//	d := []float64{}
+	//	for _, p := range coordinateSystem.Extent2Diagram {
+	//		d = append(d, p*coordinateSystem.InitialScale)
+	//	}
+	//	return d
+	//}()
 	data["coordinate_system"] = coordinateSystem
 	return data
 }
