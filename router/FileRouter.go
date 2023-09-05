@@ -1,7 +1,7 @@
 package router
 
 import (
-	FileAPI "yssim-go/app/api/file"
+	API "yssim-go/app/api/file"
 
 	"github.com/gin-gonic/gin"
 )
@@ -9,34 +9,34 @@ import (
 func FileRouter(g *gin.Engine) {
 	var Models = g.Group("/file")
 	{
-		Models.POST("/upload/package", FileAPI.UploadModelPackageView)
-		Models.POST("/update/package", FileAPI.UpdateModelPackageView)
-		Models.POST("/create/package", FileAPI.CreateModelPackageView)
+		Models.POST("/upload/package", API.UploadModelPackageView)
+		Models.POST("/update/package", API.UpdateModelPackageView)
+		Models.POST("/create/package", API.CreateModelPackageView)
 
-		Models.POST("/upload/icon", FileAPI.UploadModelIconView)
+		Models.POST("/upload/icon", API.UploadModelIconView)
 
-		Models.GET("/package/list", FileAPI.GetPackageFileListView)
-		Models.POST("/package/get", FileAPI.GetPackageFileView)
-		Models.GET("/package/encrypt/export", FileAPI.GetPackageEncryptView)
+		Models.GET("/package/list", API.GetPackageFileListView)
+		Models.POST("/package/get", API.GetPackageFileView)
+		Models.GET("/package/encrypt/export", API.GetPackageEncryptView)
 
-		Models.POST("/result/all/get", FileAPI.GetResultFileView)
-		Models.POST("/result/filter/get", FileAPI.GetFilterResultFileView)
+		Models.POST("/result/all/get", API.GetResultFileView)
+		Models.POST("/result/filter/get", API.GetFilterResultFileView)
 
-		Models.POST("/fmu/export", FileAPI.FmuExportModelView)
-		Models.POST("/code/save", FileAPI.ModelCodeSaveView)
-		Models.POST("/upload/var", FileAPI.UploadModelVarFileView)
+		Models.POST("/fmu/export", API.FmuExportModelView)
+		Models.POST("/code/save", API.ModelCodeSaveView)
+		Models.POST("/upload/var", API.UploadModelVarFileView)
 
-		Models.POST("/package/resources/download/", FileAPI.DownloadResourcesFileView)
-		Models.POST("/package/resources/get", FileAPI.GetPackageResourcesList)
-		Models.POST("/package/resources/upload", FileAPI.UploadResourcesFileView)
-		Models.POST("/package/resources/dir/create", FileAPI.CreateResourcesDirView)
-		Models.POST("/package/resources/dir/delete", FileAPI.DeleteResourcesDirAndFileView)
-		Models.POST("/package/resources/images/path/get", FileAPI.ResourcesImagesPathGetView)
-		Models.GET("/package/resources/images/get", FileAPI.ResourcesImagesGetView)
+		Models.POST("/package/resources/download/", API.DownloadResourcesFileView)
+		Models.POST("/package/resources/get", API.GetPackageResourcesList)
+		Models.POST("/package/resources/upload", API.UploadResourcesFileView)
+		Models.POST("/package/resources/dir/create", API.CreateResourcesDirView)
+		Models.POST("/package/resources/dir/delete", API.DeleteResourcesDirAndFileView)
+		Models.POST("/package/resources/images/path/get", API.ResourcesImagesPathGetView)
+		Models.GET("/package/resources/images/get", API.ResourcesImagesGetView)
 
-		Models.POST("/package/", FileAPI.ResourcesImagesPathGetView)
+		Models.POST("/package/", API.ResourcesImagesPathGetView)
 
-		Models.POST("/icon/set", FileAPI.ModelIconSetView)
+		Models.POST("/icon/set", API.ModelIconSetView)
 
 	}
 }
