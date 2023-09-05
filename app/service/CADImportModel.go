@@ -181,7 +181,7 @@ func GetXmlData(files []string, header string) string {
 	_ = bodyWriter.Close()
 
 	// 创建一个POST请求，并设置请求头和请求体
-	req, err := http.NewRequest("POST", "http://192.168.1.200:8081/file/batch", bodyBuf)
+	req, err := http.NewRequest("POST", "http://121.37.183.103:8081/file/batch", bodyBuf)
 	if err != nil {
 		fmt.Println("error creating request")
 	}
