@@ -737,7 +737,7 @@ func AddModelComponentView(c *gin.Context) {
 		return
 	}
 	var modelPackage DataBaseModel.YssimModels
-	dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id IN ?", item.PackageId, []string{userName, "sys"}, []string{userSpaceId, "0"}).First(&modelPackage)
+	dbModel.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", item.PackageId, []string{userName, "sys"}, []string{userSpaceId, "0"}).First(&modelPackage)
 	if modelPackage.SysUser == "sys" || modelPackage.Encryption {
 		res.Err = "该模型不允许此操作"
 		res.Status = 2
