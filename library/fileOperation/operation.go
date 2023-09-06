@@ -1,7 +1,6 @@
 package fileOperation
 
 import (
-	"bytes"
 	"container/list"
 	"errors"
 	"io"
@@ -10,14 +9,9 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/klauspost/compress/zip"
-	"github.com/mholt/archiver/v3"
-	"golang.org/x/text/encoding/simplifiedchinese"
-	"golang.org/x/text/transform"
 )
 
-// 判断所给路径文件/文件夹是否存在
+// Exists 判断所给路径文件/文件夹是否存在
 func Exists(path string) bool {
 	_, err := os.Stat(path) //os.Stat获取文件信息
 	if err != nil {
@@ -37,6 +31,7 @@ func IsDir(path string) bool {
 	}
 	return s.IsDir()
 }
+
 func DeleteProjectPath(filePath string) bool {
 	filePathList := strings.Split(filePath, "/")
 	path := strings.Join(filePathList[:6], "/")
@@ -51,6 +46,7 @@ func DeleteProjectPath(filePath string) bool {
 	return false
 
 }
+
 func DeletePathAndFile(path string) bool {
 	exists := Exists(path)
 	if !exists {
@@ -140,82 +136,6 @@ func WriteFileByte(fileName string, data []byte) bool {
 	return true
 }
 
-func UnZip(filePath string, toPath string) error {
-	err := errors.New("")
-	if strings.HasSuffix(filePath, ".zip") {
-		err = unZip(filePath, toPath)
-	} else {
-		err = archiver.Unarchive(filePath, toPath)
-	}
-	if err != nil {
-		log.Println(err)
-		return err
-	}
-	return nil
-}
-
-func unZip(zipFile string, destDir string) error {
-	zipReader, err := zip.OpenReader(zipFile)
-	if err != nil {
-		return err
-	}
-	defer zipReader.Close()
-	var decodeName string
-	for _, f := range zipReader.File {
-		if f.Flags == 0 || f.Flags == 8 {
-			//如果标致位是0  则是默认的本地编码   默认为gbk
-			i := bytes.NewReader([]byte(f.Name))
-			decoder := transform.NewReader(i, simplifiedchinese.GBK.NewDecoder())
-			content, _ := ioutil.ReadAll(decoder)
-			decodeName = string(content)
-		} else {
-			//如果标志为是 1 << 11也就是 2048  则是utf-8编码
-			decodeName = f.Name
-		}
-
-		fpath := filepath.Join(destDir, decodeName)
-		if f.FileInfo().IsDir() {
-			os.MkdirAll(fpath, os.ModePerm)
-		} else {
-			if err = os.MkdirAll(filepath.Dir(fpath), os.ModePerm); err != nil {
-				return err
-			}
-
-			inFile, err := f.Open()
-			if err != nil {
-				return err
-			}
-			defer inFile.Close()
-
-			outFile, err := os.OpenFile(fpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
-			if err != nil {
-				return err
-			}
-			defer outFile.Close()
-
-			_, err = io.Copy(outFile, inFile)
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
-func Zip(filePath string, toPath string) error {
-	filePathList := []string{}
-	file, _ := os.ReadDir(filePath)
-	for _, name := range file {
-		filePathList = append(filePathList, filePath+"/"+name.Name())
-	}
-	err := archiver.Archive(filePathList, toPath)
-	if err != nil {
-		log.Println(err)
-		return err
-	}
-	return nil
-}
-
 func FindFile(fileName, rootPath string) (string, error) {
 	_, err := os.Lstat(rootPath)
 	//既不是文件，也不是文件夹
@@ -270,7 +190,7 @@ func GetDirChild(rootPath string) ([]map[string]string, error) {
 	return dataList, nil
 }
 
-// 复制文件夹
+// CopyDir 复制文件夹
 func CopyDir(srcDir string, destDir string) error {
 	err := filepath.Walk(srcDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
