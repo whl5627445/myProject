@@ -64,6 +64,8 @@ type ParameterCalibrationRecord struct {
 	Version                 string         `gorm:"column:version;default:\"\";type:varchar(32);comment:package版本号" json:"version,omitempty"`
 	UserName                string         `gorm:"index;column:username;type:varchar(128);comment:用户名"  json:"-"`
 	ModelName               string         `gorm:"column:model_name;type:varchar(256);comment:模型名称" json:"model_name"`
+	PackagePath             string         `gorm:"column:package_path;type:varchar(256);comment:标定模型所在包的加载文件" json:"-"`
+	CompileDependencies     datatypes.JSON `gorm:"column:compile_Dependencies;type:json;comment:编译时所需的包环境" json:"-"`
 	CompilePath             string         `gorm:"column:compile_path;type:varchar(128);comment:编译好的文件存放路径" json:"-"`
 	CompileStatus           string         `gorm:"column:compile_status;default:\"0\";type:varchar(32);comment:编译结果状态码，0(初始状态)、3(失败)、4(成功)、6(编译中)" json:"compile_status"`
 	SimulateModelResultPath string         `gorm:"column:simulate_model_result_path;type:varchar(256);comment:仿真结果存储路径" json:"-"`

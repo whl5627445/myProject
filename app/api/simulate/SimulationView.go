@@ -11,6 +11,8 @@ import (
 	"time"
 	"yssim-go/library/timeConvert"
 
+	"github.com/bytedance/sonic"
+
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/DataType"
 	"yssim-go/app/service"
@@ -21,6 +23,7 @@ import (
 )
 
 var DB = config.DB
+var userName = config.USERNAME
 
 func GetSimulationOptionsView(c *gin.Context) {
 	/*
@@ -71,7 +74,6 @@ func GetModelStateView(c *gin.Context) {
 	   ## package_id: 模型所在包的id
 	*/
 
-	userName := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
 	packageId := c.Query("package_id")
 	modelName := c.Query("model_name")
@@ -97,7 +99,7 @@ func ModelSimulateView(c *gin.Context) {
 		## number_of_intervals: 仿真参数， 间隔设置当中的间隔数。 与间隔参数是计算关系，
 		## method: 仿真参数， 选择求解方法，默认参数是dassl(Openmodelica使用，dymola使用Dassl)。
 	*/
-	userName := c.GetHeader("username")
+
 	userSpaceId := c.GetHeader("space_id")
 	var item DataType.ModelSimulateData
 	err := c.BindJSON(&item)
@@ -138,8 +140,6 @@ func SimulateResultGraphicsView(c *gin.Context) {
 		## s1: 单位转换使用，固定为初始单位
 		## s2: 位单位转换使用，需要转换为什么单位
 	*/
-
-	userName := c.GetHeader("username")
 
 	var item DataType.ModelSimulateResultData
 	err := c.BindJSON(&item)
@@ -812,5 +812,45 @@ func SnapshotGetListView(c *gin.Context) {
 
 	var res DataType.ResponseData
 	res.Data = dataList
+	c.JSON(http.StatusOK, res)
+}
+
+func CalibrationCompileView(c *gin.Context) {
+	/*
+	   # 模型参数标定功能编译模型，验证模型是否可用
+	*/
+
+	var res DataType.ResponseData
+	var item DataType.CalibrationCompileData
+
+	err := c.BindJSON(&item)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	var modelPackage DataBaseModel.YssimModels
+	DB.Where("id = ? AND sys_or_user = ? AND userspace_id = ?", item.PackageId, userName, item.UserSpaceId).First(&modelPackage)
+
+	var record DataBaseModel.ParameterCalibrationRecord
+	DB.Where("id = ? AND package_id = ? AND username = ?", item.ID, item.PackageId, userName).First(&record)
+	if modelPackage.ID == "" || record.ID == "" {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+	packageInformation := service.GetCompileDependencies(modelPackage.PackageName)
+	record.CompileDependencies, _ = sonic.Marshal(packageInformation)
+	record.CompilePath = "static/ParameterCalibration/" + userName + "/" + modelPackage.PackageName + "/" + time.Now().Local().Format("20060102150405")
+	record.PackagePath, err = service.CopyPackage(modelPackage.FilePath, record.CompilePath+"/"+item.ModelName)
+	if err != nil {
+		log.Println("标定参数预编译copy模型失败：", err)
+		res.Err = "系统错误请联系管理员处理"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	DB.Save(&record)
+	res.Msg = "请等待编译完成"
 	c.JSON(http.StatusOK, res)
 }

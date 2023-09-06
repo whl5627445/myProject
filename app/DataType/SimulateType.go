@@ -100,3 +100,10 @@ type RecordRenameData struct {
 	RecordId       string `json:"record_id" binding:"required"`
 	NewAnotherName string `json:"new_another_name" binding:"required"`
 }
+
+type CalibrationCompileData struct {
+	ID          string `json:"id" binding:"required"`
+	UserSpaceId string `json:"user_space_id" binding:"required"`
+	PackageId   string `json:"package_id" binding:"required"`
+	ModelName   string `json:"model_name" binding:"required"`
+}

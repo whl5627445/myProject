@@ -1,8 +1,13 @@
 package service
 
 import (
+	"errors"
+	"fmt"
 	"log"
+	"path/filepath"
 	"strings"
+	"yssim-go/library/fileOperation"
+	"yssim-go/library/omc"
 	"yssim-go/library/xmlOperation"
 )
 
@@ -145,4 +150,31 @@ func (f *FormulaAnalysis) getVariableList() {
 	for k, _ := range f.variableMap {
 		f.variableList = append(f.variableList, k)
 	}
+}
+
+// GetCompileDependencies 获取库的版本，和所在文件
+func GetCompileDependencies(packageName string) map[string]map[string]string {
+	data := map[string]map[string]string{}
+	loadedLibraries := omc.OMC.GetUses(packageName)
+	for _, library := range loadedLibraries {
+		name := library[0]
+		version := library[1]
+		sourceFile := omc.OMC.GetSourceFile(name)
+		if sourceFile != "" {
+			libraryVersion := version
+			fileName := sourceFile
+			data[name] = map[string]string{"version": libraryVersion, "file": fileName}
+		}
+	}
+	return data
+}
+
+func CopyPackage(src, dest string) (string, error) {
+	packageDir, packageFile := filepath.Split(src)
+	err := fileOperation.CopyDir(packageDir, dest)
+	if err != nil {
+		return "", errors.New(fmt.Sprintf("拷贝package文件夹失败： %s", err))
+	}
+
+	return dest + "/" + packageFile, nil
 }
