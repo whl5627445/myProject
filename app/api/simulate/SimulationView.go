@@ -839,7 +839,8 @@ func CalibrationCompileView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
-	packageInformation := service.GetCompileDependencies(modelPackage.PackageName)
+	packageInformation := service.GetPackagesInformation()
+	delete(packageInformation, modelPackage.PackageName)
 	record.CompileDependencies, _ = sonic.Marshal(packageInformation)
 	record.CompilePath = "static/ParameterCalibration/" + userName + "/" + modelPackage.PackageName + "/" + time.Now().Local().Format("20060102150405")
 	record.PackagePath, err = service.CopyPackage(modelPackage.FilePath, record.CompilePath+"/"+item.ModelName)

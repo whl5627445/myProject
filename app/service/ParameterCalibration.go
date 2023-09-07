@@ -169,6 +169,21 @@ func GetCompileDependencies(packageName string) map[string]map[string]string {
 	return data
 }
 
+func GetPackagesInformation() map[string]map[string]string {
+	// 获取当前环境中所有库的版本，和所在文件
+	data := map[string]map[string]string{}
+	loadedLibraries := omc.OMC.GetPackages()
+	for _, library := range loadedLibraries {
+		Information := omc.OMC.GetClassInformation(library)
+		if len(Information) > 0 {
+			libraryVersion := Information[14].(string)
+			fileName := Information[5].(string)
+			data[library] = map[string]string{"version": libraryVersion, "file": fileName}
+		}
+	}
+	return data
+}
+
 func CopyPackage(src, dest string) (string, error) {
 	packageDir, packageFile := filepath.Split(src)
 	err := fileOperation.CopyDir(packageDir, dest)
