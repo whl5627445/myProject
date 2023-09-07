@@ -6,45 +6,44 @@ import (
 	"log"
 	"path/filepath"
 	"strings"
+	"time"
 	"yssim-go/library/fileOperation"
 	"yssim-go/library/omc"
 	"yssim-go/library/xmlOperation"
 )
 
+var variableParameterTreeCache = map[string]xmlInit{}
+
+func init() {
+	go variableParameterCache()
+}
+
+func variableParameterCache() {
+	for {
+		time.Sleep(time.Second * 300) // 每300秒清空一次tree缓存
+		variableParameterTreeCache = map[string]xmlInit{}
+	}
+}
+
 func GetVariableParameter(path, parent string) []map[string]any {
 	var result []map[string]any
-	result = ratedConditionParameterResultTree(path, parent)
-
 	var filteredResult []map[string]any
-	parentName := ""
-	if parent != "" {
-		parentName = parent + "."
-	}
+	result = ratedConditionParameterResultTree(path, parent)
 	for _, variable := range result {
 		// 非节点不需要检查非空
-		if variable["has_child"] == false {
-			if variable["is_value_changeable"] == true {
-				filteredResult = append(filteredResult, variable)
-			}
-		} else { // 如果是节点，判断是不是空节点
-			parent_ := parentName + variable["variables"].(string)
-			var result_ bool
-			result_ = CheckNodeEmpty(path, parent_)
-			if result_ {
-				filteredResult = append(filteredResult, variable)
-			}
-		}
+		filteredResult = append(filteredResult, variable)
+
 	}
 	return filteredResult
 
 }
 
 func ratedConditionParameterResultTree(path, parent string) []map[string]any {
-	v, ok := treeCache[path]
+	v, ok := variableParameterTreeCache[path]
 	if !ok {
 		v = xmlInit{}
 		err := xmlOperation.ParseXML(path, &v)
-		treeCache[path] = v
+		variableParameterTreeCache[path] = v
 		if err != nil {
 			log.Println(err)
 		}
@@ -70,10 +69,10 @@ func ratedConditionParameterResultTree(path, parent string) []map[string]any {
 				continue
 			}
 			if !nameMap[splitNameList[0]] {
-				switch scalarVariableMap[name].IsValueChangeable {
-				case scalarVariableMap[name].HideResult == "false" && scalarVariableMap[name].IsProtected:
+				switch {
+				case scalarVariableMap[name].IsValueChangeable == true && scalarVariableMap[name].HideResult == "false" && scalarVariableMap[name].IsProtected:
 					dataList = append(dataList, getRatedConditionParameter(splitNameList, scalarVariableMap[name], id, nameMap))
-				case scalarVariableMap[name].HideResult == "" && !scalarVariableMap[name].IsProtected:
+				case scalarVariableMap[name].IsValueChangeable == true && scalarVariableMap[name].HideResult == "" && !scalarVariableMap[name].IsProtected:
 					dataList = append(dataList, getRatedConditionParameter(splitNameList, scalarVariableMap[name], id, nameMap))
 				}
 			}
@@ -88,12 +87,15 @@ func getRatedConditionParameter(splitNameList []string, scalarVariableMap scalar
 		"description":         scalarVariableMap.Description,
 		"is_value_changeable": scalarVariableMap.IsValueChangeable,
 		"has_child":           false,
-		"id":                  id,
 		"value":               scalarVariableMap.Real.Start,
 		"unit":                scalarVariableMap.Real.Unit,
 	}
 	if len(splitNameList) > 1 {
 		data["has_child"] = true
+		data["description"] = ""
+		data["is_value_changeable"] = false
+		data["unit"] = ""
+		data["value"] = ""
 	}
 	id += 1
 	nameMap[splitNameList[0]] = true
