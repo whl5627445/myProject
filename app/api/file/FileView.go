@@ -607,6 +607,14 @@ func UploadModelVarFileView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
+	fileName := varFile.Filename
+
+	if !strings.HasSuffix(fileName, ".txt") && !strings.HasSuffix(fileName, ".mos") && !strings.HasSuffix(fileName, ".csv") {
+		res.Msg = "请上传后缀为：txt、mos、csv三种格式的文件"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
 
 	var packageModel DataBaseModel.YssimModels
 	DB.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", packageId, []string{"sys", userName}, []string{"0", userSpaceId}).First(&packageModel)
