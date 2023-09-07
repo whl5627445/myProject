@@ -351,7 +351,7 @@ func SetModelParametersView(c *gin.Context) {
 		return
 	}
 	var modelPackage DataBaseModel.YssimModels
-	dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id IN ?", item.PackageId, []string{userName, "sys"}, []string{userSpaceId, "0"}).First(&modelPackage)
+	dbModel.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", item.PackageId, []string{userName, "sys"}, []string{userSpaceId, "0"}).First(&modelPackage)
 	if modelPackage.SysUser == "sys" || modelPackage.Encryption {
 		res.Err = "该模型不允许此操作"
 		res.Status = 2
@@ -399,7 +399,7 @@ func AddModelParametersView(c *gin.Context) {
 		return
 	}
 	var modelPackage DataBaseModel.YssimModels
-	dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id IN ?", item.PackageId, []string{userName, "sys"}, []string{userSpaceId, "0"}).First(&modelPackage)
+	dbModel.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", item.PackageId, []string{userName, "sys"}, []string{userSpaceId, "0"}).First(&modelPackage)
 	if modelPackage.SysUser == "sys" || modelPackage.Encryption {
 		res.Err = "该模型不允许此操作"
 		res.Status = 2
@@ -436,7 +436,7 @@ func DeleteModelParametersView(c *gin.Context) {
 		return
 	}
 	var modelPackage DataBaseModel.YssimModels
-	dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id IN ?", item.PackageId, []string{userName, "sys"}, []string{userSpaceId, "0"}).First(&modelPackage)
+	dbModel.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", item.PackageId, []string{userName, "sys"}, []string{userSpaceId, "0"}).First(&modelPackage)
 	if modelPackage.SysUser == "sys" || modelPackage.Encryption {
 		res.Err = "该模型不允许此操作"
 		res.Status = 2
@@ -784,7 +784,7 @@ func DeleteModelComponentView(c *gin.Context) {
 	}
 
 	var modelPackage DataBaseModel.YssimModels
-	dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id IN ?", item.PackageId, []string{userName, "sys"}, []string{userSpaceId, "0"}).First(&modelPackage)
+	dbModel.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", item.PackageId, []string{userName, "sys"}, []string{userSpaceId, "0"}).First(&modelPackage)
 	if modelPackage.SysUser == "sys" || modelPackage.Encryption {
 		res.Err = "该模型不允许此操作"
 		res.Status = 2
@@ -836,7 +836,7 @@ func UpdateModelComponentView(c *gin.Context) {
 	}
 
 	var modelPackage DataBaseModel.YssimModels
-	dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id IN ?", item.PackageId, []string{userName, "sys"}, []string{userSpaceId, "0"}).First(&modelPackage)
+	dbModel.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", item.PackageId, []string{userName, "sys"}, []string{userSpaceId, "0"}).First(&modelPackage)
 
 	if modelPackage.SysUser == "sys" || modelPackage.Encryption {
 		res.Err = "该模型不允许此操作"
@@ -881,7 +881,7 @@ func CreateConnectionAnnotationView(c *gin.Context) {
 	}
 
 	var modelPackage DataBaseModel.YssimModels
-	dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id IN ?", item.PackageId, []string{userName, "sys"}, []string{userSpaceId, "0"}).First(&modelPackage)
+	dbModel.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", item.PackageId, []string{userName, "sys"}, []string{userSpaceId, "0"}).First(&modelPackage)
 
 	if modelPackage.SysUser == "sys" || modelPackage.Encryption {
 		res.Err = "该模型不允许此操作"
@@ -922,7 +922,7 @@ func UpdateConnectionNamesView(c *gin.Context) {
 	}
 
 	var modelPackage DataBaseModel.YssimModels
-	dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id IN ?", item.PackageId, []string{userName, "sys"}, []string{userSpaceId, "0"}).First(&modelPackage)
+	dbModel.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", item.PackageId, []string{userName, "sys"}, []string{userSpaceId, "0"}).First(&modelPackage)
 
 	if modelPackage.SysUser == "sys" || modelPackage.Encryption {
 		res.Err = "该模型不允许此操作"
@@ -961,7 +961,7 @@ func DeleteConnectionAnnotationView(c *gin.Context) {
 	}
 
 	var modelPackage DataBaseModel.YssimModels
-	dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id IN ?", item.PackageId, []string{userName, "sys"}, []string{userSpaceId, "0"}).First(&modelPackage)
+	dbModel.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", item.PackageId, []string{userName, "sys"}, []string{userSpaceId, "0"}).First(&modelPackage)
 
 	if modelPackage.SysUser == "sys" || modelPackage.Encryption {
 		res.Err = "该模型不允许此操作"
@@ -1002,7 +1002,7 @@ func UpdateConnectionAnnotationView(c *gin.Context) {
 	}
 
 	var modelPackage DataBaseModel.YssimModels
-	dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id IN ?", item.PackageId, []string{userName, "sys"}, []string{userSpaceId, "0"}).First(&modelPackage)
+	dbModel.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", item.PackageId, []string{userName, "sys"}, []string{userSpaceId, "0"}).First(&modelPackage)
 
 	if modelPackage.SysUser == "sys" || modelPackage.Encryption {
 		res.Err = "该模型不允许此操作"
@@ -1108,7 +1108,7 @@ func SetModelDocumentView(c *gin.Context) {
 	}
 
 	var packageModel DataBaseModel.YssimModels
-	dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id IN ?", item.PackageId, []string{userName, "sys"}, []string{userSpaceId, "0"}).First(&packageModel)
+	dbModel.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", item.PackageId, []string{userName, "sys"}, []string{userSpaceId, "0"}).First(&packageModel)
 
 	if packageModel.SysUser == "sys" || packageModel.Encryption {
 		res.Err = "该模型不允许此操作"
@@ -2412,7 +2412,7 @@ func GetVariableParameterView(c *gin.Context) {
 	var res DataType.ResponseData
 	if record.CompileStatus == "4" {
 		//OMC仿真完输出的xml文件
-		result = service.GetVariableParameter(record.CompilePath+"result_init.xml", parentNode)
+		result = service.GetVariableParameter(record.CompilePath+"/result_init.xml", parentNode)
 	} else {
 		res.Err = "查询失败"
 		res.Status = 2
