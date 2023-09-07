@@ -833,17 +833,18 @@ func CalibrationCompileView(c *gin.Context) {
 	DB.Where("id = ? AND sys_or_user = ? AND userspace_id = ?", item.PackageId, userName, item.UserSpaceId).First(&modelPackage)
 
 	var record DataBaseModel.ParameterCalibrationRecord
-	DB.Where("id = ? AND package_id = ? AND username = ?", item.ID, item.PackageId, userName).First(&record)
+	err = DB.Where("id = ? AND package_id = ? AND username = ?", item.ID, item.PackageId, userName).First(&record).Error
 	if modelPackage.ID == "" || record.ID == "" {
 		log.Println(err)
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
-	packageInformation := service.GetPackagesInformation()
-	delete(packageInformation, modelPackage.PackageName)
-	record.CompileDependencies, _ = sonic.Marshal(packageInformation)
 	record.CompilePath = "static/ParameterCalibration/" + userName + "/" + modelPackage.PackageName + "/" + time.Now().Local().Format("20060102150405")
+
 	record.PackagePath, err = service.CopyPackage(modelPackage.FilePath, record.CompilePath+"/"+item.ModelName)
+	packageSource := service.GetPackagesSource()
+	packageSource[modelPackage.PackageName] = record.PackagePath
+	record.CompileDependencies, _ = sonic.Marshal(packageSource)
 	if err != nil {
 		log.Println("标定参数预编译copy模型失败：", err)
 		res.Err = "系统错误请联系管理员处理"
@@ -852,6 +853,24 @@ func CalibrationCompileView(c *gin.Context) {
 		return
 	}
 	DB.Save(&record)
+	itemMap := map[string]string{
+		"id":               record.ID,
+		"user_space_id":    modelPackage.UserSpaceId,
+		"username":         userName,
+		"package_id":       item.PackageId,
+		"package_name":     modelPackage.PackageName,
+		"model_name":       record.ModelName,
+		"result_file_path": record.CompilePath,
+	}
+	err = service.GrpcCompile(itemMap, packageSource)
+	if err != nil {
+		fmt.Println("调用(GrpcSimulation)出错：", err)
+		res.Err = "编译失败，请联系管理员"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	res.Data = map[string]any{"id": record.ID}
 	res.Msg = "请等待编译完成"
 	c.JSON(http.StatusOK, res)
 }

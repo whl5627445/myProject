@@ -386,6 +386,27 @@ func GrpcTranslate(record DataBaseModel.AppDataSource) (string, error) {
 
 }
 
+func GrpcCompile(data map[string]string, EnvModelData map[string]string) error {
+	// 创建文件夹
+	//fileOperation.CreateFilePath(record.CompilePath)
+
+	// 发送仿真请求
+	GrpcBuildModelRequest := &grpcPb.SubmitTaskRequest{
+		Uuid:              data["id"],
+		UserSpaceId:       data["user_space_id"],
+		UserName:          data["username"],
+		PackageName:       data["package_name"],
+		TaskType:          "compile",
+		SimulateModelName: data["model_name"],
+		EnvModelData:      EnvModelData,
+		SimulateType:      "OM",
+		ResultFilePath:    data["result_file_path"] + "/",
+	}
+	_, err := grpcPb.Client.SubmitTask(grpcPb.Ctx, GrpcBuildModelRequest)
+	return err
+
+}
+
 func GrpcRunResult(appPageId string, singleSimulationInputData map[string]float64) error {
 	// OM和DM 多轮仿真
 	var appPageRecord DataBaseModel.AppPage

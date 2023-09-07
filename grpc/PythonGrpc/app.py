@@ -7,6 +7,7 @@ from libs.function.process_operation import kill_process
 from libs.simulation.OmcSimulationThread import OmcSimulation
 from libs.translate.OmcTranslateThread import OmcTranslateThread
 from libs.run_result.OmcRunThread import OmcRunThread
+from libs.compile.OmcCompileThread import OmcCompileThread
 
 from libs.simulation.DmSimulationThread import DmSimulation
 from libs.translate.DmcTranslateThread import DmTranslateThread
@@ -255,6 +256,11 @@ if __name__ == '__main__':
                             OmSimulationThreadList.append(om_threading)
                         if data.taskType == "run":
                             om_threading = OmcRunThread(data)
+                            om_threading.start()
+                            OmSimulationThreadList.append(om_threading)
+                        if data.taskType == "compile":
+                            port = findPort(start_port)
+                            om_threading = OmcCompileThread(data, port)
                             om_threading.start()
                             OmSimulationThreadList.append(om_threading)
                         omcTaskMarkDict[userName] = True

@@ -5,7 +5,7 @@ import random
 import string
 
 from config.db_config import Session, YssimSimulateRecords, AppDataSources, AppPages, AppSpaces, AppPagesComponent, \
-    AppPagesComponentRelease, AppPagesComponentPreview
+    AppPagesComponentRelease, AppPagesComponentPreview, ParameterCalibrationRecord
 from config.redis_config import R
 import json
 import os
@@ -81,6 +81,45 @@ def update_simulate_records(uuid, simulate_status=None, simulate_result_str=None
         if percentage is not None:
             simulate_record.percentage = percentage  # 仿真进度
 
+        session.commit()
+
+
+def update_parameter_calibration_records(uuid,
+                                         compile_status=None,
+                                         compile_path=None,
+                                         compile_start_time=None,
+                                         compile_stop_time=None,
+                                         simulate_model_result_path=None,
+                                         simulate_status=None,
+                                         simulate_start_time=None,
+                                         simulate_end_time=None,
+                                         simulate_result_str=None,
+                                         percentage=None,
+                                         ):
+    log.info(uuid)
+    with Session() as session:
+        record = session.query(ParameterCalibrationRecord).filter(
+            ParameterCalibrationRecord.id == uuid).first()
+        if compile_status is not None:
+            record.compile_status = compile_status  # 更改状态
+        if compile_path is not None:
+            record.compile_path = compile_path  # 变更编译地址
+        if compile_start_time is not None:
+            record.compile_start_time = compile_start_time  # 记录编译开始时间
+        if compile_stop_time is not None:
+            record.compile_stop_time = compile_stop_time  # 记录编译结束时间
+        if simulate_model_result_path is not None:
+            record.simulate_model_result_path = simulate_model_result_path  # 记录仿真结果地址
+        if simulate_status is not None:
+            record.simulate_status = simulate_status  # 记录仿真状态
+        if simulate_start_time is not None:
+            record.simulate_start_time = simulate_start_time  # 记录仿真开始时间
+        if simulate_end_time is not None:
+            record.simulate_end_time = simulate_end_time  # 记录仿真结束时间
+        if simulate_result_str is not None:
+            record.simulate_result_str = simulate_result_str  # 记录仿真结果字符
+        if percentage is not None:
+            record.percentage = percentage  # 记录仿真进度
         session.commit()
 
 

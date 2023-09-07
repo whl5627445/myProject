@@ -230,3 +230,31 @@ class AppPagesComponentPreview(Base):
     max = Column(Float)
     min = Column(Float)
     interval = Column(Float)
+
+
+class ParameterCalibrationRecord(Base):
+    __tablename__ = 'parameter_calibration_records'
+    id = Column(String, primary_key=True)
+    package_id = Column(String)
+    version = Column(String)
+    username = Column(String)
+    model_name = Column(String)
+    compile_path = Column(String)
+    package_path = Column(String)
+    compile_Dependencies = Column(String)
+    compile_status = Column(Integer)
+    compile_start_time = Column(Integer)
+    compile_stop_time = Column(Integer)
+
+    simulate_model_result_path = Column(String)
+    simulate_status = Column(String)
+    start_time = Column(String)
+    stop_time = Column(String)
+    simulate_result_str = Column(Text)
+    percentage = Column(Integer)
+
+    rated_condition = Column(JSON)
+    condition_parameters = Column(JSON)
+    formula = Column(JSON)
+    associated_parameters = Column(JSON)
+

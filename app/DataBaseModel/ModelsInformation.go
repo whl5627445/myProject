@@ -68,11 +68,13 @@ type ParameterCalibrationRecord struct {
 	CompileDependencies     datatypes.JSON `gorm:"column:compile_Dependencies;type:json;comment:编译时所需的包环境" json:"-"`
 	CompilePath             string         `gorm:"column:compile_path;type:varchar(128);comment:编译好的文件存放路径" json:"-"`
 	CompileStatus           string         `gorm:"column:compile_status;default:\"0\";type:varchar(32);comment:编译结果状态码，0(初始状态)、3(失败)、4(成功)、6(编译中)" json:"compile_status"`
+	CompileStartTime        int64          `gorm:"column:compile_start_time;type:int;comment:编译开始时间"`
+	CompileStopTime         int64          `gorm:"column:compile_stop_time;type:int;comment:编译结束时间"`
 	SimulateModelResultPath string         `gorm:"column:simulate_model_result_path;type:varchar(256);comment:仿真结果存储路径" json:"-"`
 	SimulateResultStr       string         `gorm:"column:simulate_result_str;comment:仿真结果输出字符串" json:"-"`
 	SimulateStatus          string         `gorm:"column:simulate_status;default:\"0\";type:varchar(32);comment:仿真状态" json:"simulate_status"`
 	StartTime               string         `gorm:"column:start_time;type:varchar(32);comment:仿真开始时间" json:"start_time,omitempty"`
-	StopTime                string         `gorm:"column:stop_time;type:varchar(32);comment:仿真结束时间" json:"end_time,omitempty"`
+	StopTime                string         `gorm:"column:stop_time;type:varchar(32);comment:仿真结束时间" json:"stop_time,omitempty"`
 	Tolerance               string         `gorm:"column:tolerance;type:varchar(32);comment:仿真积分误差" json:"tolerance,omitempty"`
 	NumberOfIntervals       string         `gorm:"column:number_of_intervals;type:varchar(32);comment:仿真间隔数" json:"number_of_intervals,omitempty"`
 	Interval                string         `gorm:"column:interval;type:varchar(32);comment:仿真时间间隔" json:"interval,omitempty"`
