@@ -228,7 +228,6 @@ func (g *graphicsData) data01(cData []any, className, component, modelName strin
 		}
 		dataType := cData[i]
 		data["type"] = dataType
-		data["type"] = dataType
 		data["visible"] = drawingDataList[0]
 		data["originalPoint"] = oneDimensionalProcessing(drawingDataList[1])
 		data["rotation"] = drawingDataList[2]

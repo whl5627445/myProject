@@ -397,10 +397,10 @@ func iconInputOutputs(cData [][]any, caData [][]any, modelName string) []map[str
 			//data["ID"] = strconv.Itoa(i)
 			data["classname"] = classname
 			data["name"] = cDataFilter[i][3]
-			//data["original_name"] = cDataFilter[i][3]
-			data["parent"] = modelName
+			data["extend_name"] = modelName
 			data["visible"] = caf[0]
 			data["mobility"] = false
+			data["comment"] = cDataFilter[i][4]
 			//data["initialScale"] = initialScale
 			rotateAngle := func() string {
 				if caf[14] != "" {
