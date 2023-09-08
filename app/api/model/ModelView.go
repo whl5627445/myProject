@@ -646,6 +646,13 @@ func CopyClassView(c *gin.Context) {
 		packageInformation := service.GetPackageInformation()
 		packageInformationJson, _ := sonic.Marshal(packageInformation)
 		dbModel.Model(DataBaseModel.YssimUserSpace{}).Where("id = ? AND username = ?", userSpaceId, userName).Update("package_information", packageInformationJson)
+		if item.ParentName != "" {
+			service.SetPackageUses(item.CopiedClassName, item.ParentName)
+			service.ModelSave(item.ParentName + "." + item.ModelName)
+		} else {
+			service.SetPackageUses(item.CopiedClassName, item.ModelName)
+			service.ModelSave(item.ModelName)
+		}
 
 	} else {
 		res.Msg = msg
@@ -760,6 +767,7 @@ func AddModelComponentView(c *gin.Context) {
 		res.Err = msg
 		res.Status = 2
 	} else {
+		service.SetPackageUses(item.OldComponentName, item.ModelName)
 		service.ModelSave(item.ModelName)
 		res.Data = data
 		res.Msg = "新增组件成功"

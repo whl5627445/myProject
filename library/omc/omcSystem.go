@@ -1412,3 +1412,13 @@ func (o *ZmqObject) GetIconAnnotations(className string) []any {
 	//allModelCache.HSet(ctx, userName+"-yssim-IconGraphicsData", className, setData)
 	return data
 }
+
+// SetUses 设置模型依赖
+func (o *ZmqObject) SetUses(className, uses string) bool {
+	cmd := "addClassAnnotation(" + className + ",annotate=$annotation(uses(" + uses + ")))"
+	data, ok := o.SendExpressionNoParsed(cmd)
+	if ok && strings.TrimSpace(string(data)) == "true" {
+		return true
+	}
+	return false
+}

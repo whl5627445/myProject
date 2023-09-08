@@ -94,6 +94,63 @@ func GetPackageUses(packageName string) [][]string {
 	return omc.OMC.GetUses(packageName)
 }
 
+func getPackageUsesString(toPackageUses [][]string) string {
+	var result string
+	for index, packageUse := range toPackageUses {
+		result += packageUse[0] + "(version=\"" + packageUse[1] + "\")"
+		if index < len(toPackageUses)-1 {
+			result += ","
+		}
+	}
+	return result
+}
+
+func getFirstOrderName(modelName string) string {
+	if strings.Contains(modelName, ".") {
+		modelName = modelName[:strings.Index(modelName, ".")]
+	}
+	return modelName
+}
+
+func isExistFromUses(fromPackageUses []string, toPackageUses [][]string) bool {
+	var flag = false
+	for _, use := range toPackageUses {
+		if fromPackageUses[0] == use[0] {
+			flag = true
+		}
+	}
+	return flag
+}
+
+// SetPackageUses 在目标模型添加annotation，设置Uses
+func SetPackageUses(fromModelName, toModelName string) {
+
+	var fromPackageUses []string
+	var toPackageUses [][]string
+	//判断是否是自身组件添加到自身库,是就不写入了
+	if !strings.HasPrefix(toModelName, getFirstOrderName(fromModelName)) {
+		//获取组件所属库的版本号
+		fromPackageInformation := GetClassInformation(getFirstOrderName(fromModelName))
+		//版本号为空，就不添加了
+		if fromPackageInformation[14].(string) != "" {
+			fromPackageUses = []string{getFirstOrderName(fromModelName), fromPackageInformation[14].(string)}
+		}
+		//获取目标模型的PackageUse
+		toPackageUses = GetPackageUses(getFirstOrderName(toModelName))
+		//判断toPackageUses中是否含有fromPackageUses，有就不添加了
+		if len(fromPackageUses) != 0 {
+			if !isExistFromUses(fromPackageUses, toPackageUses) {
+				toPackageUses = append(toPackageUses, fromPackageUses)
+			}
+		}
+		//转成字符串
+		uses := getPackageUsesString(toPackageUses)
+		if uses != "" {
+			omc.OMC.SetUses(getFirstOrderName(toModelName), uses)
+		}
+	}
+}
+
 func GetLoadedLibraries() [][]string {
 	// 获取已加载库
 	lList := [][]string{}
