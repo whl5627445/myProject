@@ -2340,6 +2340,7 @@ func GetParameterCalibrationRecordView(c *gin.Context) {
 	modelName := c.Query("model_name")
 	var record DataBaseModel.ParameterCalibrationRecord
 	simulationOptions := service.GetSimulationOptions(modelName)
+
 	dbModel.Where(DataBaseModel.ParameterCalibrationRecord{
 		UserSpaceId: userSpaceId,
 		PackageId:   packageId,
@@ -2355,7 +2356,20 @@ func GetParameterCalibrationRecordView(c *gin.Context) {
 		Method:            simulationOptions["method"],
 	}).FirstOrCreate(&record)
 	var res DataType.ResponseData
-	res.Data = record
+	res.Data = map[string]any{
+		"id":                    record.ID,
+		"start_time":            record.StartTime,
+		"stop_time":             record.StopTime,
+		"tolerance":             record.Tolerance,
+		"number_of_intervals":   record.NumberOfIntervals,
+		"interval":              record.Interval,
+		"method":                record.Method,
+		"compile_status":        record.CompileStatus,
+		"rated_condition":       record.RatedCondition,
+		"formula":               record.Formula,
+		"associated_parameters": record.AssociatedParameters,
+		"condition_parameters":  record.ConditionParameters,
+	}
 	c.JSON(http.StatusOK, res)
 }
 
@@ -2480,5 +2494,33 @@ func SetParameterCalibrationSimulationOptionsView(c *gin.Context) {
 	dbModel.Model(DataBaseModel.ParameterCalibrationRecord{}).Where("id = ? AND package_id = ? AND model_name = ? AND username = ?", item.ID, item.PackageId, item.ModelName, userName).
 		Updates(&item.Options)
 	var res DataType.ResponseData
+	c.JSON(http.StatusOK, res)
+}
+
+func CreateParameterCalibrationTemplateView(c *gin.Context) {
+	/*
+		# 创建参数标定模板
+	*/
+	var res DataType.ResponseData
+	var item DataType.CreateCalibrationTemplateData
+	err := c.BindJSON(&item)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	var record map[string]any
+	var template DataBaseModel.ParameterCalibrationTemplate
+	columnList := []string{"id", "package_path", "compile_Dependencies", "compile_path", "simulate_result_path",
+		"start_time", "stop_time", "tolerance", "number_of_intervals", "interval", "method",
+		"rated_condition", "condition_parameters", "formula", "associated_parameters"}
+	dbModel.Model(&DataBaseModel.ParameterCalibrationRecord{}).Select(columnList).Where("id = ? AND username = ?", item.ID, userName).First(&template)
+	if record["ID"] != "" {
+		log.Println("未查到模型标定记录，请先创建记录再保存模板")
+		c.JSON(http.StatusBadRequest, "")
+	}
+	template.RecordID = uuid.New().String()
+	template.TemplateName = item.TemplateName
+	dbModel.Create(&template)
 	c.JSON(http.StatusOK, res)
 }
