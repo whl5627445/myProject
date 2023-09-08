@@ -291,22 +291,47 @@ func (m *modelParameters) getElementsModifierNamesAndValue(className, componentN
 	}
 }
 
-// getInherited 获取模型继承项, 并且继承等级加1
-func (m *modelParameters) getAttributes(varName string) []map[string]string {
-	dataList := []map[string]string{}
+func (m *modelParameters) getAttributes(varName string) []map[string]any {
+	dataList := []map[string]any{}
 	for name, modifier := range m.elementModifierNamesMap {
-		nameList := strings.Split(name, ".")
-		if nameList[0] == varName {
-			data := map[string]string{}
+
+		switch {
+		case strings.HasPrefix(name, varName+"."):
+			data := map[string]any{}
 			switch {
 			case modifier.level > 0:
 				data["defaultvalue"] = modifier.value
 			case modifier.level == 0:
 				data["value"] = modifier.value
 			}
-			data["name"] = nameList[1]
+			data["name"] = strings.TrimPrefix(name, varName+".")
 			dataList = append(dataList, data)
+		case strings.HasSuffix(name, "."+varName):
+			if modifier.fixed != nil {
+				data := map[string]any{}
+				//if modifier.level == 0 {
+				//	data["value"] = modifier.fixed
+				//} else {
+				//	data["defaultvalue"] = modifier.fixed
+				//}
+				data["defaultvalue"] = modifier.fixed
+				data["name"] = "fixed"
+				dataList = append(dataList, data)
+			}
+			if modifier.start != "" {
+				data := map[string]any{}
+				//if modifier.startLevel == 0 {
+				//	data["value"] = modifier.start
+				//} else {
+				//	data["defaultvalue"] = modifier.start
+				//}
+				data["defaultvalue"] = modifier.start
+				data["name"] = "start"
+				dataList = append(dataList, data)
+			}
+
 		}
+
 	}
 	return dataList
 }
@@ -382,7 +407,7 @@ func (m *modelParameters) getParameter(className string, varName string, p []any
 	modifier := m.componentName + "." + varName
 	elementModifierData := m.elementModifierNamesMap[modifier] // 查找有没有标识符标记该组件或参数
 	elementModifierValue := elementModifierData.value          // 如果有标记的话, 取出值
-	delete(m.elementModifierNamesMap, modifier)
+	//delete(m.elementModifierNamesMap, modifier)
 	IsExtendsModifierFinal := "false"
 	emName := varName
 	if m.extendsModifierNamesMap[emName] == nil {
