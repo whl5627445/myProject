@@ -14,10 +14,12 @@ import (
 
 var variableParameterTreeCache = map[string]xmlInit{}
 
+// 初始化xml文件内容的缓存
 func init() {
 	go variableParameterCache()
 }
 
+// xml文件的缓存每5分钟清理一次
 func variableParameterCache() {
 	for {
 		time.Sleep(time.Second * 300) // 每300秒清空一次tree缓存
@@ -25,6 +27,7 @@ func variableParameterCache() {
 	}
 }
 
+// GetVariableParameter 获取xml文件内变量的节点
 func GetVariableParameter(path, parent string) []map[string]any {
 	var result []map[string]any
 	var filteredResult []map[string]any
@@ -38,6 +41,7 @@ func GetVariableParameter(path, parent string) []map[string]any {
 
 }
 
+// 购构造额定条件参数的结果树
 func ratedConditionParameterResultTree(path, parent string) []map[string]any {
 	v, ok := variableParameterTreeCache[path]
 	if !ok {
@@ -81,6 +85,7 @@ func ratedConditionParameterResultTree(path, parent string) []map[string]any {
 	return dataList
 }
 
+// 获取满足条件的额定条件参数节点
 func getRatedConditionParameter(splitNameList []string, scalarVariableMap scalarVariable, id int, nameMap map[string]bool) map[string]any {
 	data := map[string]any{
 		"variables":           splitNameList[0],
@@ -110,6 +115,7 @@ type FormulaAnalysis struct {
 	formulaData    []map[string]string // 公式常量与完整公式的map切片 ，map包含"coefficient", "formula"两个字段
 }
 
+// GetFormulaList 获取公式数据列表与公式变量列表
 func GetFormulaList(formulaStr string) ([]map[string]string, []string) {
 	formulaStr = strings.TrimSpace(formulaStr)
 	formulaStrList := strings.Split(formulaStr, "+")
