@@ -104,10 +104,10 @@ func getRatedConditionParameter(splitNameList []string, scalarVariableMap scalar
 }
 
 type FormulaAnalysis struct {
-	formulaStrList []string
-	variableMap    map[string]bool
-	variableList   []string
-	formulaData    []map[string]string
+	formulaStrList []string            // 在字符串中被解析出的完整公式
+	variableMap    map[string]bool     // 解析后公式中的变量，存储的是原子单位， 不可再分隔
+	variableList   []string            // 从variableMap中取出的变量
+	formulaData    []map[string]string // 公式常量与完整公式的map切片 ，map包含"coefficient", "formula"两个字段
 }
 
 func GetFormulaList(formulaStr string) ([]map[string]string, []string) {
@@ -127,6 +127,7 @@ func GetFormulaList(formulaStr string) ([]map[string]string, []string) {
 	return f.formulaData, f.variableList
 }
 
+// 公式解析的入口函数
 func (f *FormulaAnalysis) formulaParse() {
 	for i := 0; i < len(f.formulaStrList); i++ {
 		formulaList := strings.Split(f.formulaStrList[i], "*")
@@ -142,12 +143,14 @@ func (f *FormulaAnalysis) formulaParse() {
 	}
 }
 
+// 将解析后的公式参数放入Map，顺便去重
 func (f *FormulaAnalysis) getVariable(variableList []string) {
 	for i := 0; i < len(variableList); i++ {
 		f.variableMap[variableList[i]] = true
 	}
 }
 
+// 获取公式解析后的参数列表
 func (f *FormulaAnalysis) getVariableList() {
 	for k, _ := range f.variableMap {
 		f.variableList = append(f.variableList, k)
@@ -171,8 +174,8 @@ func GetCompileDependencies(packageName string) map[string]map[string]string {
 	return data
 }
 
+// GetPackagesSource 获取当前环境中所有库的版本，和所在文件
 func GetPackagesSource() map[string]string {
-	// 获取当前环境中所有库的版本，和所在文件
 	data := map[string]string{}
 	loadedLibraries := omc.OMC.GetPackages()
 	for _, library := range loadedLibraries {
@@ -182,6 +185,7 @@ func GetPackagesSource() map[string]string {
 	return data
 }
 
+// CopyPackage 将package所在文件夹复制到指定位置，返回package加载文件完整路径
 func CopyPackage(src, dest string) (string, error) {
 	packageDir, packageFile := filepath.Split(src)
 	err := fileOperation.CopyDir(packageDir, dest)

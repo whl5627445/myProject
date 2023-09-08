@@ -49,6 +49,7 @@ func init() {
 		&DataBaseModel.SystemLibrary{},
 		&DataBaseModel.UserLibrary{},
 		&DataBaseModel.ParameterCalibrationRecord{},
+		&DataBaseModel.ParameterCalibrationTemplate{},
 
 		&DataBaseModel.AppDataSource{},
 		&DataBaseModel.AppSpace{},

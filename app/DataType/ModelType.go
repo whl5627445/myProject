@@ -347,3 +347,8 @@ type sOptions struct {
 	Interval          string `json:"interval" binding:"required"`
 	Method            string `json:"method" binding:"required"`
 }
+
+type CreateCalibrationTemplateData struct {
+	ID           string `json:"id" binding:"required"`
+	TemplateName string `json:"template_name" binding:"required"`
+}
