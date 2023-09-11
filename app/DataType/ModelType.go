@@ -301,6 +301,7 @@ type ratedCondition struct {
 	Name         string `json:"name" binding:"required"`
 	Value        string `json:"value" binding:"required"`
 	DefaultValue string `json:"default_value" binding:"required"`
+	Unit         string `json:"unit" binding:"required"`
 }
 
 type SetConditionParametersData struct {
