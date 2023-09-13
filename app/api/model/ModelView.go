@@ -2474,15 +2474,21 @@ func ParameterCalibrationFormulaParserView(c *gin.Context) {
 		# 设置参数标定功能公式解析
 	*/
 	var item DataType.FormulaParserData
+	var res DataType.ResponseData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
-	formulaData, variableList := service.GetFormulaList(item.FormulaStr)
+	formulaData, variableList, err := service.GetFormulaList(item.FormulaStr)
+	if err != nil {
+		res.Err = err.Error()
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
 	formula, _ := sonic.Marshal(map[string]any{"formula": formulaData, "variable": variableList})
 	dbModel.Model(DataBaseModel.ParameterCalibrationRecord{}).Where("id = ? AND package_id = ? AND username = ?", item.ID, item.PackageId, userName).UpdateColumn("formula", formula)
-	var res DataType.ResponseData
 	res.Data = map[string]any{"variable": variableList, "formula": formulaData}
 	c.JSON(http.StatusOK, res)
 }

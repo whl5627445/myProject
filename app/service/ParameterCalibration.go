@@ -116,25 +116,43 @@ type FormulaAnalysis struct {
 }
 
 // GetFormulaList 获取公式数据列表与公式变量列表
-func GetFormulaList(formulaStr string) ([]map[string]string, []string) {
-	formulaStr = strings.TrimSpace(formulaStr)
-	formulaStrList := strings.Split(formulaStr, "+")
+func GetFormulaList(formulaStr string) ([]map[string]string, []string, error) {
+	if formulaStr == "" {
+		return nil, nil, errors.New("解析数据不能为空")
+	}
+	err := formulaStrVerify(formulaStr)
+	if err != nil {
+		return nil, nil, err
+	}
+	formulaStrList := []string{}
+	index := strings.Index(formulaStr, "=")
+	formulaStrList = append(formulaStrList, formulaStr[:index])
+	formulaStrList = append(formulaStrList, strings.Split(formulaStr[index+1:], "+")...)
 	f := FormulaAnalysis{
 		formulaStrList: formulaStrList,
 		variableMap:    make(map[string]bool, 0),
 		variableList:   make([]string, 0),
 		formulaData:    make([]map[string]string, 0),
 	}
-	if formulaStr == "" {
-		return f.formulaData, f.variableList
-	}
+
 	f.formulaParse()
 	f.getVariableList()
-	return f.formulaData, f.variableList
+	return f.formulaData, f.variableList, nil
+}
+
+func formulaStrVerify(formulaStr string) error {
+	if strings.Count(formulaStr, "=") > 1 {
+		return errors.New("发现多个赋值操作，请检查数据后重新录入")
+	}
+	if strings.Count(formulaStr, "=") == 0 {
+		return errors.New("缺少赋值操作，请检查数据后重新录入")
+	}
+	return nil
 }
 
 // 公式解析的入口函数
 func (f *FormulaAnalysis) formulaParse() {
+
 	for i := 0; i < len(f.formulaStrList); i++ {
 		formulaList := strings.Split(f.formulaStrList[i], "*")
 		data := map[string]string{"coefficient": "", "formula": ""}
