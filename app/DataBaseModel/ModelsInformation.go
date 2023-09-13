@@ -80,6 +80,7 @@ type ParameterCalibrationRecord struct {
 	Interval                string         `gorm:"column:interval;type:varchar(32);comment:仿真时间间隔"`
 	Method                  string         `gorm:"column:method;type:varchar(32);comment:仿真积分方法"`
 	Percentage              int64          `gorm:"column:percentage;default:0;type:int;comment:仿真进度(0-100)"`
+	ActualData              datatypes.JSON `gorm:"column:actual_data;type:json;comment:实测数据字段与数据"`
 	RatedCondition          datatypes.JSON `gorm:"column:rated_condition;type:json;comment:额定工况参数信息"`
 	ConditionParameters     datatypes.JSON `gorm:"column:condition_parameters;type:json;comment:条件参数信息"`
 	Formula                 datatypes.JSON `gorm:"column:formula;type:json;comment:公式解析数据"`
@@ -104,6 +105,7 @@ type ParameterCalibrationTemplate struct {
 	NumberOfIntervals    string         `gorm:"column:number_of_intervals;type:varchar(32);comment:仿真间隔数"`
 	Interval             string         `gorm:"column:interval;type:varchar(32);comment:仿真时间间隔"`
 	Method               string         `gorm:"column:method;type:varchar(32);comment:仿真积分方法"`
+	ActualData           datatypes.JSON `gorm:"column:actual_data;type:json;comment:实测数据字段与数据"`
 	RatedCondition       datatypes.JSON `gorm:"column:rated_condition;type:json;comment:额定工况参数信息"`
 	ConditionParameters  datatypes.JSON `gorm:"column:condition_parameters;type:json;comment:条件参数信息"`
 	Formula              datatypes.JSON `gorm:"column:formula;type:json;comment:公式解析数据"`

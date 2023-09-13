@@ -86,6 +86,7 @@ func ModelRouter(g *gin.Engine) {
 		Models.GET("/parameter/calibration/record/get", API.GetParameterCalibrationRecordView)
 		Models.GET("/parameter/calibration/root/get", API.GetParameterCalibrationRootView)
 		Models.GET("/parameter/calibration/list/get", API.GetParameterCalibrationListView)
+		Models.POST("/parameter/calibration/actual_data/set", API.SetActualDataView)
 		Models.POST("/parameter/calibration/rated_condition/set", API.SetRatedConditionView)
 		Models.POST("/parameter/calibration/condition_parameters/set", API.SetConditionParametersView)
 		Models.GET("/parameter/calibration/variable_parameter/get", API.GetVariableParameterView)

@@ -2373,11 +2373,29 @@ func GetParameterCalibrationRecordView(c *gin.Context) {
 		"interval":              record.Interval,
 		"method":                record.Method,
 		"compile_status":        record.CompileStatus,
+		"actual_data":           record.ActualData,
 		"rated_condition":       record.RatedCondition,
 		"formula":               record.Formula,
 		"associated_parameters": record.AssociatedParameters,
 		"condition_parameters":  record.ConditionParameters,
 	}
+	c.JSON(http.StatusOK, res)
+}
+
+func SetActualDataView(c *gin.Context) {
+	/*
+		# 设置参数标定功能模型的实测参数字段与数据
+	*/
+	var item DataType.SetActualData
+	err := c.BindJSON(&item)
+	if err != nil {
+		log.Println("实测数据错误：", err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	actualDataList, _ := sonic.Marshal(&item.ActualDataList)
+	dbModel.Model(DataBaseModel.ParameterCalibrationRecord{}).Where("id = ? AND package_id = ? AND username = ?", item.ID, item.PackageId, userName).UpdateColumn("actual_data", actualDataList)
+	var res DataType.ResponseData
 	c.JSON(http.StatusOK, res)
 }
 
@@ -2419,7 +2437,6 @@ func GetVariableParameterView(c *gin.Context) {
 	/*
 	  # 获取参数标定功能模型的额定工况参数与条件参数节点
 	*/
-
 	recordId := c.Query("id")
 	packageId := c.Query("package_id")
 	parentNode := c.Query("parent")

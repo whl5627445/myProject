@@ -304,6 +304,17 @@ type ratedCondition struct {
 	Unit         string `json:"unit" binding:"required"`
 }
 
+type SetActualData struct {
+	ID             string       `json:"id" binding:"required"`
+	PackageId      string       `json:"package_id" binding:"required"`
+	ModelName      string       `json:"model_name" binding:"required"`
+	ActualDataList []actualData `json:"actual_data_list" binding:"required"`
+}
+type actualData struct {
+	Name  string   `json:"name" binding:"required"`
+	Value []string `json:"value" binding:"required"`
+}
+
 type SetConditionParametersData struct {
 	ID                      string                `json:"id" binding:"required"`
 	PackageId               string                `json:"package_id" binding:"required"`
