@@ -97,6 +97,7 @@ func DymolaFmuExportWithLibrary(fmuPar map[string]any, envLibrary map[string]str
 		"taskId":          uuid.New().String(),
 		"dymolaLibraries": []map[string]string{},
 	}
+	messageMap := make(map[string]interface{})
 	var folders []string // 所有要加载的用户模型的包文件地址
 	var dymolaLibraries []map[string]string
 	// 编译问题提示 "下载失败，请查看日志"
@@ -196,8 +197,11 @@ func DymolaFmuExportWithLibrary(fmuPar map[string]any, envLibrary map[string]str
 	req.Timeout = time.Minute * 10
 	exportFmuRes, err := requests.Post(config.DymolaSimutalionConnect+"/dymola/translateModelFMU", req)
 	if err != nil {
-		log.Println(err)
 		errTips = "下载失败，请查看日志"
+		messageMap["message"] = "Description Failed to send the http request"
+		messageMap["status"] = true
+		messageMap["type"] = "error"
+		MessageNotice(messageMap)
 		return "", false, errTips
 	}
 	exportResult, _ := exportFmuRes.Json()
@@ -205,6 +209,10 @@ func DymolaFmuExportWithLibrary(fmuPar map[string]any, envLibrary map[string]str
 	ResultCode, ok := exportResult["code"]
 	if err != nil || len(exportResult) == 0 || (ok && ResultCode.(float64) != 200) {
 		errTips = "下载失败，请查看日志"
+		messageMap["message"] = exportResult["log"].(string)
+		messageMap["status"] = true
+		messageMap["type"] = "error"
+		MessageNotice(messageMap)
 		return "", false, errTips
 	}
 	req = url.NewRequest()
