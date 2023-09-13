@@ -19,11 +19,6 @@ class GreeterStub(object):
                 request_serializer=router__pb2.GetProcessStatusRequest.SerializeToString,
                 response_deserializer=router__pb2.GetProcessStatusReply.FromString,
                 )
-        self.GetAllProcessNumber = channel.unary_unary(
-                '/Greeter/GetAllProcessNumber',
-                request_serializer=router__pb2.GetAllProcessNumberRequest.SerializeToString,
-                response_deserializer=router__pb2.GetAllProcessNumberReply.FromString,
-                )
         self.GetResult = channel.unary_unary(
                 '/Greeter/GetResult',
                 request_serializer=router__pb2.GetResultRequest.SerializeToString,
@@ -49,6 +44,11 @@ class GreeterStub(object):
                 request_serializer=router__pb2.SubmitTaskRequest.SerializeToString,
                 response_deserializer=router__pb2.SubmitTaskReply.FromString,
                 )
+        self.FittingCalculation = channel.unary_unary(
+                '/Greeter/FittingCalculation',
+                request_serializer=router__pb2.FittingCalculationRequest.SerializeToString,
+                response_deserializer=router__pb2.FittingCalculationReply.FromString,
+                )
 
 
 class GreeterServicer(object):
@@ -60,14 +60,9 @@ class GreeterServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def GetAllProcessNumber(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
     def GetResult(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+        """rpc GetAllProcessNumber(GetAllProcessNumberRequest) returns (GetAllProcessNumberReply) {}
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -96,6 +91,12 @@ class GreeterServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def FittingCalculation(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_GreeterServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -103,11 +104,6 @@ def add_GreeterServicer_to_server(servicer, server):
                     servicer.GetProcessStatus,
                     request_deserializer=router__pb2.GetProcessStatusRequest.FromString,
                     response_serializer=router__pb2.GetProcessStatusReply.SerializeToString,
-            ),
-            'GetAllProcessNumber': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetAllProcessNumber,
-                    request_deserializer=router__pb2.GetAllProcessNumberRequest.FromString,
-                    response_serializer=router__pb2.GetAllProcessNumberReply.SerializeToString,
             ),
             'GetResult': grpc.unary_unary_rpc_method_handler(
                     servicer.GetResult,
@@ -134,6 +130,11 @@ def add_GreeterServicer_to_server(servicer, server):
                     request_deserializer=router__pb2.SubmitTaskRequest.FromString,
                     response_serializer=router__pb2.SubmitTaskReply.SerializeToString,
             ),
+            'FittingCalculation': grpc.unary_unary_rpc_method_handler(
+                    servicer.FittingCalculation,
+                    request_deserializer=router__pb2.FittingCalculationRequest.FromString,
+                    response_serializer=router__pb2.FittingCalculationReply.SerializeToString,
+            ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
             'Greeter', rpc_method_handlers)
@@ -158,23 +159,6 @@ class Greeter(object):
         return grpc.experimental.unary_unary(request, target, '/Greeter/GetProcessStatus',
             router__pb2.GetProcessStatusRequest.SerializeToString,
             router__pb2.GetProcessStatusReply.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def GetAllProcessNumber(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/Greeter/GetAllProcessNumber',
-            router__pb2.GetAllProcessNumberRequest.SerializeToString,
-            router__pb2.GetAllProcessNumberReply.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -260,5 +244,22 @@ class Greeter(object):
         return grpc.experimental.unary_unary(request, target, '/Greeter/SubmitTask',
             router__pb2.SubmitTaskRequest.SerializeToString,
             router__pb2.SubmitTaskReply.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def FittingCalculation(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/Greeter/FittingCalculation',
+            router__pb2.FittingCalculationRequest.SerializeToString,
+            router__pb2.FittingCalculationReply.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

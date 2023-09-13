@@ -256,5 +256,6 @@ class ParameterCalibrationRecord(Base):
     rated_condition = Column(JSON)
     condition_parameters = Column(JSON)
     formula = Column(JSON)
+    actual_data = Column(JSON)
     associated_parameters = Column(JSON)
 

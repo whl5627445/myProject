@@ -109,35 +109,37 @@ func getRatedConditionParameter(splitNameList []string, scalarVariableMap scalar
 }
 
 type FormulaAnalysis struct {
-	formulaStrList []string            // 在字符串中被解析出的完整公式
-	variableMap    map[string]bool     // 解析后公式中的变量，存储的是原子单位， 不可再分隔
-	variableList   []string            // 从variableMap中取出的变量
-	formulaData    []map[string]string // 公式常量与完整公式的map切片 ，map包含"coefficient", "formula"两个字段
+	formulaStrList      []string            // 在字符串中被解析出的完整公式
+	variableMap         map[string]bool     // 解析后公式中的变量，存储的是原子单位， 不可再分隔
+	variableList        []string            // 从variableMap中取出的变量
+	formulaData         []map[string]string // 公式常量与完整公式的map切片 ，map包含"coefficient", "formula"两个字段
+	coefficientNameList []string            // 公式常量切片
 }
 
 // GetFormulaList 获取公式数据列表与公式变量列表
-func GetFormulaList(formulaStr string) ([]map[string]string, []string, error) {
+func GetFormulaList(formulaStr string) ([]map[string]string, []string, []string, error) {
 	if formulaStr == "" {
-		return nil, nil, errors.New("解析数据不能为空")
+		return nil, nil, nil, errors.New("解析数据不能为空")
 	}
 	err := formulaStrVerify(formulaStr)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	formulaStrList := []string{}
 	index := strings.Index(formulaStr, "=")
 	formulaStrList = append(formulaStrList, formulaStr[:index])
 	formulaStrList = append(formulaStrList, strings.Split(formulaStr[index+1:], "+")...)
 	f := FormulaAnalysis{
-		formulaStrList: formulaStrList,
-		variableMap:    make(map[string]bool, 0),
-		variableList:   make([]string, 0),
-		formulaData:    make([]map[string]string, 0),
+		formulaStrList:      formulaStrList,
+		variableMap:         make(map[string]bool, 0),
+		variableList:        make([]string, 0),
+		formulaData:         make([]map[string]string, 0),
+		coefficientNameList: make([]string, 0),
 	}
 
 	f.formulaParse()
 	f.getVariableList()
-	return f.formulaData, f.variableList, nil
+	return f.formulaData, f.variableList, f.coefficientNameList, nil
 }
 
 func formulaStrVerify(formulaStr string) error {
@@ -164,6 +166,7 @@ func (f *FormulaAnalysis) formulaParse() {
 		}
 		f.getVariable(formulaList[1:])
 		f.formulaData = append(f.formulaData, data)
+		f.coefficientNameList = append(f.coefficientNameList, data["coefficient"])
 	}
 }
 

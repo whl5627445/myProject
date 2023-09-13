@@ -2,14 +2,24 @@ syntax = "proto3";
 option go_package = "./grpcPb" ;
 service Greeter {
   rpc GetProcessStatus(GetProcessStatusRequest) returns (GetProcessStatusReply) {}
-  rpc GetAllProcessNumber(GetAllProcessNumberRequest) returns (GetAllProcessNumberReply) {}
+//  rpc GetAllProcessNumber(GetAllProcessNumberRequest) returns (GetAllProcessNumberReply) {}
   rpc GetResult(GetResultRequest) returns (GetResultReply) {}
   rpc ProcessOperation(ProcessOperationRequest) returns (ProcessOperationReply) {}
   rpc ReadSimulationResult(ReadSimulationResultRequest) returns (ReadSimulationResultReply) {}
   rpc CheckVarExist(CheckVarExistRequest) returns (CheckVarExistReply) {}
   rpc SubmitTask(SubmitTaskRequest) returns (SubmitTaskReply) {}
+  rpc FittingCalculation(FittingCalculationRequest) returns (FittingCalculationReply) {}
+}
+message FittingCalculationRequest{
+  string uuid = 1;
 }
 
+message FittingCalculationReply{
+  repeated string coefficient=1;
+  string score = 2;
+  int32  status = 3;
+  string err = 4;
+}
 
 message GetProcessStatusRequest{
   string uuid = 1;

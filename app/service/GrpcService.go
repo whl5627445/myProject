@@ -550,3 +550,11 @@ func GrpcSimulationProcessOperation(uid, operation, simulateType string) (*grpcP
 	replyTest, err := grpcPb.Client.ProcessOperation(grpcPb.Ctx, PyOmcSimProcessOperationRequest)
 	return replyTest, err
 }
+
+func GrpcFittingCalculation(uid string) (*grpcPb.FittingCalculationReply, error) {
+	FittingCalculationRequest := &grpcPb.FittingCalculationRequest{
+		Uuid: uid,
+	}
+	res, err := grpcPb.Client.FittingCalculation(grpcPb.Ctx, FittingCalculationRequest)
+	return res, err
+}

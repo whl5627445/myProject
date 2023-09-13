@@ -2480,15 +2480,18 @@ func ParameterCalibrationFormulaParserView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
-	formulaData, variableList, err := service.GetFormulaList(item.FormulaStr)
+	formulaData, variableList, coefficientNameList, err := service.GetFormulaList(item.FormulaStr)
 	if err != nil {
 		res.Err = err.Error()
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	formula, _ := sonic.Marshal(map[string]any{"formula": formulaData, "variable": variableList})
-	dbModel.Model(DataBaseModel.ParameterCalibrationRecord{}).Where("id = ? AND package_id = ? AND username = ?", item.ID, item.PackageId, userName).UpdateColumn("formula", formula)
+	formula, _ := sonic.Marshal(&formulaData)
+	coefficientName, _ := sonic.Marshal(&coefficientNameList)
+	variables, _ := sonic.Marshal(&variableList)
+	dbModel.Model(DataBaseModel.ParameterCalibrationRecord{}).Where("id = ? AND package_id = ? AND username = ?", item.ID, item.PackageId, userName).Updates(
+		map[string]any{"formula": formula, "coefficient_name": coefficientName, "variable_list": variables})
 	res.Data = map[string]any{"variable": variableList, "formula": formulaData}
 	c.JSON(http.StatusOK, res)
 }
@@ -2507,6 +2510,47 @@ func SetAssociatedParametersView(c *gin.Context) {
 	parameters, _ := sonic.Marshal(&item.Parameters)
 	dbModel.Model(DataBaseModel.ParameterCalibrationRecord{}).Where("id = ? AND package_id = ? AND username = ?", item.ID, item.PackageId, userName).UpdateColumn("associated_parameters", parameters)
 	var res DataType.ResponseData
+	c.JSON(http.StatusOK, res)
+}
+
+func FittingCalculationView(c *gin.Context) {
+	/*
+		# 进行模型参数标定的拟合计算
+	*/
+	var item DataType.FittingCalculationData
+	var res DataType.ResponseData
+	err := c.BindJSON(&item)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	result, err := service.GrpcFittingCalculation(item.ID)
+	if err != nil {
+		res.Err = "系统出现错误，请联系管理员"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	if result.Status != 0 {
+		res.Err = result.Err
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	var record DataBaseModel.ParameterCalibrationRecord
+	dbModel.Where("id = ? AND username = ?", item.ID, userName).First(&record)
+	record.Coefficient, _ = sonic.Marshal(&result.Coefficient)
+	dbModel.Save(&record)
+	var formulaList []map[string]string
+	var coefficientNameList []string
+	var coefficientList []map[string]any
+	_ = sonic.Unmarshal(record.Formula, &formulaList)
+	_ = sonic.Unmarshal(record.CoefficientName, &coefficientNameList)
+	for i := 1; i < len(coefficientNameList); i++ {
+		coefficientList = append(coefficientList, map[string]any{"name": coefficientNameList[i], "value": result.Coefficient[i-1]})
+	}
+	res.Data = map[string]any{"coefficient": coefficientList, "score": result.Score}
 	c.JSON(http.StatusOK, res)
 }
 

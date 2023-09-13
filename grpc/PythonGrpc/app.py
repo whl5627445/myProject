@@ -17,6 +17,8 @@ from libs.function.find_port import findPort
 from libs.function.defs import update_app_pages_records
 from libs.function.grpc_log import log
 from libs.function.init import initOmTask, initDmTask
+from libs.parameter_calibration.fitting_calculation import get_coefficient_score
+from config.db_config import ParameterCalibrationRecord
 import threading
 import zarr
 from config.db_config import Session, YssimSimulateRecords
@@ -56,7 +58,7 @@ if __name__ == '__main__':
     class Greeter(router_pb2_grpc.GreeterServicer):
         # 实现 proto 文件中定义的 rpc 调用
         # 仿真接口
-        def SubmitTask(self, request, context):
+        def SubmitTask (self, request, context):
 
             newRequest = copy.deepcopy(request)
             data = newRequest
@@ -72,7 +74,7 @@ if __name__ == '__main__':
                                               msg="Task submitted successfully."
                                               )
 
-        def ProcessOperation(self, request, context):
+        def ProcessOperation (self, request, context):
             log.info("ProcessOperation被调用。")
             multiprocessing_id = request.uuid
             operationName = request.operationName
@@ -111,7 +113,7 @@ if __name__ == '__main__':
 
         # 获取某个进程状态信息
 
-        def GetProcessStatus(self, request, context):
+        def GetProcessStatus (self, request, context):
             uuid = request.uuid
             with Session() as session:
                 processDetails = session.query(YssimSimulateRecords).filter(YssimSimulateRecords.id == uuid).first()
@@ -135,7 +137,7 @@ if __name__ == '__main__':
                                                         resPath="")
 
         # 获取变量结果 单个mat文件单个变量mat
-        def GetResult(self, request, context):
+        def GetResult (self, request, context):
             log.info("GetResult被调用。")
             d = DyMat.DyMatFile(r"/home/simtek/code/" + request.path)
             try:
@@ -152,7 +154,7 @@ if __name__ == '__main__':
                 return router_pb2.GetResultReply(data=[], log=str(e))
 
         # 单个记录，多个变量zarr
-        def ReadSimulationResult(self, request, context):
+        def ReadSimulationResult (self, request, context):
             log.info("ReadSimulationResult被调用。")
             res = zarr.load(adsPath + request.resultPath)
             if res is not None:
@@ -171,7 +173,7 @@ if __name__ == '__main__':
             else:
                 return router_pb2.SaveFilterResultToCsvReply(ok=False)
 
-        def CheckVarExist(self, request, context):
+        def CheckVarExist (self, request, context):
             log.info("CheckVarExist被调用")
             resMap = {}
             zarrPath = os.path.dirname(adsPath + request.Path) + "/zarr_res.zarr"
@@ -190,13 +192,30 @@ if __name__ == '__main__':
                     resMap[i] = True
             return router_pb2.CheckVarExistReply(Res=resMap)
 
+        def FittingCalculation(self, request, context):
+            log.info("FittingCalculation被调用")
+            with (Session() as session):
+                app_pages_record = session.query(ParameterCalibrationRecord
+                                                 ).filter(ParameterCalibrationRecord.id == request.uuid).first()
+            if app_pages_record.formula is None or app_pages_record.actual_data is None or app_pages_record.associated_parameters is None:
+                return router_pb2.FittingCalculationReply(status=2, err="拟合数据缺失")
+            formula = app_pages_record.formula
+            associated_parameters = {}
+            actual_data = {}
+            for i in app_pages_record.associated_parameters:
+                associated_parameters[i["measured_variable"]] = i["formula_variable"]
+            for i in app_pages_record.actual_data:
+                actual_data[associated_parameters[i["name"]]] = i["value"]
+            coefficient, score = get_coefficient_score(actual_data, formula)
+            return router_pb2.FittingCalculationReply(coefficient=coefficient, score=score, status=0, err="")
+
 
     class SimulationThread(threading.Thread):
-        def __int__(self):
+        def __int__ (self):
             threading.Thread.__init__(self)
             pass
 
-        def run(self):
+        def run (self):
             log.info("仿真任务执行线程启动!")
             while True:
                 time.sleep(1)
@@ -204,26 +223,30 @@ if __name__ == '__main__':
                 if len(OmSimulationThreadList) > 0:
                     log.info("(OMC)正在运行的任务数：{}".format(len(OmSimulationThreadList)))
                     log.info("(OMC)正在运行的任务：" + str(
-                        [{j.request.simulateModelName: j.state,
-                          "user_name": j.request.userName,
-                          "id": j.uuid,
-                          "socket进度": j.tcpServer.percentage[-1] if (hasattr(j, "tcpServer") and j.tcpServer is not None) else 0
-                          } for j in
-                         OmSimulationThreadList]))
+                            [{
+                                j.request.simulateModelName: j.state,
+                                "user_name": j.request.userName,
+                                "id": j.uuid,
+                                "socket进度": j.tcpServer.percentage[-1] if (
+                                        hasattr(j, "tcpServer") and j.tcpServer is not None) else 0
+                                } for j in
+                                OmSimulationThreadList]))
                 if len(omcTaskList) > 0:
                     log.info("(OMC)正在排队的任务数：{}".format(len(omcTaskList)))
                     log.info("(OMC)正在排队的任务：" + str(
-                        [{"model_name": j.simulateModelName, "user_name": j.userName} for j in omcTaskList]))
+                            [{"model_name": j.simulateModelName, "user_name": j.userName} for j in omcTaskList]))
                 if len(DmSimulationThreadList) > 0:
                     log.info("(Dymola)正在运行的任务数：{}".format(len(DmSimulationThreadList)))
                     log.info("(Dymola)正在运行的任务：" + str(
-                        [{j.request.simulateModelName: j.state,
-                          "user_name": j.request.userName,
-                          "id": j.uuid} for j in DmSimulationThreadList]))
+                            [{
+                                j.request.simulateModelName: j.state,
+                                "user_name": j.request.userName,
+                                "id": j.uuid
+                                } for j in DmSimulationThreadList]))
                 if len(dymolaTaskList) > 0:
                     log.info("(Dymola)未执行任务队列剩余数量：{}".format(len(dymolaTaskList)))
                     log.info("(Dymola)正在排队的任务：" + str(
-                        [{"model_name": j.simulateModelName, "user_name": j.userName} for j in dymolaTaskList]))
+                            [{"model_name": j.simulateModelName, "user_name": j.userName} for j in dymolaTaskList]))
                 # 任务状态为"stopped"的移除队列
                 for i in OmSimulationThreadList:
                     if i.state == "stopped":

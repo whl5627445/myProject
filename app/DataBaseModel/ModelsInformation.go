@@ -83,7 +83,10 @@ type ParameterCalibrationRecord struct {
 	ActualData              datatypes.JSON `gorm:"column:actual_data;type:json;comment:实测数据字段与数据"`
 	RatedCondition          datatypes.JSON `gorm:"column:rated_condition;type:json;comment:额定工况参数信息"`
 	ConditionParameters     datatypes.JSON `gorm:"column:condition_parameters;type:json;comment:条件参数信息"`
-	Formula                 datatypes.JSON `gorm:"column:formula;type:json;comment:公式解析数据"`
+	Formula                 datatypes.JSON `gorm:"column:formula;type:json;comment:解析出来的公式"`
+	VariableList            datatypes.JSON `gorm:"column:variable_list;type:json;comment:解析出来的公式变量数值"`
+	CoefficientName         datatypes.JSON `gorm:"column:coefficient_name;type:json;comment:公式系数的名字"`
+	Coefficient             datatypes.JSON `gorm:"column:coefficient;type:json;comment:公式系数的具体值"`
 	AssociatedParameters    datatypes.JSON `gorm:"column:associated_parameters;type:json;comment:公式变量与实测数据参数名的映射"`
 	CreatedAt               *time.Time     `gorm:"column:create_time;autoCreateTime;comment:创建时间" json:"-"`
 	UpdatedAt               *time.Time     `gorm:"column:update_time;comment:更新时间" json:"-"`
@@ -108,7 +111,10 @@ type ParameterCalibrationTemplate struct {
 	ActualData           datatypes.JSON `gorm:"column:actual_data;type:json;comment:实测数据字段与数据"`
 	RatedCondition       datatypes.JSON `gorm:"column:rated_condition;type:json;comment:额定工况参数信息"`
 	ConditionParameters  datatypes.JSON `gorm:"column:condition_parameters;type:json;comment:条件参数信息"`
-	Formula              datatypes.JSON `gorm:"column:formula;type:json;comment:公式解析数据"`
+	Formula              datatypes.JSON `gorm:"column:formula;type:json;comment:解析出来的公式"`
+	VariableList         datatypes.JSON `gorm:"column:variable_list;type:json;comment:解析出来的公式变量数值"`
+	CoefficientName      datatypes.JSON `gorm:"column:coefficient_name;type:json;comment:公式系数的名字"`
+	Coefficient          datatypes.JSON `gorm:"column:coefficient;type:json;comment:公式系数的具体值"`
 	AssociatedParameters datatypes.JSON `gorm:"column:associated_parameters;type:json;comment:公式变量与实测数据参数名的映射"`
 	CreatedAt            *time.Time     `gorm:"column:create_time;autoCreateTime;comment:创建时间"`
 	UpdatedAt            *time.Time     `gorm:"column:update_time;comment:更新时间"`

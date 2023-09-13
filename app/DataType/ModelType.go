@@ -364,3 +364,7 @@ type CreateCalibrationTemplateData struct {
 	ID           string `json:"id" binding:"required"`
 	TemplateName string `json:"template_name" binding:"required"`
 }
+
+type FittingCalculationData struct {
+	ID string `json:"id" binding:"required"`
+}
