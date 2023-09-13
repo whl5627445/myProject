@@ -152,6 +152,11 @@ func (f *FormulaAnalysis) formulaParse() {
 // 将解析后的公式参数放入Map，顺便去重
 func (f *FormulaAnalysis) getVariable(variableList []string) {
 	for i := 0; i < len(variableList); i++ {
+		pow := strings.Index(variableList[i], "^")
+		if pow != -1 {
+			f.variableMap[variableList[i][:pow]] = true
+			continue
+		}
 		f.variableMap[variableList[i]] = true
 	}
 }
