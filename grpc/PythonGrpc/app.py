@@ -197,16 +197,31 @@ if __name__ == '__main__':
             with (Session() as session):
                 app_pages_record = session.query(ParameterCalibrationRecord
                                                  ).filter(ParameterCalibrationRecord.id == request.uuid).first()
-            if app_pages_record.formula is None or app_pages_record.actual_data is None or app_pages_record.associated_parameters is None:
-                return router_pb2.FittingCalculationReply(status=2, err="拟合数据缺失")
+            if app_pages_record.formula in [[], {}, None]:
+                return router_pb2.FittingCalculationReply(status=2, err="请录入公式数据")
+            elif app_pages_record.actual_data in [[], {}, None]:
+                return router_pb2.FittingCalculationReply(status=2, err="请上传实测数据")
+            elif app_pages_record.associated_parameters in [[], {}, None]:
+                return router_pb2.FittingCalculationReply(status=2, err="请关联拟合参数")
             formula = app_pages_record.formula
             associated_parameters = {}
             actual_data = {}
+
             for i in app_pages_record.associated_parameters:
-                associated_parameters[i["measured_variable"]] = i["formula_variable"]
+                try:
+                    associated_parameters[i["measured_variable"]] = i["formula_variable"]
+                except Exception as e:
+                    return router_pb2.FittingCalculationReply(status=2, err="关联参数有误")
             for i in app_pages_record.actual_data:
+                if i["name"] not in associated_parameters:
+                    continue
                 actual_data[associated_parameters[i["name"]]] = i["value"]
-            coefficient, score = get_coefficient_score(actual_data, formula)
+            coefficient, score, err = get_coefficient_score(actual_data, formula)
+            log.info(coefficient)
+            log.info(score)
+            log.info(err)
+            if err is not None:
+                return router_pb2.FittingCalculationReply(status=2, err=err)
             return router_pb2.FittingCalculationReply(coefficient=coefficient, score=score, status=0, err="")
 
 

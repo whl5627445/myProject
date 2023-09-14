@@ -2,7 +2,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 import pandas as pd
 
-
 def prediction (data):
     # 读取数据
     # data = pd.read_excel(data_file)
@@ -77,22 +76,27 @@ def get_formula_operation (value_dict, formula_list):
                 return None, None
         formula_data_list = []
         f_list = f_dict.keys()
-        l_list = []
         for i in range(0, l):
             replace_formula = formula.replace("^", "**")
             for f in f_list:
-                replace_formula = replace_formula.replace(f, str(f_dict[f][i]))
-            l_list.append(replace_formula)
-            value = eval(replace_formula)
-            formula_data_list.append(value)
+                d = str(f_dict[f][i])
+                if d == "":
+                    return None
+                replace_formula = replace_formula.replace(f, d)
+                value = eval(replace_formula)
+                formula_data_list.append(value)
+
         data_dict[formula] = formula_data_list
     return pd.DataFrame(data_dict)
 
 
 def get_coefficient_score(actual_data, formula_list):
     data = get_formula_operation(actual_data, formula_list)
+
+    if data is None:
+        return None, None, "实测数据含有空值，本次拟合失败"
     predictions_coefficient, predictions_score = prediction(data)
-    return [str(c) for c in predictions_coefficient], str(predictions_score)
+    return [str(c) for c in predictions_coefficient], str(predictions_score), None
 
 
 
