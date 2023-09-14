@@ -2525,6 +2525,15 @@ func FittingCalculationView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
+
+	var record DataBaseModel.ParameterCalibrationRecord
+	dbModel.Where("id = ? AND username = ?", item.ID, userName).First(&record)
+	if record.ID == "" {
+		res.Err = "未找到记录"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
 	result, err := service.GrpcFittingCalculation(item.ID)
 	if err != nil {
 		res.Err = "系统出现错误，请联系管理员"
@@ -2538,10 +2547,9 @@ func FittingCalculationView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	var record DataBaseModel.ParameterCalibrationRecord
-	dbModel.Where("id = ? AND username = ?", item.ID, userName).First(&record)
-	record.Coefficient, _ = sonic.Marshal(&result.Coefficient)
-	dbModel.Save(&record)
+	dbModel.Model(&record).Update("coefficient", &result.Coefficient)
+	//record.Coefficient, _ = sonic.Marshal(&result.Coefficient)
+	//dbModel.Save(&record)
 	var formulaList []map[string]string
 	var coefficientNameList []string
 	var coefficientList []map[string]any
@@ -2586,16 +2594,17 @@ func CreateParameterCalibrationTemplateView(c *gin.Context) {
 	}
 	var record map[string]any
 	var template DataBaseModel.ParameterCalibrationTemplate
-	columnList := []string{"id", "package_path", "compile_Dependencies", "compile_path", "simulate_result_path",
-		"start_time", "stop_time", "tolerance", "number_of_intervals", "interval", "method",
-		"rated_condition", "condition_parameters", "formula", "associated_parameters"}
-	dbModel.Model(&DataBaseModel.ParameterCalibrationRecord{}).Select(columnList).Where("id = ? AND username = ?", item.ID, userName).First(&template)
-	if record["ID"] != "" {
+
+	dbModel.Model(&DataBaseModel.ParameterCalibrationRecord{}).Where("id = ?", item.ID).First(&record)
+	if record == nil {
 		log.Println("未查到模型标定记录，请先创建记录再保存模板")
 		c.JSON(http.StatusBadRequest, "")
+		return
 	}
-	template.RecordID = uuid.New().String()
+	template.ID = uuid.New().String()
 	template.TemplateName = item.TemplateName
 	dbModel.Create(&template)
+	dbModel.Model(&DataBaseModel.ParameterCalibrationTemplate{}).Where("id = ?", template.ID).Updates(&record)
+	res.Msg = "模板创建成功"
 	c.JSON(http.StatusOK, res)
 }

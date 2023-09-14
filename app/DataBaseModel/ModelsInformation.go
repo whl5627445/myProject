@@ -95,28 +95,39 @@ type ParameterCalibrationRecord struct {
 }
 
 type ParameterCalibrationTemplate struct {
-	RecordID             string         `gorm:"index;primaryKey;type:varchar(128);comment:参数标定模板的唯一标识" json:"id"`
-	TemplateName         string         `gorm:"column:template_name;type:varchar(128);comment:参数标定记录的唯一标识" json:"template_name"`
-	ID                   string         `gorm:"index;column:id;type:varchar(128);comment:参数标定记录的唯一标识"`
-	PackagePath          string         `gorm:"column:package_path;type:varchar(256);comment:标定模型所在包的加载文件"`
-	CompileDependencies  datatypes.JSON `gorm:"column:compile_Dependencies;type:json;comment:编译时所需的包环境"`
-	CompilePath          string         `gorm:"column:compile_path;type:varchar(128);comment:编译好的文件存放路径"`
-	SimulateResultPath   string         `gorm:"column:simulate_result_path;type:varchar(256);comment:仿真结果存储路径"`
-	StartTime            string         `gorm:"column:start_time;type:varchar(32);comment:仿真开始时间"`
-	StopTime             string         `gorm:"column:stop_time;type:varchar(32);comment:仿真结束时间"`
-	Tolerance            string         `gorm:"column:tolerance;type:varchar(32);comment:仿真积分误差"`
-	NumberOfIntervals    string         `gorm:"column:number_of_intervals;type:varchar(32);comment:仿真间隔数"`
-	Interval             string         `gorm:"column:interval;type:varchar(32);comment:仿真时间间隔"`
-	Method               string         `gorm:"column:method;type:varchar(32);comment:仿真积分方法"`
-	ActualData           datatypes.JSON `gorm:"column:actual_data;type:json;comment:实测数据字段与数据"`
-	RatedCondition       datatypes.JSON `gorm:"column:rated_condition;type:json;comment:额定工况参数信息"`
-	ConditionParameters  datatypes.JSON `gorm:"column:condition_parameters;type:json;comment:条件参数信息"`
-	Formula              datatypes.JSON `gorm:"column:formula;type:json;comment:解析出来的公式"`
-	VariableList         datatypes.JSON `gorm:"column:variable_list;type:json;comment:解析出来的公式变量数值"`
-	CoefficientName      datatypes.JSON `gorm:"column:coefficient_name;type:json;comment:公式系数的名字"`
-	Coefficient          datatypes.JSON `gorm:"column:coefficient;type:json;comment:公式系数的具体值"`
-	AssociatedParameters datatypes.JSON `gorm:"column:associated_parameters;type:json;comment:公式变量与实测数据参数名的映射"`
-	CreatedAt            *time.Time     `gorm:"column:create_time;autoCreateTime;comment:创建时间"`
-	UpdatedAt            *time.Time     `gorm:"column:update_time;comment:更新时间"`
-	Deleted              gorm.DeletedAt `gorm:"column:deleted_at;comment:删除时间"`
+	RecordID                string         `gorm:"index;column:id;type:varchar(128);comment:参数标定记录的唯一标识"`
+	PackageId               string         `gorm:"index;column:package_id;type:varchar(128);comment:package唯一标识"`
+	Version                 string         `gorm:"column:version;default:\"\";type:varchar(32);comment:package版本号"`
+	UserName                string         `gorm:"index;column:username;type:varchar(128);comment:用户名"`
+	ModelName               string         `gorm:"column:model_name;type:varchar(256);comment:模型名称"`
+	PackagePath             string         `gorm:"column:package_path;type:varchar(256);comment:标定模型所在包的加载文件"`
+	CompileDependencies     datatypes.JSON `gorm:"column:compile_Dependencies;type:json;comment:编译时所需的包环境"`
+	CompilePath             string         `gorm:"column:compile_path;type:varchar(128);comment:编译好的文件存放路径"`
+	CompileStatus           string         `gorm:"column:compile_status;default:\"0\";type:varchar(32);comment:编译结果状态码，0(初始状态)、3(失败)、4(成功)、6(编译中)"`
+	CompileStartTime        int64          `gorm:"column:compile_start_time;type:int;comment:编译开始时间"`
+	CompileStopTime         int64          `gorm:"column:compile_stop_time;type:int;comment:编译结束时间"`
+	SimulateModelResultPath string         `gorm:"column:simulate_model_result_path;type:varchar(256);comment:仿真结果存储路径"`
+	SimulateResultStr       string         `gorm:"column:simulate_result_str;comment:仿真结果输出字符串"`
+	SimulateStatus          string         `gorm:"column:simulate_status;default:\"0\";type:varchar(32);comment:仿真状态"`
+	StartTime               string         `gorm:"column:start_time;type:varchar(32);comment:仿真开始时间"`
+	StopTime                string         `gorm:"column:stop_time;type:varchar(32);comment:仿真结束时间"`
+	Tolerance               string         `gorm:"column:tolerance;type:varchar(32);comment:仿真积分误差"`
+	NumberOfIntervals       string         `gorm:"column:number_of_intervals;type:varchar(32);comment:仿真间隔数"`
+	Interval                string         `gorm:"column:interval;type:varchar(32);comment:仿真时间间隔"`
+	Method                  string         `gorm:"column:method;type:varchar(32);comment:仿真积分方法"`
+	Percentage              int64          `gorm:"column:percentage;default:0;type:int;comment:仿真进度(0-100)"`
+	ActualData              datatypes.JSON `gorm:"column:actual_data;type:json;comment:实测数据字段与数据"`
+	RatedCondition          datatypes.JSON `gorm:"column:rated_condition;type:json;comment:额定工况参数信息"`
+	ConditionParameters     datatypes.JSON `gorm:"column:condition_parameters;type:json;comment:条件参数信息"`
+	Formula                 datatypes.JSON `gorm:"column:formula;type:json;comment:解析出来的公式"`
+	VariableList            datatypes.JSON `gorm:"column:variable_list;type:json;comment:解析出来的公式变量数值"`
+	CoefficientName         datatypes.JSON `gorm:"column:coefficient_name;type:json;comment:公式系数的名字"`
+	Coefficient             datatypes.JSON `gorm:"column:coefficient;type:json;comment:公式系数的具体值"`
+	AssociatedParameters    datatypes.JSON `gorm:"column:associated_parameters;type:json;comment:公式变量与实测数据参数名的映射"`
+	CreatedAt               *time.Time     `gorm:"column:create_time;autoCreateTime;comment:创建时间" json:"-"`
+	UpdatedAt               *time.Time     `gorm:"column:update_time;comment:更新时间" json:"-"`
+	UserSpaceId             string         `gorm:"column:userspace_id;type:varchar(128);comment:package所在用户空间的唯一识别标识"`
+	Deleted                 gorm.DeletedAt `gorm:"column:deleted_at;comment:删除时间" json:"-"`
+	ID                      string         `gorm:"index;primaryKey;type:varchar(128);comment:参数标定模板的唯一标识"`
+	TemplateName            string         `gorm:"column:template_name;type:varchar(128);comment:参数标定模板名称"`
 }

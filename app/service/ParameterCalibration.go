@@ -126,13 +126,15 @@ func GetFormulaList(formulaStr string) ([]map[string]string, []string, []string,
 		return nil, nil, nil, err
 	}
 	formulaStrList := []string{}
+	variableMap := make(map[string]bool, 0)
 	index := strings.Index(formulaStr, "=")
 	formulaStrList = append(formulaStrList, formulaStr[:index])
+	variableMap[formulaStr[:index]] = true
 	formulaStrList = append(formulaStrList, strings.Split(formulaStr[index+1:], "+")...)
 	f := FormulaAnalysis{
 		formulaStrList:      formulaStrList,
-		variableMap:         make(map[string]bool, 0),
-		variableList:        make([]string, 0),
+		variableMap:         variableMap,
+		variableList:        []string{},
 		formulaData:         make([]map[string]string, 0),
 		coefficientNameList: make([]string, 0),
 	}
