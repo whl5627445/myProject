@@ -1,6 +1,8 @@
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 import pandas as pd
+from libs.function.grpc_log import log
+
 
 def prediction (data):
     # 读取数据
@@ -56,13 +58,16 @@ def get_formula_operation (value_dict, formula_list):
     data = pd.DataFrame(value_dict)
     approach = data.columns[0]
     approach_data = data[approach].tolist()
-    data_dict[approach] = approach_data
+    try:
+        data_dict[approach] = [float(f) for f in approach_data]
+    except Exception as e:
+        log.info("approach数据解析失败， 含有非浮点型字符")
+        return None, None
     l = len(approach_data)
     for formula_dict in formula_list:
         # formula = "Twb * Tr^2 * LGRatio^2"
         formula = formula_dict["formula"].replace(" ", "")
         f_str_list = formula.split("*")
-
         if formula == "1":
             data_dict[formula] = [1] * l
             continue
@@ -76,6 +81,7 @@ def get_formula_operation (value_dict, formula_list):
                 return None, None
         formula_data_list = []
         f_list = f_dict.keys()
+
         for i in range(0, l):
             replace_formula = formula.replace("^", "**")
             for f in f_list:
@@ -83,8 +89,8 @@ def get_formula_operation (value_dict, formula_list):
                 if d == "":
                     return None
                 replace_formula = replace_formula.replace(f, d)
-                value = eval(replace_formula)
-                formula_data_list.append(value)
+            value = eval(replace_formula)
+            formula_data_list.append(value)
 
         data_dict[formula] = formula_data_list
     return pd.DataFrame(data_dict)
@@ -92,7 +98,6 @@ def get_formula_operation (value_dict, formula_list):
 
 def get_coefficient_score(actual_data, formula_list):
     data = get_formula_operation(actual_data, formula_list)
-
     if data is None:
         return None, None, "实测数据含有空值，本次拟合失败"
     predictions_coefficient, predictions_score = prediction(data)

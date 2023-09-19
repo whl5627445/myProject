@@ -7,7 +7,7 @@ from libs.function.process_operation import kill_process
 from libs.simulation.OmcSimulationThread import OmcSimulation
 from libs.translate.OmcTranslateThread import OmcTranslateThread
 from libs.run_result.OmcRunThread import OmcRunThread
-from libs.compile.OmcCompileThread import OmcCompileThread
+from libs.Calibration.CalibrationThread import CalibrationCompileThread, CalibrationSimulateThread
 
 from libs.simulation.DmSimulationThread import DmSimulation
 from libs.translate.DmcTranslateThread import DmTranslateThread
@@ -16,7 +16,7 @@ from libs.run_result.DmRunThread import DmRunThread
 from libs.function.find_port import findPort
 from libs.function.defs import update_app_pages_records
 from libs.function.grpc_log import log
-from libs.function.init import initOmTask, initDmTask
+from libs.function.init import initOmTask, initDmTask, initcalibrationTask
 from libs.parameter_calibration.fitting_calculation import get_coefficient_score
 from config.db_config import ParameterCalibrationRecord
 import threading
@@ -47,10 +47,15 @@ if __name__ == '__main__':
     # 接收仿真任务队列
     # 初始化omc任务队列
     omcTaskList = initOmTask()
+    # 初始化参数标定任务队列
+    calibrationCompileList, calibrationSimulateList = initcalibrationTask()
     # 初始化dy任务队列
     dymolaTaskList = initDmTask()
     # 每个用户只能开启一个omc线程和一个dymola线程
     omcTaskMarkDict = {}
+    # 参数标定任务区分为两个任务执行
+    calibrationCompileTaskMarkDict = {}
+    calibrationSimulateTaskMarkDict = {}
     dymolaTaskMarkDict = {}
 
 
@@ -262,6 +267,14 @@ if __name__ == '__main__':
                     log.info("(Dymola)未执行任务队列剩余数量：{}".format(len(dymolaTaskList)))
                     log.info("(Dymola)正在排队的任务：" + str(
                             [{"model_name": j.simulateModelName, "user_name": j.userName} for j in dymolaTaskList]))
+                if len(calibrationCompileList) > 0:
+                    log.info("(calibration编译)未执行任务队列剩余数量：{}".format(len(calibrationCompileList)))
+                    log.info("(calibration编译)正在排队的任务：" + str(
+                        [{"model_name": j.simulateModelName, "user_name": j.userName} for j in calibrationCompileList]))
+                if len(calibrationSimulateList) > 0:
+                    log.info("(calibration仿真)未执行任务队列剩余数量：{}".format(len(calibrationSimulateList)))
+                    log.info("(calibration仿真)正在排队的任务：" + str(
+                        [{"model_name": j.simulateModelName, "user_name": j.userName} for j in calibrationSimulateList]))
                 # 任务状态为"stopped"的移除队列
                 for i in OmSimulationThreadList:
                     if i.state == "stopped":
@@ -274,6 +287,16 @@ if __name__ == '__main__':
                         log.info("(Dymola)" + i.request.simulateModelName + "仿真结束,线程关闭。")
                         DmSimulationThreadList.remove(i)
                         del dymolaTaskMarkDict[i.request.userName]
+                for i in calibrationCompileList:
+                    if i.state == "stopped":
+                        log.info("(calibration)" + i.request.simulateModelName + "仿真结束,线程关闭。")
+                        calibrationCompileList.remove(i)
+                        del calibrationCompileTaskMarkDict[i.request.userName]
+                for i in calibrationSimulateList:
+                    if i.state == "stopped":
+                        log.info("(calibration)" + i.request.simulateModelName + "仿真结束,线程关闭。")
+                        calibrationSimulateList.remove(i)
+                        del calibrationSimulateTaskMarkDict[i.request.userName]
                 # 取omc任务
                 i = 0
                 while i < len(omcTaskList):
@@ -296,13 +319,35 @@ if __name__ == '__main__':
                             om_threading = OmcRunThread(data)
                             om_threading.start()
                             OmSimulationThreadList.append(om_threading)
-                        if data.taskType == "compile":
-                            port = findPort(start_port)
-                            om_threading = OmcCompileThread(data, port)
-                            om_threading.start()
-                            OmSimulationThreadList.append(om_threading)
                         omcTaskMarkDict[userName] = True
                     i += 1
+                # 取参数标定编译任务
+                ci = 0
+                while ci < len(calibrationCompileList):
+                    userName = calibrationCompileList[ci].userName
+                    if userName not in calibrationCompileTaskMarkDict:
+                        data = calibrationCompileList.pop(ci)
+                        if data.taskType == "compile":
+                            port = findPort(start_port)
+                            t = CalibrationCompileThread(data, port)
+                            t.start()
+                            calibrationCompileList.append(t)
+                        calibrationCompileTaskMarkDict[userName] = True
+                    ci += 1
+                # 取参数标定仿真任务
+                si = 0
+                while si < len(calibrationSimulateList):
+                    userName = calibrationSimulateList[si].userName
+                    if userName not in calibrationSimulateTaskMarkDict:
+                        data = calibrationSimulateList.pop(si)
+                        if data.taskType == "simulate":
+                            port = findPort(start_port)
+                            t = CalibrationSimulateThread(data, port)
+                            t.start()
+                            calibrationSimulateList.append(t)
+                        calibrationSimulateTaskMarkDict[userName] = True
+                    si += 1
+
                 # 取 dymola任务
                 di = 0
                 while di < len(dymolaTaskList):

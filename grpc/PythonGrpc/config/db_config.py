@@ -242,7 +242,7 @@ class ParameterCalibrationRecord(Base):
     compile_path = Column(String)
     package_path = Column(String)
     compile_Dependencies = Column(String)
-    compile_status = Column(Integer)
+    compile_status = Column(String)
     compile_start_time = Column(Integer)
     compile_stop_time = Column(Integer)
 
@@ -258,4 +258,5 @@ class ParameterCalibrationRecord(Base):
     formula = Column(JSON)
     actual_data = Column(JSON)
     associated_parameters = Column(JSON)
+    deleted_at = Column(DateTime)
 
