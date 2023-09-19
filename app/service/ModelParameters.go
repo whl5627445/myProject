@@ -401,10 +401,7 @@ func (m *modelParameters) getParameter(className string, varName string, p []any
 		return nil
 	}
 	m.deduplicationMap[varName] = true
-	isExtend := false
-	if m.extendComponent {
-		isExtend = m.extend
-	}
+	isExtend := m.extend
 	dataDefault := map[string]any{"tab": "General", "type": "Normal", "group": "Parameters", "defaultvalue": "", "value": "", "unit": []string{getUnit(className)}, "is_extend": isExtend, "extend_name": m.extendLevel2Name}
 	dataDefault["unit_related"] = getDerivedClassModifierNamesAndValues(className)
 	modifier := m.componentName + "." + varName
