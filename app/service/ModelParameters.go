@@ -68,6 +68,9 @@ func GetModelParameters(modelName, componentName, componentClassName string, gra
 		dataList = m.getClassParameters(componentClassName)
 	}
 	if m.graphicsParameterName != "" {
+		if len(dataList) == 0 {
+			return []any{"", ""}
+		}
 		return dataList
 	}
 	sortDataList := m.elementsToSort(dataList)
