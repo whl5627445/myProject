@@ -95,7 +95,9 @@ func ModelRouter(g *gin.Engine) {
 		Models.POST("/parameter/calibration/simulation_options/set", API.SetParameterCalibrationSimulationOptionsView)
 		Models.POST("/parameter/calibration/fitting/calculate", API.FittingCalculationView)
 
+		Models.GET("/parameter/calibration/template/get", API.GetParameterCalibrationTemplateView)
 		Models.POST("/parameter/calibration/template/create", API.CreateParameterCalibrationTemplateView)
+		Models.POST("/parameter/calibration/template/delete", API.DeleteParameterCalibrationTemplateView)
 
 	}
 	g.POST("/test", API.Test)
