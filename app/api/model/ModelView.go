@@ -2434,6 +2434,23 @@ func SetConditionParametersView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+func SetResultParametersView(c *gin.Context) {
+	/*
+		# 设置参数标定功能模型的结果参数
+	*/
+	var item DataType.SetResultParametersData
+	err := c.BindJSON(&item)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	resultParametersList, _ := sonic.Marshal(&item.ResultParametersList)
+	dbModel.Model(DataBaseModel.ParameterCalibrationRecord{}).Where("id = ? AND package_id = ? AND username = ?", item.ID, item.PackageId, userName).UpdateColumn("result_parameters", resultParametersList)
+	var res DataType.ResponseData
+	c.JSON(http.StatusOK, res)
+}
+
 func GetVariableParameterView(c *gin.Context) {
 	/*
 	  # 获取参数标定功能模型的额定工况参数与条件参数节点

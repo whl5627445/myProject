@@ -327,6 +327,18 @@ type conditionParameters struct {
 	Value []string `json:"value" binding:"required"`
 }
 
+type SetResultParametersData struct {
+	ID                   string             `json:"id" binding:"required"`
+	PackageId            string             `json:"package_id" binding:"required"`
+	ModelName            string             `json:"model_name" binding:"required"`
+	ResultParametersList []resultParameters `json:"result_parameters_list" binding:"required"`
+}
+
+type resultParameters struct {
+	ResultName string `json:"result_name" binding:"required"`
+	ActualName string `json:"actual_name" binding:"required"`
+}
+
 type FormulaParserData struct {
 	ID         string `json:"id" binding:"required"`
 	PackageId  string `json:"package_id" binding:"required"`
@@ -366,5 +378,9 @@ type CreateCalibrationTemplateData struct {
 }
 
 type FittingCalculationData struct {
+	ID string `json:"id" binding:"required"`
+}
+
+type DeleteCalibrationTemplateData struct {
 	ID string `json:"id" binding:"required"`
 }
