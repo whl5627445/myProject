@@ -2378,6 +2378,7 @@ func GetParameterCalibrationRecordView(c *gin.Context) {
 		"formula":               record.Formula,
 		"associated_parameters": record.AssociatedParameters,
 		"condition_parameters":  record.ConditionParameters,
+		"formula_string":        record.FormulaString,
 	}
 	c.JSON(http.StatusOK, res)
 }
@@ -2491,7 +2492,7 @@ func ParameterCalibrationFormulaParserView(c *gin.Context) {
 	coefficientName, _ := sonic.Marshal(&coefficientNameList)
 	variables, _ := sonic.Marshal(&variableList)
 	dbModel.Model(DataBaseModel.ParameterCalibrationRecord{}).Where("id = ? AND package_id = ? AND username = ?", item.ID, item.PackageId, userName).Updates(
-		map[string]any{"formula": formula, "coefficient_name": coefficientName, "variable_list": variables})
+		map[string]any{"formula": formula, "coefficient_name": coefficientName, "variable_list": variables, "formula_string": item.FormulaStr})
 	res.Data = map[string]any{"variable": variableList, "formula": formulaData}
 	c.JSON(http.StatusOK, res)
 }
@@ -2580,6 +2581,30 @@ func SetParameterCalibrationSimulationOptionsView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+func GetParameterCalibrationTemplateView(c *gin.Context) {
+	/*
+		# 获取参数标定模板
+	*/
+	var res DataType.ResponseData
+	recordId := c.Query("id")
+	var template []DataBaseModel.ParameterCalibrationTemplate
+	if recordId == "" {
+		dbModel.Find(&template)
+	} else {
+		dbModel.Where("id = ?", recordId).First(&template)
+	}
+	dataList := []map[string]any{}
+	for _, calibrationTemplate := range template {
+		d := map[string]any{
+			"id":   calibrationTemplate.RecordID,
+			"name": calibrationTemplate.TemplateName,
+		}
+		dataList = append(dataList, d)
+	}
+	res.Data = dataList
+	c.JSON(http.StatusOK, res)
+}
+
 func CreateParameterCalibrationTemplateView(c *gin.Context) {
 	/*
 		# 创建参数标定模板
@@ -2604,7 +2629,24 @@ func CreateParameterCalibrationTemplateView(c *gin.Context) {
 	template.ID = uuid.New().String()
 	template.TemplateName = item.TemplateName
 	dbModel.Create(&template)
-	dbModel.Model(&DataBaseModel.ParameterCalibrationTemplate{}).Where("id = ?", template.ID).Updates(&record)
+	dbModel.Model(&DataBaseModel.ParameterCalibrationTemplate{}).Where("record_id = ?", template.ID).Updates(&record)
 	res.Msg = "模板创建成功"
+	c.JSON(http.StatusOK, res)
+}
+
+func DeleteParameterCalibrationTemplateView(c *gin.Context) {
+	/*
+		# 删除参数标定模板
+	*/
+	var res DataType.ResponseData
+	var item DataType.DeleteCalibrationTemplateData
+	err := c.BindJSON(&item)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	dbModel.Delete(DataBaseModel.ParameterCalibrationTemplate{}, item.ID)
+	res.Msg = "模板删除成功"
 	c.JSON(http.StatusOK, res)
 }

@@ -83,6 +83,8 @@ type ParameterCalibrationRecord struct {
 	ActualData              datatypes.JSON `gorm:"column:actual_data;type:json;comment:实测数据字段与数据"`
 	RatedCondition          datatypes.JSON `gorm:"column:rated_condition;type:json;comment:额定工况参数信息"`
 	ConditionParameters     datatypes.JSON `gorm:"column:condition_parameters;type:json;comment:条件参数信息"`
+	ResultParameters        datatypes.JSON `gorm:"column:result_parameters;type:json;comment:结果参数信息"`
+	FormulaString           datatypes.JSON `gorm:"column:formula_string;type:json;comment:公式的原始数据"`
 	Formula                 datatypes.JSON `gorm:"column:formula;type:json;comment:解析出来的公式"`
 	VariableList            datatypes.JSON `gorm:"column:variable_list;type:json;comment:解析出来的公式变量数值"`
 	CoefficientName         datatypes.JSON `gorm:"column:coefficient_name;type:json;comment:公式系数的名字"`
@@ -119,6 +121,8 @@ type ParameterCalibrationTemplate struct {
 	ActualData              datatypes.JSON `gorm:"column:actual_data;type:json;comment:实测数据字段与数据"`
 	RatedCondition          datatypes.JSON `gorm:"column:rated_condition;type:json;comment:额定工况参数信息"`
 	ConditionParameters     datatypes.JSON `gorm:"column:condition_parameters;type:json;comment:条件参数信息"`
+	ResultParameters        datatypes.JSON `gorm:"column:result_parameters;type:json;comment:结果参数信息"`
+	FormulaString           datatypes.JSON `gorm:"column:formula_string;type:json;comment:公式的原始数据"`
 	Formula                 datatypes.JSON `gorm:"column:formula;type:json;comment:解析出来的公式"`
 	VariableList            datatypes.JSON `gorm:"column:variable_list;type:json;comment:解析出来的公式变量数值"`
 	CoefficientName         datatypes.JSON `gorm:"column:coefficient_name;type:json;comment:公式系数的名字"`
@@ -128,6 +132,6 @@ type ParameterCalibrationTemplate struct {
 	UpdatedAt               *time.Time     `gorm:"column:update_time;comment:更新时间" json:"-"`
 	UserSpaceId             string         `gorm:"column:userspace_id;type:varchar(128);comment:package所在用户空间的唯一识别标识"`
 	Deleted                 gorm.DeletedAt `gorm:"column:deleted_at;comment:删除时间" json:"-"`
-	ID                      string         `gorm:"index;primaryKey;type:varchar(128);comment:参数标定模板的唯一标识"`
+	ID                      string         `gorm:"index;column:record_id;primaryKey;type:varchar(128);comment:参数标定模板的唯一标识"`
 	TemplateName            string         `gorm:"column:template_name;type:varchar(128);comment:参数标定模板名称"`
 }
