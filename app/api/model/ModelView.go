@@ -2379,6 +2379,7 @@ func GetParameterCalibrationRecordView(c *gin.Context) {
 		"associated_parameters": record.AssociatedParameters,
 		"condition_parameters":  record.ConditionParameters,
 		"formula_string":        record.FormulaString,
+		"result_parameters":     record.ResultParameters,
 	}
 	c.JSON(http.StatusOK, res)
 }
