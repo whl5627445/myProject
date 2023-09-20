@@ -862,7 +862,7 @@ func CalibrationCompileView(c *gin.Context) {
 		"model_name":       record.ModelName,
 		"result_file_path": record.CompilePath,
 	}
-	err = service.GrpcCompile(itemMap, packageSource)
+	err = service.GrpcCalibrationCompile(itemMap, packageSource)
 	if err != nil {
 		fmt.Println("调用(GrpcSimulation)出错：", err)
 		res.Err = "编译失败，请联系管理员"
@@ -872,5 +872,79 @@ func CalibrationCompileView(c *gin.Context) {
 	}
 	res.Data = map[string]any{"id": record.ID}
 	res.Msg = "请等待编译完成"
+	c.JSON(http.StatusOK, res)
+}
+
+func CalibrationSimulateTaskAddView(c *gin.Context) {
+	/*
+	   # 模型参数标定功能仿真接口，生成仿真数据
+	*/
+
+	var res DataType.ResponseData
+	var item DataType.CalibrationSimulateData
+
+	err := c.BindJSON(&item)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+
+	var record DataBaseModel.ParameterCalibrationRecord
+	err = DB.Where("id = ?  AND username = ?", item.ID, userName).First(&record).Error
+	if record.ID == "" {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+
+	itemMap := map[string]string{
+		"id": record.ID,
+	}
+	err = service.GrpcCalibrationSimulate(itemMap)
+	if err != nil {
+		fmt.Println("调用(GrpcSimulation)出错：", err)
+		res.Err = "仿真失败，请联系管理员"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	res.Data = map[string]any{"id": record.ID}
+	res.Msg = "请等待仿真完成"
+	c.JSON(http.StatusOK, res)
+}
+
+func CalibrationSimulateTaskStopView(c *gin.Context) {
+	/*
+	   # 模型参数标定功能仿真终止接口，终止仿真任务
+	*/
+
+	var res DataType.ResponseData
+	var item DataType.CalibrationSimulateData
+
+	err := c.BindJSON(&item)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+
+	var record DataBaseModel.ParameterCalibrationRecord
+	err = DB.Where("id = ?  AND username = ?", item.ID, userName).First(&record).Error
+	if record.ID == "" {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+	err = service.DeleteCalculationSimulateTask(record.ID)
+	if err != nil {
+		fmt.Println("调用(GrpcSimulation)出错：", err)
+		res.Err = "仿真失败，请联系管理员"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	res.Data = map[string]any{"id": record.ID}
+	res.Msg = "仿真任务已终止"
 	c.JSON(http.StatusOK, res)
 }

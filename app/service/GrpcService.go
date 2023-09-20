@@ -386,27 +386,6 @@ func GrpcTranslate(record DataBaseModel.AppDataSource) (string, error) {
 
 }
 
-func GrpcCompile(data map[string]string, EnvModelData map[string]string) error {
-	// 创建文件夹
-	//fileOperation.CreateFilePath(record.CompilePath)
-
-	// 发送仿真请求
-	GrpcBuildModelRequest := &grpcPb.SubmitTaskRequest{
-		Uuid:              data["id"],
-		UserSpaceId:       data["user_space_id"],
-		UserName:          data["username"],
-		PackageName:       data["package_name"],
-		TaskType:          "compile",
-		SimulateModelName: data["model_name"],
-		EnvModelData:      EnvModelData,
-		SimulateType:      "OM",
-		ResultFilePath:    data["result_file_path"] + "/",
-	}
-	_, err := grpcPb.Client.SubmitTask(grpcPb.Ctx, GrpcBuildModelRequest)
-	return err
-
-}
-
 func GrpcRunResult(appPageId string, singleSimulationInputData map[string]float64) error {
 	// OM和DM 多轮仿真
 	var appPageRecord DataBaseModel.AppPage
@@ -551,10 +530,52 @@ func GrpcSimulationProcessOperation(uid, operation, simulateType string) (*grpcP
 	return replyTest, err
 }
 
+func GrpcCalibrationCompile(data map[string]string, EnvModelData map[string]string) error {
+
+	// 发送编译请求
+	GrpcBuildModelRequest := &grpcPb.SubmitTaskRequest{
+		Uuid:              data["id"],
+		UserSpaceId:       data["user_space_id"],
+		UserName:          data["username"],
+		PackageName:       data["package_name"],
+		TaskType:          "compile",
+		SimulateModelName: data["model_name"],
+		EnvModelData:      EnvModelData,
+		SimulateType:      "calibrationCompile",
+		ResultFilePath:    data["result_file_path"] + "/",
+	}
+	_, err := grpcPb.Client.SubmitTask(grpcPb.Ctx, GrpcBuildModelRequest)
+	return err
+
+}
+
+func GrpcCalibrationSimulate(data map[string]string) error {
+
+	// 发送仿真请求
+	GrpcBuildModelRequest := &grpcPb.SubmitTaskRequest{
+		Uuid:         data["id"],
+		TaskType:     "simulate",
+		SimulateType: "calibrationSimulate",
+	}
+	_, err := grpcPb.Client.SubmitTask(grpcPb.Ctx, GrpcBuildModelRequest)
+	return err
+
+}
+
 func GrpcFittingCalculation(uid string) (*grpcPb.FittingCalculationReply, error) {
 	FittingCalculationRequest := &grpcPb.FittingCalculationRequest{
 		Uuid: uid,
 	}
 	res, err := grpcPb.Client.FittingCalculation(grpcPb.Ctx, FittingCalculationRequest)
 	return res, err
+}
+
+func DeleteCalculationSimulateTask(taskID string) error {
+	replyVar, err := GrpcSimulationProcessOperation(taskID, "kill", "")
+	if err != nil {
+		log.Println(replyVar.Msg)
+		log.Println("调用grpc服务(GrpcPyOmcSimulationProcessOperation)出错：：", err)
+		return err
+	}
+	return nil
 }

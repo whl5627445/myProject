@@ -255,7 +255,7 @@ class OMCSessionBase(with_metaclass(abc.ABCMeta, object)):
         simulate_result = self.ask('simulate', '{0}'.format(cmd))
         return simulate_result
 
-    def buildModel(self, className, fileNamePrefix, simulate_parameters_data):
+    def buildModel(self, className, fileNamePrefix, simulate_parameters_data=None):
         cmd = className + ', fileNamePrefix = "' + fileNamePrefix + 'result\"'
         if simulate_parameters_data:
             simulate_parameters_list = []

@@ -1,5 +1,5 @@
 import psutil
-from config.db_config import Session, YssimSimulateRecords,AppPages
+from config.db_config import Session, YssimSimulateRecords,AppPages, ParameterCalibrationRecord
 import os
 import signal
 from libs.function.grpc_log import log
@@ -71,8 +71,9 @@ import configparser
 #     return {"msg": False}
 
 
-def kill_process(multiprocessing_id, om_process_list, dm_process_list, om_task_mark_dict, dymola_task_mark_dict):
-    
+def kill_process(multiprocessing_id, om_process_list, dm_process_list, om_task_mark_dict, dymola_task_mark_dict,
+                 calibration_compile_thread_list, calibration_compile_task_mark_dict,
+                 calibration_simulate_thread_list, calibration_simulate_task_mark_dict):
     for i in om_process_list:
         if i.uuid == multiprocessing_id:
             try:
@@ -145,4 +146,63 @@ def kill_process(multiprocessing_id, om_process_list, dm_process_list, om_task_m
                         app_pages_record.simulate_state = 3  # 杀死进程
                     session.commit()
                 return {"msg": "End Process:{}".format(multiprocessing_id)}
+
+    for i in calibration_compile_thread_list:
+        # log.info("(calibration) 准备杀死进程")
+        if i.uuid == multiprocessing_id:
+            log.info("(calibration) 找到记录，准备杀死进程")
+            try:
+                if hasattr(i, 'omc_obj'):
+                    log.info("(calibration) 存在 omc_obj")
+                    log.info("(calibration)杀死的进程id："+str(i.omc_obj.omc_process.pid))
+                    parent_proc = psutil.Process(i.omc_obj.omc_process.pid)
+                    for child_proc in parent_proc.children(recursive=True):
+                        log.info("(calibration)关闭子进程："+str(child_proc.pid))
+                        os.kill(child_proc.pid, 9)
+                    os.kill(i.omc_obj.omc_process.pid, 9)
+                    log.info("(calibration)关闭omc进程成功")
+                if i.run_pid:
+                    os.kill(i.run_pid, 9)
+            # i.omc_obj.sendExpression("quit()")
+            except OSError as e:
+                log.info(f"(calibration)Error: {e}")
+            i.state = "delete"
+
+            del calibration_compile_task_mark_dict[i.request.userName]
+            calibration_compile_thread_list.remove(i)
+            i.__del__()
+            del i
+            log.info("(calibration)杀死线程，数据库id:"+multiprocessing_id)
+            with Session() as session:
+                simulate_records = session.query(ParameterCalibrationRecord).filter(
+                    ParameterCalibrationRecord.id == multiprocessing_id).first()
+                if simulate_records:
+                    simulate_records.compile_status = "5"  # 杀死进程
+                session.commit()
+            return {"msg": "End Process:{}".format(multiprocessing_id)}
+
+    for i in calibration_simulate_thread_list:
+        if i.uuid == multiprocessing_id:
+            try:
+                log.info("(calibration) 找到记录，准备杀死进程")
+                if hasattr(i, 'omc_obj'):
+                    log.info("(calibration)杀死的进程id："+str(i.omc_obj.omc_process.pid))
+                    parent_proc = psutil.Process(i.omc_obj.omc_process.pid)
+                    for child_proc in parent_proc.children(recursive=True):
+                        log.info("(calibration)关闭子进程："+str(child_proc.pid))
+                        os.kill(child_proc.pid, 9)
+                    os.kill(i.omc_obj.omc_process.pid, 9)
+                    log.info("(calibration)关闭omc进程成功")
+                if i.run_pid:
+                    os.kill(i.run_pid, 9)
+            # i.omc_obj.sendExpression("quit()")
+            except OSError as e:
+                log.info(f"(calibration)Error: {e}")
+            i.state = "delete"
+            i.message = "终止任务"
+            del calibration_simulate_task_mark_dict[i.request.userName]
+            calibration_simulate_thread_list.remove(i)
+            i.__del__()
+            log.info("(calibration)杀死线程，数据库id:"+multiprocessing_id)
+            return {"msg": "End Process:{}".format(multiprocessing_id)}
     return {"msg": "The process is not found or has ended or failed:{}".format(multiprocessing_id)}

@@ -62,7 +62,7 @@ def get_formula_operation (value_dict, formula_list):
         data_dict[approach] = [float(f) for f in approach_data]
     except Exception as e:
         log.info("approach数据解析失败， 含有非浮点型字符")
-        return None, None
+        return None
     l = len(approach_data)
     for formula_dict in formula_list:
         # formula = "Twb * Tr^2 * LGRatio^2"
@@ -78,7 +78,7 @@ def get_formula_operation (value_dict, formula_list):
             if value_dict[name] is not None:
                 f_dict[name] = value_dict[name]
             else:
-                return None, None
+                return None
         formula_data_list = []
         f_list = f_dict.keys()
 
@@ -89,8 +89,11 @@ def get_formula_operation (value_dict, formula_list):
                 if d == "":
                     return None
                 replace_formula = replace_formula.replace(f, d)
-            value = eval(replace_formula)
-            formula_data_list.append(value)
+            try:
+                value = eval(replace_formula)
+                formula_data_list.append(value)
+            except Exception as e:
+                log.info("执行计算代码出错： "+str(replace_formula))
 
         data_dict[formula] = formula_data_list
     return pd.DataFrame(data_dict)
@@ -141,11 +144,11 @@ def get_coefficient_score(actual_data, formula_list):
 # }
 
 
-if __name__ == '__main__':
-    data = pd.read_excel("test.xlsx")
-    c = data.columns
-    for i in c:
-        print(data[i].tolist())
+# if __name__ == '__main__':
+#     data = pd.read_excel("test.xlsx")
+#     c = data.columns
+#     for i in c:
+#         print(data[i].tolist())
     # value_dict = get_columns_value_dict(data)
     #
     # x = get_formula_operation(data, value_dict, a["formula"])

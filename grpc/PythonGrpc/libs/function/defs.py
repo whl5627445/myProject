@@ -95,8 +95,9 @@ def update_parameter_calibration_records(uuid,
                                          simulate_end_time=None,
                                          simulate_result_str=None,
                                          percentage=None,
+                                         simulate_result=None,
                                          ):
-    log.info(uuid)
+    # log.info(uuid)
     with Session() as session:
         record = session.query(ParameterCalibrationRecord).filter(
             ParameterCalibrationRecord.id == uuid).first()
@@ -120,6 +121,8 @@ def update_parameter_calibration_records(uuid,
             record.simulate_result_str = simulate_result_str  # 记录仿真结果字符
         if percentage is not None:
             record.percentage = percentage  # 记录仿真进度
+        if simulate_result is not None:
+            record.simulate_result = simulate_result  # 记录仿真进度
         session.commit()
 
 

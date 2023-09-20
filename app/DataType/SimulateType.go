@@ -107,3 +107,7 @@ type CalibrationCompileData struct {
 	PackageId   string `json:"package_id" binding:"required"`
 	ModelName   string `json:"model_name" binding:"required"`
 }
+
+type CalibrationSimulateData struct {
+	ID string `json:"id" binding:"required"`
+}

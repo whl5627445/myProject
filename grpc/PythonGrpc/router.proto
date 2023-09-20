@@ -8,6 +8,7 @@ service Greeter {
   rpc ReadSimulationResult(ReadSimulationResultRequest) returns (ReadSimulationResultReply) {}
   rpc CheckVarExist(CheckVarExistRequest) returns (CheckVarExistReply) {}
   rpc SubmitTask(SubmitTaskRequest) returns (SubmitTaskReply) {}
+//  rpc SubmitTask(SubmitTaskRequest) returns (SubmitTaskReply) {}
   rpc FittingCalculation(FittingCalculationRequest) returns (FittingCalculationReply) {}
 }
 message FittingCalculationRequest{

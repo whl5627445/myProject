@@ -2566,9 +2566,8 @@ func FittingCalculationView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	dbModel.Model(&record).Update("coefficient", &result.Coefficient)
-	//record.Coefficient, _ = sonic.Marshal(&result.Coefficient)
-	//dbModel.Save(&record)
+	coefficient, _ := sonic.Marshal(&result.Coefficient)
+	dbModel.Model(&record).Update("coefficient", coefficient)
 	var formulaList []map[string]string
 	var coefficientNameList []string
 	var coefficientList []map[string]any

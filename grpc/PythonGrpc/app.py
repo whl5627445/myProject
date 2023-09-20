@@ -44,11 +44,15 @@ if __name__ == '__main__':
     OmSimulationThreadList = []
     # dymola线程列表，用于保存每个线程对象
     DmSimulationThreadList = []
+    # dymola线程列表，用于保存每个线程对象
+    calibrationCompileThreadList = []
+    # dymola线程列表，用于保存每个线程对象
+    calibrationSimulateThreadList = []
     # 接收仿真任务队列
     # 初始化omc任务队列
     omcTaskList = initOmTask()
     # 初始化参数标定任务队列
-    calibrationCompileList, calibrationSimulateList = initcalibrationTask()
+    calibrationCompileTaskList, calibrationSimulateTaskList = initcalibrationTask()
     # 初始化dy任务队列
     dymolaTaskList = initDmTask()
     # 每个用户只能开启一个omc线程和一个dymola线程
@@ -73,6 +77,12 @@ if __name__ == '__main__':
             elif data.simulateType == "DM":
                 # 如果是DM仿真,将仿真请求体放到dymolaTaskList中
                 dymolaTaskList.append(data)
+            elif data.simulateType == "calibrationCompile":
+                # 如果是DM仿真,将仿真请求体放到dymolaTaskList中
+                calibrationCompileTaskList.append(data)
+            elif data.simulateType == "calibrationSimulate":
+                # 如果是DM仿真,将仿真请求体放到dymolaTaskList中
+                calibrationSimulateTaskList.append(data)
             if data.pageId != '':
                 update_app_pages_records(data.pageId, mul_sim_state=5)
             return router_pb2.SubmitTaskReply(ok=True,
@@ -95,13 +105,26 @@ if __name__ == '__main__':
                     if dymolaTaskList[j].uuid == multiprocessing_id:
                         dymolaTaskList.pop(j)
                     j += 1
+                while j < len(calibrationCompileTaskList):
+                    if calibrationCompileTaskList[j].uuid == multiprocessing_id:
+                        calibrationCompileTaskList.pop(j)
+                    j += 1
+                while j < len(calibrationSimulateTaskList):
+                    if calibrationSimulateTaskList[j].uuid == multiprocessing_id:
+                        calibrationSimulateTaskList.pop(j)
+                    j += 1
                 # OmSimulationThreadList   DmSimulationThreadList
                 # 删除仿真任务
                 killProcessReply = kill_process(multiprocessing_id,
                                                 OmSimulationThreadList,
                                                 DmSimulationThreadList,
                                                 omcTaskMarkDict,
-                                                dymolaTaskMarkDict)
+                                                dymolaTaskMarkDict,
+                                                calibrationCompileThreadList,
+                                                calibrationCompileTaskMarkDict,
+                                                calibrationSimulateThreadList,
+                                                calibrationSimulateTaskMarkDict
+                                                )
 
                 # 删除多轮仿真任务
 
@@ -222,9 +245,9 @@ if __name__ == '__main__':
                     continue
                 actual_data[associated_parameters[i["name"]]] = i["value"]
             coefficient, score, err = get_coefficient_score(actual_data, formula)
-            log.info(coefficient)
-            log.info(score)
-            log.info(err)
+            # log.info(coefficient)
+            # log.info(score)
+            # log.info(err)
             if err is not None:
                 return router_pb2.FittingCalculationReply(status=2, err=err)
             return router_pb2.FittingCalculationReply(coefficient=coefficient, score=score, status=0, err="")
@@ -267,14 +290,14 @@ if __name__ == '__main__':
                     log.info("(Dymola)未执行任务队列剩余数量：{}".format(len(dymolaTaskList)))
                     log.info("(Dymola)正在排队的任务：" + str(
                             [{"model_name": j.simulateModelName, "user_name": j.userName} for j in dymolaTaskList]))
-                if len(calibrationCompileList) > 0:
-                    log.info("(calibration编译)未执行任务队列剩余数量：{}".format(len(calibrationCompileList)))
+                if len(calibrationCompileTaskList) > 0:
+                    log.info("(calibration编译)未执行任务队列剩余数量：{}".format(len(calibrationCompileTaskList)))
                     log.info("(calibration编译)正在排队的任务：" + str(
-                        [{"model_name": j.simulateModelName, "user_name": j.userName} for j in calibrationCompileList]))
-                if len(calibrationSimulateList) > 0:
-                    log.info("(calibration仿真)未执行任务队列剩余数量：{}".format(len(calibrationSimulateList)))
+                        [{"model_name": j.simulateModelName, "user_name": j.userName} for j in calibrationCompileTaskList]))
+                if len(calibrationSimulateTaskList) > 0:
+                    log.info("(calibration仿真)未执行任务队列剩余数量：{}".format(len(calibrationSimulateTaskList)))
                     log.info("(calibration仿真)正在排队的任务：" + str(
-                        [{"model_name": j.simulateModelName, "user_name": j.userName} for j in calibrationSimulateList]))
+                        [{"model_name": j.simulateModelName, "user_name": j.userName} for j in calibrationSimulateTaskList]))
                 # 任务状态为"stopped"的移除队列
                 for i in OmSimulationThreadList:
                     if i.state == "stopped":
@@ -287,15 +310,15 @@ if __name__ == '__main__':
                         log.info("(Dymola)" + i.request.simulateModelName + "仿真结束,线程关闭。")
                         DmSimulationThreadList.remove(i)
                         del dymolaTaskMarkDict[i.request.userName]
-                for i in calibrationCompileList:
-                    if i.state == "stopped":
+                for i in calibrationCompileThreadList:
+                    if i.state == "stopped" or i.state == "delete":
                         log.info("(calibration)" + i.request.simulateModelName + "仿真结束,线程关闭。")
-                        calibrationCompileList.remove(i)
+                        calibrationCompileThreadList.remove(i)
                         del calibrationCompileTaskMarkDict[i.request.userName]
-                for i in calibrationSimulateList:
-                    if i.state == "stopped":
+                for i in calibrationSimulateThreadList:
+                    if i.state == "stopped" or i.state == "delete":
                         log.info("(calibration)" + i.request.simulateModelName + "仿真结束,线程关闭。")
-                        calibrationSimulateList.remove(i)
+                        calibrationSimulateThreadList.remove(i)
                         del calibrationSimulateTaskMarkDict[i.request.userName]
                 # 取omc任务
                 i = 0
@@ -323,28 +346,28 @@ if __name__ == '__main__':
                     i += 1
                 # 取参数标定编译任务
                 ci = 0
-                while ci < len(calibrationCompileList):
-                    userName = calibrationCompileList[ci].userName
+                while ci < len(calibrationCompileTaskList):
+                    userName = calibrationCompileTaskList[ci].userName
                     if userName not in calibrationCompileTaskMarkDict:
-                        data = calibrationCompileList.pop(ci)
+                        data = calibrationCompileTaskList.pop(ci)
                         if data.taskType == "compile":
                             port = findPort(start_port)
                             t = CalibrationCompileThread(data, port)
                             t.start()
-                            calibrationCompileList.append(t)
+                            calibrationCompileThreadList.append(t)
                         calibrationCompileTaskMarkDict[userName] = True
                     ci += 1
                 # 取参数标定仿真任务
                 si = 0
-                while si < len(calibrationSimulateList):
-                    userName = calibrationSimulateList[si].userName
+                while si < len(calibrationSimulateTaskList):
+                    userName = calibrationSimulateTaskList[si].userName
                     if userName not in calibrationSimulateTaskMarkDict:
-                        data = calibrationSimulateList.pop(si)
+                        data = calibrationSimulateTaskList.pop(si)
                         if data.taskType == "simulate":
                             port = findPort(start_port)
                             t = CalibrationSimulateThread(data, port)
                             t.start()
-                            calibrationSimulateList.append(t)
+                            calibrationSimulateThreadList.append(t)
                         calibrationSimulateTaskMarkDict[userName] = True
                     si += 1
 
