@@ -215,7 +215,12 @@ class CalibrationSimulateThread(threading.Thread):
             r = absolute_path+str(i)
             if not os.path.exists(r):
                 os.mkdir(r)
-            stepSize = '%.1g' % ((float(self.record.stop_time) - float(self.record.start_time)) / 500)
+            size = (float(self.record.stop_time) - float(self.record.start_time)) / 500
+            if size > 0:
+                stepSize = str(int(size))
+            else:
+                stepSize = '%.1g' % size
+
             override = ("-override=" + "startTime=" + self.record.start_time + ",stopTime=" +
                         self.record.stop_time + ",stepSize="+stepSize + ",tolerance=1e-05")
 
