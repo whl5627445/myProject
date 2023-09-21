@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"regexp"
 	"sort"
 	"strconv"
@@ -2151,6 +2152,71 @@ func CreateVersionAvailableLibrariesView(c *gin.Context) {
 	}
 	dbModel.Model(&userLibrary).Update("used", true)
 	res.Msg = "创建成功"
+	c.JSON(http.StatusOK, res)
+}
+
+func InitVersionControlView(c *gin.Context) {
+	/*
+		将无版本控制的包初始化为有版本控制
+	*/
+	var res DataType.ResponseData
+	var item DataType.InitVersionControlData
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	// 检查是否已经存在
+	var record DataBaseModel.UserLibrary
+	dbModel.Where("username = ? AND repository_address = ?", userName, item.RepositoryAddress).First(&record)
+	if record.ID != "" {
+		res.Err = "该存储库已经存在！"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	//查询无版本控制的包
+	var noVersionRecord DataBaseModel.YssimModels
+	dbModel.Where("id = ?", item.NoVersionPackageId).First(&noVersionRecord)
+	var errorMessage string
+	// 克隆到本地
+	repositoryPath, _, errorMessage, cloneRes := service.RepositoryClone(item.RepositoryAddress, "", userName)
+	if cloneRes {
+		//克隆成功
+		// 将无版本控制的包添加到有版本控制
+		addVersionRes, msg := service.InitVersionControl(noVersionRecord.FilePath, repositoryPath, item.UserName, item.PassWord)
+		errorMessage = msg
+		if addVersionRes {
+			packageName, packagePath, msg_, ok := service.GitPackageFileParse(noVersionRecord.PackageName, repositoryPath)
+			errorMessage = msg_
+			if ok {
+				//分支名称默认是master
+				versionBranch := "master"
+				// 获取克隆到本地的存储库的tag
+				versionTag := service.GetTag(repositoryPath)
+				anotherName, _ := service.GetRepositoryName(item.RepositoryAddress)
+				versionRecord := DataBaseModel.UserLibrary{
+					ID:                uuid.New().String(),
+					UserName:          userName,
+					PackageName:       packageName,            //package名称，一般称为包名或库的名字
+					FilePath:          packagePath,            //package所在路径
+					VersionControl:    true,                   //是否有版本控制
+					VersionBranch:     versionBranch,          //版本控制分支
+					VersionTag:        versionTag,             //版本控制tag
+					AnotherName:       anotherName,            // 别名
+					RepositoryAddress: item.RepositoryAddress, //存储库地址
+				}
+				err = dbModel.Create(&versionRecord).Error
+				dbModel.Delete(&noVersionRecord)
+				res.Msg = "初始化成功!"
+				c.JSON(http.StatusOK, res)
+				return
+			}
+		}
+	}
+	os.RemoveAll(repositoryPath)
+	res.Err = errorMessage
+	res.Status = 2
 	c.JSON(http.StatusOK, res)
 }
 

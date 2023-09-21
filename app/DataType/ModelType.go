@@ -271,6 +271,13 @@ type RepositoryCloneData struct {
 	Name              string `json:"name" binding:"required"`
 	Branch            string `json:"branch" binding:""`
 }
+type InitVersionControlData struct {
+	NoVersionPackageId string `json:"no_version_package_id" binding:"required"`
+	RepositoryAddress  string `json:"repository_address" binding:"required"`
+	//AnotherName        string `json:"another_name" binding:"required"`
+	UserName string `json:"user_name" binding:"required"`
+	PassWord string `json:"pass_word" binding:"required"`
+}
 
 type RepositoryDeleteData struct {
 	ID string `json:"id" binding:"required"`

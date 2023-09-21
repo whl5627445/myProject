@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 	"yssim-go/library/fileOperation"
 	"yssim-go/library/goGit"
@@ -32,7 +33,7 @@ func RepositoryClone(address, branchName, userName string) (string, string, stri
 		return "", "", msg, false
 	}
 	// 创建本地存储库路径
-	repositoryPath := "static/UserFiles/UploadFile/" + userName + "/" + time.Now().Local().Format("20060102150405") + "/" + repositoryName + "/"
+	repositoryPath := "static/UserFiles/UploadFile/" + userName + "/VersionControl/" + time.Now().Local().Format("20060102150405") + "/" + repositoryName + "/"
 	fileOperation.CreateFilePath(repositoryPath)
 	// 克隆到本地
 	res, err := goGit.GitPlainClone(address, repositoryPath, branchName)
@@ -85,4 +86,25 @@ func GitPackageFileParse(repositoryName, repositoryPath string) (string, string,
 
 	return packageName, packagePath, msg, ok
 
+}
+
+func InitVersionControl(noVersionPackagePath, repositoryPath, userName, passWord string) (bool, string) {
+	parts := strings.Split(noVersionPackagePath, "/")
+	var newPath string
+	//将无版本控制的包文件复制到存储库文件夹下
+	if parts[4] == "Workspace" && parts[6] == "Workspace" {
+		newPath = strings.Join(parts[:8], "/")
+	} else {
+		newPath = strings.Join(parts[:6], "/")
+	}
+	err := fileOperation.CopyDir(newPath, repositoryPath)
+	if err != nil {
+		log.Println(err)
+		return false, "初始化失败，请联系管理员。"
+	}
+	control, err := goGit.GitInitVersionControl(repositoryPath, userName, passWord)
+	if err != nil {
+		return false, err.Error()
+	}
+	return control, ""
 }

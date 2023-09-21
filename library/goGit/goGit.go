@@ -4,10 +4,58 @@ import (
 	"context"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"time"
 
 	"log"
 )
+
+func GitInitVersionControl(path, username, password string) (bool, error) {
+	repo, err := git.PlainOpen(path)
+	if err != nil {
+		log.Println(err)
+		return false, err
+	}
+
+	// 获取工作目录
+	worktree, err := repo.Worktree()
+	if err != nil {
+		log.Println(err)
+		return false, err
+	}
+	// 添加所有文件到仓库
+	_, err = worktree.Add(".")
+	if err != nil {
+		log.Println(err)
+		return false, err
+	}
+	// 创建提交
+	_, err = worktree.Commit("Initial commit", &git.CommitOptions{
+		Author: &object.Signature{
+			Name: username,
+			//Email: "your.email@example.com",
+		},
+	})
+	if err != nil {
+		log.Println(err)
+		return false, err
+	}
+
+	// 推送到远程仓库
+	err = repo.Push(&git.PushOptions{
+		RemoteName: "origin",
+		Auth: &http.BasicAuth{
+			Username: username,
+			Password: password,
+		},
+	})
+	if err != nil {
+		log.Println(err)
+		return false, err
+	}
+	return true, nil
+}
 
 func GitPlainClone(address, FilePath, branchName string) (bool, error) {
 	ctx := context.TODO()
