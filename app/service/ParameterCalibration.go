@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"path/filepath"
+	"sort"
+	"strconv"
 	"strings"
 	"time"
 	"yssim-go/library/fileOperation"
@@ -228,4 +230,94 @@ func CopyPackage(src, dest string) (string, error) {
 	}
 
 	return dest + "/" + packageFile, nil
+}
+
+// GetConditionSimulateResult 获取标定仿真结果
+func GetConditionSimulateResult(result map[string]map[string][]float64) []map[string]any {
+	data := []map[string]any{}
+	nameValue := map[string][]float64{}
+	indexList := []string{}
+	for index, _ := range result {
+		indexList = append(indexList, index)
+	}
+	sort.Strings(indexList)
+	for _, i := range indexList {
+		r := result[i]
+		for n, v := range r {
+			if n != "time" && len(v) != 0 {
+				value := v[len(v)-1]
+				if nameValue[n] != nil {
+					nameValue[n] = append(nameValue[n], value)
+				} else {
+					nameValue[n] = []float64{value}
+				}
+			}
+		}
+	}
+	for k, v := range nameValue {
+		data = append(data, map[string]any{"name": k, "value": v})
+	}
+	return data
+}
+
+// 标定结果对象
+type conditionResult struct {
+	ActualName    any       `json:"actual_name"`    // 实测名称， 用户上传的实测数据名称
+	ResultName    any       `json:"result_name"`    // 结果名称， 仿真结果中选择与实测名称对应的
+	ResultValue   []float64 `json:"result_value"`   // 仿真结果值， 仿真几次，就有几个值，取每次仿真的最后一刻时间的点
+	ActualValue   []float64 `json:"actual_value"`   // 实测值， 用户上传的实测值， 从第一个值开始取，仿真几次取几个值
+	RelativeError []float64 `json:"relative_error"` // 相对误差， 计算公式：（仿真值-实测值）/实测值
+}
+
+// GetConditionResult 获取标定结果
+func GetConditionResult(resultParameters []map[string]any, actualData []map[string]any, simulationResult []map[string]any) []conditionResult {
+	// actualData:       [{"name": "Approach", "value": ["16.03362", "15.00623"]}]
+	// resultParameters: [{"actual_name": "Approach", "result_name": "inertia1.J"}]
+	// simulationResult: [{"name": "inertia1.J", "value": [ 0.1, 0.1, 0.1]}]
+	var dataList []conditionResult
+	resultLen := len(simulationResult)
+	for _, parameter := range resultParameters {
+		var d conditionResult
+		pActualName := parameter["actual_name"]
+		for _, actual := range actualData {
+			actualName := actual["name"]
+			if pActualName == actualName {
+				actualValue := actual["value"].([]any)
+				if len(actualValue) < resultLen {
+					resultLen = len(actualValue)
+				}
+				d.ActualValue = stringToFloat(actualValue[:resultLen])
+				d.ActualName = actualName
+			}
+		}
+		resultName := parameter["result_name"]
+
+		for _, sResult := range simulationResult {
+			if resultName == sResult["name"] {
+				sResultValue := sResult["value"].([]float64)
+				d.ResultName = resultName
+				d.ResultValue = sResultValue[:resultLen]
+			}
+		}
+		d.RelativeError = []float64{}
+		for index, resulValue := range d.ResultValue {
+			actualValue := d.ActualValue[index]
+			value := (resulValue - actualValue) / actualValue
+			errorValue := fmt.Sprintf("%.2g", value)
+			value, _ = strconv.ParseFloat(errorValue, 64)
+			d.RelativeError = append(d.RelativeError, value)
+		}
+		dataList = append(dataList, d)
+	}
+	return dataList
+}
+
+// 将string类型的浮点数切片转换成浮点类型切片后返回
+func stringToFloat(data []any) []float64 {
+	fData := []float64{}
+	for _, s := range data {
+		f, _ := strconv.ParseFloat(s.(string), 64)
+		fData = append(fData, f)
+	}
+	return fData
 }

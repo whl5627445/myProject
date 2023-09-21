@@ -2733,3 +2733,23 @@ func DeleteParameterCalibrationTemplateView(c *gin.Context) {
 	res.Msg = "模板删除成功"
 	c.JSON(http.StatusOK, res)
 }
+
+func GetParameterCalibrationResultView(c *gin.Context) {
+	/*
+		# 获取参数标定结果
+	*/
+	var res DataType.ResponseData
+	recordId := c.Query("id")
+	var record DataBaseModel.ParameterCalibrationRecord
+	dbModel.Where("id = ? AND username = ?", recordId, userName).First(&record)
+	var resultMap map[string]map[string][]float64
+	var resultParameters []map[string]any
+	var actualData []map[string]any
+
+	_ = sonic.Unmarshal(record.SimulateResult, &resultMap)
+	_ = sonic.Unmarshal(record.ResultParameters, &resultParameters)
+	_ = sonic.Unmarshal(record.ActualData, &actualData)
+	simulationResult := service.GetConditionSimulateResult(resultMap)
+	res.Data = service.GetConditionResult(resultParameters, actualData, simulationResult)
+	c.JSON(http.StatusOK, res)
+}
