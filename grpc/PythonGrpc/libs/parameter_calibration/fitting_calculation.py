@@ -45,14 +45,6 @@ def prediction (data):
     return model.coef_[0], model.score(X_all, y_all)
 
 
-#
-# def get_columns_value_dict (data):
-#     d = {}
-#     for i in data.columns:
-#         d[i] = data[i].tolist()
-#     return d
-
-
 def get_formula_operation (value_dict, formula_list):
     data_dict = {}
     data = pd.DataFrame(value_dict)
@@ -107,54 +99,3 @@ def get_coefficient_score(actual_data, formula_list):
     return [str(c) for c in predictions_coefficient], str(predictions_score), None
 
 
-
-# predictions, score = prediction((r"test.xlsx"))
-# print(predictions)
-# print(len(predictions))
-# a = {
-#     "formula": [
-#         {"formula": "1", "coefficient": "Coeff(1)"},
-#         {"formula": "Twb", "coefficient": "Coeff(2)"},
-#         {"formula": "Twb^2", "coefficient": "Coeff(3)"},
-#         {"formula": "Tr", "coefficient": "Coeff(4)"},
-#         {"formula": "Twb * Tr", "coefficient": "Coeff(5)"},
-#         {"formula": "Twb^2 * Tr", "coefficient": "Coeff(6)"},
-#         {"formula": "Tr^2", "coefficient": "Coeff(7)"},
-#         {"formula": "Twb * Tr^2", "coefficient": "Coeff(8)"},
-#         {"formula": "Twb^2 * Tr^2", "coefficient": "Coeff(9)"},
-#         {"formula": "LGRatio", "coefficient": "Coeff(10)"},
-#         {"formula": "Twb * LGRatio", "coefficient": "Coeff(11)"},
-#         {"formula": "Twb^2 * LGRatio", "coefficient": "Coeff(12)"},
-#         {"formula": "Tr * LGRatio", "coefficient": "Coeff(13)"},
-#         {"formula": "Twb * Tr * LGRatio", "coefficient": "Coeff(14)"},
-#         {"formula": "Twb^2 * Tr * LGRatio", "coefficient": "Coeff(15)"},
-#         {"formula": "Tr^2 * LGRatio", "coefficient": "Coeff(16)"},
-#         {"formula": "Twb * Tr^2 * LGRatio", "coefficient": "Coeff(17)"},
-#         {"formula": "Twb^2 * Tr^2 * LGRatio", "coefficient": "Coeff(18)"},
-#         {"formula": "LGRatio^2", "coefficient": "Coeff(19)"},
-#         {"formula": "Twb * LGRatio^2", "coefficient": "Coeff(20)"},
-#         {"formula": "Twb^2 * LGRatio^2", "coefficient": "Coeff(21)"},
-#         {"formula": "Tr * LGRatio^2", "coefficient": "Coeff(22)"},
-#         {"formula": "Twb * Tr * LGRatio^2", "coefficient": "Coeff(23)"},
-#         {"formula": "Twb^2 * Tr * LGRatio^2", "coefficient": "Coeff(24)"},
-#         {"formula": "Tr^2 * LGRatio^2", "coefficient": "Coeff(25)"},
-#         {"formula": "Twb * Tr^2 * LGRatio^2", "coefficient": "Coeff(26)"},
-#         {"formula": "Twb^2 * Tr^2 * LGRatio^2", "coefficient": "Coeff(27)"}],
-#     "variable": ["Tr", "LGRatio", "Twb"]
-# }
-
-
-# if __name__ == '__main__':
-#     data = pd.read_excel("test.xlsx")
-#     c = data.columns
-#     for i in c:
-#         print(data[i].tolist())
-    # value_dict = get_columns_value_dict(data)
-    #
-    # x = get_formula_operation(data, value_dict, a["formula"])
-    # x.to_excel("test1.xlsx", index=False)
-    # predictions, score = prediction(x)
-    # predictions1, score1 = prediction(pd.read_excel("Cooling.xlsx"))
-    # print(predictions.tolist())
-    # print(predictions1.tolist())
-    # # print(len(predictions))
