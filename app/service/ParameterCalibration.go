@@ -158,8 +158,8 @@ func formulaStrVerify(formulaStr string) error {
 
 // 公式解析的入口函数
 func (f *FormulaAnalysis) formulaParse() {
-
-	for i := 0; i < len(f.formulaStrList); i++ {
+	// 把等号左侧变量排除，所以索引1开始
+	for i := 1; i < len(f.formulaStrList); i++ {
 		formulaList := strings.Split(f.formulaStrList[i], "*")
 		data := map[string]string{"coefficient": "", "formula": ""}
 		data["coefficient"] = formulaList[0]
