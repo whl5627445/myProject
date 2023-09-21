@@ -2393,7 +2393,7 @@ func GetParameterCalibrationListView(c *gin.Context) {
 		return
 	}
 	var res DataType.ResponseData
-	modelChildList := service.GetModelChild(parent)
+	modelChildList := service.GetCalibrationModelChild(parent)
 	var modelChildListNew []any
 	for i := 0; i < len(modelChildList); i++ {
 		if !modelChildList[i].HasChild && modelChildList[i].Type == "package" {
