@@ -90,6 +90,7 @@ type ParameterCalibrationRecord struct {
 	VariableList            datatypes.JSON `gorm:"column:variable_list;default:{};type:json;comment:解析出来的公式变量数值"`
 	CoefficientName         datatypes.JSON `gorm:"column:coefficient_name;default:{};type:json;comment:公式系数的名字"`
 	Coefficient             datatypes.JSON `gorm:"column:coefficient;type;default:{}:json;comment:公式系数的具体值"`
+	CoefficientScore        datatypes.JSON `gorm:"column:coefficient_score;type;default:{}:json;comment:公式拟合得分"`
 	AssociatedParameters    datatypes.JSON `gorm:"column:associated_parameters;default:{};type:json;comment:公式变量与实测数据参数名的映射"`
 	CreatedAt               *time.Time     `gorm:"column:create_time;autoCreateTime;comment:创建时间" json:"-"`
 	UpdatedAt               *time.Time     `gorm:"column:update_time;comment:更新时间" json:"-"`

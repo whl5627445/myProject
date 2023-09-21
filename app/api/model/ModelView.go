@@ -2633,7 +2633,7 @@ func FittingCalculationView(c *gin.Context) {
 		return
 	}
 	coefficient, _ := sonic.Marshal(&result.Coefficient)
-	dbModel.Model(&record).Update("coefficient", coefficient)
+	dbModel.Model(&record).Updates(map[string]any{"coefficient": coefficient, "coefficient_score": result.Score})
 	var formulaList []map[string]string
 	var coefficientNameList []string
 	var coefficientList []map[string]any
