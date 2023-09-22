@@ -206,9 +206,7 @@ func GetXmlData(files []string, header string) string {
 	defer resp.Body.Close()
 	var data DataType.CadData
 	_ = sonic.Unmarshal(body, &data)
-	fmt.Println(data.Msg)
-	fmt.Println(data.Code)
-	fmt.Println(data.Data)
+
 	return data.Data
 }
 
