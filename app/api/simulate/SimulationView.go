@@ -948,3 +948,21 @@ func CalibrationSimulateTaskStopView(c *gin.Context) {
 	res.Msg = "仿真任务已终止"
 	c.JSON(http.StatusOK, res)
 }
+
+func GetCalibrationTaskStatusView(c *gin.Context) {
+	/*
+	   # 模型参数标定功能仿真状态获取
+	*/
+
+	var res DataType.ResponseData
+	recordId := c.Query("id")
+	var record DataBaseModel.ParameterCalibrationRecord
+	err := DB.Where("id = ?  AND username = ?", recordId, userName).First(&record).Error
+	if record.ID == "" {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+	res.Data = record.Percentage
+	c.JSON(http.StatusOK, res)
+}

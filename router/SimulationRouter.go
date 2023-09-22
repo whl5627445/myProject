@@ -37,8 +37,9 @@ func SimulateRouter(g *gin.Engine) {
 		Models.GET("/snapshot/list", API.SnapshotGetListView)
 
 		Models.POST("/calibration/compile", API.CalibrationCompileView)
-		Models.POST("/calibration/task/add", API.CalibrationSimulateTaskAddView)
+		Models.POST("/calibration/task/start", API.CalibrationSimulateTaskAddView)
 		Models.POST("/calibration/task/stop", API.CalibrationSimulateTaskStopView)
+		Models.GET("/calibration/task/status/get", API.GetCalibrationTaskStatusView)
 
 	}
 }
