@@ -1,32 +1,43 @@
 import time
 
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import create_engine, Column, String, Integer, Text, DateTime, JSON, Boolean, Float
+from sqlalchemy import (
+    create_engine,
+    Column,
+    String,
+    Integer,
+    Text,
+    DateTime,
+    JSON,
+    Boolean,
+    Float,
+)
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import QueuePool
 from libs.function.grpc_log import log
 
-HOST = 'mysql'  # 127.0.0.1/localhost 124.70.211.127
+HOST = "mysql"  # 127.0.0.1/localhost 124.70.211.127
 PORT = 3306
 #
 # HOST = '124.70.211.127'  # 127.0.0.1/localhost 124.70.211.127
 # PORT = 3307
-DATA_BASE = 'yssim'
-USER = 'root'
-PWD = 'simtek_cloud_sim'
+DATA_BASE = "yssim"
+USER = "root"
+PWD = "simtek_cloud_sim"
 
-DB_URI = f'mysql+pymysql://{USER}:{PWD}@{HOST}:{PORT}/{DATA_BASE}'
+DB_URI = f"mysql+pymysql://{USER}:{PWD}@{HOST}:{PORT}/{DATA_BASE}"
 
 while True:
     try:
-        engine = create_engine(DB_URI,
-                               poolclass=QueuePool,
-                               pool_size=50,  # 最大连接数  124 3个  119 50个
-                               max_overflow=30,  # 连接池溢出后允许的最大连接数
-                               pool_timeout=15,  # 请求超时时间（秒）
-                               pool_pre_ping=True,  # 每次从连接池中取连接的时候，都会验证一下与数据库是否连接正常
-                               pool_recycle=3600,  # 主动回收mysql连接的时间
-                               )
+        engine = create_engine(
+            DB_URI,
+            poolclass=QueuePool,
+            pool_size=50,  # 最大连接数  124 3个  119 50个
+            max_overflow=30,  # 连接池溢出后允许的最大连接数
+            pool_timeout=15,  # 请求超时时间（秒）
+            pool_pre_ping=True,  # 每次从连接池中取连接的时候，都会验证一下与数据库是否连接正常
+            pool_recycle=3600,  # 主动回收mysql连接的时间
+        )
         log.info("连接数据库成功！")
         break
     except Exception as e:
@@ -38,7 +49,7 @@ Session = sessionmaker(engine)
 
 
 class YssimSimulateRecords(Base):
-    __tablename__ = 'yssim_simulate_records'
+    __tablename__ = "yssim_simulate_records"
     id = Column(String, primary_key=True)
     experiment_id = Column(String)
     username = Column(String)
@@ -72,7 +83,7 @@ class YssimSimulateRecords(Base):
 
 
 class YssimModels(Base):
-    __tablename__ = 'yssim_models'
+    __tablename__ = "yssim_models"
     id = Column(String, primary_key=True)
     userspace_id = Column(String)
     package_name = Column(String)
@@ -84,7 +95,7 @@ class YssimModels(Base):
 
 
 class AppDataSources(Base):
-    __tablename__ = 'app_data_sources'
+    __tablename__ = "app_data_sources"
     id = Column(String, primary_key=True)
     username = Column(String)
     user_space_id = Column(String)
@@ -111,7 +122,7 @@ class AppDataSources(Base):
 
 
 class AppPages(Base):
-    __tablename__ = 'app_pages'
+    __tablename__ = "app_pages"
     id = Column(String, primary_key=True)
     mul_result_path = Column(String)
     release_state = Column(Integer)
@@ -130,13 +141,13 @@ class AppPages(Base):
 
 
 class AppSpaces(Base):
-    __tablename__ = 'app_spaces'
+    __tablename__ = "app_spaces"
     id = Column(String, primary_key=True)
     is_release = Column(Boolean)
 
 
 class AppPagesComponent(Base):
-    __tablename__ = 'app_page_components'
+    __tablename__ = "app_page_components"
     id = Column(String, primary_key=True)
     page_id = Column(String)
     type = Column(String)
@@ -169,7 +180,7 @@ class AppPagesComponent(Base):
 
 
 class AppPagesComponentRelease(Base):
-    __tablename__ = 'app_page_components_releases'
+    __tablename__ = "app_page_components_releases"
     id = Column(String, primary_key=True)
     page_id = Column(String)
     type = Column(String)
@@ -201,7 +212,7 @@ class AppPagesComponentRelease(Base):
 
 
 class AppPagesComponentPreview(Base):
-    __tablename__ = 'app_page_components_previews'
+    __tablename__ = "app_page_components_previews"
     id = Column(String, primary_key=True)
     page_id = Column(String)
     type = Column(String)
@@ -233,9 +244,10 @@ class AppPagesComponentPreview(Base):
 
 
 class ParameterCalibrationRecord(Base):
-    __tablename__ = 'parameter_calibration_records'
+    __tablename__ = "parameter_calibration_records"
     id = Column(String, primary_key=True)
     package_id = Column(String)
+    userspace_id = Column(String)
     version = Column(String)
     username = Column(String)
     model_name = Column(String)
@@ -262,4 +274,3 @@ class ParameterCalibrationRecord(Base):
     associated_parameters = Column(JSON)
     result_parameters = Column(JSON)
     deleted_at = Column(DateTime)
-

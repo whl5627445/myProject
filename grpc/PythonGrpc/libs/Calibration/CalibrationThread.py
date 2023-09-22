@@ -185,8 +185,10 @@ class CalibrationSimulateThread(threading.Thread):
         if self.record.simulate_status == "4":
             return
         status = "3"
-        if self.state != "stopped":
+        if self.state == "delete":
             status = "5"
+        elif self.state == "fail":
+            self.state = "stop"
         for s in range(self.simulate_current, self.simulate_total):
             self.record.percentage[str(s)] = status
             update_parameter_calibration_records(
@@ -257,12 +259,16 @@ class CalibrationSimulateThread(threading.Thread):
         simulate_status = "4"
         for i in range(0, self.simulate_total):
             self.simulate_current = i
-            percentage = self.record.percentage
             # if percentage is not None and str(i) in percentage and percentage[str(i)] == 4:
             #     log.info("本轮仿真已跳过：" + str(i))
             #     continue
-            percentage[i] = "2"
-            update_parameter_calibration_records(uuid=self.uuid, percentage=percentage)
+            if self.record.percentage is None:
+                self.record.percentage = {str(i): "2"}
+            else:
+                self.record.percentage[str(i)] = "2"
+            update_parameter_calibration_records(
+                uuid=self.uuid, percentage=self.record.percentage
+            )
 
             # 修改xml文件
             var = {}
@@ -315,7 +321,7 @@ class CalibrationSimulateThread(threading.Thread):
                 if self.record.result_parameters in [None, {}]:
                     log.info("结果参数为空，无法提取仿真结果，本次仿真终止")
                     break
-                percentage[i] = "4"
+                self.record.percentage[i] = "4"
                 for j in self.record.result_parameters:
                     result_name = j["result_name"]
                     d_data = list(d.data(result_name))
@@ -323,7 +329,7 @@ class CalibrationSimulateThread(threading.Thread):
                         d_data = [d_data[0] for i in range(len(result_dict["time"]))]
                     result_dict[result_name] = d_data
                     if not steady_state(d_data):
-                        percentage[i] = "7"  # 表示本次仿真没有达到稳态
+                        self.record.percentage[i] = "7"  # 表示本次仿真没有达到稳态
                         simulate_status = "7"
 
                 if self.record.simulate_result is None:
@@ -333,11 +339,12 @@ class CalibrationSimulateThread(threading.Thread):
 
                 update_parameter_calibration_records(
                     uuid=self.uuid,
-                    percentage=percentage,
+                    percentage=self.record.percentage,
                     simulate_result=self.record.simulate_result,
                 )
             else:
-                self.state = "stopped"
+                log.info("仿真执行失败，本次仿真终止")
+                self.state = "fail"
                 self.__del__()
         update_parameter_calibration_records(
             uuid=self.uuid,
