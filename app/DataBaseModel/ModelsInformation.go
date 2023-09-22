@@ -92,14 +92,16 @@ type ParameterCalibrationRecord struct {
 	Coefficient             datatypes.JSON `gorm:"column:coefficient;type;default:[]:json;comment:公式系数的具体值"`
 	CoefficientScore        float64        `gorm:"column:coefficient_score;type:float;comment:公式拟合得分"`
 	AssociatedParameters    datatypes.JSON `gorm:"column:associated_parameters;default:[];type:json;comment:公式变量与实测数据参数名的映射"`
-	CreatedAt               *time.Time     `gorm:"column:create_time;autoCreateTime;comment:创建时间" json:"-"`
-	UpdatedAt               *time.Time     `gorm:"column:update_time;comment:更新时间" json:"-"`
+	CreatedAt               *time.Time     `gorm:"column:create_time;autoCreateTime;type:datetime;comment:创建时间" json:"-"`
+	UpdatedAt               *time.Time     `gorm:"column:update_time;comment;type:datetime:更新时间" json:"-"`
 	UserSpaceId             string         `gorm:"column:userspace_id;type:varchar(128);comment:package所在用户空间的唯一识别标识"`
-	Deleted                 gorm.DeletedAt `gorm:"column:deleted_at;comment:删除时间" json:"-"`
+	Deleted                 gorm.DeletedAt `gorm:"column:deleted_at;type:datetime;comment:删除时间" json:"-"`
 }
 
 type ParameterCalibrationTemplate struct {
-	RecordID                string         `gorm:"index;column:id;type:varchar(128);comment:参数标定记录的唯一标识"`
+	ID                      string         `gorm:"index;primaryKey;type:varchar(128);comment:参数标定模板的唯一标识"`
+	TemplateName            string         `gorm:"column:template_name;type:varchar(128);comment:参数标定模板名称"`
+	RecordID                string         `gorm:"index;column:record_id;type:varchar(128);comment:参数标定记录的唯一标识"`
 	PackageId               string         `gorm:"index;column:package_id;type:varchar(128);comment:package唯一标识"`
 	Version                 string         `gorm:"column:version;default:\"\";type:varchar(32);comment:package版本号"`
 	UserName                string         `gorm:"index;column:username;type:varchar(128);comment:用户名"`
@@ -132,10 +134,8 @@ type ParameterCalibrationTemplate struct {
 	Coefficient             datatypes.JSON `gorm:"column:coefficient;type;default:[]:json;comment:公式系数的具体值"`
 	CoefficientScore        float64        `gorm:"column:coefficient_score;type:float;comment:公式拟合得分"`
 	AssociatedParameters    datatypes.JSON `gorm:"column:associated_parameters;default:[];type:json;comment:公式变量与实测数据参数名的映射"`
-	CreatedAt               *time.Time     `gorm:"column:create_time;autoCreateTime;comment:创建时间" json:"-"`
-	UpdatedAt               *time.Time     `gorm:"column:update_time;comment:更新时间" json:"-"`
+	CreatedAt               *time.Time     `gorm:"column:create_time;autoCreateTime;type:datetime;comment:创建时间" json:"-"`
+	UpdatedAt               *time.Time     `gorm:"column:update_time;comment;type:datetime:更新时间" json:"-"`
 	UserSpaceId             string         `gorm:"column:userspace_id;type:varchar(128);comment:package所在用户空间的唯一识别标识"`
-	Deleted                 gorm.DeletedAt `gorm:"column:deleted_at;comment:删除时间" json:"-"`
-	ID                      string         `gorm:"index;column:record_id;primaryKey;type:varchar(128);comment:参数标定模板的唯一标识"`
-	TemplateName            string         `gorm:"column:template_name;type:varchar(128);comment:参数标定模板名称"`
+	Deleted                 gorm.DeletedAt `gorm:"column:deleted_at;type:datetime;comment:删除时间" json:"-"`
 }

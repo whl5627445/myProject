@@ -2715,7 +2715,9 @@ func CreateParameterCalibrationTemplateView(c *gin.Context) {
 	template.ID = uuid.New().String()
 	template.TemplateName = item.TemplateName
 	dbModel.Create(&template)
-	dbModel.Model(&DataBaseModel.ParameterCalibrationTemplate{}).Where("record_id = ?", template.ID).Updates(&record)
+	record["record_id"] = record["id"]
+	delete(record, "id")
+	dbModel.Model(&DataBaseModel.ParameterCalibrationTemplate{}).Where("id = ?", template.ID).Updates(&record)
 	res.Msg = "模板创建成功"
 	c.JSON(http.StatusOK, res)
 }
