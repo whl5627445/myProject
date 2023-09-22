@@ -2682,8 +2682,12 @@ func GetParameterCalibrationTemplateView(c *gin.Context) {
 	dataList := []map[string]any{}
 	for _, calibrationTemplate := range template {
 		d := map[string]any{
-			"id":   calibrationTemplate.RecordID,
-			"name": calibrationTemplate.TemplateName,
+			"id":         calibrationTemplate.ID,
+			"name":       calibrationTemplate.TemplateName,
+			"record_id":  calibrationTemplate.RecordID,
+			"model_name": calibrationTemplate.ModelName,
+			"package_id": calibrationTemplate.PackageId,
+			"space_id":   calibrationTemplate.UserSpaceId,
 		}
 		dataList = append(dataList, d)
 	}
