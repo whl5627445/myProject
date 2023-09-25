@@ -3,6 +3,7 @@ package fileOperation
 import (
 	"container/list"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -242,4 +243,30 @@ func copyFile(srcPath string, destPath string, mode os.FileMode) error {
 	}
 
 	return nil
+}
+
+// FindFileBySuffixName 查找文件夹下后缀名为suffixName的文件
+func FindFileBySuffixName(suffixName, rootPath string) []string {
+	// 用于保存符合条件的文件路径
+	var eligibleFiles []string
+	var files []string
+
+	// 获取目录中的所有文件
+	err := filepath.Walk(rootPath, func(path string, info os.FileInfo, err error) error {
+		files = append(files, path)
+		return nil
+	})
+	if err != nil {
+		fmt.Println("无法读取目录:", err)
+		return eligibleFiles
+	}
+
+	// 遍历文件列表
+	for _, file := range files {
+		// 判断文件后缀名
+		if strings.HasSuffix(file, suffixName) {
+			eligibleFiles = append(eligibleFiles, file)
+		}
+	}
+	return eligibleFiles
 }

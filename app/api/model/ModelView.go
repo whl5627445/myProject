@@ -2199,7 +2199,7 @@ func InitVersionControlView(c *gin.Context) {
 		addVersionRes, msg := service.InitVersionControl(noVersionRecord.FilePath, repositoryPath, item.UserName, item.PassWord)
 		errorMessage = msg
 		if addVersionRes {
-			packageName, packagePath, msg_, ok := service.GitPackageFileParse(noVersionRecord.PackageName, repositoryPath)
+			packageName, packagePath, msg_, ok := service.GitPackageFileParse(repositoryPath)
 			errorMessage = msg_
 			if ok {
 				//分支名称默认是master
@@ -2257,7 +2257,7 @@ func RepositoryCloneView(c *gin.Context) {
 	}
 	var errorMessage string
 	// 克隆到本地
-	repositoryPath, repositoryName, errorMessage, cloneRes := service.RepositoryClone(item.RepositoryAddress, item.Branch, userName)
+	repositoryPath, _, errorMessage, cloneRes := service.RepositoryClone(item.RepositoryAddress, item.Branch, userName)
 
 	if cloneRes { //克隆成功
 		//分支名称默认是master
@@ -2269,7 +2269,7 @@ func RepositoryCloneView(c *gin.Context) {
 		versionTag := service.GetTag(repositoryPath)
 
 		// 解析包文件
-		packageName, packagePath, msg_, ok := service.GitPackageFileParse(repositoryName, repositoryPath)
+		packageName, packagePath, msg_, ok := service.GitPackageFileParse(repositoryPath)
 		errorMessage = msg_
 
 		if ok { // 创建数据库记录
@@ -2461,6 +2461,7 @@ func GetParameterCalibrationRecordView(c *gin.Context) {
 		"condition_parameters":  record.ConditionParameters,
 		"formula_string":        record.FormulaString,
 		"result_parameters":     record.ResultParameters,
+		"percentage":            record.Percentage,
 	}
 	c.JSON(http.StatusOK, res)
 }
@@ -2694,8 +2695,12 @@ func GetParameterCalibrationTemplateView(c *gin.Context) {
 	dataList := []map[string]any{}
 	for _, calibrationTemplate := range template {
 		d := map[string]any{
-			"id":   calibrationTemplate.RecordID,
-			"name": calibrationTemplate.TemplateName,
+			"id":         calibrationTemplate.ID,
+			"name":       calibrationTemplate.TemplateName,
+			"record_id":  calibrationTemplate.RecordID,
+			"model_name": calibrationTemplate.ModelName,
+			"package_id": calibrationTemplate.PackageId,
+			"space_id":   calibrationTemplate.UserSpaceId,
 		}
 		dataList = append(dataList, d)
 	}

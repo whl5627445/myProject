@@ -60,10 +60,11 @@ func GetTag(path string) string {
 	return tag
 }
 
-func GitPackageFileParse(repositoryName, repositoryPath string) (string, string, string, bool) {
+func GitPackageFileParse(repositoryPath string) (string, string, string, bool) {
 	packagePath := ""
-	if fileOperation.Exists(repositoryPath + "/" + repositoryName + ".mo") {
-		packagePath = repositoryPath + repositoryName + ".mo"
+	moFiles := fileOperation.FindFileBySuffixName(".mo", repositoryPath)
+	if len(moFiles) == 1 {
+		packagePath = moFiles[0]
 	} else {
 		packageFilePath, err := fileOperation.FindFile("package.mo", repositoryPath)
 		if err != nil {
