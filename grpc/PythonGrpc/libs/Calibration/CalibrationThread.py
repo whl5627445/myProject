@@ -329,7 +329,8 @@ class CalibrationSimulateThread(threading.Thread):
                     if len(d_data) == 2 and d_data[0] == d_data[1]:
                         d_data = [d_data[0] for i in range(len(result_dict["time"]))]
                     result_dict[result_name] = d_data
-                    if not steady_state(d_data):
+
+                    if result_name != "time" and not steady_state(d_data):
                         self.record.percentage[i] = "7"  # 表示本次仿真没有达到稳态
                         simulate_status = "7"
                 if self.record.simulate_result is None:
@@ -361,7 +362,7 @@ def steady_state(data):
     t0 = 0
     for i in range(step, len(data), step):
         t1 = abs(data[step] - data[step - 1])
-        if t1 / t0 > (1 - e):
+        if (t1 / t0) > (1 - e) or (t1 == 0 and t0 == 0):
             return True
         t0 = t1
     return False
