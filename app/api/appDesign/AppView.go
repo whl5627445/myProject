@@ -1500,7 +1500,14 @@ func AppPagePreviewAccessView(c *gin.Context) {
 	if page.PageType == "large-screen" {
 		var components []DataBaseModel.AppPageComponent
 		DB.Where("page_id = ?", page.ID).Find(&components)
-		pageData := map[string]any{"width": page.PageWidth, "height": page.PageHeight, "background": page.Background, "background_color": page.BackgroundColor, "page_type": page.PageType}
+		pageData := map[string]any{
+			"width":              page.PageWidth,
+			"height":             page.PageHeight,
+			"background":         page.Background,
+			"background_color":   page.BackgroundColor,
+			"page_type":          page.PageType,
+			"global_information": page.GlobalInformation,
+		}
 		res.Data = map[string]any{"result": result, "component": components, "page": pageData}
 		c.JSON(http.StatusOK, res)
 	}
@@ -1529,7 +1536,7 @@ func AppPageReleaseAccessView(c *gin.Context) {
 			return
 		}
 	}
-	pageData := map[string]any{"width": page.PageWidth, "height": page.PageHeight, "background": page.Background, "background_color": page.BackgroundColor, "page_type": page.PageType}
+	pageData := map[string]any{"width": page.PageWidth, "height": page.PageHeight, "background": page.Background, "background_color": page.BackgroundColor, "page_type": page.PageType, "global_information": page.GlobalInformation}
 	res.Data = map[string]any{"result": result, "component": components, "page": pageData}
 	c.JSON(http.StatusOK, res)
 }
