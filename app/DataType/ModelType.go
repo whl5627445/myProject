@@ -185,9 +185,10 @@ type CadModelMapping struct {
 }
 
 type CadMappingModelInformation struct {
-	ModelInformation []CadInformation `json:"model_information" binding:"required"`
-	PartNumber       string           `json:"partnumber" binding:"required"`
-	Type             string           `json:"type" binding:"required"`
+	ModelInformation  []CadInformation `json:"model_information" binding:"required"`
+	PartNumber        string           `json:"partnumber" binding:"required"`
+	Type              string           `json:"type" binding:"required"`
+	ConnectedRelation []map[string]any `json:"connected_relation" binding:""`
 }
 
 type CadData struct {

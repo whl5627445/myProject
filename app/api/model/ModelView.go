@@ -1679,7 +1679,14 @@ func CADParseXmlView(c *gin.Context) {
 		return
 	}
 	dbModel.Where("package_name = ? AND version = ?", "Modelica", "4.0.0").First(&model)
-	modelName := map[string]any{"straight_tube": map[string]any{"id": model.ID, "model_name": []string{"Modelica.Fluid.Pipes.StaticPipe", "Modelica.Fluid.Pipes.DynamicPipe"}}, "bendable_tube": map[string]any{"id": model.ID, "model_name": []string{"Modelica.Fluid.Fittings.Bends.CurvedBend"}}}
+	modelName := map[string]any{
+		"straight_tube": map[string]any{"id": model.ID,
+			"model_name": []string{"Modelica.Fluid.Pipes.StaticPipe", "Modelica.Fluid.Pipes.DynamicPipe"}},
+		"bendable_tube": map[string]any{"id": model.ID,
+			"model_name": []string{"Modelica.Fluid.Fittings.Bends.CurvedBend"}},
+		"three-way_tube": map[string]any{"id": model.ID,
+			"model_name": []string{"Modelica.Fluid.Fittings.TeeJunctionIdeal"}},
+	}
 
 	components := service.CADParseParts(xml)
 
@@ -1741,10 +1748,15 @@ func CADMappingModelView(c *gin.Context) {
 			return
 		}
 	}
+	lineMap := make(map[string]string)
 	for i := 0; i < len(item.ModelMapping); i++ {
-		service.CADMappingModel(item.ModelName, item.ModelMapping[i].ModelName, item.Information[i])
+		service.CADMappingModel(item.ModelName, item.ModelMapping[i].ModelName, item.Information[i], lineMap)
 	}
-
+	for _, information := range item.Information {
+		if information.Type == "CATTubTeeJunction" {
+			service.ThreeWayManage(item.ModelName, lineMap, information.ConnectedRelation)
+		}
+	}
 	res.Msg = "建模完成"
 	c.JSON(http.StatusOK, res)
 }
@@ -2449,7 +2461,6 @@ func GetParameterCalibrationRecordView(c *gin.Context) {
 		"condition_parameters":  record.ConditionParameters,
 		"formula_string":        record.FormulaString,
 		"result_parameters":     record.ResultParameters,
-		"percentage":            record.Percentage,
 	}
 	c.JSON(http.StatusOK, res)
 }
@@ -2683,12 +2694,8 @@ func GetParameterCalibrationTemplateView(c *gin.Context) {
 	dataList := []map[string]any{}
 	for _, calibrationTemplate := range template {
 		d := map[string]any{
-			"id":         calibrationTemplate.ID,
-			"name":       calibrationTemplate.TemplateName,
-			"record_id":  calibrationTemplate.RecordID,
-			"model_name": calibrationTemplate.ModelName,
-			"package_id": calibrationTemplate.PackageId,
-			"space_id":   calibrationTemplate.UserSpaceId,
+			"id":   calibrationTemplate.RecordID,
+			"name": calibrationTemplate.TemplateName,
 		}
 		dataList = append(dataList, d)
 	}
