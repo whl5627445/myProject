@@ -963,6 +963,20 @@ func GetCalibrationTaskStatusView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
-	res.Data = record.Percentage
+	percentageMap := map[string]any{}
+	_ = sonic.Unmarshal(record.Percentage, &percentageMap)
+	percentageList := []any{}
+	for i := 0; i >= 0; i++ {
+		index := strconv.Itoa(i)
+		percentage, ok := percentageMap[index]
+		if ok {
+			percentageList = append(percentageList, percentage)
+			delete(percentageMap, index)
+		}
+		if len(percentageMap) == 0 {
+			break
+		}
+	}
+	res.Data = percentageList
 	c.JSON(http.StatusOK, res)
 }
