@@ -2771,7 +2771,10 @@ func GetParameterCalibrationResultView(c *gin.Context) {
 	_ = sonic.Unmarshal(record.SimulateResult, &resultMap)
 	_ = sonic.Unmarshal(record.ResultParameters, &resultParameters)
 	_ = sonic.Unmarshal(record.ActualData, &actualData)
-	simulationResult := service.GetConditionSimulateResult(resultMap)
-	res.Data = service.GetConditionResult(resultParameters, actualData, simulationResult)
+	simulationResult, simulationLen := service.GetConditionSimulateResult(resultMap)
+	res.Data = map[string]any{
+		"result":            service.GetConditionResult(resultParameters, actualData, simulationResult, simulationLen),
+		"result_parameters": record.ResultParameters,
+	}
 	c.JSON(http.StatusOK, res)
 }

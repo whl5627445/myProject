@@ -233,7 +233,7 @@ func CopyPackage(src, dest string) (string, error) {
 }
 
 // GetConditionSimulateResult 获取标定仿真结果
-func GetConditionSimulateResult(result map[string]map[string][]float64) []map[string]any {
+func GetConditionSimulateResult(result map[string]map[string][]float64) ([]map[string]any, int) {
 	data := []map[string]any{}
 	nameValue := map[string][]float64{}
 	indexList := []string{}
@@ -257,7 +257,7 @@ func GetConditionSimulateResult(result map[string]map[string][]float64) []map[st
 	for k, v := range nameValue {
 		data = append(data, map[string]any{"name": k, "value": v})
 	}
-	return data
+	return data, len(indexList)
 }
 
 // 标定结果对象
@@ -270,12 +270,12 @@ type conditionResult struct {
 }
 
 // GetConditionResult 获取标定结果
-func GetConditionResult(resultParameters []map[string]any, actualData []map[string]any, simulationResult []map[string]any) []conditionResult {
+func GetConditionResult(resultParameters []map[string]any, actualData []map[string]any, simulationResult []map[string]any, simulationLen int) []conditionResult {
 	// actualData:       [{"name": "Approach", "value": ["16.03362", "15.00623"]}]
 	// resultParameters: [{"actual_name": "Approach", "result_name": "inertia1.J"}]
 	// simulationResult: [{"name": "inertia1.J", "value": [ 0.1, 0.1, 0.1]}]
 	var dataList []conditionResult
-	resultLen := len(simulationResult)
+	resultLen := simulationLen
 	for _, parameter := range resultParameters {
 		var d conditionResult
 		pActualName := parameter["actual_name"]
@@ -320,4 +320,8 @@ func stringToFloat(data []any) []float64 {
 		fData = append(fData, f)
 	}
 	return fData
+}
+
+func GetPercentageCalibration() {
+
 }
