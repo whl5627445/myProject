@@ -121,6 +121,7 @@ class CalibrationCompileThread(threading.Thread):
             update_parameter_calibration_records(
                 uuid=self.uuid, compile_status="3", compile_stop_time=int(time.time())
             )
+            shutil.rmtree(absolute_path)
             self.state = "stopped"
             return
         # 编译完成，通知omc进程退出，杀死父进程
