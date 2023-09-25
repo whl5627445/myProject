@@ -7,7 +7,8 @@ import os
 import subprocess
 import DyMat
 import pandas as pd
-from config.redis_config import R
+
+# from config.redis_config import R
 from libs.OMPython.OMCSessionZMQ import OMCSessionZMQ
 from libs.function.defs import (
     update_compile_records,
@@ -282,11 +283,10 @@ class CalibrationSimulateThread(threading.Thread):
             if not os.path.exists(r):
                 os.mkdir(r)
             size = (float(self.record.stop_time) - float(self.record.start_time)) / 500
-            if size > 0:
-                stepSize = str(int(size))
+            if size + 0.5 > 1:
+                stepSize = str(int(size + 0.5))
             else:
                 stepSize = "%.1g" % size
-
             override = (
                 "-override="
                 + "startTime="
@@ -321,6 +321,7 @@ class CalibrationSimulateThread(threading.Thread):
                 if self.record.result_parameters in [None, {}]:
                     log.info("结果参数为空，无法提取仿真结果，本次仿真终止")
                     break
+
                 self.record.percentage[i] = "4"
                 for j in self.record.result_parameters:
                     result_name = j["result_name"]
@@ -345,7 +346,7 @@ class CalibrationSimulateThread(threading.Thread):
                 log.info("仿真执行失败，本次仿真终止")
                 self.state = "fail"
                 self.__del__()
-            os.remove(r)
+            shutil.rmtree(r)
         update_parameter_calibration_records(
             uuid=self.uuid,
             simulate_status=simulate_status,
@@ -356,9 +357,9 @@ class CalibrationSimulateThread(threading.Thread):
 
 def steady_state(data):
     e = 0.1
-    step = int(len(data) / 100) if int(len(data) / 100) > 0 else 0
+    step = int(len(data) / 100) if int(len(data) / 100) > 0 else 1
     t0 = 0
-    for i in range(step, data, step):
+    for i in range(step, len(data), step):
         t1 = abs(data[step] - data[step - 1])
         if t1 / t0 > (1 - e):
             return True
