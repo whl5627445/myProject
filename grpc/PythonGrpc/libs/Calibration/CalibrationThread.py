@@ -365,7 +365,7 @@ def steady_state(data):
     t0 = 0
     for i in range(step, len(data), step):
         t1 = abs(data[step] - data[step - 1])
-        if (t1 / t0) > (1 - e) or (t1 == 0 and t0 == 0):
+        if (t1 == 0 and t0 == 0) or (t1 / t0) > (1 - e):
             return True
         t0 = t1
     return False
