@@ -48,18 +48,17 @@ func GetCalibrationModelChild(modelName string) []modelChild {
 	if childAllList != nil {
 		for i := 0; i < len(childAllList); i++ {
 			modelChildName := modelName + "." + childAllList[i]
-			classInformation := GetClassInformation(modelChildName)
-			modelType := strings.TrimSpace(classInformation[0].(string))
+			modelType := GetModelType(modelChildName)
 			data := modelChild{
 				Name:      childAllList[i],
 				ModelName: modelChildName,
 				HasChild:  false,
 				Type:      modelType,
 			}
-			childList := omc.OMC.GetClassNames(modelChildName, false)
+			childList := omc.OMC.GetClassNames(modelChildName, true)
 			for _, c := range childList {
 				t := GetModelType(c)
-				if t == "model" {
+				if t == "model" && c != modelChildName {
 					data.HasChild = true
 					break
 				}
