@@ -2552,7 +2552,7 @@ func GetVariableParameterView(c *gin.Context) {
 	var res DataType.ResponseData
 	if record.CompileStatus == "4" {
 		//OMC仿真完输出的xml文件
-		result = service.GetVariableParameter(record.CompilePath+"/result_init.xml", parentNode, true)
+		result = service.GetVariableParameter(record.CompilePath+"/result_init.xml", parentNode, false)
 	} else {
 		res.Err = "查询失败"
 		res.Status = 2
@@ -2587,7 +2587,7 @@ func GetResultVariableParameterView(c *gin.Context) {
 	var res DataType.ResponseData
 	if record.CompileStatus == "4" {
 		//OMC仿真完输出的xml文件
-		result = service.GetVariableParameter(record.CompilePath+"/result_init.xml", parentNode, false)
+		result = service.GetVariableParameter(record.CompilePath+"/result_init.xml", parentNode, true)
 	} else {
 		res.Err = "查询失败"
 		res.Status = 2
@@ -2808,8 +2808,9 @@ func GetParameterCalibrationResultView(c *gin.Context) {
 	_ = sonic.Unmarshal(record.ActualData, &actualData)
 	simulationResult, simulationLen := service.GetConditionSimulateResult(resultMap)
 	res.Data = map[string]any{
-		"result":            service.GetConditionResult(resultParameters, actualData, simulationResult, simulationLen),
-		"result_parameters": record.ResultParameters,
+		"result":               service.GetConditionResult(resultParameters, actualData, simulationResult, simulationLen),
+		"condition_parameters": record.ConditionParameters,
+		"actual_name":          record.VariableList,
 	}
 	c.JSON(http.StatusOK, res)
 }
