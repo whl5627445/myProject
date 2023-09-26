@@ -30,10 +30,10 @@ func variableParameterCache() {
 }
 
 // GetVariableParameter 获取xml文件内变量的节点
-func GetVariableParameter(path, parent string) []map[string]any {
+func GetVariableParameter(path, parent string, isValueAll bool) []map[string]any {
 	var result []map[string]any
 	var filteredResult []map[string]any
-	result = ratedConditionParameterResultTree(path, parent)
+	result = ratedConditionParameterResultTree(path, parent, isValueAll)
 	for _, variable := range result {
 		// 非节点不需要检查非空
 		filteredResult = append(filteredResult, variable)
@@ -44,7 +44,7 @@ func GetVariableParameter(path, parent string) []map[string]any {
 }
 
 // 购构造额定条件参数的结果树
-func ratedConditionParameterResultTree(path, parent string) []map[string]any {
+func ratedConditionParameterResultTree(path, parent string, isValueAll bool) []map[string]any {
 	v, ok := variableParameterTreeCache[path]
 	if !ok {
 		v = xmlInit{}
@@ -76,9 +76,13 @@ func ratedConditionParameterResultTree(path, parent string) []map[string]any {
 			}
 			if !nameMap[splitNameList[0]] {
 				switch {
-				case scalarVariableMap[name].IsValueChangeable == true && scalarVariableMap[name].HideResult == "false" && scalarVariableMap[name].IsProtected:
+				case isValueAll == false && scalarVariableMap[name].IsValueChangeable == true && scalarVariableMap[name].HideResult == "false" && scalarVariableMap[name].IsProtected:
 					dataList = append(dataList, getRatedConditionParameter(splitNameList, scalarVariableMap[name], id, nameMap))
-				case scalarVariableMap[name].IsValueChangeable == true && scalarVariableMap[name].HideResult == "" && !scalarVariableMap[name].IsProtected:
+				case isValueAll == false && scalarVariableMap[name].IsValueChangeable == true && scalarVariableMap[name].HideResult == "" && !scalarVariableMap[name].IsProtected:
+					dataList = append(dataList, getRatedConditionParameter(splitNameList, scalarVariableMap[name], id, nameMap))
+				case isValueAll == true && scalarVariableMap[name].HideResult == "false" && scalarVariableMap[name].IsProtected:
+					dataList = append(dataList, getRatedConditionParameter(splitNameList, scalarVariableMap[name], id, nameMap))
+				case isValueAll == true && scalarVariableMap[name].HideResult == "" && !scalarVariableMap[name].IsProtected:
 					dataList = append(dataList, getRatedConditionParameter(splitNameList, scalarVariableMap[name], id, nameMap))
 				}
 			}
@@ -106,7 +110,6 @@ func getRatedConditionParameter(splitNameList []string, scalarVariableMap scalar
 	}
 	id += 1
 	nameMap[splitNameList[0]] = true
-
 	return data
 }
 

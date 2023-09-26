@@ -2552,7 +2552,42 @@ func GetVariableParameterView(c *gin.Context) {
 	var res DataType.ResponseData
 	if record.CompileStatus == "4" {
 		//OMC仿真完输出的xml文件
-		result = service.GetVariableParameter(record.CompilePath+"/result_init.xml", parentNode)
+		result = service.GetVariableParameter(record.CompilePath+"/result_init.xml", parentNode, true)
+	} else {
+		res.Err = "查询失败"
+		res.Status = 2
+	}
+
+	sortByFirstLetter := func(i, j int) bool {
+		// 从每个map中提取指定键的值进行比较
+		value1 := fmt.Sprintf("%v", result[i]["variables"])
+		value2 := fmt.Sprintf("%v", result[j]["variables"])
+		return strings.ToLower(string(value1[0])) < strings.ToLower(string(value2[0]))
+	}
+	// 使用排序函数对切片进行排序
+	sort.Slice(result, sortByFirstLetter)
+	res.Data = result
+	c.JSON(http.StatusOK, res)
+}
+
+func GetResultVariableParameterView(c *gin.Context) {
+	/*
+	  # 获取参数标定功能模型的结果参数节点
+	*/
+	recordId := c.Query("id")
+	parentNode := c.Query("parent")
+	var record DataBaseModel.ParameterCalibrationRecord
+	dbModel.Where("id = ? AND username = ?", recordId, userName).First(&record)
+	if record.ID == "" {
+		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+	var result []map[string]any
+
+	var res DataType.ResponseData
+	if record.CompileStatus == "4" {
+		//OMC仿真完输出的xml文件
+		result = service.GetVariableParameter(record.CompilePath+"/result_init.xml", parentNode, false)
 	} else {
 		res.Err = "查询失败"
 		res.Status = 2
