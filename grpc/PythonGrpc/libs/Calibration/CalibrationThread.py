@@ -258,6 +258,7 @@ class CalibrationSimulateThread(threading.Thread):
         update_parameter_calibration_records(uuid=self.uuid, simulate_status="2")
         self.state = "running"
         log.info("仿真计算进行中。。。")
+        self.record.percentage = {}
         simulate_status = "4"
         for i in range(0, self.simulate_total):
             self.simulate_current = i
@@ -346,6 +347,7 @@ class CalibrationSimulateThread(threading.Thread):
                 )
             else:
                 log.info("仿真执行失败，本次仿真终止")
+
                 self.state = "fail"
                 self.__del__()
             shutil.rmtree(r)
