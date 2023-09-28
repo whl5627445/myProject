@@ -1650,7 +1650,12 @@ func CADParseView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	modelName := map[string]any{"straight_tube": map[string]any{"id": model.ID, "model_name": []string{"Modelica.Fluid.Pipes.StaticPipe", "Modelica.Fluid.Pipes.DynamicPipe"}}, "bendable_tube": map[string]any{"id": model.ID, "model_name": []string{"Modelica.Fluid.Fittings.Bends.CurvedBend"}}}
+	modelName := map[string]any{
+		"straight_tube": map[string]any{"id": model.ID, "model_name": []string{"Modelica.Fluid.Pipes.StaticPipe", "Modelica.Fluid.Pipes.DynamicPipe"}},
+		"bendable_tube": map[string]any{"id": model.ID, "model_name": []string{"Modelica.Fluid.Fittings.Bends.CurvedBend"}},
+		"tee_tube": map[string]any{"id": model.ID,
+			"model_name": []string{"Modelica.Fluid.Fittings.TeeJunctionIdeal"}},
+	}
 	components := service.CADParseParts(data)
 
 	res.Data = map[string]any{"components": components, "model": modelName}
@@ -1684,7 +1689,7 @@ func CADParseXmlView(c *gin.Context) {
 			"model_name": []string{"Modelica.Fluid.Pipes.StaticPipe", "Modelica.Fluid.Pipes.DynamicPipe"}},
 		"bendable_tube": map[string]any{"id": model.ID,
 			"model_name": []string{"Modelica.Fluid.Fittings.Bends.CurvedBend"}},
-		"three-way_tube": map[string]any{"id": model.ID,
+		"tee_tube": map[string]any{"id": model.ID,
 			"model_name": []string{"Modelica.Fluid.Fittings.TeeJunctionIdeal"}},
 	}
 

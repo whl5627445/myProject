@@ -198,7 +198,6 @@ func GetXmlData(files []string, header string) string {
 			fmt.Println("error opening file")
 		}
 		defer file.Close()
-
 		_, err = io.Copy(fileWriter, file)
 		if err != nil {
 			fmt.Println("error copying file")
@@ -235,7 +234,6 @@ func GetXmlData(files []string, header string) string {
 	defer resp.Body.Close()
 	var data DataType.CadData
 	_ = sonic.Unmarshal(body, &data)
-
 	return data.Data
 }
 
@@ -322,7 +320,6 @@ func CADParseParts(path string) []map[string]any {
 		}
 		parts = append(parts, data)
 	}
-
 	return parts
 }
 
@@ -374,6 +371,9 @@ func getBendsData(pipeData []map[string]any) []map[string]any {
 		pipeModulus := coordinate["x"]*coordinate["x"] + coordinate["y"]*coordinate["y"] + coordinate["z"]*coordinate["z"]
 		nextPipeModulus := nextCoordinate["x"]*nextCoordinate["x"] + nextCoordinate["y"]*nextCoordinate["y"] + nextCoordinate["z"]*nextCoordinate["z"]
 		delta := math.Acos((nextCoordinate["x"]*coordinate["x"] + nextCoordinate["y"]*coordinate["y"] + nextCoordinate["z"]*coordinate["z"]) / pipeModulus / nextPipeModulus)
+		if math.IsNaN(delta) {
+			delta = 0
+		}
 		R0 := pipe["bend_radius"]
 		dHyd := pipe["diameter"]
 		bendsData = append(bendsData, map[string]any{"delta": delta, "R_0": R0, "d_hyd": dHyd})
