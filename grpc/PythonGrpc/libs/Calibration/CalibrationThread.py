@@ -143,6 +143,7 @@ class CalibrationSimulateThread(threading.Thread):
         self.simulate_current = 0
         self.message = ""
         self.calibration_simulate_task_mark_dict = calibration_simulate_task_mark_dict
+        self.percentage = {}
         with Session() as session:
             self.record = (
                 session.query(ParameterCalibrationRecord)
@@ -201,12 +202,14 @@ class CalibrationSimulateThread(threading.Thread):
         status = "3"
         if self.state == "delete":
             status = "5"
+        elif self.state == "stop":
+            status = "4"
         elif self.state == "fail":
             self.state = "stop"
         for s in range(self.simulate_current, self.simulate_total):
-            self.record.percentage[str(s)] = status
+            self.percentage[str(s)] = status
             update_parameter_calibration_records(
-                uuid=self.uuid, percentage=self.record.percentage
+                uuid=self.uuid, percentage=self.percentage
             )
         log.info("status： " + str(status))
         log.info("message： " + str(self.message))
@@ -222,11 +225,6 @@ class CalibrationSimulateThread(threading.Thread):
         # omc准备操作
 
         self.compile_Dependencies = self.record.compile_Dependencies
-        update_parameter_calibration_records(
-            uuid=self.uuid,
-            simulate_status="6",
-            compile_start_time=int(time.time()),
-        )
         self.omc_obj.sendExpression(
             'setCommandLineOptions("-d=initialization,NLSanalyticJacobian")'
         )
@@ -246,7 +244,11 @@ class CalibrationSimulateThread(threading.Thread):
         self.state = "compiling"  # 编译中
         log.info("(calibration)开始编译")
         # 编译
-
+        update_parameter_calibration_records(
+            uuid=self.uuid,
+            simulate_status="6",
+            compile_start_time=int(time.time()),
+        )
         absolute_path = r"/home/simtek/code/" + self.record.compile_path + "/"
         # log.info("(calibration)仿真结果地址:" + absolute_path)
         # log.info("(calibration)仿真模型名：" + app_pages_record.model_name)
@@ -272,6 +274,7 @@ class CalibrationSimulateThread(threading.Thread):
         log.info("(calibration)编译完成，杀死omc进程：" + str(self.omc_obj.omc_process.pid))
 
         update_parameter_calibration_records(uuid=self.uuid, simulate_status="2")
+
         self.state = "running"
         log.info("仿真计算进行中。。。")
         simulate_status = "4"
@@ -279,13 +282,9 @@ class CalibrationSimulateThread(threading.Thread):
             if self.state == "delete" or self.state == "stop":
                 return
             self.simulate_current = i
-
-            if self.record.percentage is None:
-                self.record.percentage = {str(i): "2"}
-            else:
-                self.record.percentage[str(i)] = "2"
+            self.percentage[str(i)] = "2"
             update_parameter_calibration_records(
-                uuid=self.uuid, percentage=self.record.percentage
+                uuid=self.uuid, percentage=self.percentage
             )
 
             # 修改xml文件
@@ -339,7 +338,7 @@ class CalibrationSimulateThread(threading.Thread):
                     log.info("结果参数为空，无法提取仿真结果，本次仿真终止")
                     break
 
-                self.record.percentage[i] = "4"
+                self.percentage[i] = "4"
                 for j in self.record.result_parameters:
                     result_name = j["result_name"]
                     d_data = list(d.data(result_name))
@@ -348,8 +347,7 @@ class CalibrationSimulateThread(threading.Thread):
                     result_dict[result_name] = d_data
 
                     if result_name != "time" and not steady_state(d_data):
-                        self.record.percentage[i] = "7"  # 表示本次仿真没有达到稳态
-                        simulate_status = "7"
+                        self.percentage[i] = "7"  # 表示本次仿真没有达到稳态
                 if self.record.simulate_result is None:
                     self.record.simulate_result = {i: result_dict}
                 else:
@@ -357,7 +355,7 @@ class CalibrationSimulateThread(threading.Thread):
 
                 update_parameter_calibration_records(
                     uuid=self.uuid,
-                    percentage=self.record.percentage,
+                    percentage=self.percentage,
                     simulate_result=self.record.simulate_result,
                 )
             else:

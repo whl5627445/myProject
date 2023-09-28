@@ -913,15 +913,17 @@ func CalibrationSimulateTaskAddView(c *gin.Context) {
 	itemMap := map[string]string{
 		"id": record.ID,
 	}
-	var percentage = map[string]any{"0": 1}
+	var percentageMap = map[string]any{"0": 1}
 	var conditionParameters []map[string]any
 	_ = sonic.Unmarshal(record.ConditionParameters, &conditionParameters)
-	record.Percentage, _ = sonic.Marshal(percentage)
-	record.SimulateStatus = "1"
-	DB.Save(&record)
+	percentage, _ := sonic.Marshal(percentageMap)
+	err = DB.Model(DataBaseModel.ParameterCalibrationRecord{}).Where("id = ?  AND username = ?", item.ID, userName).Updates(map[string]any{"percentage": percentage, "simulate_status": "1"}).Error
+	if err != nil {
+		log.Println("标定任务更新数据库出错：", err)
+	}
 	err = service.GrpcCalibrationSimulate(itemMap)
 	if err != nil {
-		fmt.Println("调用(GrpcSimulation)出错：", err)
+		log.Println("调用(GrpcSimulation)出错：", err)
 		res.Err = "仿真失败，请联系管理员"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
@@ -976,7 +978,7 @@ func GetCalibrationTaskStatusView(c *gin.Context) {
 	recordId := c.Query("id")
 	var record DataBaseModel.ParameterCalibrationRecord
 	err := DB.Where("id = ?  AND username = ?", recordId, userName).First(&record).Error
-	if record.ID == "" {
+	if err != nil {
 		log.Println(err)
 		c.JSON(http.StatusBadRequest, "not found")
 		return
