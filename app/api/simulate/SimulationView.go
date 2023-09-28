@@ -897,10 +897,28 @@ func CalibrationSimulateTaskAddView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
+	switch record.SimulateStatus {
+	case "1":
+		res.Msg = "已经在排队仿真当中，请耐心等待"
+		res.Status = 0
+		c.JSON(http.StatusOK, res)
+		return
+	case "2":
+		res.Msg = "已经在仿真进行中，请耐心等待"
+		res.Status = 0
+		c.JSON(http.StatusOK, res)
+		return
+	}
 
 	itemMap := map[string]string{
 		"id": record.ID,
 	}
+	var percentage = map[string]any{"0": 1}
+	var conditionParameters []map[string]any
+	_ = sonic.Unmarshal(record.ConditionParameters, &conditionParameters)
+	record.Percentage, _ = sonic.Marshal(percentage)
+	record.SimulateStatus = "1"
+	DB.Save(&record)
 	err = service.GrpcCalibrationSimulate(itemMap)
 	if err != nil {
 		fmt.Println("调用(GrpcSimulation)出错：", err)
@@ -977,6 +995,6 @@ func GetCalibrationTaskStatusView(c *gin.Context) {
 			break
 		}
 	}
-	res.Data = percentageList
+	res.Data = map[string]any{"status": record.SimulateStatus, "percentage": percentageList}
 	c.JSON(http.StatusOK, res)
 }

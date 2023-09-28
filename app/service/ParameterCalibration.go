@@ -302,6 +302,9 @@ func GetConditionResult(resultParameters []map[string]any, actualData []map[stri
 				d.ResultValue = sResultValue[:resultLen]
 			}
 		}
+		if len(d.ResultValue) != len(d.ActualValue) || len(d.ResultValue) == 0 || len(d.ActualValue) == 0 {
+			return []conditionResult{}
+		}
 		d.RelativeError = []float64{}
 		for index, resulValue := range d.ResultValue {
 			actualValue := d.ActualValue[index]
@@ -319,12 +322,11 @@ func GetConditionResult(resultParameters []map[string]any, actualData []map[stri
 func stringToFloat(data []any) []float64 {
 	fData := []float64{}
 	for _, s := range data {
-		f, _ := strconv.ParseFloat(s.(string), 64)
+		f, err := strconv.ParseFloat(s.(string), 64)
+		if err != nil {
+			log.Println("stringToFloat err", err)
+		}
 		fData = append(fData, f)
 	}
 	return fData
-}
-
-func GetPercentageCalibration() {
-
 }
