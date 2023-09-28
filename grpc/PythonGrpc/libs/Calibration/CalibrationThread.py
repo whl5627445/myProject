@@ -131,7 +131,7 @@ class CalibrationCompileThread(threading.Thread):
 
 class CalibrationSimulateThread(threading.Thread):
     # 仿真之前需要进行额定工况参数写入，拟合系数参数写入，
-    def __init__(self, request, port):
+    def __init__(self, request, port, calibration_simulate_task_mark_dict):
         self.state = "init"
         self.port = port
         self.run_pid = None
@@ -142,6 +142,7 @@ class CalibrationSimulateThread(threading.Thread):
         self.compile_Dependencies = {}
         self.simulate_current = 0
         self.message = ""
+        self.calibration_simulate_task_mark_dict = calibration_simulate_task_mark_dict
         with Session() as session:
             self.record = (
                 session.query(ParameterCalibrationRecord)
@@ -186,6 +187,17 @@ class CalibrationSimulateThread(threading.Thread):
         log.info("对象被删除，执行删除后操作")
         if self.record.simulate_status == "4":
             return
+        parent_proc = psutil.Process(self.omc_obj.omc_process.pid)
+        for child_proc in parent_proc.children(recursive=True):
+            log.info("(calibration)关闭子进程：" + str(child_proc.pid))
+            os.kill(child_proc.pid, 9)
+        os.kill(self.omc_obj.omc_process.pid, 9)
+        log.info("(calibration)关闭omc进程成功")
+        try:
+            if self.run_pid:
+                os.kill(self.run_pid, 9)
+        except OSError:
+            log.info("(calibration)运行进程不存在，跳过")
         status = "3"
         if self.state == "delete":
             status = "5"
@@ -196,21 +208,25 @@ class CalibrationSimulateThread(threading.Thread):
             update_parameter_calibration_records(
                 uuid=self.uuid, percentage=self.record.percentage
             )
+        log.info("status： " + str(status))
+        log.info("message： " + str(self.message))
         update_parameter_calibration_records(
             uuid=self.uuid,
             simulate_status=status,
             compile_stop_time=int(time.time()),
             simulate_result_str=self.message,
         )
+        # del self.calibration_simulate_task_mark_dict[self.request.userName]
 
     def run(self):
         # omc准备操作
 
         self.compile_Dependencies = self.record.compile_Dependencies
         update_parameter_calibration_records(
-            uuid=self.uuid, simulate_status="6", compile_start_time=int(time.time())
+            uuid=self.uuid,
+            simulate_status="6",
+            compile_start_time=int(time.time()),
         )
-
         self.omc_obj.sendExpression(
             'setCommandLineOptions("-d=initialization,NLSanalyticJacobian")'
         )
@@ -258,13 +274,12 @@ class CalibrationSimulateThread(threading.Thread):
         update_parameter_calibration_records(uuid=self.uuid, simulate_status="2")
         self.state = "running"
         log.info("仿真计算进行中。。。")
-        self.record.percentage = {}
         simulate_status = "4"
         for i in range(0, self.simulate_total):
+            if self.state == "delete" or self.state == "stop":
+                return
             self.simulate_current = i
-            # if percentage is not None and str(i) in percentage and percentage[str(i)] == 4:
-            #     log.info("本轮仿真已跳过：" + str(i))
-            #     continue
+
             if self.record.percentage is None:
                 self.record.percentage = {str(i): "2"}
             else:
@@ -362,7 +377,7 @@ class CalibrationSimulateThread(threading.Thread):
 def steady_state(data):
     e = 0.1
     step = int(len(data) / 100) if int(len(data) / 100) > 0 else 1
-    t0 = 0
+    t0 = float("inf")
     for i in range(step, len(data), step):
         t1 = abs(data[step] - data[step - 1])
         if (t1 == 0 and t0 == 0) or (t1 / t0) > (1 - e):

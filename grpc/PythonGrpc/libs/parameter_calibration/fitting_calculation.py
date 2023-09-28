@@ -4,7 +4,7 @@ import pandas as pd
 from libs.function.grpc_log import log
 
 
-def prediction (data):
+def prediction(data):
     # 读取数据
     # data = pd.read_excel(data_file)
 
@@ -25,7 +25,9 @@ def prediction (data):
         y_all.append(y)
 
     # 取90%的数据作为训练数据，10%用于判断模型效果
-    X_train, X_test, y_train, y_test = train_test_split(X_all, y_all, test_size=0.2, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X_all, y_all, test_size=0.2, random_state=42
+    )
 
     # 简单线性回归
 
@@ -45,7 +47,7 @@ def prediction (data):
     return model.coef_[0], model.score(X_all, y_all)
 
 
-def get_formula_operation (value_dict, formula_list):
+def get_formula_operation(value_dict, formula_list):
     data_dict = {}
     data = pd.DataFrame(value_dict)
     approach = data.columns[0]
@@ -85,7 +87,7 @@ def get_formula_operation (value_dict, formula_list):
                 value = eval(replace_formula)
                 formula_data_list.append(value)
             except Exception as e:
-                log.info("执行计算代码出错： "+str(replace_formula))
+                log.info("执行计算代码出错： " + str(replace_formula))
 
         data_dict[formula] = formula_data_list
     return pd.DataFrame(data_dict)
