@@ -137,11 +137,11 @@ class CalibrationSimulateThread(threading.Thread):
         self.run_pid = None
         self.uuid = request.uuid
         self.request = request
-        threading.Thread.__init__(self)
         self.omc_obj = OMCSessionZMQ(port=port)
         self.compile_Dependencies = {}
         self.simulate_current = 0
         self.message = ""
+        self.destroy = False
         self.calibration_simulate_task_mark_dict = calibration_simulate_task_mark_dict
         self.percentage = {}
         with Session() as session:
@@ -167,6 +167,7 @@ class CalibrationSimulateThread(threading.Thread):
                 d.append(v[p])
             self.parameters_value_list.append(d)
         self.simulate_total = len(self.parameters_value_list)
+        threading.Thread.__init__(self)
 
     def load_dependent_library(self):
         for key, val in self.compile_Dependencies.items():
@@ -186,40 +187,39 @@ class CalibrationSimulateThread(threading.Thread):
 
     def __del__(self):
         log.info("对象被删除，执行删除后操作")
-        if self.record.simulate_status == "4":
-            return
-        parent_proc = psutil.Process(self.omc_obj.omc_process.pid)
-        for child_proc in parent_proc.children(recursive=True):
-            log.info("(calibration)关闭子进程：" + str(child_proc.pid))
-            os.kill(child_proc.pid, 9)
-        os.kill(self.omc_obj.omc_process.pid, 9)
-        log.info("(calibration)关闭omc进程成功")
-        try:
-            if self.run_pid:
-                os.kill(self.run_pid, 9)
-        except OSError:
-            log.info("(calibration)运行进程不存在，跳过")
-        status = "3"
-        if self.state == "delete":
-            status = "5"
-        elif self.state == "stop":
+
+        if not self.destroy:
+            parent_proc = psutil.Process(self.omc_obj.omc_process.pid)
+            for child_proc in parent_proc.children(recursive=True):
+                log.info("(calibration)关闭子进程：" + str(child_proc.pid))
+                os.kill(child_proc.pid, 9)
+            os.kill(self.omc_obj.omc_process.pid, 9)
+            log.info("(calibration)关闭omc进程成功")
+            try:
+                if self.run_pid:
+                    os.kill(self.run_pid, 9)
+            except OSError:
+                log.info("(calibration)运行进程不存在，跳过")
             status = "4"
-        elif self.state == "fail":
-            self.state = "stop"
-        for s in range(self.simulate_current, self.simulate_total):
-            self.percentage[str(s)] = status
+            if self.state == "delete":
+                status = "5"
+            elif self.state == "fail":
+                status = "3"
+                self.state = "stop"
+            for s in range(self.simulate_current, self.simulate_total):
+                self.percentage[str(s)] = status
+                update_parameter_calibration_records(
+                    uuid=self.uuid, percentage=self.percentage
+                )
+            log.info("status： " + str(status))
+            log.info("message： " + str(self.message))
             update_parameter_calibration_records(
-                uuid=self.uuid, percentage=self.percentage
+                uuid=self.uuid,
+                simulate_status=status,
+                compile_stop_time=int(time.time()),
+                simulate_result_str=self.message,
             )
-        log.info("status： " + str(status))
-        log.info("message： " + str(self.message))
-        update_parameter_calibration_records(
-            uuid=self.uuid,
-            simulate_status=status,
-            compile_stop_time=int(time.time()),
-            simulate_result_str=self.message,
-        )
-        # del self.calibration_simulate_task_mark_dict[self.request.userName]
+            self.destroy = True
 
     def run(self):
         # omc准备操作
@@ -268,8 +268,8 @@ class CalibrationSimulateThread(threading.Thread):
             log.info("(calibration)编译失败")
             # update_parameter_calibration_records(uuid=self.uuid, simulate_status="3", compile_stop_time=int(time.time()))
             self.state = "stopped"
-            self.__del__()
-            return
+            self.join()
+
         # 编译完成，通知omc进程退出，杀死父进程
         log.info("(calibration)编译完成，杀死omc进程：" + str(self.omc_obj.omc_process.pid))
 
@@ -280,7 +280,7 @@ class CalibrationSimulateThread(threading.Thread):
         simulate_status = "4"
         for i in range(0, self.simulate_total):
             if self.state == "delete" or self.state == "stop":
-                return
+                self.join()
             self.simulate_current = i
             self.percentage[str(i)] = "2"
             update_parameter_calibration_records(
@@ -336,7 +336,7 @@ class CalibrationSimulateThread(threading.Thread):
                 result_dict = {"time": list(d.abscissa("2", True))}
                 if self.record.result_parameters in [None, {}]:
                     log.info("结果参数为空，无法提取仿真结果，本次仿真终止")
-                    break
+                    self.join()
 
                 self.percentage[i] = "4"
                 for j in self.record.result_parameters:
@@ -363,6 +363,7 @@ class CalibrationSimulateThread(threading.Thread):
 
                 self.state = "fail"
                 self.__del__()
+                break
             shutil.rmtree(r)
         update_parameter_calibration_records(
             uuid=self.uuid,
@@ -370,6 +371,7 @@ class CalibrationSimulateThread(threading.Thread):
             simulate_result_str=self.message,
         )
         self.state = "stopped"
+        self.__del__()
 
 
 def steady_state(data):
