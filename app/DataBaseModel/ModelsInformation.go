@@ -79,21 +79,21 @@ type ParameterCalibrationRecord struct {
 	NumberOfIntervals       string         `gorm:"column:number_of_intervals;type:varchar(32);comment:仿真间隔数"`
 	Interval                string         `gorm:"column:interval;type:varchar(32);comment:仿真时间间隔"`
 	Method                  string         `gorm:"column:method;type:varchar(32);comment:仿真积分方法"`
-	Percentage              datatypes.JSON `gorm:"column:percentage;default:{};type:json;comment:仿真进度, 每次仿真有单独状态"`
-	ActualData              datatypes.JSON `gorm:"column:actual_data;default:[];type:json;comment:实测数据字段与数据"`
-	SimulateResult          datatypes.JSON `gorm:"column:simulate_result;default:{};type:json;comment:仿真结果数据"`
-	RatedCondition          datatypes.JSON `gorm:"column:rated_condition;default:[];type:json;comment:额定工况参数信息"`
-	ConditionParameters     datatypes.JSON `gorm:"column:condition_parameters;default:[];type:json;comment:条件参数信息"`
-	ResultParameters        datatypes.JSON `gorm:"column:result_parameters;default:[];type:json;comment:结果参数信息"`
+	Percentage              datatypes.JSON `gorm:"column:percentage;type:json;comment:仿真进度, 每次仿真有单独状态"`
+	ActualData              datatypes.JSON `gorm:"column:actual_data;type:json;comment:实测数据字段与数据"`
+	SimulateResult          datatypes.JSON `gorm:"column:simulate_result;type:json;comment:仿真结果数据"`
+	RatedCondition          datatypes.JSON `gorm:"column:rated_condition;type:json;comment:额定工况参数信息"`
+	ConditionParameters     datatypes.JSON `gorm:"column:condition_parameters;type:json;comment:条件参数信息"`
+	ResultParameters        datatypes.JSON `gorm:"column:result_parameters;type:json;comment:结果参数信息"`
 	FormulaString           string         `gorm:"column:formula_string;type:longtext;comment:公式的原始数据"`
-	Formula                 datatypes.JSON `gorm:"column:formula;default:[];type:json;comment:解析出来的公式"`
-	VariableList            datatypes.JSON `gorm:"column:variable_list;default:[];type:json;comment:解析出来的公式变量数值"`
-	CoefficientName         datatypes.JSON `gorm:"column:coefficient_name;default:[];type:json;comment:公式系数的名字"`
-	Coefficient             datatypes.JSON `gorm:"column:coefficient;type;default:[]:json;comment:公式系数的具体值"`
+	Formula                 datatypes.JSON `gorm:"column:formula;type:json;comment:解析出来的公式"`
+	VariableList            datatypes.JSON `gorm:"column:variable_list;type:json;comment:解析出来的公式变量数值"`
+	CoefficientName         datatypes.JSON `gorm:"column:coefficient_name;type:json;comment:公式系数的名字"`
+	Coefficient             datatypes.JSON `gorm:"column:coefficient;type:json;comment:公式系数的具体值"`
 	CoefficientScore        float64        `gorm:"column:coefficient_score;type:float;comment:公式拟合得分"`
-	AssociatedParameters    datatypes.JSON `gorm:"column:associated_parameters;default:[];type:json;comment:公式变量与实测数据参数名的映射"`
+	AssociatedParameters    datatypes.JSON `gorm:"column:associated_parameters;type:json;comment:公式变量与实测数据参数名的映射"`
 	CreatedAt               *time.Time     `gorm:"column:create_time;autoCreateTime;type:datetime;comment:创建时间" json:"-"`
-	UpdatedAt               *time.Time     `gorm:"column:update_time;comment;type:datetime:更新时间" json:"-"`
+	UpdatedAt               *time.Time     `gorm:"column:update_time;type:datetime;comment:更新时间" json:"-"`
 	UserSpaceId             string         `gorm:"column:userspace_id;type:varchar(128);comment:package所在用户空间的唯一识别标识"`
 	Deleted                 gorm.DeletedAt `gorm:"column:deleted_at;type:datetime;comment:删除时间" json:"-"`
 }
@@ -121,21 +121,21 @@ type ParameterCalibrationTemplate struct {
 	NumberOfIntervals       string         `gorm:"column:number_of_intervals;type:varchar(32);comment:仿真间隔数"`
 	Interval                string         `gorm:"column:interval;type:varchar(32);comment:仿真时间间隔"`
 	Method                  string         `gorm:"column:method;type:varchar(32);comment:仿真积分方法"`
-	Percentage              datatypes.JSON `gorm:"column:percentage;default:{};type:json;comment:仿真进度, 每次仿真有单独状态"`
-	ActualData              datatypes.JSON `gorm:"column:actual_data;default:[];type:json;comment:实测数据字段与数据"`
-	SimulateResult          datatypes.JSON `gorm:"column:simulate_result;default:{};type:json;comment:仿真结果数据"`
-	RatedCondition          datatypes.JSON `gorm:"column:rated_condition;default:[];type:json;comment:额定工况参数信息"`
-	ConditionParameters     datatypes.JSON `gorm:"column:condition_parameters;default:[];type:json;comment:条件参数信息"`
-	ResultParameters        datatypes.JSON `gorm:"column:result_parameters;default:[];type:json;comment:结果参数信息"`
+	Percentage              datatypes.JSON `gorm:"column:percentage;type:json;comment:仿真进度, 每次仿真有单独状态"`
+	ActualData              datatypes.JSON `gorm:"column:actual_data;type:json;comment:实测数据字段与数据"`
+	SimulateResult          datatypes.JSON `gorm:"column:simulate_result;type:json;comment:仿真结果数据"`
+	RatedCondition          datatypes.JSON `gorm:"column:rated_condition;type:json;comment:额定工况参数信息"`
+	ConditionParameters     datatypes.JSON `gorm:"column:condition_parameters;type:json;comment:条件参数信息"`
+	ResultParameters        datatypes.JSON `gorm:"column:result_parameters;type:json;comment:结果参数信息"`
 	FormulaString           string         `gorm:"column:formula_string;type:longtext;comment:公式的原始数据"`
-	Formula                 datatypes.JSON `gorm:"column:formula;default:[];type:json;comment:解析出来的公式"`
-	VariableList            datatypes.JSON `gorm:"column:variable_list;default:[];type:json;comment:解析出来的公式变量数值"`
-	CoefficientName         datatypes.JSON `gorm:"column:coefficient_name;default:[];type:json;comment:公式系数的名字"`
-	Coefficient             datatypes.JSON `gorm:"column:coefficient;type;default:[]:json;comment:公式系数的具体值"`
+	Formula                 datatypes.JSON `gorm:"column:formula;type:json;comment:解析出来的公式"`
+	VariableList            datatypes.JSON `gorm:"column:variable_list;type:json;comment:解析出来的公式变量数值"`
+	CoefficientName         datatypes.JSON `gorm:"column:coefficient_name;type:json;comment:公式系数的名字"`
+	Coefficient             datatypes.JSON `gorm:"column:coefficient;type:json;comment:公式系数的具体值"`
 	CoefficientScore        float64        `gorm:"column:coefficient_score;type:float;comment:公式拟合得分"`
-	AssociatedParameters    datatypes.JSON `gorm:"column:associated_parameters;default:[];type:json;comment:公式变量与实测数据参数名的映射"`
+	AssociatedParameters    datatypes.JSON `gorm:"column:associated_parameters;type:json;comment:公式变量与实测数据参数名的映射"`
 	CreatedAt               *time.Time     `gorm:"column:create_time;autoCreateTime;type:datetime;comment:创建时间" json:"-"`
-	UpdatedAt               *time.Time     `gorm:"column:update_time;comment;type:datetime:更新时间" json:"-"`
+	UpdatedAt               *time.Time     `gorm:"column:update_time;type:datetime;comment:更新时间" json:"-"`
 	UserSpaceId             string         `gorm:"column:userspace_id;type:varchar(128);comment:package所在用户空间的唯一识别标识"`
 	Deleted                 gorm.DeletedAt `gorm:"column:deleted_at;type:datetime;comment:删除时间" json:"-"`
 }

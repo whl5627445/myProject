@@ -2690,8 +2690,8 @@ func FittingCalculationView(c *gin.Context) {
 	var coefficientList []map[string]any
 	_ = sonic.Unmarshal(record.Formula, &formulaList)
 	_ = sonic.Unmarshal(record.CoefficientName, &coefficientNameList)
-	for i := 1; i < len(coefficientNameList); i++ {
-		coefficientList = append(coefficientList, map[string]any{"name": coefficientNameList[i], "value": result.Coefficient[i-1]})
+	for i := 0; i < len(coefficientNameList); i++ {
+		coefficientList = append(coefficientList, map[string]any{"name": coefficientNameList[i], "value": result.Coefficient[i]})
 	}
 	res.Data = map[string]any{"coefficient": coefficientList, "score": result.Score}
 	c.JSON(http.StatusOK, res)
@@ -2798,6 +2798,30 @@ func GetParameterCalibrationResultView(c *gin.Context) {
 	var res DataType.ResponseData
 	recordId := c.Query("id")
 	var record DataBaseModel.ParameterCalibrationRecord
+	dbModel.Where("id = ? AND username = ?", recordId, userName).First(&record)
+	var resultMap map[string]map[string][]float64
+	var resultParameters []map[string]any
+	var actualData []map[string]any
+
+	_ = sonic.Unmarshal(record.SimulateResult, &resultMap)
+	_ = sonic.Unmarshal(record.ResultParameters, &resultParameters)
+	_ = sonic.Unmarshal(record.ActualData, &actualData)
+	simulationResult, simulationLen := service.GetConditionSimulateResult(resultMap)
+	res.Data = map[string]any{
+		"result":               service.GetConditionResult(resultParameters, actualData, simulationResult, simulationLen),
+		"condition_parameters": record.ConditionParameters,
+		"actual_name":          record.VariableList,
+	}
+	c.JSON(http.StatusOK, res)
+}
+
+func GetParameterCalibrationTemplateResultView(c *gin.Context) {
+	/*
+		# 获取参数标定模板结果
+	*/
+	var res DataType.ResponseData
+	recordId := c.Query("id")
+	var record DataBaseModel.ParameterCalibrationTemplate
 	dbModel.Where("id = ? AND username = ?", recordId, userName).First(&record)
 	var resultMap map[string]map[string][]float64
 	var resultParameters []map[string]any
