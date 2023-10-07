@@ -329,7 +329,7 @@ class CalibrationSimulateThread(threading.Thread):
 
             run_result_str = output.decode("utf-8")
             self.message = str(run_result_str)
-            if "successfully" in run_result_str:
+            if "The simulation finished successfully." in run_result_str:
                 log.info("(calibration)successfully")
                 # 从mat中读取数据
                 d = DyMat.DyMatFile(r + "/" + "result_res.mat")
