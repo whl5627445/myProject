@@ -273,8 +273,11 @@ class CalibrationSimulateThread(threading.Thread):
         # 编译完成，通知omc进程退出，杀死父进程
         log.info("(calibration)编译完成，杀死omc进程：" + str(self.omc_obj.omc_process.pid))
 
-        update_parameter_calibration_records(uuid=self.uuid, simulate_status="2")
-
+        update_parameter_calibration_records(
+            uuid=self.uuid,
+            simulate_status="2",
+            simulate_result={},
+        )
         self.state = "running"
         log.info("仿真计算进行中。。。")
         simulate_status = "4"
