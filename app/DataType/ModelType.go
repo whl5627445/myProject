@@ -185,10 +185,12 @@ type CadModelMapping struct {
 }
 
 type CadMappingModelInformation struct {
-	ModelInformation  []CadInformation `json:"model_information" binding:"required"`
-	PartNumber        string           `json:"partnumber" binding:"required"`
-	Type              string           `json:"type" binding:"required"`
-	ConnectedRelation []map[string]any `json:"connected_relation" binding:""`
+	ModelInformation  []CadInformation     `json:"model_information" binding:"required"`
+	PartNumber        string               `json:"partnumber" binding:"required"`
+	Type              string               `json:"type" binding:"required"`
+	ConnectedRelation []map[string]any     `json:"connected_relation" binding:""`
+	Points            []map[string]float64 `json:"points" binding:""`
+	Name              string               `json:"name" binding:""`
 }
 
 type CadData struct {

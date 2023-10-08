@@ -276,7 +276,7 @@ func CADParseParts(path string) []map[string]any {
 		t := v.Tube[i]
 		var pList []map[string]any
 		name := t.Name
-		data := map[string]any{"partnumber": t.Partnumber, "type": t.Type}
+		data := map[string]any{"partnumber": t.Partnumber, "type": t.Type, "name": t.Name}
 		if t.Type == "CATTubBendableTube" {
 			if len(t.Run.Points.Point) != len(t.Run.Segments.Segment)+1 {
 				continue
@@ -294,6 +294,8 @@ func CADParseParts(path string) []map[string]any {
 					lineMap = map[string]any{
 						"start_line": startLine,
 						"end_line":   endLine,
+						"start_name": l.Start.Name,
+						"end_name":   l.End.Name,
 					}
 					lineList = append(lineList, lineMap)
 				}
@@ -303,6 +305,11 @@ func CADParseParts(path string) []map[string]any {
 
 			data["connected_relation"] = lineList
 			modelInformation := getModelInformationData(t, nil, nil)
+			for _, p := range t.Run.Points.Point {
+				pData := map[string]any{"x": p.X.Value, "y": p.Y.Value}
+				pList = append(pList, pData)
+			}
+			data["points"] = pList
 			data["model_information"] = modelInformation
 		} else {
 			diameter := getAttributes(t.Solid.Attributes)
@@ -457,6 +464,13 @@ func getModelInformationData(tube tube, pipeData []map[string]any, bendsData []m
 				pzData["rotation"] = -90
 				pzData["origin"] = []float64{xNum, y1Num - (y1Num-yNum)/2}
 			}
+
+			//if index == len(pointList)-2 {
+			//
+			//	xLast := pointList[index+1].X.Value
+			//	yLast := pointList[index+1].Y.Value
+			//	pzData["origin"] = []float64{xLast, yLast}
+			//}
 			pzData["geometry_data"] = pipeData[0]
 			pipeData = pipeData[1:]
 			pData["geometry_data"] = bendsData[0]
@@ -513,6 +527,15 @@ func getModelInformationData(tube tube, pipeData []map[string]any, bendsData []m
 
 func CADMappingModel(modelName string, classNameList []string, modelInformationList DataType.CadMappingModelInformation, lineMap map[string]string) {
 	var componentNames []map[string]string
+	pointList := make(map[string]string)
+	pointsMap := modelInformationList.Points
+	for i, m := range pointsMap {
+		pointX := strconv.FormatFloat(m["x"], 'f', -1, 64)
+		pointY := strconv.FormatFloat(m["y"], 'f', -1, 64)
+		pointCoord := strings.Join([]string{pointX, pointY}, ",")
+		pointName := modelInformationList.Name + ".port_" + strconv.Itoa(i+1)
+		pointList[pointName] = pointCoord
+	}
 	for index, className := range classNameList {
 		component := map[string]string{}
 		componentName := GetComponentName(modelName, className)
@@ -523,7 +546,10 @@ func CADMappingModel(modelName string, classNameList []string, modelInformationL
 		rotation := strconv.FormatFloat(modelInformation.Rotation, 'f', -1, 64)
 		extent := getExtents(className, modelInformation.Xz, modelInformation.Yz)
 		AddComponent(componentName, className, modelName, origin, rotation, extent)
-		lineMap[componentName] = origin
+		fmt.Println("初始组件的名称和origin", componentName, origin, modelInformationList.Name)
+		for k, _ := range pointList {
+			lineMap[k] = componentName
+		}
 		if modelInformationList.Type != "CATTubTeeJunction" {
 			if (index+1)%2 == 1 {
 				length := strconv.FormatFloat(modelInformation.GeometryData.Length, 'f', -1, 64)
@@ -572,25 +598,24 @@ func ThreeWayManage(modelName string, lineMap map[string]string, connectedRelati
 		startLine := strings.Join([]string{endOriginX, endOriginY}, ",")
 		endLine := strings.Join([]string{startOriginX, startOriginY}, ",")
 
-		e := getKeyByValue(lineMap, startLine)
-		s := getKeyByValue(lineMap, endLine)
-		if e != nil && s != nil {
-			for i := 0; i < len(e); i++ {
-				AddConnection(modelName, s[i], e[i], "0,127,255", []string{startLine, endLine})
-			}
+		startXml := con["start_name"]
+		endXml := con["end_name"]
+		startName := getValue(lineMap, startXml.(string))
+		endName := getValue(lineMap, endXml.(string))
+		if startName != "" && endName != "" {
+			AddConnection(modelName, startName, endName, "0,127,255", []string{startLine, endLine})
 		}
-	}
 
+	}
 }
 
-func getKeyByValue(dictionary map[string]string, targetValue any) []string {
-	var list []string
-	for key, value := range dictionary {
-		if value == targetValue {
-			list = append(list, key)
+func getValue(dictionary map[string]string, targetValue string) string {
+	for k, v := range dictionary {
+		if targetValue == k {
+			return v
 		}
 	}
-	return list
+	return ""
 }
 
 func getExtents(className string, Xz, Yz float64) []string {

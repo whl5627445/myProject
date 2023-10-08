@@ -1753,10 +1753,12 @@ func CADMappingModelView(c *gin.Context) {
 			return
 		}
 	}
+
 	lineMap := make(map[string]string)
 	for i := 0; i < len(item.ModelMapping); i++ {
 		service.CADMappingModel(item.ModelName, item.ModelMapping[i].ModelName, item.Information[i], lineMap)
 	}
+
 	for _, information := range item.Information {
 		if information.Type == "CATTubTeeJunction" {
 			service.ThreeWayManage(item.ModelName, lineMap, information.ConnectedRelation)
