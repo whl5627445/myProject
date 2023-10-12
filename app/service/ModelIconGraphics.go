@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
 	"yssim-go/library/omc"
 	"yssim-go/library/stringOperation"
 )
@@ -88,23 +89,23 @@ func getCoordinateSystemRecursion(modelNameList []string, isIcon bool) coordinat
 				InitialScale, _ := strconv.ParseFloat(coordinateSystem[5].(string), 64)
 				return InitialScale
 			}()
-			//initialScale, _ := strconv.ParseFloat(data["initialScale"], 64)
-			//x1, _ := strconv.ParseFloat(coordinateSystem[0].(string), 64)
-			//y1, _ := strconv.ParseFloat(coordinateSystem[1].(string), 64)
-			//x2, _ := strconv.ParseFloat(coordinateSystem[2].(string), 64)
-			//y2, _ := strconv.ParseFloat(coordinateSystem[3].(string), 64)
-			//x1, y1, x2, y2 = x1*initialScale, y1*initialScale, x2*initialScale, y2*initialScale
-			//x1Str := strconv.FormatFloat(x1, 'f', 1, 64)
-			//y1Str := strconv.FormatFloat(y1, 'f', 1, 64)
-			//x2Str := strconv.FormatFloat(x2, 'f', 1, 64)
-			//y2Str := strconv.FormatFloat(y2, 'f', 1, 64)
-			//data["extent1Diagram"] = strings.Join([]string{x1Str, y1Str}, ",")
+			// initialScale, _ := strconv.ParseFloat(data["initialScale"], 64)
+			// x1, _ := strconv.ParseFloat(coordinateSystem[0].(string), 64)
+			// y1, _ := strconv.ParseFloat(coordinateSystem[1].(string), 64)
+			// x2, _ := strconv.ParseFloat(coordinateSystem[2].(string), 64)
+			// y2, _ := strconv.ParseFloat(coordinateSystem[3].(string), 64)
+			// x1, y1, x2, y2 = x1*initialScale, y1*initialScale, x2*initialScale, y2*initialScale
+			// x1Str := strconv.FormatFloat(x1, 'f', 1, 64)
+			// y1Str := strconv.FormatFloat(y1, 'f', 1, 64)
+			// x2Str := strconv.FormatFloat(x2, 'f', 1, 64)
+			// y2Str := strconv.FormatFloat(y2, 'f', 1, 64)
+			// data["extent1Diagram"] = strings.Join([]string{x1Str, y1Str}, ",")
 			x1, _ := strconv.ParseFloat(coordinateSystem[0].(string), 64)
 			y1, _ := strconv.ParseFloat(coordinateSystem[1].(string), 64)
 			x2, _ := strconv.ParseFloat(coordinateSystem[2].(string), 64)
 			y2, _ := strconv.ParseFloat(coordinateSystem[3].(string), 64)
 			data.Extent1Diagram = []float64{x1, y1}
-			//data["extent2Diagram"] = strings.Join([]string{x2Str, y2Str}, ",")
+			// data["extent2Diagram"] = strings.Join([]string{x2Str, y2Str}, ",")
 			data.Extent2Diagram = []float64{x2, y2}
 			return data
 		}
@@ -189,20 +190,20 @@ func getDiagramAnnotationGraphics(modelName, modelType string) map[string]any {
 		}
 		return strings.Join(d, ",")
 	}()
-	//data["extent1Diagram"] = func() []float64 {
+	// data["extent1Diagram"] = func() []float64 {
 	//	d := []float64{}
 	//	for _, p := range coordinateSystem.Extent2Diagram {
 	//		d = append(d, p*coordinateSystem.InitialScale)
 	//	}
 	//	return d
-	//}()
-	//data["extent2Diagram"] = func() []float64 {
+	// }()
+	// data["extent2Diagram"] = func() []float64 {
 	//	d := []float64{}
 	//	for _, p := range coordinateSystem.Extent2Diagram {
 	//		d = append(d, p*coordinateSystem.InitialScale)
 	//	}
 	//	return d
-	//}()
+	// }()
 	data["coordinate_system"] = coordinateSystem
 	return data
 }
@@ -377,10 +378,10 @@ func iconInputOutputs(cData [][]any, caData [][]any, modelName string) []map[str
 		}()
 		if placementIndex != -1 {
 
-			//initialScale := "1"
-			//if len(modelIconAnnotationAll) > 0 {
+			// initialScale := "1"
+			// if len(modelIconAnnotationAll) > 0 {
 			//	initialScale = modelIconAnnotationAll[5].(string)
-			//}
+			// }
 			if len(caDataFilter[i]) < 1 {
 				continue
 			}
@@ -394,14 +395,14 @@ func iconInputOutputs(cData [][]any, caData [][]any, modelName string) []map[str
 
 			data["graphType"] = cDataFilter[i][17]
 			data["connector_sizing"] = cDataFilter[i][16]
-			//data["ID"] = strconv.Itoa(i)
+			// data["ID"] = strconv.Itoa(i)
 			data["classname"] = classname
 			data["name"] = cDataFilter[i][3]
 			data["extend_name"] = modelName
 			data["visible"] = caf[0]
 			data["mobility"] = false
 			data["comment"] = cDataFilter[i][4]
-			//data["initialScale"] = initialScale
+			// data["initialScale"] = initialScale
 			rotateAngle := func() string {
 				if caf[14] != "" {
 					return caf[14].(string)
@@ -438,6 +439,8 @@ func iconInputOutputs(cData [][]any, caData [][]any, modelName string) []map[str
 			nameList := GetICList(classname)
 			IconAnnotationData := getIconAnnotation(nameList)
 			data["subShapes"] = iconSubShapes(IconAnnotationData, modelName)
+			coordinateSystem := getCoordinateSystemRecursion(nameList, false)
+			data["coordinate_system"] = coordinateSystem
 			dataList = append(dataList, data)
 		}
 	}
