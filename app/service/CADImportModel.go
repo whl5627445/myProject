@@ -15,7 +15,9 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
 	"yssim-go/app/DataType"
+	"yssim-go/config"
 	"yssim-go/library/fileOperation"
 	"yssim-go/library/omc"
 
@@ -183,7 +185,7 @@ func CadFilesUpload(form *multipart.Form, userName string) []string {
 	return filePath
 }
 
-func GetXmlData(files []string, header string) string {
+func GetXmlData(files []string, userName string) string {
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
 	currentDir, _ := os.Getwd()
@@ -205,11 +207,11 @@ func GetXmlData(files []string, header string) string {
 	}
 
 	// 完成multipart/form-data表单
-	_ = bodyWriter.WriteField("url", header+"/xml")
+	_ = bodyWriter.WriteField("url", userName+"/xml")
 	_ = bodyWriter.Close()
 
 	// 创建一个POST请求，并设置请求头和请求体
-	req, err := http.NewRequest("POST", "http://121.37.183.103:8081/file/batch", bodyBuf)
+	req, err := http.NewRequest("POST", config.CADConnect+"/file/batch", bodyBuf)
 	if err != nil {
 		fmt.Println("error creating request")
 	}
@@ -546,7 +548,6 @@ func CADMappingModel(modelName string, classNameList []string, modelInformationL
 		rotation := strconv.FormatFloat(modelInformation.Rotation, 'f', -1, 64)
 		extent := getExtents(className, modelInformation.Xz, modelInformation.Yz)
 		AddComponent(componentName, className, modelName, origin, rotation, extent)
-		fmt.Println("初始组件的名称和origin", componentName, origin, modelInformationList.Name)
 		for k, _ := range pointList {
 			lineMap[k] = componentName
 		}

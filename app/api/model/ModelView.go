@@ -1701,6 +1701,9 @@ func CADParseXmlView(c *gin.Context) {
 }
 
 func CADFilesUploadView(c *gin.Context) {
+	/*
+		# 上传xml文件进行解析
+	*/
 	var res DataType.ResponseData
 
 	form, err := c.MultipartForm()
@@ -1769,6 +1772,9 @@ func CADMappingModelView(c *gin.Context) {
 }
 
 func GetSystemLibraryView(c *gin.Context) {
+	/*
+		# 模型管理 获取系统模型
+	*/
 	var res DataType.ResponseData
 	var system []DataBaseModel.SystemLibrary
 
@@ -1807,6 +1813,9 @@ func GetSystemLibraryView(c *gin.Context) {
 }
 
 func DeleteDependencyLibraryView(c *gin.Context) {
+	/*
+		# 模型管理  删除依赖库模型数据
+	*/
 	var res DataType.ResponseData
 	var model []DataBaseModel.YssimModels
 	var item DataType.DeleteDependencyLibraryData
@@ -1828,6 +1837,9 @@ func DeleteDependencyLibraryView(c *gin.Context) {
 }
 
 func CreateDependencyLibraryView(c *gin.Context) {
+	/*
+		# 模型管理 创建依赖库数据
+	*/
 	var res DataType.ResponseData
 	var item DataType.CreateDependencyLibraryData
 	var models DataBaseModel.YssimModels
@@ -1893,7 +1905,9 @@ func GetUMLView(c *gin.Context) {
 }
 
 func GetDependencyLibraryView(c *gin.Context) {
-
+	/*
+		# 模型管理获取依赖库的数据
+	*/
 	var res DataType.ResponseData
 	var model []DataBaseModel.YssimModels
 
