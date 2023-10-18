@@ -450,7 +450,6 @@ func iconInputOutputs(cData [][]any, caData [][]any, modelName string) []map[str
 func getBitmapImage(bitmapData []any, modelName, modelType string) map[string]any {
 	modelNameList := GetICList(modelName)
 	modelIconAnnotation := getIconAnnotation(modelNameList)
-	AnnotationConfig := []any{}
 	data := map[string]any{"extent1Diagram": "-,-", "extent2Diagram": "-,-", "initialScale": "0.1"}
 	componentsData, componentAnnotationsData := getElementsAndModelName(modelNameList)
 	subShapes := iconSubShapes(modelIconAnnotation, modelName)
@@ -458,15 +457,24 @@ func getBitmapImage(bitmapData []any, modelName, modelType string) map[string]an
 	if len(subShapes) == 0 && len(inputOutputs) == 0 && len(modelIconAnnotation) == 0 {
 		return nil
 	}
-	if len(modelIconAnnotation) > 8 {
-		AnnotationConfig = modelIconAnnotation[:8]
-		x1, y1, x2, y2 := AnnotationConfig[0], AnnotationConfig[1], AnnotationConfig[2], AnnotationConfig[3]
-		data["extent1Diagram"] = strings.Replace(strings.Join([]string{x1.(string), y1.(string)}, ","), "-,-", "-100.0,-100.0", 1)
-		data["extent2Diagram"] = strings.Replace(strings.Join([]string{x2.(string), y2.(string)}, ","), "-,-", "100.0,100.0", 1)
-		if AnnotationConfig[5].(string) != "-" {
-			data["initialScale"] = AnnotationConfig[5].(string)
+	coordinateSystem := getCoordinateSystemRecursion(modelNameList, false)
+	data["extent1Diagram"] = func() string {
+		d := []string{}
+		for _, p := range coordinateSystem.Extent1Diagram {
+			f := strconv.FormatFloat(p*coordinateSystem.InitialScale, 'f', -1, 64)
+			d = append(d, f)
 		}
-	}
+		return strings.Join(d, ",")
+	}()
+	data["extent2Diagram"] = func() string {
+		d := []string{}
+		for _, p := range coordinateSystem.Extent2Diagram {
+			f := strconv.FormatFloat(p*coordinateSystem.InitialScale, 'f', -1, 64)
+			d = append(d, f)
+		}
+		return strings.Join(d, ",")
+	}()
+	data["coordinate_system"] = coordinateSystem
 	data["output_type"] = "[]"
 	data["graphType"] = modelType
 	data["classname"] = modelName
