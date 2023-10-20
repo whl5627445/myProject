@@ -5,16 +5,16 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"regexp"
+	"strconv"
+	"strings"
 	"sync"
+
 	"yssim-go/app/serviceType"
 	"yssim-go/config"
 
 	"github.com/bytedance/sonic"
-
-	"os"
-	"strconv"
-	"strings"
 
 	"github.com/go-zeromq/zmq4"
 )
@@ -32,7 +32,7 @@ var allModelCache = config.R
 
 // SendExpression 发送指令，获取数据
 func (o *ZmqObject) SendExpression(cmd string) ([]any, bool) {
-	//s := time.Now().UnixNano() / 1e6
+	// s := time.Now().UnixNano() / 1e6
 	var msg []byte
 	ctx := context.Background()
 	msg, err := allModelCache.HGet(ctx, *redisCacheKey, cmd).Bytes()
@@ -54,10 +54,10 @@ func (o *ZmqObject) SendExpression(cmd string) ([]any, bool) {
 	if len(parseData) == 0 {
 		return nil, false
 	}
-	//log.Println("cmd", cmd)
-	//if time.Now().UnixNano()/1e6-s > 20 {
+	// log.Println("cmd", cmd)
+	// if time.Now().UnixNano()/1e6-s > 20 {
 	//	log.Println("消耗时间: ", time.Now().UnixNano()/1e6-s)
-	//}
+	// }
 	return parseData, true
 }
 
@@ -65,7 +65,7 @@ func (o *ZmqObject) SendExpression(cmd string) ([]any, bool) {
 func (o *ZmqObject) SendExpressionNoParsed(cmd string) ([]byte, bool) {
 
 	var msg []byte
-	//s := time.Now().UnixNano() / 1e6
+	// s := time.Now().UnixNano() / 1e6
 	ctx := context.Background()
 	msg, _ = allModelCache.HGet(ctx, *redisCacheKey, cmd).Bytes()
 	if len(msg) == 0 || string(msg) == "null" {
@@ -81,17 +81,17 @@ func (o *ZmqObject) SendExpressionNoParsed(cmd string) ([]byte, bool) {
 	if string(msg) == "\"\"\n" {
 		return []byte{}, false
 	}
-	//msg = bytes.ReplaceAll(msg, []byte("\"\"\n"), []byte(""))
+	// msg = bytes.ReplaceAll(msg, []byte("\"\"\n"), []byte(""))
 	msg = bytes.ReplaceAll(msg, []byte("\"false\""), []byte("false"))
 	msg = bytes.ReplaceAll(msg, []byte("\"true\""), []byte("true"))
 	if len(msg) == 0 {
 		return nil, false
 	}
-	//if time.Now().UnixNano()/1e6-s > 10 {
+	// if time.Now().UnixNano()/1e6-s > 10 {
 	//	log.Println("cmd: ", cmd)
 	//	log.Println("消耗时间: ", time.Now().UnixNano()/1e6-s)
-	//}
-	//log.Println("cmd", cmd)
+	// }
+	// log.Println("cmd, data", cmd, string(msg))
 	return msg, true
 }
 
@@ -116,24 +116,24 @@ func (o *ZmqObject) BuildModel(className, fileNamePrefix string, simulateParamet
 
 // SetOptions 清空加载的模型库， 设置OMC的命令行选项
 func (o *ZmqObject) SetOptions() {
-	//o.SendExpressionNoParsed("clearCommandLineOptions()")
+	// o.SendExpressionNoParsed("clearCommandLineOptions()")
 	o.SendExpressionNoParsed("clearMessages()")
-	//o.SendExpressionNoParsed("clear()")
-	//o.SendExpressionNoParsed("clearVariables()")
-	//o.SendExpressionNoParsed("clearProgram()")
-	//o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nfAPI,execstat,rml,nfAPIDynamicSelect=false\")")
-	//o.SendExpressionNoParsed("setCommandLineOptions(\"-d=initialization,NLSanalyticJacobian\")")
+	// o.SendExpressionNoParsed("clear()")
+	// o.SendExpressionNoParsed("clearVariables()")
+	// o.SendExpressionNoParsed("clearProgram()")
+	// o.SendExpressionNoParsed("setCommandLineOptions(\"-d=nfAPI,execstat,rml,nfAPIDynamicSelect=false\")")
+	// o.SendExpressionNoParsed("setCommandLineOptions(\"-d=initialization,NLSanalyticJacobian\")")
 	o.SendExpressionNoParsed("setCommandLineOptions(\"+ignoreSimulationFlagsAnnotation=false\")")
 	o.SendExpressionNoParsed("setCommandLineOptions(\"+ignoreCommandLineOptionsAnnotation=false\")")
 	o.SendExpressionNoParsed("setCommandLineOptions(\"--simCodeTarget=C\")")
-	//o.SendExpressionNoParsed("setCommandLineOptions(\"--matchingAlgorithm=PFPlusExt --indexReductionMethod=dynamicStateSelection\")")
+	// o.SendExpressionNoParsed("setCommandLineOptions(\"--matchingAlgorithm=PFPlusExt --indexReductionMethod=dynamicStateSelection\")")
 	o.SendExpressionNoParsed("setModelicaPath(\"/usr/lib/omlibrary\")")
 	o.SendExpressionNoParsed("setCommandLineOptions(\"--matchingAlgorithm=PFPlusExt \")")
 	o.SendExpressionNoParsed("setCommandLineOptions(\"--indexReductionMethod=dynamicStateSelection\")")
 	o.SendExpressionNoParsed("setCommandLineOptions(\"-d=initialization,NLSanalyticJacobian\")")
-	//o.SendExpressionNoParsed("setCommandLineOptions(\"--NAPI=true\")")
-	//o.SendExpressionNoParsed("setCompiler(\"clang\")")
-	//o.SendExpressionNoParsed("setCXXCompiler(\"clang++\")")
+	// o.SendExpressionNoParsed("setCommandLineOptions(\"--NAPI=true\")")
+	// o.SendExpressionNoParsed("setCompiler(\"clang\")")
+	// o.SendExpressionNoParsed("setCXXCompiler(\"clang++\")")
 }
 
 func (o *ZmqObject) GetCommandLineOptions() string {
@@ -389,8 +389,8 @@ func (o *ZmqObject) GetElementAnnotations(className string) []any {
 	}
 	cmd := "getElementAnnotations(" + className + ", useQuotes = true)"
 	componentAnnotations, _ = o.SendExpression(cmd)
-	//annotation(Placement(visible = true,transformation(origin = {16,-87},extent = {{-10,  -10},{10, 10}},rotation = 0,iconTransformation(origin = {168.94117431640626,-87.15294189453125},extent = {{-10,-10},{10,10}},rotation = 0))))
-	//annotation(Placement(visible = true,transformation(origin = {-8, 40}, extent = {{-10, -10},{10, 10}}, rotation = 0), iconTransformation(origin = {-36, 20}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
+	// annotation(Placement(visible = true,transformation(origin = {16,-87},extent = {{-10,  -10},{10, 10}},rotation = 0,iconTransformation(origin = {168.94117431640626,-87.15294189453125},extent = {{-10,-10},{10,10}},rotation = 0))))
+	// annotation(Placement(visible = true,transformation(origin = {-8, 40}, extent = {{-10, -10},{10, 10}}, rotation = 0), iconTransformation(origin = {-36, 20}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));
 	return componentAnnotations
 }
 
@@ -506,8 +506,8 @@ func (o *ZmqObject) GetElementModifierNames(className string, componentName stri
 	cmd := "getElementModifierNames(" + className + ",\"" + componentName + "\")"
 	data, ok := o.SendExpressionNoParsed(cmd)
 	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
-	//data = bytes.ReplaceAll(data, []byte("\""), []byte(""))
-	//data = bytes.ReplaceAll(data, []byte("\\"), []byte(""))
+	// data = bytes.ReplaceAll(data, []byte("\""), []byte(""))
+	// data = bytes.ReplaceAll(data, []byte("\\"), []byte(""))
 	if ok && len(data) > 0 {
 		data = data[1 : len(data)-1]
 		data = append([]byte{'['}, data...)
@@ -522,9 +522,9 @@ func (o *ZmqObject) GetElementModifierValue(className string, modifierName strin
 	cmd := "getElementModifierValue(" + className + "," + modifierName + ")"
 	data, _ := o.SendExpressionNoParsed(cmd)
 	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
-	//data = bytes.ReplaceAll(data, []byte("\""), []byte(""))
+	// data = bytes.ReplaceAll(data, []byte("\""), []byte(""))
 	data = bytes.ReplaceAll(data, []byte("\\"), []byte(""))
-	if len(data) > 0 {
+	if len(data) > 2 && string(data[0]) == "\"" {
 		data = data[1 : len(data)-1]
 	}
 	return string(data)
@@ -577,9 +577,9 @@ func (o *ZmqObject) GetDerivedClassModifierValue(className string, modifierName 
 func (o *ZmqObject) GetDerivedClassModifierNames(className string) []any {
 	cmd := "getDerivedClassModifierNames(" + className + ")"
 	data, _ := o.SendExpression(cmd)
-	//data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
-	//data = bytes.ReplaceAll(data, []byte("\""), []byte(""))
-	//data = bytes.ReplaceAll(data, []byte("\\"), []byte(""))
+	// data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
+	// data = bytes.ReplaceAll(data, []byte("\""), []byte(""))
+	// data = bytes.ReplaceAll(data, []byte("\\"), []byte(""))
 	return data
 }
 
@@ -655,9 +655,9 @@ func (o *ZmqObject) SetExtendsModifierValue(className, extendsName, parameter, v
 	if strings.HasPrefix(value, "redeclare") {
 		code = "=\"" + value + "\""
 	}
-	//if value == "" {
+	// if value == "" {
 	//	code = "()"
-	//}
+	// }
 	cmd := "setExtendsModifierValue(" + className + ", " + extendsName + ", " + parameter + ", $Code(" + code + "))"
 	data, ok := o.SendExpressionNoParsed(cmd)
 	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
@@ -748,7 +748,7 @@ func (o *ZmqObject) AddComponent(newComponentName, oldComponentName, className, 
 // AddInterfacesComponent 新增connector类型的模型组件
 func (o *ZmqObject) AddInterfacesComponent(newComponentName, oldComponentName, className, origin, rotation string, extent []string) bool {
 	// addComponent(Modelica.Blocks.Interfaces.RealInput,t,realinput,annotate=Placement(visible=true, transformation=transformation(origin={168.94117431640626,-87.15294189453125}, extent={{-10,-10},{10,10}}, rotation=0,iconTransformation=transformation(origin={168.94117431640626,-87.15294189453125}, extent={{-10,-10},{10,10}}, rotation=0))))
-	//addComponent(y, Modelica.Blocks.Interfaces.RealVectorOutput,q,annotate=Placement(visible=true, transformation=transformation(origin={-36,-22}, extent={{-20,-20},{20,20}}, rotation=0), iconTransformation=transformation(origin={-36,-22}, extent={{-20,-20},{20,20}}, rotation=0))) 09:42:19:196
+	// addComponent(y, Modelica.Blocks.Interfaces.RealVectorOutput,q,annotate=Placement(visible=true, transformation=transformation(origin={-36,-22}, extent={{-20,-20},{20,20}}, rotation=0), iconTransformation=transformation(origin={-36,-22}, extent={{-20,-20},{20,20}}, rotation=0))) 09:42:19:196
 	annotate := "annotate=Placement(visible=true, transformation=transformation(origin={" + origin + "}, extent={{" + extent[0] + "},{" + extent[1] + "}}, rotation=" + rotation + "),iconTransformation=transformation(origin={" + origin + "}, extent={{" + extent[0] + "},{" + extent[1] + "}}, rotation=" + rotation + "))"
 	cmd := "addComponent(" + newComponentName + "," + oldComponentName + "," + className + "," + annotate + ")"
 	result, ok := o.SendExpressionNoParsed(cmd)
@@ -858,7 +858,7 @@ func (o *ZmqObject) UpdateConnectionAnnotation(classNameAll, connectStart, conne
 func (o *ZmqObject) CheckModel(className string) string {
 	cmd := "checkModel(" + className + ")"
 	data, ok := o.SendExpressionNoParsed(cmd)
-	//data = bytes.TrimSuffix(data, []byte("\n"))
+	// data = bytes.TrimSuffix(data, []byte("\n"))
 	if ok {
 		return string(data[1 : len(data)-1])
 	}
@@ -957,7 +957,7 @@ func (o *ZmqObject) GetSimulationOptions(className string) []string {
 	}
 	// 获取求解其类型的注释
 	solver := o.GetAnnotationModifierValue(className, "__OpenModelica_simulationFlags", "solver")
-	//log.Println("solver:", solver)
+	// log.Println("solver:", solver)
 	if strings.Contains(solver, "not Found") {
 		solver = "dassl"
 	}
@@ -1263,9 +1263,9 @@ func (o *ZmqObject) SetSourceFile(packageName, path string) bool {
 
 // BuildModelFMU 构建FMU文件
 func (o *ZmqObject) BuildModelFMU(className string, fmuFileNameId string) string {
-	//fileNamePrefix := "/home/xuqingda/GolandProjects/YssimGoService/"
-	//(Modelica.Blocks.Examples.PID_Controller,"2.0","me_cs","<default>",{"static"},false)
-	//cmd := "buildModelFMU(" + className + ",\"2.0\",\"me_cs\",\"" + fmuFileNameId + "\",{\"static\"},false" + ")"
+	// fileNamePrefix := "/home/xuqingda/GolandProjects/YssimGoService/"
+	// (Modelica.Blocks.Examples.PID_Controller,"2.0","me_cs","<default>",{"static"},false)
+	// cmd := "buildModelFMU(" + className + ",\"2.0\",\"me_cs\",\"" + fmuFileNameId + "\",{\"static\"},false" + ")"
 	cmd := "buildModelFMU(" + className + ",\"2.0\",\"me_cs\",\"" + fmuFileNameId + "\",{\"static\"},false" + ")"
 	result, ok := o.SendExpressionNoParsed(cmd)
 	if ok {
@@ -1342,20 +1342,20 @@ func (o *ZmqObject) DeleteComponentParameter(varName, className string) bool {
 
 func (o *ZmqObject) GetIconAndDiagramAnnotations(classNameList []string, isIcon bool) []any {
 	var data []any
-	//ctx := context.Background()
-	//var msg []byte
+	// ctx := context.Background()
+	// var msg []byte
 	for _, name := range classNameList {
 		nType := o.GetClassRestriction(classNameList[len(classNameList)-1])
-		//if nType != "connector" && nType != "expandable connector" {
+		// if nType != "connector" && nType != "expandable connector" {
 		//	msg, _ = allModelCache.HGet(ctx, userName+"-yssim-componentGraphicsData", name).Bytes()
-		//}
-		//if len(msg) > 0 && string(msg) != "null" {
+		// }
+		// if len(msg) > 0 && string(msg) != "null" {
 		//	var d []any
 		//	err := sonic.Unmarshal(msg, &d)
 		//	if err == nil && len(d) > 8 {
 		//		data = append(data, d[8].([]any)...)
 		//	}
-		//}
+		// }
 		result := make([]any, 0)
 		if (nType == "connector" || nType == "expandable connector") && !isIcon {
 			result = o.GetDiagramAnnotation(name)
@@ -1364,8 +1364,8 @@ func (o *ZmqObject) GetIconAndDiagramAnnotations(classNameList []string, isIcon 
 			}
 		} else {
 			result = o.GetIconAnnotationLineData(name)
-			//setData, _ := sonic.Marshal(result)
-			//allModelCache.HSet(ctx, userName+"-yssim-componentGraphicsData", name, setData)
+			// setData, _ := sonic.Marshal(result)
+			// allModelCache.HSet(ctx, userName+"-yssim-componentGraphicsData", name, setData)
 		}
 		if len(result) > 8 {
 			result = result[8].([]any)
@@ -1396,20 +1396,20 @@ func (o *ZmqObject) GetCoordinateSystem(className string, isIcon bool) []any {
 
 func (o *ZmqObject) GetIconAnnotations(className string) []any {
 	var data []any
-	//ctx := context.Background()
-	//var msg []byte
-	//msg, _ = allModelCache.HGet(ctx, userName+"-yssim-IconGraphicsData", className).Bytes()
-	//if len(msg) > 0 && string(msg) != "null" {
+	// ctx := context.Background()
+	// var msg []byte
+	// msg, _ = allModelCache.HGet(ctx, userName+"-yssim-IconGraphicsData", className).Bytes()
+	// if len(msg) > 0 && string(msg) != "null" {
 	//	err := sonic.Unmarshal(msg, &data)
 	//	if err != nil {
 	//		log.Println("err", err)
 	//		return nil
 	//	}
 	//	return data
-	//}
+	// }
 	data = o.GetIconAnnotationLineData(className)
-	//setData, _ := sonic.Marshal(data)
-	//allModelCache.HSet(ctx, userName+"-yssim-IconGraphicsData", className, setData)
+	// setData, _ := sonic.Marshal(data)
+	// allModelCache.HSet(ctx, userName+"-yssim-IconGraphicsData", className, setData)
 	return data
 }
 

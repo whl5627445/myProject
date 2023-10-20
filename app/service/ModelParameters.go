@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 	"strings"
+
 	"yssim-go/library/omc"
 )
 
@@ -161,7 +162,7 @@ func (m *modelParameters) getExtendsModifierNamesAndValue() {
 // getComponentLevel 获取组件在模型父类的第几层, 0表示组件不是继承来的, 是当前模型自己的组件
 func (m *modelParameters) getComponentLevel(componentName, componentClassName string) {
 	classAll := []string{m.modelName}
-	//classAll := m.getInherited(m.modelName)
+	// classAll := m.getInherited(m.modelName)
 Loop:
 	for i := 0; i < len(classAll); i++ {
 		m.geParent(classAll[i])
@@ -233,7 +234,7 @@ func (m *modelParameters) getElementsModifierNamesAndValue(className, componentN
 			level:     m.level,
 			fixed:     nil,
 			start:     "",
-			//other:     map[string]string{},
+			// other:     map[string]string{},
 		}
 
 		switch {
@@ -312,22 +313,22 @@ func (m *modelParameters) getAttributes(varName string) []map[string]any {
 		case strings.HasSuffix(name, "."+varName):
 			if modifier.fixed != nil {
 				data := map[string]any{}
-				//if modifier.level == 0 {
+				// if modifier.level == 0 {
 				//	data["value"] = modifier.fixed
-				//} else {
+				// } else {
 				//	data["defaultvalue"] = modifier.fixed
-				//}
+				// }
 				data["defaultvalue"] = modifier.fixed
 				data["name"] = "fixed"
 				dataList = append(dataList, data)
 			}
 			if modifier.start != "" {
 				data := map[string]any{}
-				//if modifier.startLevel == 0 {
+				// if modifier.startLevel == 0 {
 				//	data["value"] = modifier.start
-				//} else {
+				// } else {
 				//	data["defaultvalue"] = modifier.start
-				//}
+				// }
 				data["defaultvalue"] = modifier.start
 				data["name"] = "start"
 				dataList = append(dataList, data)
@@ -407,7 +408,7 @@ func (m *modelParameters) getParameter(className string, varName string, p []any
 	modifier := m.componentName + "." + varName
 	elementModifierData := m.elementModifierNamesMap[modifier] // 查找有没有标识符标记该组件或参数
 	elementModifierValue := elementModifierData.value          // 如果有标记的话, 取出值
-	//delete(m.elementModifierNamesMap, modifier)
+	// delete(m.elementModifierNamesMap, modifier)
 	IsExtendsModifierFinal := "false"
 	emName := varName
 	if m.extendsModifierNamesMap[emName] == nil {
@@ -416,7 +417,7 @@ func (m *modelParameters) getParameter(className string, varName string, p []any
 	if m.extendsModifierNamesMap[emName] != nil {
 		extendsModifier := m.extendsModifierNamesMap[emName]
 		IsExtendsModifierFinal = omc.OMC.IsExtendsModifierFinal(extendsModifier["child"].(string), extendsModifier["parent"].(string), varName)
-		if IsExtendsModifierFinal == "true" { //判断参数是否是不可修改的, 如果是,则过滤该参数
+		if IsExtendsModifierFinal == "true" { // 判断参数是否是不可修改的, 如果是,则过滤该参数
 			return nil
 		}
 		extendsModifierValue := extendsModifier["value"] // 继承过来的标识符中如果有该参数的值,则根据level等级进行赋值
@@ -599,7 +600,7 @@ func (m *modelParameters) getParameter(className string, varName string, p []any
 				dataDefault["defaultvalue"] = parameterValue
 			}
 		}
-		//dataDefault["unit"] = []string{getUnit(className)}
+		// dataDefault["unit"] = []string{getUnit(className)}
 		return dataDefault
 	}
 	if elementModifierData.start != "" || elementModifierData.fixed != nil || showStartAttribute == "true" { // 处理 fixed类型参数
@@ -621,7 +622,7 @@ func (m *modelParameters) getParameter(className string, varName string, p []any
 			value = ""
 		}
 		dataDefault["value"] = map[string]any{"isFixed": isFixed, "value": value}
-		//dataDefault["unit"] = []string{getUnit(className)}
+		// dataDefault["unit"] = []string{getUnit(className)}
 
 		return dataDefault
 	}
