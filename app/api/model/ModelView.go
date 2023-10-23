@@ -1644,9 +1644,10 @@ func CADParseView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "参数错误")
 		return
 	}
-	data := service.GetXmlData(item.FilePath, userName)
-	if data == "" {
-		res.Err = "文件解析失败"
+	header := c.GetHeader("Authorization")
+	data, code := service.GetXmlData(item.FilePath, userName, header)
+	if code != 200 {
+		res.Err = data
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return

@@ -15,9 +15,9 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"yssim-go/config"
 
 	"yssim-go/app/DataType"
-	"yssim-go/config"
 	"yssim-go/library/fileOperation"
 	"yssim-go/library/omc"
 
@@ -93,19 +93,13 @@ type segment struct {
 }
 
 type pointStart struct {
-	XMLName    xml.Name   `xml:"point-start"`
-	X          x          `xml:"x"`
-	Y          y          `xml:"y"`
-	Z          z          `xml:"z"`
-	Bendradius bendradius `xml:"bendradius"`
+	XMLName xml.Name `xml:"point-start"`
+	Point   point    `xml:"point"`
 }
 
 type pointEnd struct {
-	XMLName    xml.Name   `xml:"point-end"`
-	X          x          `xml:"x"`
-	Y          y          `xml:"y"`
-	Z          z          `xml:"z"`
-	Bendradius bendradius `xml:"bendradius"`
+	XMLName xml.Name `xml:"point-end"`
+	Point   point    `xml:"point"`
 }
 
 type points struct {
@@ -138,7 +132,7 @@ type z struct {
 
 type bendradius struct {
 	XMLName xml.Name `xml:"bendradius"`
-	Value   float64  `xml:"value,attr"`
+	Value   string   `xml:"value,attr"`
 }
 
 type attributes struct {
@@ -185,24 +179,24 @@ func CadFilesUpload(form *multipart.Form, userName string) []string {
 	return filePath
 }
 
-func GetXmlData(files []string, userName string) string {
+func GetXmlData(files []string, userName, header string) (string, int) {
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
 	currentDir, _ := os.Getwd()
 	for _, filePath := range files {
 		fileWriter, err := bodyWriter.CreateFormFile("file", currentDir+filePath)
 		if err != nil {
-			fmt.Println("error writing to buffer")
+			log.Println("error writing to buffer", err)
 		}
 		// 打开文件并将内容复制到fileWriter
 		file, err := os.Open(currentDir + filePath)
 		if err != nil {
-			fmt.Println("error opening file")
+			log.Println("error opening file", err)
 		}
 		defer file.Close()
 		_, err = io.Copy(fileWriter, file)
 		if err != nil {
-			fmt.Println("error copying file")
+			log.Println("error copying file", err)
 		}
 	}
 
@@ -213,30 +207,35 @@ func GetXmlData(files []string, userName string) string {
 	// 创建一个POST请求，并设置请求头和请求体
 	req, err := http.NewRequest("POST", config.CADConnect+"/file/batch", bodyBuf)
 	if err != nil {
-		fmt.Println("error creating request")
+		log.Println("error creating request", err)
 	}
 
 	req.Header.Set("Content-Type", bodyWriter.FormDataContentType())
+	req.Header.Set("Authorization", header)
 
 	// 发送HTTP请求
 	client := new(http.Client)
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println("error sending request")
+		log.Println("error sending request", err)
 	}
 	defer resp.Body.Close()
 	// 读取响应的内容
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Println("读取响应失败:", err)
-		return ""
+		log.Println("读取响应失败:", err)
+		return "", 0
 	}
 
 	// 关闭响应的 Body
 	defer resp.Body.Close()
 	var data DataType.CadData
 	_ = sonic.Unmarshal(body, &data)
-	return data.Data
+	if data.Code == 200 {
+		return data.Data, data.Code
+	}
+	log.Println(data)
+	return data.Msg, data.Code
 }
 
 func HandleXMLUpload(from *multipart.FileHeader) string {
@@ -355,15 +354,17 @@ func getAttributes(Attribute attributes) float64 {
 func getPipeData(diameter float64, sList []segment) []map[string]any {
 	pipeData := []map[string]any{}
 	for s := 0; s < len(sList); s++ {
-		sx := sList[s].PointStart.X.Value
-		sy := sList[s].PointStart.Y.Value
-		sz := sList[s].PointStart.Z.Value
-		ex := sList[s].PointEnd.X.Value
-		ey := sList[s].PointEnd.Y.Value
-		ez := sList[s].PointEnd.Z.Value
-		bendRadius := sList[s].PointEnd.Bendradius.Value
+		sx := sList[s].PointStart.Point.X.Value
+		sy := sList[s].PointStart.Point.Y.Value
+		sz := sList[s].PointStart.Point.Z.Value
+		ex := sList[s].PointEnd.Point.X.Value
+		ey := sList[s].PointEnd.Point.Y.Value
+		ez := sList[s].PointEnd.Point.Z.Value
+		bendRadius := sList[s].PointEnd.Point.Bendradius.Value
+		trim := strings.Trim(bendRadius, "mm")
+		float, _ := strconv.ParseFloat(trim, 64)
 		coordinate := map[string]float64{"x": ex - sx, "y": ey - sy, "z": ez - sz}
-		length := math.Sqrt((ex-sx)*(ex-sx)+(ey-sy)*(ey-sy)+(ez-sz)*(ez-sz)) - bendRadius
+		length := math.Sqrt((ex-sx)*(ex-sx)+(ey-sy)*(ey-sy)+(ez-sz)*(ez-sz)) - float
 		height := ez - sz
 		pipeData = append(pipeData, map[string]any{"length": length / 1000, "height_ab": height / 1000, "diameter": diameter / 1000, "bend_radius": bendRadius, "coordinate": coordinate})
 	}
@@ -551,7 +552,7 @@ func CADMappingModel(modelName string, classNameList []string, modelInformationL
 		for k, _ := range pointList {
 			lineMap[k] = componentName
 		}
-		if modelInformationList.Type != "CATTubTeeJunction" {
+		if modelInformationList.Type == "CATTubBendableTube" {
 			if (index+1)%2 == 1 {
 				length := strconv.FormatFloat(modelInformation.GeometryData.Length, 'f', -1, 64)
 				heightAb := strconv.FormatFloat(modelInformation.GeometryData.HeightAb, 'f', -1, 64)
@@ -601,12 +602,15 @@ func ThreeWayManage(modelName string, lineMap map[string]string, connectedRelati
 
 		startXml := con["start_name"]
 		endXml := con["end_name"]
+		startSplit := strings.Split(startXml.(string), ".")
+		endSplit := strings.Split(startXml.(string), ".")
+		startSuffix := startSplit[len(startSplit)-1]
+		endSuffix := endSplit[len(endSplit)-1]
 		startName := getValue(lineMap, startXml.(string))
 		endName := getValue(lineMap, endXml.(string))
 		if startName != "" && endName != "" {
-			AddConnection(modelName, startName, endName, "0,127,255", []string{startLine, endLine})
+			AddConnection(modelName, startName+"."+startSuffix, endName+"."+endSuffix, "0,127,255", []string{startLine, endLine})
 		}
-
 	}
 }
 
