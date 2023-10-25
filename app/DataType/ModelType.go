@@ -73,7 +73,7 @@ type AddComponentData struct {
 	OldComponentName string `json:"old_component_name" binding:"required"`
 	ModelName        string `json:"model_name" binding:"required"`
 	Origin           string `json:"origin" binding:"required"`
-	//Extent           []string `json:"extent" binding:"required"`
+	// Extent           []string `json:"extent" binding:"required"`
 	Rotation int `json:"rotation" binding:""`
 }
 
@@ -155,7 +155,7 @@ type UnLoadPackageData struct {
 type LoadPackageConflict struct {
 	Name    string `json:"name,omitempty"`
 	Version string `json:"version,omitempty"`
-	//LoadOrUnload string `json:"type,omitempty"`
+	// LoadOrUnload string `json:"type,omitempty"`
 }
 
 type LoginUserSpaceModel struct {
@@ -277,7 +277,7 @@ type RepositoryCloneData struct {
 type InitVersionControlData struct {
 	NoVersionPackageId string `json:"no_version_package_id" binding:"required"`
 	RepositoryAddress  string `json:"repository_address" binding:"required"`
-	//AnotherName        string `json:"another_name" binding:"required"`
+	// AnotherName        string `json:"another_name" binding:"required"`
 	UserName string `json:"user_name" binding:"required"`
 	PassWord string `json:"pass_word" binding:"required"`
 }
@@ -305,7 +305,7 @@ type SetRatedConditionData struct {
 	PackageId          string           `json:"package_id" binding:"required"`
 	ModelName          string           `json:"model_name" binding:"required"`
 	RatedConditionList []ratedCondition `json:"rated_condition_list" binding:"required"`
-	//RatedConditionList datatypes.JSON `json:"rated_condition_list" binding:"required"`
+	// RatedConditionList datatypes.JSON `json:"rated_condition_list" binding:"required"`
 }
 type ratedCondition struct {
 	Name         string `json:"name" binding:"required"`
@@ -389,6 +389,11 @@ type CreateCalibrationTemplateData struct {
 
 type FittingCalculationData struct {
 	ID string `json:"id" binding:"required"`
+}
+
+type FittingCoefficientSetData struct {
+	Name  string `json:"name" binding:"required"`
+	Value string `json:"value" binding:"required"`
 }
 
 type DeleteCalibrationTemplateData struct {

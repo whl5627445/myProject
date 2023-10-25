@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/DataType"
 	"yssim-go/app/service"
@@ -35,7 +36,7 @@ func GetSysRootModelView(c *gin.Context) {
 	keywords := c.Query("keywords")
 
 	//
-	//userSpaceId := c.Query("space_id")
+	// userSpaceId := c.Query("space_id")
 	userSpaceId := c.GetHeader("space_id")
 	var modelData []map[string]any
 	var packageModel []DataBaseModel.YssimModels
@@ -1178,22 +1179,22 @@ func CreateCollectionModelView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
-	//检测PackageId，userspace_id是否存在
+	// 检测PackageId，userspace_id是否存在
 	var packageModel DataBaseModel.YssimModels
 	err = dbModel.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", item.PackageId, []string{"sys", userName}, []string{"0", userSpaceId}).First(&packageModel).Error
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "not found")
 		return
 	}
-	//omc检测模型是否存在
+	// omc检测模型是否存在
 	result := service.ExistClass(item.ModelName)
 	if !result {
 		c.JSON(http.StatusBadRequest, "model not found")
 		return
 	}
-	//检测数据库表中是否存在同名模型
+	// 检测数据库表中是否存在同名模型
 	modelType := service.GetModelType(item.ModelName)
-	//hasChild := service.GetModelChild(item.ModelName)
+	// hasChild := service.GetModelChild(item.ModelName)
 	if modelType == "package" {
 		res.Err = "包类型或有子类的模型暂不允许收藏，请选择其他类型"
 		res.Status = 2
@@ -1208,7 +1209,7 @@ func CreateCollectionModelView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	//表中插入记录
+	// 表中插入记录
 	var newCollection = DataBaseModel.YssimModelsCollection{
 		ID:          uuid.New().String(),
 		PackageId:   item.PackageId,
@@ -1244,7 +1245,7 @@ func GetCollectionModelView(c *gin.Context) {
 		if modelCollections[i]["sys_or_user"].(string) == "sys" {
 			sysOrUser = true
 		}
-		//检测模型是否存在，不存在就从表中删除记录
+		// 检测模型是否存在，不存在就从表中删除记录
 		result := service.ExistClass(modelName)
 		if !result {
 			go dbModel.Delete(&modelCollections[i])
@@ -1273,7 +1274,7 @@ func DeleteCollectionModelView(c *gin.Context) {
 		## id： 需要删除的收藏模型id
 	*/
 	//
-	//userSpaceId := c.GetHeader("space_id")
+	// userSpaceId := c.GetHeader("space_id")
 
 	id := c.Query("id")
 	var res DataType.ResponseData
@@ -1296,7 +1297,7 @@ func SearchModelView(c *gin.Context) {
 	*/
 
 	userSpaceId := c.GetHeader("space_id")
-	//userSpaceId := c.Query("space_id")
+	// userSpaceId := c.Query("space_id")
 	keywords := c.Query("keywords")
 	parent := c.Query("parent")
 	var res DataType.ResponseData
@@ -1492,7 +1493,7 @@ func GetIconView(c *gin.Context) {
 		# 获取模型的图标信息
 	*/
 	//
-	//userSpaceId := c.GetHeader("space_id")
+	// userSpaceId := c.GetHeader("space_id")
 	var item DataType.ModelGraphicsData
 	err := c.BindJSON(&item)
 	if err != nil {
@@ -1500,8 +1501,8 @@ func GetIconView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
-	//var packageModel []DataBaseModel.YssimModels
-	//dbModel.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", item.PackageId, []string{"sys", username}, []string{"0", userSpaceId}).Order("create_time desc").Find(&packageModel)
+	// var packageModel []DataBaseModel.YssimModels
+	// dbModel.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", item.PackageId, []string{"sys", username}, []string{"0", userSpaceId}).Order("create_time desc").Find(&packageModel)
 	var res DataType.ResponseData
 	data := service.GetIconNew(item.ModelName, true)
 	res.Data = data
@@ -1520,12 +1521,12 @@ func LoginUserSpaceView(c *gin.Context) {
 		return
 	}
 
-	//result := service.SetWorkSpaceId(&item.SpaceId)
-	//if result {
+	// result := service.SetWorkSpaceId(&item.SpaceId)
+	// if result {
 	//	res.Msg = "初始化完成"
 	//	c.JSON(http.StatusOK, res)
 	//	return
-	//}
+	// }
 	var space DataBaseModel.YssimUserSpace
 	dbModel.Model(space).Where("id = ? AND username = ?", item.SpaceId, userName).First(&space)
 	if space.ID == "" {
@@ -1561,7 +1562,7 @@ func Test(c *gin.Context) {
 		d, _ := omc.OMC.SendExpressionNoParsed(cmd)
 		data = string(d)
 	}
-	//log.Println(data)
+	// log.Println(data)
 	var res DataType.ResponseData
 	res.Data = data
 	c.JSON(http.StatusOK, res)
@@ -1974,7 +1975,7 @@ func Test1(c *gin.Context) {
 	*/
 	cmd := c.Query("cmd")
 	data := service.GetGraphicsDataNew(cmd)
-	//_ = omc.OMC.GetModelInstance(cmd)
+	// _ = omc.OMC.GetModelInstance(cmd)
 	var res DataType.ResponseData
 	res.Data = data
 	c.JSON(http.StatusOK, res)
@@ -2208,14 +2209,14 @@ func InitVersionControlView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	//查询无版本控制的包
+	// 查询无版本控制的包
 	var noVersionRecord DataBaseModel.YssimModels
 	dbModel.Where("id = ?", item.NoVersionPackageId).First(&noVersionRecord)
 	var errorMessage string
 	// 克隆到本地
 	repositoryPath, _, errorMessage, cloneRes := service.RepositoryClone(item.RepositoryAddress, "", userName)
 	if cloneRes {
-		//克隆成功
+		// 克隆成功
 		// 将无版本控制的包添加到有版本控制
 		addVersionRes, msg := service.InitVersionControl(noVersionRecord.FilePath, repositoryPath, item.UserName, item.PassWord)
 		errorMessage = msg
@@ -2223,7 +2224,7 @@ func InitVersionControlView(c *gin.Context) {
 			packageName, packagePath, msg_, ok := service.GitPackageFileParse(repositoryPath)
 			errorMessage = msg_
 			if ok {
-				//分支名称默认是master
+				// 分支名称默认是master
 				versionBranch := "master"
 				// 获取克隆到本地的存储库的tag
 				versionTag := service.GetTag(repositoryPath)
@@ -2231,13 +2232,13 @@ func InitVersionControlView(c *gin.Context) {
 				versionRecord := DataBaseModel.UserLibrary{
 					ID:                uuid.New().String(),
 					UserName:          userName,
-					PackageName:       packageName,            //package名称，一般称为包名或库的名字
-					FilePath:          packagePath,            //package所在路径
-					VersionControl:    true,                   //是否有版本控制
-					VersionBranch:     versionBranch,          //版本控制分支
-					VersionTag:        versionTag,             //版本控制tag
+					PackageName:       packageName,            // package名称，一般称为包名或库的名字
+					FilePath:          packagePath,            // package所在路径
+					VersionControl:    true,                   // 是否有版本控制
+					VersionBranch:     versionBranch,          // 版本控制分支
+					VersionTag:        versionTag,             // 版本控制tag
 					AnotherName:       anotherName,            // 别名
-					RepositoryAddress: item.RepositoryAddress, //存储库地址
+					RepositoryAddress: item.RepositoryAddress, // 存储库地址
 				}
 				err = dbModel.Create(&versionRecord).Error
 				dbModel.Delete(&noVersionRecord)
@@ -2260,7 +2261,7 @@ func RepositoryCloneView(c *gin.Context) {
 	var res DataType.ResponseData
 	var item DataType.RepositoryCloneData
 
-	//userSpaceId := c.GetHeader("space_id")
+	// userSpaceId := c.GetHeader("space_id")
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
@@ -2280,8 +2281,8 @@ func RepositoryCloneView(c *gin.Context) {
 	// 克隆到本地
 	repositoryPath, _, errorMessage, cloneRes := service.RepositoryClone(item.RepositoryAddress, item.Branch, userName)
 
-	if cloneRes { //克隆成功
-		//分支名称默认是master
+	if cloneRes { // 克隆成功
+		// 分支名称默认是master
 		versionBranch := "master"
 		if item.Branch != "" {
 			versionBranch = item.Branch
@@ -2297,15 +2298,15 @@ func RepositoryCloneView(c *gin.Context) {
 			libraryRecord := DataBaseModel.UserLibrary{
 				ID:                uuid.New().String(),
 				UserName:          userName,
-				PackageName:       packageName,            //package名称，一般称为包名或库的名字
-				FilePath:          packagePath,            //package所在路径
-				VersionControl:    true,                   //是否有版本控制
-				VersionBranch:     versionBranch,          //版本控制分支
-				VersionTag:        versionTag,             //版本控制tag
+				PackageName:       packageName,            // package名称，一般称为包名或库的名字
+				FilePath:          packagePath,            // package所在路径
+				VersionControl:    true,                   // 是否有版本控制
+				VersionBranch:     versionBranch,          // 版本控制分支
+				VersionTag:        versionTag,             // 版本控制tag
 				AnotherName:       item.Name,              // 别名
-				RepositoryAddress: item.RepositoryAddress, //存储库地址
-				//Version:     packageVersion, //package版本号
-				//Used:           bool           			//是否已经被某空间使用
+				RepositoryAddress: item.RepositoryAddress, // 存储库地址
+				// Version:     packageVersion, //package版本号
+				// Used:           bool           			//是否已经被某空间使用
 
 			}
 			err = dbModel.Create(&libraryRecord).Error
@@ -2359,11 +2360,11 @@ func RepositoryGetView(c *gin.Context) {
 		d := map[string]any{
 			"id":           records[i].ID,
 			"package_name": records[i].PackageName,
-			//"version":            records[i].Version,
+			// "version":            records[i].Version,
 			"another_name":       records[i].AnotherName,
 			"repository_address": records[i].RepositoryAddress,
 			"version_branch":     records[i].VersionBranch,
-			//"create_time":        records[i].CreatedAt,
+			// "create_time":        records[i].CreatedAt,
 		}
 		data = append(data, d)
 	}
@@ -2384,8 +2385,8 @@ func GetParameterCalibrationRootView(c *gin.Context) {
 	}
 	var modelData []map[string]any
 	var packageModel []DataBaseModel.YssimModels
-	//var space DataBaseModel.YssimUserSpace
-	//dbModel.Where("id = ? AND username = ?", userSpaceId, userName).First(&space)
+	// var space DataBaseModel.YssimUserSpace
+	// dbModel.Where("id = ? AND username = ?", userSpaceId, userName).First(&space)
 	subQuery := dbModel.Model(&DataBaseModel.SystemLibrary{}).Where("encryption = ?", true).Or("encryption = ? AND username = ?", false, userName).Select("id")
 	dbModel.Where("sys_or_user = ? AND userspace_id = ? AND encryption = ? AND library_id = ''", userName, userSpaceId, false).
 		Or("sys_or_user = ? AND userspace_id = ? AND library_id NOT IN (?)", userName, userSpaceId, subQuery).Find(&packageModel)
@@ -2464,25 +2465,26 @@ func GetParameterCalibrationRecordView(c *gin.Context) {
 	}).FirstOrCreate(&record)
 	var res DataType.ResponseData
 	res.Data = map[string]any{
-		"id":                    record.ID,
-		"start_time":            record.StartTime,
-		"stop_time":             record.StopTime,
-		"tolerance":             record.Tolerance,
-		"number_of_intervals":   record.NumberOfIntervals,
-		"interval":              record.Interval,
-		"method":                record.Method,
-		"compile_status":        record.CompileStatus,
-		"actual_data":           record.ActualData,
-		"rated_condition":       record.RatedCondition,
-		"formula":               record.Formula,
-		"coefficient_name":      record.CoefficientName,
-		"coefficient_value":     record.Coefficient,
-		"coefficient_score":     record.CoefficientScore,
-		"associated_parameters": record.AssociatedParameters,
-		"condition_parameters":  record.ConditionParameters,
-		"formula_string":        record.FormulaString,
-		"result_parameters":     record.ResultParameters,
-		"percentage":            record.Percentage,
+		"id":                               record.ID,
+		"start_time":                       record.StartTime,
+		"stop_time":                        record.StopTime,
+		"tolerance":                        record.Tolerance,
+		"number_of_intervals":              record.NumberOfIntervals,
+		"interval":                         record.Interval,
+		"method":                           record.Method,
+		"compile_status":                   record.CompileStatus,
+		"actual_data":                      record.ActualData,
+		"rated_condition":                  record.RatedCondition,
+		"formula":                          record.Formula,
+		"coefficient_name":                 record.CoefficientName,
+		"coefficient_value":                record.Coefficient,
+		"coefficient_score":                record.CoefficientScore,
+		"associated_parameters":            record.AssociatedParameters,
+		"condition_parameters":             record.ConditionParameters,
+		"formula_string":                   record.FormulaString,
+		"result_parameters":                record.ResultParameters,
+		"percentage":                       record.Percentage,
+		"coefficient_component_parameters": record.ComponentParameters,
 	}
 	c.JSON(http.StatusOK, res)
 }
@@ -2514,7 +2516,7 @@ func SetRatedConditionView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
-	//var ratedConditionList []any
+	// var ratedConditionList []any
 	ratedConditionList, _ := sonic.Marshal(&item.RatedConditionList)
 	dbModel.Model(DataBaseModel.ParameterCalibrationRecord{}).Where("id = ? AND package_id = ? AND username = ?", item.ID, item.PackageId, userName).UpdateColumn("rated_condition", ratedConditionList)
 	var res DataType.ResponseData
@@ -2572,7 +2574,7 @@ func GetVariableParameterView(c *gin.Context) {
 
 	var res DataType.ResponseData
 	if record.CompileStatus == "4" {
-		//OMC仿真完输出的xml文件
+		// OMC仿真完输出的xml文件
 		result = service.GetVariableParameter(record.CompilePath+"/result_init.xml", parentNode, false)
 	} else {
 		res.Err = "查询失败"
@@ -2607,7 +2609,7 @@ func GetResultVariableParameterView(c *gin.Context) {
 
 	var res DataType.ResponseData
 	if record.CompileStatus == "4" {
-		//OMC仿真完输出的xml文件
+		// OMC仿真完输出的xml文件
 		result = service.GetVariableParameter(record.CompilePath+"/result_init.xml", parentNode, true)
 	} else {
 		res.Err = "查询失败"
@@ -2715,6 +2717,31 @@ func FittingCalculationView(c *gin.Context) {
 		coefficientList = append(coefficientList, map[string]any{"name": coefficientNameList[i], "value": result.Coefficient[i]})
 	}
 	res.Data = map[string]any{"coefficient": coefficientList, "score": result.Score}
+	c.JSON(http.StatusOK, res)
+}
+
+func FittingCoefficientSetView(c *gin.Context) {
+	/*
+		# 模型参数标定的拟合系数，设置到模型组件的哪个参数
+	*/
+	var item DataType.FittingCalculationData
+	var res DataType.ResponseData
+	err := c.BindJSON(&item)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	var record DataBaseModel.ParameterCalibrationRecord
+	dbModel.Where("id = ? AND username = ?", item.ID, userName).First(&record)
+	if record.ID == "" {
+		res.Err = "未找到记录"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	parameters, _ := sonic.Marshal(&item)
+	dbModel.Model(&record).Updates(map[string]any{"component_parameters": parameters})
 	c.JSON(http.StatusOK, res)
 }
 

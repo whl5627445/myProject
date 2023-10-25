@@ -91,6 +91,7 @@ type ParameterCalibrationRecord struct {
 	CoefficientName         datatypes.JSON `gorm:"column:coefficient_name;type:json;comment:公式系数的名字"`
 	Coefficient             datatypes.JSON `gorm:"column:coefficient;type:json;comment:公式系数的具体值"`
 	CoefficientScore        float64        `gorm:"column:coefficient_score;type:float;comment:公式拟合得分"`
+	ComponentParameters     datatypes.JSON `gorm:"column:component_parameters;type:json;comment:拟合设置的组件参数与值"`
 	AssociatedParameters    datatypes.JSON `gorm:"column:associated_parameters;type:json;comment:公式变量与实测数据参数名的映射"`
 	CreatedAt               *time.Time     `gorm:"column:create_time;autoCreateTime;type:datetime;comment:创建时间" json:"-"`
 	UpdatedAt               *time.Time     `gorm:"column:update_time;type:datetime;comment:更新时间" json:"-"`
@@ -133,6 +134,7 @@ type ParameterCalibrationTemplate struct {
 	CoefficientName         datatypes.JSON `gorm:"column:coefficient_name;type:json;comment:公式系数的名字"`
 	Coefficient             datatypes.JSON `gorm:"column:coefficient;type:json;comment:公式系数的具体值"`
 	CoefficientScore        float64        `gorm:"column:coefficient_score;type:float;comment:公式拟合得分"`
+	ComponentParameters     datatypes.JSON `gorm:"column:component_parameters;type:json;comment:拟合设置的组件参数与值"`
 	AssociatedParameters    datatypes.JSON `gorm:"column:associated_parameters;type:json;comment:公式变量与实测数据参数名的映射"`
 	CreatedAt               *time.Time     `gorm:"column:create_time;autoCreateTime;type:datetime;comment:创建时间" json:"-"`
 	UpdatedAt               *time.Time     `gorm:"column:update_time;type:datetime;comment:更新时间" json:"-"`
