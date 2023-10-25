@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"time"
+
 	"yssim-go/app/DataBaseModel"
 
 	"gorm.io/gorm/logger"
@@ -12,7 +13,7 @@ import (
 )
 
 func openMySql() *gorm.DB {
-	dsn := "root:simtek_cloud_sim@tcp(mysql:3306)/yssim?charset=utf8mb4&parseTime=True&loc=Local"
+	dsn := "root:root@tcp(mysql:3306)/yssim?charset=utf8mb4&parseTime=True&loc=Local"
 	if DEBUG != "" {
 		dsn = "root:simtek_cloud_sim@tcp(127.0.0.1:3307)/yssim?charset=utf8mb4&parseTime=True&loc=Local"
 	}

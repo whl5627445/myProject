@@ -23,7 +23,7 @@ PORT = 3306
 # PORT = 3307
 DATA_BASE = "yssim"
 USER = "root"
-PWD = "simtek_cloud_sim"
+PWD = "root"
 
 DB_URI = f"mysql+pymysql://{USER}:{PWD}@{HOST}:{PORT}/{DATA_BASE}"
 
