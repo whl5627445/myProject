@@ -2724,7 +2724,7 @@ func FittingCoefficientSetView(c *gin.Context) {
 	/*
 		# 模型参数标定的拟合系数，设置到模型组件的哪个参数
 	*/
-	var item DataType.FittingCalculationData
+	var item DataType.FittingCoefficientSetData
 	var res DataType.ResponseData
 	err := c.BindJSON(&item)
 	if err != nil {
@@ -2740,7 +2740,7 @@ func FittingCoefficientSetView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	parameters, _ := sonic.Marshal(&item)
+	parameters, _ := sonic.Marshal(&map[string]any{"name": item.Name, "value": item.Value})
 	dbModel.Model(&record).Updates(map[string]any{"component_parameters": parameters})
 	c.JSON(http.StatusOK, res)
 }
