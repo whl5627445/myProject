@@ -110,7 +110,7 @@ class CalibrationCompileThread(threading.Thread):
             )
         else:
             # 改数据库状态为3
-            if self.state != "stopped":
+            if self.state != "stopped" and self.state != "compiling":
                 update_parameter_calibration_records(
                     uuid=self.uuid,
                     compile_status="5",
