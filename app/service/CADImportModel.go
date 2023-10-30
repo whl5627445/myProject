@@ -15,9 +15,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"yssim-go/config"
-
 	"yssim-go/app/DataType"
+	"yssim-go/config"
 	"yssim-go/library/fileOperation"
 	"yssim-go/library/omc"
 
@@ -324,7 +323,6 @@ func CADParseParts(path string) []map[string]any {
 			bendsData := getBendsData(pipeData)
 			modelInformation := getModelInformationData(t, pipeData, bendsData)
 			data["model_information"] = modelInformation
-
 		}
 		parts = append(parts, data)
 	}
@@ -428,7 +426,7 @@ func getModelInformationData(tube tube, pipeData []map[string]any, bendsData []m
 
 			if yNum-y_1Num > 0 && x1Num-xNum > 0 {
 				pData["rotation"] = -90
-				pData["yz"] = -1
+				pData["xz"] = -1
 				pzData["origin"] = []float64{x1Num - (x1Num-xNum)/2, yNum}
 				pzData["port_a"] = []float64{x1Num - (x1Num-xNum)/2, yNum}
 			}
@@ -468,12 +466,12 @@ func getModelInformationData(tube tube, pipeData []map[string]any, bendsData []m
 				pzData["origin"] = []float64{xNum, y1Num - (y1Num-yNum)/2}
 			}
 
-			//if index == len(pointList)-2 {
-			//
-			//	xLast := pointList[index+1].X.Value
-			//	yLast := pointList[index+1].Y.Value
-			//	pzData["origin"] = []float64{xLast, yLast}
-			//}
+			if index == len(pointList)-2 {
+
+				xLast := pointList[index+1].X.Value
+				yLast := pointList[index+1].Y.Value
+				pzData["origin"] = []float64{xLast, yLast}
+			}
 			pzData["geometry_data"] = pipeData[0]
 			pipeData = pipeData[1:]
 			pData["geometry_data"] = bendsData[0]
@@ -606,7 +604,6 @@ func ThreeWayManage(modelName string, componentsNames map[string][]map[string]st
 		for i, m := range endList {
 			endCom[m["name"]+"_"+strconv.Itoa(i+1)] = m["origin"]
 		}
-
 		if len(startCom) == 1 && len(endCom) == 1 {
 			var startComponentName string
 			var endComponentName string
@@ -630,17 +627,11 @@ func ThreeWayManage(modelName string, componentsNames map[string][]map[string]st
 			endComponentName := getKeyByValue(endCom, endLine)
 			split := strings.Split(endComponentName, "_")
 			index := split[len(split)-1]
-			fmt.Println("第几个", split[0], index, len(endCom))
 			if index == strconv.Itoa(len(endCom)) {
 				AddConnection(modelName, startComponentName+"."+startSuffix, split[0]+"."+"port_b", "0,127,255", []string{startLine, endLine})
 			} else {
 				AddConnection(modelName, startComponentName+"."+startSuffix, split[0]+"."+"port_a", "0,127,255", []string{startLine, endLine})
 			}
-			//if strings.Contains(endComponentName, "pipe") && endSuffix == "port_1" {
-			//	AddConnection(modelName, startComponentName+"."+startSuffix, endComponentName+"."+"port_a", "0,127,255", []string{startLine, endLine})
-			//} else {
-			//	AddConnection(modelName, startComponentName+"."+startSuffix, endComponentName+"."+"port_b", "0,127,255", []string{startLine, endLine})
-			//}
 		}
 	}
 }
