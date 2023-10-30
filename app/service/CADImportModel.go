@@ -179,7 +179,7 @@ func CadFilesUpload(form *multipart.Form, userName string) []string {
 	return filePath
 }
 
-func GetXmlData(files []string, userName, header string) (string, int) {
+func GetXmlData(files []string, userName string) (string, int) {
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
 	currentDir, _ := os.Getwd()
@@ -206,12 +206,12 @@ func GetXmlData(files []string, userName, header string) (string, int) {
 
 	// 创建一个POST请求，并设置请求头和请求体
 	req, err := http.NewRequest("POST", config.CADConnect+"/file/batch", bodyBuf)
+	//req, err := http.NewRequest("POST", "http://121.37.183.103:8081/file/batch", bodyBuf)
 	if err != nil {
 		log.Println("error creating request", err)
 	}
 
 	req.Header.Set("Content-Type", bodyWriter.FormDataContentType())
-	req.Header.Set("Authorization", header)
 
 	// 发送HTTP请求
 	client := new(http.Client)
@@ -366,7 +366,7 @@ func getPipeData(diameter float64, sList []segment) []map[string]any {
 		coordinate := map[string]float64{"x": ex - sx, "y": ey - sy, "z": ez - sz}
 		length := math.Sqrt((ex-sx)*(ex-sx)+(ey-sy)*(ey-sy)+(ez-sz)*(ez-sz)) - float
 		height := ez - sz
-		pipeData = append(pipeData, map[string]any{"length": length / 1000, "height_ab": height / 1000, "diameter": diameter / 1000, "bend_radius": bendRadius, "coordinate": coordinate})
+		pipeData = append(pipeData, map[string]any{"length": length / 1000, "height_ab": height / 1000, "diameter": diameter / 1000, "bend_radius": float, "coordinate": coordinate})
 	}
 	return pipeData
 }
@@ -528,17 +528,8 @@ func getModelInformationData(tube tube, pipeData []map[string]any, bendsData []m
 	return modelInformation
 }
 
-func CADMappingModel(modelName string, classNameList []string, modelInformationList DataType.CadMappingModelInformation, lineMap map[string]string) {
+func CADMappingModel(modelName string, classNameList []string, modelInformationList DataType.CadMappingModelInformation, componentsName map[string][]map[string]string) {
 	var componentNames []map[string]string
-	pointList := make(map[string]string)
-	pointsMap := modelInformationList.Points
-	for i, m := range pointsMap {
-		pointX := strconv.FormatFloat(m["x"], 'f', -1, 64)
-		pointY := strconv.FormatFloat(m["y"], 'f', -1, 64)
-		pointCoord := strings.Join([]string{pointX, pointY}, ",")
-		pointName := modelInformationList.Name + ".port_" + strconv.Itoa(i+1)
-		pointList[pointName] = pointCoord
-	}
 	for index, className := range classNameList {
 		component := map[string]string{}
 		componentName := GetComponentName(modelName, className)
@@ -549,9 +540,6 @@ func CADMappingModel(modelName string, classNameList []string, modelInformationL
 		rotation := strconv.FormatFloat(modelInformation.Rotation, 'f', -1, 64)
 		extent := getExtents(className, modelInformation.Xz, modelInformation.Yz)
 		AddComponent(componentName, className, modelName, origin, rotation, extent)
-		for k, _ := range pointList {
-			lineMap[k] = componentName
-		}
 		if modelInformationList.Type == "CATTubBendableTube" {
 			if (index+1)%2 == 1 {
 				length := strconv.FormatFloat(modelInformation.GeometryData.Length, 'f', -1, 64)
@@ -572,6 +560,7 @@ func CADMappingModel(modelName string, classNameList []string, modelInformationL
 		component["origin"] = origin
 		componentNames = append(componentNames, component)
 	}
+	componentsName[modelInformationList.Name] = componentNames
 	if len(classNameList) > 1 {
 		for i := 0; i < len(componentNames)-1; i++ {
 			startName := componentNames[i]["name"] + ".port_b"
@@ -583,7 +572,7 @@ func CADMappingModel(modelName string, classNameList []string, modelInformationL
 	}
 }
 
-func ThreeWayManage(modelName string, lineMap map[string]string, connectedRelation []map[string]any) {
+func ThreeWayManage(modelName string, componentsNames map[string][]map[string]string, connectedRelation []map[string]any) {
 	for _, con := range connectedRelation {
 		endDot := con["start_line"]
 		startDot := con["end_line"]
@@ -603,24 +592,66 @@ func ThreeWayManage(modelName string, lineMap map[string]string, connectedRelati
 		startXml := con["start_name"]
 		endXml := con["end_name"]
 		startSplit := strings.Split(startXml.(string), ".")
-		endSplit := strings.Split(startXml.(string), ".")
+		endSplit := strings.Split(endXml.(string), ".")
 		startSuffix := startSplit[len(startSplit)-1]
 		endSuffix := endSplit[len(endSplit)-1]
-		startName := getValue(lineMap, startXml.(string))
-		endName := getValue(lineMap, endXml.(string))
-		if startName != "" && endName != "" {
-			AddConnection(modelName, startName+"."+startSuffix, endName+"."+endSuffix, "0,127,255", []string{startLine, endLine})
+		startList := componentsNames[startSplit[0]]
+		endList := componentsNames[endSplit[0]]
+		startCom := make(map[string]string)
+		endCom := make(map[string]string)
+		for _, m := range startList {
+			startCom[m["name"]] = m["origin"]
+		}
+
+		for i, m := range endList {
+			endCom[m["name"]+"_"+strconv.Itoa(i+1)] = m["origin"]
+		}
+
+		if len(startCom) == 1 && len(endCom) == 1 {
+			var startComponentName string
+			var endComponentName string
+			for k, _ := range startCom {
+				startComponentName = k
+			}
+			for k, _ := range endCom {
+				endComponentName = k
+			}
+			split := strings.Split(endComponentName, "_")
+			if strings.Contains(endComponentName, "pipe") && endSuffix == "port_1" {
+				AddConnection(modelName, startComponentName+"."+startSuffix, split[0]+"."+"port_b", "0,127,255", []string{startLine, endLine})
+			} else {
+				AddConnection(modelName, startComponentName+"."+startSuffix, split[0]+"."+"port_a", "0,127,255", []string{startLine, endLine})
+			}
+		} else if len(endCom) != 1 {
+			var startComponentName string
+			for k, _ := range startCom {
+				startComponentName = k
+			}
+			endComponentName := getKeyByValue(endCom, endLine)
+			split := strings.Split(endComponentName, "_")
+			index := split[len(split)-1]
+			fmt.Println("第几个", split[0], index, len(endCom))
+			if index == strconv.Itoa(len(endCom)) {
+				AddConnection(modelName, startComponentName+"."+startSuffix, split[0]+"."+"port_b", "0,127,255", []string{startLine, endLine})
+			} else {
+				AddConnection(modelName, startComponentName+"."+startSuffix, split[0]+"."+"port_a", "0,127,255", []string{startLine, endLine})
+			}
+			//if strings.Contains(endComponentName, "pipe") && endSuffix == "port_1" {
+			//	AddConnection(modelName, startComponentName+"."+startSuffix, endComponentName+"."+"port_a", "0,127,255", []string{startLine, endLine})
+			//} else {
+			//	AddConnection(modelName, startComponentName+"."+startSuffix, endComponentName+"."+"port_b", "0,127,255", []string{startLine, endLine})
+			//}
 		}
 	}
 }
 
-func getValue(dictionary map[string]string, targetValue string) string {
-	for k, v := range dictionary {
-		if targetValue == k {
-			return v
+func getKeyByValue(m map[string]string, value string) string {
+	for key, val := range m {
+		if val == value {
+			return key
 		}
 	}
-	return ""
+	return "" // 如果没有找到对应的键，则返回空字符串或者其他你认为合适的默认值
 }
 
 func getExtents(className string, Xz, Yz float64) []string {

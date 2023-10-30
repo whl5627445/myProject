@@ -1644,8 +1644,7 @@ func CADParseView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "参数错误")
 		return
 	}
-	header := c.GetHeader("Authorization")
-	data, code := service.GetXmlData(item.FilePath, userName, header)
+	data, code := service.GetXmlData(item.FilePath, userName)
 	if code != 200 {
 		res.Err = data
 		res.Status = 2
@@ -1758,15 +1757,13 @@ func CADMappingModelView(c *gin.Context) {
 			return
 		}
 	}
-
-	lineMap := make(map[string]string)
+	componentsNames := make(map[string][]map[string]string)
 	for i := 0; i < len(item.ModelMapping); i++ {
-		service.CADMappingModel(item.ModelName, item.ModelMapping[i].ModelName, item.Information[i], lineMap)
+		service.CADMappingModel(item.ModelName, item.ModelMapping[i].ModelName, item.Information[i], componentsNames)
 	}
-
 	for _, information := range item.Information {
 		if information.Type == "CATTubTeeJunction" {
-			service.ThreeWayManage(item.ModelName, lineMap, information.ConnectedRelation)
+			service.ThreeWayManage(item.ModelName, componentsNames, information.ConnectedRelation)
 		}
 	}
 	res.Msg = "建模完成"
