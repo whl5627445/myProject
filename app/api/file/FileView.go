@@ -541,9 +541,16 @@ func FmuExportModelView(c *gin.Context) {
 	}
 	// 获取依赖
 	envLibrary := service.GetEnvLibrary(packageModel.PackageName, username, userSpaceId)
-	newFileName, ok, errTips := service.DymolaFmuExportWithLibrary(item.FmuPar, envLibrary, token, username, item.FmuName, item.PackageName, item.ModelName, fileName, filePath)
-	//newFileName, ok := service.DymolaFmuExport(item.FmuPar, token, username, item.FmuName, item.PackageName, item.ModelName, fileName, filePath)
+	newFileName := ""
+	ok := false
+	errTips := ""
+	if item.Solver == "default" {
+		newFileName, ok, errTips = service.OmcFmuExportWithLibrary(item.FmuPar, envLibrary, username, item.FmuName, item.PackageName, item.ModelName, filePath)
 
+	} else {
+		newFileName, ok, errTips = service.DymolaFmuExportWithLibrary(item.FmuPar, envLibrary, token, username, item.FmuName, item.PackageName, item.ModelName, fileName, filePath)
+
+	}
 	if ok {
 
 		res.Data = map[string]string{"url": newFileName}

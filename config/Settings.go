@@ -26,6 +26,7 @@ var ClassTypeAll = map[string]bool{"model": true, "class": true, "connector": tr
 
 const dymolaConnect = "http://gateway:6535"
 const DymolaSimutalionConnect = dymolaConnect + "/dymola"
+const OmcFlaskConnect = dymolaConnect + "/omc-python"
 const ADDR = "0.0.0.0:"
 const CADConnect = dymolaConnect + "/caa"
 

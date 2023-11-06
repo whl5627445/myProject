@@ -28,6 +28,7 @@ type FilterResultFileData struct {
 }
 
 type FmuExportData struct {
+	Solver        string         `json:"solver" binding:"required"`
 	PackageId     string         `json:"package_id" binding:"required"`
 	PackageName   string         `json:"package_name" binding:"required"`
 	ModelName     string         `json:"model_name" binding:"required"`
