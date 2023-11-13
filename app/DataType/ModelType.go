@@ -130,7 +130,7 @@ type SetModelDocumentData struct {
 	PackageId string `json:"package_id" binding:"required"`
 	ModelName string `json:"model_name" binding:"required"`
 	Document  string `json:"document" binding:"required"`
-	Revisions string `json:"revisions" binding:"required"`
+	Revisions string `json:"revisions" binding:""`
 }
 
 type ConvertUnitsData struct {
