@@ -230,11 +230,11 @@ func GetXmlData(files []string, userName string) (string, int) {
 	defer resp.Body.Close()
 	var data DataType.CadData
 	_ = sonic.Unmarshal(body, &data)
-	if data.Code == 200 {
-		return data.Data, data.Code
+	if data.Code != 200 {
+		log.Println(data)
+		return data.Msg, data.Code
 	}
-	log.Println(data)
-	return data.Msg, data.Code
+	return data.Data, data.Code
 }
 
 func HandleXMLUpload(from *multipart.FileHeader) string {

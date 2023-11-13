@@ -1766,6 +1766,7 @@ func CADMappingModelView(c *gin.Context) {
 			service.ThreeWayManage(item.ModelName, componentsNames, information.ConnectedRelation)
 		}
 	}
+	service.ModelSave(item.ModelName)
 	res.Msg = "建模完成"
 	c.JSON(http.StatusOK, res)
 }
