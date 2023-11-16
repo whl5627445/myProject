@@ -2770,7 +2770,7 @@ func GetParameterCalibrationTemplateView(c *gin.Context) {
 	recordId := c.Query("id")
 	var template []DataBaseModel.ParameterCalibrationTemplate
 	if recordId == "" {
-		dbModel.Find(&template)
+		dbModel.Where("username = ?", config.USERNAME).Find(&template)
 	} else {
 		dbModel.Where("id = ?", recordId).First(&template)
 	}
