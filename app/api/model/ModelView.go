@@ -2833,7 +2833,7 @@ func DeleteParameterCalibrationTemplateView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
-	dbModel.Delete(DataBaseModel.ParameterCalibrationTemplate{}, item.ID)
+	dbModel.Delete(&DataBaseModel.ParameterCalibrationTemplate{}, "id", item.ID)
 	res.Msg = "模板删除成功"
 	c.JSON(http.StatusOK, res)
 }
