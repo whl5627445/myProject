@@ -11,8 +11,8 @@ import (
 	"yssim-go/library/stringOperation"
 )
 
-func GetIconNew(modelName string, icon bool) map[string]any {
-	data := make(map[string]any, 0)
+func GetIconNew(modelName, componentName string, icon bool) map[string]any {
+	data := make(map[string]any)
 	iconData := omc.OMC.GetIconAnnotation(modelName)
 	modelType := omc.OMC.GetClassRestriction(modelName)
 	if len(iconData) > 8 {
@@ -28,7 +28,7 @@ func GetIconNew(modelName string, icon bool) map[string]any {
 	}
 	graphics := map[string]any{}
 	if (modelType != "connector" && modelType != "expandable connector") || (icon && (modelType == "connector" || modelType == "expandable connector")) {
-		graphics = getIconAnnotationGraphics(modelName, modelType)
+		graphics = getIconAnnotationGraphics(modelName, modelType, componentName)
 	} else {
 		graphics = getDiagramAnnotationGraphics(modelName, modelType)
 	}
@@ -113,14 +113,14 @@ func getCoordinateSystemRecursion(modelNameList []string, isIcon bool) coordinat
 	return data
 }
 
-func getIconAnnotationGraphics(modelName, modelType string) map[string]any {
+func getIconAnnotationGraphics(modelName, modelType, parentName string) map[string]any {
 	data := map[string]any{}
 	modelNameList := GetICList(modelName)
 	modelIconAnnotation := getIconAnnotation(modelNameList)
 	coordinateSystem := getCoordinateSystemRecursion(modelNameList, false)
 	componentsData, componentAnnotationsData := getElementsAndModelName(modelNameList)
 	subShapes := iconSubShapes(modelIconAnnotation, modelName)
-	inputOutputs := iconInputOutputs(componentsData, componentAnnotationsData, modelName)
+	inputOutputs := iconInputOutputs(componentsData, componentAnnotationsData, modelName, parentName)
 	if len(subShapes) == 0 && len(inputOutputs) == 0 && len(modelIconAnnotation) == 0 {
 		return nil
 	}
@@ -345,7 +345,7 @@ func iconSubShapes(cData []any, modelName string) []map[string]any {
 	return dataList
 }
 
-func iconInputOutputs(cData [][]any, caData [][]any, modelName string) []map[string]any {
+func iconInputOutputs(cData [][]any, caData [][]any, modelName, parentName string) []map[string]any {
 	dataList := make([]map[string]any, 0, 1)
 	var cDataFilter [][]any
 	var caDataFilter [][]any
@@ -401,6 +401,7 @@ func iconInputOutputs(cData [][]any, caData [][]any, modelName string) []map[str
 			data["extend_name"] = modelName
 			data["visible"] = caf[0]
 			data["mobility"] = false
+			data["parent"] = parentName
 			data["comment"] = cDataFilter[i][4]
 			// data["initialScale"] = initialScale
 			rotateAngle := func() string {
@@ -453,7 +454,7 @@ func getBitmapImage(bitmapData []any, modelName, modelType string) map[string]an
 	data := map[string]any{"extent1Diagram": "-,-", "extent2Diagram": "-,-", "initialScale": "0.1"}
 	componentsData, componentAnnotationsData := getElementsAndModelName(modelNameList)
 	subShapes := iconSubShapes(modelIconAnnotation, modelName)
-	inputOutputs := iconInputOutputs(componentsData, componentAnnotationsData, modelName)
+	inputOutputs := iconInputOutputs(componentsData, componentAnnotationsData, modelName, "")
 	if len(subShapes) == 0 && len(inputOutputs) == 0 && len(modelIconAnnotation) == 0 {
 		return nil
 	}

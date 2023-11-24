@@ -754,7 +754,7 @@ func AddModelComponentView(c *gin.Context) {
 		return
 	}
 	rotation := strconv.Itoa(item.Rotation)
-	data := service.GetIconNew(item.OldComponentName, false)
+	data := service.GetIconNew(item.OldComponentName, item.NewComponentName, false)
 	graphics := data["graphics"].(map[string]any)
 	graphics["originDiagram"] = item.Origin
 	graphics["original_name"] = item.NewComponentName
@@ -1504,7 +1504,7 @@ func GetIconView(c *gin.Context) {
 	// var packageModel []DataBaseModel.YssimModels
 	// dbModel.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", item.PackageId, []string{"sys", username}, []string{"0", userSpaceId}).Order("create_time desc").Find(&packageModel)
 	var res DataType.ResponseData
-	data := service.GetIconNew(item.ModelName, true)
+	data := service.GetIconNew(item.ModelName, "", true)
 	res.Data = data
 	c.JSON(http.StatusOK, res)
 }
