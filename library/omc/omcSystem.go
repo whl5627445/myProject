@@ -641,7 +641,7 @@ func (o *ZmqObject) SetElementModifierValue(className string, parameter string, 
 	cmd := "setElementModifierValue(" + className + ", " + parameter + ", $Code(" + code + "))"
 	data, ok := o.SendExpressionNoParsed(cmd)
 	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
-	if ok && string(data) == "Ok" {
+	if ok && (string(data) == "Ok" || string(data) == "true") {
 		return true
 	}
 	return false
@@ -651,17 +651,20 @@ func (o *ZmqObject) SetElementModifierValue(className string, parameter string, 
 func (o *ZmqObject) SetExtendsModifierValue(className, extendsName, parameter, value string) bool {
 	// setExtendsModifierValue(test12345, Modelica.Blocks.Examples.PID_Controller, kinematicPTP.startTime, $Code(=10))
 	value = strings.ReplaceAll(value, "\"", "\\\"")
-	code := "=" + value + ""
+	if value == "" {
+		value = "\"\""
+	}
+	code := "=" + value
 	if strings.HasPrefix(value, "redeclare") {
 		code = "=\"" + value + "\""
 	}
-	// if value == "" {
+	// if value == "" {3
 	//	code = "()"
 	// }
 	cmd := "setExtendsModifierValue(" + className + ", " + extendsName + ", " + parameter + ", $Code(" + code + "))"
 	data, ok := o.SendExpressionNoParsed(cmd)
 	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
-	if ok && string(data) == "Ok" {
+	if ok && (string(data) == "Ok" || string(data) == "true") {
 		return true
 	}
 	return false
@@ -681,6 +684,7 @@ func (o *ZmqObject) RenameComponentInClass(className string, oldComponentName st
 // SetComponentProperties 设置模型组件的属性
 func (o *ZmqObject) SetComponentProperties(className string, newComponentName string, final string, protected string, replaceable string, variability string, inner string, outer string, causality string) bool {
 	// setComponentProperties(PID_Controller,PI,{true,false,true,false}, {""}, {false,false}, {""})
+	causality = strings.Replace(causality, "none", "", 1)
 	cmdParameterList := []string{className, ",", newComponentName, ",{", final, ",false,", protected, ",", replaceable,
 		"},{\"", variability, "\"}", ",{", inner, ",", outer, "},{\"", causality, "\"}"}
 	cmd := "setComponentProperties(" + strings.Join(cmdParameterList, "") + ")"
