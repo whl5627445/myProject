@@ -162,14 +162,12 @@ func (m *modelParameters) getExtendsModifierNamesAndValue() {
 // getComponentLevel 获取组件在模型父类的第几层, 0表示组件不是继承来的, 是当前模型自己的组件
 func (m *modelParameters) getComponentLevel(componentName, componentClassName string) {
 	classAll := []string{m.modelName}
-	// classAll := m.getInherited(m.modelName)
 Loop:
 	for i := 0; i < len(classAll); i++ {
 		m.geParent(classAll[i])
 		m.getExtendsModifierNamesAndValue()
 		m.components = omc.OMC.GetElements(classAll[i])
 		m.componentAnnotations = omc.OMC.GetElementAnnotations(classAll[i])
-
 		for index, c := range m.components {
 			cAnnotations := m.componentAnnotations[index].([]any)
 			componentList := c.([]any)
@@ -181,7 +179,7 @@ Loop:
 				if m.level == 1 {
 					m.extendLevel2Name = classAll[i]
 				}
-				if m.level > 0 {
+				if i > 0 {
 					m.extendComponent = true
 				}
 				break Loop
@@ -200,7 +198,7 @@ func (m *modelParameters) getClassParameters(className string) []any {
 	dataList := []any{}
 	for i := 0; i < len(classAll); i++ {
 		m.className = classAll[i]
-		if (m.level > 1 && m.componentParameters) || (m.level > 0 && !m.componentParameters) {
+		if (m.level > 1 && m.componentParameters && m.extendComponent) || (m.level > 0 && !m.componentParameters) {
 			m.extend = true
 			m.extendName = classAll[i]
 		}
@@ -241,7 +239,7 @@ func (m *modelParameters) getElementsModifierNamesAndValue(className, componentN
 		case strings.HasSuffix(name, ".fixed"):
 			modifierName := componentName + "." + strings.TrimSuffix(name, ".fixed")
 			elementModifierNamesMapData, ok := m.elementModifierNamesMap[modifierName]
-			if !ok {
+			if ok {
 				elementModifierNamesMapData.fixed = elementModifierValue
 				m.elementModifierNamesMap[modifierName] = elementModifierNamesMapData
 			} else {
@@ -251,7 +249,7 @@ func (m *modelParameters) getElementsModifierNamesAndValue(className, componentN
 		case name == "fixed":
 			modifierName := m.componentName + "." + componentName
 			elementModifierNamesMapData, ok := m.elementModifierNamesMap[modifierName]
-			if !ok {
+			if ok {
 				elementModifierNamesMapData.fixed = elementModifierValue
 				m.elementModifierNamesMap[modifierName] = elementModifierNamesMapData
 			} else {
