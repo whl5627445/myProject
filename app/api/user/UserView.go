@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/DataType"
 	"yssim-go/app/service"
@@ -24,7 +25,8 @@ func GetUserSpaceView(c *gin.Context) {
 	/*
 		# 获取用户所有的用户空间条目
 	*/
-	userName := c.GetHeader("username")
+	userName := config.USERNAME
+
 	var res DataType.ResponseData
 	var modelData []map[string]string
 	var userSpace []DataBaseModel.YssimUserSpace
@@ -43,7 +45,7 @@ func GetUserSpaceNewView(c *gin.Context) {
 	*/
 
 	var res DataType.ResponseData
-	userName := c.GetHeader("username")
+	userName := config.USERNAME
 	keyWords := c.Query("keywords")
 	collect := c.Query("collect")
 	var recentSpaceList []DataBaseModel.YssimUserSpace
@@ -102,7 +104,7 @@ func CreateUserSpaceView(c *gin.Context) {
 	/*
 		# 创建用户空间
 	*/
-	userName := c.GetHeader("username")
+	userName := config.USERNAME
 	var res DataType.ResponseData
 	var item DataType.CreateUserSpaceModel
 	err := c.BindJSON(&item)
@@ -164,7 +166,7 @@ func EditUserSpaceView(c *gin.Context) {
 	/*
 		# 编辑用户空间
 	*/
-	userName := c.GetHeader("username")
+	userName := config.USERNAME
 	var res DataType.ResponseData
 	var item DataType.EditUserSpaceModel
 	err := c.BindJSON(&item)
@@ -203,7 +205,7 @@ func CollectUserSpaceView(c *gin.Context) {
 	/*
 		# 收藏用户空间
 	*/
-	userName := c.GetHeader("username")
+	userName := config.USERNAME
 	var res DataType.ResponseData
 	var item DataType.CollectUserSpaceData
 	err := c.BindJSON(&item)
@@ -230,7 +232,7 @@ func DeleteUserSpaceView(c *gin.Context) {
 	/*
 		# 删除用户空间
 	*/
-	userName := c.GetHeader("username")
+	userName := config.USERNAME
 	var res DataType.ResponseData
 	var item DataType.DeleteUserSpaceModel
 	err := c.BindJSON(&item)
@@ -238,12 +240,12 @@ func DeleteUserSpaceView(c *gin.Context) {
 		return
 	}
 	var space DataBaseModel.YssimUserSpace
-	//for _, id := range item.SpaceId {
+	// for _, id := range item.SpaceId {
 	//	result := service.GetWorkSpaceId(&id)
 	//	if result {
 	//		service.Clear()
 	//	}
-	//}
+	// }
 	dbUser.Model(&space).Where("id IN ? AND username = ?", item.SpaceId, userName).Delete(&space)
 	res.Msg = "删除成功"
 	c.JSON(http.StatusOK, res)
@@ -254,7 +256,7 @@ func GetUserRecentlyOpenedView(c *gin.Context) {
 	/*
 		#获取用户空间的最近打开
 	*/
-	userName := c.GetHeader("username")
+	userName := config.USERNAME
 	var res DataType.ResponseData
 	var modelData []map[string]string
 	var userSpace []DataBaseModel.YssimUserSpace
@@ -271,7 +273,7 @@ func ExamplesView(c *gin.Context) {
 		# 获取示例
 	*/
 	var res DataType.ResponseData
-	//res.Data = config.EXAMPLES
+	// res.Data = config.EXAMPLES
 	c.JSON(http.StatusOK, res)
 }
 
@@ -281,8 +283,8 @@ func GetUserSettingsView(c *gin.Context) {
 	*/
 	var res DataType.ResponseData
 	var setting DataBaseModel.YssimUserSettings
-	username := c.GetHeader("username")
-	dbUser.Where("username =? ", username).First(&setting)
+	userName := config.USERNAME
+	dbUser.Where("username =? ", userName).First(&setting)
 	oneData := map[string]any{
 		"grid_display": setting.GridDisplay,
 	}
@@ -295,7 +297,7 @@ func SetUserSettingsView(c *gin.Context) {
 		# 设置用户配置
 	*/
 	var res DataType.ResponseData
-	username := c.GetHeader("username")
+	userName := config.USERNAME
 	var setting DataType.UserSettingsModel
 	var settingRecord DataBaseModel.YssimUserSettings
 	err := c.BindJSON(&setting)
@@ -304,11 +306,11 @@ func SetUserSettingsView(c *gin.Context) {
 		return
 	}
 	res.Data = true
-	dbUser.Where("username =? ", username).First(&settingRecord)
-	if settingRecord.ID != "" { //存在则修改
+	dbUser.Where("username =? ", userName).First(&settingRecord)
+	if settingRecord.ID != "" { // 存在则修改
 		res.Msg = "修改成功。"
 		settingRecord.GridDisplay = setting.GridDisplay
-		err := dbUser.Where("username =? ", username).Save(&settingRecord).Error
+		err := dbUser.Where("username =? ", userName).Save(&settingRecord).Error
 		if err != nil {
 			log.Println("err:", err)
 			res.Data = false
@@ -316,10 +318,10 @@ func SetUserSettingsView(c *gin.Context) {
 			res.Status = 2
 		}
 
-	} else { //不存在则创建
+	} else { // 不存在则创建
 		settingNew := DataBaseModel.YssimUserSettings{
 			ID:          uuid.New().String(),
-			UserName:    username,
+			UserName:    userName,
 			GridDisplay: setting.GridDisplay,
 		}
 		res.Msg = "创建成功。"
@@ -341,7 +343,7 @@ func BackgroundUploadView(c *gin.Context) {
 		## path: 文件相对路径
 	*/
 	var res DataType.ResponseData
-	userName := c.GetHeader("username")
+	userName := config.USERNAME
 	varFile, err := c.FormFile("file")
 	if !strings.HasSuffix(varFile.Filename, ".jpg") && !strings.HasSuffix(varFile.Filename, ".jpeg") && !strings.HasSuffix(varFile.Filename, ".png") &&
 		!strings.HasSuffix(varFile.Filename, ".jfif") && !strings.HasSuffix(varFile.Filename, ".pjp") && !strings.HasSuffix(varFile.Filename, ".pjpeg") {
