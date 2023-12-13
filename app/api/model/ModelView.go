@@ -538,7 +538,7 @@ func SetComponentPropertiesView(c *gin.Context) {
 		service.ModelSave(item.ModelName)
 		res.Msg = "设置完成"
 	} else {
-		res.Err = msg
+		res.Err = strings.Join(msg, " - ")
 		res.Status = 2
 	}
 	data := make([]string, 0, 1)

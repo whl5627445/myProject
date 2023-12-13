@@ -682,7 +682,7 @@ func (o *ZmqObject) RenameComponentInClass(className string, oldComponentName st
 }
 
 // SetComponentProperties 设置模型组件的属性
-func (o *ZmqObject) SetComponentProperties(className string, newComponentName string, final string, protected string, replaceable string, variability string, inner string, outer string, causality string) bool {
+func (o *ZmqObject) SetComponentProperties(className string, newComponentName string, final string, protected string, replaceable string, variability string, inner string, outer string, causality string) (bool, string) {
 	// setComponentProperties(PID_Controller,PI,{true,false,true,false}, {""}, {false,false}, {""})
 	causality = strings.Replace(causality, "none", "", 1)
 	cmdParameterList := []string{className, ",", newComponentName, ",{", final, ",false,", protected, ",", replaceable,
@@ -691,9 +691,9 @@ func (o *ZmqObject) SetComponentProperties(className string, newComponentName st
 	result, ok := o.SendExpressionNoParsed(cmd)
 	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
 	if ok && string(result) == "Ok" {
-		return true
+		return true, ""
 	}
-	return false
+	return false, "设置模型组件的属性失败"
 }
 
 func (o *ZmqObject) SetComponentComment(className, componentName, comment string) (bool, string) {
