@@ -25,12 +25,12 @@ func renameComponentInClass(className, oldComponentName, newComponentName string
 	return false, "设置失败，请检查是否修改了继承模型的组件"
 }
 
-func SetComponentProperties(className, componentName, newComponentName, oldComponentName, final, protected, replaceable, variability, inner, outer, causality, comment, dimensions string) (bool, string) {
+func SetComponentProperties(className, newComponentName, oldComponentName, final, protected, replaceable, variability, inner, outer, causality, comment, dimensions string) (bool, string) {
 	renameResult, msg := renameComponentInClass(className, oldComponentName, newComponentName)
 	ScpResult := omc.OMC.SetComponentProperties(className, newComponentName, final, protected, replaceable, variability, inner, outer, causality)
-	_ = omc.OMC.SetComponentComment(className, componentName, comment)
-	_ = omc.OMC.SetComponentDimensions(className, componentName, dimensions)
-	if ScpResult && renameResult {
+	Cms, msg := omc.OMC.SetComponentComment(className, newComponentName, comment)
+	Dms, msg := omc.OMC.SetComponentDimensions(className, newComponentName, dimensions)
+	if ScpResult && renameResult && Cms && Dms {
 		return true, msg
 	}
 	return false, msg

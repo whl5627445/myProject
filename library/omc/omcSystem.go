@@ -696,24 +696,24 @@ func (o *ZmqObject) SetComponentProperties(className string, newComponentName st
 	return false
 }
 
-func (o *ZmqObject) SetComponentComment(className, componentName, comment string) bool {
+func (o *ZmqObject) SetComponentComment(className, componentName, comment string) (bool, string) {
 	cmd := "setComponentComment(" + className + "," + componentName + ",\"" + comment + "\")"
 	result, ok := o.SendExpressionNoParsed(cmd)
 	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
-	if ok && string(result) != "Error" {
-		return true
+	if ok && string(result) == "Ok" {
+		return true, ""
 	}
-	return false
+	return false, "组件注释设置失败"
 }
 
-func (o *ZmqObject) SetComponentDimensions(className, componentName, dimensions string) bool {
+func (o *ZmqObject) SetComponentDimensions(className, componentName, dimensions string) (bool, string) {
 	cmd := "setComponentDimensions(" + className + "," + componentName + ",{" + dimensions + "})"
 	result, ok := o.SendExpressionNoParsed(cmd)
 	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
-	if ok && string(result) != "Error" {
-		return true
+	if ok && string(result) == "Ok" {
+		return true, ""
 	}
-	return false
+	return false, "组件维数设置失败"
 }
 
 // ExistClass 判断模型名称是否已经存在

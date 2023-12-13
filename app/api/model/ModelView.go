@@ -524,7 +524,6 @@ func SetComponentPropertiesView(c *gin.Context) {
 	result, msg := service.SetComponentProperties(
 		item.ModelName,
 		item.NewComponentName,
-		item.NewComponentName,
 		item.OldComponentName,
 		strconv.FormatBool(item.Final),
 		strconv.FormatBool(item.Protected),

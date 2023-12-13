@@ -565,7 +565,7 @@ func CADMappingModel(modelName string, classNameList []string, modelInformationL
 			endName := componentNames[i+1]["name"] + ".port_a"
 			startCoordinate := componentNames[i]["origin"]
 			endCoordinate := componentNames[i+1]["origin"]
-			AddConnection(modelName, startName, endName, "0,127,255", []string{startCoordinate, endCoordinate})
+			AddConnection(modelName, startName, endName, "0,0,127", []string{startCoordinate, endCoordinate})
 		}
 	}
 }
@@ -615,9 +615,9 @@ func ThreeWayManage(modelName string, componentsNames map[string][]map[string]st
 			}
 			split := strings.Split(endComponentName, "_")
 			if strings.Contains(endComponentName, "pipe") && endSuffix == "port_1" {
-				AddConnection(modelName, startComponentName+"."+startSuffix, split[0]+"."+"port_b", "0,127,255", []string{startLine, endLine})
+				AddConnection(modelName, startComponentName+"."+startSuffix, split[0]+"."+"port_b", "0,0,127", []string{startLine, endLine})
 			} else {
-				AddConnection(modelName, startComponentName+"."+startSuffix, split[0]+"."+"port_a", "0,127,255", []string{startLine, endLine})
+				AddConnection(modelName, startComponentName+"."+startSuffix, split[0]+"."+"port_a", "0,0,127", []string{startLine, endLine})
 			}
 		} else if len(endCom) != 1 {
 			var startComponentName string
@@ -628,9 +628,9 @@ func ThreeWayManage(modelName string, componentsNames map[string][]map[string]st
 			split := strings.Split(endComponentName, "_")
 			index := split[len(split)-1]
 			if index == strconv.Itoa(len(endCom)) {
-				AddConnection(modelName, startComponentName+"."+startSuffix, split[0]+"."+"port_b", "0,127,255", []string{startLine, endLine})
+				AddConnection(modelName, startComponentName+"."+startSuffix, split[0]+"."+"port_b", "0,0,127", []string{startLine, endLine})
 			} else {
-				AddConnection(modelName, startComponentName+"."+startSuffix, split[0]+"."+"port_a", "0,127,255", []string{startLine, endLine})
+				AddConnection(modelName, startComponentName+"."+startSuffix, split[0]+"."+"port_a", "0,0,127", []string{startLine, endLine})
 			}
 		}
 	}
