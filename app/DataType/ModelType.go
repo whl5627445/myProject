@@ -51,6 +51,8 @@ type SetComponentPropertiesData struct {
 	Inner            bool   `json:"inner" binding:""`
 	Outer            bool   `json:"outer" binding:""`
 	Causality        string `json:"causality" binding:""`
+	Comment          string `json:"comment" binding:""`
+	Dimensions       string `json:"dimensions" binding:""`
 }
 
 type CopyClassData struct {

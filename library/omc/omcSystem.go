@@ -696,6 +696,26 @@ func (o *ZmqObject) SetComponentProperties(className string, newComponentName st
 	return false
 }
 
+func (o *ZmqObject) SetComponentComment(className, componentName, comment string) bool {
+	cmd := "setComponentComment(" + className + "," + componentName + ",\"" + comment + "\")"
+	result, ok := o.SendExpressionNoParsed(cmd)
+	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
+	if ok && string(result) != "Error" {
+		return true
+	}
+	return false
+}
+
+func (o *ZmqObject) SetComponentDimensions(className, componentName, dimensions string) bool {
+	cmd := "setComponentDimensions(" + className + "," + componentName + ",{" + dimensions + "})"
+	result, ok := o.SendExpressionNoParsed(cmd)
+	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
+	if ok && string(result) != "Error" {
+		return true
+	}
+	return false
+}
+
 // ExistClass 判断模型名称是否已经存在
 func (o *ZmqObject) ExistClass(className string) bool {
 	cmd := "existClass(" + className + ")"

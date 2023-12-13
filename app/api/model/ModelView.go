@@ -498,6 +498,8 @@ func SetComponentPropertiesView(c *gin.Context) {
 		## inner: "true" or "false",
 		## outer: "true" or "false",
 		## causality: "output" or "input"
+		## comment: 组件注释
+		## dimensions: 维数
 	*/
 	var res DataType.ResponseData
 	var item DataType.SetComponentPropertiesData
@@ -522,6 +524,7 @@ func SetComponentPropertiesView(c *gin.Context) {
 	result, msg := service.SetComponentProperties(
 		item.ModelName,
 		item.NewComponentName,
+		item.NewComponentName,
 		item.OldComponentName,
 		strconv.FormatBool(item.Final),
 		strconv.FormatBool(item.Protected),
@@ -529,7 +532,9 @@ func SetComponentPropertiesView(c *gin.Context) {
 		item.Variability,
 		strconv.FormatBool(item.Inner),
 		strconv.FormatBool(item.Outer),
-		item.Causality)
+		item.Causality,
+		item.Comment,
+		item.Dimensions)
 	if result {
 		service.ModelSave(item.ModelName)
 		res.Msg = "设置完成"
