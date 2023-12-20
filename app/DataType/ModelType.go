@@ -24,6 +24,7 @@ type ParameterData struct {
 	IsExtend       bool   `json:"is_extend" binding:"required"`
 	ParameterName  string `json:"parameter_name" binding:"required"`
 	ParameterValue string `json:"parameter_value" binding:"required"`
+	Unit           string `json:"unit" binding:""`
 }
 
 type AddComponentParametersData struct {
@@ -90,6 +91,12 @@ type DeleteComponentMap struct {
 type DeleteComponentData struct {
 	PackageId     string               `json:"package_id" binding:"required"`
 	ComponentList []DeleteComponentMap `json:"component_list" binding:"required"`
+}
+
+type BatchUpdateComponentData struct {
+	PackageId            string                `json:"package_id" binding:"required"`
+	ModelName            string                `json:"model_name" binding:"required"`
+	UpdateComponentDatas []UpdateComponentData `json:"batch_update_data" binding:"required"`
 }
 
 type UpdateComponentData struct {

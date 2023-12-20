@@ -647,6 +647,32 @@ func (o *ZmqObject) SetElementModifierValue(className string, parameter string, 
 	return false
 }
 
+// SetElementModifierUnit 修改组件的参数的单位
+func (o *ZmqObject) SetElementModifierUnit(modelName, parameterName, unit string) bool {
+	parameter := strings.ReplaceAll(parameterName, ".start", ".displayUnit")
+	cmd := "setElementModifierValue(" + modelName + ", " + parameter + ", $Code(=\"" + unit + "\"))"
+
+	data, ok := o.SendExpressionNoParsed(cmd)
+	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
+	if ok && (string(data) == "Ok" || string(data) == "true") {
+		return true
+	}
+	return false
+}
+
+// setComponentParameterStart 修改组件参数的初始值
+func (o *ZmqObject) setComponentParameterStart(modelName, componentName, variateName, start string) (bool, string) {
+	parameter := componentName + "." + variateName + ".start"
+	cmd := "setElementModifierValue(" + modelName + ", " + parameter + ", $Code(=" + start + "))"
+
+	data, ok := o.SendExpressionNoParsed(cmd)
+	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
+	if ok && (string(data) == "Ok" || string(data) == "true") {
+		return true, ""
+	}
+	return false, "设置和组件参数单位失败"
+}
+
 // SetExtendsModifierValue  设置组件修饰符的值
 func (o *ZmqObject) SetExtendsModifierValue(className, extendsName, parameter, value string) bool {
 	// setExtendsModifierValue(test12345, Modelica.Blocks.Examples.PID_Controller, kinematicPTP.startTime, $Code(=10))
@@ -662,6 +688,18 @@ func (o *ZmqObject) SetExtendsModifierValue(className, extendsName, parameter, v
 	//	code = "()"
 	// }
 	cmd := "setExtendsModifierValue(" + className + ", " + extendsName + ", " + parameter + ", $Code(" + code + "))"
+	data, ok := o.SendExpressionNoParsed(cmd)
+	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
+	if ok && (string(data) == "Ok" || string(data) == "true") {
+		return true
+	}
+	return false
+}
+
+func (o *ZmqObject) SetExtendsModifierUnit(className, extendsName, parameter, unit string) bool {
+	// setExtendsModifierValue(test12345, Modelica.Blocks.Examples.PID_Controller, kinematicPTP.startTime, $Code(=10))
+	parameter = strings.ReplaceAll(parameter, ".start", ".displayUnit")
+	cmd := "setExtendsModifierValue(" + className + ", " + extendsName + ", " + parameter + ", $Code(=\"" + unit + "\"))"
 	data, ok := o.SendExpressionNoParsed(cmd)
 	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
 	if ok && (string(data) == "Ok" || string(data) == "true") {

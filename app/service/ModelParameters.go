@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytes"
 	"errors"
 	"strings"
 
@@ -401,7 +402,8 @@ func (m *modelParameters) getParameter(className string, varName string, p []any
 	}
 	m.deduplicationMap[varName] = true
 	isExtend := m.extend
-	dataDefault := map[string]any{"tab": "General", "type": "Normal", "group": "Parameters", "defaultvalue": "", "value": "", "unit": []string{getUnit(className)}, "is_extend": isExtend, "extend_name": m.extendLevel2Name}
+	dataDefault := map[string]any{"tab": "General", "type": "Normal", "group": "Parameters", "defaultvalue": "", "value": "", "is_extend": isExtend, "extend_name": m.extendLevel2Name}
+
 	dataDefault["unit_related"] = getDerivedClassModifierNamesAndValues(className)
 	modifier := m.componentName + "." + varName
 	elementModifierData := m.elementModifierNamesMap[modifier] // 查找有没有标识符标记该组件或参数
@@ -412,6 +414,14 @@ func (m *modelParameters) getParameter(className string, varName string, p []any
 	if m.extendsModifierNamesMap[emName] == nil {
 		emName = m.componentName + "." + varName
 	}
+	value := omc.OMC.GetElementModifierValue(m.modelName, emName+".displayUnit")
+	value = string(bytes.ReplaceAll([]byte(value), []byte("\""), []byte("")))
+	if value != "" {
+		dataDefault["unit"] = value
+	} else {
+		dataDefault["unit"] = getUnit(className)
+	}
+	dataDefault["unit_dictionary"] = unitDictionary(dataDefault["unit"].(string))
 	if m.extendsModifierNamesMap[emName] != nil {
 		extendsModifier := m.extendsModifierNamesMap[emName]
 		IsExtendsModifierFinal = omc.OMC.IsExtendsModifierFinal(extendsModifier["child"].(string), extendsModifier["parent"].(string), varName)
@@ -673,8 +683,18 @@ func SetElementModifierValue(className string, parameter, Value string) bool {
 	return result
 }
 
+func SetElementModifierUnit(modelName, parameterName, unit string) bool {
+	result := omc.OMC.SetElementModifierUnit(modelName, parameterName, unit)
+	return result
+}
+
 func SetExtendsModifierValue(className, extentsName, parameter, Value string) bool {
 	result := omc.OMC.SetExtendsModifierValue(className, extentsName, parameter, Value)
+	return result
+}
+
+func SetExtendsModifierUnit(className, extendsName, parameter, unit string) bool {
+	result := omc.OMC.SetExtendsModifierUnit(className, extendsName, parameter, unit)
 	return result
 }
 
@@ -719,4 +739,45 @@ func checkComponentParameter(className, varName string) error {
 		return errors.New("参数名已存在")
 	}
 	return nil
+}
+
+func unitDictionary(unit string) []string {
+	units := [][]string{
+		{"rad", "deg"},
+		{"rad/s", "deg/s", "Hz", "rpm", "rev/min"},
+		{"m", "km", "mm"},
+		{"m2", "mm2", "cm2"},
+		{"m3", "cm3", "ml", "l"},
+		{"s", "ms,", "min", "h"},
+		{"m/s", "km/h,", "mm/s"},
+		{"kg", "g,"},
+		{"kg/m3", "g/cm3", "kg/l"},
+		{"N", "mN,", "kN"},
+		{"Pa", "kPa,", "MPa", "bar", "psi"},
+		{"1", "%"},
+		{"J", "kJ", "kWh", "Wh"},
+		{"W", "kW", "MW", "mW"},
+		{"m3/s", "l/min", "l/h", "m3/h"},
+		{"K", "degC"},
+		{"1/K", "ppm/K"},
+		{"A", "mA", "kA"},
+		{"V", "mV", " kV"},
+		{"C", "As", "Ah", "mAh"},
+		{"F", "µF"},
+	}
+	for _, v := range units {
+		if contains(v, unit) {
+			return v
+		}
+	}
+	return nil
+}
+
+func contains(arr []string, s string) bool {
+	for _, v := range arr {
+		if s == v {
+			return true
+		}
+	}
+	return false
 }

@@ -37,6 +37,7 @@ func ModelRouter(g *gin.Engine) {
 		Models.POST("/component/add", API.AddModelComponentView)
 		Models.POST("/component/delete", API.DeleteModelComponentView)
 		Models.POST("/component/update", API.UpdateModelComponentView)
+		Models.POST("/component/batch/update", API.BatchUpdateModelComponentView)
 
 		Models.POST("/connection/create", API.CreateConnectionAnnotationView)
 		Models.POST("/connection/delete", API.DeleteConnectionAnnotationView)

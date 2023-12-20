@@ -362,11 +362,14 @@ func SetModelParametersView(c *gin.Context) {
 	}
 	result := false
 	errParameterName := []string{}
+
 	for _, parameter := range item.Parameter {
 		if !parameter.IsExtend {
 			result = service.SetElementModifierValue(item.ModelName, parameter.ParameterName, parameter.ParameterValue)
+			result = service.SetElementModifierUnit(item.ModelName, parameter.ParameterName, parameter.Unit)
 		} else {
 			result = service.SetExtendsModifierValue(item.ModelName, parameter.ExtendName, parameter.ParameterName, parameter.ParameterValue)
+			result = service.SetExtendsModifierUnit(item.ModelName, parameter.ExtendName, parameter.ParameterName, parameter.Unit)
 		}
 		if !result {
 			errParameterName = append(errParameterName, parameter.ParameterName)
@@ -377,7 +380,7 @@ func SetModelParametersView(c *gin.Context) {
 		service.ModelSave(item.ModelName)
 		res.Msg = "设置完成"
 	} else {
-		res.Err = "设置失败: 请检查参数是否正确"
+		res.Err = "设置失败: 请检查参数值或单位是否正确-" + strings.Join(errParameterName, ",")
 		res.Status = 2
 	}
 	c.JSON(http.StatusOK, res)
@@ -870,6 +873,51 @@ func UpdateModelComponentView(c *gin.Context) {
 		}
 	}
 	service.ModelSave(item.ModelName)
+	res.Msg = "更新组件成功"
+	c.JSON(http.StatusOK, res)
+}
+
+func BatchUpdateModelComponentView(c *gin.Context) {
+	/*
+		# 批量更新模型当中的模型组件
+		## package_id： 包id
+		## model_name: 需要更新的组件在哪个模型当中， 例如"Modelica.Blocks.Examples.PID_Controller"
+		## batch_update_data 需要更新的组件参数数组集
+	*/
+
+	userSpaceId := c.GetHeader("space_id")
+	var res DataType.ResponseData
+	var data DataType.BatchUpdateComponentData
+	err := c.BindJSON(&data)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+
+	var modelPackage DataBaseModel.YssimModels
+	dbModel.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", data.PackageId, []string{userName, "sys"}, []string{userSpaceId, "0"}).First(&modelPackage)
+
+	if modelPackage.SysUser == "sys" || modelPackage.Encryption {
+		res.Err = "该模型不允许此操作"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	for _, item := range data.UpdateComponentDatas {
+		result := service.UpdateComponent(item.ComponentName, item.ComponentClassName, item.ModelName, item.Origin, item.Rotation, item.Extent)
+		if !result {
+			res.Err = item.ComponentName + "更新组件失败"
+			res.Status = 2
+			c.JSON(http.StatusOK, res)
+			return
+		} else {
+			for _, connect := range item.ConnectionList {
+				service.UpdateConnection(item.ModelName, connect.ConnectStart, connect.ConnectEnd, connect.Color, connect.LinePoints)
+			}
+		}
+	}
+
+	service.ModelSave(data.ModelName)
 	res.Msg = "更新组件成功"
 	c.JSON(http.StatusOK, res)
 }
