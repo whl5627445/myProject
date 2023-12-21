@@ -1,7 +1,7 @@
 package sliceOperation
 
-func Contains(arr []string, s string) bool {
-	for _, v := range arr {
+func Contains(data []string, s string) bool {
+	for _, v := range data {
 		if s == v {
 			return true
 		}
