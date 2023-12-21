@@ -1,6 +1,10 @@
 package service
 
-import "yssim-go/library/omc"
+import (
+	"yssim-go/config"
+	"yssim-go/library/omc"
+	"yssim-go/library/sliceOperation"
+)
 
 func ConvertUnits(s1, s2 string) []string {
 	data := []string{}
@@ -26,4 +30,14 @@ func ConvertUnits(s1, s2 string) []string {
 		data = append(data, i.(string))
 	}
 	return data
+}
+
+func unitDictionary(unit string) []string {
+	for _, v := range config.Units {
+		if sliceOperation.Contains(v, unit) {
+			return v
+		}
+	}
+
+	return nil
 }
