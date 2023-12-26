@@ -21,8 +21,8 @@ var ModelicaKeywords = map[string]bool{"model": true, "class": true, "connector"
 // }
 
 var Units = [][]string{{"rad", "deg"}, {"rad/s", "deg/s", "Hz", "rpm", "rev/min"}, {"m", "km", "mm"}, {"m2", "mm2", "cm2"}, {"m3", "cm3", "ml", "l"},
-	{"s", "ms,", "min", "h"}, {"m/s", "km/h,", "mm/s"}, {"kg", "g,"}, {"kg/m3", "g/cm3", "kg/l"}, {"N", "mN,", "kN"}, {"Pa", "kPa,", "MPa", "bar", "psi"},
-	{"1", "%"}, {"J", "kJ", "kWh", "Wh"}, {"W", "kW", "MW", "mW"}, {"m3/s", "l/min", "l/h", "m3/h"}, {"K", "degC"}, {"1/K", "ppm/K"}, {"A", "mA", "kA"}, {"V", "mV", " kV"},
+	{"s", "ms", "min", "h"}, {"m/s", "km/h", "mm/s"}, {"kg", "g"}, {"kg/m3", "g/cm3", "kg/l"}, {"N", "mN", "kN"}, {"Pa", "kPa", "MPa", "bar", "psi"},
+	{"1", "%"}, {"J", "kJ", "kWh", "Wh"}, {"W", "kW", "MW", "mW"}, {"m3/s", "l/min", "l/h", "m3/h"}, {"K", "degC"}, {"1/K", "ppm/K"}, {"A", "mA", "kA"}, {"V", "mV", "kV"},
 	{"C", "As", "Ah", "mAh"}, {"F", "µF"},
 }
 var MoldelSimutalionStatus = map[string]string{"1": "仿真排队中", "2": "正在仿真", "3": "仿真失败", "4": "仿真完成", "5": "删除任务", "6": "正在编译"}

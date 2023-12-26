@@ -38,6 +38,5 @@ func unitDictionary(unit string) []string {
 			return v
 		}
 	}
-
 	return nil
 }
