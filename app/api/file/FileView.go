@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/DataType"
 	"yssim-go/app/service"
@@ -147,7 +148,7 @@ func UpdateModelPackageView(c *gin.Context) {
 	username := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
 	var packageRecord DataBaseModel.YssimModels
-	parentName := ""
+	// parentName := ""
 	modelStr := item.ModelStr
 	DB.Where("id = ? AND sys_or_user = ? AND userspace_id = ?", item.PackageId, username, userSpaceId).First(&packageRecord)
 	if packageRecord.ID == "" {
@@ -156,15 +157,34 @@ func UpdateModelPackageView(c *gin.Context) {
 	}
 	nameList := strings.Split(item.ModelName, ".")
 	if len(nameList) > 1 {
-		parentName = strings.Join(nameList[:len(nameList)-1], ".")
+		parentName := strings.Join(nameList[:len(nameList)-1], ".")
 		modelStr = "within " + parentName + ";" + item.ModelStr
 	}
-	oldCode := service.GetModelCode(item.ModelName)
-	parseResult, ok := service.ParseCodeString(modelStr, item.ModelName)
+	// oldCode := service.GetModelCode(item.ModelName)
+	modelPath := packageRecord.FilePath
+	if strings.HasSuffix(packageRecord.FilePath, "/package.mo") {
+		modelPath = service.GetSourceFile(item.ModelName)
+	}
+
+	parseResult, ok := service.ParseCodeString(modelStr, modelPath)
 	if ok && len(parseResult) > 0 {
-		loadResult := service.LoadCodeString(modelStr, item.ModelName)
+		isExist := service.IsExistPackage(parseResult)
+		if isExist && (item.ModelName != parseResult) {
+			res.Err = "模型名称重复"
+			res.Status = 2
+			c.JSON(http.StatusOK, res)
+			return
+		}
+		loadResult := service.LoadCodeString(modelStr, modelPath)
 		if loadResult {
-			service.ModelSave(item.ModelName)
+			if parseResult != item.ModelName {
+				// 判断是否是子模型
+				if !strings.Contains(item.ModelName, ".") {
+					DB.Model(DataBaseModel.YssimModels{}).Where("id = ? AND sys_or_user = ? AND userspace_id = ?", item.PackageId, username, userSpaceId).Update("package_name", parseResult)
+				}
+				service.DeleteLibrary(item.ModelName)
+			}
+			service.ModelSave(parseResult)
 			res.Data = map[string]string{
 				"id":        packageRecord.ID,
 				"model_str": modelStr,
@@ -174,9 +194,10 @@ func UpdateModelPackageView(c *gin.Context) {
 			c.JSON(http.StatusOK, res)
 			return
 		}
-	} else {
-		service.LoadCodeString(oldCode, packageRecord.PackageName)
 	}
+	// else {
+	// 	service.LoadCodeString(oldCode, packageRecord.PackageName)
+	// }
 	res.Err = "语法错误，请重新检查"
 	res.Status = 2
 	c.JSON(http.StatusOK, res)
@@ -266,13 +287,13 @@ func CreateModelPackageView(c *gin.Context) {
 			if item.Vars.InsertTo == "" {
 				res.Data = map[string]string{
 					"model_name": newPackage.PackageName,
-					//"model_str": service.GetModelCode(createPackageName),
+					// "model_str": service.GetModelCode(createPackageName),
 					"id": newPackage.ID,
 				}
 			} else {
 				res.Data = map[string]string{
 					"model_name": item.Vars.InsertTo + "." + item.Name,
-					//"model_str": service.GetModelCode(createPackageName),
+					// "model_str": service.GetModelCode(createPackageName),
 					"id": newPackage.ID,
 				}
 			}
@@ -439,10 +460,10 @@ func GetResultFileView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
-	//recordId := c.Query("record_id")
+	// recordId := c.Query("record_id")
 	var resultRecord DataBaseModel.YssimSimulateRecord
 	DB.Where("id = ? AND username = ? AND userspace_id = ? ", item.RecordId, username, userSpaceId).First(&resultRecord)
-	//ok := service.GrpcMatToCsv(resultRecord.SimulateModelResultPath)
+	// ok := service.GrpcMatToCsv(resultRecord.SimulateModelResultPath)
 	if resultRecord.SimulateModelResultPath != "" && resultRecord.SimulateStatus == "4" {
 		res.Data = map[string]string{"url": resultRecord.SimulateModelResultPath + "result_res.mat"}
 	} else {
@@ -458,7 +479,7 @@ func GetFilterResultFileView(c *gin.Context) {
 	*/
 	var res DataType.ResponseData
 	username := c.GetHeader("username")
-	//userSpaceId := c.GetHeader("space_id")
+	// userSpaceId := c.GetHeader("space_id")
 	var items []DataType.FilterResultFileData
 	err := c.BindJSON(&items)
 	if err != nil {
@@ -483,7 +504,7 @@ func GetFilterResultFileView(c *gin.Context) {
 			return
 		}
 	}
-	//判断输入的id数和数据库查询的id数是否一致
+	// 判断输入的id数和数据库查询的id数是否一致
 	if len(recordList) != len(recordIdList) {
 		c.JSON(http.StatusBadRequest, "判断输入的id数和数据库查询的id数是否一致")
 		return
@@ -499,8 +520,8 @@ func GetFilterResultFileView(c *gin.Context) {
 
 	ok = service.FilterSimulationResult(itemsMap, recordDict, newFileName)
 	if ok {
-		//c.Header("content-disposition", `attachment; filename=`+recordList[0].SimulateModelName+".csv")
-		//c.File(newFileName)
+		// c.Header("content-disposition", `attachment; filename=`+recordList[0].SimulateModelName+".csv")
+		// c.File(newFileName)
 		res.Data = map[string]string{"url": newFileName}
 		c.JSON(http.StatusOK, res)
 		return
@@ -849,8 +870,8 @@ func DownloadResourcesFileView(c *gin.Context) {
 		filePath = item.Path
 	}
 	filePathAll := service.GetResourcesDir(packageModel.PackageName, filePath)
-	//c.Header("content-disposition", `attachment;filename=`+url.QueryEscape(item.Path))
-	//c.Data(http.StatusOK, "application/octet-stream", fileData)
+	// c.Header("content-disposition", `attachment;filename=`+url.QueryEscape(item.Path))
+	// c.Data(http.StatusOK, "application/octet-stream", fileData)
 	res.Data = map[string]any{
 		"url": filePathAll,
 	}
@@ -889,13 +910,13 @@ func ResourcesImagesGetView(c *gin.Context) {
 		# 静态资源文件png图片的获取
 		## path: 文件相对路径
 	*/
-	//var item getResourcesImagesData
+	// var item getResourcesImagesData
 	path := c.Query("path")
-	//err := c.BindJSON(&item)
-	//if err != nil {
+	// err := c.BindJSON(&item)
+	// if err != nil {
 	//	c.JSON(http.StatusBadRequest, "not found")
 	//	return
-	//}
+	// }
 	fileData := service.GetResourcesImages(path)
 	c.Header("content-disposition", `attachment;filename=`+url.QueryEscape("image.png"))
 	c.Data(http.StatusOK, "application/octet-stream", fileData)
@@ -926,16 +947,16 @@ func ModelIconSetView(c *gin.Context) {
 		return
 	}
 
-	//iconFileNameList := strings.Split(item.Path, ".")
-	//iconFileNameSuffix := iconFileNameList[len(iconFileNameList)-1]
-	//iconType := map[string]bool{"png": true}
-	//file := service.GetResourcesImages(item.Path)
-	//if !iconType[iconFileNameSuffix] || len(file) == 0 {
+	// iconFileNameList := strings.Split(item.Path, ".")
+	// iconFileNameSuffix := iconFileNameList[len(iconFileNameList)-1]
+	// iconType := map[string]bool{"png": true}
+	// file := service.GetResourcesImages(item.Path)
+	// if !iconType[iconFileNameSuffix] || len(file) == 0 {
 	//	res.Err = ""
 	//	res.Status = 2
 	//	c.JSON(http.StatusBadRequest, res)
 	//	return
-	//}
+	// }
 	file := service.GetResourcesImages(item.Path)
 	if !strings.HasSuffix(item.Path, ".png") || len(file) == 0 {
 		res.Err = ""

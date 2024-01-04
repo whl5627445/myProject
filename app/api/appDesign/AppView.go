@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/DataType"
 	"yssim-go/app/service"
@@ -27,8 +28,8 @@ func MultipleSimulateView(c *gin.Context) {
 		开发人： 徐庆达
 	*/
 	var res DataType.ResponseData
-	//userName := c.GetHeader("username")
-	//userSpaceId := c.GetHeader("space_id")
+	// userName := c.GetHeader("username")
+	// userSpaceId := c.GetHeader("space_id")
 	var item DataType.AppMultipleSimulateData
 	err := c.BindJSON(&item)
 	if err != nil {
@@ -269,12 +270,12 @@ func GetModelStateView(c *gin.Context) {
 	resData := map[string]any{
 		"is_preview": appPageRecord.IsPreview,
 		"is_release": appPageRecord.Release,
-		//"release_state": appPageRecord.ReleaseState,
+		// "release_state": appPageRecord.ReleaseState,
 		"release_time":         appPageRecord.ReleaseTime * 1000,
 		"mul_sim_state":        appPageRecord.MulSimulateState,
 		"mul_sim_time":         appPageRecord.MulSimulateTime * 1000,
 		"mul_sim_message_read": appPageRecord.MulSimulateMessageRead,
-		//"release_message_read": appPageRecord.ReleaseMessageRead,
+		// "release_message_read": appPageRecord.ReleaseMessageRead,
 	}
 	res.Data = resData
 	c.JSON(http.StatusOK, res)
@@ -327,7 +328,7 @@ func GetAppSpaceView(c *gin.Context) {
 	*/
 	var res DataType.ResponseData
 	userName := c.GetHeader("username")
-	//userSpaceId := c.GetHeader("space_id")
+	// userSpaceId := c.GetHeader("space_id")
 	keyWords := c.Query("keywords")
 	release := c.Query("release")
 	collect := c.Query("collect")
@@ -543,7 +544,7 @@ func DeleteAppSpaceView(c *gin.Context) {
 	}
 	var space DataBaseModel.AppSpace
 	err = DB.Where("id IN ? AND username = ?", item.SpaceId, userName).Delete(&space).Error
-	//err = DB.Delete(&space)
+	// err = DB.Delete(&space)
 	if err != nil {
 		log.Println("删除app空间时保存数据库出现错误：", err)
 		res.Err = "删除失败，请稍后再试"
@@ -820,7 +821,7 @@ func CreatePageComponentView(c *gin.Context) {
 	*/
 	var res DataType.ResponseData
 	userName := c.GetHeader("username")
-	//spaceId := c.GetHeader("space_id")
+	// spaceId := c.GetHeader("space_id")
 	var item DataType.CreatePageComponentData
 	err := c.BindJSON(&item)
 	if err != nil {
@@ -829,7 +830,7 @@ func CreatePageComponentView(c *gin.Context) {
 		return
 	}
 	var page DataBaseModel.AppPage
-	//DB.Where("id = ? AND username = ?", item.PageId, userName).First(&page)
+	// DB.Where("id = ? AND username = ?", item.PageId, userName).First(&page)
 	DB.Where("id = ? AND app_space_id = ? AND username = ?", item.PageId, item.SpaceId, userName).First(&page)
 	if page.ID == "" {
 		c.JSON(http.StatusBadRequest, "")
@@ -958,7 +959,7 @@ func EditPageComponentView(c *gin.Context) {
 		return
 	}
 
-	//err = DB.Model(DataBaseModel.AppPageComponent{}).Select("*").Where("id = ? AND page_id = ?", item.Id, item.PageId).Updates(&item).Error
+	// err = DB.Model(DataBaseModel.AppPageComponent{}).Select("*").Where("id = ? AND page_id = ?", item.Id, item.PageId).Updates(&item).Error
 	err = DB.Model(DataBaseModel.AppPageComponent{}).Where("id = ? AND page_id = ?", item.Id, item.PageId).Updates(map[string]any{
 		"type":                item.Type,
 		"input_name":          item.InputName,
@@ -1019,7 +1020,7 @@ func ConfigEditPageComponentView(c *gin.Context) {
 		return
 	}
 
-	//err = DB.Model(DataBaseModel.AppPageComponent{}).Select("*").Where("id = ? AND page_id = ?", item.Id, item.PageId).Updates(&item).Error
+	// err = DB.Model(DataBaseModel.AppPageComponent{}).Select("*").Where("id = ? AND page_id = ?", item.Id, item.PageId).Updates(&item).Error
 	err = DB.Model(DataBaseModel.AppPageComponent{}).Where("id = ? AND page_id = ?", item.Id, item.PageId).Updates(map[string]any{
 		"type":                item.Type,
 		"width":               item.Width,
@@ -1076,7 +1077,7 @@ func EditPageComponentDataView(c *gin.Context) {
 		return
 	}
 
-	//err = DB.Model(DataBaseModel.AppPageComponent{}).Select("*").Where("id = ? AND page_id = ?", item.Id, item.PageId).Updates(&item).Error
+	// err = DB.Model(DataBaseModel.AppPageComponent{}).Select("*").Where("id = ? AND page_id = ?", item.Id, item.PageId).Updates(&item).Error
 	err = DB.Model(DataBaseModel.AppPageComponent{}).Where("id = ? AND page_id = ?", item.Id, item.PageId).Updates(map[string]any{
 		"input_name": item.InputName,
 		"option":     item.Option,
@@ -1113,13 +1114,13 @@ func DeletePageComponentView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
-	//var space DataBaseModel.AppSpace
+	// var space DataBaseModel.AppSpace
 	var page DataBaseModel.AppPage
 	var components DataBaseModel.AppPageComponent
-	//DB.Where("id = ? AND username = ? ",item.)
+	// DB.Where("id = ? AND username = ? ",item.)
 	DB.Where("id = ? AND username = ? ", item.PageId, userName).First(&page)
 	err = DB.Model(DataBaseModel.AppPageComponent{}).Where("id IN ? AND page_id = ?", item.ComponentsList, page.ID).Delete(&components).Error
-	//err = DB.Model(DataBaseModel.AppPageComponent{}).Where("id IN ? AND page_id = ?", item.ComponentsList, item.PageId).Delete(&components).Error
+	// err = DB.Model(DataBaseModel.AppPageComponent{}).Where("id IN ? AND page_id = ?", item.ComponentsList, item.PageId).Delete(&components).Error
 	if err != nil {
 		log.Println("删除app空间页面组件时保存数据库出现错误：", err)
 		res.Err = "删除失败，请稍后再试"
@@ -1223,8 +1224,8 @@ func GetDatasourceInputView(c *gin.Context) {
 		开发人： 徐庆达
 	*/
 
-	//username := c.GetHeader("username")
-	//userSpaceId := c.GetHeader("space_id")
+	// username := c.GetHeader("username")
+	// userSpaceId := c.GetHeader("space_id")
 	recordId := c.Query("record_id")
 	parentNode := c.Query("parent_node")
 	keyWords := c.Query("key_words")
@@ -1252,8 +1253,8 @@ func GetDatasourceOutputView(c *gin.Context) {
 		开发人： 徐庆达
 	*/
 
-	//username := c.GetHeader("username")
-	//userSpaceId := c.GetHeader("space_id")
+	// username := c.GetHeader("username")
+	// userSpaceId := c.GetHeader("space_id")
 	recordId := c.Query("record_id")
 	parentNode := c.Query("parent_node")
 	keyWords := c.Query("key_words")
@@ -1267,11 +1268,11 @@ func GetDatasourceOutputView(c *gin.Context) {
 	var res DataType.ResponseData
 	if record.CompilePath != "" {
 		if record.CompileType == "DM" {
-			//DM生成的fmu解压后的xml文件
+			// DM生成的fmu解压后的xml文件
 			result := service.DymolaSimulationResultTree(record.CompilePath+"result_init.xml", parentNode, keyWords)
 			res.Data = result
 		} else {
-			//OMC仿真完输出的xml文件
+			// OMC仿真完输出的xml文件
 			result := service.SimulationResultTree(record.CompilePath+"result_init.xml", parentNode, keyWords)
 			res.Data = result
 		}
@@ -1475,7 +1476,7 @@ func AppPagePreviewAccessView(c *gin.Context) {
 		# 预览的页面数据获取接口
 	*/
 	var res DataType.ResponseData
-	//userName := c.GetHeader("username")
+	// userName := c.GetHeader("username")
 	spaceId := c.Query("space_id")
 	pageId := c.Query("page_id")
 	var page DataBaseModel.AppPage
@@ -1518,7 +1519,7 @@ func AppPageReleaseAccessView(c *gin.Context) {
 		# 访问发布成功的页面数据获取接口
 	*/
 	var res DataType.ResponseData
-	//userName := c.GetHeader("username")
+	// userName := c.GetHeader("username")
 	spaceId := c.Query("space_id")
 	pageId := c.Query("page_id")
 	var page DataBaseModel.AppPage
@@ -1546,7 +1547,7 @@ func SetComponentBasicInformationView(c *gin.Context) {
 		# 设置web应用页面基础组件接口
 	*/
 	var res DataType.ResponseData
-	//userName := c.GetHeader("username")
+	// userName := c.GetHeader("username")
 	var item DataType.CreateComponentBasesData
 	err := c.BindJSON(&item)
 	if err != nil {
@@ -1570,7 +1571,7 @@ func SetComponentBasicInformationView(c *gin.Context) {
 	component.VerticalFlip = item.VerticalFlip
 	component.Opacity = item.Opacity
 	component.OtherConfiguration = item.OtherConfiguration
-	//component.CreatedAt = time.Now().Local().Format("20060102150405")
+	// component.CreatedAt = time.Now().Local().Format("20060102150405")
 	err = DB.Save(&component).Error
 	if err != nil {
 		log.Println("创建web组件设计页面数据库失败！", err)
@@ -1606,7 +1607,7 @@ func SetPageAlignmentLineView(c *gin.Context) {
 	*/
 
 	var res DataType.ResponseData
-	//userName := c.GetHeader("username")
+	// userName := c.GetHeader("username")
 	var item DataType.SetPageAlignmentLineData
 	err := c.BindJSON(&item)
 	if err != nil {

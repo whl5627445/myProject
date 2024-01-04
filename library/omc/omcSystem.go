@@ -1137,7 +1137,7 @@ func (o *ZmqObject) LoadString(code, path string) bool {
 	jsonCode = bytes.ReplaceAll(jsonCode, []byte("\\u0026"), []byte("&"))
 	jsonCode = bytes.ReplaceAll(jsonCode, []byte("\\u2028"), []byte("U+2028"))
 	jsonCode = bytes.ReplaceAll(jsonCode, []byte("\\u2029"), []byte("U+2029"))
-	cmd := "loadString(" + string(jsonCode) + ",\"" + pwd + "/" + path + "\",\"UTF-8\")"
+	cmd := "loadString(" + string(jsonCode) + ",\"" + pwd + "/" + path + "\",\"UTF-8\",false)"
 	result, ok := o.SendExpressionNoParsed(cmd)
 	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
 	if ok && string(result) == "true" {
