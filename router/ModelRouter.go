@@ -21,6 +21,7 @@ func ModelRouter(g *gin.Engine) {
 
 		Models.GET("/parameters/get", API.GetModelParametersView)
 		Models.POST("/parameters/set", API.SetModelParametersView)
+		Models.POST("/parameters/unit/set", API.SetModelParametersUnitView)
 		Models.POST("/parameters/add", API.AddModelParametersView)
 		Models.POST("/parameters/delete", API.DeleteModelParametersView)
 		Models.GET("/properties/get", API.GetComponentPropertiesView)
@@ -63,6 +64,7 @@ func ModelRouter(g *gin.Engine) {
 		Models.POST("/mark", API.AppModelMarkView)
 
 		Models.POST("/CAD/parse", API.CADParseView)
+		Models.POST("/CAD/xml/parse", API.CADParseXmlView)
 		Models.POST("/CAD/mapping", API.CADMappingModelView)
 		Models.POST("/CAD/files/upload", API.CADFilesUploadView)
 

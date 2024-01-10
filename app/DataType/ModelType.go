@@ -24,7 +24,7 @@ type ParameterData struct {
 	IsExtend       bool   `json:"is_extend" binding:"required"`
 	ParameterName  string `json:"parameter_name" binding:"required"`
 	ParameterValue string `json:"parameter_value" binding:"required"`
-	Unit           string `json:"unit" binding:""`
+	Unit           string `json:"unit" binding:"required"`
 }
 
 type AddComponentParametersData struct {

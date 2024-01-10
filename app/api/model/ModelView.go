@@ -362,13 +362,59 @@ func SetModelParametersView(c *gin.Context) {
 	}
 	result := false
 	errParameterName := []string{}
-
 	for _, parameter := range item.Parameter {
 		if !parameter.IsExtend {
 			result = service.SetElementModifierValue(item.ModelName, parameter.ParameterName, parameter.ParameterValue)
-			result = service.SetElementModifierUnit(item.ModelName, parameter.ParameterName, parameter.Unit)
 		} else {
 			result = service.SetExtendsModifierValue(item.ModelName, parameter.ExtendName, parameter.ParameterName, parameter.ParameterValue)
+		}
+		if !result {
+			errParameterName = append(errParameterName, parameter.ParameterName)
+		}
+	}
+
+	if len(errParameterName) == 0 {
+		service.ModelSave(item.ModelName)
+		res.Msg = "设置完成"
+	} else {
+		res.Err = "设置失败: 请检查参数是否正确"
+		res.Status = 2
+	}
+	c.JSON(http.StatusOK, res)
+}
+
+func SetModelParametersUnitView(c *gin.Context) {
+	/*
+		# 设置模型组件的参数数据，一次性返回
+		## package_id: 模型包的id
+		## model_name: 需要设置参数的模型名称，全称，例如“ENN.Examples.Scenario1_Status”
+		## parameter_value: 需要设置的变量和新的值，全称，例如{"PID.k": "200"}， k是模型的组件别名和变量名字的组成， 类似于“别名.变量名”
+	*/
+	var item DataType.SetComponentModifierValueData
+	var res DataType.ResponseData
+
+	userSpaceId := c.GetHeader("space_id")
+	err := c.BindJSON(&item)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+	var modelPackage DataBaseModel.YssimModels
+	dbModel.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", item.PackageId, []string{userName, "sys"}, []string{userSpaceId, "0"}).First(&modelPackage)
+	if modelPackage.SysUser == "sys" || modelPackage.Encryption {
+		res.Err = "该模型不允许此操作"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	result := false
+	errParameterName := []string{}
+
+	for _, parameter := range item.Parameter {
+		if !parameter.IsExtend {
+			result = service.SetElementModifierUnit(item.ModelName, parameter.ParameterName, parameter.Unit)
+		} else {
 			result = service.SetExtendsModifierUnit(item.ModelName, parameter.ExtendName, parameter.ParameterName, parameter.Unit)
 		}
 		if !result {
