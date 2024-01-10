@@ -24,7 +24,19 @@ type ParameterData struct {
 	IsExtend       bool   `json:"is_extend" binding:"required"`
 	ParameterName  string `json:"parameter_name" binding:"required"`
 	ParameterValue string `json:"parameter_value" binding:"required"`
-	Unit           string `json:"unit" binding:"required"`
+}
+
+type SetComponentUintData struct {
+	PackageId      string           `json:"package_id" binding:"required"`
+	ModelName      string           `json:"model_name" binding:"required"`
+	UnitEditorData []UnitEditorData `json:"unit_editor" binding:"required"`
+}
+
+type UnitEditorData struct {
+	ExtendName    string `json:"extend_name" binding:"required"`
+	IsExtend      bool   `json:"is_extend" binding:"required"`
+	ParameterName string `json:"parameter_name" binding:"required"`
+	ParameterUnit string `json:"parameter_unit" binding:"required"`
 }
 
 type AddComponentParametersData struct {

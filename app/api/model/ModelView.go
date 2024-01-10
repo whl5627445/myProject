@@ -390,7 +390,7 @@ func SetModelParametersUnitView(c *gin.Context) {
 		## model_name: 需要设置参数的模型名称，全称，例如“ENN.Examples.Scenario1_Status”
 		## parameter_value: 需要设置的变量和新的值，全称，例如{"PID.k": "200"}， k是模型的组件别名和变量名字的组成， 类似于“别名.变量名”
 	*/
-	var item DataType.SetComponentModifierValueData
+	var item DataType.SetComponentUintData
 	var res DataType.ResponseData
 
 	userSpaceId := c.GetHeader("space_id")
@@ -411,11 +411,11 @@ func SetModelParametersUnitView(c *gin.Context) {
 	result := false
 	errParameterName := []string{}
 
-	for _, parameter := range item.Parameter {
+	for _, parameter := range item.UnitEditorData {
 		if !parameter.IsExtend {
-			result = service.SetElementModifierUnit(item.ModelName, parameter.ParameterName, parameter.Unit)
+			result = service.SetElementModifierUnit(item.ModelName, parameter.ParameterName, parameter.ParameterUnit)
 		} else {
-			result = service.SetExtendsModifierUnit(item.ModelName, parameter.ExtendName, parameter.ParameterName, parameter.Unit)
+			result = service.SetExtendsModifierUnit(item.ModelName, parameter.ExtendName, parameter.ParameterName, parameter.ParameterUnit)
 		}
 		if !result {
 			errParameterName = append(errParameterName, parameter.ParameterName)
