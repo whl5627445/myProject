@@ -306,7 +306,7 @@ func iconSubShapes(cData []any, modelName string) []map[string]any {
 							varName = strings.TrimSuffix(varName, "%")
 							if varName != "" {
 								c := GetModelParameters(modelName, "", "", varName)
-								varValue, Unit = c[0].(string), c[1].(string)
+								varValue, Unit = c[1].(string), c[0].(string)
 								if varValue == "" {
 									varValue = varName
 								}

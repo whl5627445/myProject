@@ -4,6 +4,7 @@ import (
 	"log"
 	"strconv"
 	"time"
+
 	"yssim-go/config"
 
 	"github.com/nacos-group/nacos-sdk-go/clients"
@@ -56,7 +57,7 @@ func Register() {
 			log.Println("服务注册成功")
 			break
 		} else {
-			log.Println("服务注册失败正在准备重新尝试")
+			log.Println("服务注册失败正在准备重新尝试: ", err)
 			time.Sleep(time.Second * 10)
 		}
 	}

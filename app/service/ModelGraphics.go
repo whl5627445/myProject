@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"regexp"
 	"strings"
-	"yssim-go/config"
+
 	"yssim-go/library/omc"
 	"yssim-go/library/stringOperation"
 )
@@ -19,50 +19,50 @@ type graphicsData struct {
 	permissions   string   //  模型权限，系统模型还是用户模型
 }
 
-var allModelCache = config.R
+// var allModelCache = config.R
 
 func GetGraphicsData(modelName, permissions string) []any {
 	var g = graphicsData{}
 	g.permissions = permissions
-	//g.data = [][]map[string]any{{}, {}}
+	// g.data = [][]map[string]any{{}, {}}
 	g.data = make([]any, 3)               // 定义返回数据切片
 	g.data[0] = make([]map[string]any, 0) // 该切片返回图形的连线数据以及Diagram数据
 	g.data[1] = make([]map[string]any, 0) // 该切片返回图形的组件绘图数据
 	g.data[2] = make(map[string]any, 0)   // 该切片返回模型的坐标系数据
-	//ctx := context.Background()
+	// ctx := context.Background()
 
-	//if permissions == "sys" {
+	// if permissions == "sys" {
 	//	msg, _ := allModelCache.HGet(ctx, config.USERNAME+"-yssim-modelGraphicsData", modelName).Bytes()
 	//	msg := []byte{}
-	//if len(msg) > 0 {
+	// if len(msg) > 0 {
 	//	err := sonic.Unmarshal(msg, &g.data)
 	//	if err != nil {
 	//		log.Println("GetGraphicsData 反序列化错误 err", err)
 	//		return nil
 	//	}
 	//	return g.data
-	//}
-	//}
+	// }
+	// }
 	g.modelName = modelName
 	modelType := omc.OMC.GetClassRestriction(modelName)
 	if modelType == "connector" || modelType == "expandable connector" {
-		g.data = g.getConnectorModelDiagram(modelName) // 如果是连接器类型，进行特殊处理，与普通模型不同
+		g.data = g.getConnectorModelDiagramAll(modelName) // 如果是连接器类型，进行特殊处理，与普通模型不同
 	} else {
 		g.modelNameList = g.getICList(modelName) // 获取模型继承了哪些父类，以切片形式传递，包括模型本身
 		g.getDiagramAnnotationData()             // 获取模型Diagram数据
 		g.getnthconnectionData()                 // 获取模型连线数据
 		g.getData02()                            // 获取模型组件数据
 	}
-	//if permissions == "sys" {
+	// if permissions == "sys" {
 	//	redisData, _ := sonic.Marshal(g.data)
 	//	allModelCache.HSet(ctx, config.USERNAME+"-yssim-modelGraphicsData", modelName, redisData)
-	//}
+	// }
 	return g.data
 }
 
 func GetComponentGraphicsData(modelName, componentName string) []any {
 	var g = graphicsData{}
-	//g.data = [][]map[string]any{{}, {}}
+	// g.data = [][]map[string]any{{}, {}}
 	g.data = make([]any, 3)
 	g.data[0] = make([]map[string]any, 0)
 	g.data[1] = make([]map[string]any, 0)
@@ -159,7 +159,7 @@ func twoDimensionalProcessing(drawingData []any) []string {
 				}
 				data = append(data, strings.Join(piList, ","))
 			}
-			//break
+			// break
 		}
 		return data
 	}
@@ -377,7 +377,7 @@ func (g *graphicsData) data02(cData [][]any, caData [][]any, isIcon bool, parent
 			data := map[string]any{"type": "Transformation"}
 
 			data["graphType"] = cDataFilter[i][17]
-			//data["ID"] = strconv.Itoa(i)
+			// data["ID"] = strconv.Itoa(i)
 			data["classname"] = classname
 			data["name"] = cDataFilter[i][3]
 			data["comment"] = cDataFilter[i][4]
@@ -395,7 +395,7 @@ func (g *graphicsData) data02(cData [][]any, caData [][]any, isIcon bool, parent
 			data["connector_sizing"] = cDataFilter[i][16]
 			data["visible"] = caf[0]
 			data["mobility"] = mobility
-			//data["initialScale"] = initialScale
+			// data["initialScale"] = initialScale
 			rotateAngle := func() string {
 				if caf[14] != "" {
 					return caf[14].(string)
@@ -458,8 +458,8 @@ func (g *graphicsData) getnthconnectionData() {
 						}
 						daData["connectionfrom_original_name"] = ncData[0]
 						daData["connectionto_original_name"] = ncData[1]
-						//re1, _ := regexp.Compile("\\[[0-9a-zA-Z]+\\]$")
-						//re2, _ := regexp.Compile("\\[[0-9a-zA-Z]+\\].")
+						// re1, _ := regexp.Compile("\\[[0-9a-zA-Z]+\\]$")
+						// re2, _ := regexp.Compile("\\[[0-9a-zA-Z]+\\].")
 						re1, _ := regexp.Compile("\\[[0-9a-zA-Z,，]+\\]$")
 						re2, _ := regexp.Compile("\\[[0-9a-zA-Z,，]+\\].")
 						connectionfrom := re1.ReplaceAll([]byte(ncData[0]), []byte(""))
@@ -518,7 +518,7 @@ func getDialogConnectorSizing(annotation []any) bool {
 			tabIndex := n + 1
 			dListTab := annotation[tabIndex].([]any)
 			if tabIndex > 0 && len(dListTab) > 3 {
-				//if len(annotation) <= 1 || dListTab[len(dListTab)-1] == "true" {
+				// if len(annotation) <= 1 || dListTab[len(dListTab)-1] == "true" {
 				if len(annotation) <= 1 || dListTab[2] == "false" {
 					continue
 				}
@@ -579,8 +579,8 @@ func (g *graphicsData) getConnectorComponentDiagram(components, componentAnnotat
 		caf := componentAnnotationsData[1].([]any)
 		data["ID"] = "0"
 		data["classname"] = className
-		//data["extent1Diagram"] = strings.Replace(caf[3].(string)+","+caf[4].(string), "-,-", "-100.0,-100.0", 1)
-		//data["extent2Diagram"] = strings.Replace(caf[5].(string)+","+caf[6].(string), "-,-", "100.0,100.0", 1)
+		// data["extent1Diagram"] = strings.Replace(caf[3].(string)+","+caf[4].(string), "-,-", "-100.0,-100.0", 1)
+		// data["extent2Diagram"] = strings.Replace(caf[5].(string)+","+caf[6].(string), "-,-", "100.0,100.0", 1)
 		data["graphType"] = modelType
 		data["mobility"] = true
 		data["name"] = componentName
@@ -599,6 +599,14 @@ func (g *graphicsData) getConnectorComponentDiagram(components, componentAnnotat
 		return g.data
 	}
 	return nil
+}
+
+func (g *graphicsData) getConnectorModelDiagramAll(modelName string) []any {
+	nameList := g.getICList(modelName)
+	for i := len(nameList) - 1; i >= 0; i-- {
+		g.getConnectorModelDiagram(nameList[i])
+	}
+	return g.data
 }
 
 func (g *graphicsData) getConnectorModelDiagram(modelName string) []any {
@@ -647,7 +655,7 @@ func GetConnectionOption(modelName, modelType string) []map[string]any {
 		option := GetConnectionOption(typeName, modelType)
 		ser := map[string]any{
 			"variableName": arr[3],
-			//"variableType": typeName,
+			// "variableType": typeName,
 			"hasChild": len(option) > 0,
 			"option":   option,
 		}
