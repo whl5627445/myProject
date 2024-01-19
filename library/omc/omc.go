@@ -3,8 +3,12 @@ package omc
 import (
 	"log"
 	"os/exec"
+	"os/user"
+	"strconv"
 	"sync"
+	"syscall"
 	"time"
+
 	"yssim-go/config"
 
 	"github.com/sirupsen/logrus"
@@ -37,12 +41,20 @@ func StartOMC(result chan bool) {
 		return
 	}
 	cmd := exec.Command("omc", "--interactive=zmq", "--locale=C", "-z=omc", "--interactivePort=23456")
-	err := cmd.Start()
+	user, err := user.Lookup("simtek") // 查找指定nginx用户是否存在，获取Uid和Gid
+	if err == nil {
+		uid, _ := strconv.Atoi(user.Uid)
+		gid, _ := strconv.Atoi(user.Gid)
+		cmd.SysProcAttr = &syscall.SysProcAttr{}
+		cmd.SysProcAttr.Credential = &syscall.Credential{Uid: uint32(uid), Gid: uint32(gid)} // 设置执行用户为nginx
+	}
+	err = cmd.Start()
 	if err != nil {
 		result <- false
 		logrus.Println("启动OMC实例失败， 错误： ", err)
 		return
 	}
+
 	OMCInstance.Start = true
 	OMCInstance.Cmd = cmd
 	UseTime := time.Now().Local()
@@ -51,7 +63,7 @@ func StartOMC(result chan bool) {
 	OMC.SetOptions()
 	OMCInstance.Mu.Unlock()
 	result <- true
-	//libraryInitialization()
+	// libraryInitialization()
 	err = cmd.Wait()
 	if err != nil {
 		log.Println("omc wait 出错：", err)
@@ -76,13 +88,13 @@ func StopOMC() {
 	OMCInstance.Start = false
 	OMC = nil
 	OMCInstance.Mu.Unlock()
-	//config.UserSpaceId = ""
+	// config.UserSpaceId = ""
 	log.Printf("omc实例信息： %#v", OMCInstance)
 	log.Println("omc进程已停止")
 	return
 }
 
-//func libraryInitialization(LibraryMap map[string]map[string]string) {
+// func libraryInitialization(LibraryMap map[string]map[string]string) {
 //	OMC.SetOptions()
 //	//log.Println("LibraryMap", config.LibraryMap)
 //	for name, information := range LibraryMap {
@@ -90,4 +102,4 @@ func StopOMC() {
 //		ok := OMC.LoadModel(information["file"], "")
 //		log.Printf("初始化模型库：%s %s  %t \n", name, version, ok)
 //	}
-//}
+// }
