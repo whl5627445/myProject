@@ -2,18 +2,16 @@ package grpcPb
 
 import (
 	"context"
+	"log"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"log"
-)
-
-const (
-	address = "fmpy_grpc:50051"
+	"yssim-go/config"
 )
 
 func StartGrpc() (GreeterClient, context.Context) {
-	conn, err := grpc.Dial(
-		address, grpc.WithTransportCredentials(insecure.NewCredentials())) // 建立链接
+	address := config.GrpcServerName + ":" + config.GrpcPort
+	conn, err := grpc.Dial(address, grpc.WithTransportCredentials(insecure.NewCredentials())) // 建立链接
 	if err != nil {
 		log.Println("did not connect.", err)
 		return nil, nil

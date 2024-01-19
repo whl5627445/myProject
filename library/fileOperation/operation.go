@@ -14,7 +14,7 @@ import (
 
 // Exists 判断所给路径文件/文件夹是否存在
 func Exists(path string) bool {
-	_, err := os.Stat(path) //os.Stat获取文件信息
+	_, err := os.Stat(path) // os.Stat获取文件信息
 	if err != nil {
 		if os.IsExist(err) {
 			return true
@@ -78,7 +78,7 @@ func CreateFilePath(filePath string) bool {
 	}
 	err := os.MkdirAll(filePath, 0777)
 	if err != nil {
-		log.Println(err)
+		log.Println("仿真文件夹路径创建失败：", err)
 		return false
 	}
 	return true
@@ -139,12 +139,12 @@ func WriteFileByte(fileName string, data []byte) bool {
 
 func FindFile(fileName, rootPath string) (string, error) {
 	_, err := os.Lstat(rootPath)
-	//既不是文件，也不是文件夹
+	// 既不是文件，也不是文件夹
 	if err != nil {
 		os.RemoveAll(rootPath)
 		return "", errors.New("文件格式不正确")
 	}
-	//文件夹添加到队列里
+	// 文件夹添加到队列里
 	queue := list.New()
 	queue.PushBack(rootPath)
 	for queue.Len() > 0 {
@@ -166,12 +166,12 @@ func FindFile(fileName, rootPath string) (string, error) {
 
 func GetDirChild(rootPath string) ([]map[string]string, error) {
 	_, err := os.Lstat(rootPath)
-	//既不是文件，也不是文件夹
+	// 既不是文件，也不是文件夹
 	if err != nil {
 		log.Println("err", err)
 		return nil, err
 	}
-	//文件夹添加到队列里
+	// 文件夹添加到队列里
 	dataList := make([]map[string]string, 0, 1)
 	queue := list.New()
 	queue.PushBack(rootPath)

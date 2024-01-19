@@ -35,6 +35,9 @@ const OmcFlaskConnect = dymolaConnect + "/omc-python"
 const ADDR = "0.0.0.0:"
 const CADConnect = dymolaConnect + "/caa"
 
+var GrpcServerName = os.Getenv("GrpcServerName")
+var GrpcPort = os.Getenv("GrpcPort")
+
 var USERNAME = os.Getenv("USERNAME")
 var PORT = os.Getenv("PORT")
 var DEBUG = os.Getenv("DEBUG")

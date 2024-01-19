@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 	"time"
+
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/config"
 	"yssim-go/grpc/PythonGrpc/grpcPb"
@@ -28,7 +29,7 @@ type OutputData struct {
 var DB = config.DB
 
 // GetEnvLibraryAll 获取当前环境下的所有已经加载的包和系统库
-//func GetEnvLibraryAll(userName, spaceId string) map[string]string {
+// func GetEnvLibraryAll(userName, spaceId string) map[string]string {
 //
 //	// 获取系统模型
 //	environmentModelData := make(map[string]string)
@@ -61,7 +62,7 @@ var DB = config.DB
 //	}
 //	return environmentModelData
 //
-//}
+// }
 
 // GetEnvLibrary 获取已经加载的依赖包和系统库
 func GetEnvLibrary(packageName, userName, spaceId string) map[string]string {
@@ -108,7 +109,7 @@ func GetEnvLibrary(packageName, userName, spaceId string) map[string]string {
 	return environmentModelData
 }
 
-//func GrpcReadSimulationResult(VarList []string, SimulateModelResultPath string) ([][]float64, bool) {
+// func GrpcReadSimulationResult(VarList []string, SimulateModelResultPath string) ([][]float64, bool) {
 //
 //	SaveFilterResultTest := &grpcPb.ReadSimulationResultRequest{ // 构造请求体
 //		Vars:       VarList,
@@ -141,9 +142,9 @@ func GetEnvLibrary(packageName, userName, spaceId string) map[string]string {
 //	}
 //	return result, ok
 //
-//}
+// }
 
-//func GrpcZarrToCsv(SimulateModelResultPath string) bool {
+// func GrpcZarrToCsv(SimulateModelResultPath string) bool {
 //	ZarrToCsvRequestTest := &grpcPb.ZarrToCsvRequest{
 //		ZarrPath: SimulateModelResultPath + "zarr_res.zarr",
 //	} // 构造请求体
@@ -153,9 +154,9 @@ func GetEnvLibrary(packageName, userName, spaceId string) map[string]string {
 //		return false
 //	}
 //	return ZarrToCsvRes.Ok
-//}
+// }
 //
-//func GrpcMatToCsv(SimulateModelResultPath string) bool {
+// func GrpcMatToCsv(SimulateModelResultPath string) bool {
 //	MatToCsvRequestTest := &grpcPb.MatToCsvRequest{
 //		MatPath: SimulateModelResultPath + "result_res.mat",
 //	} // 构造请求体
@@ -165,7 +166,7 @@ func GetEnvLibrary(packageName, userName, spaceId string) map[string]string {
 //		return false
 //	}
 //	return MatToCsvRes.Ok
-//}
+// }
 
 func GrpcCheckVarExist(path string, dataNameList []string) map[string]bool {
 	CheckVarExistRequestTest := &grpcPb.CheckVarExistRequest{
@@ -196,10 +197,10 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 	if !SimulateTypeDict[itemMap["simulate_type"]] {
 		return "", errors.New("不存在的仿真类型")
 	}
-	//查询数据库中的实验id对应的记录
+	// 查询数据库中的实验id对应的记录
 	var experimentRecord DataBaseModel.YssimExperimentRecord
 	DB.Where("id = ? ", itemMap["experiment_id"]).First(&experimentRecord)
-	//查询数据库中的模型对应的记录
+	// 查询数据库中的模型对应的记录
 	var packageModel DataBaseModel.YssimModels
 	err := DB.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", itemMap["package_id"], []string{"sys", itemMap["username"]}, []string{"0", itemMap["space_id"]}).First(&packageModel).Error
 	if err != nil {
@@ -228,18 +229,18 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 	}
 	// 创建结果文件夹,并存入数据库
 	resultFilePath := "static/UserFiles/ModelResult/" + itemMap["username"] + "/" + strings.ReplaceAll(itemMap["model_name"], ".", "-") + "/" + time.Now().Local().Format("20060102150405") + "/"
-	fileOperation.CreateFilePath(resultFilePath)
+	// fileOperation.CreateFilePath(resultFilePath)
 	record.SimulateModelResultPath = resultFilePath
 	config.DB.Save(&record)
 	// 将实验参数写入模型
 	if packageModel.SysUser != "sys" {
-		//YssimExperimentRecord表的json数据绑定到结构体
+		// YssimExperimentRecord表的json数据绑定到结构体
 		var componentValue modelVarData
 		if experimentRecord.ModelVarData.String() != "" {
 			err := sonic.Unmarshal(experimentRecord.ModelVarData, &componentValue)
 			if err == nil {
 				mapAttributesStr := mapProcessing.MapDataConversion(componentValue.FinalAttributesStr)
-				//设置组件参数
+				// 设置组件参数
 				result := SetComponentModifierValue(experimentRecord.ModelName, mapAttributesStr)
 				if result {
 					log.Println("重新设置参数-完成。")
@@ -271,7 +272,7 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 	if err != nil {
 		log.Println("环境依赖包解析错误：", err)
 	}
-	//SimulateTaskMap[record.ID] = record
+	// SimulateTaskMap[record.ID] = record
 	record.SimulateStart = true
 	record.EnvModelData = jsonEnvData
 	config.DB.Save(&record)
@@ -308,15 +309,15 @@ func GrpcTranslate(record DataBaseModel.AppDataSource) (string, error) {
 	record.Method = SimulationPra["method"]
 	record.Tolerance = SimulationPra["tolerance"]
 	record.NumberOfIntervals = SimulationPra["numberOfIntervals"]
-	//record.CompileType = SimulationPra["simulate_type"]
+	// record.CompileType = SimulationPra["simulate_type"]
 	err := DB.Save(&record).Error
 	if err != nil {
 		return "", errors.New("save error")
 	}
-	//查询数据库中的实验id对应的记录
+	// 查询数据库中的实验id对应的记录
 	var experimentRecord DataBaseModel.YssimExperimentRecord
 	DB.Where("id = ? ", record.ExperimentId).First(&experimentRecord)
-	//查询数据库中的模型对应的记录
+	// 查询数据库中的模型对应的记录
 	var packageModel DataBaseModel.YssimModels
 	err = DB.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", record.PackageId, []string{"sys", record.UserName}, []string{"0", record.UserSpaceId}).First(&packageModel).Error
 	if err != nil {
@@ -324,13 +325,13 @@ func GrpcTranslate(record DataBaseModel.AppDataSource) (string, error) {
 	}
 	// 将实验参数写入模型
 	if packageModel.SysUser != "sys" {
-		//YssimExperimentRecord表的json数据绑定到结构体
+		// YssimExperimentRecord表的json数据绑定到结构体
 		var componentValue modelVarData
 		if experimentRecord.ModelVarData.String() != "" {
 			err = sonic.Unmarshal(experimentRecord.ModelVarData, &componentValue)
 			if err == nil {
 				mapAttributesStr := mapProcessing.MapDataConversion(componentValue.FinalAttributesStr)
-				//设置组件参数
+				// 设置组件参数
 				result := SetComponentModifierValue(experimentRecord.ModelName, mapAttributesStr)
 				if result {
 					log.Println("重新设置参数-完成。")
@@ -360,8 +361,8 @@ func GrpcTranslate(record DataBaseModel.AppDataSource) (string, error) {
 	if err != nil {
 		log.Println("环境依赖包解析错误：", err)
 	}
-	//SimulateTaskMap[record.ID] = record
-	//record.SimulateStart = true
+	// SimulateTaskMap[record.ID] = record
+	// record.SimulateStart = true
 	record.EnvModelData = jsonEnvData
 	config.DB.Save(&record)
 	// 发送仿真请求
@@ -408,12 +409,12 @@ func GrpcRunResult(appPageId string, singleSimulationInputData map[string]float6
 		"numberOfIntervals": record.NumberOfIntervals,
 		"tolerance":         record.Tolerance,
 	}
-	//查询数据库中的模型表
-	//var packageModel DataBaseModel.YssimModels
-	//err = DB.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", record.PackageId, []string{"sys", record.UserName}, []string{"0", record.UserSpaceId}).First(&packageModel).Error
-	//if err != nil {
+	// 查询数据库中的模型表
+	// var packageModel DataBaseModel.YssimModels
+	// err = DB.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", record.PackageId, []string{"sys", record.UserName}, []string{"0", record.UserSpaceId}).First(&packageModel).Error
+	// if err != nil {
 	//	return errors.New("模型不存在！")
-	//}
+	// }
 	// 获取依赖
 	var environmentModelData map[string]string
 	err = sonic.Unmarshal(record.EnvModelData, &environmentModelData)
@@ -434,7 +435,7 @@ func GrpcRunResult(appPageId string, singleSimulationInputData map[string]float6
 	}
 	var singleOrMultiple string
 	if singleSimulationInputData != nil {
-		//log.Println("单次仿真！")
+		// log.Println("单次仿真！")
 		singleOrMultiple = "single"
 		for key, value := range singleSimulationInputData {
 			var newValues []float64
@@ -444,15 +445,15 @@ func GrpcRunResult(appPageId string, singleSimulationInputData map[string]float6
 		}
 	} else {
 		singleOrMultiple = "multiple"
-		//log.Println("多轮仿真！")
-		//查询数据库中的模型表
+		// log.Println("多轮仿真！")
+		// 查询数据库中的模型表
 		var componentRecord []DataBaseModel.AppPageComponent
 		DB.Where("page_id = ? AND type = ? AND input_name != ''", appPageId, "slider").Find(&componentRecord)
 		for i := 0; i < len(componentRecord); i++ {
 			// 将[1,0.5,5]转换为[1,1.5,2,2.5,3,3.5,4,4.5,5]
 			minVal := componentRecord[i].Min
 			step := componentRecord[i].Interval
-			//maxVal := componentRecord[i].Max
+			// maxVal := componentRecord[i].Max
 			// 计算新的数组元素
 			var newValues []float64
 			if step == 0 {
@@ -485,7 +486,7 @@ func GrpcRunResult(appPageId string, singleSimulationInputData map[string]float6
 		EnvModelData:      environmentModelData,
 		SimulateType:      record.CompileType, // OM DM
 		// dm才会用到的参数
-		//PackageName:     packageModel.PackageName,
+		// PackageName:     packageModel.PackageName,
 		PackageFilePath: record.ZipMoPath,
 		// 任务类型"simulate " "translate " "run"三种
 		TaskType: "run",
