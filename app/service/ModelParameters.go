@@ -615,15 +615,7 @@ func (m *modelParameters) getParameter(className string, varName string, p []any
 		dataDefault["type"] = "checkWrite"
 		dataDefault["name"] = varName + ".start"
 		dataDefault["group"] = "Initialization"
-		isFixed := func() any { // 标记该参数的fixed值
-			switch {
-			case elementModifierData.fixed == "true":
-				return true
-			case elementModifierData.fixed == "false":
-				return false
-			}
-			return ""
-		}()
+		isFixed := omc.OMC.GetElementModifierValue(m.modelName, modifier+".fixed")
 		value := elementModifierData.start // 标记参数的start值
 		if elementModifierData.startLevel > 0 || elementModifierData.level > 0 {
 			dataDefault["defaultvalue"] = elementModifierData.start
