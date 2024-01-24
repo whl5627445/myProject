@@ -2,6 +2,7 @@ package omc
 
 import (
 	"log"
+	"os"
 	"os/exec"
 	"os/user"
 	"strconv"
@@ -41,12 +42,13 @@ func StartOMC(result chan bool) {
 		return
 	}
 	cmd := exec.Command("omc", "--interactive=zmq", "--locale=C", "-z=omc", "--interactivePort=23456")
-	user, err := user.Lookup("simtek") // 查找指定nginx用户是否存在，获取Uid和Gid
-	if err == nil {
-		uid, _ := strconv.Atoi(user.Uid)
-		gid, _ := strconv.Atoi(user.Gid)
+
+	user, err := user.Lookup("simtek") // 查找指定simtek用户是否存在，获取Uid和Gid
+	uid, _ := strconv.Atoi(user.Uid)
+	gid, _ := strconv.Atoi(user.Gid)
+	if (os.Getegid() != gid || os.Geteuid() != uid) && err == nil {
 		cmd.SysProcAttr = &syscall.SysProcAttr{}
-		cmd.SysProcAttr.Credential = &syscall.Credential{Uid: uint32(uid), Gid: uint32(gid)} // 设置执行用户为nginx
+		cmd.SysProcAttr.Credential = &syscall.Credential{Uid: uint32(uid), Gid: uint32(gid)} // 设置执行用户为simtek
 	}
 	err = cmd.Start()
 	if err != nil {
