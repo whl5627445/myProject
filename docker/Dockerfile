@@ -25,6 +25,6 @@ RUN   ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 WORKDIR /home/simtek
 COPY ./start.sh start.sh
-USER simtek
+USER root
 
 #CMD ["supervisord", "-n", "-c", "/home/simtek/code/docker/yssim/supervisor_OpenModelica.ini"]
