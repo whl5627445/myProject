@@ -1073,6 +1073,36 @@ func (o *ZmqObject) ReadSimulationResult(varNameList []string, path string) ([][
 	return dataList, true
 }
 
+// ReadSimulationResultList 读取仿真结果，给定需要读取的变量列表与结果文件路径，返回所有数据
+func (o *ZmqObject) ReadSimulationResultList(varNameList []string, path string) ([][]float64, bool) {
+	// readSimulationResult("result_res.mat", {time,Bessel.a[1]}, 0)
+	varNameStr := "time," + strings.Join(varNameList, ",")
+	cmd := "readSimulationResult(\"" + path + "\",{" + varNameStr + "},0)"
+	data, _ := o.SendExpressionNoParsed(cmd)
+	data = bytes.ReplaceAll(data, []byte("{"), []byte("["))
+	data = bytes.ReplaceAll(data, []byte("}"), []byte("]"))
+	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
+
+	dataUnmarshal := make([][]float64, 0, len(varNameList)+1)
+	dataList := make([][]float64, 0, len(varNameList)+1)
+	for i := 0; i < len(varNameList)+1; i++ {
+		dataUnmarshal = append(dataUnmarshal, make([]float64, 0, 1))
+		dataList = append(dataList, make([]float64, 0, 1))
+	}
+	_ = sonic.Unmarshal(data, &dataUnmarshal)
+	d := dataUnmarshal[0]
+	for index, _ := range d {
+		// 时间和数据可能存在重复，循环将时间相同的部分移除
+		if index != 0 && (dataUnmarshal[0][index] == dataUnmarshal[0][index-1]) {
+			continue
+		}
+		for i := 0; i < len(dataList); i++ {
+			dataList[i] = append(dataList[i], dataUnmarshal[i][index])
+		}
+	}
+	return dataList, true
+}
+
 // ParseFile 解析mo文件
 func (o *ZmqObject) ParseFile(path string) (string, bool) {
 	pwd, _ := os.Getwd()

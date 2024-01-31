@@ -425,7 +425,7 @@ func SimulateResultTreeView(c *gin.Context) {
 			result = service.DymolaSimulationResultTree(record.SimulateModelResultPath+"result_init.xml", parentNode, keyWords)
 		} else {
 			//OMC仿真完输出的xml文件
-			result = service.SimulationResultTree(record.SimulateModelResultPath+"result_init.xml", parentNode, keyWords)
+			result = service.SimulationResultTree(record.SimulateModelResultPath, parentNode, keyWords)
 		}
 	} else {
 		res.Err = "查询失败"

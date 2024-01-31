@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/library/fileOperation"
 	"yssim-go/library/omc"
@@ -49,9 +50,17 @@ func mergeArrays(arr1, arr2 [][]string) [][]string {
 	return merged
 }
 
+// ReadSimulationResult 原读取mat文件中单个变量的值
 func ReadSimulationResult(varNameList []string, path string) ([][]float64, bool) {
 	pwd, _ := os.Getwd()
 	data, ok := omc.OMC.ReadSimulationResult(varNameList, pwd+"/"+path)
+	return data, ok
+}
+
+// ReadSimulationResultList 返回给定所有变量的值
+func ReadSimulationResultList(varNameList []string, path string) ([][]float64, bool) {
+	pwd, _ := os.Getwd()
+	data, ok := omc.OMC.ReadSimulationResultList(varNameList, pwd+"/"+path)
 	return data, ok
 }
 
@@ -90,7 +99,7 @@ func FilterSimulationResult(items map[string][]string, recordDict map[string]Dat
 	for key, value := range items {
 		var result [][]float64
 		// 定义csv的第一行
-		headFlagName := recordDict[key].AnotherName + "." //标记
+		headFlagName := recordDict[key].AnotherName + "." // 标记
 		headRow := []string{headFlagName + "time"}
 		for i := 0; i < len(value); i++ {
 			headRow = append(headRow, headFlagName+value[i])
@@ -109,8 +118,8 @@ func FilterSimulationResult(items map[string][]string, recordDict map[string]Dat
 		}
 
 		var csvDataOne [][]string
-		csvDataOne = append(csvDataOne, headRow) //先写入第一行变量名
-		for i := 0; i < len(result[0]); i++ {    //逐行写入
+		csvDataOne = append(csvDataOne, headRow) // 先写入第一行变量名
+		for i := 0; i < len(result[0]); i++ {    // 逐行写入
 			var fData []string
 			for _, s := range result {
 				floatToStr := strconv.FormatFloat(s[i], 'f', -1, 64)
@@ -125,7 +134,7 @@ func FilterSimulationResult(items map[string][]string, recordDict map[string]Dat
 		}
 		headFlag++
 	}
-	//将最后生成的csvData保存为csv文件
+	// 将最后生成的csvData保存为csv文件
 	nfs, ok := fileOperation.CreateFile(newFileName)
 	if ok {
 		defer nfs.Close()
@@ -152,7 +161,7 @@ type realType struct {
 	UseNominal   string   `xml:"useNominal,attr"`
 	Unit         string   `xml:"unit,attr"`
 	DisplayUnit  string   `xml:"displayUnit,attr"`
-	DeclaredType string   `xml:"declaredType,attr"` //DeclaredType只对dymola的xml生效
+	DeclaredType string   `xml:"declaredType,attr"` // DeclaredType只对dymola的xml生效
 }
 
 type booleanType struct {
@@ -206,19 +215,19 @@ type modelVariables struct {
 }
 
 type dmRealType struct {
-	//只对dymola的xml生效
+	// 只对dymola的xml生效
 	XMLName     xml.Name `xml:"RealType"`
 	Unit        string   `xml:"unit,attr"`
 	DisplayUnit string   `xml:"displayUnit,attr"`
 }
 type DmType struct {
-	//只对dymola的xml生效
+	// 只对dymola的xml生效
 	XMLName  xml.Name   `xml:"Type"`
 	Name     string     `xml:"name,attr"`
 	RealType dmRealType `xml:"RealType,omitempty"`
 }
 type typeDefinitions struct {
-	//只对dymola的xml生效
+	// 只对dymola的xml生效
 	XMLName xml.Name `xml:"TypeDefinitions"`
 	Type    []DmType `xml:"Type"`
 }
@@ -226,7 +235,7 @@ type xmlInit struct {
 	XMLName           xml.Name          `xml:"fmiModelDescription"`
 	ModelVariables    modelVariables    `xml:"ModelVariables"`
 	DefaultExperiment defaultExperiment `xml:"DefaultExperiment"`
-	TypeDefinitions   typeDefinitions   `xml:"TypeDefinitions"` //TypeDefinitions只对dymola的xml生效
+	TypeDefinitions   typeDefinitions   `xml:"TypeDefinitions"` // TypeDefinitions只对dymola的xml生效
 }
 
 var treeCache = map[string]xmlInit{}
@@ -279,11 +288,11 @@ func CheckNodeEmpty(path, parent string) bool {
 }
 
 func SimulationResultTree(path, parent, keyWords string) []map[string]any {
-	v, ok := treeCache[path]
+	v, ok := treeCache[path+"result_init.xml"]
 	if !ok {
 		v = xmlInit{}
-		err := xmlOperation.ParseXML(path, &v)
-		treeCache[path] = v
+		err := xmlOperation.ParseXML(path+"result_init.xml", &v)
+		treeCache[path+"result_init.xml"] = v
 		if err != nil {
 			log.Println(err)
 		}
@@ -296,11 +305,12 @@ func SimulationResultTree(path, parent, keyWords string) []map[string]any {
 	scalarVariableMap := make(map[string]scalarVariable, 0)
 	var dataList []map[string]any
 	nameMap := map[string]bool{}
+	var resultNameList, splitName []string
+	var name, trimPrefixName string
 	id := 0
 	for _, variable := range scalarVariableList {
-		name := variable.Name
-		var splitName []string
-		trimPrefixName := strings.TrimPrefix(name, parent+".")
+		name = variable.Name
+		trimPrefixName = strings.TrimPrefix(name, parent+".")
 		if strings.HasPrefix(name, parentName) && strings.Contains(strings.ToLower(name), strings.ToLower(keyWords)) {
 			scalarVariableMap[name] = variable
 			if !strings.HasPrefix(name, "der(") && !strings.HasPrefix(name, "$") {
@@ -311,9 +321,34 @@ func SimulationResultTree(path, parent, keyWords string) []map[string]any {
 			if !nameMap[splitName[0]] {
 				switch {
 				case scalarVariableMap[name].HideResult == "false" && scalarVariableMap[name].IsProtected:
-					dataList = append(dataList, SetResultTree(splitName, scalarVariableMap[name], id, nameMap))
+					if !scalarVariableMap[name].IsValueChangeable && len(splitName) == 1 {
+						resultNameList = append(resultNameList, scalarVariableMap[name].Name)
+					}
+					dataList = append(dataList, SetResultTree(splitName, scalarVariableMap[name], id, nameMap, path))
 				case scalarVariableMap[name].HideResult == "" && !scalarVariableMap[name].IsProtected:
-					dataList = append(dataList, SetResultTree(splitName, scalarVariableMap[name], id, nameMap))
+					if !scalarVariableMap[name].IsValueChangeable && len(splitName) == 1 {
+						resultNameList = append(resultNameList, scalarVariableMap[name].Name)
+					}
+					dataList = append(dataList, SetResultTree(splitName, scalarVariableMap[name], id, nameMap, path))
+				}
+			}
+		}
+	}
+	if len(resultNameList) > 0 {
+		result, ok := ReadSimulationResultList(resultNameList, path+"result_res.mat")
+		if ok {
+			indexNameMap := make(map[string]int) // 用来存储datalist中的变量名称和下标
+			for dataListIndex, variable := range dataList {
+				indexNameMap[variable["variables"].(string)] = dataListIndex
+			}
+			for index := range resultNameList {
+				ordinate := result[index+1]
+				length := len(ordinate)
+				trimPrefixName = strings.TrimPrefix(resultNameList[index], parent+".")
+				splitName = strings.Split(trimPrefixName, ".")
+				dataListIndex, dataOk := indexNameMap[splitName[0]]
+				if dataOk {
+					dataList[dataListIndex]["start"] = strconv.FormatFloat(ordinate[length-1], 'f', -1, 64)
 				}
 			}
 		}
@@ -321,7 +356,7 @@ func SimulationResultTree(path, parent, keyWords string) []map[string]any {
 	return dataList
 }
 
-func SetResultTree(splitName []string, scalarVariableMap scalarVariable, id int, nameMap map[string]bool) map[string]any {
+func SetResultTree(splitName []string, scalarVariableMap scalarVariable, id int, nameMap map[string]bool, path string) map[string]any {
 	data := map[string]any{
 		"variables":           splitName[0],
 		"description":         scalarVariableMap.Description,
@@ -329,18 +364,20 @@ func SetResultTree(splitName []string, scalarVariableMap scalarVariable, id int,
 		"has_child":           false,
 		"id":                  id,
 		"is_value_changeable": scalarVariableMap.IsValueChangeable,
-		"start":               scalarVariableMap.Real.Start,
 		"unit":                scalarVariableMap.Real.Unit,
+	}
+	if scalarVariableMap.IsValueChangeable {
+		data["start"] = scalarVariableMap.Real.Start
 	}
 	if len(splitName) > 1 {
 		data["has_child"] = true
 		data["unit"] = ""
 		data["is_value_changeable"] = false
 		data["display_unit"] = ""
+		data["start"] = ""
 	}
 	id += 1
 	nameMap[splitName[0]] = true
-
 	return data
 }
 
@@ -411,13 +448,13 @@ func DymolaSimulationResultTree(path, parent, keyWords string) []map[string]any 
 			} else {
 				continue
 			}
-			//if !nameMap[splitName[0]] && !scalarVariableMap[name].HideResult && !scalarVariableMap[name].IsProtected {
+			// if !nameMap[splitName[0]] && !scalarVariableMap[name].HideResult && !scalarVariableMap[name].IsProtected {
 			if !nameMap[splitName[0]] {
 				unit := scalarVariableMap[name].Real.Unit
 				displayUnit := scalarVariableMap[name].Real.DisplayUnit
 				declaredTypeName := scalarVariableMap[name].Real.DeclaredType
 
-				//如果scalarVariable节点中的单位不存在并且DeclaredType存在，则从typeDefinitionsMap中获取Unit和DisplayUnit
+				// 如果scalarVariable节点中的单位不存在并且DeclaredType存在，则从typeDefinitionsMap中获取Unit和DisplayUnit
 				if unit == "" && declaredTypeName != "" {
 					unit = typeDefinitionsMap[declaredTypeName].RealType.Unit
 					displayUnit = typeDefinitionsMap[declaredTypeName].RealType.DisplayUnit
@@ -469,7 +506,7 @@ func FmpySimulationResultTree(modelName, path, parent, keyWords string) []map[st
 	var dataList []map[string]any
 	nameMap := map[string]bool{}
 	variables := doc.SelectElement("dae").SelectElement("variables")
-	//解析orderedVariables节点
+	// 解析orderedVariables节点
 	if orderedVariables := variables.SelectElement("orderedVariables"); orderedVariables != nil {
 		if variablesList := orderedVariables.SelectElement("variablesList"); variablesList != nil {
 			dataList1, id1, nameMap1 := xmlOperation.GetVarXml(variablesList, parent, keyWords, id, nameMap)
@@ -478,7 +515,7 @@ func FmpySimulationResultTree(modelName, path, parent, keyWords string) []map[st
 			nameMap = nameMap1
 		}
 	}
-	//解析knownVariables节点
+	// 解析knownVariables节点
 	if knownVariables := variables.SelectElement("knownVariables"); knownVariables != nil {
 		if variablesList := knownVariables.SelectElement("variablesList"); variablesList != nil {
 			dataList2, id2, nameMap2 := xmlOperation.GetVarXml(variablesList, parent, keyWords, id, nameMap)
@@ -487,14 +524,14 @@ func FmpySimulationResultTree(modelName, path, parent, keyWords string) []map[st
 			nameMap = nameMap2
 		}
 	}
-	//解析aliasVariables节点
+	// 解析aliasVariables节点
 	if aliasVariables := variables.SelectElement("aliasVariables"); aliasVariables != nil {
 		if variablesList := aliasVariables.SelectElement("variablesList"); variablesList != nil {
 			dataList3, _, _ := xmlOperation.GetVarXml(variablesList, parent, keyWords, id, nameMap)
 			dataList = append(dataList, dataList3...)
 		}
 	}
-	//获取没有子节点的变量名
+	// 获取没有子节点的变量名
 	var dataList2 []map[string]any
 	var dataNameList []string
 	for i := 0; i < len(dataList); i++ {
@@ -507,9 +544,9 @@ func FmpySimulationResultTree(modelName, path, parent, keyWords string) []map[st
 
 		}
 	}
-	//调用grpc判断变量名（list）是否存在值
+	// 调用grpc判断变量名（list）是否存在值
 	GrpcCheckVarExistRes := GrpcCheckVarExist(path, dataNameList)
-	//dataList去掉不存在值的元素
+	// dataList去掉不存在值的元素
 	for i := 0; i < len(dataList); i++ {
 		if dataList[i]["has_child"] == false {
 			if parent == "" {
