@@ -216,20 +216,20 @@ type modelVariables struct {
 
 type dmRealType struct {
 	// 只对dymola的xml生效
-	XMLName     xml.Name `xml:"RealType"`
+	XMLName     xml.Name `xml:"Real"`
 	Unit        string   `xml:"unit,attr"`
 	DisplayUnit string   `xml:"displayUnit,attr"`
 }
 type DmType struct {
 	// 只对dymola的xml生效
-	XMLName  xml.Name   `xml:"Type"`
-	Name     string     `xml:"name,attr"`
-	RealType dmRealType `xml:"RealType,omitempty"`
+	XMLName xml.Name   `xml:"SimpleType"`
+	Name    string     `xml:"name,attr"`
+	Real    dmRealType `xml:"Real,omitempty"`
 }
 type typeDefinitions struct {
 	// 只对dymola的xml生效
-	XMLName xml.Name `xml:"TypeDefinitions"`
-	Type    []DmType `xml:"Type"`
+	XMLName    xml.Name `xml:"TypeDefinitions"`
+	SimpleType []DmType `xml:"SimpleType"`
 }
 type xmlInit struct {
 	XMLName           xml.Name          `xml:"fmiModelDescription"`
@@ -425,7 +425,7 @@ func DymolaSimulationResultTree(path, parent, keyWords string) []map[string]any 
 		parentName = parent + "."
 	}
 	// 将所有的单位类型保存为typeDefinitionsMap
-	typeDefinitionsList := v.TypeDefinitions.Type
+	typeDefinitionsList := v.TypeDefinitions.SimpleType
 	typeDefinitionsMap := make(map[string]DmType, 0)
 	for _, variable := range typeDefinitionsList {
 		name := variable.Name
@@ -456,8 +456,8 @@ func DymolaSimulationResultTree(path, parent, keyWords string) []map[string]any 
 
 				// 如果scalarVariable节点中的单位不存在并且DeclaredType存在，则从typeDefinitionsMap中获取Unit和DisplayUnit
 				if unit == "" && declaredTypeName != "" {
-					unit = typeDefinitionsMap[declaredTypeName].RealType.Unit
-					displayUnit = typeDefinitionsMap[declaredTypeName].RealType.DisplayUnit
+					unit = typeDefinitionsMap[declaredTypeName].Real.Unit
+					displayUnit = typeDefinitionsMap[declaredTypeName].Real.DisplayUnit
 				}
 				isValueChangeable := false
 				if scalarVariableMap[name].Causality == "parameter" || scalarVariableMap[name].Initial == "exact" {
@@ -478,6 +478,7 @@ func DymolaSimulationResultTree(path, parent, keyWords string) []map[string]any 
 					data["is_value_changeable"] = false
 					data["unit"] = ""
 					data["display_unit"] = ""
+					data["start"] = ""
 				}
 				id += 1
 				nameMap[splitName[0]] = true
