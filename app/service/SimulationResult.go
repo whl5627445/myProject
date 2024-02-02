@@ -343,12 +343,15 @@ func SimulationResultTree(path, parent, keyWords string) []map[string]any {
 			}
 			for index := range resultNameList {
 				ordinate := result[index+1]
-				length := len(ordinate)
-				trimPrefixName = strings.TrimPrefix(resultNameList[index], parent+".")
-				splitName = strings.Split(trimPrefixName, ".")
-				dataListIndex, dataOk := indexNameMap[splitName[0]]
-				if dataOk {
-					dataList[dataListIndex]["start"] = strconv.FormatFloat(ordinate[length-1], 'f', -1, 64)
+				ordinateLength := len(ordinate)
+				// 避免读取结果失败，ordinate下标越界异常
+				if ordinateLength >= 1 {
+					trimPrefixName = strings.TrimPrefix(resultNameList[index], parent+".")
+					splitName = strings.Split(trimPrefixName, ".")
+					dataListIndex, dataOk := indexNameMap[splitName[0]]
+					if dataOk {
+						dataList[dataListIndex]["start"] = strconv.FormatFloat(ordinate[ordinateLength-1], 'f', -1, 64)
+					}
 				}
 			}
 		}
@@ -367,7 +370,11 @@ func SetResultTree(splitName []string, scalarVariableMap scalarVariable, id int,
 		"unit":                scalarVariableMap.Real.Unit,
 	}
 	if scalarVariableMap.IsValueChangeable {
-		data["start"] = scalarVariableMap.Real.Start
+		if scalarVariableMap.Boolean.XMLName.Local == "Boolean" {
+			data["start"] = scalarVariableMap.Boolean.Start
+		} else {
+			data["start"] = scalarVariableMap.Real.Start
+		}
 	}
 	if len(splitName) > 1 {
 		data["has_child"] = true
@@ -470,8 +477,11 @@ func DymolaSimulationResultTree(path, parent, keyWords string) []map[string]any 
 					"has_child":           false,
 					"id":                  id,
 					"is_value_changeable": isValueChangeable,
-					"start":               scalarVariableMap[name].Real.Start,
 					"unit":                unit,
+					"start":               scalarVariableMap[name].Real.Start,
+				}
+				if scalarVariableMap[name].Boolean.XMLName.Local == "Boolean" {
+					data["start"] = scalarVariableMap[name].Boolean.Start
 				}
 				if len(splitName) > 1 {
 					data["has_child"] = true
