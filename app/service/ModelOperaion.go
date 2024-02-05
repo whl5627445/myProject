@@ -53,6 +53,8 @@ func inheritanceModelNameFixes(copiedClassName, className string) {
 			for k, fixesModelData := range componentNameFixesMap {
 				if strings.HasSuffix(name, "."+k) && name != k {
 					switch {
+					case fixesModelData[11].(string) == "inner": // 替换inner组件
+						classStrNew = strings.ReplaceAll(classStrNew, "inner "+k+" ", "inner "+name+" ")
 					case fixesModelData[10].(string) == "parameter": // 替换参数组件
 						classStrNew = strings.ReplaceAll(classStrNew, "parameter "+k+" ", "parameter "+name+" ")
 					case fixesModelData[9].(bool) == true: // 替换replaceable组件
