@@ -58,6 +58,7 @@ class OmcTranslateThread(threading.Thread):
         R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
 
         absolute_path = r"/home/simtek/code/" + self.request.resultFilePath
+        os.makedirs(absolute_path, exist_ok=True)
         log.info("(OMC)仿真结果地址:" + absolute_path)
         log.info("(OMC)仿真模型名：" + self.request.simulateModelName)
         log.info("(OMC)仿真参数：" + str(self.request.simulationPraData))

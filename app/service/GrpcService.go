@@ -11,7 +11,6 @@ import (
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/config"
 	"yssim-go/grpc/PythonGrpc/grpcPb"
-	"yssim-go/library/fileOperation"
 	"yssim-go/library/mapProcessing"
 
 	"github.com/bytedance/sonic"
@@ -301,7 +300,7 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 
 func GrpcTranslate(record DataBaseModel.AppDataSource) (string, error) {
 	// 创建文件夹
-	fileOperation.CreateFilePath(record.CompilePath)
+	//fileOperation.CreateFilePath(record.CompilePath)
 	// 获取仿真参数
 	SimulationPra := GetSimulationOptions(record.ModelName)
 	record.StartTime = SimulationPra["startTime"]
