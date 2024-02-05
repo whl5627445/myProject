@@ -79,10 +79,13 @@ class OmcSimulation(threading.Thread):
         log.info("(OMC)转换结果:" + str(translateModelRes))
         sendMessage(self.omc_obj, self.request.userName)
         log.info("(OMC)消息推送完成")
-        parent_proc = psutil.Process(self.omc_obj.omc_process.pid)
-        for child_proc in parent_proc.children(recursive=True):
-            os.kill(child_proc.pid, 9)
-        os.kill(self.omc_obj.omc_process.pid, 9)
+        try:
+            parent_proc = psutil.Process(self.omc_obj.omc_process.pid)
+            for child_proc in parent_proc.children(recursive=True):
+                os.kill(child_proc.pid, 9)
+            os.kill(self.omc_obj.omc_process.pid, 9)
+        except Exception as e:
+            log.info(str(e))
 
         if translateModelRes:
             update_simulate_records(uuid=self.uuid, percentage=20)
