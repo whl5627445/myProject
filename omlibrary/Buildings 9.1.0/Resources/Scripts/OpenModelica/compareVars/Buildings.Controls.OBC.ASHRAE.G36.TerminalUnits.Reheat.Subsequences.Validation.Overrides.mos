@@ -1,9 +1,0 @@
-compareVars :=
-  {
-    "ove.oveDamPos",
-    "ove.uDam",
-    "ove.yDam",
-    "ove.uHeaOff",
-    "ove.uVal",
-    "ove.yVal"
-  };

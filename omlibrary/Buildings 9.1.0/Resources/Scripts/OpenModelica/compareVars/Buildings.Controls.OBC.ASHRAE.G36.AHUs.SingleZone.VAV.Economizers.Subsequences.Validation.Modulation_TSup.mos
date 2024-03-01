@@ -1,8 +1,0 @@
-compareVars :=
-  {
-    "mod.yOutDam",
-    "mod.yRetDam",
-    "mod.yHeaCoi",
-    "mod.TSupHeaEcoSet",
-    "mod.TSup"
-  };

@@ -1,7 +1,0 @@
-compareVars :=
-  {
-    "ahuMod.uOpeMod[1]",
-    "ahuMod.uOpeMod[2]",
-    "ahuMod.uOpeMod[3]",
-    "ahuMod.yAhuOpeMod"
-  };

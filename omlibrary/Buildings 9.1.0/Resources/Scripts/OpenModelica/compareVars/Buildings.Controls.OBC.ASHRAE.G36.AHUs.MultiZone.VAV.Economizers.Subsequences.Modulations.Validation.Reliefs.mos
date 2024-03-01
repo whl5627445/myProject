@@ -1,6 +1,0 @@
-compareVars :=
-  {
-    "mod1.yOutDam",
-    "mod1.yRetDam",
-    "mod1.uTSup"
-  };

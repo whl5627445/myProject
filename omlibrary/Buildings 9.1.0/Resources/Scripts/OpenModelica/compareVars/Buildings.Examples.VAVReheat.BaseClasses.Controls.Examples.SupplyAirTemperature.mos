@@ -1,9 +1,0 @@
-compareVars :=
-  {
-    "conTSup.yHea",
-    "conTSup.yOA",
-    "conTSup.yCoo",
-    "uEna.y",
-    "TSupSet.y",
-    "TSup.y"
-  };

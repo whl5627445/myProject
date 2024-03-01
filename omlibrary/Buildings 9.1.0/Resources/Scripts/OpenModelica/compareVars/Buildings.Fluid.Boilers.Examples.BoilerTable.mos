@@ -1,9 +1,0 @@
-compareVars :=
-  {
-    "boi1.sta_a.T",
-    "boi1.sta_b.T",
-    "boi2.sta_b.T",
-    "boi1.eta",
-    "boi2.eta",
-    "y.y"
-  };

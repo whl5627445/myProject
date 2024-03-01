@@ -1,5 +1,0 @@
-compareVars :=
-  {
-    "arcSin.u",
-    "arcSin.y"
-  };

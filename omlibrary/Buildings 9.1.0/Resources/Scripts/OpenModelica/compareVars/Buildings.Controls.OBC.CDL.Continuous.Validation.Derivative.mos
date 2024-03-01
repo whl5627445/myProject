@@ -1,7 +1,0 @@
-compareVars :=
-  {
-    "der1.y",
-    "intWitRes.u",
-    "der2.y",
-    "der1.T"
-  };

@@ -1,6 +1,0 @@
-compareVars :=
-  {
-    "lmtdSta.lmtdSta",
-    "TIn.y",
-    "TOut.y"
-  };
