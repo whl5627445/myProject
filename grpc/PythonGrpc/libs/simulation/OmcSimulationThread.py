@@ -65,7 +65,7 @@ class OmcSimulation(threading.Thread):
         self.state = "compiling"  # 编译中
         log.info("(OMC)开始编译")
         # 编译
-        os.makedirs(r"/home/simtek/code/" + self.request.resultFilePath, exist_ok=True)
+        os.makedirs(r"/home/simtek/code/" + self.request.resultFilePath, exist_ok=True, mode=0o777)
         absolute_path = r"/home/simtek/code/" + self.request.resultFilePath + "result"
         log.info("(OMC)仿真结果地址:" + absolute_path)
         log.info("(OMC)仿真模型名：" + self.request.simulateModelName)

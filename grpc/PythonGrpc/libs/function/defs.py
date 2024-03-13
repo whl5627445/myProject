@@ -280,7 +280,7 @@ def message_notice(username, mes):
 
 def zip_folders(folders, output_path):
     if len(folders) > 0:
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        os.makedirs(os.path.dirname(output_path), exist_ok=True, mode=0o777)
         with zipfile.ZipFile(output_path, mode='w') as archive:
             for folder in folders:
                 parent_folder = os.path.dirname(folder)
