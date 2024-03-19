@@ -183,26 +183,9 @@ func SimulateResultGraphicsView(c *gin.Context) {
 			abscissa := data[0]
 
 			if unitsData[0] == "true" {
+				// 单位转换
 				scaleFactor, _ := strconv.ParseFloat(unitsData[1], 64)
 				offset, _ := strconv.ParseFloat(unitsData[2], 64)
-				length := len(ordinate)
-				if length > 1000 {
-					step := length / 1000
-					o := []float64{}
-					a := []float64{}
-					for s := 0; s < length; s++ {
-						index := s * step
-						if index > length || len(o) > 999 {
-							//o = append(o, data[1][len(ordinate)-1])
-							//a = append(a, data[0][len(ordinate)-1])
-							break
-						}
-						o = append(o, data[1][index])
-						a = append(a, data[0][index])
-					}
-					ordinate = o
-					abscissa = a
-				}
 				for p := 0; p < len(ordinate); p++ {
 					ordinate[p] = ordinate[p]*scaleFactor + offset
 				}
@@ -269,24 +252,9 @@ func SimulateResultSingularView(c *gin.Context) {
 			ordinate := data[1]
 			abscissa := data[0]
 			if unitsData[0] == "true" {
+				// 单位转换
 				scaleFactor, _ := strconv.ParseFloat(unitsData[1], 64)
 				offset, _ := strconv.ParseFloat(unitsData[2], 64)
-				length := len(ordinate)
-				if length > 1000 {
-					step := len(ordinate) / 1000
-					o := []float64{}
-					a := []float64{}
-					for s := 0; s < len(ordinate); s++ {
-						index := s * step
-						if index > length || len(o) > 999 {
-							break
-						}
-						o = append(o, data[1][index])
-						a = append(a, data[0][index])
-					}
-					ordinate = o
-					abscissa = a
-				}
 				for p := 0; p < len(ordinate); p++ {
 					ordinate[p] = ordinate[p]*scaleFactor + offset
 				}

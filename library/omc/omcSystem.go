@@ -1063,8 +1063,8 @@ func (o *ZmqObject) ReadSimulationResult(varNameList []string, path string) ([][
 	dataList = append(dataList, make([]float64, 0, 1))
 	d := dataUnmarshal[0]
 	for index, _ := range d {
-		// 时间和数据可能存在重复，循环将时间相同的部分移除
-		if index != 0 && (dataUnmarshal[0][index] == dataUnmarshal[0][index-1]) {
+		// 时间和数据可能存在重复，循环将时间相同并且数据相同的部分移除
+		if index != 0 && (dataUnmarshal[0][index] == dataUnmarshal[0][index-1]) && (dataUnmarshal[1][index] == dataUnmarshal[1][index-1]) {
 			continue
 		}
 		dataList[0] = append(dataList[0], dataUnmarshal[0][index])
