@@ -582,10 +582,10 @@ func (m *modelParameters) getParameter(className string, varName string, p []any
 		if isEnumeration { // 处理枚举类型
 			Literals := omc.OMC.GetEnumerationLiterals(className)
 			dataDefault["options"] = func() []string {
-				oData := []string{parameterValue}
+				oData := []string{}
 				for _, literal := range Literals {
 					literalValue := strings.TrimPrefix(className, ".") + "." + literal
-					if literal != "" && literalValue != parameterValue {
+					if literal != "" {
 						oData = append(oData, literalValue)
 					}
 				}
