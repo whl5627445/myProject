@@ -1,19 +1,14 @@
 package service
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"log"
 	"strings"
 
 	"yssim-go/app/DataBaseModel"
-	"yssim-go/config"
 	"yssim-go/library/omc"
 )
-
-var r = config.R
-var redisKey = config.RedisCacheKey
 
 func DefaultLibraryInitialization(packageModel []DataBaseModel.YssimModels) {
 	setOptions()
@@ -47,8 +42,8 @@ func DefaultLibraryInitialization(packageModel []DataBaseModel.YssimModels) {
 	for k, _ := range packageAll {
 		deleteModel(k)
 	}
-	lPackage := GetLibraryAndVersions()
-	refreshCache(lPackage)
+	// lPackage := GetLibraryAndVersions()
+	// refreshCache(lPackage)
 
 }
 
@@ -58,20 +53,6 @@ func setOptions() {
 
 func Clear() {
 	omc.OMC.SendExpressionNoParsed("clear()")
-}
-
-func modelCache(packageModel, permissions string) {
-	modelsALL := omc.OMC.GetClassNames(packageModel, true)
-	omc.OMC.CacheRefreshSet(true)
-	for p := 0; p < len(modelsALL); p++ {
-		if permissions == "sys" {
-			log.Println("正在缓存：", modelsALL[p], " 的图形数据")
-			GetGraphicsData(modelsALL[p], permissions)
-		}
-		// GetGraphicsData(modelsALL[p])
-
-	}
-	omc.OMC.CacheRefreshSet(false)
 }
 
 func GetLibraryAndVersions() map[string]string {
@@ -222,8 +203,6 @@ func LoadAndDeleteLibrary(packageName, version, path, loadOrUnload string) error
 		result = DeleteLibrary(packageName)
 	} else {
 		result = LoadPackage(packageName, version, path)
-		lPackage := GetLibraryAndVersions()
-		refreshCache(lPackage)
 	}
 	if !result {
 		return errors.New(fmt.Sprintf("操作模型库 %s %s 时出错，请联系管理员", packageName, version))
@@ -295,23 +274,6 @@ func getInterdependence(unloadMap map[string]bool, LoadPackageList [][]string) m
 		}
 	}
 	return unloadMap
-}
-
-func refreshCache(packageAndVersion map[string]string) {
-	ctx := context.Background()
-	r.Del(ctx, config.USERNAME+"-yssim-componentGraphicsData").Result()
-	r.Del(ctx, config.USERNAME+"-yssim-GraphicsData").Result()
-	r.Del(ctx, config.USERNAME+"-yssim-modelGraphicsData").Result()
-	for k, v := range packageAndVersion {
-		packageCacheKeys := r.HKeys(ctx, k+"-"+v+"-GraphicsData").Val()
-		packageCacheValues := r.HVals(ctx, k+"-"+v+"-GraphicsData").Val()
-		NewKeyValues := []string{}
-		for i := 0; i < len(packageCacheKeys); i++ {
-			NewKeyValues = append(NewKeyValues, packageCacheKeys[i])
-			NewKeyValues = append(NewKeyValues, packageCacheValues[i])
-		}
-		r.HSet(ctx, redisKey, NewKeyValues)
-	}
 }
 
 func GetPackageInformation() map[string]map[string]string {
