@@ -2071,8 +2071,8 @@ func Test1(c *gin.Context) {
 		测试omc命令
 	*/
 	cmd := c.Query("cmd")
-	data := service.GetGraphicsDataNew(cmd)
-	// _ = omc.OMC.GetModelInstance(cmd)
+	// data := service.GetGraphicsDataNew(cmd)
+	data, _ := omc.OMC.SendExpression(cmd)
 	var res DataType.ResponseData
 	res.Data = data
 	c.JSON(http.StatusOK, res)
