@@ -2,7 +2,6 @@ package omc
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"log"
 	"os"
@@ -11,10 +10,9 @@ import (
 	"strings"
 	"sync"
 
-	"yssim-go/app/serviceType"
-	"yssim-go/config"
-
 	"github.com/bytedance/sonic"
+
+	// "yssim-go/app/serviceType"
 
 	"github.com/go-zeromq/zmq4"
 )
@@ -24,28 +22,15 @@ type ZmqObject struct {
 	sync.Mutex
 }
 
-var cacheRefresh = false
-var redisCacheKey = &config.RedisCacheKey
-var userName = config.USERNAME
-
-var allModelCache = config.R
-
 // SendExpression 发送指令，获取数据
 func (o *ZmqObject) SendExpression(cmd string) ([]any, bool) {
 	// s := time.Now().UnixNano() / 1e6
 	var msg []byte
-	ctx := context.Background()
-	msg, err := allModelCache.HGet(ctx, *redisCacheKey, cmd).Bytes()
-	if len(msg) == 0 || string(msg) == "null" {
-		o.Lock()
-		_ = o.Send(zmq4.NewMsgString(cmd))
-		data, _ := o.Recv()
-		msg = data.Bytes()
-		o.Unlock()
-		if cacheRefresh && len(msg) > 0 {
-			allModelCache.HSet(ctx, *redisCacheKey, cmd, msg)
-		}
-	}
+	o.Lock()
+	_ = o.Send(zmq4.NewMsgString(cmd))
+	data, _ := o.Recv()
+	msg = data.Bytes()
+	o.Unlock()
 	parseData, err := dataToGo(msg)
 	if err != nil {
 		log.Println("cmd: ", cmd)
@@ -66,18 +51,11 @@ func (o *ZmqObject) SendExpressionNoParsed(cmd string) ([]byte, bool) {
 
 	var msg []byte
 	// s := time.Now().UnixNano() / 1e6
-	ctx := context.Background()
-	msg, _ = allModelCache.HGet(ctx, *redisCacheKey, cmd).Bytes()
-	if len(msg) == 0 || string(msg) == "null" {
-		o.Lock()
-		_ = o.Send(zmq4.NewMsgString(cmd))
-		data, _ := o.Recv()
-		msg = data.Bytes()
-		o.Unlock()
-		if cacheRefresh && len(msg) > 0 {
-			allModelCache.HSet(ctx, *redisCacheKey, cmd, msg)
-		}
-	}
+	o.Lock()
+	_ = o.Send(zmq4.NewMsgString(cmd))
+	data, _ := o.Recv()
+	msg = data.Bytes()
+	o.Unlock()
 	if string(msg) == "\"\"\n" {
 		return []byte{}, false
 	}
@@ -144,11 +122,6 @@ func (o *ZmqObject) GetCommandLineOptions() string {
 		return string(data)
 	}
 	return ""
-}
-
-// CacheRefreshSet 改变缓存策略
-func (o *ZmqObject) CacheRefreshSet(cache bool) {
-	cacheRefresh = cache
 }
 
 // GetInheritedClasses 获取给定切片当中所有模型的继承项
@@ -1364,24 +1337,6 @@ func (o *ZmqObject) BuildModelFMU(className string, fmuFileNameId string) string
 		return string(result)
 	}
 	return ""
-}
-
-// ModelInstance 将模型实例化后解析到给定的指针地址变量
-func (o *ZmqObject) ModelInstance(modelName string, ModelInstance *serviceType.ModelInstance) bool {
-	cmd := "getModelInstance(" + modelName + ")"
-	result, ok := o.SendExpressionNoParsed(cmd)
-	if ok && len(result) > 1 {
-		result = bytes.ReplaceAll(result, []byte("\\\""), []byte("\""))
-		result = bytes.ReplaceAll(result, []byte("\\\\"), []byte("\\"))
-		result = result[1 : len(result)-2]
-		err := sonic.Unmarshal(result, ModelInstance)
-
-		if err != nil {
-			log.Println(err)
-		}
-		return true
-	}
-	return false
 }
 
 // DumpXMLDAE  生成result_init.xml文件
