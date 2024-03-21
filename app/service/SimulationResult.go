@@ -320,12 +320,7 @@ func SimulationResultTree(path, parent, keyWords string) []map[string]any {
 			}
 			if !nameMap[splitName[0]] {
 				switch {
-				case scalarVariableMap[name].HideResult == "false" && scalarVariableMap[name].IsProtected:
-					if !scalarVariableMap[name].IsValueChangeable && len(splitName) == 1 {
-						resultNameList = append(resultNameList, scalarVariableMap[name].Name)
-					}
-					dataList = append(dataList, SetResultTree(splitName, scalarVariableMap[name], id, nameMap, path))
-				case scalarVariableMap[name].HideResult == "" && !scalarVariableMap[name].IsProtected:
+				case scalarVariableMap[name].HideResult != "true":
 					if !scalarVariableMap[name].IsValueChangeable && len(splitName) == 1 {
 						resultNameList = append(resultNameList, scalarVariableMap[name].Name)
 					}
