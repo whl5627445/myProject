@@ -64,6 +64,11 @@ type ExperimentEditData struct {
 	ModelVarData    datatypes.JSON    `json:"model_var_data" binding:""`
 }
 
+type ExperimentNameEditData struct {
+	ExperimentId      string `json:"experiment_id" binding:"required"`
+	NewExperimentName string `json:"new_experiment_name" binding:"required"`
+}
+
 type SnapshotCreatData struct {
 	SnapshotName      string         `json:"snapshot_name" binding:"required"`
 	ModelName         string         `json:"model_name" binding:"required"`
