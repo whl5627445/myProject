@@ -704,35 +704,26 @@ func ExperimentNameEditView(c *gin.Context) {
 	var simulateRecord DataBaseModel.YssimSimulateRecord
 	DB.Where("experiment_id = ? AND username =? AND userspace_id =?", item.ExperimentId, username, userSpaceId).First(&simulateRecord)
 
-	// 更新名称
+	// 修改名称，开启事务
+	tx := DB.Begin()
+
 	var newExperimentRecordName DataBaseModel.YssimExperimentRecord
-	if simulateRecord.ID == "" {
-		// 若simulation不存在，只修改experiment的名称
-		err = DB.Model(&newExperimentRecordName).Where("id = ? AND username =? AND userspace_id =?", item.ExperimentId, username, userSpaceId).Updates(DataBaseModel.YssimExperimentRecord{
-			ExperimentName: item.NewExperimentName,
-		}).Error
-		if err != nil {
-			res.Err = "实验名称更新失败，请稍后再试"
-			res.Status = 1
-			c.JSON(http.StatusOK, res)
-			return
-		}
-	} else {
-		// 若simulation存在，修改experiment和simulation的名称
-		tx := DB.Begin()
+	var newSimulationRecordName DataBaseModel.YssimSimulateRecord
 
-		txResult := tx.Model(&newExperimentRecordName).Where("id = ? AND username =? AND userspace_id =?", item.ExperimentId, username, userSpaceId).Updates(DataBaseModel.YssimExperimentRecord{
-			ExperimentName: item.NewExperimentName,
-		})
-		if txResult.Error != nil {
-			tx.Rollback()
-			res.Err = "实验名称更新失败，请稍后再试"
-			res.Status = 1
-			c.JSON(http.StatusOK, res)
-			return
-		}
+	// 修改实验名称
+	txResult := tx.Model(&newExperimentRecordName).Where("id = ? AND username =? AND userspace_id =?", item.ExperimentId, username, userSpaceId).Updates(DataBaseModel.YssimExperimentRecord{
+		ExperimentName: item.NewExperimentName,
+	})
+	if txResult.Error != nil {
+		tx.Rollback()
+		res.Err = "实验名称更新失败，请稍后再试"
+		res.Status = 1
+		c.JSON(http.StatusOK, res)
+		return
+	}
 
-		var newSimulationRecordName DataBaseModel.YssimSimulateRecord
+	//若实验存在仿真结果，同步修改仿真结果名称
+	if simulateRecord.ID != "" {
 		txResult = tx.Model(&newSimulationRecordName).Where("experiment_id =? AND username =? AND userspace_id =?", item.ExperimentId, username, userSpaceId).Updates(DataBaseModel.YssimSimulateRecord{
 			AnotherName: item.NewExperimentName + "的结果",
 		})
@@ -743,9 +734,9 @@ func ExperimentNameEditView(c *gin.Context) {
 			c.JSON(http.StatusOK, res)
 			return
 		}
-
-		tx.Commit()
 	}
+
+	tx.Commit()
 
 	res.Msg = "实验名称已更新"
 	c.JSON(http.StatusOK, res)
