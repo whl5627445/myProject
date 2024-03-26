@@ -672,6 +672,85 @@ func ExperimentParametersView(c *gin.Context) {
 	res.Data = record.ModelVarData
 	c.JSON(http.StatusOK, res)
 }
+
+func ExperimentNameEditView(c *gin.Context) {
+	/*
+	   # 仿真实验记录名称编辑接口，
+	   ## experiment_id: 实验id
+	   ## new_experiment_name: 新的实验名称
+	*/
+
+	var res DataType.ResponseData
+	var item DataType.ExperimentNameEditData
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	username := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
+
+	// 判断用户传入的experiment是否存在
+	var recordName DataBaseModel.YssimExperimentRecord
+	DB.Where("id = ? AND username =? AND userspace_id =?", item.ExperimentId, username, userSpaceId).First(&recordName)
+	if recordName.ID == "" {
+		res.Err = "实验记录不存在"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	// 查询experiment对应的simulation record
+	var simulateRecord DataBaseModel.YssimSimulateRecord
+	DB.Where("experiment_id = ? AND username =? AND userspace_id =?", item.ExperimentId, username, userSpaceId).First(&simulateRecord)
+
+	// 更新名称
+	var newExperimentRecordName DataBaseModel.YssimExperimentRecord
+	if simulateRecord.ID == "" {
+		// 若simulation不存在，只修改experiment的名称
+		err = DB.Model(&newExperimentRecordName).Where("id = ? AND username =? AND userspace_id =?", item.ExperimentId, username, userSpaceId).Updates(DataBaseModel.YssimExperimentRecord{
+			ExperimentName: item.NewExperimentName,
+		}).Error
+		if err != nil {
+			res.Err = "实验名称更新失败，请稍后再试"
+			res.Status = 1
+			c.JSON(http.StatusOK, res)
+			return
+		}
+	} else {
+		// 若simulation存在，修改experiment和simulation的名称
+		tx := DB.Begin()
+
+		txResult := tx.Model(&newExperimentRecordName).Where("id = ? AND username =? AND userspace_id =?", item.ExperimentId, username, userSpaceId).Updates(DataBaseModel.YssimExperimentRecord{
+			ExperimentName: item.NewExperimentName,
+		})
+		if txResult.Error != nil {
+			tx.Rollback()
+			res.Err = "实验名称更新失败，请稍后再试"
+			res.Status = 1
+			c.JSON(http.StatusOK, res)
+			return
+		}
+
+		var newSimulationRecordName DataBaseModel.YssimSimulateRecord
+		txResult = tx.Model(&newSimulationRecordName).Where("experiment_id =? AND username =? AND userspace_id =?", item.ExperimentId, username, userSpaceId).Updates(DataBaseModel.YssimSimulateRecord{
+			AnotherName: item.NewExperimentName + "的结果",
+		})
+		if txResult.Error != nil {
+			tx.Rollback()
+			res.Err = "实验名称更新失败，请稍后再试"
+			res.Status = 1
+			c.JSON(http.StatusOK, res)
+			return
+		}
+
+		tx.Commit()
+	}
+
+	res.Msg = "实验名称已更新"
+	c.JSON(http.StatusOK, res)
+}
+
 func CreateSnapshotView(c *gin.Context) {
 	/*
 		#xqd#创建视图(快照)接口
