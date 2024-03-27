@@ -43,6 +43,12 @@ type ModelSimulateResultSingularData struct {
 	S2       string `json:"s2" binding:""`
 }
 
+type ExperimentExistsData struct {
+	PackageId       string            `json:"package_id" binding:"required"`
+	SimulateVarData map[string]string `json:"simulate_var_data" binding:"required"`
+	ModelVarData    datatypes.JSON    `json:"model_var_data" binding:""`
+}
+
 type ExperimentCreateData struct {
 	PackageId       string            `json:"package_id" binding:"required"`
 	ModelName       string            `json:"model_name" binding:"required"`
