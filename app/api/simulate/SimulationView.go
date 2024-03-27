@@ -1,10 +1,12 @@
 package simulate
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"math"
 	"net/http"
+	"reflect"
 	"sort"
 	"strconv"
 	"strings"
@@ -453,6 +455,75 @@ func SimulateResultRenameView(c *gin.Context) {
 		return
 	}
 	res.Msg = "修改成功"
+	c.JSON(http.StatusOK, res)
+}
+
+func ExperimentExistsView(c *gin.Context) {
+	/*
+	   # 判断仿真实验记录是否存在接口，
+	   ## package_id: 保存的实验是属于哪个包id
+	   ## model_var_data: 模型的变量数据，修改过哪个模型变量，保存到当前数组对象
+	   ## simulate_var_data: 模型仿真选项数据
+	*/
+	var res DataType.ResponseData
+	var item DataType.ExperimentExistsData
+	err := c.BindJSON(&item)
+	if err != nil {
+		fmt.Println(err.Error())
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	username := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
+
+	// 将请求数据的ModelVarData转化为slice
+	var requestModelParamList interface{}
+	if err = json.Unmarshal([]byte(item.ModelVarData), &requestModelParamList); err != nil {
+		res.Err = "实验参数对比失败，请稍后再试"
+		res.Status = 1
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	// 查询当前用户空间的package id所有的experiment记录
+	var experimentRecordList []DataBaseModel.YssimExperimentRecord
+	DB.Where("package_id = ? AND username =? AND userspace_id =?",
+		item.PackageId, username, userSpaceId).Find(&experimentRecordList)
+
+	// 遍历每一条数据库记录，把每一条数据库记录和当前请求数据对比
+	for _, experimentRecord := range experimentRecordList {
+		// 将每一个数据库记录转化为ExperimentExistsData类型数据，方便比较数据
+		var dbRecord DataType.ExperimentExistsData
+		simulateVarData := map[string]string{}
+		simulateVarData["startTime"] = experimentRecord.StartTime
+		simulateVarData["stopTime"] = experimentRecord.StopTime
+		simulateVarData["tolerance"] = experimentRecord.Tolerance
+		simulateVarData["numberOfIntervals"] = experimentRecord.NumberOfIntervals
+		simulateVarData["interval"] = experimentRecord.Interval
+		simulateVarData["simulate_type"] = experimentRecord.SimulateType
+		simulateVarData["method"] = experimentRecord.Method
+
+		dbRecord.SimulateVarData = simulateVarData
+		dbRecord.ModelVarData = experimentRecord.ModelVarData
+
+		// 将每一条数据库记录的ModelVarData转化为slice
+		var dbRecordModelParamList interface{}
+		if err := json.Unmarshal([]byte(dbRecord.ModelVarData), &dbRecordModelParamList); err != nil {
+			res.Err = "实验参数对比失败，请稍后再试"
+			res.Status = 1
+			c.JSON(http.StatusOK, res)
+			return
+		}
+
+		// 比较请求参数和本条数据库记录参数的SimulateVarData和ModelVarData
+		if reflect.DeepEqual(item.SimulateVarData, dbRecord.SimulateVarData) && reflect.DeepEqual(requestModelParamList, dbRecordModelParamList) {
+			data := map[string]string{"experiment_id": experimentRecord.ID, "name": experimentRecord.ExperimentName}
+			res.Data = data
+			c.JSON(http.StatusOK, res)
+			return
+		}
+	}
+
 	c.JSON(http.StatusOK, res)
 }
 
