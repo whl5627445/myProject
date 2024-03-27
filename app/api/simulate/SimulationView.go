@@ -13,13 +13,12 @@ import (
 
 	"github.com/bytedance/sonic"
 
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/DataType"
 	"yssim-go/app/service"
 	"yssim-go/config"
-
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 )
 
 var DB = config.DB
@@ -484,9 +483,10 @@ func ExperimentCreateView(c *gin.Context) {
 		return
 	}
 
+	// 名称判重
 	var record DataBaseModel.YssimExperimentRecord
 	DB.Where("package_id = ? AND experiment_name = ? AND username =? AND userspace_id =? AND model_name =?", item.PackageId, item.ExperimentName, username, userSpaceId, item.ModelName).First(&record)
-	if record.ExperimentName != "" {
+	if record.ExperimentName != "" || item.ExperimentName == "实验(默认)" {
 		res.Err = "实验记录名称已存在，请更换。"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
@@ -516,6 +516,12 @@ func ExperimentCreateView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
+	// 超过5个实验时会自动删除最早创建的实验
+	var recordList []DataBaseModel.YssimExperimentRecord
+	DB.Where("package_id = ? AND username =? AND userspace_id =? AND model_name =?", item.PackageId, username, userSpaceId, item.ModelName).Order("create_time desc").Find(&recordList)
+	if len(recordList) > 5 {
+		DB.Delete(&recordList[len(recordList)-1])
+	}
 	item.SimulateVarData["id"] = experimentRecord.ID
 	// item.SimulateVarData["ModelVarData"] = item.ModelVarData
 	res.Data = item.SimulateVarData
@@ -541,7 +547,19 @@ func ExperimentDeleteView(c *gin.Context) {
 	var record DataBaseModel.YssimExperimentRecord
 	DB.Where("username =? AND userspace_id =? AND id =?", username, userSpaceId, item.ExperimentId).First(&record)
 	DB.Delete(&record)
-	DB.Delete(&DataBaseModel.YssimSnapshots{}, "experiment_id = ?", item.ExperimentId) //删除相关的快照
+	//删除相关的快照
+	DB.Delete(&DataBaseModel.YssimSnapshots{}, "experiment_id = ?", item.ExperimentId)
+
+	// 删除相关的仿真记录
+	var resultRecord []DataBaseModel.YssimSimulateRecord
+	DB.Where("experiment_id = ? ", item.ExperimentId).Find(&resultRecord)
+	for i := 0; i < len(resultRecord); i++ {
+		resultRecord[i].SimulateStatus = "5"
+		config.DB.Save(&resultRecord[i])
+		service.DeleteSimulateTask(resultRecord[i].ID, resultRecord[i].SimulateType, resultRecord[i].SimulateModelResultPath)
+		config.DB.Delete(&resultRecord[i])
+	}
+
 	res.Msg = "删除成功"
 	c.JSON(http.StatusOK, res)
 }

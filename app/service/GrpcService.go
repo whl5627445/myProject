@@ -197,40 +197,58 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 		return "", errors.New("不存在的仿真类型")
 	}
 	// 查询数据库中的实验id对应的记录
+	anotherName := ""
 	var experimentRecord DataBaseModel.YssimExperimentRecord
 	DB.Where("id = ? ", itemMap["experiment_id"]).First(&experimentRecord)
+	if experimentRecord.ID == "" {
+		anotherName = "实验(默认)的结果"
+	} else {
+		anotherName = experimentRecord.ExperimentName + "的结果"
+	}
 	// 查询数据库中的模型对应的记录
 	var packageModel DataBaseModel.YssimModels
 	err := DB.Where("id = ? AND sys_or_user IN ? AND userspace_id IN ?", itemMap["package_id"], []string{"sys", itemMap["username"]}, []string{"0", itemMap["space_id"]}).First(&packageModel).Error
 	if err != nil {
 		return "", errors.New("not found")
 	}
-	// SimulateStatus "1"初始(正在准备)  "2"执行  "3"失败(编译失败or仿真运行失败)  "4"成功结束  "5"关闭(killed)  "6"编译阶段
-	record := DataBaseModel.YssimSimulateRecord{
-		ID:                uuid.New().String(),
-		PackageId:         itemMap["package_id"],
-		UserspaceId:       itemMap["space_id"],
-		UserName:          itemMap["username"],
-		SimulateModelName: itemMap["model_name"],
-		SimulateStatus:    "1",
-		StartTime:         itemMap["start_time"],
-		StopTime:          itemMap["stop_time"],
-		Method:            itemMap["method"],
-		SimulateType:      itemMap["simulate_type"],
-		NumberOfIntervals: itemMap["number_of_intervals"],
-		Tolerance:         itemMap["tolerance"],
-		ExperimentId:      itemMap["experiment_id"],
-		Intervals:         itemMap["interval"],
+
+	// 查询实验id对应的仿真记录
+	var simulateRecord DataBaseModel.YssimSimulateRecord
+	DB.Where("experiment_id = ? AND username = ? AND userspace_id = ?", itemMap["experiment_id"], itemMap["username"], itemMap["space_id"]).First(&simulateRecord)
+
+	record := DataBaseModel.YssimSimulateRecord{}
+	if simulateRecord.ID == "" {
+		// SimulateStatus "1"初始(正在准备)  "2"执行  "3"失败(编译失败or仿真运行失败)  "4"成功结束  "5"关闭(killed)  "6"编译阶段
+		record = DataBaseModel.YssimSimulateRecord{
+			ID:                uuid.New().String(),
+			PackageId:         itemMap["package_id"],
+			UserspaceId:       itemMap["space_id"],
+			UserName:          itemMap["username"],
+			SimulateModelName: itemMap["model_name"],
+			SimulateStatus:    "1",
+			StartTime:         itemMap["start_time"],
+			StopTime:          itemMap["stop_time"],
+			Method:            itemMap["method"],
+			SimulateType:      itemMap["simulate_type"],
+			NumberOfIntervals: itemMap["number_of_intervals"],
+			Tolerance:         itemMap["tolerance"],
+			ExperimentId:      itemMap["experiment_id"],
+			Intervals:         itemMap["interval"],
+			AnotherName:       anotherName,
+		}
+		err = DB.Create(&record).Error
+		if err != nil {
+			return "", errors.New("新建数据库记录出现错误")
+		}
+		// 创建结果文件夹,并存入数据库
+		resultFilePath := "static/UserFiles/ModelResult/" + itemMap["username"] + "/" + strings.ReplaceAll(itemMap["model_name"], ".", "-") + "/" + time.Now().Local().Format("20060102150405") + "/"
+		// fileOperation.CreateFilePath(resultFilePath)
+		record.SimulateModelResultPath = resultFilePath
+		config.DB.Save(&record)
+	} else {
+		record = simulateRecord
 	}
-	err = DB.Create(&record).Error
-	if err != nil {
-		return "", errors.New("新建数据库记录出现错误")
-	}
-	// 创建结果文件夹,并存入数据库
-	resultFilePath := "static/UserFiles/ModelResult/" + itemMap["username"] + "/" + strings.ReplaceAll(itemMap["model_name"], ".", "-") + "/" + time.Now().Local().Format("20060102150405") + "/"
-	// fileOperation.CreateFilePath(resultFilePath)
-	record.SimulateModelResultPath = resultFilePath
-	config.DB.Save(&record)
+
 	// 将实验参数写入模型
 	if packageModel.SysUser != "sys" {
 		// YssimExperimentRecord表的json数据绑定到结构体
@@ -274,6 +292,7 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 	// SimulateTaskMap[record.ID] = record
 	record.SimulateStart = true
 	record.EnvModelData = jsonEnvData
+	record.Percentage = 0
 	config.DB.Save(&record)
 	// 发送仿真请求
 	GrpcBuildModelRequest := &grpcPb.SubmitTaskRequest{
@@ -283,7 +302,7 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 		UserName:          record.UserName,
 		SimulatePackageId: record.PackageId,
 		SimulateModelName: record.SimulateModelName,
-		ResultFilePath:    resultFilePath,
+		ResultFilePath:    record.SimulateModelResultPath,
 		SimulationPraData: SimulationPraData,
 		EnvModelData:      environmentModelData,
 		SimulateType:      record.SimulateType, // OM DM

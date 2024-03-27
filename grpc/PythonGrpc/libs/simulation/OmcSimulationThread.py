@@ -6,7 +6,7 @@ import time
 import psutil
 from config.redis_config import R
 from libs.OMPython.OMCSessionZMQ import OMCSessionZMQ
-from libs.function.defs import update_simulate_records, new_another_name, sendMessage
+from libs.function.defs import update_simulate_records, sendMessage
 from libs.function.find_port import findPort
 from libs.function.grpc_log import log
 from libs.function.progress_server import TcpServer
@@ -170,10 +170,10 @@ class OmcSimulation(threading.Thread):
                                         simulate_start="0",
                                         result_run_time=time2 - time1,
                                         simulate_end_time=int(time.time()),
-                                        another_name=new_another_name(self.request.userName,
-                                                                      self.request.simulateModelName,
-                                                                      self.request.simulatePackageId,
-                                                                      self.request.userSpaceId),
+                                        # another_name=new_another_name(self.request.userName,
+                                        #                               self.request.simulateModelName,
+                                        #                               self.request.simulatePackageId,
+                                        #                               self.request.userSpaceId),
                                         percentage=100
                                         )
 
