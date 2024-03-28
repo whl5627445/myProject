@@ -71,6 +71,7 @@ type ExperimentEditData struct {
 }
 
 type ExperimentNameEditData struct {
+	PackageId         string `json:"package_id" binding:"required"`
 	ExperimentId      string `json:"experiment_id" binding:"required"`
 	NewExperimentName string `json:"new_experiment_name" binding:"required"`
 }
