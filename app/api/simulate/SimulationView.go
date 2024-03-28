@@ -763,10 +763,21 @@ func ExperimentNameEditView(c *gin.Context) {
 
 	// 判断用户传入的experiment是否存在
 	var recordName DataBaseModel.YssimExperimentRecord
-	DB.Where("id = ? AND username =? AND userspace_id =?", item.ExperimentId, username, userSpaceId).First(&recordName)
+	DB.Where("id =? AND package_id =? AND username =? AND userspace_id =?",
+		item.ExperimentId, item.PackageId, username, userSpaceId).First(&recordName)
 	if recordName.ID == "" {
 		res.Err = "实验记录不存在"
 		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	// 判断新的experiment name是否重复
+	var existingName DataBaseModel.YssimExperimentRecord
+	DB.Where("id != ? AND username =? AND userspace_id =? AND experiment_name =? AND package_id =?",
+		item.ExperimentId, username, userSpaceId, item.NewExperimentName, item.PackageId).First(&existingName)
+	if existingName.ExperimentName != "" || item.NewExperimentName == "实验(默认)" {
+		res.Msg = "实验记录名称已存在，请更换"
 		c.JSON(http.StatusOK, res)
 		return
 	}
