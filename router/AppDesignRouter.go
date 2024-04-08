@@ -1,7 +1,7 @@
 package router
 
 import (
-	API "yssim-go/app/api/appDesign"
+	API "yssim-go/app/v1/api/appDesign"
 
 	"github.com/gin-gonic/gin"
 )

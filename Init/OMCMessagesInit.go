@@ -3,7 +3,8 @@ package Init
 import (
 	"log"
 	"time"
-	"yssim-go/app/service"
+
+	"yssim-go/app/v1/service"
 	"yssim-go/library/omc"
 )
 

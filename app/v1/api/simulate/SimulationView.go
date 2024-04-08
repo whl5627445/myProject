@@ -19,7 +19,7 @@ import (
 	"github.com/google/uuid"
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/DataType"
-	"yssim-go/app/service"
+	"yssim-go/app/v1/service"
 	"yssim-go/config"
 )
 

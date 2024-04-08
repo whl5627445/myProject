@@ -1184,15 +1184,18 @@ func (o *ZmqObject) GetClassRestriction(className string) string {
 }
 
 // GetModelInstance 获取给定模型名称的实例化json数据字符串
-func (o *ZmqObject) GetModelInstance(className string) string {
-	cmd := "getModelInstance(" + className + ")"
+func (o *ZmqObject) GetModelInstance(className string) []byte {
+	cmd := "getModelInstance(" + className + ",\"\",false)"
 	result, ok := o.SendExpressionNoParsed(cmd)
 	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
+	result = bytes.ReplaceAll(result, []byte("\\\""), []byte("\""))
+	result = bytes.ReplaceAll(result, []byte("\\\\"), []byte("\\"))
+	result = bytes.ReplaceAll(result, []byte("$"), []byte(""))
 	result = result[1 : len(result)-1]
 	if ok && len(result) > 0 {
-		return string(result)
+		return result
 	}
-	return ""
+	return nil
 }
 
 // Save 保存模型源码到文件，文件路径由omc查找
