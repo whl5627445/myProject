@@ -12,7 +12,7 @@ import (
 
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/DataType"
-	"yssim-go/app/service"
+	"yssim-go/app/v1/service"
 	"yssim-go/config"
 
 	"github.com/bytedance/sonic"
