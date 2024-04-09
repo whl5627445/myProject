@@ -18,11 +18,12 @@ func GetModelInstance(modelName string) map[string]any {
 	m.DataPreprocessing()
 	fmt.Printf("数据预处理用时：%d", time.Now().Local().UnixMilli()-ss)
 	sss := time.Now().Local().UnixMilli()
-	i := map[string]any{
+	graphics := map[string]any{
 		"connections": GetConnectionsListAll(m),
 		"diagram":     GetDiagramListAll(m),
 		"elements":    GetElementsIconList(m),
 	}
+	i := map[string]any{"graphics": graphics, "parameters": make(map[string]any, 0)}
 	fmt.Printf("逻辑处理用时：%d", time.Now().Local().UnixMilli()-sss)
 	return i
 }
@@ -90,7 +91,7 @@ func getElementsGraphicsList(m *instance.ModelInstance, parentName string) []map
 	elementsList := make([]map[string]any, 0)
 	for i := 0; i < len(m.Elements); i++ {
 		e := m.Elements[i]
-		if (e.BaseClass != nil && e.BaseClass.BasicType && e.Kind == "extends") || e.Annotation == nil || (e.Annotation != nil && e.Annotation.Placement == nil) || e.Type == nil || (e.Type != nil && e.Type.BasicType) {
+		if (e.BaseClass != nil && e.BaseClass.BasicType && e.Kind == "extends") || e.Annotation.Placement == nil || e.Type == nil || (e.Type != nil && e.Type.BasicType) {
 			continue
 		}
 		typeInstance := e.Type
@@ -100,14 +101,14 @@ func getElementsGraphicsList(m *instance.ModelInstance, parentName string) []map
 		modelIconList["comment"] = typeInstance.Comment
 		modelIconList["restriction"] = typeInstance.Restriction
 		modelIconList["direction"] = typeInstance.Prefixes.Direction
-		modelIconList["connectorSizing"] = e.Dims.Absyn
+		// modelIconList["connectorSizing"] = e.Dims.Absyn
 		modelIconList["subShapes"] = typeInstance.Annotation.Icon.GetIconList(e)
 		modelIconList["modelName"] = m.Name
 		modelIconList["connectors"] = getElementsConnectorList(typeInstance, e.Name)
-		modelIconList["outputType"] = e.Dims.Absyn
+		// modelIconList["outputType"] = e.Dims.Absyn
 		modelIconList["parentName"] = parentName
 		modelIconList["origin"] = e.Annotation.Placement.Transformation.Origin
-		modelIconList["extent"] = e.Annotation.Placement.Transformation.Extent
+		modelIconList["extents"] = e.Annotation.Placement.Transformation.Extents
 		modelIconList["rotation"] = e.Annotation.Placement.Transformation.Rotation
 		modelIconList["coordinateSystem"] = typeInstance.Annotation.Icon.CoordinateSystem
 		elementsList = append(elementsList, modelIconList)
@@ -140,8 +141,10 @@ func getExtendsElementsGraphicsList(m *instance.ModelInstance, parentName string
 // getElementsConnectorList 获取模型组件连接器数据列表
 func getElementsConnectorList(m *instance.ModelInstance, parentName string) []map[string]any {
 	connectorList := make([]map[string]any, 0)
+	connectorSizingMap := map[string]bool{}
 	for i := 0; i < len(m.Elements); i++ {
 		e := m.Elements[i]
+		connectorSizingMap[e.Name] = e.Annotation.Dialog.ConnectorSizing
 		if e.BaseClass != nil && !e.BaseClass.BasicType && e.Kind == "extends" {
 			connectorList = append(connectorList, getElementsConnectorList(m.Elements[i].BaseClass, parentName)...)
 			continue
@@ -163,16 +166,29 @@ func getElementsConnectorList(m *instance.ModelInstance, parentName string) []ma
 			modelIconList["comment"] = e.Comment
 			modelIconList["restriction"] = typeInstance.Restriction
 			modelIconList["direction"] = typeInstance.Prefixes.Direction
-			modelIconList["connectorSizing"] = e.Dims.Absyn
+			// modelIconList["connectorSizing"] =
 			modelIconList["subShapes"] = typeInstance.Annotation.Icon.GetIconList(e)
 			modelIconList["modelName"] = m.Name
-			modelIconList["outputType"] = e.Dims.Typed
+			modelIconList["outputType"] = geOutputType(connectorSizingMap, e.Dims.Absyn, e.Dims.Typed)
 			modelIconList["parentName"] = parentName
 			modelIconList["origin"] = e.Annotation.Placement.Transformation.Origin
-			modelIconList["extent"] = e.Annotation.Placement.Transformation.Extent
+			modelIconList["extents"] = e.Annotation.Placement.Transformation.Extents
 			modelIconList["rotation"] = e.Annotation.Placement.Transformation.Rotation
 			connectorList = append(connectorList, modelIconList)
 		}
 	}
 	return connectorList
+}
+
+func geOutputType(connectorSizingMap map[string]bool, nameList, numList []string) map[string]any {
+	opt := make(map[string]any, 0)
+	for i, n := range nameList {
+		if c, ok := connectorSizingMap[n]; ok && c {
+			opt["name"] = nameList[i]
+			opt["num"] = numList[i]
+			opt["connectorSizing"] = true
+			return opt
+		}
+	}
+	return opt
 }
