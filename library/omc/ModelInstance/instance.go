@@ -200,21 +200,7 @@ func (m *Diagram) GetAnnotationDiagram() map[string]any {
 func (m *Diagram) GetDiagramList() []map[string]any {
 	graphicsList := make([]map[string]any, 0)
 	for _, c := range m.Graphics {
-		graphicsData := map[string]any{}
-		switch c.Name {
-		case "Rectangle":
-			graphicsData = getRectangle(c.Elements, graphicsData)
-		case "Text":
-			graphicsData = getText(c.Elements, graphicsData, nil)
-		case "Polygon":
-			graphicsData = getPolygon(c.Elements, graphicsData)
-		case "Line":
-			graphicsData = getLine(c.Elements, graphicsData)
-		case "Ellipse":
-			graphicsData = getEllipse(c.Elements, graphicsData)
-		case "Bitmap":
-			graphicsData = getBitmap(c.Elements, graphicsData)
-		}
+		graphicsData := getGraphicsData(c, nil)
 		graphicsList = append(graphicsList, graphicsData)
 	}
 	return graphicsList
@@ -222,26 +208,28 @@ func (m *Diagram) GetDiagramList() []map[string]any {
 
 // GetIconList 将给定Icon数据处理成结构化信息
 func (m *Icon) GetIconList(modelElements *elements) []map[string]any {
-	icon := make(map[string]any, 0)
-	icon["coordinateSystem"] = m.CoordinateSystem
 	graphicsList := make([]map[string]any, 0)
 	for _, c := range m.Graphics {
-		graphicsData := map[string]any{}
-		switch c.Name {
-		case "Rectangle":
-			graphicsData = getRectangle(c.Elements, graphicsData)
-		case "Text":
-			graphicsData = getText(c.Elements, graphicsData, modelElements)
-		case "Polygon":
-			graphicsData = getPolygon(c.Elements, graphicsData)
-		case "Line":
-			graphicsData = getLine(c.Elements, graphicsData)
-		case "Ellipse":
-			graphicsData = getEllipse(c.Elements, graphicsData)
-		case "Bitmap":
-			graphicsData = getBitmap(c.Elements, graphicsData)
-		}
+		graphicsData := getGraphicsData(c, modelElements)
 		graphicsList = append(graphicsList, graphicsData)
 	}
 	return graphicsList
+}
+func getGraphicsData(c *graphics, modelElements *elements) map[string]any {
+	graphicsData := map[string]any{}
+	switch c.Name {
+	case "Rectangle":
+		graphicsData = getRectangle(c.Elements, graphicsData)
+	case "Text":
+		graphicsData = getText(c.Elements, graphicsData, modelElements)
+	case "Polygon":
+		graphicsData = getPolygon(c.Elements, graphicsData)
+	case "Line":
+		graphicsData = getLine(c.Elements, graphicsData)
+	case "Ellipse":
+		graphicsData = getEllipse(c.Elements, graphicsData)
+	case "Bitmap":
+		graphicsData = getBitmap(c.Elements, graphicsData)
+	}
+	return graphicsData
 }
