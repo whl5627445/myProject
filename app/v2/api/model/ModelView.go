@@ -14,7 +14,7 @@ import (
 var dbModel = config.DB
 var userName = config.USERNAME
 
-func GetGraphicsDataView(c *gin.Context) {
+func GetInstanceDataView(c *gin.Context) {
 	/*
 		# 获取模型的画图数据，一次性返回
 		## package_id: 模型包的id
