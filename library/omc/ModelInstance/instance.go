@@ -42,9 +42,9 @@ type elements struct {
 	Prefixes          prefixes       `json:"prefixes,omitempty"`
 	Comment           string         `json:"comment,omitempty"`
 	Modifiers         any            `json:"modifiers,omitempty"`
-	Annotation        *annotation    `json:"annotation,omitempty"`
-	BaseClassOriginal any            `json:"baseClass,omitempty"`              // 字符串或baseClass
-	BaseClass         *ModelInstance `json:"baseClassPreprocessing,omitempty"` // 字符串或baseClass
+	Annotation        annotation     `json:"annotation,omitempty"`
+	BaseClassOriginal any            `json:"baseClass,omitempty"` // 字符串或baseClass
+	BaseClass         *ModelInstance `json:"baseClassPreprocessing,omitempty"`
 	// Source            *source        `json:"source,omitempty"`
 	Value     any        `json:"value,omitempty"`
 	Condition any        `json:"condition,omitempty"`
@@ -92,11 +92,19 @@ type transformation struct {
 }
 type Diagram struct {
 	CoordinateSystem coordinateSystem `json:"coordinateSystem,omitempty"`
-	Graphics         []*graphics      `json:"graphics,omitempty"`
+	GraphicsOriginal any              `json:"graphics,omitempty"`
+	Graphics         []*graphics
+	// Graphics []*graphics `json:"graphics,omitempty"`
+	// TypeOriginal      any            `json:"type,omitempty"`
+	// Type              *ModelInstance `json:"typePreprocessing,omitempty"`
 }
 type Icon struct {
 	CoordinateSystem coordinateSystem `json:"coordinateSystem,omitempty"`
-	Graphics         []*graphics      `json:"graphics,omitempty"`
+	GraphicsOriginal any              `json:"graphics,omitempty"`
+	Graphics         []*graphics
+	// Graphics []*graphics `json:"graphics,omitempty"`
+	// Graphics []*graphics `json:"graphics,omitempty"`
+	// Graphics         []*graphics      `json:"graphicsPreprocessing,omitempty"`
 }
 type coordinateSystem struct {
 	PreserveAspectRatio bool        `json:"preserveAspectRatio,omitempty"`
@@ -131,6 +139,18 @@ type connectionAnnotation struct {
 
 // DataPreprocessing 模型实例数据预处理
 func (m *ModelInstance) DataPreprocessing() {
+	if _, ok := m.Annotation.Icon.GraphicsOriginal.([]any); ok {
+		g := []*graphics{}
+		convert.S2S(m.Annotation.Icon.GraphicsOriginal, &g)
+		m.Annotation.Icon.Graphics = g
+	}
+	if _, ok := m.Annotation.Diagram.GraphicsOriginal.([]any); ok {
+		g := []*graphics{}
+		convert.S2S(m.Annotation.Diagram.GraphicsOriginal, &g)
+		m.Annotation.Diagram.Graphics = g
+	}
+	m.Annotation.Icon.GraphicsOriginal = nil
+	m.Annotation.Diagram.GraphicsOriginal = nil
 	for i := 0; i < len(m.Elements); i++ {
 		element := m.Elements[i]
 		switch true {
