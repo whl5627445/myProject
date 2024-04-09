@@ -112,7 +112,7 @@ func ModelRouter(g *gin.Engine) {
 
 	var ModelsV2 = g.Group("/api/v2/model")
 	{
-		ModelsV2.POST("/graphics", APIv2.GetGraphicsDataView)
+		ModelsV2.POST("/instance", APIv2.GetInstanceDataView)
 	}
 	g.POST("/test", API.Test)
 	g.POST("/test1", API.Test1)
