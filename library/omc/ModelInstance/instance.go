@@ -69,14 +69,14 @@ type annotation struct {
 	Evaluate   bool                         `json:"Evaluate,omitempty"`
 	HideResult bool                         `json:"HideResult,omitempty"`
 	Choices    *choices                     `json:"choices,omitempty"`
-	Dialog     *dialog                      `json:"Dialog,omitempty"`
+	Dialog     dialog                       `json:"Dialog,omitempty"`
 }
 type dialog struct {
 	Tab                string `json:"tab,omitempty"`
 	Group              string `json:"group,omitempty"`
 	ShowStartAttribute bool   `json:"showStartAttribute,omitempty"`
 	GroupImage         string `json:"groupImage,omitempty"`
-	// ConnectorSizing    bool   `json:"connectorSizing,omitempty"`
+	ConnectorSizing    bool   `json:"connectorSizing,omitempty"`
 }
 type choices struct {
 	CheckBox bool `json:"checkBox,omitempty"`
@@ -86,7 +86,7 @@ type placement struct {
 	IconTransformation transformation `json:"iconTransformation,omitempty"`
 }
 type transformation struct {
-	Extent   [][]float64 `json:"extent,omitempty"`
+	Extents  [][]float64 `json:"extents,omitempty"`
 	Origin   []float64   `json:"origin,omitempty"`
 	Rotation float64     `json:"rotation,omitempty"`
 }
@@ -108,7 +108,7 @@ type Icon struct {
 }
 type coordinateSystem struct {
 	PreserveAspectRatio bool        `json:"preserveAspectRatio,omitempty"`
-	Extent              [][]float64 `json:"extent,omitempty"`
+	Extents             [][]float64 `json:"extents,omitempty"`
 	InitialScale        float64     `json:"initialScale,omitempty"`
 }
 type graphics struct {
