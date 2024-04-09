@@ -89,7 +89,7 @@ func getText(data []any, graphics map[string]any, modelElements *elements) map[s
 	graphics["fillPattern"] = data[6]                                   // 填充样式
 	graphics["lineThickness"] = data[7]                                 // 线的粗细
 	graphics["extentsPoints"] = data[8]                                 // 范围坐标
-	graphics["text"] = getTextString(data[9], modelElements)            // 文本文字
+	graphics["textString"] = getTextString(data[9], modelElements)      // 文本文字
 	graphics["fontSize"] = data[10]                                     // 字体大小
 	graphics["textColor"] = data[11]                                    // 文本颜色
 	graphics["fontName"] = data[12]                                     // 文字字体
