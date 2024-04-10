@@ -451,6 +451,7 @@ func (m *modelParameters) getParameter(className string, varName string, p []any
 		dataDefault["value"] = parameterValue
 	case elementModifierValue != "" && elementModifierData.level == 0:
 		dataDefault["value"] = elementModifierValue
+		dataDefault["defaultvalue"] = parameterValue
 	default:
 		dataDefault["defaultvalue"] = parameterValue
 	}
