@@ -763,7 +763,8 @@ func ExperimentNameEditView(c *gin.Context) {
 	DB.Where("id != ? AND username =? AND userspace_id =? AND experiment_name =? AND package_id =?",
 		item.ExperimentId, username, userSpaceId, item.NewExperimentName, item.PackageId).First(&existingName)
 	if existingName.ExperimentName != "" || item.NewExperimentName == "实验(默认)" {
-		res.Msg = "实验记录名称已存在，请更换"
+		res.Err = "实验记录名称已存在，请更换"
+		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
 	}
