@@ -19,6 +19,7 @@ func ModelRouter(g *gin.Engine) {
 		ModelsV1.POST("/icon/graphics", API.GetGraphicsDataView)
 		ModelsV1.POST("/icon/graphics/new", API.GetIconView)
 		ModelsV1.GET("/code", API.GetModelCodeView)
+		ModelsV1.POST("/rename", API.ModelRename)
 
 		ModelsV1.GET("/parameters/get", API.GetModelParametersView)
 		ModelsV1.POST("/parameters/set", API.SetModelParametersView)

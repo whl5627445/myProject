@@ -6,6 +6,12 @@ type UpdateModelPackageData struct {
 	ModelStr  string `json:"model_str" binding:"required"`
 }
 
+type ModelRenameData struct {
+	PackageId string `json:"package_id" binding:"required"`
+	ModelName string `json:"model_name" binding:"required"`
+	NewName   string `json:"new_name" binding:"required"`
+}
+
 type CreateModelPackageDataVars struct {
 	Encapsulated bool   `json:"encapsulated" binding:""`
 	Expand       string `json:"expand" binding:""`

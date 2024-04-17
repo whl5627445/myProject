@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"yssim-go/library/stringOperation"
 
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/DataType"
@@ -242,6 +243,97 @@ func GetModelCodeView(c *gin.Context) {
 	modelCode := service.GetModelCode(modelName)
 	res.Data = modelCode
 	c.JSON(http.StatusOK, res)
+}
+
+func ModelRename(c *gin.Context) {
+	/*
+		# 模型重命名
+		## new_name: 新名字
+		## model_name: 需要查询的模型名称，全称， 例如“Modelica.Blocks.Examples.PID_Controller”
+		## package_id: 包的id
+	*/
+	var res DataType.ResponseData
+	var item DataType.ModelRenameData
+	userSpaceId := c.GetHeader("space_id")
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, res)
+		return
+	}
+	// 判断名称存不存在
+	var packageRecord_ DataBaseModel.YssimModels
+	dbModel.Where("package_name = ? AND sys_or_user IN ? AND userspace_id IN ?", item.NewName, []string{"sys", userName}, []string{"0", userSpaceId}).First(&packageRecord_)
+	if packageRecord_.PackageName != "" {
+		res.Err = "名称已存在，请修改后再试。"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	// 判断是不是加密模型
+	var packageRecord DataBaseModel.YssimModels
+	dbModel.Where("userspace_id = ?  AND sys_or_user = ? AND id = ?", userSpaceId, userName, item.PackageId).First(&packageRecord)
+	if packageRecord.Encryption || packageRecord.ID == "" {
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	nameList := strings.Split(item.ModelName, ".")
+
+	// 获取模型代码
+	modelCode := service.GetModelCode(item.ModelName)
+
+	// 将代码中的名称修改为新的名称
+	modelCode = stringOperation.ModelRenam(modelCode, nameList[len(nameList)-1], item.NewName)
+
+	// 保存代码 参考接口/update/package UpdateModelPackageView
+	if len(nameList) > 1 {
+		parentName := strings.Join(nameList[:len(nameList)-1], ".")
+		modelCode = "within " + parentName + ";" + modelCode
+	}
+
+	modelPath := packageRecord.FilePath
+	if strings.HasSuffix(packageRecord.FilePath, "/package.mo") {
+		modelPath = service.GetSourceFile(item.ModelName)
+	}
+	parseResult, ok := service.ParseCodeString(modelCode, modelPath)
+	if ok && len(parseResult) > 0 {
+		isExist := service.IsExistPackage(parseResult)
+		if isExist && (item.ModelName != parseResult) {
+			res.Err = "模型名称重复"
+			res.Status = 2
+			c.JSON(http.StatusOK, res)
+			return
+		}
+		loadResult := service.LoadCodeString(modelCode, modelPath)
+		if loadResult {
+			if parseResult != item.ModelName {
+				// 判断是否是子模型
+				if !strings.Contains(item.ModelName, ".") {
+					dbModel.Model(DataBaseModel.YssimModels{}).Where("id = ? AND sys_or_user = ? AND userspace_id = ?", item.PackageId, userName, userSpaceId).Update("package_name", parseResult)
+				}
+				service.DeleteLibrary(item.ModelName)
+			}
+			service.ModelSave(parseResult)
+			res.Data = map[string]string{
+				"id":        packageRecord.ID,
+				"model_str": modelCode,
+				"name":      parseResult,
+			}
+			var modelCollectionRecord DataBaseModel.YssimModelsCollection
+			dbModel.Where("package_id = ? AND userspace_id = ? AND model_name = ? ", item.PackageId, userSpaceId, item.ModelName).First(&modelCollectionRecord)
+			if modelCollectionRecord.ID != "" {
+				modelCollectionRecord.ModelName = parseResult
+				dbModel.Save(&modelCollectionRecord)
+			}
+			res.Msg = "模型保存成功"
+			c.JSON(http.StatusOK, res)
+			return
+		}
+	}
+	res.Err = "语法错误，请重新检查"
+	res.Status = 2
+	c.JSON(http.StatusOK, res)
+
 }
 
 func GetModelResourcesReferenceView(c *gin.Context) {
