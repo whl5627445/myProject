@@ -6,7 +6,7 @@ import time
 import psutil
 from config.redis_config import R
 from libs.OMPython.OMCSessionZMQ import OMCSessionZMQ
-from libs.function.defs import update_simulate_records, new_another_name, sendMessage
+from libs.function.defs import update_simulate_records, sendMessage
 from libs.function.find_port import findPort
 from libs.function.grpc_log import log
 from libs.function.progress_server import TcpServer
@@ -65,7 +65,7 @@ class OmcSimulation(threading.Thread):
         self.state = "compiling"  # 编译中
         log.info("(OMC)开始编译")
         # 编译
-        os.makedirs(r"/home/simtek/code/" + self.request.resultFilePath, exist_ok=True)
+        os.makedirs(r"/home/simtek/code/" + self.request.resultFilePath, exist_ok=True, mode=0o777)
         absolute_path = r"/home/simtek/code/" + self.request.resultFilePath + "result"
         log.info("(OMC)仿真结果地址:" + absolute_path)
         log.info("(OMC)仿真模型名：" + self.request.simulateModelName)
@@ -170,10 +170,10 @@ class OmcSimulation(threading.Thread):
                                         simulate_start="0",
                                         result_run_time=time2 - time1,
                                         simulate_end_time=int(time.time()),
-                                        another_name=new_another_name(self.request.userName,
-                                                                      self.request.simulateModelName,
-                                                                      self.request.simulatePackageId,
-                                                                      self.request.userSpaceId),
+                                        # another_name=new_another_name(self.request.userName,
+                                        #                               self.request.simulateModelName,
+                                        #                               self.request.simulatePackageId,
+                                        #                               self.request.userSpaceId),
                                         percentage=100
                                         )
 

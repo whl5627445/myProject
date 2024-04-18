@@ -169,7 +169,7 @@ class DmTranslateThread(threading.Thread):
 
                     downloadResFileUrl = requests.get(resFileUrl)
                     # 创建文件夹
-                    os.makedirs(absolute_path, exist_ok=True)
+                    os.makedirs(absolute_path, exist_ok=True,mode=0o777)
                     with open(absolute_path + "result_res.mat", "wb") as f:
                         f.write(downloadResFileUrl.content)
 

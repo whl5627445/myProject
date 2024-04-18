@@ -2,7 +2,6 @@ package omc
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"log"
 	"os"
@@ -11,10 +10,9 @@ import (
 	"strings"
 	"sync"
 
-	"yssim-go/app/serviceType"
-	"yssim-go/config"
-
 	"github.com/bytedance/sonic"
+
+	// "yssim-go/app/serviceType"
 
 	"github.com/go-zeromq/zmq4"
 )
@@ -24,28 +22,15 @@ type ZmqObject struct {
 	sync.Mutex
 }
 
-var cacheRefresh = false
-var redisCacheKey = &config.RedisCacheKey
-var userName = config.USERNAME
-
-var allModelCache = config.R
-
 // SendExpression 发送指令，获取数据
 func (o *ZmqObject) SendExpression(cmd string) ([]any, bool) {
 	// s := time.Now().UnixNano() / 1e6
 	var msg []byte
-	ctx := context.Background()
-	msg, err := allModelCache.HGet(ctx, *redisCacheKey, cmd).Bytes()
-	if len(msg) == 0 || string(msg) == "null" {
-		o.Lock()
-		_ = o.Send(zmq4.NewMsgString(cmd))
-		data, _ := o.Recv()
-		msg = data.Bytes()
-		o.Unlock()
-		if cacheRefresh && len(msg) > 0 {
-			allModelCache.HSet(ctx, *redisCacheKey, cmd, msg)
-		}
-	}
+	o.Lock()
+	_ = o.Send(zmq4.NewMsgString(cmd))
+	data, _ := o.Recv()
+	msg = data.Bytes()
+	o.Unlock()
 	parseData, err := dataToGo(msg)
 	if err != nil {
 		log.Println("cmd: ", cmd)
@@ -66,18 +51,11 @@ func (o *ZmqObject) SendExpressionNoParsed(cmd string) ([]byte, bool) {
 
 	var msg []byte
 	// s := time.Now().UnixNano() / 1e6
-	ctx := context.Background()
-	msg, _ = allModelCache.HGet(ctx, *redisCacheKey, cmd).Bytes()
-	if len(msg) == 0 || string(msg) == "null" {
-		o.Lock()
-		_ = o.Send(zmq4.NewMsgString(cmd))
-		data, _ := o.Recv()
-		msg = data.Bytes()
-		o.Unlock()
-		if cacheRefresh && len(msg) > 0 {
-			allModelCache.HSet(ctx, *redisCacheKey, cmd, msg)
-		}
-	}
+	o.Lock()
+	_ = o.Send(zmq4.NewMsgString(cmd))
+	data, _ := o.Recv()
+	msg = data.Bytes()
+	o.Unlock()
 	if string(msg) == "\"\"\n" {
 		return []byte{}, false
 	}
@@ -144,11 +122,6 @@ func (o *ZmqObject) GetCommandLineOptions() string {
 		return string(data)
 	}
 	return ""
-}
-
-// CacheRefreshSet 改变缓存策略
-func (o *ZmqObject) CacheRefreshSet(cache bool) {
-	cacheRefresh = cache
 }
 
 // GetInheritedClasses 获取给定切片当中所有模型的继承项
@@ -1063,8 +1036,8 @@ func (o *ZmqObject) ReadSimulationResult(varNameList []string, path string) ([][
 	dataList = append(dataList, make([]float64, 0, 1))
 	d := dataUnmarshal[0]
 	for index, _ := range d {
-		// 时间和数据可能存在重复，循环将时间相同的部分移除
-		if index != 0 && (dataUnmarshal[0][index] == dataUnmarshal[0][index-1]) {
+		// 时间和数据可能存在重复，循环将时间相同并且数据相同的部分移除
+		if index != 0 && (dataUnmarshal[0][index] == dataUnmarshal[0][index-1]) && (dataUnmarshal[1][index] == dataUnmarshal[1][index-1]) {
 			continue
 		}
 		dataList[0] = append(dataList[0], dataUnmarshal[0][index])
@@ -1211,15 +1184,18 @@ func (o *ZmqObject) GetClassRestriction(className string) string {
 }
 
 // GetModelInstance 获取给定模型名称的实例化json数据字符串
-func (o *ZmqObject) GetModelInstance(className string) string {
-	cmd := "getModelInstance(" + className + ")"
+func (o *ZmqObject) GetModelInstance(className string) []byte {
+	cmd := "getModelInstance(" + className + ",\"\",false)"
 	result, ok := o.SendExpressionNoParsed(cmd)
 	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
+	result = bytes.ReplaceAll(result, []byte("\\\""), []byte("\""))
+	result = bytes.ReplaceAll(result, []byte("\\\\"), []byte("\\"))
+	result = bytes.ReplaceAll(result, []byte("$"), []byte(""))
 	result = result[1 : len(result)-1]
 	if ok && len(result) > 0 {
-		return string(result)
+		return result
 	}
-	return ""
+	return nil
 }
 
 // Save 保存模型源码到文件，文件路径由omc查找
@@ -1364,24 +1340,6 @@ func (o *ZmqObject) BuildModelFMU(className string, fmuFileNameId string) string
 		return string(result)
 	}
 	return ""
-}
-
-// ModelInstance 将模型实例化后解析到给定的指针地址变量
-func (o *ZmqObject) ModelInstance(modelName string, ModelInstance *serviceType.ModelInstance) bool {
-	cmd := "getModelInstance(" + modelName + ")"
-	result, ok := o.SendExpressionNoParsed(cmd)
-	if ok && len(result) > 1 {
-		result = bytes.ReplaceAll(result, []byte("\\\""), []byte("\""))
-		result = bytes.ReplaceAll(result, []byte("\\\\"), []byte("\\"))
-		result = result[1 : len(result)-2]
-		err := sonic.Unmarshal(result, ModelInstance)
-
-		if err != nil {
-			log.Println(err)
-		}
-		return true
-	}
-	return false
 }
 
 // DumpXMLDAE  生成result_init.xml文件

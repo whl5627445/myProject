@@ -1,7 +1,7 @@
 package router
 
 import (
-	API "yssim-go/app/api/simulate"
+	API "yssim-go/app/v1/api/simulate"
 
 	"github.com/gin-gonic/gin"
 )
@@ -25,7 +25,7 @@ func SimulateRouter(g *gin.Engine) {
 		Models.GET("/record/delete", API.SimulateResultDeleteView)
 		Models.POST("/record/rename", API.SimulateResultRenameView)
 
-		Models.GET("/experiment/exists", API.ExperimentExistsView)
+		Models.POST("/experiment/exists", API.ExperimentExistsView)
 		Models.POST("/experiment/create", API.ExperimentCreateView)
 		Models.POST("/experiment/delete", API.ExperimentDeleteView)
 		Models.POST("/experiment/edit", API.ExperimentEditView)

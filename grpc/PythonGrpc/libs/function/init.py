@@ -308,7 +308,7 @@ def initCalibrationTask():
         )
         if yssim_model:
             log.info("(标定)重新开始仿真的模型：" + yssim_model.package_name)
-            # i.package_name = yssim_model.package_name
+            i.package_name = yssim_model.package_name
             # i.package_file_path = yssim_model.file_path
             task_record_list.append(i)
         else:
