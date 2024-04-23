@@ -110,7 +110,7 @@ func getElementsGraphicsList(m *instance.ModelInstance, parentName string) []map
 		modelIconList["origin"] = e.Annotation.Placement.Transformation.Origin
 		modelIconList["extents"] = e.Annotation.Placement.Transformation.Extents
 		modelIconList["rotation"] = e.Annotation.Placement.Transformation.Rotation
-		modelIconList["coordinateSystem"] = typeInstance.Annotation.Icon.CoordinateSystem
+		modelIconList["coordinateSystem"] = typeInstance.Annotation.Icon.GetCoordinateSystem()
 		elementsList = append(elementsList, modelIconList)
 	}
 	return elementsList
@@ -161,7 +161,7 @@ func getElementsConnectorList(m *instance.ModelInstance, parentName string) []ma
 			modelIconList := make(map[string]any, 0)
 			modelIconList["name"] = e.Name
 			// modelIconList["condition"] = condition
-			modelIconList["coordinateSystem"] = typeInstance.Annotation.Diagram.CoordinateSystem
+			modelIconList["coordinateSystem"] = typeInstance.Annotation.Diagram.GetCoordinateSystem()
 			modelIconList["classname"] = typeInstance.Name
 			modelIconList["comment"] = e.Comment
 			modelIconList["restriction"] = typeInstance.Restriction
