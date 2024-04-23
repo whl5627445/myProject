@@ -34,21 +34,23 @@ type prefixes struct {
 	Direction    string `json:"direction,omitempty"`   // ["input", "output"]
 }
 type elements struct {
-	Kind              string         `json:"kind,omitempty"`
-	Name              string         `json:"name,omitempty"`
-	TypeOriginal      any            `json:"type,omitempty"`
-	Type              *ModelInstance `json:"typePreprocessing,omitempty"`
-	Restriction       string         `json:"restriction,omitempty"`
-	Prefixes          prefixes       `json:"prefixes,omitempty"`
-	Comment           string         `json:"comment,omitempty"`
-	Modifiers         any            `json:"modifiers,omitempty"`
-	Annotation        annotation     `json:"annotation,omitempty"`
-	BaseClassOriginal any            `json:"baseClass,omitempty"` // 字符串或baseClass
-	BaseClass         *ModelInstance `json:"baseClassPreprocessing,omitempty"`
-	// Source            *source        `json:"source,omitempty"`
-	Value     any        `json:"value,omitempty"`
+	Kind              string            `json:"kind,omitempty"`
+	Name              string            `json:"name,omitempty"`
+	TypeOriginal      any               `json:"type,omitempty"`
+	Type              *ModelInstance    `json:"typePreprocessing,omitempty"`
+	Restriction       string            `json:"restriction,omitempty"`
+	Prefixes          prefixes          `json:"prefixes,omitempty"`
+	Comment           string            `json:"comment,omitempty"`
+	ModifiersOriginal any               `json:"modifiers,omitempty"`
+	Modifiers         map[string]string `json:"modifiersObject,omitempty"`
+	Annotation        annotation        `json:"annotation,omitempty"`
+	BaseClassOriginal any               `json:"baseClass,omitempty"` // 字符串或baseClass
+	BaseClass         *ModelInstance    `json:"baseClassPreprocessing,omitempty"`
+	// Value             any               `json:"value,omitempty"`
 	Condition any        `json:"condition,omitempty"`
 	Dims      dimensions `json:"dims,omitempty"`
+	// Source            *source        `json:"source,omitempty"`
+
 }
 type source struct {
 	Filename    string `json:"filename,omitempty"`
@@ -86,30 +88,30 @@ type placement struct {
 	IconTransformation transformation `json:"iconTransformation,omitempty"`
 }
 type transformation struct {
-	Extents  [][]float64 `json:"extents,omitempty"`
+	Extents  [][]float64 `json:"extent,omitempty"`
 	Origin   []float64   `json:"origin,omitempty"`
 	Rotation float64     `json:"rotation,omitempty"`
 }
 type Diagram struct {
-	CoordinateSystem coordinateSystem `json:"coordinateSystem,omitempty"`
-	GraphicsOriginal any              `json:"graphics,omitempty"`
+	CoordinateSystem *coordinateSystem `json:"coordinateSystem,omitempty"`
+	GraphicsOriginal any               `json:"graphics,omitempty"`
 	Graphics         []*graphics
 	// Graphics []*graphics `json:"graphics,omitempty"`
 	// TypeOriginal      any            `json:"type,omitempty"`
 	// Type              *ModelInstance `json:"typePreprocessing,omitempty"`
 }
 type Icon struct {
-	CoordinateSystem coordinateSystem `json:"coordinateSystem,omitempty"`
-	GraphicsOriginal any              `json:"graphics,omitempty"`
+	CoordinateSystem *coordinateSystem `json:"coordinateSystem,omitempty"`
+	GraphicsOriginal any               `json:"graphics,omitempty"`
 	Graphics         []*graphics
 	// Graphics []*graphics `json:"graphics,omitempty"`
 	// Graphics []*graphics `json:"graphics,omitempty"`
 	// Graphics         []*graphics      `json:"graphicsPreprocessing,omitempty"`
 }
 type coordinateSystem struct {
-	PreserveAspectRatio bool        `json:"preserveAspectRatio,omitempty"`
-	Extents             [][]float64 `json:"extents,omitempty"`
-	InitialScale        float64     `json:"initialScale,omitempty"`
+	PreserveAspectRatio bool        `json:"preserveAspectRatio"`
+	Extents             [][]float64 `json:"extent"`
+	InitialScale        float64     `json:"initialScale"`
 }
 type graphics struct {
 	Kind     string `json:"kind,omitempty"`
@@ -230,9 +232,16 @@ func (m *ModelInstance) GetConnectionsList() []map[string]any {
 // GetAnnotationDiagram 获取Diagram中的图形以及坐标系信息
 func (m *Diagram) GetAnnotationDiagram() map[string]any {
 	diagram := make(map[string]any, 0)
-	diagram["coordinateSystem"] = m.CoordinateSystem
-	diagram["diagram"] = m.GetDiagramList()
+	diagramData := m.GetDiagramList()
+	diagram["diagram"] = diagramData
+	if len(diagramData) > 0 {
+		diagram["coordinateSystem"] = m.GetCoordinateSystem()
+	}
 	return diagram
+}
+
+func (m *Diagram) GetCoordinateSystem() map[string]any {
+	return getCoordinateSystem(m.CoordinateSystem)
 }
 
 // GetDiagramList 将给定Diagram数据处理成结构化信息
@@ -243,6 +252,10 @@ func (m *Diagram) GetDiagramList() []map[string]any {
 		graphicsList = append(graphicsList, graphicsData)
 	}
 	return graphicsList
+}
+
+func (m *Icon) GetCoordinateSystem() map[string]any {
+	return getCoordinateSystem(m.CoordinateSystem)
 }
 
 // GetIconList 将给定Icon数据处理成结构化信息
@@ -274,3 +287,43 @@ func getGraphicsData(g *graphics, modelElements *elements) map[string]any {
 	}
 	return graphicsData
 }
+
+func getCoordinateSystem(m *coordinateSystem) map[string]any {
+	c := make(map[string]any, 0)
+	c["preserveAspectRatio"] = m.PreserveAspectRatio
+	c["extent"] = [][]float64{{-100.0, -100.0}, {100.0, 100.0}}
+	c["initialScale"] = 0.1
+	if m.Extents != nil {
+		c["extent"] = m.Extents
+	}
+	if m.InitialScale != 0 {
+		c["initialScale"] = m.InitialScale
+	}
+	return c
+}
+
+// getParameterValue 获取Text类型图形数据中组件参数的值的核心逻辑，返回值内容和值类型
+// func getParameterValue(value any) (any, string) {
+// 	switch value.(type) {
+// 	case map[string]any:
+// 		if v, ok := value.(map[string]any)["value"]; ok {
+// 			return v, "Normal"
+// 		}
+// 		if v, ok := value.(map[string]any)["binding"]; ok {
+// 			switch v.(type) {
+// 			case map[string]any:
+// 				vMap := v.(map[string]any)
+// 				if vMap["kind"] == "enum" {
+// 					return vMap["name"], "Enumeration"
+// 				}
+// 			case bool:
+// 				return v, "CheckBox"
+// 			}
+//
+// 			return v, "Normal"
+// 		}
+// 	}
+// 	return "", "Normal"
+// }
+
+// setElementModifierValue(BatteryDischargeCharge, battery1, $Code((redeclare Modelica.Electrical.Batteries.ParameterRecords.CellData cellData(Qnom = 4432428010))))
