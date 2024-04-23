@@ -152,10 +152,9 @@ func (m *ModelInstance) DataPreprocessing() {
 	m.Annotation.Icon.GraphicsOriginal = nil
 	m.Annotation.Diagram.GraphicsOriginal = nil
 	for i := 0; i < len(m.Elements); i++ {
-		element := m.Elements[i]
 		switch true {
-		case element.Kind == "extends" && element.BaseClassOriginal != nil:
-			if b, ok := element.BaseClassOriginal.(string); ok {
+		case m.Elements[i].Kind == "extends" && m.Elements[i].BaseClassOriginal != nil:
+			if b, ok := m.Elements[i].BaseClassOriginal.(string); ok {
 				m.Elements[i].BaseClass = &ModelInstance{Name: b, BasicType: true}
 			} else {
 				bInstance := &ModelInstance{}
@@ -163,13 +162,13 @@ func (m *ModelInstance) DataPreprocessing() {
 				m.Elements[i].BaseClass = bInstance
 				bInstance.DataPreprocessing()
 			}
-			element.BaseClassOriginal = nil
-		case element.Kind == "component" && element.TypeOriginal != nil:
-			if element.Prefixes.Public != nil && *element.Prefixes.Public == false {
+			m.Elements[i].BaseClassOriginal = nil
+		case m.Elements[i].Kind == "component" && m.Elements[i].TypeOriginal != nil:
+			if m.Elements[i].Prefixes.Public != nil && *m.Elements[i].Prefixes.Public == false {
 				m.Elements = append(m.Elements[:i], m.Elements[i+1:]...)
 				continue
 			}
-			if t, ok := element.TypeOriginal.(string); ok {
+			if t, ok := m.Elements[i].TypeOriginal.(string); ok {
 				m.Elements[i].Type = &ModelInstance{Name: t, BasicType: true}
 			} else {
 				tInstance := &ModelInstance{}
@@ -177,9 +176,29 @@ func (m *ModelInstance) DataPreprocessing() {
 				m.Elements[i].Type = tInstance
 				tInstance.DataPreprocessing()
 			}
-			element.TypeOriginal = nil
+			m.Elements[i].TypeOriginal = nil
+		}
+		m.Elements[i].Modifiers = getElementModifiers(m.Elements[i].ModifiersOriginal)
+		m.Elements[i].ModifiersOriginal = nil
+	}
+}
+
+// 预处理组件modifier数据， 被设置过的参数与参数属性
+func getElementModifiers(modifiersOriginal any) map[string]string {
+	modifiers := make(map[string]string, 0)
+	if modifier, ok := modifiersOriginal.(map[string]any); ok {
+		for k1, v1 := range modifier { // map可能存在多层结构，这里表示第一层的k与v的值
+			if vString, vOk := v1.(string); vOk {
+				modifiers[k1] = vString
+			}
+			if vMap, vOk := v1.(map[string]string); vOk {
+				for k2, v2 := range vMap {
+					modifiers[k1+"."+k2] = v2 // map可能存在多层结构，这里表示第二层的k与v的值， 相当于某组件的某个参数
+				}
+			}
 		}
 	}
+	return modifiers
 }
 
 // GetConnectionsList 将给定连接信息处理成结构化信息
@@ -235,21 +254,23 @@ func (m *Icon) GetIconList(modelElements *elements) []map[string]any {
 	}
 	return graphicsList
 }
-func getGraphicsData(c *graphics, modelElements *elements) map[string]any {
+
+// 处理图形数据
+func getGraphicsData(g *graphics, modelElements *elements) map[string]any {
 	graphicsData := map[string]any{}
-	switch c.Name {
+	switch g.Name {
 	case "Rectangle":
-		graphicsData = getRectangle(c.Elements, graphicsData)
+		graphicsData = getRectangle(g.Elements, graphicsData)
 	case "Text":
-		graphicsData = getText(c.Elements, graphicsData, modelElements)
+		graphicsData = getText(g.Elements, graphicsData, modelElements)
 	case "Polygon":
-		graphicsData = getPolygon(c.Elements, graphicsData)
+		graphicsData = getPolygon(g.Elements, graphicsData)
 	case "Line":
-		graphicsData = getLine(c.Elements, graphicsData)
+		graphicsData = getLine(g.Elements, graphicsData)
 	case "Ellipse":
-		graphicsData = getEllipse(c.Elements, graphicsData)
+		graphicsData = getEllipse(g.Elements, graphicsData)
 	case "Bitmap":
-		graphicsData = getBitmap(c.Elements, graphicsData)
+		graphicsData = getBitmap(g.Elements, graphicsData)
 	}
 	return graphicsData
 }

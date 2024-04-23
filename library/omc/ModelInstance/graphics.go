@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"log"
 	"os"
-	"strconv"
 	"strings"
 
 	"yssim-go/library/omc"
@@ -89,7 +88,7 @@ func getText(data []any, graphics map[string]any, modelElements *elements) map[s
 	graphics["fillPattern"] = data[6]                                   // 填充样式
 	graphics["lineThickness"] = data[7]                                 // 线的粗细
 	graphics["extentsPoints"] = data[8]                                 // 范围坐标
-	graphics["textString"] = getTextString(data[9], modelElements)      // 文本文字
+	graphics["textString"] = modelElements.getTextString(data[9])       // 文本文字
 	graphics["fontSize"] = data[10]                                     // 字体大小
 	graphics["textColor"] = data[11]                                    // 文本颜色
 	graphics["fontName"] = data[12]                                     // 文字字体
@@ -100,15 +99,13 @@ func getText(data []any, graphics map[string]any, modelElements *elements) map[s
 }
 
 // getTextString 获取Text类型图形数据中的文字字符串内容， 有可能包含有组件参数需要获取对应的值
-func getTextString(textData any, modelElements *elements) string {
+func (e *elements) getTextString(textData any) string {
 	if _, ok := textData.(string); !ok {
-		// s, _ := sonic.Marshal(textData)
-		// fmt.Printf("%s,", s)
 		return ""
 	}
 	text := textData.(string)
 	originalTextString := text
-	if modelElements == nil {
+	if e == nil {
 		return originalTextString
 	}
 	textList := stringOperation.PluralSplit(originalTextString, []string{"/", ",", "\t", "\n", "\r", " "})
@@ -120,7 +117,7 @@ func getTextString(textData any, modelElements *elements) string {
 			if varName != "name" {
 				varName = strings.TrimSuffix(varName, "%")
 				if varName != "" {
-					varValue = getModelGraphicsParameters(varName, modelElements)
+					varValue = e.getModelGraphicsParameters(varName)
 					if varValue == "" {
 						varValue = varName
 					}
@@ -134,67 +131,25 @@ func getTextString(textData any, modelElements *elements) string {
 }
 
 // getModelGraphicsParameters 获取Text类型图形数据中组件参数的值
-func getModelGraphicsParameters(varName string, modelElements *elements) string {
-	modifiers, ok := modelElements.Modifiers.(map[string]any)
-	if ok {
-		varValue, ok := modifiers[varName]
-		if ok {
-			if vMap, ok := varValue.(map[string]any); ok {
-				// s, _ := sonic.Marshal(varValue)
-				// fmt.Printf("%s,", s)
-				return vMap["value"].(string)
-			}
-			return varValue.(string)
-		}
+func (e *elements) getModelGraphicsParameters(varName string) string {
+	if varValue, ok := e.Modifiers[varName]; ok {
+		return varValue
 	}
-	if modelElements.Type.BasicType {
+	if e.Type.BasicType {
 		return varName
 	}
-	typeInstance := modelElements.Type
-	valueStr := ""
+	typeInstance := e.Type
 	for i := 0; i < len(typeInstance.Elements); i++ {
-		e := typeInstance.Elements[i]
-		if e.BaseClass != nil && e.BaseClass.BasicType && e.Kind == "extends" {
-			typeInstance.Elements = append(typeInstance.Elements, e.BaseClass.Elements...)
+		element := typeInstance.Elements[i]
+		if element.BaseClass != nil && element.BaseClass.BasicType && element.Kind == "extends" {
+			typeInstance.Elements = append(typeInstance.Elements, element.BaseClass.Elements...)
 			continue
 		}
-		if e.Name == varName {
-			value, _ := getParameterValue(e.Value)
-			switch value.(type) {
-			case string:
-				return value.(string)
-			case float64:
-				valueStr = strconv.FormatFloat(value.(float64), 'f', -1, 64)
-			case bool:
-				valueStr = strconv.FormatBool(value.(bool))
-			}
+		if value, ok := element.Modifiers[varName]; ok {
+			return value
 		}
 	}
-	return valueStr
-}
-
-// getParameterValue 获取Text类型图形数据中组件参数的值的核心逻辑，返回值内容和值类型
-func getParameterValue(value any) (any, string) {
-	switch value.(type) {
-	case map[string]any:
-		if v, ok := value.(map[string]any)["value"]; ok {
-			return v, "Normal"
-		}
-		if v, ok := value.(map[string]any)["binding"]; ok {
-			switch v.(type) {
-			case map[string]any:
-				vMap := v.(map[string]any)
-				if vMap["kind"] == "enum" {
-					return vMap["name"], "Enumeration"
-				}
-			case bool:
-				return v, "CheckBox"
-			}
-
-			return v, "Normal"
-		}
-	}
-	return "", "Normal"
+	return ""
 }
 
 // getBitmap 获取Bitmap类型图形数据
