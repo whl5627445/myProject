@@ -76,6 +76,11 @@ type ExperimentNameEditData struct {
 	NewExperimentName string `json:"new_experiment_name" binding:"required"`
 }
 
+type ExperimentCompareData struct {
+	PackageId        string   `json:"package_id" binding:"required"`
+	ExperimentIdList []string `json:"experiment_id_list" binding:"required"`
+}
+
 type SnapshotCreatData struct {
 	SnapshotName      string         `json:"snapshot_name" binding:"required"`
 	ModelName         string         `json:"model_name" binding:"required"`
