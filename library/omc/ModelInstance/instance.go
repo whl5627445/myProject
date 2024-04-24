@@ -290,15 +290,19 @@ func getGraphicsData(g *graphics, modelElements *elements) map[string]any {
 
 func getCoordinateSystem(m *coordinateSystem) map[string]any {
 	c := make(map[string]any, 0)
-	c["preserveAspectRatio"] = m.PreserveAspectRatio
+	c["preserveAspectRatio"] = false
 	c["extent"] = [][]float64{{-100.0, -100.0}, {100.0, 100.0}}
 	c["initialScale"] = 0.1
+	if m == nil {
+		return c
+	}
 	if m.Extents != nil {
 		c["extent"] = m.Extents
 	}
 	if m.InitialScale != 0 {
 		c["initialScale"] = m.InitialScale
 	}
+	c["preserveAspectRatio"] = m.PreserveAspectRatio
 	return c
 }
 
