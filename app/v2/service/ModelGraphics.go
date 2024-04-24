@@ -102,7 +102,7 @@ func getElementsGraphicsList(m *instance.ModelInstance, parentName string) []map
 		modelIconList["restriction"] = typeInstance.Restriction
 		modelIconList["direction"] = typeInstance.Prefixes.Direction
 		// modelIconList["connectorSizing"] = e.Dims.Absyn
-		modelIconList["subShapes"] = typeInstance.Annotation.Icon.GetIconList(e)
+		modelIconList["subShapes"] = typeInstance.GetIconListALL(e)
 		modelIconList["modelName"] = m.Name
 		modelIconList["connectors"] = getElementsConnectorList(typeInstance, e.Name)
 		// modelIconList["outputType"] = e.Dims.Absyn
@@ -167,7 +167,7 @@ func getElementsConnectorList(m *instance.ModelInstance, parentName string) []ma
 			modelIconList["restriction"] = typeInstance.Restriction
 			modelIconList["direction"] = typeInstance.Prefixes.Direction
 			// modelIconList["connectorSizing"] =
-			modelIconList["subShapes"] = typeInstance.Annotation.Icon.GetIconList(e)
+			modelIconList["subShapes"] = typeInstance.GetIconListALL(e)
 			modelIconList["modelName"] = m.Name
 			modelIconList["outputType"] = geOutputType(connectorSizingMap, e.Dims.Absyn, e.Dims.Typed)
 			modelIconList["parentName"] = parentName

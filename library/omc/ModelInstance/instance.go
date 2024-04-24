@@ -268,6 +268,18 @@ func (m *Icon) GetIconList(modelElements *elements) []map[string]any {
 	return graphicsList
 }
 
+func (m *ModelInstance) GetIconListALL(modelElements *elements) []map[string]any {
+
+	graphicsList := make([]map[string]any, 0)
+	graphicsList = append(graphicsList, m.Annotation.Icon.GetIconList(modelElements)...)
+	for _, element := range m.Elements {
+		if element.Kind == "extends" && element.BaseClass != nil {
+			graphicsList = append(element.BaseClass.GetIconListALL(modelElements), graphicsList...)
+		}
+	}
+	return graphicsList
+}
+
 // 处理图形数据
 func getGraphicsData(g *graphics, modelElements *elements) map[string]any {
 	graphicsData := map[string]any{}
