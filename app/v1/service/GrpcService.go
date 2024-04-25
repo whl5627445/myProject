@@ -196,7 +196,7 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 	if !SimulateTypeDict[itemMap["simulate_type"]] {
 		return "", errors.New("不存在的仿真类型")
 	}
-	// 查询数据库中的实验id对应的记录
+	// 查询数据库中的实验id对应的记录, 不传实验id 则表示使用默认参数仿真
 	anotherName := ""
 	var experimentRecord DataBaseModel.YssimExperimentRecord
 	DB.Where("id = ? ", itemMap["experiment_id"]).First(&experimentRecord)
@@ -214,9 +214,10 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 
 	// 查询实验id对应的仿真记录
 	var simulateRecord DataBaseModel.YssimSimulateRecord
-	DB.Where("experiment_id = ? AND username = ? AND userspace_id = ?", itemMap["experiment_id"], itemMap["username"], itemMap["space_id"]).First(&simulateRecord)
-
+	DB.Where("experiment_id = ? AND package_id = ? AND simulate_model_name = ? AND username = ? AND userspace_id = ?", itemMap["experiment_id"], itemMap["package_id"], itemMap["model_name"], itemMap["username"], itemMap["space_id"]).First(&simulateRecord)
 	record := DataBaseModel.YssimSimulateRecord{}
+
+	//如果没有找到记录，则新建实验记录
 	if simulateRecord.ID == "" {
 		// SimulateStatus "1"初始(正在准备)  "2"执行  "3"失败(编译失败or仿真运行失败)  "4"成功结束  "5"关闭(killed)  "6"编译阶段
 		record = DataBaseModel.YssimSimulateRecord{
@@ -246,6 +247,14 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 		record.SimulateModelResultPath = resultFilePath
 		config.DB.Save(&record)
 	} else {
+		//如果有找到记录，则用老的记录,并更新仿真参数
+		simulateRecord.StartTime = itemMap["start_time"]
+		simulateRecord.StopTime = itemMap["stop_time"]
+		simulateRecord.Method = itemMap["method"]
+		simulateRecord.NumberOfIntervals = itemMap["number_of_intervals"]
+		simulateRecord.Tolerance = itemMap["tolerance"]
+		simulateRecord.SimulateType = itemMap["simulate_type"]
+		config.DB.Save(&simulateRecord)
 		record = simulateRecord
 	}
 
