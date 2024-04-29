@@ -15,12 +15,13 @@ import (
 
 	"github.com/bytedance/sonic"
 
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/DataType"
 	"yssim-go/app/v1/service"
 	"yssim-go/config"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 var DB = config.DB
@@ -455,6 +456,25 @@ func SimulateResultRenameView(c *gin.Context) {
 		return
 	}
 	res.Msg = "修改成功"
+	c.JSON(http.StatusOK, res)
+}
+
+func SimulateSuspendView(c *gin.Context) {
+	/*
+	   # 2024.04.29 周强修改（新接口）：中止仿真进程
+	*/
+	username := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
+	recordId := c.Query("record_id")
+
+	var res DataType.ResponseData
+	var resultRecord DataBaseModel.YssimSimulateRecord
+	DB.Where("id = ? AND username = ? AND userspace_id = ? ", recordId, username, userSpaceId).First(&resultRecord)
+	resultRecord.SimulateStatus = "5"
+	config.DB.Save(&resultRecord)
+
+	service.SuspendSimulateTask(recordId, resultRecord.SimulateType)
+	res.Msg = "仿真已中止"
 	c.JSON(http.StatusOK, res)
 }
 
