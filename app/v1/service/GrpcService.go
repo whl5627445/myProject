@@ -548,6 +548,16 @@ func DeleteSimulateTask(taskID, simulateType, SimulateModelResultPath string) {
 
 }
 
+func SuspendSimulateTask(taskID, simulateType string) {
+
+	replyVar, err := GrpcSimulationProcessOperation(taskID, "kill", simulateType)
+	defer log.Println(replyVar.Msg)
+	if err != nil {
+		log.Println("调用grpc服务(GrpcPyOmcSimulationProcessOperation)出错：：", err)
+		return
+	}
+}
+
 func GrpcSimulationProcessOperation(uid, operation, simulateType string) (*grpcPb.ProcessOperationReply, error) {
 	PyOmcSimProcessOperationRequest := &grpcPb.ProcessOperationRequest{
 		Uuid:          uid,
