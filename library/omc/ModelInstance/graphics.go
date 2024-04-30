@@ -132,24 +132,32 @@ func (e *elements) getTextString(textData any) string {
 
 // getModelGraphicsParameters 获取Text类型图形数据中组件参数的值
 func (e *elements) getModelGraphicsParameters(varName string) string {
-	if varValue, ok := e.Modifiers[varName]; ok {
-		return varValue
-	}
-	if e.Type.BasicType {
-		return varName
-	}
-	typeInstance := e.Type
-	for i := 0; i < len(typeInstance.Elements); i++ {
-		element := typeInstance.Elements[i]
-		if element.BaseClass != nil && element.BaseClass.BasicType && element.Kind == "extends" {
-			typeInstance.Elements = append(typeInstance.Elements, element.BaseClass.Elements...)
-			continue
+	value := varName
+	unitStr := ""
+	if p, ok := e.ElementsParameter[varName]; ok {
+		if p.Value != nil {
+			pValue, ok := p.Value.(string)
+			if ok {
+				value = pValue
+			}
 		}
-		if value, ok := element.Modifiers[varName]; ok {
-			return value
+		if p.DefaultValue != nil {
+			pDefaultValue, ok := p.DefaultValue.(string)
+			if ok {
+				value = pDefaultValue
+			}
+		}
+		if unit, ok := p.ParameterUnit["unit"]; ok {
+			uMap, ok := unit.(map[string]any)
+			if ok {
+				unitStr = uMap["value"].(string)
+			}
+		}
+		if unitStr != "" {
+			value += " " + unitStr
 		}
 	}
-	return ""
+	return value
 }
 
 // getBitmap 获取Bitmap类型图形数据
