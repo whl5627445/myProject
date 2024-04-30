@@ -286,16 +286,18 @@ func (m *ModelInstance) GetConnectionsList() []map[string]any {
 }
 
 // GetAnnotationDiagram 获取Diagram中的图形以及坐标系信息
-func (m *Diagram) GetAnnotationDiagram() map[string]any {
+func (m *Diagram) GetAnnotationDiagram() []map[string]any {
 	diagram := make(map[string]any, 0)
 	diagramData := m.GetDiagramList()
 	diagram["diagram"] = diagramData
 	if len(diagramData) > 0 {
 		diagram["coordinateSystem"] = m.GetCoordinateSystem()
+		return []map[string]any{diagram}
 	}
-	return diagram
+	return nil
 }
 
+// GetCoordinateSystem 获取Diagram的坐标系数据
 func (m *Diagram) GetCoordinateSystem() map[string]any {
 	return getCoordinateSystem(m.CoordinateSystem)
 }
@@ -310,11 +312,12 @@ func (m *Diagram) GetDiagramList() []map[string]any {
 	return graphicsList
 }
 
+// GetCoordinateSystem 获取Icon的坐标系数据
 func (m *Icon) GetCoordinateSystem() map[string]any {
 	return getCoordinateSystem(m.CoordinateSystem)
 }
 
-// GetIconList 将给定Icon数据处理成结构化信息
+// GetIconList 将给定Icon数据处理成结构化信息，elements是为了传入参数信息
 func (m *Icon) GetIconList(modelElements *elements) []map[string]any {
 	graphicsList := make([]map[string]any, 0)
 	for _, c := range m.Graphics {
@@ -324,13 +327,17 @@ func (m *Icon) GetIconList(modelElements *elements) []map[string]any {
 	return graphicsList
 }
 
+// GetIconListALL 获取给定ModelInstance的全部图标数据，递归查找，elements是为了传入参数信息
 func (m *ModelInstance) GetIconListALL(modelElements *elements) []map[string]any {
 
 	graphicsList := make([]map[string]any, 0)
 	graphicsList = append(graphicsList, m.Annotation.Icon.GetIconList(modelElements)...)
 	for _, element := range m.Elements {
-		if element.Kind == "extends" && element.BaseClass != nil {
+		if element.BaseClass != nil {
 			graphicsList = append(element.BaseClass.GetIconListALL(modelElements), graphicsList...)
+		}
+		if element.Type != nil {
+			graphicsList = append(element.Type.GetIconListALL(modelElements), graphicsList...)
 		}
 	}
 	return graphicsList
@@ -533,6 +540,7 @@ func getGraphicsData(g *graphics, modelElements *elements) map[string]any {
 	return graphicsData
 }
 
+// 将给定coordinateSystem处理成结构化的坐标系数据，具有默认值， 当前默认值是不具备修改能力的，如果是配置项，则需要传入对应的配置数据
 func getCoordinateSystem(m *coordinateSystem) map[string]any {
 	c := make(map[string]any, 0)
 	c["preserveAspectRatio"] = false
@@ -550,29 +558,5 @@ func getCoordinateSystem(m *coordinateSystem) map[string]any {
 	c["preserveAspectRatio"] = m.PreserveAspectRatio
 	return c
 }
-
-// getParameterValue 获取Text类型图形数据中组件参数的值的核心逻辑，返回值内容和值类型
-// func getParameterValue(value any) (any, string) {
-// 	switch value.(type) {
-// 	case map[string]any:
-// 		if v, ok := value.(map[string]any)["value"]; ok {
-// 			return v, "Normal"
-// 		}
-// 		if v, ok := value.(map[string]any)["binding"]; ok {
-// 			switch v.(type) {
-// 			case map[string]any:
-// 				vMap := v.(map[string]any)
-// 				if vMap["kind"] == "enum" {
-// 					return vMap["name"], "Enumeration"
-// 				}
-// 			case bool:
-// 				return v, "CheckBox"
-// 			}
-//
-// 			return v, "Normal"
-// 		}
-// 	}
-// 	return "", "Normal"
-// }
 
 // setElementModifierValue(BatteryDischargeCharge, battery1, $Code((redeclare Modelica.Electrical.Batteries.ParameterRecords.CellData cellData(Qnom = 4432428010))))
