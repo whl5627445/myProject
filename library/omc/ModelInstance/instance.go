@@ -190,22 +190,73 @@ func (m *ModelInstance) DataPreprocessing() {
 	}
 }
 
-// 预处理组件modifier数据， 被设置过的参数与参数属性
-func getElementModifiers(modifiersOriginal any) map[string]string {
-	modifiers := make(map[string]string, 0)
-	if modifier, ok := modifiersOriginal.(map[string]any); ok {
+// getElementModifiers 预处理组件modifier数据， 被设置过的参数与参数属性
+func (e *elements) getElementModifiers() map[string]any {
+	modifiers := make(map[string]any, 0)
+	if modifier, ok := e.ModifiersOriginal.(map[string]any); ok {
 		for k1, v1 := range modifier { // map可能存在多层结构，这里表示第一层的k与v的值
-			if vString, vOk := v1.(string); vOk {
-				modifiers[k1] = vString
-			}
-			if vMap, vOk := v1.(map[string]string); vOk {
+			if vMap, vOk := v1.(map[string]string); vOk && e.Kind == "extends" {
 				for k2, v2 := range vMap {
 					modifiers[k1+"."+k2] = v2 // map可能存在多层结构，这里表示第二层的k与v的值， 相当于某组件的某个参数
+				}
+			} else {
+				modifiers[k1] = v1
+			}
+		}
+	}
+	if modifier, ok := e.ModifiersOriginal.(string); ok {
+		modifiers["value"] = modifier
+	}
+	return modifiers
+}
+
+// getExtendsParameter 获取设置的继承模型参数
+func (e *elements) getExtendsModifiers(extendModelParameterMap map[string]map[string]*Parameter, n int) {
+	for elementName, v := range e.Modifiers {
+		if nvMap, ok := v.(map[string]any); ok {
+			for pName, pValue := range nvMap {
+				if parameterMap, ok := extendModelParameterMap[elementName]; ok {
+					if p, ok := parameterMap[pName]; ok {
+						p.DefaultValue = pValue
+						continue
+					} else {
+						extendModelParameterMap[elementName][pName] = &Parameter{Name: e.Name, IsExtend: n > 1, Type: "Normal"}
+					}
+				} else {
+					extendModelParameterMap[elementName] = map[string]*Parameter{pName: {Name: pName, IsExtend: n > 1, Type: "Normal"}}
+				}
+				if n > 0 {
+					extendModelParameterMap[elementName][pName].DefaultValue = pValue
+				} else {
+					extendModelParameterMap[elementName][pName].Value = pValue
 				}
 			}
 		}
 	}
-	return modifiers
+}
+
+// GetModelParameterValue 获取模型的参数数据，extendModelParameterMap是当模型继承了其他模型，又设置了继承模型是参数时会有用
+func (m *ModelInstance) GetModelParameterValue(modelParameterMap map[string]map[string]*Parameter, n int) []map[string]any {
+	eList := make([]map[string]any, 0)
+	for _, e := range m.Elements {
+		if e.Kind == "extends" {
+			e.getExtendsModifiers(modelParameterMap, n)
+			eList = append(eList, e.BaseClass.GetModelParameterValue(modelParameterMap, n+1)...)
+		} else {
+			e.ElementsParameter = map[string]*Parameter{}
+			e.ParameterList = []*Parameter{}
+			if extend, ok := modelParameterMap[e.Name]; ok {
+				e.ElementsParameter = extend
+			}
+			e.GetElementsParameterValue(e.ElementsParameter, &e.ParameterList, false, e.Type.Name, n+1)
+			p := map[string]any{"name": e.Name, "parameter": e.ParameterList, "type": "component"}
+			if e.Prefixes.Variability == "parameter" {
+				p["type"] = "model"
+			}
+			eList = append(eList, p)
+		}
+	}
+	return eList
 }
 
 // GetConnectionsList 将给定连接信息处理成结构化信息
@@ -283,6 +334,183 @@ func (m *ModelInstance) GetIconListALL(modelElements *elements) []map[string]any
 		}
 	}
 	return graphicsList
+}
+
+// GetElementsParameterValue 获取组件参数与值信息，写入给定的map当中
+// 如果是初次调用则isType为false，parentName是调用时传入模型名称，n为0
+func (e *elements) GetElementsParameterValue(parameterMap map[string]*Parameter, parameterList *[]*Parameter, isType bool, parentName string, n int) {
+	if e.Kind == "component" && e.Prefixes.Variability != "parameter" && !isType {
+		for k, v := range e.Modifiers {
+			if p, ok := e.ElementsParameter[k]; ok {
+				if p.DefaultValue == nil {
+					p.DefaultValue = v
+				}
+			} else {
+				e.ElementsParameter[k] = &Parameter{Name: k, Type: "Normal"}
+				if n > 1 {
+					e.ElementsParameter[k].DefaultValue = v
+				} else {
+					e.ElementsParameter[k].Value = v
+				}
+			}
+		}
+	}
+	if e.Prefixes.Variability == "parameter" || e.Annotation.Dialog.ShowStartAttribute {
+		value := ""
+		if _, ok := e.Modifiers["value"]; ok {
+			value = e.Modifiers["value"].(string)
+		}
+		if p, ok := parameterMap[e.Name]; ok {
+			p.ParameterAttributes = e.Modifiers
+			p.IsExtend = n > 1
+			if p.DefaultValue == nil {
+				p.DefaultValue = value
+			}
+		} else {
+			if n > 0 {
+				parameterMap[e.Name] = &Parameter{ParameterAttributes: e.Modifiers, DefaultValue: value, Name: e.Name, IsExtend: n > 1, Type: "Normal"}
+			} else {
+				parameterMap[e.Name] = &Parameter{ParameterAttributes: e.Modifiers, Value: value, Name: e.Name, IsExtend: n > 1, Type: "Normal"}
+			}
+		}
+		parameterMap[e.Name].Comment = e.Comment
+		parameterMap[e.Name].ExtendName = parentName
+		e.Annotation.Dialog.getParameterDialog(parameterMap[e.Name])
+		e.Annotation.getParameterChoices(parameterMap[e.Name])
+		if e.Type != nil && (!e.Type.BasicType || e.Type.Restriction == "type") {
+			if e.Type.Elements[0].BaseClass.Name == "enumeration" {
+				parameterMap[e.Name].Type = "Enumeration"
+				options := []map[string]string{}
+				for i := 1; i < len(e.Type.Elements); i++ {
+					options = append(options, map[string]string{"value": e.Type.Elements[i].Name, "comment": e.Type.Elements[i].Comment})
+				}
+				parameterMap[e.Name].Options = options
+			}
+			parameterMap[e.Name].ParameterUnit = e.getParameterUnit()
+		}
+		if e.Type != nil && e.Type.BasicType {
+			parameterMap[e.Name].Type = "Normal"
+			switch e.Type.Name {
+			case "Boolean":
+				parameterMap[e.Name].Type = "CheckBox"
+			}
+		}
+		*parameterList = append(*parameterList, parameterMap[e.Name])
+	}
+	if !isType && e.Type != nil {
+		for _, element := range e.Type.Elements {
+			element.GetElementsParameterValue(parameterMap, parameterList, true, e.Type.Name, n+1)
+		}
+	}
+	if e.BaseClass != nil {
+		for _, element := range e.BaseClass.Elements {
+			element.GetElementsParameterValue(parameterMap, parameterList, true, e.BaseClass.Name, n+1)
+		}
+	}
+}
+
+// GetParameterAttributes 获取该类型的属性数据，max、min、start等等
+func (m *ModelInstance) GetParameterAttributes() map[string]any {
+	attr := make(map[string]any, 0)
+	for i := 0; i < len(m.Elements); i++ {
+		if m.Elements[i].Kind == "extends" && m.Elements[i].BaseClass.BasicType {
+			attr = m.Elements[i].Modifiers
+			break
+		}
+	}
+	return attr
+}
+
+// Parameter 定义的参数结构体
+type Parameter struct {
+	Comment             string              `json:"comment"`
+	DefaultValue        any                 `json:"defaultValue"`
+	Value               any                 `json:"value"`
+	ExtendName          string              `json:"extendName"`
+	Group               string              `json:"group"`
+	Name                string              `json:"name"`
+	Tab                 string              `json:"tab"`
+	Type                string              `json:"type"`
+	Options             []map[string]string `json:"options,omitempty"`
+	ParameterAttributes map[string]any      `json:"parameterAttributes,omitempty"`
+	ParameterUnit       map[string]any      `json:"parameterUnit,omitempty"`
+	IsExtend            bool                `json:"isExtend"`
+}
+
+// 获取单位数据，是一个map，包含源码当中定义的该类型的单位属性
+func (e *elements) getParameterUnit() map[string]any {
+	if e.BaseClass != nil && e.BaseClass.BasicType {
+		return e.Modifiers
+	}
+	if e.Type != nil {
+		for _, element := range e.Type.Elements {
+			if element.Kind == "extends" {
+				if element.BaseClass != nil && element.BaseClass.BasicType {
+					return element.Modifiers
+				}
+				for _, bElement := range element.BaseClass.Elements {
+					return bElement.getParameterUnit()
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func (e *elements) GetConnectionOption() []map[string]any {
+	if e.Kind == "extends" || e.Type.Restriction != "expandable connector" {
+		return nil
+	}
+	variableList := make([]map[string]any, 0)
+	for _, element := range e.Type.Elements {
+		if element.Kind == "extends" {
+			continue
+		}
+		option := element.GetConnectionOption()
+		ser := map[string]any{
+			"variableName": element.Name,
+			"hasChild":     len(option) > 0,
+			"option":       option,
+		}
+		variableList = append(variableList, ser)
+	}
+
+	return variableList
+}
+
+// 获取参数的dialog数据， 包括分组，tab页，是否显示开始属性以及部分专属处理
+func (d *dialog) getParameterDialog(parameter *Parameter) {
+	parameter.Tab = "General"
+	parameter.Group = "Parameters"
+	if d.Tab != "" {
+		parameter.Tab = d.Tab
+	}
+	if d.Group != "" {
+		parameter.Group = d.Group
+	}
+	if d.ShowStartAttribute {
+		parameter.Group = "Initialization"
+		parameter.Type = "checkWrite"
+		parameter.Name = parameter.Name + ".start"
+	}
+}
+
+func (a *annotation) getParameterChoices(parameter *Parameter) {
+	switch true {
+	case len(a.Choices.Choice) > 0:
+		options := []map[string]string{}
+		for _, value := range a.Choices.Choice {
+			choiceMap := map[string]string{}
+			choiceMap["comment"] = ""
+			choiceMap["value"] = value
+			options = append(options, choiceMap)
+		}
+		parameter.Options = options
+		parameter.Type = "Enumeration"
+		return
+	case a.Choices.CheckBox:
+		parameter.Type = "CheckBox"
+	}
 }
 
 // 处理图形数据

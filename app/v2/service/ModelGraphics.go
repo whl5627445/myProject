@@ -10,7 +10,12 @@ import (
 	instance "yssim-go/library/omc/ModelInstance"
 )
 
-func GetModelInstance(modelName string) map[string]any {
+type ModelInstanceData struct {
+	Graphics   map[string]any   `json:"graphics,omitempty"`
+	Parameters []map[string]any `json:"parameters,omitempty"`
+}
+
+func GetModelInstanceData(modelName string) *ModelInstanceData {
 	s := time.Now().Local().UnixMilli()
 	m := getModelInstance(modelName)
 	fmt.Printf("模型实例化用时：%d", time.Now().Local().UnixMilli()-s)
@@ -18,16 +23,26 @@ func GetModelInstance(modelName string) map[string]any {
 	m.DataPreprocessing()
 	fmt.Printf("数据预处理用时：%d", time.Now().Local().UnixMilli()-ss)
 	sss := time.Now().Local().UnixMilli()
-	graphics := map[string]any{
-		"connections": GetConnectionsListAll(m),
-		"diagram":     GetDiagramListAll(m),
-		"elements":    GetElementsIconList(m),
+	modelData := &ModelInstanceData{}
+	modelData.Parameters = getModelElementsParameter(m)
+	modelData.Graphics = map[string]any{
+		"connections": getConnectionsListAll(m),
+		"diagram":     getDiagramListAll(m),
+		"elements":    getElementsIconList(m),
 	}
 	i := map[string]any{"graphics": graphics, "parameters": make(map[string]any, 0)}
 	fmt.Printf("逻辑处理用时：%d", time.Now().Local().UnixMilli()-sss)
-	return i
+	return modelData
 }
 
+// getModelElementsParameter 获取给定实例化模型的所有参数数据
+func getModelElementsParameter(modelInstance *instance.ModelInstance) []map[string]any {
+	modelParameterMap := map[string]map[string]*instance.Parameter{}
+
+	return modelInstance.GetModelParameterValue(modelParameterMap, 0)
+}
+
+// getModelInstance 获取给定模型名字的实例化数据
 func getModelInstance(modelName string) *instance.ModelInstance {
 	i := omc.OMC.GetModelInstance(modelName)
 	m := &instance.ModelInstance{}
