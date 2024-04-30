@@ -88,8 +88,9 @@ type AddComponentData struct {
 	OldComponentName string `json:"old_component_name" binding:"required"`
 	ModelName        string `json:"model_name" binding:"required"`
 	Origin           string `json:"origin" binding:"required"`
+	Rotation         int    `json:"rotation" binding:""`
 	// Extent           []string `json:"extent" binding:"required"`
-	Rotation int `json:"rotation" binding:""`
+
 }
 
 type DeleteComponentMap struct {
