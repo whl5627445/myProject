@@ -5,14 +5,16 @@ import (
 )
 
 type ModelInstance struct {
-	Name        string        `json:"name"`
-	Dims        dimensions    `json:"dims,omitempty"`
-	Restriction string        `json:"restriction,omitempty"`
-	Prefixes    prefixes      `json:"prefixes,omitempty"`
-	Comment     string        `json:"comment,omitempty"`
-	Elements    []*elements   `json:"elements,omitempty"`
-	Connections []*connection `json:"connections,omitempty"`
-	Annotation  annotation    `json:"annotation,omitempty"`
+	Name              string         `json:"name"`
+	Dims              dimensions     `json:"dims,omitempty"`
+	Restriction       string         `json:"restriction,omitempty"`
+	Prefixes          prefixes       `json:"prefixes,omitempty"`
+	Comment           string         `json:"comment,omitempty"`
+	ModifiersOriginal any            `json:"modifiers,omitempty"`
+	Modifiers         map[string]any `json:"modifiersObject,omitempty"`
+	Elements          []*elements    `json:"elements,omitempty"`
+	Connections       []*connection  `json:"connections,omitempty"`
+	Annotation        annotation     `json:"annotation,omitempty"`
 	// Source      source        `json:"source,omitempty"`
 	BasicType bool
 }
@@ -34,22 +36,24 @@ type prefixes struct {
 	Direction    string `json:"direction,omitempty"`   // ["input", "output"]
 }
 type elements struct {
-	Kind              string            `json:"kind,omitempty"`
-	Name              string            `json:"name,omitempty"`
-	TypeOriginal      any               `json:"type,omitempty"`
-	Type              *ModelInstance    `json:"typePreprocessing,omitempty"`
-	Restriction       string            `json:"restriction,omitempty"`
-	Prefixes          prefixes          `json:"prefixes,omitempty"`
-	Comment           string            `json:"comment,omitempty"`
-	ModifiersOriginal any               `json:"modifiers,omitempty"`
-	Modifiers         map[string]string `json:"modifiersObject,omitempty"`
-	Annotation        annotation        `json:"annotation,omitempty"`
-	BaseClassOriginal any               `json:"baseClass,omitempty"` // 字符串或baseClass
-	BaseClass         *ModelInstance    `json:"baseClassPreprocessing,omitempty"`
-	// Value             any               `json:"value,omitempty"`
-	Condition any        `json:"condition,omitempty"`
-	Dims      dimensions `json:"dims,omitempty"`
+	Kind              string         `json:"kind,omitempty"`
+	Name              string         `json:"name,omitempty"`
+	TypeOriginal      any            `json:"type,omitempty"`
+	Type              *ModelInstance `json:"typePreprocessing,omitempty"`
+	Restriction       string         `json:"restriction,omitempty"`
+	Prefixes          prefixes       `json:"prefixes,omitempty"`
+	Comment           string         `json:"comment,omitempty"`
+	ModifiersOriginal any            `json:"modifiers,omitempty"`
+	Modifiers         map[string]any `json:"modifiersObject,omitempty"`
+	Annotation        annotation     `json:"annotation,omitempty"`
+	BaseClassOriginal any            `json:"baseClass,omitempty"` // 字符串或baseClass
+	BaseClass         *ModelInstance `json:"baseClassPreprocessing,omitempty"`
+	Condition         any            `json:"condition,omitempty"`
+	Dims              dimensions     `json:"dims,omitempty"`
+	ParameterList     []*Parameter   `json:"parameter,omitempty"`
+	ElementsParameter map[string]*Parameter
 	// Source            *source        `json:"source,omitempty"`
+	// Value             any               `json:"value,omitempty"`
 
 }
 type source struct {
@@ -70,7 +74,7 @@ type annotation struct {
 	Placement  *placement                   `json:"Placement,omitempty"`
 	Evaluate   bool                         `json:"Evaluate,omitempty"`
 	HideResult bool                         `json:"HideResult,omitempty"`
-	Choices    *choices                     `json:"choices,omitempty"`
+	Choices    choices                      `json:"choices,omitempty"`
 	Dialog     dialog                       `json:"Dialog,omitempty"`
 }
 type dialog struct {
@@ -81,7 +85,8 @@ type dialog struct {
 	ConnectorSizing    bool   `json:"connectorSizing,omitempty"`
 }
 type choices struct {
-	CheckBox bool `json:"checkBox,omitempty"`
+	CheckBox bool     `json:"checkBox,omitempty"`
+	Choice   []string `json:"choice,omitempty"`
 }
 type placement struct {
 	Transformation     transformation `json:"transformation,omitempty"`
