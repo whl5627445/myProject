@@ -185,7 +185,7 @@ func (m *ModelInstance) DataPreprocessing() {
 			}
 			m.Elements[i].TypeOriginal = nil
 		}
-		m.Elements[i].Modifiers = getElementModifiers(m.Elements[i].ModifiersOriginal)
+		m.Elements[i].Modifiers = m.Elements[i].getElementModifiers()
 		m.Elements[i].ModifiersOriginal = nil
 	}
 }
