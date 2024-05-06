@@ -714,7 +714,7 @@ func ExperimentGetView(c *gin.Context) {
 	packageId := c.Query("package_id")
 	modelName := c.Query("model_name")
 	var recordList []DataBaseModel.YssimExperimentRecord
-	DB.Where("package_id = ? AND userspace_id = ? AND username = ? AND model_name = ?", packageId, userSpaceId, username, modelName).Find(&recordList)
+	DB.Where("package_id = ? AND userspace_id = ? AND username = ? AND model_name = ?", packageId, userSpaceId, username, modelName).Order("create_time desc").Find(&recordList)
 
 	var dataList []map[string]string
 	for _, record := range recordList {
