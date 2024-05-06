@@ -603,9 +603,15 @@ func (m *modelParameters) getParameter(className string, varName string, p []any
 				} else {
 					dataDefault["checked"] = parameterValue
 				}
-			} else {
+			} else if choices == nil {
 				dataDefault["type"] = "Enumeration"
 				dataDefault["options"] = []string{"", "true", "false"}
+				dataDefault["defaultvalue"] = parameterValue
+			} else {
+				dataDefault["type"] = "Enumeration"
+				options := []any{""}
+				options = append(options, choices["value"].([]any)[len(choices["value"].([]any))-1].([]any)...)
+				dataDefault["options"] = options
 				dataDefault["defaultvalue"] = parameterValue
 			}
 		}
