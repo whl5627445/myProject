@@ -1,9 +1,7 @@
 package service
 
 import (
-	"fmt"
 	"log"
-	"time"
 
 	"github.com/bytedance/sonic"
 	"yssim-go/library/omc"
@@ -16,13 +14,8 @@ type ModelInstanceData struct {
 }
 
 func GetModelInstanceData(modelName string) *ModelInstanceData {
-	s := time.Now().Local().UnixMilli()
 	m := getModelInstance(modelName)
-	fmt.Printf("模型实例化用时：%d", time.Now().Local().UnixMilli()-s)
-	ss := time.Now().Local().UnixMilli()
 	m.DataPreprocessing()
-	fmt.Printf("数据预处理用时：%d", time.Now().Local().UnixMilli()-ss)
-	sss := time.Now().Local().UnixMilli()
 	modelData := &ModelInstanceData{}
 	modelData.Parameters = getModelElementsParameter(m)
 	modelData.Graphics = map[string]any{
@@ -30,8 +23,6 @@ func GetModelInstanceData(modelName string) *ModelInstanceData {
 		"diagram":     getDiagramListAll(m),
 		"elements":    getElementsIconList(m),
 	}
-	i := map[string]any{"graphics": graphics, "parameters": make(map[string]any, 0)}
-	fmt.Printf("逻辑处理用时：%d", time.Now().Local().UnixMilli()-sss)
 	return modelData
 }
 
