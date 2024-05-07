@@ -262,7 +262,8 @@ func (m *ModelInstance) GetModelParameterValue(modelParameterMap map[string]map[
 		if e.Kind == "extends" {
 			e.getExtendsModifiers(modelParameterMap, n)
 			eList = append(eList, e.BaseClass.GetModelParameterValue(modelParameterMap, true, n+1)...)
-		} else {
+		}
+		if e.Kind == "component" {
 			e.ElementsParameter = map[string]*Parameter{}
 			e.ParameterList = []*Parameter{}
 			if extend, ok := modelParameterMap[e.Name]; ok {
