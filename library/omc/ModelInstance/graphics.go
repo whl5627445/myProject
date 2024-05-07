@@ -141,7 +141,7 @@ func (e *elements) getModelGraphicsParameters(varName string) string {
 				value = pValue
 			}
 		}
-		if p.DefaultValue != nil {
+		if p.DefaultValue != nil && value == varName {
 			pDefaultValue, ok := p.DefaultValue.(string)
 			if ok {
 				value = pDefaultValue
