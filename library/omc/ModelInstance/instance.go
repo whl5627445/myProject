@@ -85,8 +85,9 @@ type dialog struct {
 	ConnectorSizing    bool   `json:"connectorSizing,omitempty"`
 }
 type choices struct {
-	CheckBox bool     `json:"checkBox,omitempty"`
-	Choice   []string `json:"choice,omitempty"`
+	CheckBox       bool                `json:"checkBox,omitempty"`
+	ChoiceOriginal []any               `json:"choice,omitempty"`
+	Choice         []map[string]string `json:"choicePreprocessing,omitempty"`
 }
 type placement struct {
 	Transformation     transformation `json:"transformation,omitempty"`
@@ -184,6 +185,25 @@ func (m *ModelInstance) DataPreprocessing() {
 				tInstance.DataPreprocessing()
 			}
 			m.Elements[i].TypeOriginal = nil
+			for c := 0; c < len(m.Elements[i].Annotation.Choices.ChoiceOriginal); c++ {
+				co := m.Elements[i].Annotation.Choices.ChoiceOriginal[c]
+				coMap, ok := co.(map[string]any)
+				cStr := ""
+				prefixes := coMap["prefixes"].(map[string]any)
+				restriction := coMap["restriction"].(string)
+				name := coMap["name"].(string)
+				baseClass := coMap["baseClass"].(string)
+				comment := coMap["comment"].(string)
+				if ok {
+					if prefixes["redeclare"].(bool) {
+						cStr += "redeclare "
+					}
+					cStr += restriction
+					cStr += " " + name
+					cStr += " =  " + baseClass
+					m.Elements[i].Annotation.Choices.Choice = append(m.Elements[i].Annotation.Choices.Choice, map[string]string{"value": cStr, "comment": comment})
+				}
+			}
 		}
 		m.Elements[i].Modifiers = m.Elements[i].getElementModifiers()
 		m.Elements[i].ModifiersOriginal = nil
@@ -506,8 +526,8 @@ func (a *annotation) getParameterChoices(parameter *Parameter) {
 		options := []map[string]string{}
 		for _, value := range a.Choices.Choice {
 			choiceMap := map[string]string{}
-			choiceMap["comment"] = ""
-			choiceMap["value"] = value
+			choiceMap["comment"] = value["comment"]
+			choiceMap["value"] = value["value"]
 			options = append(options, choiceMap)
 		}
 		parameter.Options = options
