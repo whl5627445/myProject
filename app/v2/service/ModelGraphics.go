@@ -29,8 +29,7 @@ func GetModelInstanceData(modelName string) *ModelInstanceData {
 // getModelElementsParameter 获取给定实例化模型的所有参数数据
 func getModelElementsParameter(modelInstance *instance.ModelInstance) []map[string]any {
 	modelParameterMap := map[string]map[string]*instance.Parameter{}
-
-	return modelInstance.GetModelParameterValue(modelParameterMap, 0)
+	return modelInstance.GetModelParameterValue(modelParameterMap, false, 0)
 }
 
 // getModelInstance 获取给定模型名字的实例化数据
