@@ -153,6 +153,10 @@ func (e *elements) getModelGraphicsParameters(varName string) string {
 				unitStr = uMap["value"].(string)
 			}
 		}
+		if strings.Contains(value, ".") && value != varName {
+			strList := strings.Split(value, ".")
+			value = strList[len(strList)-1]
+		}
 		if unitStr != "" {
 			value += " " + unitStr
 		}
