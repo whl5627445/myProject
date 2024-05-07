@@ -166,17 +166,15 @@ func getElementsConnectorList(modelInstance *instance.ModelInstance, parentName 
 			}
 			modelIconList := make(map[string]any, 0)
 			modelIconList["name"] = e.Name
-			// modelIconList["condition"] = condition
 			modelIconList["coordinateSystem"] = typeInstance.Annotation.Diagram.GetCoordinateSystem()
 			modelIconList["classname"] = typeInstance.Name
 			modelIconList["comment"] = e.Comment
 			modelIconList["restriction"] = typeInstance.Restriction
 			modelIconList["direction"] = typeInstance.Prefixes.Direction
-			modelIconList["type"] = typeInstance.Name
+			modelIconList["type"] = ""
 			if typeInstance.Elements[0].BaseClass != nil && typeInstance.Elements[0].BaseClass.BasicType {
 				modelIconList["type"] = typeInstance.Elements[0].BaseClass.Name
 			}
-			// modelIconList["connectorSizing"] =
 			modelIconList["subShapes"] = typeInstance.GetIconListALL(e)
 			modelIconList["modelName"] = modelInstance.Name
 			modelIconList["outputType"] = geOutputType(connectorSizingMap, e.Dims.Absyn, e.Dims.Typed)
