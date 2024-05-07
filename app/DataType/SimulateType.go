@@ -43,6 +43,10 @@ type ModelSimulateResultSingularData struct {
 	S2       string `json:"s2" binding:""`
 }
 
+type SimulateTerminateData struct {
+	RecordId string `json:"record_id" binding:"required"`
+}
+
 type ExperimentExistsData struct {
 	PackageId       string            `json:"package_id" binding:"required"`
 	SimulateVarData map[string]string `json:"simulate_var_data" binding:"required"`

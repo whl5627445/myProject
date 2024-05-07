@@ -459,22 +459,43 @@ func SimulateResultRenameView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-func SimulateSuspendView(c *gin.Context) {
+func SimulateTerminateView(c *gin.Context) {
 	/*
-	   # 2024.04.29 周强修改（新接口）：中止仿真进程
+	   # 2024.04.29 周强修改（新接口）：终止仿真进程
 	*/
 	username := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
-	recordId := c.Query("record_id")
+	var item DataType.SimulateTerminateData
+	if err := c.BindJSON(&item); err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
 
 	var res DataType.ResponseData
 	var resultRecord DataBaseModel.YssimSimulateRecord
-	DB.Where("id = ? AND username = ? AND userspace_id = ? ", recordId, username, userSpaceId).First(&resultRecord)
-	resultRecord.SimulateStatus = "5"
-	config.DB.Save(&resultRecord)
+	if err := DB.Where("id = ? AND username = ? AND userspace_id = ? ", item.RecordId, username, userSpaceId).First(&resultRecord).Error; err != nil {
+		res.Err = "终止仿真失败"
+		res.Status = 1
+		c.JSON(http.StatusOK, res)
+		return
+	}
 
-	service.SuspendSimulateTask(recordId, resultRecord.SimulateType)
-	res.Msg = "仿真已中止"
+	if err := service.TerminateSimulateTask(item.RecordId, resultRecord.SimulateType); err != nil {
+		res.Err = "终止仿真失败"
+		res.Status = 1
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	resultRecord.SimulateStatus = "7"
+	if err := config.DB.Save(&resultRecord).Error; err != nil {
+		res.Err = "仿真已终止，但仿真状态更新失败"
+		res.Status = 1
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	res.Msg = "仿真已终止"
 	c.JSON(http.StatusOK, res)
 }
 
