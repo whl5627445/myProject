@@ -309,7 +309,7 @@ func (m *ModelInstance) GetConnectionsList() []map[string]any {
 // GetAnnotationDiagram 获取Diagram中的图形以及坐标系信息
 func (m *Diagram) GetAnnotationDiagram() []map[string]any {
 	diagram := make(map[string]any, 0)
-	diagramData := m.GetDiagramList()
+	diagramData := m.GetDiagramList(nil)
 	diagram["diagram"] = diagramData
 	if len(diagramData) > 0 {
 		diagram["coordinateSystem"] = m.GetCoordinateSystem()
@@ -324,10 +324,10 @@ func (m *Diagram) GetCoordinateSystem() map[string]any {
 }
 
 // GetDiagramList 将给定Diagram数据处理成结构化信息
-func (m *Diagram) GetDiagramList() []map[string]any {
+func (m *Diagram) GetDiagramList(modelElements *elements) []map[string]any {
 	graphicsList := make([]map[string]any, 0)
 	for _, c := range m.Graphics {
-		graphicsData := getGraphicsData(c, nil)
+		graphicsData := getGraphicsData(c, modelElements)
 		graphicsList = append(graphicsList, graphicsData)
 	}
 	return graphicsList
@@ -352,7 +352,11 @@ func (m *Icon) GetIconList(modelElements *elements) []map[string]any {
 func (m *ModelInstance) GetIconListALL(modelElements *elements) []map[string]any {
 
 	graphicsList := make([]map[string]any, 0)
-	graphicsList = append(graphicsList, m.Annotation.Icon.GetIconList(modelElements)...)
+	if m.Restriction == "connector" || m.Restriction == "expandable connector" {
+		graphicsList = append(graphicsList, m.Annotation.Diagram.GetDiagramList(modelElements)...)
+	} else {
+		graphicsList = append(graphicsList, m.Annotation.Icon.GetIconList(modelElements)...)
+	}
 	for _, element := range m.Elements {
 		if element.BaseClass != nil && element.Kind == "extends" {
 			graphicsList = append(element.BaseClass.GetIconListALL(modelElements), graphicsList...)
