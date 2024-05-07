@@ -236,19 +236,19 @@ func (e *elements) getExtendsModifiers(extendModelParameterMap map[string]map[st
 }
 
 // GetModelParameterValue 获取模型的参数数据，extendModelParameterMap是当模型继承了其他模型，又设置了继承模型是参数时会有用
-func (m *ModelInstance) GetModelParameterValue(modelParameterMap map[string]map[string]*Parameter, n int) []map[string]any {
+func (m *ModelInstance) GetModelParameterValue(modelParameterMap map[string]map[string]*Parameter, isExtend bool, n int) []map[string]any {
 	eList := make([]map[string]any, 0)
 	for _, e := range m.Elements {
 		if e.Kind == "extends" {
 			e.getExtendsModifiers(modelParameterMap, n)
-			eList = append(eList, e.BaseClass.GetModelParameterValue(modelParameterMap, n+1)...)
+			eList = append(eList, e.BaseClass.GetModelParameterValue(modelParameterMap, true, n+1)...)
 		} else {
 			e.ElementsParameter = map[string]*Parameter{}
 			e.ParameterList = []*Parameter{}
 			if extend, ok := modelParameterMap[e.Name]; ok {
 				e.ElementsParameter = extend
 			}
-			e.GetElementsParameterValue(e.ElementsParameter, &e.ParameterList, false, e.Type.Name, n+1)
+			e.GetElementsParameterValue(e.ElementsParameter, &e.ParameterList, isExtend, e.Type.Name, n)
 			p := map[string]any{"name": e.Name, "parameter": e.ParameterList, "type": "component"}
 			if e.Prefixes.Variability == "parameter" {
 				p["type"] = "model"
@@ -333,11 +333,8 @@ func (m *ModelInstance) GetIconListALL(modelElements *elements) []map[string]any
 	graphicsList := make([]map[string]any, 0)
 	graphicsList = append(graphicsList, m.Annotation.Icon.GetIconList(modelElements)...)
 	for _, element := range m.Elements {
-		if element.BaseClass != nil {
+		if element.BaseClass != nil && element.Kind == "extends" {
 			graphicsList = append(element.BaseClass.GetIconListALL(modelElements), graphicsList...)
-		}
-		if element.Type != nil {
-			graphicsList = append(element.Type.GetIconListALL(modelElements), graphicsList...)
 		}
 	}
 	return graphicsList
@@ -345,8 +342,8 @@ func (m *ModelInstance) GetIconListALL(modelElements *elements) []map[string]any
 
 // GetElementsParameterValue 获取组件参数与值信息，写入给定的map当中
 // 如果是初次调用则isType为false，parentName是调用时传入模型名称，n为0
-func (e *elements) GetElementsParameterValue(parameterMap map[string]*Parameter, parameterList *[]*Parameter, isType bool, parentName string, n int) {
-	if e.Kind == "component" && e.Prefixes.Variability != "parameter" && !isType {
+func (e *elements) GetElementsParameterValue(parameterMap map[string]*Parameter, parameterList *[]*Parameter, isExtend bool, parentName string, n int) {
+	if e.Kind == "component" && e.Prefixes.Variability != "parameter" && e.ElementsParameter != nil {
 		for k, v := range e.Modifiers {
 			if p, ok := e.ElementsParameter[k]; ok {
 				if p.DefaultValue == nil {
@@ -354,7 +351,7 @@ func (e *elements) GetElementsParameterValue(parameterMap map[string]*Parameter,
 				}
 			} else {
 				e.ElementsParameter[k] = &Parameter{Name: k, Type: "Normal"}
-				if n > 1 {
+				if isExtend {
 					e.ElementsParameter[k].DefaultValue = v
 				} else {
 					e.ElementsParameter[k].Value = v
@@ -369,15 +366,15 @@ func (e *elements) GetElementsParameterValue(parameterMap map[string]*Parameter,
 		}
 		if p, ok := parameterMap[e.Name]; ok {
 			p.ParameterAttributes = e.Modifiers
-			p.IsExtend = n > 1
+			p.IsExtend = isExtend
 			if p.DefaultValue == nil {
 				p.DefaultValue = value
 			}
 		} else {
 			if n > 0 {
-				parameterMap[e.Name] = &Parameter{ParameterAttributes: e.Modifiers, DefaultValue: value, Name: e.Name, IsExtend: n > 1, Type: "Normal"}
+				parameterMap[e.Name] = &Parameter{ParameterAttributes: e.Modifiers, DefaultValue: value, Name: e.Name, IsExtend: isExtend, Type: "Normal"}
 			} else {
-				parameterMap[e.Name] = &Parameter{ParameterAttributes: e.Modifiers, Value: value, Name: e.Name, IsExtend: n > 1, Type: "Normal"}
+				parameterMap[e.Name] = &Parameter{ParameterAttributes: e.Modifiers, Value: value, Name: e.Name, IsExtend: isExtend, Type: "Normal"}
 			}
 		}
 		parameterMap[e.Name].Comment = e.Comment
@@ -404,14 +401,15 @@ func (e *elements) GetElementsParameterValue(parameterMap map[string]*Parameter,
 		}
 		*parameterList = append(*parameterList, parameterMap[e.Name])
 	}
-	if !isType && e.Type != nil {
+	n += 1
+	if e.Type != nil {
 		for _, element := range e.Type.Elements {
-			element.GetElementsParameterValue(parameterMap, parameterList, true, e.Type.Name, n+1)
+			element.GetElementsParameterValue(parameterMap, parameterList, true, e.Type.Name, n)
 		}
 	}
 	if e.BaseClass != nil {
 		for _, element := range e.BaseClass.Elements {
-			element.GetElementsParameterValue(parameterMap, parameterList, true, e.BaseClass.Name, n+1)
+			element.GetElementsParameterValue(parameterMap, parameterList, true, e.BaseClass.Name, n)
 		}
 	}
 }
