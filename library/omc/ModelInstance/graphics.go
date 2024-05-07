@@ -135,13 +135,13 @@ func (e *elements) getModelGraphicsParameters(varName string) string {
 	value := varName
 	unitStr := ""
 	if p, ok := e.ElementsParameter[varName]; ok {
-		if p.Value != nil {
+		if p.Value != nil && p.Value != "" {
 			pValue, ok := p.Value.(string)
 			if ok {
 				value = pValue
 			}
 		}
-		if p.DefaultValue != nil && value == varName {
+		if p.DefaultValue != "" && p.DefaultValue != nil && value == varName {
 			pDefaultValue, ok := p.DefaultValue.(string)
 			if ok {
 				value = pDefaultValue
