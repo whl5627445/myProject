@@ -285,18 +285,18 @@ func (m *ModelInstance) GetConnectionsList() []map[string]any {
 	data := make([]map[string]any, 0)
 	for _, c := range m.Connections {
 		line := map[string]any{
-			"points":        make([][]float64, 0),                 // 连线经过的拐点，第一个与最后一个表示起始位置
-			"color":         []int{0, 0, 127},                     // 连线颜色
-			"arrow":         []string{"Arrow.None", "Arrow.None"}, // 连线的开始和结束点箭头样式
-			"arrowSize":     3,                                    // 箭头大小
-			"linePattern":   "LinePattern.Solid",                  // 连线样式
-			"lineThickness": 0.25,                                 // 连线粗细
-			"smooth":        "Smooth.None",                        // 平滑样式
-			"rotation":      0,                                    // 旋转角度
-			"type":          "Line",                               // 数据类型
-			"offset":        []float64{0, 0},                      // 偏移量
-			"lhs":           c.Lhs.Parts,                          // 起点数据 ，包括组件名字和接口名字， 如果有下标会有下标数组
-			"rhs":           c.Rhs.Parts,                          // 结束点数据，包括组件名字和接口名字， 如果有下标会有下标数组
+			"points":      make([][]float64, 0),                                                    // 连线经过的拐点，第一个与最后一个表示起始位置
+			"color":       []int{0, 0, 127},                                                        // 连线颜色
+			"arrow":       []string{"Arrow.None", "Arrow.None"},                                    // 连线的开始和结束点箭头样式
+			"arrowSize":   3,                                                                       // 箭头大小
+			"linePattern": map[string]any{"name": "LinePattern.Solid", "index": 2, "kind": "enum"}, // 连线样式
+			"thickness":   0.25,                                                                    // 连线粗细
+			"smooth":      map[string]any{"index": 1, "kind": "enum", "name": "Smooth.None"},       // 平滑样式
+			"rotation":    0,                                                                       // 旋转角度
+			"type":        "Line",                                                                  // 数据类型
+			"offset":      []float64{0, 0},                                                         // 偏移量
+			"lhs":         c.Lhs.Parts,                                                             // 起点数据 ，包括组件名字和接口名字， 如果有下标会有下标数组
+			"rhs":         c.Rhs.Parts,                                                             // 结束点数据，包括组件名字和接口名字， 如果有下标会有下标数组
 		}
 		for k, v := range c.Annotation.Line {
 			line[k] = v
