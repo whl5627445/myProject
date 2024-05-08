@@ -349,17 +349,17 @@ func (m *Icon) GetIconList(modelElements *elements) []map[string]any {
 }
 
 // GetIconListALL 获取给定ModelInstance的全部图标数据，递归查找，elements是为了传入参数信息
-func (m *ModelInstance) GetIconListALL(modelElements *elements) []map[string]any {
+func (m *ModelInstance) GetIconListALL(modelElements *elements, isElement bool) []map[string]any {
 
 	graphicsList := make([]map[string]any, 0)
-	if m.Restriction == "connector" || m.Restriction == "expandable connector" {
+	if (m.Restriction == "connector" || m.Restriction == "expandable connector") && isElement {
 		graphicsList = append(graphicsList, m.Annotation.Diagram.GetDiagramList(modelElements)...)
 	} else {
 		graphicsList = append(graphicsList, m.Annotation.Icon.GetIconList(modelElements)...)
 	}
 	for _, element := range m.Elements {
 		if element.BaseClass != nil && element.Kind == "extends" {
-			graphicsList = append(element.BaseClass.GetIconListALL(modelElements), graphicsList...)
+			graphicsList = append(element.BaseClass.GetIconListALL(modelElements, isElement), graphicsList...)
 		}
 	}
 	return graphicsList
