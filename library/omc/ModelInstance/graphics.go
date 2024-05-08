@@ -19,7 +19,7 @@ func getRectangle(data []any, graphics map[string]any) map[string]any {
 	graphics["fillColor"] = data[4]     // 填充颜色
 	graphics["linePattern"] = data[5]   // 线的样式
 	graphics["fillPattern"] = data[6]   // 填充样式
-	graphics["lineThickness"] = data[7] // 线的粗细
+	graphics["thickness"] = data[7]     // 线的粗细
 	graphics["borderPattern"] = data[8] // 边框图案
 	graphics["extentsPoints"] = data[9] // 范围坐标
 	graphics["borderRadius"] = data[10] // 边框半径
@@ -36,7 +36,7 @@ func getPolygon(data []any, graphics map[string]any) map[string]any {
 	graphics["fillColor"] = data[4]     // 填充颜色
 	graphics["linePattern"] = data[5]   // 线的样式
 	graphics["fillPattern"] = data[6]   // 填充样式
-	graphics["lineThickness"] = data[7] // 线的粗细
+	graphics["thickness"] = data[7]     // 线的粗细
 	graphics["extentsPoints"] = data[8] // 范围坐标
 	graphics["smooth"] = data[9]        // 平滑度
 	graphics["type"] = "Polygon"        // 类型
@@ -51,7 +51,7 @@ func getLine(data []any, graphics map[string]any) map[string]any {
 	graphics["extentsPoints"] = data[3] // 范围坐标
 	graphics["lineColor"] = data[4]     // 线的颜色
 	graphics["linePattern"] = data[5]   // 线的样式
-	graphics["lineThickness"] = data[6] // 线的粗细
+	graphics["thickness"] = data[6]     // 线的粗细
 	graphics["arrow"] = data[7]         // 箭头样式， 开始样式与结束样式
 	graphics["arrowSize"] = data[8]     // 箭头大小
 	graphics["smooth"] = data[9]        // 平滑度
@@ -68,7 +68,7 @@ func getEllipse(data []any, graphics map[string]any) map[string]any {
 	graphics["fillColor"] = data[4]     // 填充颜色
 	graphics["linePattern"] = data[5]   // 线的样式
 	graphics["fillPattern"] = data[6]   // 填充样式
-	graphics["lineThickness"] = data[7] // 线的粗细
+	graphics["thickness"] = data[7]     // 线的粗细
 	graphics["extentsPoints"] = data[8] // 范围坐标
 	graphics["startingAngle"] = data[9] // 起始角度
 	graphics["endingAngle"] = data[10]  // 结束角度
@@ -86,7 +86,7 @@ func getText(data []any, graphics map[string]any, modelElements *elements) map[s
 	graphics["fillColor"] = data[4]                                     // 填充颜色
 	graphics["linePattern"] = data[5]                                   // 线的样式
 	graphics["fillPattern"] = data[6]                                   // 填充样式
-	graphics["lineThickness"] = data[7]                                 // 线的粗细
+	graphics["thickness"] = data[7]                                     // 线的粗细
 	graphics["extentsPoints"] = data[8]                                 // 范围坐标
 	graphics["textString"] = modelElements.getTextString(data[9])       // 文本文字
 	graphics["fontSize"] = data[10]                                     // 字体大小
