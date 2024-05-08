@@ -2,7 +2,7 @@ package service
 
 import (
 	"log"
-
+	
 	"github.com/bytedance/sonic"
 	"yssim-go/library/omc"
 	instance "yssim-go/library/omc/ModelInstance"
@@ -46,7 +46,7 @@ func getModelInstance(modelName string) *instance.ModelInstance {
 
 // getConnectionsListAll 获取模型实例的全部连接信息
 func getConnectionsListAll(modelInstance *instance.ModelInstance) map[string]any {
-
+	
 	connectionsList := make(map[string]any, 0)
 	mDiagramList := modelInstance.GetConnectionsList()
 	connectionsList["model"] = mDiagramList
@@ -104,14 +104,10 @@ func getElementsGraphicsList(modelInstance *instance.ModelInstance, parentName s
 		modelIconList["comment"] = typeInstance.Comment
 		modelIconList["restriction"] = typeInstance.Restriction
 		modelIconList["direction"] = typeInstance.Prefixes.Direction
-
 		modelIconList["visibleList"] = e.GetConnectionOption()
-
-		// modelIconList["connectorSizing"] = e.Dims.Absyn
-		modelIconList["subShapes"] = typeInstance.GetIconListALL(e)
+		modelIconList["subShapes"] = typeInstance.GetIconListALL(e, true)
 		modelIconList["modelName"] = modelInstance.Name
 		modelIconList["connectors"] = getElementsConnectorList(typeInstance, e.Name)
-		// modelIconList["outputType"] = e.Dims.Absyn
 		modelIconList["parentName"] = parentName
 		modelIconList["origin"] = e.Annotation.Placement.Transformation.Origin
 		modelIconList["extents"] = e.Annotation.Placement.Transformation.Extents
@@ -175,7 +171,7 @@ func getElementsConnectorList(modelInstance *instance.ModelInstance, parentName 
 			if typeInstance.Elements[0].BaseClass != nil && typeInstance.Elements[0].BaseClass.BasicType {
 				modelIconList["type"] = typeInstance.Elements[0].BaseClass.Name
 			}
-			modelIconList["subShapes"] = typeInstance.GetIconListALL(e)
+			modelIconList["subShapes"] = typeInstance.GetIconListALL(e, false)
 			modelIconList["modelName"] = modelInstance.Name
 			modelIconList["outputType"] = geOutputType(connectorSizingMap, e.Dims.Absyn, e.Dims.Typed)
 			modelIconList["parentName"] = parentName
