@@ -36,3 +36,12 @@ func SliceIndexString(target string, strArray []string) bool {
 	}
 	return false
 }
+
+// 获取小数字符串的精度
+func GetDecimalStrPrecision(decimalStr string) int {
+	parts := strings.Split(decimalStr, ".")
+	if len(parts) < 2 {
+		return 0
+	}
+	return len(parts[1])
+}
