@@ -81,12 +81,11 @@ func GetModelStateView(c *gin.Context) {
 	modelName := c.Query("model_name")
 	var modelRecord DataBaseModel.YssimSimulateRecord
 	DB.Where("package_id = ? AND username = ? AND simulate_model_name = ? AND simulate_start = ? AND userspace_id = ?", packageId, userName, modelName, true, userSpaceId).First(&modelRecord)
+
 	var res DataType.ResponseData
-	if modelRecord.ID != "" {
-		res.Data = 2
-	} else {
-		res.Data = 4
-	}
+	stateData := service.GetSimulationState(modelRecord.ID, modelRecord.StartTime, modelRecord.StopTime, modelRecord.Intervals, modelRecord.Percentage)
+
+	res.Data = stateData
 	c.JSON(http.StatusOK, res)
 }
 
