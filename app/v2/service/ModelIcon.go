@@ -245,15 +245,15 @@ func iconSubShapes(cData []any, modelName string) []map[string]any {
 				data["extentsPoints"] = append(ppData, ppData[0])
 			}
 			data["smooth"] = map[string]any{"name": drawingDataList[9]}
-			lineThickness, _ := strconv.ParseFloat(drawingDataList[7].(string), 64)
-			data["lineThickness"] = lineThickness
+			thickness, _ := strconv.ParseFloat(drawingDataList[7].(string), 64)
+			data["thickness"] = thickness
 		case "Line":
 			delete(data, "fillColor")
 			delete(data, "fillPattern")
 			data["extentsPoints"] = twoDimensionalProcessing(drawingDataList[3].([]any))
 			data["lineColor"] = oneDimensionalProcessing(drawingDataList[4])
-			lineThickness, _ := strconv.ParseFloat(drawingDataList[6].(string), 64)
-			data["lineThickness"] = lineThickness
+			thickness, _ := strconv.ParseFloat(drawingDataList[6].(string), 64)
+			data["thickness"] = thickness
 			arrow := drawingDataList[7].([]any)
 			data["arrow"] = []map[string]any{{"name": arrow[0]}, {"name": arrow[1]}}
 			arrowSize, _ := strconv.ParseFloat(drawingDataList[8].(string), 64)
@@ -261,8 +261,8 @@ func iconSubShapes(cData []any, modelName string) []map[string]any {
 			data["smooth"] = map[string]any{"name": drawingDataList[9]}
 		case "Text":
 			data["lineColor"] = oneDimensionalProcessing(drawingDataList[3])
-			lineThickness, _ := strconv.ParseFloat(drawingDataList[7].(string), 64)
-			data["lineThickness"] = lineThickness
+			thickness, _ := strconv.ParseFloat(drawingDataList[7].(string), 64)
+			data["thickness"] = thickness
 			data["fillPattern"] = map[string]any{"name": drawingDataList[6]}
 			data["extentsPoints"] = twoDimensionalProcessing(drawingDataList[8].([]any))
 			typeOriginalTextString, ok := drawingDataList[9].([]any)
@@ -310,8 +310,8 @@ func iconSubShapes(cData []any, modelName string) []map[string]any {
 			data["glyph"] = drawingDataList[13]
 			data["horizontalAlignment"] = drawingDataList[14]
 		case "Rectangle":
-			lineThickness, _ := strconv.ParseFloat(drawingDataList[7].(string), 64)
-			data["lineThickness"] = lineThickness
+			thickness, _ := strconv.ParseFloat(drawingDataList[7].(string), 64)
+			data["thickness"] = thickness
 			data["fillPattern"] = map[string]any{"name": drawingDataList[6]}
 			data["borderPattern"] = map[string]any{"name": drawingDataList[8]}
 			data["borderPattern"] = drawingDataList[8]
@@ -319,8 +319,8 @@ func iconSubShapes(cData []any, modelName string) []map[string]any {
 			radius, _ := strconv.ParseFloat(drawingDataList[10].(string), 64)
 			data["radius"] = radius
 		case "Ellipse":
-			lineThickness, _ := strconv.ParseFloat(drawingDataList[7].(string), 64)
-			data["lineThickness"] = lineThickness
+			thickness, _ := strconv.ParseFloat(drawingDataList[7].(string), 64)
+			data["thickness"] = thickness
 			data["fillPattern"] = map[string]any{"name": drawingDataList[6]}
 			data["extentsPoints"] = twoDimensionalProcessing(drawingDataList[8].([]any))
 			startingAngle, _ := strconv.ParseFloat(drawingDataList[9].(string), 64)
