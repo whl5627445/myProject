@@ -299,8 +299,10 @@ func (m *ModelInstance) GetConnectionsList() []map[string]any {
 			"lhs":         c.Lhs.Parts,                                                             // 起点数据 ，包括组件名字和接口名字， 如果有下标会有下标数组
 			"rhs":         c.Rhs.Parts,                                                             // 结束点数据，包括组件名字和接口名字， 如果有下标会有下标数组
 		}
-		for k, v := range c.Annotation.Line {
-			line[k] = v
+		if c.Annotation != nil {
+			for k, v := range c.Annotation.Line {
+				line[k] = v
+			}
 		}
 		data = append(data, line)
 	}
