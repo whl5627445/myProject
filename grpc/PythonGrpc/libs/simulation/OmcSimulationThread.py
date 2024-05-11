@@ -142,6 +142,8 @@ class OmcSimulation(threading.Thread):
         self.tcpServer.stop()
         if error:
             log.info("(OMC)仿真失败,error:" + str(error))
+            json_data = {"message": str(error)}
+            R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
             update_simulate_records(uuid=self.uuid,
                                     simulate_status="3",
                                     simulate_result_str="仿真失败",
