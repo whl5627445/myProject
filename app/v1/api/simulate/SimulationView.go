@@ -801,8 +801,8 @@ func ExperimentNameEditView(c *gin.Context) {
 
 	// 判断新的experiment name是否重复
 	var existingName DataBaseModel.YssimExperimentRecord
-	DB.Where("id != ? AND username =? AND userspace_id =? AND experiment_name =? AND package_id =?",
-		item.ExperimentId, username, userSpaceId, item.NewExperimentName, item.PackageId).First(&existingName)
+	DB.Where("id != ? AND username =? AND userspace_id =? AND experiment_name =? AND package_id =? AND model_name =?",
+		item.ExperimentId, username, userSpaceId, item.NewExperimentName, item.PackageId, item.ModelName).First(&existingName)
 	if existingName.ExperimentName != "" || item.NewExperimentName == "实验(默认)" {
 		res.Err = "实验记录名称已存在，请更换"
 		res.Status = 2
