@@ -487,6 +487,7 @@ func SimulateTerminateView(c *gin.Context) {
 	}
 
 	resultRecord.SimulateStatus = "7"
+	resultRecord.SimulateStart = false
 	if err := config.DB.Save(&resultRecord).Error; err != nil {
 		res.Err = "仿真已终止，但仿真状态更新失败"
 		res.Status = 1
