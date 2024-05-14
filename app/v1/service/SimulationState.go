@@ -16,13 +16,13 @@ func GetSimulationState(id, startTimeStr, stopTimeStr, intervals string, percent
 		"4": "结束",
 	}
 
-	data := map[string]any{"simulate_time": ""}
+	data := map[string]any{"simulate_record_id": id, "simulate_time": ""}
 	if id != "" { // 仿真进行中
 		data["status"] = 2
 		precision := stringOperation.GetDecimalStrPrecision(intervals)
-		if percentage >= 0 && percentage <= 10 {
+		if percentage >= 0 && percentage < 10 {
 			data["simulate_status_msg"] = states["1"]
-		} else if percentage >= 11 && percentage <= 30 {
+		} else if percentage >= 10 && percentage <= 30 {
 			data["simulate_status_msg"] = states["2"]
 		} else {
 			startTime, _ := strconv.ParseFloat(startTimeStr, 64)
