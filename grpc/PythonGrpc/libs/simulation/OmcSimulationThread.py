@@ -133,7 +133,7 @@ class OmcSimulation(threading.Thread):
         self.tcpServer = TcpServer(socket_port, self.uuid)
         self.tcpServer.start()
         time.sleep(1)
-        cmd = [absolute_path, "-port=" + str(socket_port)]
+        cmd = [absolute_path, "-port=" + str(socket_port), "-cpu"]
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         self.run_pid = process.pid
         # 获取命令行输出结果
