@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 
+	"google.golang.org/grpc/grpclog"
 	"yssim-go/config"
 
 	"github.com/nacos-group/nacos-sdk-go/clients"
@@ -18,17 +19,30 @@ var clientConfig = constant.ClientConfig{
 	TimeoutMs:           5000,
 	NotLoadCacheAtStart: true,
 }
-var serverConfigs = []constant.ServerConfig{
-	{
+var serverConfigs = getServerConfigs()
+
+func getServerConfigs() []constant.ServerConfig {
+	if config.NacosIp != "" && config.NacosPort != "" {
+		Port, err := strconv.ParseUint(config.NacosPort, 10, 64)
+		if err != nil {
+			grpclog.Error("nacos port 解析失败： ", err.Error())
+		}
+		return []constant.ServerConfig{{
+			IpAddr: config.NacosIp,
+			Port:   Port,
+		}}
+	}
+
+	return []constant.ServerConfig{{
 		IpAddr: "nacos",
 		Port:   8848,
-	},
+	}}
 }
 
 func Register() {
-	if config.DEBUG != "" {
-		return
-	}
+	// if config.DEBUG != "" {
+	// 	return
+	// }
 	for {
 		Client, err := clients.NewNamingClient(
 			vo.NacosClientParam{
@@ -43,7 +57,7 @@ func Register() {
 		}
 		port, _ := strconv.ParseUint(config.PORT, 10, 64)
 		success, err := Client.RegisterInstance(vo.RegisterInstanceParam{
-			Ip:          config.USERNAME,
+			Ip:          config.ServiceIp,
 			Port:        port,
 			ServiceName: config.USERNAME,
 			Weight:      10,
