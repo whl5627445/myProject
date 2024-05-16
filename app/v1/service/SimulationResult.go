@@ -383,6 +383,23 @@ func SetResultTree(splitName []string, scalarVariableMap scalarVariable, id int,
 	return data
 }
 
+func SetCpuTimeResultTree() map[string]any {
+
+	data := map[string]any{
+		"variables":           "$cpuTime",
+		"description":         "",
+		"display_unit":        "",
+		"has_child":           false,
+		"id":                  0,
+		"is_value_changeable": false,
+		"unit":                "",
+		"start":               "",
+		"hide_dollar_symbol":  true,
+	}
+
+	return data
+}
+
 func AppInputTree(compileType, path, parent, keyWords string) []map[string]any {
 	var result []map[string]any
 	if compileType == "OM" {
