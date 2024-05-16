@@ -752,10 +752,11 @@ func (o *ZmqObject) GetClassInformation(className string) []any {
 func (o *ZmqObject) CopyClass(className string, copiedClassName string, parentName string) bool {
 	cmd := "copyClass(" + className + ",\"" + copiedClassName + "\"," + parentName + ")"
 	result, ok := o.SendExpressionNoParsed(cmd)
-	if ok && string(result) == "false" {
-		return false
+	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
+	if ok && string(result) == "true" {
+		return true
 	}
-	return true
+	return false
 }
 
 // DeleteClass 删除模型
