@@ -411,6 +411,11 @@ func SimulateResultTreeView(c *gin.Context) {
 	// 使用排序函数对切片进行排序
 	sort.Slice(result, sortByFirstLetter)
 
+	// OMC仿真结果树中增加cpuTime数据
+	if parentNode == "" && keyWords == "" && record.SimulateType != "FmPy" && record.SimulateType != "DM" {
+		result = append(result, service.SetCpuTimeResultTree())
+	}
+
 	res.Data = result
 	c.JSON(http.StatusOK, res)
 }
