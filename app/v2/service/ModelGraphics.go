@@ -2,7 +2,7 @@ package service
 
 import (
 	"log"
-	
+
 	"github.com/bytedance/sonic"
 	"yssim-go/library/omc"
 	instance "yssim-go/library/omc/ModelInstance"
@@ -46,7 +46,7 @@ func getModelInstance(modelName string) *instance.ModelInstance {
 
 // getConnectionsListAll 获取模型实例的全部连接信息
 func getConnectionsListAll(modelInstance *instance.ModelInstance) map[string]any {
-	
+
 	connectionsList := make(map[string]any, 0)
 	mDiagramList := modelInstance.GetConnectionsList()
 	connectionsList["model"] = mDiagramList
@@ -99,6 +99,10 @@ func getElementsGraphicsList(modelInstance *instance.ModelInstance, parentName s
 		}
 		typeInstance := e.Type
 		modelIconList := make(map[string]any, 0)
+		modelIconList["type"] = ""
+		if typeInstance.Elements[0].BaseClass != nil && typeInstance.Elements[0].BaseClass.BasicType {
+			modelIconList["type"] = typeInstance.Elements[0].BaseClass.Name
+		}
 		modelIconList["name"] = e.Name
 		modelIconList["classname"] = typeInstance.Name
 		modelIconList["comment"] = typeInstance.Comment
