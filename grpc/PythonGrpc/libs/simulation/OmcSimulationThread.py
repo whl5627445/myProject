@@ -165,6 +165,7 @@ class OmcSimulation(threading.Thread):
                 log.info("(OMC)模型仿真成功完成")
                 json_data = {"message": self.request.simulateModelName + " 模型仿真完成"}
                 R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
+                time.sleep(0.2)
                 update_simulate_records(uuid=self.uuid,
                                         simulate_model_result_path=self.request.resultFilePath,
                                         simulate_result_str=simulate_result_str,
