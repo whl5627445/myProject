@@ -15,6 +15,10 @@ type ModelInstanceData struct {
 
 func GetModelInstanceData(modelName string) *ModelInstanceData {
 	m := getModelInstance(modelName)
+	if m == nil {
+		return nil
+	}
+
 	m.DataPreprocessing()
 	modelData := &ModelInstanceData{}
 	modelData.Parameters = getModelElementsParameter(m)

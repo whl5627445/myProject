@@ -1194,8 +1194,8 @@ func (o *ZmqObject) GetModelInstance(className string) []byte {
 	result = bytes.ReplaceAll(result, []byte("\"\\\""), []byte("\""))
 	result = bytes.ReplaceAll(result, []byte("\\\"\""), []byte("\""))
 	result = bytes.ReplaceAll(result, []byte("$"), []byte(""))
-	result = result[1 : len(result)-1]
-	if ok && len(result) > 0 {
+	if ok && len(result) >= 4 {
+		result = result[1 : len(result)-1]
 		return result
 	}
 	return nil
