@@ -24,13 +24,13 @@ type dimensions struct {
 }
 type prefixes struct {
 	Public       *bool  `json:"public,omitempty"`
-	Final        *bool  `json:"final,omitempty"`
-	Inner        *bool  `json:"inner,omitempty"`
-	Outer        *bool  `json:"outer,omitempty"`
+	Final        bool   `json:"final,omitempty"`
+	Inner        bool   `json:"inner,omitempty"`
+	Outer        bool   `json:"outer,omitempty"`
 	Replaceable  any    `json:"replaceable,omitempty"` // 值为bool的true，或replaceableObject的结构体类型
-	Redeclare    *bool  `json:"redeclare,omitempty"`
-	Partial      *bool  `json:"partial,omitempty"`
-	Encapsulated *bool  `json:"encapsulated,omitempty"`
+	Redeclare    bool   `json:"redeclare,omitempty"`
+	Partial      bool   `json:"partial,omitempty"`
+	Encapsulated bool   `json:"encapsulated,omitempty"`
 	Connector    string `json:"connector,omitempty"`   // ["flow", "stream"]
 	Variability  string `json:"variability,omitempty"` // ["constant", "parameter", "discrete"]
 	Direction    string `json:"direction,omitempty"`   // ["input", "output"]
@@ -274,11 +274,45 @@ func (m *ModelInstance) GetModelParameterValue(modelParameterMap map[string]map[
 			p := map[string]any{"name": e.Name, "parameter": e.ParameterList, "type": "component"}
 			if e.Prefixes.Variability == "parameter" {
 				p["type"] = "model"
+			} else {
+				p["properties"] = e.getProperties()
 			}
 			eList = append(eList, p)
 		}
 	}
 	return eList
+}
+
+// 获取模型组件属性
+func (e *elements) getProperties() map[string]any {
+	p := map[string]any{
+		"variability": "unspecified",
+		"causality":   "unspecified",
+		"dimension":   e.Dims.Typed,
+		"inner/outer": "none",
+		"comment":     e.Comment,
+		"path":        e.Type.Name,
+	}
+	if e.Prefixes.Variability != "" {
+		p["variability"] = e.Prefixes.Variability
+	}
+	if e.Prefixes.Direction != "" {
+		p["causality"] = e.Prefixes.Direction
+	}
+	if e.Prefixes.Inner {
+		p["inner/outer"] = "inner"
+	} else if e.Prefixes.Outer {
+		p["inner/outer"] = "outer"
+	}
+	properties := make([]any, 3)
+	properties[0] = e.Prefixes.Final
+	properties[1] = "public"
+	properties[2] = false
+	if _, ok := e.Prefixes.Replaceable.(bool); ok {
+		properties[3] = e.Prefixes.Replaceable
+	}
+	p["properties"] = properties
+	return p
 }
 
 // GetConnectionsList 将给定连接信息处理成结构化信息
