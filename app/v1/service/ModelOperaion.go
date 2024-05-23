@@ -62,6 +62,8 @@ func inheritanceModelNameFixes(copiedClassName, className string) {
 						classStrNew = strings.ReplaceAll(classStrNew, "replaceable "+k+" ", "replaceable "+name+" ")
 					default: // 替换普通组件
 						classStrNew = strings.ReplaceAll(classStrNew, ";\n  "+k+" ", ";\n  "+name+" ")
+						classStrNew = strings.ReplaceAll(classStrNew, "protected\n  "+k+" ", "protected\n  "+name+" ")
+						classStrNew = strings.ReplaceAll(classStrNew, "public\n  "+k+" ", "public\n  "+name+" ")
 					}
 					delete(componentNameFixesMap, k)
 				}
