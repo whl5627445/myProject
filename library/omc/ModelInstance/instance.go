@@ -172,11 +172,11 @@ func (m *ModelInstance) DataPreprocessing() {
 			}
 			m.Elements[i].BaseClassOriginal = nil
 		case m.Elements[i].Kind == "component" && m.Elements[i].TypeOriginal != nil:
-			if m.Elements[i].Prefixes.Public != nil && *m.Elements[i].Prefixes.Public == false {
-				m.Elements = append(m.Elements[:i], m.Elements[i+1:]...)
-				i -= 1
-				continue
-			}
+			// if m.Elements[i].Prefixes.Public != nil && *m.Elements[i].Prefixes.Public == false {
+			// 	m.Elements = append(m.Elements[:i], m.Elements[i+1:]...)
+			// 	i -= 1
+			// 	continue
+			// }
 			if t, ok := m.Elements[i].TypeOriginal.(string); ok {
 				m.Elements[i].Type = &ModelInstance{Name: t, BasicType: true}
 			} else {
