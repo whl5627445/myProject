@@ -123,7 +123,9 @@ func getIconAnnotationGraphics(modelName, modelType, parentName string) map[stri
 	}
 	data["outputType"] = make(map[string]any, 0)
 	data["classname"] = modelName
+	data["direction"] = ""
 	data["restriction"] = modelType
+	data["type"] = ""
 	data["visible"] = true
 	data["rotation"] = 0
 	data["connectors"] = inputOutputs
@@ -152,7 +154,14 @@ func getDiagramAnnotationGraphics(modelName, modelType string) map[string]any {
 	data["parentName"] = ""
 	data["visible"] = true
 	data["rotation"] = 0
-	data["restriction"] = modelType
+	iconInstance := getModelInstance(modelName)
+	iconInstance.DataPreprocessing()
+	data["direction"] = iconInstance.Prefixes.Direction
+	data["restriction"] = iconInstance.Restriction
+	data["type"] = ""
+	if iconInstance.Elements[0].BaseClass != nil && iconInstance.Elements[0].BaseClass.BasicType {
+		data["type"] = iconInstance.Elements[0].BaseClass.Name
+	}
 	data["visibleList"] = serviceV1.GetConnectionOption(modelName, modelType)
 	data["connectors"] = make([]any, 0)
 	data["subShapes"] = subShapes
@@ -404,7 +413,16 @@ func iconInputOutputs(cData [][]any, caData [][]any, modelName, parentName strin
 				data["outputType"] = map[string]any{"name": cDataFilter[i][16], "connectorSizing": true}
 			}
 			data["connectors"] = make([]map[string]any, 0)
-			nameList := GetICList(classname)
+			iconInstance := getModelInstance(classname)
+			iconInstance.DataPreprocessing()
+			data["direction"] = iconInstance.Prefixes.Direction
+			data["restriction"] = iconInstance.Restriction
+
+			data["type"] = ""
+			if iconInstance.Elements[0].BaseClass != nil && iconInstance.Elements[0].BaseClass.BasicType {
+				data["type"] = iconInstance.Elements[0].BaseClass.Name
+			}
+			nameList := modelComponent.GetICList(classname)
 			IconAnnotationData := getIconAnnotation(nameList)
 			data["subShapes"] = iconSubShapes(IconAnnotationData, modelName)
 			coordinateSystem := getCoordinateSystemRecursion(nameList, false)
