@@ -309,7 +309,7 @@ func (e *elements) getProperties() map[string]any {
 	properties[1] = "public"
 	properties[2] = false
 	if _, ok := e.Prefixes.Replaceable.(bool); ok {
-		properties[3] = e.Prefixes.Replaceable
+		properties[2] = e.Prefixes.Replaceable
 	}
 	p["properties"] = properties
 	return p
