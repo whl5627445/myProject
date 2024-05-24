@@ -1,8 +1,7 @@
-package service
+package serviceV2
 
 import (
 	"log"
-	"time"
 
 	"github.com/bytedance/sonic"
 	"yssim-go/library/omc"

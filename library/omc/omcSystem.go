@@ -1201,6 +1201,23 @@ func (o *ZmqObject) GetModelInstance(className string) []byte {
 	return nil
 }
 
+// GetModelInstanceAnnotation 获取给定模型名称的annotation实例化json数据字符串
+func (o *ZmqObject) GetModelInstanceAnnotation(className string) []byte {
+	cmd := "getModelInstanceAnnotation(" + className + ",{\"Icon\",\"IconMap\",\"Diagram\",\"DiagramMap\"},false)"
+	result, ok := o.SendExpressionNoParsed(cmd)
+	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
+	result = bytes.ReplaceAll(result, []byte("\\\""), []byte("\""))
+	result = bytes.ReplaceAll(result, []byte("\\\\"), []byte("\\"))
+	result = bytes.ReplaceAll(result, []byte("\"\\\""), []byte("\""))
+	result = bytes.ReplaceAll(result, []byte("\\\"\""), []byte("\""))
+	result = bytes.ReplaceAll(result, []byte("$"), []byte(""))
+	if ok && len(result) >= 4 {
+		result = result[1 : len(result)-1]
+		return result
+	}
+	return nil
+}
+
 // Save 保存模型源码到文件，文件路径由omc查找
 func (o *ZmqObject) Save(className string) bool {
 	cmd := "save(" + className + ")"
