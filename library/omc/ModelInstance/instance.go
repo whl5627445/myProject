@@ -190,12 +190,12 @@ func (m *ModelInstance) DataPreprocessing() {
 				co := m.Elements[i].Annotation.Choices.ChoiceOriginal[c]
 				coMap, ok := co.(map[string]any)
 				cStr := ""
-				prefixes := coMap["prefixes"].(map[string]any)
-				restriction := coMap["restriction"].(string)
-				name := coMap["name"].(string)
-				baseClass := coMap["baseClass"].(string)
-				comment := coMap["comment"].(string)
 				if ok {
+					prefixes := coMap["prefixes"].(map[string]any)
+					restriction := coMap["restriction"].(string)
+					name := coMap["name"].(string)
+					baseClass := coMap["baseClass"].(string)
+					comment := coMap["comment"].(string)
 					if prefixes["redeclare"].(bool) {
 						cStr += "redeclare "
 					}
