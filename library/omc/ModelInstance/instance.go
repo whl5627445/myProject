@@ -580,6 +580,30 @@ func (a *annotation) getParameterChoices(parameter *Parameter) {
 	}
 }
 
+// GetElementsExtents 获取模型组件icon数据列表，包括模型本身的与继承过来的
+func (p *placement) GetElementsExtents() [][]float64 {
+	if p.IconTransformation.Extents != nil {
+		return p.IconTransformation.Extents
+	}
+	return p.Transformation.Extents
+}
+
+// GetElementsOrigin 获取模型组件icon数据列表，包括模型本身的与继承过来的
+func (p *placement) GetElementsOrigin() []float64 {
+	if p.IconTransformation.Origin != nil {
+		return p.IconTransformation.Origin
+	}
+	return p.Transformation.Origin
+}
+
+// // GetElementsRotation 获取模型组件icon数据列表，包括模型本身的与继承过来的
+// func (p *placement) GetElementsRotation() float64 {
+// 	if p.IconTransformation.Rotation != nil{
+// 		return p.IconTransformation.Rotation
+// 	}
+// 	return p.Transformation.Rotation
+// }
+
 // 处理图形数据
 func getGraphicsData(g *graphics, modelElements *elements) map[string]any {
 	graphicsData := map[string]any{}
