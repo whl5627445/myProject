@@ -444,7 +444,7 @@ func (e *elements) GetElementsParameterValue(parameterMap map[string]*Parameter,
 		e.Annotation.Dialog.getParameterDialog(parameterMap[e.Name])
 		e.Annotation.getParameterChoices(parameterMap[e.Name])
 		if e.Type != nil && (!e.Type.BasicType || e.Type.Restriction == "type") {
-			if e.Type.Elements[0].BaseClass.Name == "enumeration" {
+			if len(e.Type.Elements) > 0 && e.Type.Elements[0].BaseClass != nil && e.Type.Elements[0].BaseClass.Name == "enumeration" {
 				parameterMap[e.Name].Type = "Enumeration"
 				options := []map[string]string{}
 				for i := 1; i < len(e.Type.Elements); i++ {
