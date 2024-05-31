@@ -68,8 +68,8 @@ def update_simulate_records(uuid, simulate_status=None, simulate_result_str=None
         if simulate_start:
             simulate_record.simulate_start = simulate_start  # 仿真开始标致
         if simulate_start_time:
-            if simulate_record.simulate_start_time == 0:  # 仿真开始时间只会设置一次
-                simulate_record.simulate_start_time = simulate_start_time  # 仿真开始时间
+            # if simulate_record.simulate_start_time == 0:  # 仿真开始时间只会设置一次
+            simulate_record.simulate_start_time = simulate_start_time  # 仿真开始时间
         if simulate_end_time:
             simulate_record.simulate_end_time = simulate_end_time  # 仿真结束时间
         if simulate_model_result_path:

@@ -18,16 +18,6 @@ func GetComponentType(modelType string) string {
 	return modelTypeList[len(modelTypeList)-1]
 }
 
-func ContainsString(target string) bool {
-	collection := []string{"function", "package"}
-	for _, str := range collection {
-		if str == target {
-			return true
-		}
-	}
-	return false
-}
-
 func SliceIndexString(target string, strArray []string) bool {
 	sort.Strings(strArray)
 	index := sort.SearchStrings(strArray, target)

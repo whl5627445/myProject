@@ -3,22 +3,11 @@ package config
 import (
 	_ "embed"
 	"os"
+
+	"yssim-go/library/net"
 )
 
 var ModelicaKeywords = map[string]bool{"model": true, "class": true, "connector": true, "block": true, "function": true, "record": true, "expandable connector": true, "der": true, "and": true, "or": true, "not": true, "constant": true, "sum": true, "abs": true, "sign": true, "sqrt": true}
-
-// var ParameterTranslation = map[string]string{
-//	"Initialization": "初始化",
-//	"General":        "通用设置",
-//	"Advanced":       "高级设置",
-//	"Attributes":     "属性设置",
-//	"Parameters":     "参数",
-//	"Modifiers":      "Modifiers",
-//	"Dummy":          "Dummy",
-//	"Component":      "组件",
-//	"Name":           "名称",
-//	"comment":        "注释",
-// }
 
 var Units = [][]string{{"rad", "deg"}, {"rad/s", "deg/s", "Hz", "rpm", "rev/min"}, {"m", "km", "mm"}, {"m2", "mm2", "cm2"}, {"m3", "cm3", "ml", "l"},
 	{"s", "ms", "min", "h"}, {"m/s", "km/h", "mm/s"}, {"kg", "g"}, {"kg/m3", "g/cm3", "kg/l"}, {"N", "mN", "kN"}, {"Pa", "kPa", "MPa", "bar", "psi"},
@@ -52,3 +41,11 @@ var PrivateKey []byte
 
 //go:embed key/public_key.pem
 var PublicKey []byte
+
+var NacosIp = os.Getenv("NacosIp")
+var NacosPort = os.Getenv("NacosPort")
+
+var ServiceIp = net.GetLocalIp()
+
+var DebugDB = os.Getenv("DebugDB")       // 192.168.121.12:13306
+var DebugRedis = os.Getenv("DebugRedis") // 192.168.121.12:6379

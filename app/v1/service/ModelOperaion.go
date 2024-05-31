@@ -2,14 +2,15 @@ package service
 
 import (
 	"strings"
+
 	"yssim-go/library/omc"
 )
 
 func inheritanceModelNameFixes(copiedClassName, className string) {
-	//classInformation := omc.OMC.GetClassRestriction(copiedClassName)
-	//if classInformation != "model" {
+	// classInformation := omc.OMC.GetClassRestriction(copiedClassName)
+	// if classInformation != "model" {
 	//	return
-	//}
+	// }
 	classStrOld := omc.OMC.ListFile(className)
 	classStrNew := classStrOld
 	classNameList := strings.Split(copiedClassName, ".")
@@ -87,6 +88,7 @@ func copyModel(copiedClassName, className, parentName string) (bool, string) {
 	}
 	if parentName == "" {
 		parentName = "TopLevel"
+		// parentName = "__OpenModelica_TopLevel"  // 1.23开始改用此标记
 	} else {
 		parentInformation := omc.OMC.GetClassRestriction(parentName)
 		if parentInformation != "package" {
@@ -141,12 +143,12 @@ func SaveModel(className, copiedClassName, parentName, copeOrDelete, fileName st
 		switch {
 		case parentName != "":
 			path := omc.OMC.GetSourceFile(parentName)
-			//omc.OMC.SetSourceFile(parentName+"."+className, path)
+			// omc.OMC.SetSourceFile(parentName+"."+className, path)
 			SaveModelSource(parentName+"."+className, path)
 		default:
-			//SaveModelSource(className, fileName)
-			//omc.OMC.SetSourceFile(className, fileName)
-			//go SaveModelToFile(className, fileName)
+			// SaveModelSource(className, fileName)
+			// omc.OMC.SetSourceFile(className, fileName)
+			// go SaveModelToFile(className, fileName)
 			SaveModelCode(className, fileName)
 		}
 	}

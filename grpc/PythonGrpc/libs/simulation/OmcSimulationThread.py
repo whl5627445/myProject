@@ -133,7 +133,7 @@ class OmcSimulation(threading.Thread):
         self.tcpServer = TcpServer(socket_port, self.uuid)
         self.tcpServer.start()
         time.sleep(1)
-        cmd = [absolute_path, "-port=" + str(socket_port)]
+        cmd = [absolute_path, "-port=" + str(socket_port), "-cpu"]
         process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         self.run_pid = process.pid
         # 获取命令行输出结果
@@ -142,6 +142,8 @@ class OmcSimulation(threading.Thread):
         self.tcpServer.stop()
         if error:
             log.info("(OMC)仿真失败,error:" + str(error))
+            json_data = {"message": str(error)}
+            R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
             update_simulate_records(uuid=self.uuid,
                                     simulate_status="3",
                                     simulate_result_str="仿真失败",
@@ -163,6 +165,7 @@ class OmcSimulation(threading.Thread):
                 log.info("(OMC)模型仿真成功完成")
                 json_data = {"message": self.request.simulateModelName + " 模型仿真完成"}
                 R.lpush(self.request.userName + "_" + "notification", json.dumps(json_data))
+                time.sleep(0.2)
                 update_simulate_records(uuid=self.uuid,
                                         simulate_model_result_path=self.request.resultFilePath,
                                         simulate_result_str=simulate_result_str,

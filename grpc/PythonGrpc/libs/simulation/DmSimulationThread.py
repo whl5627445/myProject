@@ -227,9 +227,9 @@ class DmSimulation(threading.Thread):
                                     simulate_result_str="DM",
                                     simulate_start="0",
                                     simulate_end_time=str(time.time()),
-                                    another_name=new_another_name(self.request.userName, self.request.simulateModelName,
-                                                                  self.request.simulatePackageId,
-                                                                  self.request.userSpaceId),
+                                    # another_name=new_another_name(self.request.userName, self.request.simulateModelName,
+                                    #                               self.request.simulatePackageId,
+                                    #                               self.request.userSpaceId),
                                     percentage=100
                                     )
             self.percentage = 100
