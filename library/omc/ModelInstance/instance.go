@@ -145,6 +145,16 @@ type connectionAnnotation struct {
 	Line map[string]any `json:"line,omitempty"`
 }
 
+type TypeConnector struct {
+	ClassName   string           `json:"classname,"`
+	Name        string           `json:"name"`
+	Restriction string           `json:"restriction"`
+	Direction   string           `json:"direction"`
+	Elements    []*TypeConnector `json:"elements"`
+	Extends     []*TypeConnector `json:"extends"`
+	Type        string           `json:"type"`
+}
+
 // DataPreprocessing 模型实例数据预处理
 func (m *ModelInstance) DataPreprocessing() {
 	if _, ok := m.Annotation.Icon.GraphicsOriginal.([]any); ok {
