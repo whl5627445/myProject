@@ -105,13 +105,16 @@ func getElementsGraphicsList(modelInstance *instance.ModelInstance, parentName s
 		typeInstance := e.Type
 		modelIconList := make(map[string]any, 0)
 		modelIconList["type"] = ""
-		if typeInstance.Elements[0].BaseClass != nil && typeInstance.Elements[0].BaseClass.BasicType {
+		if len(typeInstance.Elements) > 0 && typeInstance.Elements[0].BaseClass != nil && typeInstance.Elements[0].BaseClass.BasicType {
 			modelIconList["type"] = typeInstance.Elements[0].BaseClass.Name
 		}
 		modelIconList["name"] = e.Name
 		modelIconList["classname"] = typeInstance.Name
 		modelIconList["comment"] = typeInstance.Comment
 		modelIconList["restriction"] = typeInstance.Restriction
+		if modelIconList["restriction"] == "expandable connector" || modelIconList["restriction"] == "connector" {
+			modelIconList["type"] = getConnectorType(e.Name, typeInstance)
+		}
 		modelIconList["direction"] = typeInstance.Prefixes.Direction
 		modelIconList["visibleList"] = e.GetConnectionOption()
 		modelIconList["subShapes"] = typeInstance.GetIconListALL(e, true)
@@ -177,9 +180,10 @@ func getElementsConnectorList(modelInstance *instance.ModelInstance, parentName 
 			modelIconList["restriction"] = typeInstance.Restriction
 			modelIconList["direction"] = typeInstance.Prefixes.Direction
 			modelIconList["type"] = ""
-			if typeInstance.Elements[0].BaseClass != nil && typeInstance.Elements[0].BaseClass.BasicType {
+			if len(typeInstance.Elements) > 0 && typeInstance.Elements[0].BaseClass != nil && typeInstance.Elements[0].BaseClass.BasicType {
 				modelIconList["type"] = typeInstance.Elements[0].BaseClass.Name
 			}
+			modelIconList["type"] = getConnectorType(e.Name, typeInstance)
 			modelIconList["subShapes"] = typeInstance.GetIconListALL(e, false)
 			modelIconList["modelName"] = modelInstance.Name
 			modelIconList["outputType"] = geOutputType(connectorSizingMap, e.Dims.Absyn, e.Dims.Typed)
