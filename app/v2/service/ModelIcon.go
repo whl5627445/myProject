@@ -34,6 +34,12 @@ func GetIcon(modelName, componentName string, icon bool) map[string]any {
 		graphics = getIconAnnotationGraphics(modelName, modelType, componentName)
 	} else {
 		graphics = getDiagramAnnotationGraphics(modelName, modelType)
+
+		iconInstance := getModelInstance(modelName)
+		iconInstance.DataPreprocessing()
+		graphics["direction"] = iconInstance.Prefixes.Direction
+		graphics["restriction"] = iconInstance.Restriction
+		graphics["type"] = getConnectorType(componentName, iconInstance)
 	}
 
 	data = map[string]any{
@@ -154,14 +160,6 @@ func getDiagramAnnotationGraphics(modelName, modelType string) map[string]any {
 	data["parentName"] = ""
 	data["visible"] = true
 	data["rotation"] = 0
-	iconInstance := getModelInstance(modelName)
-	iconInstance.DataPreprocessing()
-	data["direction"] = iconInstance.Prefixes.Direction
-	data["restriction"] = iconInstance.Restriction
-	data["type"] = ""
-	if iconInstance.Elements[0].BaseClass != nil && iconInstance.Elements[0].BaseClass.BasicType {
-		data["type"] = iconInstance.Elements[0].BaseClass.Name
-	}
 	data["visibleList"] = serviceV1.GetConnectionOption(modelName, modelType)
 	data["connectors"] = make([]any, 0)
 	data["subShapes"] = subShapes
@@ -419,9 +417,11 @@ func iconInputOutputs(cData [][]any, caData [][]any, modelName, parentName strin
 			data["restriction"] = iconInstance.Restriction
 
 			data["type"] = ""
-			if iconInstance.Elements[0].BaseClass != nil && iconInstance.Elements[0].BaseClass.BasicType {
+			if len(iconInstance.Elements) > 0 && iconInstance.Elements[0].BaseClass != nil && iconInstance.Elements[0].BaseClass.BasicType {
 				data["type"] = iconInstance.Elements[0].BaseClass.Name
 			}
+			data["type"] = getConnectorType(data["name"].(string), iconInstance)
+
 			nameList := modelComponent.GetICList(classname)
 			IconAnnotationData := getIconAnnotation(nameList)
 			data["subShapes"] = iconSubShapes(IconAnnotationData, modelName)
