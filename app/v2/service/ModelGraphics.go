@@ -3,9 +3,10 @@ package serviceV2
 import (
 	"log"
 
-	"github.com/bytedance/sonic"
 	"yssim-go/library/omc"
 	instance "yssim-go/library/omc/ModelInstance"
+
+	"github.com/bytedance/sonic"
 )
 
 type ModelInstanceData struct {
@@ -190,6 +191,36 @@ func getElementsConnectorList(modelInstance *instance.ModelInstance, parentName 
 		}
 	}
 	return connectorList
+}
+
+// getConnectorType 获取连接器类型
+func getConnectorType(name string, typeInstance *instance.ModelInstance) *instance.TypeConnector {
+	t := &instance.TypeConnector{
+		ClassName:   typeInstance.Name,
+		Name:        name,
+		Restriction: typeInstance.Restriction,
+		Direction:   typeInstance.Prefixes.Direction,
+		Elements:    make([]*instance.TypeConnector, 0),
+		Extends:     make([]*instance.TypeConnector, 0),
+		Type:        "",
+	}
+
+	for i := 0; i < len(typeInstance.Elements); i++ {
+		e := typeInstance.Elements[i]
+
+		if e.Kind == "extends" && e.BaseClass != nil && e.BaseClass.BasicType == true {
+			t.Type = e.BaseClass.Name
+			continue
+		}
+
+		if e.Kind == "extends" {
+			t.Extends = append(t.Extends, getConnectorType(e.Name, e.BaseClass))
+		} else {
+			t.Elements = append(t.Elements, getConnectorType(e.Name, e.Type))
+		}
+	}
+
+	return t
 }
 
 // geOutputType 获取接口的特殊标记
