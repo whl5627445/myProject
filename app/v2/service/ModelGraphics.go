@@ -156,11 +156,18 @@ func getExtendsElementsGraphicsList(modelInstance *instance.ModelInstance, paren
 func getElementsConnectorList(modelInstance *instance.ModelInstance, parentName string) []map[string]any {
 	connectorList := make([]map[string]any, 0)
 	connectorSizingMap := map[string]bool{}
+	connectorDumpMap := map[string]string{}
 	for i := 0; i < len(modelInstance.Elements); i++ {
 		e := modelInstance.Elements[i]
 		connectorSizingMap[e.Name] = e.Annotation.Dialog.ConnectorSizing
 		if e.BaseClass != nil && !e.BaseClass.BasicType && e.Kind == "extends" {
-			connectorList = append(connectorList, getElementsConnectorList(modelInstance.Elements[i].BaseClass, parentName)...)
+			extendsConnectorList := getElementsConnectorList(modelInstance.Elements[i].BaseClass, parentName)
+			for _, connector := range extendsConnectorList {
+				if _, ok := connectorDumpMap[connector["name"].(string)]; !ok {
+					connectorList = append(connectorList, connector)
+					connectorDumpMap[connector["name"].(string)] = connector["classname"].(string)
+				}
+			}
 			continue
 		}
 		if e.Type == nil || (e.Type != nil && e.Type.BasicType) {
@@ -172,6 +179,11 @@ func getElementsConnectorList(modelInstance *instance.ModelInstance, parentName 
 				// condition = c
 				continue
 			}
+
+			if _, ok := connectorDumpMap[e.Name]; ok {
+				continue
+			}
+
 			modelIconList := make(map[string]any, 0)
 			modelIconList["name"] = e.Name
 			modelIconList["coordinateSystem"] = typeInstance.Annotation.Diagram.GetCoordinateSystem()
@@ -192,6 +204,7 @@ func getElementsConnectorList(modelInstance *instance.ModelInstance, parentName 
 			modelIconList["extents"] = e.Annotation.Placement.GetElementsExtents()
 			modelIconList["rotation"] = e.Annotation.Placement.Transformation.Rotation
 			connectorList = append(connectorList, modelIconList)
+			connectorDumpMap[e.Name] = typeInstance.Name
 		}
 	}
 	return connectorList
