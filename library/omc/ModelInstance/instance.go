@@ -215,6 +215,12 @@ func (m *ModelInstance) DataPreprocessing() {
 					m.Elements[i].Annotation.Choices.Choice = append(m.Elements[i].Annotation.Choices.Choice, map[string]string{"value": cStr, "comment": comment})
 				}
 			}
+		case m.Elements[i].TypeOriginal == nil:
+			if b, ok := m.Elements[i].BaseClassOriginal.(string); ok {
+				m.Elements[i].Type = &ModelInstance{Name: b, BasicType: false}
+			} else {
+				m.Elements[i].Type = &ModelInstance{}
+			}
 		}
 		m.Elements[i].Modifiers = m.Elements[i].getElementModifiers()
 		m.Elements[i].ModifiersOriginal = nil
