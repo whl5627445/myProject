@@ -198,7 +198,7 @@ func getElementsConnectorList(modelInstance *instance.ModelInstance, parentName 
 			modelIconList["type"] = getConnectorType(e.Name, typeInstance)
 			modelIconList["subShapes"] = typeInstance.GetIconListALL(e, false)
 			modelIconList["modelName"] = modelInstance.Name
-			modelIconList["outputType"] = geOutputType(connectorSizingMap, e.Dims.Absyn, e.Dims.Typed)
+			modelIconList["outputType"] = getOutputType(connectorSizingMap, e.Dims.Absyn, e.Dims.Typed)
 			modelIconList["parentName"] = parentName
 			modelIconList["origin"] = e.Annotation.Placement.GetElementsOrigin()
 			modelIconList["extents"] = e.Annotation.Placement.GetElementsExtents()
@@ -240,16 +240,14 @@ func getConnectorType(name string, typeInstance *instance.ModelInstance) *instan
 	return t
 }
 
-// geOutputType 获取接口的特殊标记
-func geOutputType(connectorSizingMap map[string]bool, nameList, numList []string) map[string]any {
+// getOutputType 获取接口的特殊标记
+func getOutputType(connectorSizingMap map[string]bool, nameList, numList []string) map[string]any {
 	opt := make(map[string]any, 0)
 	for i, n := range nameList {
-		if c, ok := connectorSizingMap[n]; ok && c {
-			opt["name"] = nameList[i]
-			opt["num"] = numList[i]
-			opt["connectorSizing"] = true
-			return opt
-		}
+		opt["name"] = nameList[i]
+		opt["num"] = numList[i]
+		opt["connectorSizing"] = connectorSizingMap[n]
+		return opt
 	}
 	return opt
 }
