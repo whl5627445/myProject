@@ -97,8 +97,10 @@ func getExtendsDiagramMap(modelInstance *instance.ModelInstance) []map[string]an
 // getElementsGraphicsList 获取模型本身组件图形数据列表
 func getElementsGraphicsList(modelInstance *instance.ModelInstance, parentName string) []map[string]any {
 	elementsList := make([]map[string]any, 0)
+	connectorSizingMap := map[string]bool{}
 	for i := 0; i < len(modelInstance.Elements); i++ {
 		e := modelInstance.Elements[i]
+		connectorSizingMap[e.Name] = e.Annotation.Dialog.ConnectorSizing
 		if (e.BaseClass != nil && e.BaseClass.BasicType && e.Kind == "extends") || e.Annotation.Placement == nil || e.Type == nil || (e.Type != nil && e.Type.BasicType) {
 			continue
 		}
@@ -119,6 +121,7 @@ func getElementsGraphicsList(modelInstance *instance.ModelInstance, parentName s
 		modelIconList["visibleList"] = e.GetConnectionOption()
 		modelIconList["subShapes"] = typeInstance.GetIconListALL(e, true)
 		modelIconList["modelName"] = modelInstance.Name
+		modelIconList["outputType"] = getOutputType(connectorSizingMap, e.Dims.Absyn, e.Dims.Typed)
 		modelIconList["connectors"] = getElementsConnectorList(typeInstance, e.Name)
 		modelIconList["parentName"] = parentName
 		modelIconList["origin"] = e.Annotation.Placement.GetElementsOrigin()
