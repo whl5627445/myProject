@@ -1,4 +1,4 @@
-package service
+package serviceV2
 
 import (
 	"encoding/base64"
@@ -10,10 +10,11 @@ import (
 
 	serviceV1 "yssim-go/app/v1/service"
 	"yssim-go/library/omc"
+	modelComponent "yssim-go/library/omc/component"
 	"yssim-go/library/stringOperation"
 )
 
-func GetIconNew(modelName, componentName string, icon bool) map[string]any {
+func GetIcon(modelName, componentName string, icon bool) map[string]any {
 	data := make(map[string]any)
 	iconData := omc.OMC.GetIconAnnotation(modelName)
 	modelType := omc.OMC.GetClassRestriction(modelName)
@@ -111,7 +112,7 @@ func getCoordinateSystemRecursion(modelNameList []string, isIcon bool) coordinat
 
 func getIconAnnotationGraphics(modelName, modelType, parentName string) map[string]any {
 	data := map[string]any{}
-	modelNameList := GetICList(modelName)
+	modelNameList := modelComponent.GetICList(modelName)
 	modelIconAnnotation := getIconAnnotation(modelNameList)
 	coordinateSystem := getCoordinateSystemRecursion(modelNameList, false)
 	componentsData, componentAnnotationsData := getElementsAndModelName(modelNameList)
@@ -122,7 +123,9 @@ func getIconAnnotationGraphics(modelName, modelType, parentName string) map[stri
 	}
 	data["outputType"] = make(map[string]any, 0)
 	data["classname"] = modelName
+	data["direction"] = ""
 	data["restriction"] = modelType
+	data["type"] = ""
 	data["visible"] = true
 	data["rotation"] = 0
 	data["connectors"] = inputOutputs
@@ -137,7 +140,7 @@ func getIconAnnotationGraphics(modelName, modelType, parentName string) map[stri
 
 func getDiagramAnnotationGraphics(modelName, modelType string) map[string]any {
 	data := map[string]any{}
-	nameList := GetICList(modelName)
+	nameList := modelComponent.GetICList(modelName)
 	modelIconAnnotation := getDiagramAnnotation(nameList)
 	coordinateSystem := getCoordinateSystemRecursion(nameList, false)
 	subShapes := make([]map[string]any, 0)
@@ -151,7 +154,14 @@ func getDiagramAnnotationGraphics(modelName, modelType string) map[string]any {
 	data["parentName"] = ""
 	data["visible"] = true
 	data["rotation"] = 0
-	data["restriction"] = modelType
+	iconInstance := getModelInstance(modelName)
+	iconInstance.DataPreprocessing()
+	data["direction"] = iconInstance.Prefixes.Direction
+	data["restriction"] = iconInstance.Restriction
+	data["type"] = ""
+	if iconInstance.Elements[0].BaseClass != nil && iconInstance.Elements[0].BaseClass.BasicType {
+		data["type"] = iconInstance.Elements[0].BaseClass.Name
+	}
 	data["visibleList"] = serviceV1.GetConnectionOption(modelName, modelType)
 	data["connectors"] = make([]any, 0)
 	data["subShapes"] = subShapes
@@ -159,20 +169,7 @@ func getDiagramAnnotationGraphics(modelName, modelType string) map[string]any {
 		{coordinateSystem.Extent[0][0] * coordinateSystem.InitialScale, coordinateSystem.Extent[0][1] * coordinateSystem.InitialScale},
 		{coordinateSystem.Extent[1][0] * coordinateSystem.InitialScale, coordinateSystem.Extent[1][1] * coordinateSystem.InitialScale},
 	}
-	// data["extent1Diagram"] = func() []float64 {
-	//	d := []float64{}
-	//	for _, p := range coordinateSystem.Extent2Diagram {
-	//		d = append(d, p*coordinateSystem.InitialScale)
-	//	}
-	//	return d
-	// }()
-	// data["extent2Diagram"] = func() []float64 {
-	//	d := []float64{}
-	//	for _, p := range coordinateSystem.Extent2Diagram {
-	//		d = append(d, p*coordinateSystem.InitialScale)
-	//	}
-	//	return d
-	// }()
+
 	data["coordinateSystem"] = coordinateSystem
 	return data
 }
@@ -339,12 +336,8 @@ func iconInputOutputs(cData [][]any, caData [][]any, modelName, parentName strin
 	var caDataFilter [][]any
 
 	for i := 0; i < len(cData); i++ {
-		modelType := omc.OMC.GetClassRestriction(cData[i][2].(string))
-		if modelType == "connector" || modelType == "expandable connector" {
-			cData[i] = append(cData[i], modelType)
-			cDataFilter = append(cDataFilter, cData[i])
-			caDataFilter = append(caDataFilter, caData[i])
-		}
+		cDataFilter = append(cDataFilter, cData[i])
+		caDataFilter = append(caDataFilter, caData[i])
 	}
 	if cDataFilter == nil || caDataFilter == nil {
 		return dataList
@@ -366,10 +359,6 @@ func iconInputOutputs(cData [][]any, caData [][]any, modelName, parentName strin
 		}()
 		if placementIndex != -1 {
 
-			// initialScale := "1"
-			// if len(modelIconAnnotationAll) > 0 {
-			//	initialScale = modelIconAnnotationAll[5].(string)
-			// }
 			if len(caDataFilter[i]) < 1 {
 				continue
 			}
@@ -379,12 +368,11 @@ func iconInputOutputs(cData [][]any, caData [][]any, modelName, parentName strin
 				continue
 			}
 			data := map[string]any{}
-			data["restriction"] = cDataFilter[i][17]
 			data["classname"] = classname
 			data["name"] = cDataFilter[i][3]
 			data["modelName"] = modelName
 			data["visible"] = true
-			data["type"] = omc.OMC.GetClassRestriction(cData[i][2].(string))
+
 			data["parentName"] = parentName
 			data["comment"] = cDataFilter[i][4]
 			rotateAngle := func() float64 {
@@ -398,7 +386,6 @@ func iconInputOutputs(cData [][]any, caData [][]any, modelName, parentName strin
 				}
 				return r
 			}()
-
 			if caf[10].(string) != "-" {
 				originX, _ := strconv.ParseFloat(caf[8].(string), 64)
 				originY, _ := strconv.ParseFloat(caf[9].(string), 64)
@@ -409,9 +396,6 @@ func iconInputOutputs(cData [][]any, caData [][]any, modelName, parentName strin
 				data["origin"] = []float64{originX, originY}
 				data["extents"] = [][]float64{{extentX1, extentY1}, {extentX2, extentY2}}
 			} else {
-				// data["extent1Diagram"] = strings.Join([]string{caf[3].(string), caf[4].(string)}, ",")
-				// data["extent2Diagram"] = strings.Join([]string{caf[5].(string), caf[6].(string)}, ",")
-				// data["originDiagram"] = strings.Join([]string{caf[1].(string), caf[2].(string)}, ",")
 				originX, _ := strconv.ParseFloat(caf[1].(string), 64)
 				originY, _ := strconv.ParseFloat(caf[2].(string), 64)
 				extentX1, _ := strconv.ParseFloat(caf[3].(string), 64)
@@ -421,9 +405,6 @@ func iconInputOutputs(cData [][]any, caData [][]any, modelName, parentName strin
 				data["origin"] = []float64{originX, originY}
 				data["extents"] = [][]float64{{extentX1, extentY1}, {extentX2, extentY2}}
 			}
-			// data["extent1Diagram"] = strings.Replace(data["extent1Diagram"].(string), "-,-", "-100.0,-100.0", 1)
-			// data["extent2Diagram"] = strings.Replace(data["extent2Diagram"].(string), "-,-", "100.0,100.0", 1)
-			data["outputType"] = map[string]any{}
 			data["rotation"] = rotateAngle
 			if cDataFilter[i][14].(string) != "[]" {
 				data["outputType"] = map[string]any{"name": cDataFilter[i][14].(string)}
@@ -432,7 +413,16 @@ func iconInputOutputs(cData [][]any, caData [][]any, modelName, parentName strin
 				data["outputType"] = map[string]any{"name": cDataFilter[i][16], "connectorSizing": true}
 			}
 			data["connectors"] = make([]map[string]any, 0)
-			nameList := GetICList(classname)
+			iconInstance := getModelInstance(classname)
+			iconInstance.DataPreprocessing()
+			data["direction"] = iconInstance.Prefixes.Direction
+			data["restriction"] = iconInstance.Restriction
+
+			data["type"] = ""
+			if iconInstance.Elements[0].BaseClass != nil && iconInstance.Elements[0].BaseClass.BasicType {
+				data["type"] = iconInstance.Elements[0].BaseClass.Name
+			}
+			nameList := modelComponent.GetICList(classname)
 			IconAnnotationData := getIconAnnotation(nameList)
 			data["subShapes"] = iconSubShapes(IconAnnotationData, modelName)
 			coordinateSystem := getCoordinateSystemRecursion(nameList, false)
@@ -444,7 +434,7 @@ func iconInputOutputs(cData [][]any, caData [][]any, modelName, parentName strin
 }
 
 func getBitmapImage(bitmapData []any, modelName, modelType string) map[string]any {
-	modelNameList := GetICList(modelName)
+	modelNameList := modelComponent.GetICList(modelName)
 	modelIconAnnotation := getIconAnnotation(modelNameList)
 	data := map[string]any{}
 	componentsData, componentAnnotationsData := getElementsAndModelName(modelNameList)
@@ -528,11 +518,15 @@ func getElementsAndModelName(nameList []string) ([][]any, [][]any) {
 	for _, name := range nameList {
 		connectorSizingList := []string{}
 		componentsData := omc.OMC.GetElements(name)
-		annotationsData := omc.OMC.GetElementAnnotations(name)
+
 		componentsList := [][]any{}
+		annotationsData := omc.OMC.GetElementAnnotations(name)
 		// {Dialog("General","Parameters",true,false,false,-,-,-,-,"",true)}
 		for index, c := range componentsData {
-
+			modelType := omc.OMC.GetClassRestriction(c.([]any)[2].(string))
+			if modelType != "connector" && modelType != "expandable connector" {
+				continue
+			}
 			component := c.([]any)
 			component = append(component, name)
 			componentsList = append(componentsList, component)

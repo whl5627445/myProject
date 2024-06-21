@@ -1,4 +1,4 @@
-package API
+package APIv2
 
 import (
 	"log"
@@ -37,7 +37,7 @@ func GetInstanceDataView(c *gin.Context) {
 		return
 	}
 	var res DataType.ResponseData
-	res.Data = map[string]any{"encryption": packageModel.Encryption, "model": service.GetModelInstanceData(item.ModelName)}
+	res.Data = map[string]any{"encryption": packageModel.Encryption, "model": serviceV2.GetModelInstanceData(item.ModelName)}
 	c.JSON(http.StatusOK, res)
 }
 
@@ -70,21 +70,14 @@ func AddModelComponentView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	data := service.GetIconNew(item.OldComponentName, item.NewComponentName, false)
-	graphics := data["graphics"].(map[string]any)
-	graphics["origin"] = item.Origin
-	graphics["name"] = item.NewComponentName
-	extentDiagram := service.GetModelExtentToString(graphics["coordinateSystem"])
-	data["graphics"] = graphics
-	result, msg := service.AddComponent(item.NewComponentName, item.OldComponentName, item.ModelName, item.Origin, "0", extentDiagram)
-	if !result {
-		res.Err = msg
+	data, err := serviceV2.AddComponent(item.ModelName, item.OldComponentName, item.NewComponentName, item.Origin)
+	if err != nil {
+		res.Err = err.Error()
 		res.Status = 2
-	} else {
-		service.SetPackageUses(item.OldComponentName, item.ModelName)
-		service.ModelSave(item.ModelName)
-		res.Data = data
-		res.Msg = "新增组件成功"
+		c.JSON(http.StatusOK, res)
+		return
 	}
+	res.Data = data
+	res.Msg = "新增组件成功"
 	c.JSON(http.StatusOK, res)
 }

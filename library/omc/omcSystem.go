@@ -1194,8 +1194,25 @@ func (o *ZmqObject) GetModelInstance(className string) []byte {
 	result = bytes.ReplaceAll(result, []byte("\"\\\""), []byte("\""))
 	result = bytes.ReplaceAll(result, []byte("\\\"\""), []byte("\""))
 	result = bytes.ReplaceAll(result, []byte("$"), []byte(""))
-	result = result[1 : len(result)-1]
-	if ok && len(result) > 0 {
+	if ok && len(result) >= 4 {
+		result = result[1 : len(result)-1]
+		return result
+	}
+	return nil
+}
+
+// GetModelInstanceAnnotation 获取给定模型名称的annotation实例化json数据字符串
+func (o *ZmqObject) GetModelInstanceAnnotation(className string) []byte {
+	cmd := "getModelInstanceAnnotation(" + className + ",{\"Icon\",\"IconMap\",\"Diagram\",\"DiagramMap\"},false)"
+	result, ok := o.SendExpressionNoParsed(cmd)
+	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
+	result = bytes.ReplaceAll(result, []byte("\\\""), []byte("\""))
+	result = bytes.ReplaceAll(result, []byte("\\\\"), []byte("\\"))
+	result = bytes.ReplaceAll(result, []byte("\"\\\""), []byte("\""))
+	result = bytes.ReplaceAll(result, []byte("\\\"\""), []byte("\""))
+	result = bytes.ReplaceAll(result, []byte("$"), []byte(""))
+	if ok && len(result) >= 4 {
+		result = result[1 : len(result)-1]
 		return result
 	}
 	return nil

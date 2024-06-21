@@ -34,7 +34,7 @@ class TcpServer(threading.Thread):  # TCP服务
                 log.info("(OMC)更新数据库进度："+str(percent))
                 update_simulate_records(uuid=self.db_id, percentage=percent)
                 # log.info("更新数据库进度为:{}".format(percent))
-                time.sleep(0.5)
+            time.sleep(0.1)
 
     def stop(self):
         log.info("关闭读取进度的socket,进度更新到:"+str(self.percentage[-1]))

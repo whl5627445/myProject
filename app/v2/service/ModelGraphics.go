@@ -1,4 +1,4 @@
-package service
+package serviceV2
 
 import (
 	"log"
@@ -15,6 +15,10 @@ type ModelInstanceData struct {
 
 func GetModelInstanceData(modelName string) *ModelInstanceData {
 	m := getModelInstance(modelName)
+	if m == nil {
+		return nil
+	}
+
 	m.DataPreprocessing()
 	modelData := &ModelInstanceData{}
 	modelData.Parameters = getModelElementsParameter(m)
@@ -113,8 +117,8 @@ func getElementsGraphicsList(modelInstance *instance.ModelInstance, parentName s
 		modelIconList["modelName"] = modelInstance.Name
 		modelIconList["connectors"] = getElementsConnectorList(typeInstance, e.Name)
 		modelIconList["parentName"] = parentName
-		modelIconList["origin"] = e.Annotation.Placement.Transformation.Origin
-		modelIconList["extents"] = e.Annotation.Placement.Transformation.Extents
+		modelIconList["origin"] = e.Annotation.Placement.GetElementsOrigin()
+		modelIconList["extents"] = e.Annotation.Placement.GetElementsExtents()
 		modelIconList["rotation"] = e.Annotation.Placement.Transformation.Rotation
 		modelIconList["coordinateSystem"] = typeInstance.Annotation.Icon.GetCoordinateSystem()
 		elementsList = append(elementsList, modelIconList)
@@ -179,8 +183,8 @@ func getElementsConnectorList(modelInstance *instance.ModelInstance, parentName 
 			modelIconList["modelName"] = modelInstance.Name
 			modelIconList["outputType"] = geOutputType(connectorSizingMap, e.Dims.Absyn, e.Dims.Typed)
 			modelIconList["parentName"] = parentName
-			modelIconList["origin"] = e.Annotation.Placement.Transformation.Origin
-			modelIconList["extents"] = e.Annotation.Placement.Transformation.Extents
+			modelIconList["origin"] = e.Annotation.Placement.GetElementsOrigin()
+			modelIconList["extents"] = e.Annotation.Placement.GetElementsExtents()
 			modelIconList["rotation"] = e.Annotation.Placement.Transformation.Rotation
 			connectorList = append(connectorList, modelIconList)
 		}

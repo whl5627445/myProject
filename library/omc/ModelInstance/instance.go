@@ -24,13 +24,13 @@ type dimensions struct {
 }
 type prefixes struct {
 	Public       *bool  `json:"public,omitempty"`
-	Final        *bool  `json:"final,omitempty"`
-	Inner        *bool  `json:"inner,omitempty"`
-	Outer        *bool  `json:"outer,omitempty"`
+	Final        bool   `json:"final,omitempty"`
+	Inner        bool   `json:"inner,omitempty"`
+	Outer        bool   `json:"outer,omitempty"`
 	Replaceable  any    `json:"replaceable,omitempty"` // 值为bool的true，或replaceableObject的结构体类型
-	Redeclare    *bool  `json:"redeclare,omitempty"`
-	Partial      *bool  `json:"partial,omitempty"`
-	Encapsulated *bool  `json:"encapsulated,omitempty"`
+	Redeclare    bool   `json:"redeclare,omitempty"`
+	Partial      bool   `json:"partial,omitempty"`
+	Encapsulated bool   `json:"encapsulated,omitempty"`
 	Connector    string `json:"connector,omitempty"`   // ["flow", "stream"]
 	Variability  string `json:"variability,omitempty"` // ["constant", "parameter", "discrete"]
 	Direction    string `json:"direction,omitempty"`   // ["input", "output"]
@@ -172,11 +172,11 @@ func (m *ModelInstance) DataPreprocessing() {
 			}
 			m.Elements[i].BaseClassOriginal = nil
 		case m.Elements[i].Kind == "component" && m.Elements[i].TypeOriginal != nil:
-			if m.Elements[i].Prefixes.Public != nil && *m.Elements[i].Prefixes.Public == false {
-				m.Elements = append(m.Elements[:i], m.Elements[i+1:]...)
-				i -= 1
-				continue
-			}
+			// if m.Elements[i].Prefixes.Public != nil && *m.Elements[i].Prefixes.Public == false {
+			// 	m.Elements = append(m.Elements[:i], m.Elements[i+1:]...)
+			// 	i -= 1
+			// 	continue
+			// }
 			if t, ok := m.Elements[i].TypeOriginal.(string); ok {
 				m.Elements[i].Type = &ModelInstance{Name: t, BasicType: true}
 			} else {
@@ -190,12 +190,12 @@ func (m *ModelInstance) DataPreprocessing() {
 				co := m.Elements[i].Annotation.Choices.ChoiceOriginal[c]
 				coMap, ok := co.(map[string]any)
 				cStr := ""
-				prefixes := coMap["prefixes"].(map[string]any)
-				restriction := coMap["restriction"].(string)
-				name := coMap["name"].(string)
-				baseClass := coMap["baseClass"].(string)
-				comment := coMap["comment"].(string)
 				if ok {
+					prefixes := coMap["prefixes"].(map[string]any)
+					restriction := coMap["restriction"].(string)
+					name := coMap["name"].(string)
+					baseClass := coMap["baseClass"].(string)
+					comment := coMap["comment"].(string)
 					if prefixes["redeclare"].(bool) {
 						cStr += "redeclare "
 					}
@@ -274,11 +274,45 @@ func (m *ModelInstance) GetModelParameterValue(modelParameterMap map[string]map[
 			p := map[string]any{"name": e.Name, "parameter": e.ParameterList, "type": "component"}
 			if e.Prefixes.Variability == "parameter" {
 				p["type"] = "model"
+			} else {
+				p["properties"] = e.getProperties()
 			}
 			eList = append(eList, p)
 		}
 	}
 	return eList
+}
+
+// 获取模型组件属性
+func (e *elements) getProperties() map[string]any {
+	p := map[string]any{
+		"variability": "unspecified",
+		"causality":   "unspecified",
+		"dimension":   e.Dims.Typed,
+		"inner/outer": "none",
+		"comment":     e.Comment,
+		"path":        e.Type.Name,
+	}
+	if e.Prefixes.Variability != "" {
+		p["variability"] = e.Prefixes.Variability
+	}
+	if e.Prefixes.Direction != "" {
+		p["causality"] = e.Prefixes.Direction
+	}
+	if e.Prefixes.Inner {
+		p["inner/outer"] = "inner"
+	} else if e.Prefixes.Outer {
+		p["inner/outer"] = "outer"
+	}
+	properties := make([]any, 3)
+	properties[0] = e.Prefixes.Final
+	properties[1] = "public"
+	properties[2] = false
+	if _, ok := e.Prefixes.Replaceable.(bool); ok {
+		properties[2] = e.Prefixes.Replaceable
+	}
+	p["properties"] = properties
+	return p
 }
 
 // GetConnectionsList 将给定连接信息处理成结构化信息
@@ -410,7 +444,7 @@ func (e *elements) GetElementsParameterValue(parameterMap map[string]*Parameter,
 		e.Annotation.Dialog.getParameterDialog(parameterMap[e.Name])
 		e.Annotation.getParameterChoices(parameterMap[e.Name])
 		if e.Type != nil && (!e.Type.BasicType || e.Type.Restriction == "type") {
-			if e.Type.Elements[0].BaseClass.Name == "enumeration" {
+			if len(e.Type.Elements) > 0 && e.Type.Elements[0].BaseClass != nil && e.Type.Elements[0].BaseClass.Name == "enumeration" {
 				parameterMap[e.Name].Type = "Enumeration"
 				options := []map[string]string{}
 				for i := 1; i < len(e.Type.Elements); i++ {
@@ -545,6 +579,30 @@ func (a *annotation) getParameterChoices(parameter *Parameter) {
 		parameter.Type = "CheckBox"
 	}
 }
+
+// GetElementsExtents 获取模型组件icon数据列表，包括模型本身的与继承过来的
+func (p *placement) GetElementsExtents() [][]float64 {
+	if p.IconTransformation.Extents != nil {
+		return p.IconTransformation.Extents
+	}
+	return p.Transformation.Extents
+}
+
+// GetElementsOrigin 获取模型组件icon数据列表，包括模型本身的与继承过来的
+func (p *placement) GetElementsOrigin() []float64 {
+	if p.IconTransformation.Origin != nil {
+		return p.IconTransformation.Origin
+	}
+	return p.Transformation.Origin
+}
+
+// // GetElementsRotation 获取模型组件icon数据列表，包括模型本身的与继承过来的
+// func (p *placement) GetElementsRotation() float64 {
+// 	if p.IconTransformation.Rotation != nil{
+// 		return p.IconTransformation.Rotation
+// 	}
+// 	return p.Transformation.Rotation
+// }
 
 // 处理图形数据
 func getGraphicsData(g *graphics, modelElements *elements) map[string]any {
