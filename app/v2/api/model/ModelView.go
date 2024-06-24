@@ -5,11 +5,12 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/gin-gonic/gin"
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/DataType"
-	"yssim-go/app/v2/service"
+	serviceV2 "yssim-go/app/v2/service"
 	"yssim-go/config"
+
+	"github.com/gin-gonic/gin"
 )
 
 var dbModel = config.DB
@@ -79,5 +80,23 @@ func AddModelComponentView(c *gin.Context) {
 	}
 	res.Data = data
 	res.Msg = "新增组件成功"
+	c.JSON(http.StatusOK, res)
+}
+
+func GetIconView(c *gin.Context) {
+	/*
+		# 获取模型的图标信息
+	*/
+
+	var item DataType.ModelGraphicsData
+	if err := c.BindJSON(&item); err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+
+	var res DataType.ResponseData
+	data := serviceV2.GetIcon(item.ModelName, "", true)
+	res.Data = data
 	c.JSON(http.StatusOK, res)
 }
