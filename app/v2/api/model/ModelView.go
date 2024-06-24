@@ -3,13 +3,16 @@ package APIv2
 import (
 	"log"
 	"net/http"
+	"os"
 	"strings"
+	"time"
 
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/DataType"
 	serviceV2 "yssim-go/app/v2/service"
 	"yssim-go/config"
 
+	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 )
 
@@ -80,6 +83,132 @@ func AddModelComponentView(c *gin.Context) {
 	}
 	res.Data = data
 	res.Msg = "新增组件成功"
+	c.JSON(http.StatusOK, res)
+}
+
+func GetAllModelView(c *gin.Context) {
+	/*
+		# 获取用户空间所有模型信息
+		## space_id: 用户空间id
+	*/
+	var res DataType.ResponseData
+	var item DataType.LoginUserSpaceModel
+	if err := c.BindJSON(&item); err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+
+	// 从用户空间表获取package数据
+	var space DataBaseModel.YssimUserSpace
+	dbModel.Model(space).Where("id = ? AND username = ?", item.SpaceId, userName).First(&space)
+	if space.ID == "" {
+		res.Status = 4
+		res.Err = "空间已被删除"
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	// 从模型表获取package数据
+	var packageModelAll []DataBaseModel.YssimModels
+	dbModel.Where("sys_or_user IN ?  AND default_version = ? AND userspace_id IN ?", []string{"sys", userName}, true, []string{"0", item.SpaceId}).Find(&packageModelAll)
+
+	dbModel.Model(DataBaseModel.YssimUserSpace{}).Where("id = ? AND username = ?", item.SpaceId, userName).UpdateColumn("last_login_time", time.Now().Local().Unix())
+
+	information, _ := space.PackageInformation.MarshalJSON()
+	packageInformation := map[string]map[string]string{}
+	sonic.Unmarshal(information, &packageInformation)
+
+	// 获取所有模型信息
+	data := []map[string]string{}
+	if len(packageInformation) == 0 {
+		for _, packageModel := range packageModelAll {
+			m := map[string]string{
+				"id":      packageModel.ID,
+				"name":    packageModel.PackageName,
+				"version": packageModel.Version,
+			}
+			data = append(data, m)
+		}
+	} else {
+		for packageName, info := range packageInformation {
+			m := map[string]string{
+				"id":      "",
+				"name":    packageName,
+				"version": info["version"],
+			}
+			data = append(data, m)
+		}
+	}
+
+	serviceV2.RestartOMC()
+	res.Data = data
+	res.Msg = "获取模型列表成功"
+	c.JSON(http.StatusOK, res)
+}
+
+func LoadModelView(c *gin.Context) {
+	/*
+		# 加载单个模型
+		## space_id: 用户空间id
+	*/
+	userSpaceId := c.GetHeader("space_id")
+	username := c.GetHeader("username")
+	var res DataType.ResponseData
+	var item DataType.LoadingModel
+	if err := c.BindJSON(&item); err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+
+	var packageName, packageVersion, filePath string
+
+	if item.Id == "" {
+		// 从用户空间表获取filePath数据
+		var space DataBaseModel.YssimUserSpace
+		dbModel.Model(space).Where("id = ? AND username = ?", userSpaceId, username).First(&space)
+		if space.ID == "" {
+			res.Status = 4
+			res.Err = "空间已被删除"
+			c.JSON(http.StatusOK, res)
+			return
+		}
+		information, _ := space.PackageInformation.MarshalJSON()
+		packageInformation := map[string]map[string]string{}
+		sonic.Unmarshal(information, &packageInformation)
+
+		for name, info := range packageInformation {
+			if name == item.Name {
+				packageName = name
+				packageVersion = info["version"]
+				filePath = info["file"]
+				break
+			}
+		}
+	} else {
+		// 从模型表获取filePath数据
+		var packageModel DataBaseModel.YssimModels
+		dbModel.Where("id = ? AND default_version = ? AND userspace_id IN ?", item.Id, true, []string{"0", userSpaceId}).Find(&packageModel)
+
+		packageName = packageModel.PackageName
+		packageVersion = packageModel.Version
+		filePath = packageModel.FilePath
+		if filePath != "" {
+			pwd, _ := os.Getwd()
+			filePath = pwd + "/" + filePath
+		}
+	}
+
+	if ok := serviceV2.LibraryInitializationSingle(packageName, packageVersion, filePath); !ok {
+		// 加载失败
+		res.Status = 4
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	dbModel.Model(DataBaseModel.YssimUserSpace{}).Where("id = ? AND username = ?", userSpaceId, username).UpdateColumn("last_login_time", time.Now().Local().Unix())
+	res.Msg = packageName
 	c.JSON(http.StatusOK, res)
 }
 
