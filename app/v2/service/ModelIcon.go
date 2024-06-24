@@ -309,10 +309,9 @@ func iconSubShapes(cData []any, modelName string) []map[string]any {
 			data["thickness"] = thickness
 			data["fillPattern"] = map[string]any{"name": drawingDataList[6]}
 			data["borderPattern"] = map[string]any{"name": drawingDataList[8]}
-			data["borderPattern"] = drawingDataList[8]
 			data["extentsPoints"] = twoDimensionalProcessing(drawingDataList[9].([]any))
 			radius, _ := strconv.ParseFloat(drawingDataList[10].(string), 64)
-			data["radius"] = radius
+			data["borderRadius"] = radius
 		case "Ellipse":
 			thickness, _ := strconv.ParseFloat(drawingDataList[7].(string), 64)
 			data["thickness"] = thickness
