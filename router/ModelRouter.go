@@ -115,6 +115,8 @@ func ModelRouter(g *gin.Engine) {
 	{
 		ModelsV2.POST("/instance", APIv2.GetInstanceDataView)
 		ModelsV2.POST("/component/add", APIv2.AddModelComponentView)
+
+		ModelsV2.POST("/icon/graphics", APIv2.GetIconView)
 	}
 	g.POST("/test", API.Test)
 	g.POST("/test1", API.Test1)
