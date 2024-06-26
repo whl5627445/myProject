@@ -14,9 +14,6 @@ import (
 
 func openMySql() *gorm.DB {
 	dsn := "root:root@tcp(mysql:3306)/yssim?charset=utf8mb4&parseTime=True&loc=Local"
-	if DEBUG != "" {
-		dsn = "root:root@tcp(" + DebugDB + ")/yssim?charset=utf8mb4&parseTime=True&loc=Local"
-	}
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
 		PrepareStmt: true,
 	})
