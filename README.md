@@ -1,6 +1,8 @@
 感谢https://www.jetbrains.com/ 的赞助
 ## 介绍：
   ### 这是一个基于OpenModelica项目后端omc的Web API项目
+## 项目目标：
+  ### 本项目的目标是为有需要的用户提供一个基于omc的Web API，方便用户在不安装OMEdit的情况下使用omc的功能
 ## 安装：
   ```markdown
   omc官方的docker镜像，最低版本1.21
