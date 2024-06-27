@@ -24,7 +24,7 @@ The goal of this project is to provide users with a backend API based on omc, se
 ## Installation Guide
 1. **Install omc**: [Official Download Link](https://openmodelica.org/download/download-linux/)
 2. **Install Golang**: [Official Download Link](https://go.dev/doc/install)
-3. Clone this project: `git clone <repository-url>`
+3. Clone this project: `git clone https://github.com/whl5627445/myProject`
 4. Configure the database address in the `config` file
 5. Compile the project: `go build main.go`
 
