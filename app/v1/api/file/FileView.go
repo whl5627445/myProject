@@ -181,6 +181,10 @@ func UpdateModelPackageView(c *gin.Context) {
 				// 判断是否是子模型
 				if !strings.Contains(item.ModelName, ".") {
 					DB.Model(DataBaseModel.YssimModels{}).Where("id = ? AND sys_or_user = ? AND userspace_id = ?", item.PackageId, username, userSpaceId).Update("package_name", parseResult)
+
+					packageInformation := service.GetPackageInformation()
+					packageInformationJson, _ := sonic.Marshal(packageInformation)
+					DB.Model(DataBaseModel.YssimUserSpace{}).Where("id = ? AND username = ?", userSpaceId, username).Update("package_information", packageInformationJson)
 				}
 				service.DeleteLibrary(item.ModelName)
 			}
