@@ -29,17 +29,23 @@ func GetIcon(modelName, componentName string, icon bool) map[string]any {
 			return data
 		}
 	}
+
 	graphics := map[string]any{}
+	iconInstance := getModelInstance(modelName)
+	iconInstance.DataPreprocessing()
+
 	if (modelType != "connector" && modelType != "expandable connector") || (icon && (modelType == "connector" || modelType == "expandable connector")) {
 		graphics = getIconAnnotationGraphics(modelName, modelType, componentName)
 	} else {
 		graphics = getDiagramAnnotationGraphics(modelName, modelType)
 
-		iconInstance := getModelInstance(modelName)
-		iconInstance.DataPreprocessing()
 		graphics["direction"] = iconInstance.Prefixes.Direction
 		graphics["restriction"] = iconInstance.Restriction
 		graphics["type"] = getConnectorType(componentName, iconInstance)
+	}
+
+	if graphics != nil {
+		graphics["connectors"] = getElementsConnectorList(iconInstance, "")
 	}
 
 	data = map[string]any{
@@ -134,7 +140,6 @@ func getIconAnnotationGraphics(modelName, modelType, parentName string) map[stri
 	data["type"] = ""
 	data["visible"] = true
 	data["rotation"] = 0
-	data["connectors"] = inputOutputs
 	data["subShapes"] = subShapes
 	data["extents"] = [][]float64{
 		{coordinateSystem.Extent[0][0] * coordinateSystem.InitialScale, coordinateSystem.Extent[0][1] * coordinateSystem.InitialScale},
@@ -161,7 +166,6 @@ func getDiagramAnnotationGraphics(modelName, modelType string) map[string]any {
 	data["visible"] = true
 	data["rotation"] = 0
 	data["visibleList"] = serviceV1.GetConnectionOption(modelName, modelType)
-	data["connectors"] = make([]any, 0)
 	data["subShapes"] = subShapes
 	data["extents"] = [][]float64{
 		{coordinateSystem.Extent[0][0] * coordinateSystem.InitialScale, coordinateSystem.Extent[0][1] * coordinateSystem.InitialScale},
