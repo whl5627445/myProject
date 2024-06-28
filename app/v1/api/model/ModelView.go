@@ -310,6 +310,10 @@ func ModelRename(c *gin.Context) {
 				// 判断是否是子模型
 				if !strings.Contains(item.ModelName, ".") {
 					dbModel.Model(DataBaseModel.YssimModels{}).Where("id = ? AND sys_or_user = ? AND userspace_id = ?", item.PackageId, userName, userSpaceId).Update("package_name", parseResult)
+
+					packageInformation := service.GetPackageInformation()
+					packageInformationJson, _ := sonic.Marshal(packageInformation)
+					dbModel.Model(DataBaseModel.YssimUserSpace{}).Where("id = ? AND username = ?", userSpaceId, userName).Update("package_information", packageInformationJson)
 				}
 				service.DeleteLibrary(item.ModelName)
 			}
