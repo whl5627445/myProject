@@ -38,10 +38,12 @@ func GetIcon(modelName, componentName string, icon bool) map[string]any {
 		graphics = getIconAnnotationGraphics(modelName, modelType, componentName)
 	} else {
 		graphics = getDiagramAnnotationGraphics(modelName, modelType)
-
-		graphics["direction"] = iconInstance.Prefixes.Direction
-		graphics["restriction"] = iconInstance.Restriction
-		graphics["type"] = getConnectorType(componentName, iconInstance)
+		if graphics != nil {
+			graphics["direction"] = iconInstance.Prefixes.Direction
+			graphics["restriction"] = iconInstance.Restriction
+			graphics["type"] = getConnectorType(componentName, iconInstance)
+			graphics["visibleList"] = GetConnectionOption(componentName, iconInstance, nil)
+		}
 	}
 
 	if graphics != nil {
@@ -165,7 +167,6 @@ func getDiagramAnnotationGraphics(modelName, modelType string) map[string]any {
 	data["parentName"] = ""
 	data["visible"] = true
 	data["rotation"] = 0
-	data["visibleList"] = serviceV1.GetConnectionOption(modelName, modelType)
 	data["subShapes"] = subShapes
 	data["extents"] = [][]float64{
 		{coordinateSystem.Extent[0][0] * coordinateSystem.InitialScale, coordinateSystem.Extent[0][1] * coordinateSystem.InitialScale},

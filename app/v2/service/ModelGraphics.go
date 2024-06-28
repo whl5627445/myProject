@@ -2,6 +2,7 @@ package serviceV2
 
 import (
 	"log"
+	"strings"
 
 	"yssim-go/library/omc"
 	instance "yssim-go/library/omc/ModelInstance"
@@ -118,7 +119,10 @@ func getElementsGraphicsList(modelInstance *instance.ModelInstance, parentName s
 			modelIconList["type"] = getConnectorType(e.Name, typeInstance)
 		}
 		modelIconList["direction"] = typeInstance.Prefixes.Direction
-		modelIconList["visibleList"] = e.GetConnectionOption()
+		modelIconList["visibleList"] = nil
+		if e.Kind != "extends" {
+			modelIconList["visibleList"] = GetConnectionOption(e.Name, e.Type, e.Modifiers)
+		}
 		modelIconList["subShapes"] = typeInstance.GetIconListALL(e, true)
 		modelIconList["modelName"] = modelInstance.Name
 		modelIconList["outputType"] = getOutputType(connectorSizingMap, e.Dims.Absyn, e.Dims.Typed)
@@ -253,4 +257,134 @@ func getOutputType(connectorSizingMap map[string]bool, nameList, numList []strin
 		return opt
 	}
 	return opt
+}
+
+// GetConnectionOption 获取visibleList
+func GetConnectionOption(elementName string, typeInstance *instance.ModelInstance, modifiers map[string]any) []map[string]any {
+	if typeInstance.Restriction == "expandable connector" {
+		return getConnectionOptionExpandableConnector(elementName, typeInstance, modifiers)
+	}
+
+	if typeInstance.Restriction == "connector" {
+		return getConnectionOptionConnector(elementName, typeInstance, modifiers)
+	}
+
+	return nil
+}
+
+// getConnectionOptionExpandableConnector 获取expandable connector的visibleList
+func getConnectionOptionExpandableConnector(elementName string, typeInstance *instance.ModelInstance, modifiers map[string]any) []map[string]any {
+	variableList := make([]map[string]any, 0)
+	connectorSizingMap := map[string]bool{}
+	for _, element := range typeInstance.Elements {
+		if element.Kind == "extends" {
+			continue
+		}
+		connectorSizingMap[element.Name] = element.Annotation.Dialog.ConnectorSizing
+		option := getConnectionOptionExpandableConnector(element.Name, element.Type, element.Modifiers)
+		ser := map[string]any{
+			"variableName": element.Name,
+			"hasChild":     len(option) > 0,
+			"option":       option,
+			"outputType":   getOutputTypeExpandableConnector(connectorSizingMap, element.Dims.Absyn, element.Dims.Typed, modifiers),
+		}
+		variableList = append(variableList, ser)
+	}
+
+	return variableList
+}
+
+// getConnectionOptionConnector 获取connector的visibleList
+func getConnectionOptionConnector(parentName string, typeInstance *instance.ModelInstance, modifiers map[string]any) []map[string]any {
+	variableList := getSubConnectorList(typeInstance, parentName, modifiers)
+	return variableList
+}
+
+// getSubConnectorList 获取子连接器列表
+func getSubConnectorList(modelInstance *instance.ModelInstance, parentName string, modifiers map[string]any) []map[string]any {
+	connectorList := make([]map[string]any, 0)
+	connectorSizingMap := map[string]bool{}
+	connectorRemoveDuplicateMap := map[string]string{}
+	for i := 0; i < len(modelInstance.Elements); i++ {
+		e := modelInstance.Elements[i]
+		connectorSizingMap[e.Name] = e.Annotation.Dialog.ConnectorSizing
+		if e.BaseClass != nil && !e.BaseClass.BasicType && e.Kind == "extends" {
+			extendsConnectorList := getSubConnectorList(modelInstance.Elements[i].BaseClass, parentName, e.Modifiers)
+			for _, connector := range extendsConnectorList {
+				if _, ok := connectorRemoveDuplicateMap[connector["variableName"].(string)]; !ok {
+					connectorList = append(connectorList, connector)
+					connectorRemoveDuplicateMap[connector["variableName"].(string)] = connector["classname"].(string)
+				}
+			}
+			continue
+		}
+		if e.Type == nil || (e.Type != nil && e.Type.BasicType) {
+			continue
+		}
+		typeInstance := e.Type
+		if typeInstance.Restriction == "expandable connector" || typeInstance.Restriction == "connector" {
+			if c, ok := e.Condition.(bool); ok && !c {
+				// condition = c
+				continue
+			}
+			if _, ok := connectorRemoveDuplicateMap[e.Name]; ok {
+				continue
+			}
+
+			modelIconList := make(map[string]any, 0)
+			modelIconList["variableName"] = e.Name
+			modelIconList["hasChild"] = false
+			modelIconList["option"] = nil
+			modelIconList["classname"] = typeInstance.Name
+			modelIconList["type"] = getConnectorType(e.Name, typeInstance)
+			modelIconList["outputType"] = getOutputTypeConnector(connectorSizingMap, e.Dims.Absyn, e.Dims.Typed, modifiers)
+
+			connectorList = append(connectorList, modelIconList)
+			connectorRemoveDuplicateMap[e.Name] = typeInstance.Name
+		}
+	}
+	return connectorList
+}
+
+// getOutputTypeConnector 获取连接器的维度
+func getOutputTypeConnector(connectorSizingMap map[string]bool, nameList, numList []string, modifiers map[string]any) map[string]any {
+	opt := make(map[string]any, 0)
+	for i, n := range nameList {
+		opt["name"] = nameList[i]
+
+		// 维度是参数而不是数字时需将参数转化为数字
+		if strings.Contains(numList[i], ".") && len(modifiers) > 0 {
+			strs := strings.Split(numList[i], ".")
+			num := modifiers[strs[len(strs)-1]]
+			opt["num"] = num
+		} else {
+			opt["num"] = numList[i]
+		}
+
+		opt["connectorSizing"] = connectorSizingMap[n]
+		return opt
+	}
+	return opt
+}
+
+// getOutputTypeExpandableConnector 获取变量的维度
+func getOutputTypeExpandableConnector(connectorSizingMap map[string]bool, nameList, numList []string, modifiers map[string]any) []map[string]any {
+	opts := make([]map[string]any, 0)
+	for i, n := range nameList {
+		opt := map[string]any{}
+		opt["name"] = nameList[i]
+
+		// 维度是参数而不是数字时需将参数转化为数字
+		if strings.Contains(numList[i], ".") && len(modifiers) > 0 {
+			strs := strings.Split(numList[i], ".")
+			num := modifiers[strs[len(strs)-1]]
+			opt["num"] = num
+		} else {
+			opt["num"] = numList[i]
+		}
+
+		opt["connectorSizing"] = connectorSizingMap[n]
+		opts = append(opts, opt)
+	}
+	return opts
 }
