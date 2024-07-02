@@ -182,7 +182,7 @@ func GetIconView(c *gin.Context) {
 	}
 
 	var res DataType.ResponseData
-	data := serviceV2.GetIcon(item.ModelName, "", true)
+	data := serviceV2.GetIcon(item.ModelName, "", true, true)
 	res.Data = data
 	c.JSON(http.StatusOK, res)
 }

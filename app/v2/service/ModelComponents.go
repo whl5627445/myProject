@@ -7,7 +7,7 @@ import (
 )
 
 func AddComponent(ModelName, OldComponentName, NewComponentName, Origin string) (map[string]any, error) {
-	data := GetIcon(OldComponentName, NewComponentName, false)
+	data := GetIcon(OldComponentName, NewComponentName, false, false)
 	graphics := data["graphics"].(map[string]any)
 	graphics["origin"] = Origin
 	graphics["name"] = NewComponentName
