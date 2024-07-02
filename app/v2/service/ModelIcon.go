@@ -47,7 +47,7 @@ func GetIcon(modelName, componentName string, icon bool) map[string]any {
 	}
 
 	if graphics != nil {
-		graphics["connectors"] = getElementsConnectorList(iconInstance, "")
+		graphics["connectors"] = getElementsConnectorList(iconInstance, componentName)
 	}
 
 	data = map[string]any{
