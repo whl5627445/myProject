@@ -864,10 +864,10 @@ func (o *ZmqObject) DeleteConnection(classNameAll, connectStart, connectEnd stri
 
 // UpdateConnectionNames  更新模型组件之间的连线的名称
 func (o *ZmqObject) UpdateConnectionNames(classNameAll, fromName, toName, fromNameNew, toNameNew string) bool {
-	cmd := "updateConnectionNames(\"" + classNameAll + "\",\"" + fromName + "\",\"" + toName + "\",\"" + fromNameNew + "\",\"" + toNameNew + "\")"
+	cmd := "updateConnectionNames(" + classNameAll + ",\"" + fromName + "\",\"" + toName + "\",\"" + fromNameNew + "\",\"" + toNameNew + "\")"
 	result, ok := o.SendExpressionNoParsed(cmd)
 	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
-	if ok && string(result) == "Ok" {
+	if ok && string(result) == "true" {
 		return true
 	}
 	return false
