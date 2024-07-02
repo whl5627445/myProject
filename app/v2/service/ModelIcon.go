@@ -14,7 +14,7 @@ import (
 	"yssim-go/library/stringOperation"
 )
 
-func GetIcon(modelName, componentName string, icon bool) map[string]any {
+func GetIcon(modelName, componentName string, icon bool, displayAllConnector bool) map[string]any {
 	data := make(map[string]any)
 	iconData := omc.OMC.GetIconAnnotation(modelName)
 	modelType := omc.OMC.GetClassRestriction(modelName)
@@ -47,7 +47,7 @@ func GetIcon(modelName, componentName string, icon bool) map[string]any {
 	}
 
 	if graphics != nil {
-		graphics["connectors"] = getElementsConnectorList(iconInstance, componentName)
+		graphics["connectors"] = getElementsConnectorList(iconInstance, componentName, displayAllConnector)
 	}
 
 	data = map[string]any{

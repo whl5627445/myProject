@@ -126,7 +126,7 @@ func getElementsGraphicsList(modelInstance *instance.ModelInstance, parentName s
 		modelIconList["subShapes"] = typeInstance.GetIconListALL(e, true)
 		modelIconList["modelName"] = modelInstance.Name
 		modelIconList["outputType"] = getOutputType(connectorSizingMap, e.Dims.Absyn, e.Dims.Typed)
-		modelIconList["connectors"] = getElementsConnectorList(typeInstance, e.Name)
+		modelIconList["connectors"] = getElementsConnectorList(typeInstance, e.Name, false)
 		modelIconList["parentName"] = parentName
 		modelIconList["origin"] = e.Annotation.Placement.GetElementsOrigin()
 		modelIconList["extents"] = e.Annotation.Placement.GetElementsExtents()
@@ -160,7 +160,7 @@ func getExtendsElementsGraphicsList(modelInstance *instance.ModelInstance, paren
 }
 
 // getElementsConnectorList 获取模型组件连接器数据列表
-func getElementsConnectorList(modelInstance *instance.ModelInstance, parentName string) []map[string]any {
+func getElementsConnectorList(modelInstance *instance.ModelInstance, parentName string, displayAllConnector bool) []map[string]any {
 	connectorList := make([]map[string]any, 0)
 	connectorSizingMap := map[string]bool{}
 	connectorDumpMap := map[string]string{}
@@ -168,7 +168,7 @@ func getElementsConnectorList(modelInstance *instance.ModelInstance, parentName 
 		e := modelInstance.Elements[i]
 		connectorSizingMap[e.Name] = e.Annotation.Dialog.ConnectorSizing
 		if e.BaseClass != nil && !e.BaseClass.BasicType && e.Kind == "extends" {
-			extendsConnectorList := getElementsConnectorList(modelInstance.Elements[i].BaseClass, parentName)
+			extendsConnectorList := getElementsConnectorList(modelInstance.Elements[i].BaseClass, parentName, displayAllConnector)
 			for _, connector := range extendsConnectorList {
 				if _, ok := connectorDumpMap[connector["name"].(string)]; !ok {
 					connectorList = append(connectorList, connector)
@@ -182,7 +182,7 @@ func getElementsConnectorList(modelInstance *instance.ModelInstance, parentName 
 		}
 		typeInstance := e.Type
 		if (typeInstance.Restriction == "expandable connector" || typeInstance.Restriction == "connector") && e.Annotation.Placement != nil {
-			if c, ok := e.Condition.(bool); ok && !c {
+			if c, ok := e.Condition.(bool); ok && !c && !displayAllConnector {
 				// condition = c
 				continue
 			}
