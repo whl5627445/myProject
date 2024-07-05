@@ -403,3 +403,21 @@ func StopOMCView(c *gin.Context) {
 	res.Msg = "服务暂停成功"
 	c.JSON(http.StatusOK, res)
 }
+
+func RestartOMCView(c *gin.Context) {
+	/*
+		# 重启用户的omc实例并连接
+	*/
+	var res DataType.ResponseData
+
+	service.StopOMC()
+	result := service.StartOMC()
+	if result {
+		res.Msg = "服务重启成功"
+	} else {
+		res.Err = "服务重启失败,请联系管理员"
+		res.Status = 2
+	}
+
+	c.JSON(http.StatusOK, res)
+}
