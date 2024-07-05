@@ -596,7 +596,7 @@ func (o *ZmqObject) SetComponentModifierValue(className string, parameter string
 	cmd := "setComponentModifierValue(" + className + ", " + parameter + ", $Code(" + code + "))"
 	data, ok := o.SendExpressionNoParsed(cmd)
 	data = bytes.ReplaceAll(data, []byte("\n"), []byte(""))
-	if ok && string(data) == "Ok" {
+	if ok && (string(data) == "Ok" || string(data) == "true") {
 		return true
 	}
 	return false
@@ -606,6 +606,9 @@ func (o *ZmqObject) SetComponentModifierValue(className string, parameter string
 func (o *ZmqObject) SetElementModifierValue(className string, parameter string, value string) bool {
 	code := "=" + value + ""
 	if strings.HasPrefix(value, "redeclare") {
+		if subParameters := strings.Split(parameter, "."); len(subParameters) > 0 {
+			parameter = subParameters[0]
+		}
 		code = "(" + value + ")"
 	}
 	if value == "" {
