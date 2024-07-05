@@ -117,9 +117,6 @@ func GetAllModelView(c *gin.Context) {
 	// 获取所有可加载的模型信息
 	data := serviceV2.GetAllLoadableModel(packageInformation, packageModelAll)
 
-	// 重启omc服务
-	serviceV2.RestartOMC()
-
 	res.Data = data
 	res.Msg = "获取模型列表成功"
 	c.JSON(http.StatusOK, res)
