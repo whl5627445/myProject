@@ -27,5 +27,6 @@ func UserRouter(g *gin.Engine) {
 
 		Models.POST("/service/start", API.StartOMCView)
 		Models.POST("/service/stop", API.StopOMCView)
+		Models.POST("/service/restart", API.RestartOMCView)
 	}
 }
