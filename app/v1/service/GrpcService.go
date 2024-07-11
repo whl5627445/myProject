@@ -270,6 +270,7 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 		result := SetComponentModifierValue(experimentRecord.ModelName, mapAttributesStr)
 		if result {
 			log.Println("重新设置参数-完成。")
+			ModelSave(experimentRecord.ModelName)
 		} else {
 			log.Println("重新设置参数-失败: ", mapAttributesStr)
 		}
