@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 	"time"
+	"yssim-go/grpc/taskManagement"
 
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/config"
@@ -72,7 +73,7 @@ func GetEnvLibrary(packageName, userName, spaceId string) map[string]string {
 	// 获取需要仿真的模型名
 	DB.Where("package_name = ? AND sys_or_user = ? AND userspace_id = ?", packageName, userName, spaceId).First(&p)
 	if p.ID != "" {
-		environmentModelData[p.PackageName] = p.FilePath
+		environmentModelData[p.PackageName] = p.ID
 	}
 
 	// 获取需要加载的用户模型
@@ -83,7 +84,7 @@ func GetEnvLibrary(packageName, userName, spaceId string) map[string]string {
 		l, ok := libraryAndVersions[usedModel.PackageName]
 		// 数据库你存在且FilePath不为空，并且yssim已经加载。
 		if usedModel.ID != "" && ok && l == usedModel.Version && usedModel.FilePath != "" {
-			environmentModelData[usedModel.PackageName] = usedModel.FilePath
+			environmentModelData[usedModel.PackageName] = usedModel.ID
 		}
 	}
 
@@ -93,7 +94,7 @@ func GetEnvLibrary(packageName, userName, spaceId string) map[string]string {
 	for i := 0; i < len(envPackageModel); i++ {
 		packageVersion, ok := libraryAndVersions[envPackageModel[i].PackageName]
 		if ok && packageVersion == envPackageModel[i].Version {
-			environmentModelData[envPackageModel[i].PackageName] = envPackageModel[i].Version
+			environmentModelData[envPackageModel[i].PackageName] = envPackageModel[i].ID
 		}
 	}
 
@@ -103,7 +104,7 @@ func GetEnvLibrary(packageName, userName, spaceId string) map[string]string {
 	for i := 0; i < len(encryptionPackageModel); i++ {
 		packageVersion, ok := libraryAndVersions[encryptionPackageModel[i].PackageName]
 		if ok && packageVersion == encryptionPackageModel[i].Version {
-			environmentModelData[encryptionPackageModel[i].PackageName] = encryptionPackageModel[i].FilePath
+			environmentModelData[encryptionPackageModel[i].PackageName] = encryptionPackageModel[i].ID
 		}
 	}
 	return environmentModelData
@@ -277,15 +278,15 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 
 	}
 	// 构建仿真参数
-	SimulationPraData := map[string]string{
-		"startTime": record.StartTime,
-		"stopTime":  record.StopTime,
-		"method":    record.Method,
-		// "outputFormat": "\"csv\"",  // csv不能使用omc的api读取结果
-		// "numberOfIntervals": "500",
-		"numberOfIntervals": record.NumberOfIntervals,
-		"tolerance":         record.Tolerance,
-	}
+	//SimulationPraData := map[string]string{
+	//	"startTime": record.StartTime,
+	//	"stopTime":  record.StopTime,
+	//	"method":    record.Method,
+	//	// "outputFormat": "\"csv\"",  // csv不能使用omc的api读取结果
+	//	// "numberOfIntervals": "500",
+	//	"numberOfIntervals": record.NumberOfIntervals,
+	//	"tolerance":         record.Tolerance,
+	//}
 
 	// 获取依赖模型和系统库
 	environmentModelData := GetEnvLibrary(packageModel.PackageName, itemMap["username"], itemMap["space_id"])
@@ -300,24 +301,30 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 	record.Percentage = 0
 	config.DB.Save(&record)
 	// 发送仿真请求
-	GrpcBuildModelRequest := &grpcPb.SubmitTaskRequest{
+	GrpcBuildModelRequest := &taskManagement.TaskAssignmentsRequest{
 
-		Uuid:              record.ID,
-		UserSpaceId:       record.UserspaceId,
-		UserName:          record.UserName,
-		SimulatePackageId: record.PackageId,
-		SimulateModelName: record.SimulateModelName,
-		ResultFilePath:    record.SimulateModelResultPath,
-		SimulationPraData: SimulationPraData,
-		EnvModelData:      environmentModelData,
-		SimulateType:      record.SimulateType, // OM DM
+		Uuid:          uuid.New().String(),
+		Application:   "SimulationModeling",
+		ResultAddress: record.SimulateModelResultPath,
+		UserName:      record.UserName,
+		TaskType:      record.SimulateType,
+		FileId:        record.ID,
+		Token:         itemMap["token"],
+
+		//UserSpaceId:       record.UserspaceId,
+		//SimulatePackageId: record.PackageId,
+		//SimulateModelName: record.SimulateModelName,
+		//ResultFilePath:    record.SimulateModelResultPath,
+		//SimulationPraData: SimulationPraData,
+		//EnvModelData:      environmentModelData,
+		//SimulateType:      record.SimulateType, // OM DM
 		// dm才会用到的参数
-		PackageName:     packageModel.PackageName,
-		PackageFilePath: packageModel.FilePath,
+		//PackageName:     packageModel.PackageName,
+		//PackageFilePath: packageModel.FilePath,
 		// 任务类型simulate  translate run_result
-		TaskType: "simulate",
+
 	}
-	_, err = grpcPb.Client.SubmitTask(grpcPb.Ctx, GrpcBuildModelRequest)
+	_, err = taskManagement.TaskClient.Assignments(taskManagement.TaskCtx, GrpcBuildModelRequest)
 	return record.ID, err
 
 }

@@ -100,8 +100,9 @@ func ModelSimulateView(c *gin.Context) {
 		## number_of_intervals: 仿真参数， 间隔设置当中的间隔数。 与间隔参数是计算关系，
 		## method: 仿真参数， 选择求解方法，默认参数是dassl(Openmodelica使用，dymola使用Dassl)。
 	*/
-
+	var res DataType.ResponseData
 	userSpaceId := c.GetHeader("space_id")
+	token := c.GetHeader("Authorization")
 	var item DataType.ModelSimulateData
 	err := c.BindJSON(&item)
 	if err != nil {
@@ -121,12 +122,15 @@ func ModelSimulateView(c *gin.Context) {
 		"interval":            item.Interval,
 		"method":              item.Method,
 		"experiment_id":       item.ExperimentId,
+		"token":               token,
 	}
 	replyId, err := service.GrpcSimulation(itemMap)
 	if err != nil {
 		fmt.Println("调用(GrpcSimulation)出错：", err)
+		res.Err = "仿真出错"
+		c.JSON(http.StatusOK, res)
 	}
-	var res DataType.ResponseData
+
 	res.Msg = "仿真任务正在准备，请等待仿真完成"
 	res.Data = map[string]string{"id": replyId}
 	c.JSON(http.StatusOK, res)
