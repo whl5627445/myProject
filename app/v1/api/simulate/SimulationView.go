@@ -437,7 +437,7 @@ func SimulateResultDeleteView(c *gin.Context) {
 
 	resultRecord.SimulateStatus = "5"
 	config.DB.Save(&resultRecord)
-	service.DeleteSimulateTask(recordId, resultRecord.SimulateType, resultRecord.SimulateModelResultPath)
+	service.DeleteSimulateTask(resultRecord.TaskId, resultRecord.SimulateModelResultPath)
 	config.DB.Delete(&resultRecord)
 	DB.Delete(&DataBaseModel.YssimSnapshots{}, "simulate_result_id = ?", recordId) //删除相关的快照
 	res.Msg = "删除成功"
@@ -488,7 +488,7 @@ func SimulateTerminateView(c *gin.Context) {
 		return
 	}
 
-	if err := service.TerminateSimulateTask(item.RecordId, resultRecord.SimulateType); err != nil {
+	if err := service.TerminateSimulateTask(resultRecord.TaskId); err != nil {
 		res.Err = "终止仿真失败"
 		res.Status = 1
 		c.JSON(http.StatusOK, res)
@@ -677,7 +677,7 @@ func ExperimentDeleteView(c *gin.Context) {
 	for i := 0; i < len(resultRecord); i++ {
 		resultRecord[i].SimulateStatus = "5"
 		config.DB.Save(&resultRecord[i])
-		service.DeleteSimulateTask(resultRecord[i].ID, resultRecord[i].SimulateType, resultRecord[i].SimulateModelResultPath)
+		service.DeleteSimulateTask(resultRecord[i].TaskId, resultRecord[i].SimulateModelResultPath)
 		config.DB.Delete(&resultRecord[i])
 	}
 

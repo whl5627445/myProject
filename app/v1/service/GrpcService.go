@@ -536,13 +536,12 @@ func GrpcRunResult(appPageId string, singleSimulationInputData map[string]float6
 	}
 }
 
-func DeleteSimulateTask(taskID, simulateType, SimulateModelResultPath string) {
+func DeleteSimulateTask(taskID, SimulateModelResultPath string) {
 
-	replyVar, err := GrpcSimulationProcessOperation(taskID, "kill", simulateType)
+	_, err := GrpcSimulationProcessOperation(taskID)
 	if err != nil {
 		log.Println("调用grpc服务(GrpcPyOmcSimulationProcessOperation)出错：：", err)
 	}
-	log.Println(replyVar.Msg)
 
 	err = os.RemoveAll(SimulateModelResultPath)
 	if err != nil {
@@ -552,26 +551,26 @@ func DeleteSimulateTask(taskID, simulateType, SimulateModelResultPath string) {
 
 }
 
-func TerminateSimulateTask(taskID, simulateType string) error {
+func TerminateSimulateTask(taskID string) error {
 
-	replyVar, err := GrpcSimulationProcessOperation(taskID, "kill", simulateType)
+	replyVar, err := GrpcSimulationProcessOperation(taskID)
 	if err != nil {
 		log.Println("调用grpc服务(GrpcPyOmcSimulationProcessOperation)出错：：", err)
 		return err
 	}
 
-	log.Println(replyVar.Msg)
+	log.Println(replyVar.Message)
 	return nil
 }
 
-func GrpcSimulationProcessOperation(uid, operation, simulateType string) (*grpcPb.ProcessOperationReply, error) {
-	PyOmcSimProcessOperationRequest := &grpcPb.ProcessOperationRequest{
-		Uuid:          uid,
-		OperationName: operation,
-		SimulateType:  simulateType,
+func GrpcSimulationProcessOperation(uid string) (*taskManagement.TerminateTaskResponse, error) {
+
+	PyOmcSimProcessOperationRequest := &taskManagement.TerminateTaskRequest{
+		Uuid: uid,
 	}
-	replyTest, err := grpcPb.Client.ProcessOperation(grpcPb.Ctx, PyOmcSimProcessOperationRequest)
+	replyTest, err := taskManagement.TaskClient.TerminateTask(taskManagement.TaskCtx, PyOmcSimProcessOperationRequest)
 	return replyTest, err
+
 }
 
 func GrpcCalibrationCompile(data map[string]string, EnvModelData map[string]string) error {
@@ -615,9 +614,9 @@ func GrpcFittingCalculation(uid string) (*grpcPb.FittingCalculationReply, error)
 }
 
 func DeleteCalculationSimulateTask(taskID string) error {
-	replyVar, err := GrpcSimulationProcessOperation(taskID, "kill", "")
+	replyVar, err := GrpcSimulationProcessOperation(taskID)
 	if err != nil {
-		log.Println(replyVar.Msg)
+		log.Println(replyVar.Message)
 		log.Println("调用grpc服务(GrpcPyOmcSimulationProcessOperation)出错：：", err)
 		return err
 	}

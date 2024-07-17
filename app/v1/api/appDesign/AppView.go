@@ -63,11 +63,11 @@ func MultipleSimulateKillView(c *gin.Context) {
 	var res DataType.ResponseData
 	pageId := c.Query("app_page_id")
 
-	replyVar, err := service.GrpcSimulationProcessOperation(pageId, "kill", "")
+	replyVar, err := service.GrpcSimulationProcessOperation(pageId)
 	if err != nil {
 		log.Println("调用grpc服务(GrpcPyOmcSimulationProcessOperation)出错：：", err)
 	}
-	res.Msg = replyVar.Msg
+	res.Msg = replyVar.Message
 	res.Err = ""
 	c.JSON(http.StatusOK, res)
 
