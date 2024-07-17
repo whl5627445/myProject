@@ -29,6 +29,7 @@ type YssimSimulateRecord struct {
 	Tolerance               string         `gorm:"column:tolerance;default:\"\";type:varchar(32);comment:仿真时的容差"`
 	SimulateStart           bool           `gorm:"column:simulate_start;type:int;comment:仿真任务是否开始"`
 	AnotherName             string         `gorm:"column:another_name;type:varchar(32);comment:仿真记录别名"`
+	TaskId                  string         `gorm:"column:task_id;type:varchar(128);comment:仿真任务唯一标识"`
 	EnvModelData            datatypes.JSON `gorm:"column:env_model_data;TYPE:json;type:json;comment:仿真模型的依赖"`
 	CreatedAt               *time.Time     `gorm:"column:create_time;autoCreateTime;comment:创建时间"`
 	Deleted                 gorm.DeletedAt `gorm:"column:deleted_at;comment:删除时间"`

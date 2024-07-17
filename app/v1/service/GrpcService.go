@@ -299,11 +299,12 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 	record.SimulateStart = true
 	record.EnvModelData = jsonEnvData
 	record.Percentage = 0
+	record.TaskId = uuid.New().String()
 	config.DB.Save(&record)
 	// 发送仿真请求
 	GrpcBuildModelRequest := &taskManagement.TaskAssignmentsRequest{
 
-		Uuid:          uuid.New().String(),
+		Uuid:          record.TaskId,
 		Application:   "SimulationModeling",
 		ResultAddress: record.SimulateModelResultPath,
 		UserName:      record.UserName,
