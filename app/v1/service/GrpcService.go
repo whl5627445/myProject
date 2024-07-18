@@ -8,7 +8,6 @@ import (
 	"os"
 	"strings"
 	"time"
-	"yssim-go/grpc/taskManagement"
 
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/config"
@@ -73,7 +72,7 @@ func GetEnvLibrary(packageName, userName, spaceId string) map[string]string {
 	// 获取需要仿真的模型名
 	DB.Where("package_name = ? AND sys_or_user = ? AND userspace_id = ?", packageName, userName, spaceId).First(&p)
 	if p.ID != "" {
-		environmentModelData[p.PackageName] = p.ID
+		environmentModelData[p.PackageName] = p.FilePath
 	}
 
 	// 获取需要加载的用户模型
@@ -84,7 +83,7 @@ func GetEnvLibrary(packageName, userName, spaceId string) map[string]string {
 		l, ok := libraryAndVersions[usedModel.PackageName]
 		// 数据库你存在且FilePath不为空，并且yssim已经加载。
 		if usedModel.ID != "" && ok && l == usedModel.Version && usedModel.FilePath != "" {
-			environmentModelData[usedModel.PackageName] = usedModel.ID
+			environmentModelData[usedModel.PackageName] = usedModel.FilePath
 		}
 	}
 
@@ -94,7 +93,7 @@ func GetEnvLibrary(packageName, userName, spaceId string) map[string]string {
 	for i := 0; i < len(envPackageModel); i++ {
 		packageVersion, ok := libraryAndVersions[envPackageModel[i].PackageName]
 		if ok && packageVersion == envPackageModel[i].Version {
-			environmentModelData[envPackageModel[i].PackageName] = envPackageModel[i].ID
+			environmentModelData[envPackageModel[i].PackageName] = envPackageModel[i].Version
 		}
 	}
 
@@ -104,7 +103,7 @@ func GetEnvLibrary(packageName, userName, spaceId string) map[string]string {
 	for i := 0; i < len(encryptionPackageModel); i++ {
 		packageVersion, ok := libraryAndVersions[encryptionPackageModel[i].PackageName]
 		if ok && packageVersion == encryptionPackageModel[i].Version {
-			environmentModelData[encryptionPackageModel[i].PackageName] = encryptionPackageModel[i].ID
+			environmentModelData[encryptionPackageModel[i].PackageName] = encryptionPackageModel[i].FilePath
 		}
 	}
 	return environmentModelData
@@ -278,15 +277,15 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 
 	}
 	// 构建仿真参数
-	//SimulationPraData := map[string]string{
-	//	"startTime": record.StartTime,
-	//	"stopTime":  record.StopTime,
-	//	"method":    record.Method,
-	//	// "outputFormat": "\"csv\"",  // csv不能使用omc的api读取结果
-	//	// "numberOfIntervals": "500",
-	//	"numberOfIntervals": record.NumberOfIntervals,
-	//	"tolerance":         record.Tolerance,
-	//}
+	SimulationPraData := map[string]string{
+		"startTime": record.StartTime,
+		"stopTime":  record.StopTime,
+		"method":    record.Method,
+		// "outputFormat": "\"csv\"",  // csv不能使用omc的api读取结果
+		// "numberOfIntervals": "500",
+		"numberOfIntervals": record.NumberOfIntervals,
+		"tolerance":         record.Tolerance,
+	}
 
 	// 获取依赖模型和系统库
 	environmentModelData := GetEnvLibrary(packageModel.PackageName, itemMap["username"], itemMap["space_id"])
@@ -299,33 +298,26 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 	record.SimulateStart = true
 	record.EnvModelData = jsonEnvData
 	record.Percentage = 0
-	record.TaskId = uuid.New().String()
 	config.DB.Save(&record)
 	// 发送仿真请求
-	GrpcBuildModelRequest := &taskManagement.TaskAssignmentsRequest{
+	GrpcBuildModelRequest := &grpcPb.SubmitTaskRequest{
 
-		Uuid:          record.TaskId,
-		Application:   "SimulationModeling",
-		ResultAddress: record.SimulateModelResultPath,
-		UserName:      record.UserName,
-		TaskType:      record.SimulateType,
-		FileId:        record.ID,
-		Token:         itemMap["token"],
-
-		//UserSpaceId:       record.UserspaceId,
-		//SimulatePackageId: record.PackageId,
-		//SimulateModelName: record.SimulateModelName,
-		//ResultFilePath:    record.SimulateModelResultPath,
-		//SimulationPraData: SimulationPraData,
-		//EnvModelData:      environmentModelData,
-		//SimulateType:      record.SimulateType, // OM DM
+		Uuid:              record.ID,
+		UserSpaceId:       record.UserspaceId,
+		UserName:          record.UserName,
+		SimulatePackageId: record.PackageId,
+		SimulateModelName: record.SimulateModelName,
+		ResultFilePath:    record.SimulateModelResultPath,
+		SimulationPraData: SimulationPraData,
+		EnvModelData:      environmentModelData,
+		SimulateType:      record.SimulateType, // OM DM
 		// dm才会用到的参数
-		//PackageName:     packageModel.PackageName,
-		//PackageFilePath: packageModel.FilePath,
+		PackageName:     packageModel.PackageName,
+		PackageFilePath: packageModel.FilePath,
 		// 任务类型simulate  translate run_result
-
+		TaskType: "simulate",
 	}
-	_, err = taskManagement.TaskClient.Assignments(taskManagement.TaskCtx, GrpcBuildModelRequest)
+	_, err = grpcPb.Client.SubmitTask(grpcPb.Ctx, GrpcBuildModelRequest)
 	return record.ID, err
 
 }
@@ -536,12 +528,13 @@ func GrpcRunResult(appPageId string, singleSimulationInputData map[string]float6
 	}
 }
 
-func DeleteSimulateTask(taskID, SimulateModelResultPath string) {
+func DeleteSimulateTask(taskID, simulateType, SimulateModelResultPath string) {
 
-	_, err := GrpcSimulationProcessOperation(taskID)
+	replyVar, err := GrpcSimulationProcessOperation(taskID, "kill", simulateType)
 	if err != nil {
 		log.Println("调用grpc服务(GrpcPyOmcSimulationProcessOperation)出错：：", err)
 	}
+	log.Println(replyVar.Msg)
 
 	err = os.RemoveAll(SimulateModelResultPath)
 	if err != nil {
@@ -551,26 +544,26 @@ func DeleteSimulateTask(taskID, SimulateModelResultPath string) {
 
 }
 
-func TerminateSimulateTask(taskID string) error {
+func TerminateSimulateTask(taskID, simulateType string) error {
 
-	replyVar, err := GrpcSimulationProcessOperation(taskID)
+	replyVar, err := GrpcSimulationProcessOperation(taskID, "kill", simulateType)
 	if err != nil {
 		log.Println("调用grpc服务(GrpcPyOmcSimulationProcessOperation)出错：：", err)
 		return err
 	}
 
-	log.Println(replyVar.Message)
+	log.Println(replyVar.Msg)
 	return nil
 }
 
-func GrpcSimulationProcessOperation(uid string) (*taskManagement.TerminateTaskResponse, error) {
-
-	PyOmcSimProcessOperationRequest := &taskManagement.TerminateTaskRequest{
-		Uuid: uid,
+func GrpcSimulationProcessOperation(uid, operation, simulateType string) (*grpcPb.ProcessOperationReply, error) {
+	PyOmcSimProcessOperationRequest := &grpcPb.ProcessOperationRequest{
+		Uuid:          uid,
+		OperationName: operation,
+		SimulateType:  simulateType,
 	}
-	replyTest, err := taskManagement.TaskClient.TerminateTask(taskManagement.TaskCtx, PyOmcSimProcessOperationRequest)
+	replyTest, err := grpcPb.Client.ProcessOperation(grpcPb.Ctx, PyOmcSimProcessOperationRequest)
 	return replyTest, err
-
 }
 
 func GrpcCalibrationCompile(data map[string]string, EnvModelData map[string]string) error {
@@ -614,9 +607,9 @@ func GrpcFittingCalculation(uid string) (*grpcPb.FittingCalculationReply, error)
 }
 
 func DeleteCalculationSimulateTask(taskID string) error {
-	replyVar, err := GrpcSimulationProcessOperation(taskID)
+	replyVar, err := GrpcSimulationProcessOperation(taskID, "kill", "")
 	if err != nil {
-		log.Println(replyVar.Message)
+		log.Println(replyVar.Msg)
 		log.Println("调用grpc服务(GrpcPyOmcSimulationProcessOperation)出错：：", err)
 		return err
 	}

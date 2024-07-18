@@ -100,9 +100,8 @@ func ModelSimulateView(c *gin.Context) {
 		## number_of_intervals: 仿真参数， 间隔设置当中的间隔数。 与间隔参数是计算关系，
 		## method: 仿真参数， 选择求解方法，默认参数是dassl(Openmodelica使用，dymola使用Dassl)。
 	*/
-	var res DataType.ResponseData
+
 	userSpaceId := c.GetHeader("space_id")
-	token := c.GetHeader("Authorization")
 	var item DataType.ModelSimulateData
 	err := c.BindJSON(&item)
 	if err != nil {
@@ -122,15 +121,12 @@ func ModelSimulateView(c *gin.Context) {
 		"interval":            item.Interval,
 		"method":              item.Method,
 		"experiment_id":       item.ExperimentId,
-		"token":               token,
 	}
 	replyId, err := service.GrpcSimulation(itemMap)
 	if err != nil {
 		fmt.Println("调用(GrpcSimulation)出错：", err)
-		res.Err = "仿真出错"
-		c.JSON(http.StatusOK, res)
 	}
-
+	var res DataType.ResponseData
 	res.Msg = "仿真任务正在准备，请等待仿真完成"
 	res.Data = map[string]string{"id": replyId}
 	c.JSON(http.StatusOK, res)
@@ -437,7 +433,7 @@ func SimulateResultDeleteView(c *gin.Context) {
 
 	resultRecord.SimulateStatus = "5"
 	config.DB.Save(&resultRecord)
-	service.DeleteSimulateTask(resultRecord.TaskId, resultRecord.SimulateModelResultPath)
+	service.DeleteSimulateTask(recordId, resultRecord.SimulateType, resultRecord.SimulateModelResultPath)
 	config.DB.Delete(&resultRecord)
 	DB.Delete(&DataBaseModel.YssimSnapshots{}, "simulate_result_id = ?", recordId) //删除相关的快照
 	res.Msg = "删除成功"
@@ -488,7 +484,7 @@ func SimulateTerminateView(c *gin.Context) {
 		return
 	}
 
-	if err := service.TerminateSimulateTask(resultRecord.TaskId); err != nil {
+	if err := service.TerminateSimulateTask(item.RecordId, resultRecord.SimulateType); err != nil {
 		res.Err = "终止仿真失败"
 		res.Status = 1
 		c.JSON(http.StatusOK, res)
@@ -677,7 +673,7 @@ func ExperimentDeleteView(c *gin.Context) {
 	for i := 0; i < len(resultRecord); i++ {
 		resultRecord[i].SimulateStatus = "5"
 		config.DB.Save(&resultRecord[i])
-		service.DeleteSimulateTask(resultRecord[i].TaskId, resultRecord[i].SimulateModelResultPath)
+		service.DeleteSimulateTask(resultRecord[i].ID, resultRecord[i].SimulateType, resultRecord[i].SimulateModelResultPath)
 		config.DB.Delete(&resultRecord[i])
 	}
 
