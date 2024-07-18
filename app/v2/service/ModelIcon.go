@@ -31,23 +31,28 @@ func GetIcon(modelName, componentName string, icon bool, displayAllConnector boo
 	}
 
 	graphics := map[string]any{}
-	iconInstance := getModelInstance(modelName)
-	iconInstance.DataPreprocessing()
-
-	if (modelType != "connector" && modelType != "expandable connector") || (icon && (modelType == "connector" || modelType == "expandable connector")) {
+	if icon {
 		graphics = getIconAnnotationGraphics(modelName, modelType, componentName)
 	} else {
-		graphics = getDiagramAnnotationGraphics(modelName, modelType)
-		if graphics != nil {
-			graphics["direction"] = iconInstance.Prefixes.Direction
-			graphics["restriction"] = iconInstance.Restriction
-			graphics["type"] = getConnectorType(componentName, iconInstance)
-			graphics["visibleList"] = GetConnectionOption(componentName, iconInstance, nil)
+		if modelType == "connector" || modelType == "expandable connector" {
+			graphics = getDiagramAnnotationGraphics(modelName, modelType)
+			if graphics != nil {
+				iconInstance := getModelInstance(modelName)
+				iconInstance.DataPreprocessing()
+				graphics["direction"] = iconInstance.Prefixes.Direction
+				graphics["restriction"] = iconInstance.Restriction
+				graphics["type"] = getConnectorType(componentName, iconInstance)
+				graphics["visibleList"] = GetConnectionOption(componentName, iconInstance, nil)
+				graphics["connectors"] = getElementsConnectorList(iconInstance, componentName, displayAllConnector)
+			}
+		} else {
+			graphics = getIconAnnotationGraphics(modelName, modelType, componentName)
+			if modelType != "model" && graphics != nil {
+				iconInstance := getModelInstance(modelName)
+				iconInstance.DataPreprocessing()
+				graphics["connectors"] = getElementsConnectorList(iconInstance, componentName, displayAllConnector)
+			}
 		}
-	}
-
-	if graphics != nil {
-		graphics["connectors"] = getElementsConnectorList(iconInstance, componentName, displayAllConnector)
 	}
 
 	data = map[string]any{
@@ -142,6 +147,7 @@ func getIconAnnotationGraphics(modelName, modelType, parentName string) map[stri
 	data["type"] = ""
 	data["visible"] = true
 	data["rotation"] = 0
+	data["connectors"] = inputOutputs
 	data["subShapes"] = subShapes
 	data["extents"] = [][]float64{
 		{coordinateSystem.Extent[0][0] * coordinateSystem.InitialScale, coordinateSystem.Extent[0][1] * coordinateSystem.InitialScale},
