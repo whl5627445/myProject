@@ -1,8 +1,11 @@
 package serviceV2
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"go.mongodb.org/mongo-driver/bson"
 	"log"
 	"os"
 	"strings"
@@ -17,15 +20,13 @@ import (
 	"github.com/google/uuid"
 )
 
-type modelVarData struct {
-	FinalAttributesStr map[string]any `json:"final_attributes_str"`
-}
 type OutputData struct {
 	Name string `json:"data"`
 	Unit string `json:"unit"`
 }
 
 var DB = config.DB
+var MB = config.MB
 
 // GetEnvLibrary 获取已经加载的依赖包和系统库
 func GetEnvLibrary(packageName, userName, spaceId string) map[string]string {
@@ -135,6 +136,17 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 		simulateRecord.NumberOfIntervals = itemMap["number_of_intervals"]
 		simulateRecord.Tolerance = itemMap["tolerance"]
 		simulateRecord.SimulateType = itemMap["simulate_type"]
+
+		//删除mongo中的记录
+		if simulateRecord.TaskId != "" {
+			coll := MB.Database("SimulationTasks").Collection("task_model")
+			filter := bson.D{{"_id", simulateRecord.TaskId}}
+			_, err = coll.DeleteOne(context.TODO(), filter)
+			if err != nil {
+				fmt.Println(err)
+			}
+		}
+
 		config.DB.Save(&simulateRecord)
 		record = simulateRecord
 	}

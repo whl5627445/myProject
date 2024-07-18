@@ -1,7 +1,9 @@
 package simulate
 
 import (
+	"context"
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson"
 	"net/http"
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/DataType"
@@ -12,6 +14,7 @@ import (
 )
 
 var DB = config.DB
+var MB = config.MB
 var userName = config.USERNAME
 
 func ModelSimulateView(c *gin.Context) {
@@ -64,7 +67,7 @@ func ModelSimulateView(c *gin.Context) {
 
 func SimulateResultDeleteView(c *gin.Context) {
 	/*
-	   # 2022.11.2 徐庆达修改（新接口）：删除仿真结果在数据库中的记录
+	   # 徐庆达修改（新接口）：删除仿真结果在数据库中的记录
 	*/
 	username := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
@@ -78,6 +81,17 @@ func SimulateResultDeleteView(c *gin.Context) {
 	serviceV2.DeleteSimulateTask(resultRecord.TaskId, resultRecord.SimulateModelResultPath)
 	config.DB.Delete(&resultRecord)
 	DB.Delete(&DataBaseModel.YssimSnapshots{}, "simulate_result_id = ?", recordId) //删除相关的快照
+
+	//删除mongo中的记录
+	if resultRecord.TaskId != "" {
+		coll := MB.Database("SimulationTasks").Collection("task_model")
+		filter := bson.D{{"_id", resultRecord.TaskId}}
+		_, err := coll.DeleteOne(context.TODO(), filter)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+
 	res.Msg = "删除成功"
 	c.JSON(http.StatusOK, res)
 }
@@ -152,6 +166,15 @@ func ExperimentDeleteView(c *gin.Context) {
 		config.DB.Save(&resultRecord[i])
 		serviceV2.DeleteSimulateTask(resultRecord[i].TaskId, resultRecord[i].SimulateModelResultPath)
 		config.DB.Delete(&resultRecord[i])
+		//删除mongo中的记录
+		if resultRecord[i].TaskId != "" {
+			coll := MB.Database("SimulationTasks").Collection("task_model")
+			filter := bson.D{{"_id", resultRecord[i].TaskId}}
+			_, err = coll.DeleteOne(context.TODO(), filter)
+			if err != nil {
+				fmt.Println(err)
+			}
+		}
 	}
 
 	res.Msg = "删除成功"
