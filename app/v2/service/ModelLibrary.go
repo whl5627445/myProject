@@ -64,3 +64,19 @@ func GetAllLoadableModel(packageInformation map[string]map[string]string, packag
 
 	return data
 }
+
+func GetLibraryAndVersions() map[string]string {
+	// 获取库和版本
+	data := map[string]string{}
+	loadedLibraries := omc.OMC.GetPackages()
+	for _, library := range loadedLibraries {
+		libraryVersion := omc.OMC.GetClassInformation(library)[14].(string)
+		data[library] = libraryVersion
+	}
+	return data
+}
+
+func GetPackageUses(packageName string) [][]string {
+	// 获取包用到的包
+	return omc.OMC.GetUses(packageName)
+}
