@@ -52,8 +52,8 @@ func SimulateRouter(g *gin.Engine) {
 	{
 		ModelsV2.POST("/simulate", APIv2.ModelSimulateView)
 		ModelsV2.GET("/record/delete", APIv2.SimulateResultDeleteView)
-		Models.POST("/record/terminate", APIv2.SimulateTerminateView)
-		Models.POST("/experiment/delete", APIv2.ExperimentDeleteView)
+		ModelsV2.POST("/record/terminate", APIv2.SimulateTerminateView)
+		ModelsV2.POST("/experiment/delete", APIv2.ExperimentDeleteView)
 
 	}
 }
