@@ -1,0 +1,45 @@
+[
+  {
+    "id": "111",
+    "userSpaceId": "self.request.userSpaceId",
+    "userName": "self.request.userName",
+    "simulateModelName": "self.request.simulateModelName",
+    "resultFilePath": "self.request.resultFilePath",
+    "simulationPraData": {
+      "11": "11"
+    },
+    "envModelData": {
+      "11": "11"
+    },
+    "simulateType": "self.request.simulateType",
+    "packageName": "self.request.packageName",
+    "packageFilePath": "self.request.packageFilePath",
+    "taskType": "self.request.taskType",
+    "pageId": "self.request.pageId",
+    "inputValData": {
+      "name1": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "name2": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ]
+    },
+    "outputValNames": [
+      "1",
+      "2",
+      "3"
+    ]
+  }
+]

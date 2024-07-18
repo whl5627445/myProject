@@ -1,0 +1,6 @@
+import redis
+
+R = redis.Redis(host="redis",
+                port=6379,
+                db=0,
+                password="")

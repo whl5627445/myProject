@@ -1,0 +1,114 @@
+syntax = "proto3";
+option go_package = "./grpcPb" ;
+service Greeter {
+  rpc GetProcessStatus(GetProcessStatusRequest) returns (GetProcessStatusReply) {}
+//  rpc GetAllProcessNumber(GetAllProcessNumberRequest) returns (GetAllProcessNumberReply) {}
+  rpc GetResult(GetResultRequest) returns (GetResultReply) {}
+  rpc ProcessOperation(ProcessOperationRequest) returns (ProcessOperationReply) {}
+  rpc ReadSimulationResult(ReadSimulationResultRequest) returns (ReadSimulationResultReply) {}
+  rpc CheckVarExist(CheckVarExistRequest) returns (CheckVarExistReply) {}
+  rpc SubmitTask(SubmitTaskRequest) returns (SubmitTaskReply) {}
+//  rpc SubmitTask(SubmitTaskRequest) returns (SubmitTaskReply) {}
+  rpc FittingCalculation(FittingCalculationRequest) returns (FittingCalculationReply) {}
+}
+message FittingCalculationRequest{
+  string uuid = 1;
+}
+
+message FittingCalculationReply{
+  repeated string coefficient=1;
+  string score = 2;
+  int32  status = 3;
+  string err = 4;
+}
+
+message GetProcessStatusRequest{
+  string uuid = 1;
+}
+message GetProcessStatusReply{
+  string log = 1;
+  int32  exception = 2;
+  int32 progress = 3;
+  string processStartTime = 4;
+  string state = 5;
+  string processRunTime = 6;
+  string resPath = 7;
+}
+
+message GetAllProcessNumberRequest{}
+message GetAllProcessNumberReply{
+  int32 totalTasks =1;
+  int32 numOfRunningProcess =2;
+  int32 numOfPendingProcess =3;
+}
+
+message GetResultRequest{
+    string path = 1;
+    string variable =2;
+}
+message GetResultReply{
+    string log = 1;
+    repeated double data=2;
+
+}
+
+message ProcessOperationRequest{
+  string uuid = 1;
+  string operationName = 2;
+  string simulate_type = 3;
+}
+message ProcessOperationReply{
+  string msg =1;
+}
+
+message ReadSimulationResultRequest{
+  repeated string Vars=1;
+  string  resultPath = 2;
+
+}
+message ReadSimulationResultReply{
+  bool ok = 1;
+  message ele {
+    repeated double row=3;
+  }
+  repeated ele data=2;
+}
+
+
+message CheckVarExistRequest{
+  repeated string Names=1;
+  string Path=2;
+}
+message CheckVarExistReply{
+  map<string, bool> Res = 2;
+}
+
+message SubmitTaskRequest{
+  string uuid = 1;
+  string userSpaceId = 2;
+  string userName = 3;
+  string simulatePackageId = 16;
+  string simulateModelName = 4;
+  string resultFilePath = 5;
+  map<string, string> simulationPraData = 6;
+  map<string, string> envModelData = 7;
+  string simulateType = 8;
+  // 下面的这些参数只在dy仿真用到
+  string packageName = 9;  //用于创建文件夹
+  string packageFilePath = 10;  //用户判断是不是系统模型，""表示系统模型
+  // 任务类型
+  string  taskType = 11;
+  // 多轮仿真用到的参数
+  string singleOrMultiple =18;
+  map<string, inputObj> inputValData = 12;
+  message inputObj{
+    repeated double inputObjList = 14;
+  }
+  repeated string outputValNames=13;
+  string pageId = 15;
+  string mulResultPath = 17;
+}
+message SubmitTaskReply{
+  bool ok = 1;
+  string msg = 2;
+}
