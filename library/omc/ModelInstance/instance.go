@@ -437,8 +437,15 @@ func (e *elements) GetElementsParameterValue(parameterMap map[string]*Parameter,
 			}
 		}
 	}
-	if e.Prefixes.Variability == "parameter" || e.Annotation.Dialog.ShowStartAttribute {
+
+	_, hasStart := e.Modifiers["start"]
+	if !e.Prefixes.Final && !e.Annotation.HideResult &&
+		((e.Prefixes.Variability == "parameter" && e.Prefixes.Public == nil) || hasStart || e.Annotation.Dialog.ShowStartAttribute) {
+
 		value := ""
+		if hasStart {
+			value = e.Modifiers["start"].(string)
+		}
 		if _, ok := e.Modifiers["value"]; ok {
 			value = e.Modifiers["value"].(string)
 		}
@@ -457,7 +464,7 @@ func (e *elements) GetElementsParameterValue(parameterMap map[string]*Parameter,
 		}
 		parameterMap[e.Name].Comment = e.Comment
 		parameterMap[e.Name].ExtendName = parentName
-		e.Annotation.Dialog.getParameterDialog(parameterMap[e.Name])
+		e.Annotation.Dialog.getParameterDialog(parameterMap[e.Name], hasStart, e.Prefixes.Variability)
 		e.Annotation.getParameterChoices(parameterMap[e.Name])
 		if e.Type != nil && (!e.Type.BasicType || e.Type.Restriction == "type") {
 			if len(e.Type.Elements) > 0 && e.Type.Elements[0].BaseClass != nil && e.Type.Elements[0].BaseClass.Name == "enumeration" {
@@ -477,17 +484,76 @@ func (e *elements) GetElementsParameterValue(parameterMap map[string]*Parameter,
 				parameterMap[e.Name].Type = "CheckBox"
 			}
 		}
+
+		if parameterMap[e.Name].Value == nil {
+			parameterMap[e.Name].Value = ""
+		}
+
+		if _, ok := parameterMap[e.Name].Value.(map[string]interface{}); ok {
+			if value, ok := parameterMap[e.Name].Value.(map[string]interface{})["start"]; ok {
+				parameterMap[e.Name].Value.(map[string]interface{})["value"] = value
+				delete(parameterMap[e.Name].Value.(map[string]interface{}), "start")
+			}
+			if value, ok := parameterMap[e.Name].Value.(map[string]interface{})["fixed"]; ok {
+				parameterMap[e.Name].Value.(map[string]interface{})["isFixed"] = value
+				delete(parameterMap[e.Name].Value.(map[string]interface{}), "fixed")
+			}
+		}
+
 		*parameterList = append(*parameterList, parameterMap[e.Name])
-	}
-	n += 1
-	if e.Type != nil {
-		for _, element := range e.Type.Elements {
-			element.GetElementsParameterValue(parameterMap, parameterList, true, e.Type.Name, n)
+
+		n += 1
+		if e.Type != nil {
+			for _, element := range e.Type.Elements {
+				if modifierInfo, ok := e.Modifiers[element.Name]; ok {
+					if isFinal, ok := modifierInfo.(map[string]interface{}); ok {
+						if final, ok := isFinal["final"].(bool); ok && final {
+							continue
+						}
+					}
+				}
+				element.GetElementsParameterValue(parameterMap, parameterList, true, e.Type.Name, n)
+			}
+		}
+		if e.BaseClass != nil {
+			for _, element := range e.BaseClass.Elements {
+				if modifierInfo, ok := e.Modifiers[element.Name]; ok {
+					if isFinal, ok := modifierInfo.(map[string]interface{}); ok {
+						if final, ok := isFinal["final"].(bool); ok && final {
+							continue
+						}
+					}
+				}
+				element.GetElementsParameterValue(parameterMap, parameterList, true, e.BaseClass.Name, n)
+			}
 		}
 	}
-	if e.BaseClass != nil {
-		for _, element := range e.BaseClass.Elements {
-			element.GetElementsParameterValue(parameterMap, parameterList, true, e.BaseClass.Name, n)
+
+	if n == 0 || e.Kind == "extends" {
+		n += 1
+		if e.Type != nil {
+			for _, element := range e.Type.Elements {
+				if modifierInfo, ok := e.Modifiers[element.Name]; ok {
+					if isFinal, ok := modifierInfo.(map[string]interface{}); ok {
+						if final, ok := isFinal["final"].(bool); ok && final {
+							continue
+						}
+					}
+				}
+				element.GetElementsParameterValue(parameterMap, parameterList, true, e.Type.Name, n)
+			}
+		}
+		if e.BaseClass != nil {
+			for _, element := range e.BaseClass.Elements {
+				if modifierInfo, ok := e.Modifiers[element.Name]; ok {
+					if isFinal, ok := modifierInfo.(map[string]interface{}); ok {
+						if final, ok := isFinal["final"].(bool); ok && final {
+							continue
+						}
+					}
+				}
+				element.GetElementsParameterValue(parameterMap, parameterList, true, e.BaseClass.Name, n)
+			}
 		}
 	}
 }
@@ -541,7 +607,7 @@ func (e *elements) getParameterUnit() map[string]any {
 }
 
 // 获取参数的dialog数据， 包括分组，tab页，是否显示开始属性以及部分专属处理
-func (d *dialog) getParameterDialog(parameter *Parameter) {
+func (d *dialog) getParameterDialog(parameter *Parameter, hasStart bool, variability string) {
 	parameter.Tab = "General"
 	parameter.Group = "Parameters"
 	if d.Tab != "" {
@@ -550,7 +616,7 @@ func (d *dialog) getParameterDialog(parameter *Parameter) {
 	if d.Group != "" {
 		parameter.Group = d.Group
 	}
-	if d.ShowStartAttribute {
+	if d.ShowStartAttribute || (hasStart && variability != "parameter") {
 		parameter.Group = "Initialization"
 		parameter.Type = "checkWrite"
 		parameter.Name = parameter.Name + ".start"
