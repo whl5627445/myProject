@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/nacos-group/nacos-sdk-go/common/logger"
 	"google.golang.org/grpc/grpclog"
 	"yssim-go/config"
 
@@ -18,6 +19,8 @@ var clientConfig = constant.ClientConfig{
 	NamespaceId:         "public", // 如果需要支持多namespace，我们可以场景多个client,它们有不同的NamespaceId。当namespace是public时，此处填空字符串。
 	TimeoutMs:           5000,
 	NotLoadCacheAtStart: true,
+	AppendToStdout:      true,
+	LogSampling:         &logger.SamplingConfig{Initial: 10, Thereafter: 3600 * 12, Tick: time.Second},
 }
 var serverConfigs = getServerConfigs()
 
