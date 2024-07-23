@@ -2,6 +2,7 @@ package stringOperation
 
 import (
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -34,4 +35,10 @@ func GetDecimalStrPrecision(decimalStr string) int {
 		return 0
 	}
 	return len(parts[1])
+}
+
+// 判断字符串是否为float
+func IsFloat(str string) bool {
+	_, err := strconv.ParseFloat(str, 64)
+	return err == nil
 }
