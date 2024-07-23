@@ -2,7 +2,6 @@ package serviceV2
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
@@ -12,12 +11,10 @@ import (
 	"time"
 	"yssim-go/grpc/taskManagement"
 
-	"yssim-go/app/DataBaseModel"
-	"yssim-go/config"
-	"yssim-go/library/mapProcessing"
-
 	"github.com/bytedance/sonic"
 	"github.com/google/uuid"
+	"yssim-go/app/DataBaseModel"
+	"yssim-go/config"
 )
 
 type OutputData struct {
@@ -149,24 +146,6 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 
 		config.DB.Save(&simulateRecord)
 		record = simulateRecord
-	}
-
-	// 将实验参数写入模型
-	if packageModel.SysUser != "sys" {
-		var componentParams []map[string]any
-		if err = json.Unmarshal([]byte(experimentRecord.ModelVarData), &componentParams); err != nil {
-			log.Println("json to list filed!")
-		}
-		mapAttributesStr := mapProcessing.ComponentParamsToMap(componentParams)
-
-		result := SetComponentModifierValue(experimentRecord.ModelName, mapAttributesStr)
-		if result {
-			log.Println("重新设置参数-完成。")
-			ModelSave(experimentRecord.ModelName)
-		} else {
-			log.Println("重新设置参数-失败: ", mapAttributesStr)
-		}
-
 	}
 
 	// 获取依赖模型和系统库
