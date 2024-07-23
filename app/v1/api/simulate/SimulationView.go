@@ -593,7 +593,7 @@ func ExperimentCreateView(c *gin.Context) {
 	userSpaceId := c.GetHeader("space_id")
 	var models DataBaseModel.YssimModels
 	err = DB.Where("id = ?", item.PackageId).First(&models).Error
-	if models.UserSpaceId == "0" && models.SysUser == "sys" || (models.Encryption == true) {
+	if models.Encryption {
 		res.Err = "该模型不支持创建实验"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
