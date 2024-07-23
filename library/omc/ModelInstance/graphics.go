@@ -178,7 +178,7 @@ func (e *elements) getModelGraphicsParameters(varName string) string {
 				unitStr = uMap["value"].(string)
 			}
 		}
-		if strings.Contains(value, ".") && value != varName {
+		if strings.Contains(value, ".") && value != varName && !stringOperation.IsFloat(value) {
 			strList := strings.Split(value, ".")
 			value = strList[len(strList)-1]
 		}
