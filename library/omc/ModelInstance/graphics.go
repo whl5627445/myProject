@@ -88,6 +88,7 @@ func getText(data []any, graphics map[string]any, modelElements *elements) map[s
 	graphics["fillPattern"] = data[6]                                   // 填充样式
 	graphics["thickness"] = data[7]                                     // 线的粗细
 	graphics["extentsPoints"] = data[8]                                 // 范围坐标
+	graphics["varName"] = modelElements.getTextStringVarName(data[9])   // 对应的参数
 	graphics["textString"] = modelElements.getTextString(data[9])       // 文本文字
 	graphics["fontSize"] = data[10]                                     // 字体大小
 	graphics["textColor"] = data[11]                                    // 文本颜色
@@ -96,6 +97,30 @@ func getText(data []any, graphics map[string]any, modelElements *elements) map[s
 	graphics["horizontalAlignment"] = data[14].(map[string]any)["name"] // 水平对齐
 	graphics["type"] = "Text"                                           // 类型
 	return graphics
+}
+
+// getTextStringVarName 获取Text类型图形数据中的文字字符串对应的参数名称
+func (e *elements) getTextStringVarName(textData any) string {
+	if _, ok := textData.(string); !ok {
+		return ""
+	}
+	originalVarName := ""
+	if e == nil {
+		return originalVarName
+	}
+
+	textList := stringOperation.PluralSplit(textData.(string), []string{"/", ",", "\t", "\n", "\r", " "})
+	for _, t := range textList {
+		pSignIndex := strings.Index(t, "%")
+		if pSignIndex != -1 {
+			varName := t[pSignIndex+1:]
+			if varName != "name" {
+				varName = strings.TrimSuffix(varName, "%")
+				originalVarName = varName
+			}
+		}
+	}
+	return originalVarName
 }
 
 // getTextString 获取Text类型图形数据中的文字字符串内容， 有可能包含有组件参数需要获取对应的值
