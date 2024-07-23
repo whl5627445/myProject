@@ -297,10 +297,10 @@ func SimulateResultListView(c *gin.Context) {
 	resData = make(map[string]any)
 	var dataList []map[string]any
 	if modelName != "" {
-		DB.Limit(10).Where("username = ? AND simulate_model_name = ? AND userspace_id = ? AND simulate_status = ?  AND package_id = ?", username, modelName, userSpaceId, "4", packageId).Order("create_time desc").Find(&recordList)
+		DB.Limit(10).Where("username = ? AND simulate_model_name = ? AND userspace_id = ? AND simulate_status = ?  AND package_id = ?", username, modelName, userSpaceId, "4", packageId).Order("simulate_start_time desc").Find(&recordList)
 	} else {
 		DB.Where("username = ? AND userspace_id = ?", username, userSpaceId).Find(&recordList).Count(&totle)
-		DB.Limit(10).Offset((pageNumInt-1)*10).Where("username = ? AND userspace_id = ?", username, userSpaceId).Order("create_time desc").Find(&recordList)
+		DB.Limit(10).Offset((pageNumInt-1)*10).Where("username = ? AND userspace_id = ?", username, userSpaceId).Order("simulate_start_time desc").Find(&recordList)
 	}
 	pageCount := math.Ceil(float64(totle) / 10) //总页数
 	for i := 0; i < len(recordList); i++ {
