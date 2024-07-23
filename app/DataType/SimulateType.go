@@ -86,6 +86,11 @@ type ExperimentCompareData struct {
 	ExperimentIdList []string `json:"experiment_id_list" binding:"required"`
 }
 
+type SimulateRecordCompareData struct {
+	PackageId    string   `json:"package_id" binding:"required"`
+	RecordIdList []string `json:"record_id_list" binding:"required"`
+}
+
 type SnapshotCreatData struct {
 	SnapshotName      string         `json:"snapshot_name" binding:"required"`
 	ModelName         string         `json:"model_name" binding:"required"`
