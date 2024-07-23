@@ -271,11 +271,13 @@ func iconSubShapes(cData []any, modelName string) []map[string]any {
 			data["thickness"] = thickness
 			data["fillPattern"] = map[string]any{"name": drawingDataList[6]}
 			data["extentsPoints"] = twoDimensionalProcessing(drawingDataList[8].([]any))
+			data["varName"] = ""
 			typeOriginalTextString, ok := drawingDataList[9].([]any)
 			if ok {
 				data["textString"] = typeOriginalTextString[0]
 			} else {
 				originalTextString := drawingDataList[9].(string)
+				varName := ""
 				data["textType"] = "var"
 				if strings.Contains(originalTextString, "%") {
 					data["textType"] = "text"
@@ -284,7 +286,7 @@ func iconSubShapes(cData []any, modelName string) []map[string]any {
 				for _, t := range textList {
 					pSignIndex := strings.Index(t, "%")
 					if pSignIndex != -1 {
-						varName := t[pSignIndex+1:]
+						varName = t[pSignIndex+1:]
 						varValue := ""
 						Unit := ""
 						if varName != "name" {
@@ -307,6 +309,7 @@ func iconSubShapes(cData []any, modelName string) []map[string]any {
 						}
 					}
 				}
+				data["varName"] = varName
 				data["textString"] = originalTextString
 			}
 			fontSize, _ := strconv.ParseFloat(drawingDataList[10].(string), 64)
