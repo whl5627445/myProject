@@ -33,7 +33,7 @@ func GetEnvLibrary(packageName, userName, spaceId string) map[string]string {
 	// 获取需要仿真的模型名
 	DB.Where("package_name = ? AND sys_or_user = ? AND userspace_id = ?", packageName, userName, spaceId).First(&p)
 	if p.ID != "" {
-		environmentModelData[p.PackageName] = p.ID
+		environmentModelData[p.PackageName] = p.FilePath
 	}
 
 	// 获取需要加载的用户模型
@@ -44,7 +44,7 @@ func GetEnvLibrary(packageName, userName, spaceId string) map[string]string {
 		l, ok := libraryAndVersions[usedModel.PackageName]
 		// 数据库你存在且FilePath不为空，并且yssim已经加载。
 		if usedModel.ID != "" && ok && l == usedModel.Version && usedModel.FilePath != "" {
-			environmentModelData[usedModel.PackageName] = usedModel.ID
+			environmentModelData[usedModel.PackageName] = usedModel.FilePath
 		}
 	}
 
@@ -54,7 +54,7 @@ func GetEnvLibrary(packageName, userName, spaceId string) map[string]string {
 	for i := 0; i < len(envPackageModel); i++ {
 		packageVersion, ok := libraryAndVersions[envPackageModel[i].PackageName]
 		if ok && packageVersion == envPackageModel[i].Version {
-			environmentModelData[envPackageModel[i].PackageName] = envPackageModel[i].ID
+			environmentModelData[envPackageModel[i].PackageName] = envPackageModel[i].Version
 		}
 	}
 
@@ -64,7 +64,7 @@ func GetEnvLibrary(packageName, userName, spaceId string) map[string]string {
 	for i := 0; i < len(encryptionPackageModel); i++ {
 		packageVersion, ok := libraryAndVersions[encryptionPackageModel[i].PackageName]
 		if ok && packageVersion == encryptionPackageModel[i].Version {
-			environmentModelData[encryptionPackageModel[i].PackageName] = encryptionPackageModel[i].ID
+			environmentModelData[encryptionPackageModel[i].PackageName] = encryptionPackageModel[i].FilePath
 		}
 	}
 	return environmentModelData
