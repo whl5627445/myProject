@@ -1,7 +1,10 @@
 package instance
 
 import (
+	"encoding/json"
 	"yssim-go/library/convert"
+
+	"github.com/bytedance/sonic"
 )
 
 type ModelInstance struct {
@@ -155,6 +158,10 @@ type TypeConnector struct {
 	Type        string           `json:"type"`
 }
 
+type replaceableObject struct {
+	Annotation annotation `json:"annotation,omitempty"`
+}
+
 // DataPreprocessing 模型实例数据预处理
 func (m *ModelInstance) DataPreprocessing() {
 	if _, ok := m.Annotation.Icon.GraphicsOriginal.([]any); ok {
@@ -224,6 +231,7 @@ func (m *ModelInstance) DataPreprocessing() {
 		}
 		m.Elements[i].Modifiers = m.Elements[i].getElementModifiers()
 		m.Elements[i].ModifiersOriginal = nil
+		m.Elements[i].getPrefixesReplaceable()
 	}
 }
 
@@ -270,6 +278,28 @@ func (e *elements) getExtendsModifiers(extendModelParameterMap map[string]map[st
 			}
 		}
 	}
+}
+
+// getPrefixesReplaceable 预处理组件Prefixes中的Replaceable数据
+func (e *elements) getPrefixesReplaceable() {
+	if e.Prefixes.Replaceable == nil {
+		return
+	}
+
+	if replaceableStr, ok := e.Prefixes.Replaceable.(string); ok {
+		e.Prefixes.Replaceable = replaceableStr
+		return
+	}
+
+	r := &replaceableObject{}
+	replaceableByte, err := json.Marshal(e.Prefixes.Replaceable)
+	if err != nil {
+		return
+	}
+	if err := sonic.Unmarshal(replaceableByte, r); err != nil {
+		return
+	}
+	e.Prefixes.Replaceable = r
 }
 
 // GetModelParameterValue 获取模型的参数数据，extendModelParameterMap是当模型继承了其他模型，又设置了继承模型是参数时会有用
@@ -589,6 +619,15 @@ func (p *placement) GetElementsOrigin() []float64 {
 		return p.IconTransformation.Origin
 	}
 	return p.Transformation.Origin
+}
+
+// hasReplaceablePlacement 判断Prefixes中是否包含放置点范围数据，并且返回范围数据
+func (p *prefixes) HasReplaceableExtent() (extent [][]float64, ok bool) {
+	replaceable, ok := p.Replaceable.(*replaceableObject)
+	if !ok {
+		return nil, false
+	}
+	return replaceable.Annotation.Placement.Transformation.Extents, true
 }
 
 // // GetElementsRotation 获取模型组件icon数据列表，包括模型本身的与继承过来的
