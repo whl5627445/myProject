@@ -102,7 +102,8 @@ func getElementsGraphicsList(modelInstance *instance.ModelInstance, parentName s
 	for i := 0; i < len(modelInstance.Elements); i++ {
 		e := modelInstance.Elements[i]
 		connectorSizingMap[e.Name] = e.Annotation.Dialog.ConnectorSizing
-		if (e.BaseClass != nil && e.BaseClass.BasicType && e.Kind == "extends") || e.Annotation.Placement == nil || e.Type == nil || (e.Type != nil && e.Type.BasicType) {
+		replaceableExtent, hasReplaceableExtent := e.Prefixes.HasReplaceableExtent()
+		if (e.BaseClass != nil && e.BaseClass.BasicType && e.Kind == "extends") || (e.Annotation.Placement == nil && !hasReplaceableExtent) || e.Type == nil || (e.Type != nil && e.Type.BasicType) {
 			continue
 		}
 		typeInstance := e.Type
@@ -128,9 +129,13 @@ func getElementsGraphicsList(modelInstance *instance.ModelInstance, parentName s
 		modelIconList["outputType"] = getOutputType(connectorSizingMap, e.Dims.Absyn, e.Dims.Typed)
 		modelIconList["connectors"] = getElementsConnectorList(typeInstance, e.Name, false)
 		modelIconList["parentName"] = parentName
-		modelIconList["origin"] = e.Annotation.Placement.GetElementsOrigin()
-		modelIconList["extents"] = e.Annotation.Placement.GetElementsExtents()
-		modelIconList["rotation"] = e.Annotation.Placement.Transformation.Rotation
+		if e.Annotation.Placement != nil {
+			modelIconList["origin"] = e.Annotation.Placement.GetElementsOrigin()
+			modelIconList["extents"] = e.Annotation.Placement.GetElementsExtents()
+			modelIconList["rotation"] = e.Annotation.Placement.Transformation.Rotation
+		} else {
+			modelIconList["extents"] = replaceableExtent
+		}
 		modelIconList["coordinateSystem"] = typeInstance.Annotation.Icon.GetCoordinateSystem()
 		elementsList = append(elementsList, modelIconList)
 	}
