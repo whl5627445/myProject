@@ -857,7 +857,7 @@ func ExperimentNameEditView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-func ExperimentCompareView(c *gin.Context) {
+func ExperimentCompareOldView(c *gin.Context) {
 	/*
 	   # 对比不同实验记录的参数差异，
 	   ## package_id: 实验是属于哪个包id
@@ -899,108 +899,28 @@ func ExperimentCompareView(c *gin.Context) {
 	}
 
 	// 遍历数据库实验记录, 将组件参数ModelVarData(json类型)转化为slice
-	experimentRecordMap := map[string][]map[string]any{}
-	for _, experimentRecord := range experimentRecordList {
-		var componentParams []map[string]any
-		if err := json.Unmarshal([]byte(experimentRecord.ModelVarData), &componentParams); err != nil {
-			res.Err = "实验参数对比失败，请稍后再试"
-			res.Status = 1
-			c.JSON(http.StatusOK, res)
-			return
-		}
-		experimentRecordMap[experimentRecord.ID] = componentParams
+	experimentRecordMap, err := service.UnmarshalExperimentRecordList(experimentRecordList)
+	if err != nil {
+		res.Err = "实验参数对比失败，请稍后再试"
+		res.Status = 1
+		c.JSON(http.StatusOK, res)
+		return
 	}
 
 	// 获取所有组件名称和组件类型
-	components := make(map[string]map[string]bool)
-	componentClasses := make(map[string]string)
-	for experimentId := range experimentRecordMap {
-		length := len(experimentRecordMap[experimentId])
-		for index := 0; index < length; {
-			// 如果实验参数中某组件不包含parameters字段，则删除该组件数据，后续再从omc中获取
-			parameters, ok := experimentRecordMap[experimentId][index]["parameters"].([]any)
-			if !ok {
-				experimentRecordMap[experimentId] = append(experimentRecordMap[experimentId][:index], experimentRecordMap[experimentId][index+1:]...)
-				length = len(experimentRecordMap[experimentId])
-				continue
-			}
-			if _, ok := components[experimentRecordMap[experimentId][index]["name"].(string)]; !ok {
-				components[experimentRecordMap[experimentId][index]["name"].(string)] = map[string]bool{}
-			}
-			components[experimentRecordMap[experimentId][index]["name"].(string)][experimentId] = true
-			componentClasses[experimentRecordMap[experimentId][index]["name"].(string)] = parameters[0].(map[string]any)["extend_name"].(string)
-			index += 1
-		}
-	}
+	components, componentClasses := service.GetComponentAndClassFromDB(experimentRecordMap)
 
 	// 与omc交互补全任一实验中缺失的组件及参数
-	for experimentId := range experimentRecordMap {
-		for component := range components {
-			if _, ok := components[component][experimentId]; !ok {
-				var parameterOMC []any
-				if component == modelName {
-					parameterOMC = service.GetModelParameters(modelName, "", componentClasses[component], "")
-				} else {
-					parameterOMC = service.GetModelParameters(modelName, component, componentClasses[component], "")
-				}
-				parameter := map[string]any{"name": component, "parameters": parameterOMC}
-				experimentRecordMap[experimentId] = append(experimentRecordMap[experimentId], parameter)
-			}
-		}
-	}
-
-	// 给前端返回的数据结构
-	tableColumns := []map[string]string{}
-	for _, experimentId := range item.ExperimentIdList {
-		data := map[string]string{"key": experimentId, "name": experimentMap[experimentId].ExperimentName}
-		tableColumns = append(tableColumns, data)
-	}
-	tableData := []map[string]any{}
+	service.GetComponentParameterFromOMC(modelName, components, experimentRecordMap, componentClasses)
 
 	// 分解出所有参数
-	compareData := map[string]map[string]map[string]any{}
-	keys := map[string]bool{}
-	for experimentId := range experimentRecordMap {
-		if _, ok := compareData[experimentId]; !ok {
-			compareData[experimentId] = make(map[string]map[string]any)
-		}
+	compareData, keys := service.GetComponentParameterFromOMC(modelName, components, experimentRecordMap, componentClasses)
 
-		for _, component := range experimentRecordMap[experimentId] {
-			if _, ok := compareData[experimentId][component["name"].(string)]; !ok {
-				compareData[experimentId][component["name"].(string)] = make(map[string]any)
-			}
-			for _, parameter := range component["parameters"].([]any) {
-				compareData[experimentId][component["name"].(string)][parameter.(map[string]any)["name"].(string)] = parameter.(map[string]any)["value"]
-				keys[parameter.(map[string]any)["name"].(string)] = true
-			}
-		}
-	}
+	// 给前端返回的表头
+	tableColumns := service.GetTableColumn(item.ExperimentIdList, experimentMap)
 
-	// 依次比较所有的参数，找出不同
-	for component := range components {
-		singleComponentAllDifferentParameters := map[string]any{}
-		for key := range keys {
-			isDuplicated := false
-			for i := 0; i < len(experimentRecordList)-1; i++ {
-				if !reflect.DeepEqual(compareData[experimentRecordList[i].ID][component][key], compareData[experimentRecordList[i+1].ID][component][key]) {
-					isDuplicated = true
-					singleComponentAllDifferentParameters["name"] = component
-				}
-			}
-
-			if isDuplicated {
-				for j := 0; j < len(experimentRecordList); j++ {
-					if _, ok := singleComponentAllDifferentParameters[experimentRecordList[j].ID]; !ok {
-						singleComponentAllDifferentParameters[experimentRecordList[j].ID] = map[string]any{}
-					}
-					singleComponentAllDifferentParameters[experimentRecordList[j].ID].(map[string]any)[key] = compareData[experimentRecordList[j].ID][component][key]
-				}
-			}
-		}
-		if len(singleComponentAllDifferentParameters) != 0 {
-			tableData = append(tableData, singleComponentAllDifferentParameters)
-		}
-	}
+	// 比较所有的参数，找出不同
+	tableData := service.GetDifferentParameterOld(components, keys, experimentRecordList, compareData)
 
 	// 返回数据
 	res.Data = map[string]any{
@@ -1011,7 +931,7 @@ func ExperimentCompareView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-func ExperimentCompareNewView(c *gin.Context) {
+func ExperimentCompareView(c *gin.Context) {
 	/*
 	   # 对比不同实验记录的参数差异，
 	   ## package_id: 实验是属于哪个包id
@@ -1044,14 +964,8 @@ func ExperimentCompareNewView(c *gin.Context) {
 	}
 
 	// 查询数据库中仿真结果对应的的experiment记录
-	experimentIdList := []string{}
-	for _, simulateRecordId := range item.RecordIdList {
-		for _, simulateRecord := range simulateRecordList {
-			if simulateRecordId == simulateRecord.ID {
-				experimentIdList = append(experimentIdList, simulateRecord.ExperimentId)
-			}
-		}
-	}
+	experimentIdList := service.GetExperimentIdList(item.RecordIdList, simulateRecordList)
+
 	var experimentRecordList []DataBaseModel.YssimExperimentRecord
 	if err = DB.Where("package_id = ? AND username =? AND userspace_id =? AND id IN ?",
 		item.PackageId, username, userSpaceId, experimentIdList).Find(&experimentRecordList).Error; err != nil {
@@ -1080,114 +994,25 @@ func ExperimentCompareNewView(c *gin.Context) {
 	}
 
 	// 遍历数据库实验记录, 将组件参数ModelVarData(json类型)转化为slice
-	experimentRecordMap := map[string][]map[string]any{}
-	for _, experimentRecord := range experimentRecordList {
-		var componentParams []map[string]any
-		if err := json.Unmarshal([]byte(experimentRecord.ModelVarData), &componentParams); err != nil {
-			res.Err = "实验参数对比失败，请稍后再试"
-			res.Status = 1
-			c.JSON(http.StatusOK, res)
-			return
-		}
-		experimentRecordMap[experimentRecord.ID] = componentParams
+	experimentRecordMap, err := service.UnmarshalExperimentRecordList(experimentRecordList)
+	if err != nil {
+		res.Err = "实验参数对比失败，请稍后再试"
+		res.Status = 1
+		c.JSON(http.StatusOK, res)
+		return
 	}
 
-	// 获取所有组件名称和组件类型
-	components := make(map[string]map[string]bool)
-	componentParameters := make(map[string][]string)
-	for experimentId := range experimentRecordMap {
-		length := len(experimentRecordMap[experimentId])
-		for index := 0; index < length; {
-			// 如果实验参数中某组件不包含parameters字段，则删除该组件数据，后续再从xml中获取
-			name, _ := experimentRecordMap[experimentId][index]["name"].(string)
-			parameters, ok := experimentRecordMap[experimentId][index]["parameters"].([]any)
-			if !ok {
-				experimentRecordMap[experimentId] = append(experimentRecordMap[experimentId][:index], experimentRecordMap[experimentId][index+1:]...)
-				length = len(experimentRecordMap[experimentId])
-				continue
-			}
-
-			// 获取数据库中组件的参数列表
-			componentParameters[name] = make([]string, 0)
-			for _, k := range parameters {
-				key, _ := k.(map[string]any)
-				componentParameters[name] = append(componentParameters[name], key["name"].(string))
-			}
-
-			//
-			if _, ok := components[experimentRecordMap[experimentId][index]["name"].(string)]; !ok {
-				components[experimentRecordMap[experimentId][index]["name"].(string)] = map[string]bool{}
-			}
-			components[experimentRecordMap[experimentId][index]["name"].(string)][experimentId] = true
-			index += 1
-		}
-	}
-
-	// 与仿真结果文件交互获取每一个实验中每个组件的参数数据
-	parametersXmlMap := map[string][]map[string]any{}
-	for experimentId := range experimentRecordMap {
-		for component := range components {
-			parameterXml := service.SimulateResultParameters(simulateResultMap[experimentId], component, "")
-			parameter := map[string]any{"name": component, "parameters": parameterXml}
-			if _, ok := parametersXmlMap[experimentId]; !ok {
-				parametersXmlMap[experimentId] = make([]map[string]any, 0)
-			}
-			parametersXmlMap[experimentId] = append(parametersXmlMap[experimentId], parameter)
-		}
-	}
-
-	// 给前端返回的数据结构
-	tableColumns := []map[string]string{}
-	for _, experimentId := range experimentIdList {
-		data := map[string]string{"key": experimentId, "name": experimentMap[experimentId].ExperimentName}
-		tableColumns = append(tableColumns, data)
-	}
-	tableData := []map[string]any{}
+	// 获取所有组件名称和组件参数
+	components, componentParameters := service.GetComponentAndParametersFromRecord(experimentRecordMap)
 
 	// 分解出所有参数
-	compareData := map[string]map[string]map[string]any{}
-	keys := map[string]bool{}
-	for experimentId := range parametersXmlMap {
-		if _, ok := compareData[experimentId]; !ok {
-			compareData[experimentId] = make(map[string]map[string]any)
-		}
+	compareData := service.GetComponentParameterFromResultXml(experimentIdList, components, simulateResultMap)
 
-		for _, component := range parametersXmlMap[experimentId] {
-			if _, ok := compareData[experimentId][component["name"].(string)]; !ok {
-				compareData[experimentId][component["name"].(string)] = make(map[string]any)
-			}
-			for _, parameter := range component["parameters"].([]any) {
-				compareData[experimentId][component["name"].(string)][parameter.(map[string]any)["name"].(string)] = parameter.(map[string]any)["value"]
-				keys[parameter.(map[string]any)["name"].(string)] = true
-			}
-		}
-	}
+	// 给前端返回的表头
+	tableColumns := service.GetTableColumn(experimentIdList, experimentMap)
 
-	// 依次比较所有的参数，找出不同
-	for component := range components {
-		singleComponentAllDifferentParameters := map[string]any{}
-		for _, key := range componentParameters[component] {
-			isDuplicated := false
-			for i := 0; i < len(experimentRecordList)-1; i++ {
-				if !reflect.DeepEqual(compareData[experimentRecordList[i].ID][component][key], compareData[experimentRecordList[i+1].ID][component][key]) {
-					isDuplicated = true
-					singleComponentAllDifferentParameters["name"] = component
-				}
-			}
-
-			if isDuplicated {
-				for j := 0; j < len(experimentRecordList); j++ {
-					if _, ok := singleComponentAllDifferentParameters[experimentRecordList[j].ID]; !ok {
-						singleComponentAllDifferentParameters[experimentRecordList[j].ID] = map[string]any{}
-					}
-					singleComponentAllDifferentParameters[experimentRecordList[j].ID].(map[string]any)[key] = compareData[experimentRecordList[j].ID][component][key]
-				}
-			}
-		}
-		if len(singleComponentAllDifferentParameters) != 0 {
-			tableData = append(tableData, singleComponentAllDifferentParameters)
-		}
-	}
+	// 比较并找出不同的参数
+	tableData := service.GetDifferentParameter(components, componentParameters, experimentRecordList, compareData)
 
 	// 返回数据
 	res.Data = map[string]any{
