@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -260,25 +261,20 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 
 	// 将实验参数写入模型
 	if packageModel.SysUser != "sys" {
-		// YssimExperimentRecord表的json数据绑定到结构体
-		var componentValue modelVarData
-		if experimentRecord.ModelVarData.String() != "" {
-			err := sonic.Unmarshal(experimentRecord.ModelVarData, &componentValue)
-			if err == nil {
-				mapAttributesStr := mapProcessing.MapDataConversion(componentValue.FinalAttributesStr)
-				// 设置组件参数
-				result := SetComponentModifierValue(experimentRecord.ModelName, mapAttributesStr)
-				if result {
-					log.Println("重新设置参数-完成。")
-				} else {
-					log.Println("重新设置参数-失败: ", mapAttributesStr)
-				}
-			} else {
-				log.Println("modelVarData: ", experimentRecord.ModelVarData)
-				log.Println("err: ", err)
-				log.Println("json2map filed!")
-			}
+		var componentParams []map[string]any
+		if err = json.Unmarshal([]byte(experimentRecord.ModelVarData), &componentParams); err != nil {
+			log.Println("json to list filed!")
 		}
+		mapAttributesStr := mapProcessing.ComponentParamsToMap(componentParams)
+
+		result := SetComponentModifierValue(experimentRecord.ModelName, mapAttributesStr)
+		if result {
+			log.Println("重新设置参数-完成。")
+			ModelSave(experimentRecord.ModelName)
+		} else {
+			log.Println("重新设置参数-失败: ", mapAttributesStr)
+		}
+
 	}
 	// 构建仿真参数
 	SimulationPraData := map[string]string{

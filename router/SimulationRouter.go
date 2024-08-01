@@ -2,6 +2,7 @@ package router
 
 import (
 	API "yssim-go/app/v1/api/simulate"
+	APIv2 "yssim-go/app/v2/api/simulate"
 
 	"github.com/gin-gonic/gin"
 )
@@ -33,7 +34,7 @@ func SimulateRouter(g *gin.Engine) {
 		Models.GET("/experiment/list", API.ExperimentGetView)
 		Models.GET("/experiment/parameters", API.ExperimentParametersView)
 		Models.POST("/experiment/name/edit", API.ExperimentNameEditView)
-		Models.POST("/experiment/compare", API.ExperimentCompareView)
+		Models.POST("/experiment/compare", API.ExperimentCompareNewView)
 
 		Models.POST("/snapshot/create", API.CreateSnapshotView)
 		Models.POST("/snapshot/delete", API.DeleteSnapshotView)
@@ -44,6 +45,15 @@ func SimulateRouter(g *gin.Engine) {
 		Models.POST("/calibration/task/start", API.CalibrationSimulateTaskAddView)
 		Models.POST("/calibration/task/stop", API.CalibrationSimulateTaskStopView)
 		Models.GET("/calibration/task/status/get", API.GetCalibrationTaskStatusView)
+
+	}
+
+	var ModelsV2 = g.Group("/api/v2/simulation")
+	{
+		ModelsV2.POST("/simulate", APIv2.ModelSimulateView)
+		ModelsV2.GET("/record/delete", APIv2.SimulateResultDeleteView)
+		ModelsV2.POST("/record/terminate", APIv2.SimulateTerminateView)
+		ModelsV2.POST("/experiment/delete", APIv2.ExperimentDeleteView)
 
 	}
 }

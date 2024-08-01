@@ -1,26 +1,35 @@
 package config
 
-//
-//func openMangoDB() *mongo.Client {
-//	// 设置客户端连接配置
-//	clientOptions := options.Client().ApplyURI("mongodb://root:simtek_cloud_sim@124.70.211.127:27017/")
-//
-//	// 连接到 MongoDB
-//	ctx := context.Background()
-//	client, err := mongo.Connect(ctx, clientOptions)
-//	if err != nil {
-//		log.Println("连接 MongoDB 失败： %s", err)
-//	}
-//
-//	// 检查连接是否成功
-//	err = client.Ping(ctx, nil)
-//	if err != nil {
-//		log.Println("连接 MongoDB 失败：%s", err)
-//	}
-//
-//	fmt.Println("成功连接到 MongoDB")
-//
-//	return client
-//}
+import (
+	"context"
+	"fmt"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+)
 
-//var MB = openMangoDB()
+func openMangoDB() *mongo.Client {
+	// 设置MongoDB连接信息
+	clientOptions := options.Client().ApplyURI("mongodb://mongo:27017/?connect=direct")
+	fmt.Println(clientOptions)
+
+	// 连接MongoDB数据库
+	client, err := mongo.Connect(context.Background(), clientOptions)
+	if err != nil {
+		fmt.Println("Failed to connect to MongoDB:", err)
+
+	}
+
+	// 检查连接
+	fmt.Println(context.Background())
+	err = client.Ping(context.Background(), nil)
+	if err != nil {
+		fmt.Println("Failed to ping MongoDB:", err)
+
+	}
+
+	//fmt.Println("成功连接到 MongoDB")
+
+	return client
+}
+
+var MB = openMangoDB()
