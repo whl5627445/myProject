@@ -79,3 +79,20 @@ func ComponentParamsToMap(componentParams []map[string]any) map[string]string {
 
 	return resMap
 }
+
+// 对多个实验参数取并集，componentParamsMap中的实验参数要按照实验创建时间从小到大排序
+func GetUnionComponentParams(componentParamsMap [][]map[string]any) map[string]string {
+
+	// 并集
+	unionSet := map[string]string{}
+
+	// 取实验参数并集
+	for _, componentParams := range componentParamsMap {
+		resMap := ComponentParamsToMap(componentParams)
+		for k, v := range resMap {
+			unionSet[k] = v
+		}
+	}
+
+	return unionSet
+}

@@ -2,19 +2,23 @@ package serviceV2
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
-	"go.mongodb.org/mongo-driver/bson"
 	"log"
 	"os"
 	"strings"
 	"time"
 	"yssim-go/grpc/taskManagement"
+	"yssim-go/library/mapProcessing"
+
+	"go.mongodb.org/mongo-driver/bson"
+
+	"yssim-go/app/DataBaseModel"
+	"yssim-go/config"
 
 	"github.com/bytedance/sonic"
 	"github.com/google/uuid"
-	"yssim-go/app/DataBaseModel"
-	"yssim-go/config"
 )
 
 type OutputData struct {
@@ -161,9 +165,37 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 	record.Percentage = 0
 	record.TaskId = uuid.New().String()
 	config.DB.Save(&record)
+
+	// 获取实验参数
+	params := []*taskManagement.ParamObj{}
+	if packageModel.SysUser != "sys" {
+		//取所有非全量实验的并集参数
+		var experimentRecords []DataBaseModel.YssimExperimentRecord
+		if err := DB.Where("username = ? AND userspace_id = ? AND package_id = ? AND create_time <= ? AND is_full_model_var != ?",
+			itemMap["username"], itemMap["space_id"], itemMap["package_id"], experimentRecord.CreatedAt, 1).Order("create_time").Find(&experimentRecords).Error; err != nil {
+			return "", errors.New("query error")
+		}
+
+		componentParamsMap := make([][]map[string]any, 0)
+
+		for _, record := range experimentRecords {
+			var componentParams []map[string]any
+			if err = json.Unmarshal([]byte(record.ModelVarData), &componentParams); err != nil {
+				log.Println("json to list filed!")
+			}
+			componentParamsMap = append(componentParamsMap, componentParams)
+		}
+
+		mapAttributesStr := mapProcessing.GetUnionComponentParams(componentParamsMap)
+
+		for component, value := range mapAttributesStr {
+			param := &taskManagement.ParamObj{Key: component, Value: value, IsFile: false}
+			params = append(params, param)
+		}
+	}
+
 	// 发送仿真请求
 	GrpcBuildModelRequest := &taskManagement.TaskAssignmentsRequest{
-
 		Uuid:          record.TaskId,
 		Application:   "SimulationModeling",
 		ResultAddress: record.SimulateModelResultPath,
@@ -171,6 +203,7 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 		TaskType:      record.SimulateType,
 		FileId:        record.ID,
 		Token:         itemMap["token"],
+		Params:        params,
 	}
 	_, err = taskManagement.TaskClient.Assignments(taskManagement.TaskCtx, GrpcBuildModelRequest)
 	return record.ID, err
