@@ -15,12 +15,12 @@ import (
 )
 
 var clientConfig = constant.ClientConfig{
-	BeatInterval:        1000,
 	NamespaceId:         "public", // 如果需要支持多namespace，我们可以场景多个client,它们有不同的NamespaceId。当namespace是public时，此处填空字符串。
 	TimeoutMs:           5000,
 	NotLoadCacheAtStart: true,
 	AppendToStdout:      true,
 	LogSampling:         &logger.SamplingConfig{Initial: 10, Thereafter: 3600 * 12, Tick: time.Second},
+	LogLevel:            "error",
 }
 var serverConfigs = getServerConfigs()
 
