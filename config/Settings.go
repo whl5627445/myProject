@@ -32,7 +32,6 @@ var PORT = os.Getenv("PORT")
 var DEBUG = os.Getenv("DEBUG")
 var Solver = map[string]string{"OM": "默认", "DM": "dymola", "JM": "第三方"}
 
-var RedisCacheKey = USERNAME + "-yssim-GraphicsData"
 var UserSpaceId = ""
 var ModelCodeChan = make(chan string, 100)
 
@@ -49,3 +48,4 @@ var ServiceIp = net.GetLocalIp()
 
 var DebugDB = os.Getenv("DebugDB")       // 192.168.121.12:13306
 var DebugRedis = os.Getenv("DebugRedis") // 192.168.121.12:6379
+var DebugMongo = os.Getenv("DebugMongo") // 192.168.121.12:27017
