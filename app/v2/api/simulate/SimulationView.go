@@ -57,6 +57,7 @@ func ModelSimulateView(c *gin.Context) {
 		fmt.Println("调用(GrpcSimulation)出错：", err)
 		res.Err = "仿真出错"
 		c.JSON(http.StatusOK, res)
+		return
 	}
 
 	res.Msg = "仿真任务正在准备，请等待仿真完成"
