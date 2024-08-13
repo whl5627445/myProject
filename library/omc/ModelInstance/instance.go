@@ -206,7 +206,7 @@ func (m *ModelInstance) DataPreprocessing() {
 					name := coMap["name"].(string)
 					baseClass := coMap["baseClass"].(string)
 					comment := coMap["comment"].(string)
-					if prefixes["redeclare"].(bool) {
+					if _, redeclareOk := prefixes["redeclare"].(bool); redeclareOk {
 						cStr += "redeclare "
 					}
 					cStr += restriction
@@ -262,7 +262,7 @@ func (e *elements) getExtendsModifiers(extendModelParameterMap map[string]map[st
 				} else {
 					extendModelParameterMap[elementName] = map[string]*Parameter{pName: {Name: pName, IsExtend: n > 1, Type: "Normal"}}
 				}
-				if n > 0 {
+				if n > 1 {
 					extendModelParameterMap[elementName][pName].DefaultValue = pValue
 				} else {
 					extendModelParameterMap[elementName][pName].Value = pValue
@@ -278,7 +278,7 @@ func (m *ModelInstance) GetModelParameterValue(modelParameterMap map[string]map[
 	for _, e := range m.Elements {
 		if e.Kind == "extends" {
 			e.getExtendsModifiers(modelParameterMap, n)
-			eList = append(eList, e.BaseClass.GetModelParameterValue(modelParameterMap, true, n+1)...)
+			eList = append(eList, e.BaseClass.GetModelParameterValue(modelParameterMap, false, n+1)...)
 		}
 		if e.Kind == "component" {
 			e.ElementsParameter = map[string]*Parameter{}
@@ -286,7 +286,7 @@ func (m *ModelInstance) GetModelParameterValue(modelParameterMap map[string]map[
 			if extend, ok := modelParameterMap[e.Name]; ok {
 				e.ElementsParameter = extend
 			}
-			e.GetElementsParameterValue(e.ElementsParameter, &e.ParameterList, isExtend, e.Type.Name, n)
+			e.GetElementsParameterValue(e.ElementsParameter, &e.ParameterList, false, e.Type.Name, n)
 			p := map[string]any{"name": e.Name, "parameter": e.ParameterList, "type": "component"}
 			if e.Prefixes.Variability == "parameter" {
 				p["type"] = "model"
@@ -419,8 +419,10 @@ func (m *ModelInstance) GetIconListALL(modelElements *elements, isElement bool) 
 }
 
 // GetElementsParameterValue 获取组件参数与值信息，写入给定的map当中
-// 如果是初次调用则isType为false，parentName是调用时传入模型名称，n为0
-func (e *elements) GetElementsParameterValue(parameterMap map[string]*Parameter, parameterList *[]*Parameter, isExtend bool, parentName string, n int) {
+func (e *elements) GetElementsParameterValue(parameterMap map[string]*Parameter, parameterList *[]*Parameter, end bool, parentName string, n int) {
+	if e.Prefixes.Public != nil && *e.Prefixes.Public == false || e.Prefixes.Final || e.Annotation.Dialog.ConnectorSizing {
+		return
+	}
 	if e.Kind == "component" && e.Prefixes.Variability != "parameter" && e.ElementsParameter != nil {
 		for k, v := range e.Modifiers {
 			if p, ok := e.ElementsParameter[k]; ok {
@@ -429,42 +431,44 @@ func (e *elements) GetElementsParameterValue(parameterMap map[string]*Parameter,
 				}
 			} else {
 				e.ElementsParameter[k] = &Parameter{Name: k, Type: "Normal"}
-				if isExtend {
+				switch true {
+				case n > 0 && e.ElementsParameter[k].DefaultValue == nil:
 					e.ElementsParameter[k].DefaultValue = v
-				} else {
+				case n < 1:
 					e.ElementsParameter[k].Value = v
 				}
 			}
 		}
 	}
+	eStartValue, eStartOk, eFixedValue, eFixedOk := getParameterFixedAndStart(e, parameterMap[e.Name])
+	if e.Prefixes.Variability == "parameter" || e.Annotation.Dialog.ShowStartAttribute || (e.Prefixes.Variability != "parameter" && (eStartOk || eFixedOk)) {
+		value := any(nil)
 
-	_, hasStart := e.Modifiers["start"]
-	if !e.Prefixes.Final && !e.Annotation.HideResult &&
-		((e.Prefixes.Variability == "parameter" && e.Prefixes.Public == nil) || hasStart || e.Annotation.Dialog.ShowStartAttribute) {
-
-		value := ""
-		if hasStart {
-			value = e.Modifiers["start"].(string)
-		}
 		if _, ok := e.Modifiers["value"]; ok {
 			value = e.Modifiers["value"].(string)
 		}
+		if eStartOk || eFixedOk {
+			value = map[string]any{"start": eStartValue, "fixed": eFixedValue}
+		}
 		if p, ok := parameterMap[e.Name]; ok {
-			p.ParameterAttributes = e.Modifiers
-			p.IsExtend = isExtend
+			if final, finalOk := p.ParameterAttributes["final"]; finalOk && final.(bool) {
+				return
+			}
+			p.IsExtend = n > 1
 			if p.DefaultValue == nil {
 				p.DefaultValue = value
 			}
 		} else {
-			if n > 0 {
-				parameterMap[e.Name] = &Parameter{ParameterAttributes: e.Modifiers, DefaultValue: value, Name: e.Name, IsExtend: isExtend, Type: "Normal"}
-			} else {
-				parameterMap[e.Name] = &Parameter{ParameterAttributes: e.Modifiers, Value: value, Name: e.Name, IsExtend: isExtend, Type: "Normal"}
+			switch true {
+			case n > 0:
+				parameterMap[e.Name] = &Parameter{ParameterAttributes: e.Modifiers, DefaultValue: value, Name: e.Name, IsExtend: n > 1, Type: "Normal"}
+			default:
+				parameterMap[e.Name] = &Parameter{ParameterAttributes: e.Modifiers, Value: value, Name: e.Name, IsExtend: n > 1, Type: "Normal"}
 			}
 		}
 		parameterMap[e.Name].Comment = e.Comment
 		parameterMap[e.Name].ExtendName = parentName
-		e.Annotation.Dialog.getParameterDialog(parameterMap[e.Name], hasStart, e.Prefixes.Variability)
+		e.Annotation.Dialog.getParameterDialog(parameterMap[e.Name], eStartOk)
 		e.Annotation.getParameterChoices(parameterMap[e.Name])
 		if e.Type != nil && (!e.Type.BasicType || e.Type.Restriction == "type") {
 			if len(e.Type.Elements) > 0 && e.Type.Elements[0].BaseClass != nil && e.Type.Elements[0].BaseClass.Name == "enumeration" {
@@ -484,78 +488,56 @@ func (e *elements) GetElementsParameterValue(parameterMap map[string]*Parameter,
 				parameterMap[e.Name].Type = "CheckBox"
 			}
 		}
-
-		if parameterMap[e.Name].Value == nil {
-			parameterMap[e.Name].Value = ""
-		}
-
-		if _, ok := parameterMap[e.Name].Value.(map[string]interface{}); ok {
-			if value, ok := parameterMap[e.Name].Value.(map[string]interface{})["start"]; ok {
-				parameterMap[e.Name].Value.(map[string]interface{})["value"] = value
-				delete(parameterMap[e.Name].Value.(map[string]interface{}), "start")
-			}
-			if value, ok := parameterMap[e.Name].Value.(map[string]interface{})["fixed"]; ok {
-				parameterMap[e.Name].Value.(map[string]interface{})["isFixed"] = value
-				delete(parameterMap[e.Name].Value.(map[string]interface{}), "fixed")
-			}
-		}
-
 		*parameterList = append(*parameterList, parameterMap[e.Name])
-
-		n += 1
-		if e.Type != nil {
-			for _, element := range e.Type.Elements {
-				if modifierInfo, ok := e.Modifiers[element.Name]; ok {
-					if isFinal, ok := modifierInfo.(map[string]interface{}); ok {
-						if final, ok := isFinal["final"].(bool); ok && final {
-							continue
-						}
-					}
-				}
-				element.GetElementsParameterValue(parameterMap, parameterList, true, e.Type.Name, n)
-			}
-		}
-		if e.BaseClass != nil {
-			for _, element := range e.BaseClass.Elements {
-				if modifierInfo, ok := e.Modifiers[element.Name]; ok {
-					if isFinal, ok := modifierInfo.(map[string]interface{}); ok {
-						if final, ok := isFinal["final"].(bool); ok && final {
-							continue
-						}
-					}
-				}
-				element.GetElementsParameterValue(parameterMap, parameterList, true, e.BaseClass.Name, n)
-			}
+		return
+	}
+	if e.Type != nil && !end {
+		for _, element := range e.Type.Elements {
+			element.GetElementsParameterValue(parameterMap, parameterList, true, e.Type.Name, n+1)
 		}
 	}
-
-	if n == 0 || e.Kind == "extends" {
-		n += 1
-		if e.Type != nil {
-			for _, element := range e.Type.Elements {
-				if modifierInfo, ok := e.Modifiers[element.Name]; ok {
-					if isFinal, ok := modifierInfo.(map[string]interface{}); ok {
-						if final, ok := isFinal["final"].(bool); ok && final {
-							continue
-						}
-					}
+	if e.BaseClass != nil {
+		if e.Kind == "extends" {
+			for modifierName, modifierValue := range e.Modifiers {
+				parameterMap[modifierName] = &Parameter{Name: modifierName, ParameterAttributesData: modifierValue, IsExtend: n > 1, Type: "Normal"}
+				p, ok := modifierValue.(map[string]any)
+				if ok {
+					parameterMap[modifierName].ParameterAttributes = p
 				}
-				element.GetElementsParameterValue(parameterMap, parameterList, true, e.Type.Name, n)
 			}
 		}
-		if e.BaseClass != nil {
-			for _, element := range e.BaseClass.Elements {
-				if modifierInfo, ok := e.Modifiers[element.Name]; ok {
-					if isFinal, ok := modifierInfo.(map[string]interface{}); ok {
-						if final, ok := isFinal["final"].(bool); ok && final {
-							continue
-						}
-					}
-				}
-				element.GetElementsParameterValue(parameterMap, parameterList, true, e.BaseClass.Name, n)
-			}
+		for _, element := range e.BaseClass.Elements {
+			element.GetElementsParameterValue(parameterMap, parameterList, true, e.BaseClass.Name, n+1)
 		}
 	}
+}
+
+func getParameterFixedAndStart(e *elements, p *Parameter) (string, bool, string, bool) {
+	if e.Prefixes.Variability == "parameter" {
+		return "", false, "", false
+	}
+	startValue := ""
+	startOk := false
+	mStartValue, mStartOk := e.Modifiers["start"]
+	pStartValue, pStartOk := any(nil), false
+	fixedValue, fixedOk := e.Modifiers["fixed"]
+	if p != nil {
+		pStartValue, pStartOk = p.ParameterAttributes["start"]
+		if !fixedOk {
+			fixedValue, fixedOk = p.ParameterAttributes["fixed"]
+		}
+	}
+	switch true {
+	case mStartOk:
+		startValue = mStartValue.(string)
+	case pStartOk:
+		startValue = pStartValue.(string)
+	}
+	startOk = mStartOk || pStartOk
+	if !fixedOk {
+		fixedValue = ""
+	}
+	return startValue, startOk, fixedValue.(string), fixedOk
 }
 
 // GetParameterAttributes 获取该类型的属性数据，max、min、start等等
@@ -572,18 +554,19 @@ func (m *ModelInstance) GetParameterAttributes() map[string]any {
 
 // Parameter 定义的参数结构体
 type Parameter struct {
-	Comment             string              `json:"comment"`
-	DefaultValue        any                 `json:"defaultValue"`
-	Value               any                 `json:"value"`
-	ExtendName          string              `json:"extendName"`
-	Group               string              `json:"group"`
-	Name                string              `json:"name"`
-	Tab                 string              `json:"tab"`
-	Type                string              `json:"type"`
-	Options             []map[string]string `json:"options,omitempty"`
-	ParameterAttributes map[string]any      `json:"parameterAttributes,omitempty"`
-	ParameterUnit       map[string]any      `json:"parameterUnit,omitempty"`
-	IsExtend            bool                `json:"isExtend"`
+	Comment                 string              `json:"comment"`
+	DefaultValue            any                 `json:"defaultValue"`
+	Value                   any                 `json:"value"`
+	ExtendName              string              `json:"extendName"`
+	Group                   string              `json:"group"`
+	Name                    string              `json:"name"`
+	Tab                     string              `json:"tab"`
+	Type                    string              `json:"type"`
+	Options                 []map[string]string `json:"options,omitempty"`
+	ParameterAttributes     map[string]any      `json:"parameterAttributes,omitempty"`
+	ParameterAttributesData any                 `json:"attributes,omitempty"`
+	ParameterUnit           map[string]any      `json:"parameterUnit,omitempty"`
+	IsExtend                bool                `json:"isExtend"`
 }
 
 // 获取单位数据，是一个map，包含源码当中定义的该类型的单位属性
@@ -607,7 +590,7 @@ func (e *elements) getParameterUnit() map[string]any {
 }
 
 // 获取参数的dialog数据， 包括分组，tab页，是否显示开始属性以及部分专属处理
-func (d *dialog) getParameterDialog(parameter *Parameter, hasStart bool, variability string) {
+func (d *dialog) getParameterDialog(parameter *Parameter, startOk bool) {
 	parameter.Tab = "General"
 	parameter.Group = "Parameters"
 	if d.Tab != "" {
@@ -616,7 +599,7 @@ func (d *dialog) getParameterDialog(parameter *Parameter, hasStart bool, variabi
 	if d.Group != "" {
 		parameter.Group = d.Group
 	}
-	if d.ShowStartAttribute || (hasStart && variability != "parameter") {
+	if d.ShowStartAttribute || startOk {
 		parameter.Group = "Initialization"
 		parameter.Type = "checkWrite"
 		parameter.Name = parameter.Name + ".start"
@@ -656,14 +639,6 @@ func (p *placement) GetElementsOrigin() []float64 {
 	}
 	return p.Transformation.Origin
 }
-
-// // GetElementsRotation 获取模型组件icon数据列表，包括模型本身的与继承过来的
-// func (p *placement) GetElementsRotation() float64 {
-// 	if p.IconTransformation.Rotation != nil{
-// 		return p.IconTransformation.Rotation
-// 	}
-// 	return p.Transformation.Rotation
-// }
 
 // 处理图形数据
 func getGraphicsData(g *graphics, modelElements *elements) map[string]any {
