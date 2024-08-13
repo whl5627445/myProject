@@ -102,17 +102,11 @@ type Diagram struct {
 	CoordinateSystem *coordinateSystem `json:"coordinateSystem,omitempty"`
 	GraphicsOriginal any               `json:"graphics,omitempty"`
 	Graphics         []*graphics
-	// Graphics []*graphics `json:"graphics,omitempty"`
-	// TypeOriginal      any            `json:"type,omitempty"`
-	// Type              *ModelInstance `json:"typePreprocessing,omitempty"`
 }
 type Icon struct {
 	CoordinateSystem *coordinateSystem `json:"coordinateSystem,omitempty"`
 	GraphicsOriginal any               `json:"graphics,omitempty"`
 	Graphics         []*graphics
-	// Graphics []*graphics `json:"graphics,omitempty"`
-	// Graphics []*graphics `json:"graphics,omitempty"`
-	// Graphics         []*graphics      `json:"graphicsPreprocessing,omitempty"`
 }
 type coordinateSystem struct {
 	PreserveAspectRatio bool        `json:"preserveAspectRatio"`
@@ -461,9 +455,9 @@ func (e *elements) GetElementsParameterValue(parameterMap map[string]*Parameter,
 		} else {
 			switch true {
 			case n > 0:
-				parameterMap[e.Name] = &Parameter{ParameterAttributes: e.Modifiers, DefaultValue: value, Name: e.Name, IsExtend: n > 1, Type: "Normal"}
+				parameterMap[e.Name] = &Parameter{ParameterAttributesData: e.Modifiers, DefaultValue: value, Name: e.Name, IsExtend: n > 1, Type: "Normal"}
 			default:
-				parameterMap[e.Name] = &Parameter{ParameterAttributes: e.Modifiers, Value: value, Name: e.Name, IsExtend: n > 1, Type: "Normal"}
+				parameterMap[e.Name] = &Parameter{ParameterAttributesData: e.Modifiers, Value: value, Name: e.Name, IsExtend: n > 1, Type: "Normal"}
 			}
 		}
 		parameterMap[e.Name].Comment = e.Comment
@@ -504,6 +498,7 @@ func (e *elements) GetElementsParameterValue(parameterMap map[string]*Parameter,
 				if ok {
 					parameterMap[modifierName].ParameterAttributes = p
 				}
+				parameterMap[modifierName].ParameterAttributesData = modifierValue
 			}
 		}
 		for _, element := range e.BaseClass.Elements {
@@ -563,9 +558,9 @@ type Parameter struct {
 	Tab                     string              `json:"tab"`
 	Type                    string              `json:"type"`
 	Options                 []map[string]string `json:"options,omitempty"`
-	ParameterAttributes     map[string]any      `json:"parameterAttributes,omitempty"`
+	ParameterAttributes     map[string]any      `json:"-"`
 	ParameterAttributesData any                 `json:"attributes,omitempty"`
-	ParameterUnit           map[string]any      `json:"parameterUnit,omitempty"`
+	ParameterUnit           map[string]any      `json:"parameterUnit"`
 	IsExtend                bool                `json:"isExtend"`
 }
 
@@ -586,7 +581,7 @@ func (e *elements) getParameterUnit() map[string]any {
 			}
 		}
 	}
-	return nil
+	return map[string]any{}
 }
 
 // 获取参数的dialog数据， 包括分组，tab页，是否显示开始属性以及部分专属处理
