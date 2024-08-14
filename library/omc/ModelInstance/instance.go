@@ -251,10 +251,10 @@ func (e *elements) getExtendsModifiers(extendModelParameterMap map[string]map[st
 						p.DefaultValue = pValue
 						continue
 					} else {
-						extendModelParameterMap[elementName][pName] = &Parameter{Name: e.Name, IsExtend: n > 1, Type: "Normal"}
+						extendModelParameterMap[elementName][pName] = &Parameter{Name: e.Name, IsExtend: n > 1, Type: "Normal", Visible: !(e.Prefixes.Public != nil && *e.Prefixes.Public == false)}
 					}
 				} else {
-					extendModelParameterMap[elementName] = map[string]*Parameter{pName: {Name: pName, IsExtend: n > 1, Type: "Normal"}}
+					extendModelParameterMap[elementName] = map[string]*Parameter{pName: {Name: pName, IsExtend: n > 1, Type: "Normal", Visible: !(e.Prefixes.Public != nil && *e.Prefixes.Public == false)}}
 				}
 				if n > 1 {
 					extendModelParameterMap[elementName][pName].DefaultValue = pValue
@@ -280,7 +280,7 @@ func (m *ModelInstance) GetModelParameterValue(modelParameterMap map[string]map[
 			if extend, ok := modelParameterMap[e.Name]; ok {
 				e.ElementsParameter = extend
 			}
-			e.GetElementsParameterValue(e.ElementsParameter, &e.ParameterList, false, e.Type.Name, n)
+			e.GetElementsParameters(e.ElementsParameter, &e.ParameterList, false, e.Type.Name, n)
 			p := map[string]any{"name": e.Name, "parameter": e.ParameterList, "type": "component"}
 			if e.Prefixes.Variability == "parameter" {
 				p["type"] = "model"
@@ -412,106 +412,137 @@ func (m *ModelInstance) GetIconListALL(modelElements *elements, isElement bool) 
 	return graphicsList
 }
 
-// GetElementsParameterValue 获取组件参数与值信息，写入给定的map当中
-func (e *elements) GetElementsParameterValue(parameterMap map[string]*Parameter, parameterList *[]*Parameter, end bool, parentName string, n int) {
-	if e.Prefixes.Public != nil && *e.Prefixes.Public == false || e.Prefixes.Final || e.Annotation.Dialog.ConnectorSizing {
+// GetElementsParameters 获取组件参数与值信息，写入给定的map当中
+func (e *elements) GetElementsParameters(parameterMap map[string]*Parameter, parameterList *[]*Parameter, end bool, parentName string, n int) {
+	if e.Prefixes.Final || e.Annotation.Dialog.ConnectorSizing {
 		return
 	}
 	if e.Kind == "component" && e.Prefixes.Variability != "parameter" && e.ElementsParameter != nil {
-		for k, v := range e.Modifiers {
-			if p, ok := e.ElementsParameter[k]; ok {
-				if p.DefaultValue == nil {
-					p.DefaultValue = v
-				}
-			} else {
-				e.ElementsParameter[k] = &Parameter{Name: k, Type: "Normal"}
-				switch true {
-				case n > 0 && e.ElementsParameter[k].DefaultValue == nil:
-					e.ElementsParameter[k].DefaultValue = v
-				case n < 1:
-					e.ElementsParameter[k].Value = v
-				}
-			}
-		}
+		getElementsParameterModifier(e, n)
 	}
-	eStartValue, eStartOk, eFixedValue, eFixedOk := getParameterFixedAndStart(e, parameterMap[e.Name])
-	if e.Prefixes.Variability == "parameter" || e.Annotation.Dialog.ShowStartAttribute || (e.Prefixes.Variability != "parameter" && (eStartOk || eFixedOk)) {
-		value := any(nil)
-
-		if _, ok := e.Modifiers["value"]; ok {
-			value = e.Modifiers["value"].(string)
-		}
-		if eStartOk || eFixedOk {
-			value = map[string]any{"start": eStartValue, "fixed": eFixedValue}
-		}
-		if p, ok := parameterMap[e.Name]; ok {
-			if final, finalOk := p.ParameterAttributes["final"]; finalOk && final.(bool) {
-				return
-			}
-			p.IsExtend = n > 1
-			if p.DefaultValue == nil {
-				p.DefaultValue = value
-			}
-		} else {
-			switch true {
-			case n > 0:
-				parameterMap[e.Name] = &Parameter{ParameterAttributesData: e.Modifiers, DefaultValue: value, Name: e.Name, IsExtend: n > 1, Type: "Normal"}
-			default:
-				parameterMap[e.Name] = &Parameter{ParameterAttributesData: e.Modifiers, Value: value, Name: e.Name, IsExtend: n > 1, Type: "Normal"}
-			}
-		}
-		parameterMap[e.Name].Comment = e.Comment
-		parameterMap[e.Name].ExtendName = parentName
-		e.Annotation.Dialog.getParameterDialog(parameterMap[e.Name], eStartOk)
-		e.Annotation.getParameterChoices(parameterMap[e.Name])
-		if e.Type != nil && (!e.Type.BasicType || e.Type.Restriction == "type") {
-			if len(e.Type.Elements) > 0 && e.Type.Elements[0].BaseClass != nil && e.Type.Elements[0].BaseClass.Name == "enumeration" {
-				parameterMap[e.Name].Type = "Enumeration"
-				options := []map[string]string{}
-				for i := 1; i < len(e.Type.Elements); i++ {
-					options = append(options, map[string]string{"value": e.Type.Elements[i].Name, "comment": e.Type.Elements[i].Comment})
-				}
-				parameterMap[e.Name].Options = options
-			}
-			parameterMap[e.Name].ParameterUnit = e.getParameterUnit()
-		}
-		if e.Type != nil && e.Type.BasicType {
-			parameterMap[e.Name].Type = "Normal"
-			switch e.Type.Name {
-			case "Boolean":
-				parameterMap[e.Name].Type = "CheckBox"
-			}
-		}
-		*parameterList = append(*parameterList, parameterMap[e.Name])
+	p := getElementsParameter(parameterMap, e, parentName, n)
+	if p != nil {
+		*parameterList = append(*parameterList, p)
 		return
 	}
 	if e.Type != nil && !end {
 		for _, element := range e.Type.Elements {
-			element.GetElementsParameterValue(parameterMap, parameterList, true, e.Type.Name, n+1)
+			element.GetElementsParameters(parameterMap, parameterList, true, e.Type.Name, n+1)
 		}
 	}
 	if e.BaseClass != nil {
-		if e.Kind == "extends" {
-			for modifierName, modifierValue := range e.Modifiers {
-				parameterMap[modifierName] = &Parameter{Name: modifierName, ParameterAttributesData: modifierValue, IsExtend: n > 1, Type: "Normal"}
-				p, ok := modifierValue.(map[string]any)
-				if ok {
-					parameterMap[modifierName].ParameterAttributes = p
-				}
-				parameterMap[modifierName].ParameterAttributesData = modifierValue
-			}
+		getElementsParameterBaseClass(parameterMap, parameterList, e, n)
+	}
+}
+
+func getElementsParameter(parameterMap map[string]*Parameter, e *elements, parentName string, n int) *Parameter {
+	p, _ := parameterMap[e.Name]
+	eStartValue, eStartOk, eFixedValue, eFixedOk := getParameterFixedAndStart(e, p)
+	if e.Prefixes.Variability == "parameter" || e.Annotation.Dialog.ShowStartAttribute || (e.Prefixes.Variability != "parameter" && (eStartOk || eFixedOk)) {
+		value := getElementsParameterValue(e)
+		if eStartOk || eFixedOk {
+			value = map[string]any{"start": eStartValue, "fixed": eFixedValue}
 		}
-		for _, element := range e.BaseClass.Elements {
-			element.GetElementsParameterValue(parameterMap, parameterList, true, e.BaseClass.Name, n+1)
+		p = getElementsParameterInstance(p, e, value, n)
+		if p == nil {
+			return nil
+		}
+		p.Comment = e.Comment
+		p.ExtendName = parentName
+		e.Annotation.Dialog.getParameterDialog(p, eStartOk)
+		e.Annotation.getParameterChoices(p)
+		if e.Type != nil && (!e.Type.BasicType || e.Type.Restriction == "type") {
+			getElementsParameterEnumeration(p, e)
+		}
+		if e.Type != nil && e.Type.BasicType && e.Type.Name == "Boolean" {
+			p.Type = "CheckBox"
+		}
+		parameterMap[e.Name] = p
+		return p
+	}
+	return nil
+}
+
+func getElementsParameterModifier(e *elements, n int) {
+	for k, v := range e.Modifiers {
+		if p, ok := e.ElementsParameter[k]; ok {
+			if p.DefaultValue == nil {
+				p.DefaultValue = v
+			}
+		} else {
+			e.ElementsParameter[k] = &Parameter{Name: k, Type: "Normal", Visible: !(e.Prefixes.Public != nil && *e.Prefixes.Public == false)}
+			switch true {
+			case n > 0 && e.ElementsParameter[k].DefaultValue == nil:
+				e.ElementsParameter[k].DefaultValue = v
+			case n < 1:
+				e.ElementsParameter[k].Value = v
+			}
 		}
 	}
 }
 
-func getParameterFixedAndStart(e *elements, p *Parameter) (string, bool, string, bool) {
+func getElementsParameterValue(e *elements) any {
+	value := any(nil)
+	if _, modifierOk := e.Modifiers["value"]; modifierOk {
+		value = e.Modifiers["value"].(string)
+	}
+	return value
+}
+
+func getElementsParameterInstance(p *Parameter, e *elements, value any, n int) *Parameter {
+	if p != nil {
+		if final, finalOk := p.ParameterAttributes["final"]; finalOk && final.(bool) {
+			return nil
+		}
+		p.IsExtend = n > 1
+		if p.DefaultValue == nil {
+			p.DefaultValue = value
+		}
+	} else {
+		p = &Parameter{ParameterAttributesData: e.Modifiers, Name: e.Name, IsExtend: n > 1, Type: "Normal", Visible: !(e.Prefixes.Public != nil && *e.Prefixes.Public == false)}
+		switch true {
+		case n > 0:
+			p.DefaultValue = value
+		default:
+			p.Value = value
+		}
+	}
+	return p
+}
+
+func getElementsParameterEnumeration(p *Parameter, e *elements) {
+	if len(e.Type.Elements) > 0 && e.Type.Elements[0].BaseClass != nil && e.Type.Elements[0].BaseClass.Name == "enumeration" {
+		p.Type = "Enumeration"
+		options := []map[string]string{}
+		for i := 1; i < len(e.Type.Elements); i++ {
+			options = append(options, map[string]string{"value": e.Type.Elements[i].Name, "comment": e.Type.Elements[i].Comment})
+		}
+		p.Options = options
+	}
+	p.ParameterUnit = e.getParameterUnit()
+}
+
+func getElementsParameterBaseClass(parameterMap map[string]*Parameter, parameterList *[]*Parameter, e *elements, n int) {
+	if e.Kind == "extends" {
+		for modifierName, modifierValue := range e.Modifiers {
+			parameterMap[modifierName] = &Parameter{Name: modifierName, ParameterAttributesData: modifierValue, IsExtend: n > 1, Type: "Normal", Visible: !(e.Prefixes.Public != nil && *e.Prefixes.Public == false)}
+			p, ok := modifierValue.(map[string]any)
+			if ok {
+				parameterMap[modifierName].ParameterAttributes = p
+			}
+			parameterMap[modifierName].ParameterAttributesData = modifierValue
+		}
+	}
+	for _, element := range e.BaseClass.Elements {
+		element.GetElementsParameters(parameterMap, parameterList, true, e.BaseClass.Name, n+1)
+	}
+}
+
+func getParameterFixedAndStart(e *elements, p *Parameter) (any, bool, string, bool) {
 	if e.Prefixes.Variability == "parameter" {
 		return "", false, "", false
 	}
-	startValue := ""
+	startValue := any(nil)
 	startOk := false
 	mStartValue, mStartOk := e.Modifiers["start"]
 	pStartValue, pStartOk := any(nil), false
@@ -524,7 +555,12 @@ func getParameterFixedAndStart(e *elements, p *Parameter) (string, bool, string,
 	}
 	switch true {
 	case mStartOk:
-		startValue = mStartValue.(string)
+		switch mStartValue.(type) {
+		case string:
+			startValue = mStartValue
+		case map[string]any:
+			startValue = mStartValue.(map[string]any)["value"]
+		}
 	case pStartOk:
 		startValue = pStartValue.(string)
 	}
@@ -562,6 +598,7 @@ type Parameter struct {
 	ParameterAttributesData any                 `json:"attributes,omitempty"`
 	ParameterUnit           map[string]any      `json:"parameterUnit"`
 	IsExtend                bool                `json:"isExtend"`
+	Visible                 bool                `json:"visible"`
 }
 
 // 获取单位数据，是一个map，包含源码当中定义的该类型的单位属性
