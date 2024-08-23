@@ -560,37 +560,35 @@ func getElementsParameterBaseClass(parameterMap map[string]*Parameter, parameter
 	}
 }
 
-func getParameterFixedAndStart(e *elements, p *Parameter) (any, bool, string, bool) {
+func getParameterFixedAndStart(e *elements, p *Parameter) (any, bool, any, bool) {
 	if e.Prefixes.Variability == "parameter" {
 		return "", false, "", false
 	}
-	startValue := any(nil)
-	startOk := false
-	mStartValue, mStartOk := e.Modifiers["start"]
-	pStartValue, pStartOk := any(nil), false
+	startValue, startOk := e.Modifiers["start"]
 	fixedValue, fixedOk := e.Modifiers["fixed"]
 	if p != nil {
-		pStartValue, pStartOk = p.ParameterAttributes["start"]
+		if !startOk {
+			startValue, startOk = p.ParameterAttributes["start"]
+		}
+		if !startOk {
+			startValue = nil
+		}
 		if !fixedOk {
 			fixedValue, fixedOk = p.ParameterAttributes["fixed"]
 		}
-	}
-	switch true {
-	case mStartOk:
-		switch mStartValue.(type) {
-		case string:
-			startValue = mStartValue
-		case map[string]any:
-			startValue = mStartValue.(map[string]any)["value"]
+		if !fixedOk {
+			fixedValue = nil
 		}
-	case pStartOk:
-		startValue = pStartValue.(string)
 	}
-	startOk = mStartOk || pStartOk
-	if !fixedOk {
-		fixedValue = ""
+	switch startValue.(type) {
+	case map[string]any:
+		startValue = startValue.(map[string]any)["value"]
 	}
-	return startValue, startOk, fixedValue.(string), fixedOk
+	switch fixedValue.(type) {
+	case map[string]any:
+		fixedValue = fixedValue.(map[string]any)["value"]
+	}
+	return startValue, startOk, fixedValue, fixedOk
 }
 
 // GetParameterAttributes 获取该类型的属性数据，max、min、start等等
