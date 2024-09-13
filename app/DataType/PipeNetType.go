@@ -12,3 +12,7 @@ type DownloadMappingConfigData struct {
 type DeleteMappingConfigData struct {
 	MappingConfigIdList []string `json:"mapping_config_id_list" binding:"required"`
 }
+
+type CopyMappingConfigData struct {
+	MappingConfigIdList []string `json:"mapping_config_id_list" binding:"required"`
+}

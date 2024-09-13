@@ -1,8 +1,10 @@
 package pipeNet
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/DataType"
@@ -148,5 +150,76 @@ func DeleteMappingConfigView(c *gin.Context) {
 	}
 
 	res.Msg = "删除成功"
+	c.JSON(http.StatusOK, res)
+}
+
+func CopyMappingConfigView(c *gin.Context) {
+	/*
+		# 复制映射配置表
+		开发人： 周强
+	*/
+	var res DataType.ResponseData
+	userName := c.GetHeader("username")
+	var item DataType.CopyMappingConfigData
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+
+	var mappingConfigList []DataBaseModel.YssimMappingConfig
+	DB.Where("id IN ? AND username = ?", item.MappingConfigIdList, userName).Find(&mappingConfigList)
+
+	var newMappingConfigList []DataBaseModel.YssimMappingConfig
+	for _, mappingConfig := range mappingConfigList {
+		// 生成复制出来的副本的名称
+		var newName string
+		var mappingConfigName DataBaseModel.YssimMappingConfig
+		if DB.Where("username = ? AND name = ?", userName, mappingConfig.Name+"-副本").First(&mappingConfigName); mappingConfigName.ID == "" {
+			newName = mappingConfig.Name + "-副本"
+		} else {
+			var mappingConfigNameList []DataBaseModel.YssimMappingConfig
+			DB.Where("username = ? AND name REGEXP ?", userName, mappingConfig.Name+"-副本"+"[0-9]+").Find(&mappingConfigNameList)
+			nums := []int{}
+			for _, mappingConfigName := range mappingConfigNameList {
+				strs := strings.Split(mappingConfigName.Name, "副本")
+				num, _ := strconv.Atoi(strs[len(strs)-1])
+				nums = append(nums, num)
+			}
+
+			// 获取待创建的副本的编号
+			num := serviceV2.FindFirstCopyNum(nums)
+			newName = fmt.Sprintf("%s%d", mappingConfig.Name+"-副本", num)
+		}
+
+		var newMappingConfig DataBaseModel.YssimMappingConfig = DataBaseModel.YssimMappingConfig{
+			ID:          uuid.New().String(),
+			UserName:    userName,
+			Name:        newName,
+			Description: mappingConfig.Description,
+			Path:        "",
+		}
+
+		newPath, ok := serviceV2.CopyMappingConfig(mappingConfig.Path, userName, newMappingConfig.ID)
+		if !ok {
+			res.Err = "复制失败"
+			res.Status = 2
+			c.JSON(http.StatusOK, res)
+			return
+		}
+
+		newMappingConfig.Path = newPath
+		newMappingConfigList = append(newMappingConfigList, newMappingConfig)
+	}
+
+	if err = DB.Create(&newMappingConfigList).Error; err != nil {
+		log.Println("复制映射配置表时数据库出现错误：", err)
+		res.Err = "复制失败"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	res.Msg = "复制成功"
 	c.JSON(http.StatusOK, res)
 }

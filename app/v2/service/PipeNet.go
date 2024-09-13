@@ -5,6 +5,8 @@ import (
 	"io"
 	"log"
 	"mime/multipart"
+	"sort"
+	"strings"
 	"yssim-go/library/fileOperation"
 )
 
@@ -82,4 +84,50 @@ func SaveMappingConfig(fileHeader *multipart.FileHeader, userName, mappingConfig
 		return "", false
 	}
 	return filePath, true
+}
+
+// 复制映射配置表
+func CopyMappingConfig(mappingConfigPath, userName, newMappingConfigId string) (dstPath string, ok bool) {
+	path := "static" + "/mappingConfig/" + userName + "/" + newMappingConfigId + "/"
+	strs := strings.Split(mappingConfigPath, "/")
+	dstPath = path + "/" + strs[len(strs)-1]
+
+	if ok := fileOperation.CreateFilePath(path); !ok {
+		log.Println("复制映射配置表时出现错误：创建文件父路径失败")
+		return "", false
+	}
+
+	if err := fileOperation.CopyDir(mappingConfigPath, dstPath); err != nil {
+		log.Println("复制映射配置表时出现错误：", err)
+		return "", false
+	}
+
+	return dstPath, true
+}
+
+func FindFirstCopyNum(nums []int) int {
+	sort.Ints(nums)
+	n := len(nums)
+	switch n {
+	case 0:
+		return 1
+	case 1:
+		if nums[0] == 0 || nums[0] == 1 {
+			return nums[0] + 1
+		}
+		return 1
+	default:
+		if nums[0] > 1 {
+			return 1
+		}
+		i, j := 0, 1
+		for j < n {
+			if nums[i]+1 == nums[j] {
+				i, j = i+1, j+1
+			} else {
+				return nums[i] + 1
+			}
+		}
+		return nums[i] + 1
+	}
 }
