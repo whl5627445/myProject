@@ -88,3 +88,37 @@ func UploadMappingConfigView(c *gin.Context) {
 	res.Data = mappingConfig.ID
 	c.JSON(http.StatusOK, res)
 }
+
+func DownloadMappingConfigView(c *gin.Context) {
+	/*
+		# 下载映射配置表
+		开发人： 周强
+	*/
+	var res DataType.ResponseData
+	userName := c.GetHeader("username")
+	var item DataType.DownloadMappingConfigData
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+
+	// 获取映射配置表记录信息
+	var mappingConfigList []DataBaseModel.YssimMappingConfig
+	if err := DB.Where("id IN ? AND username = ?", item.MappingConfigIdList, userName).Find(&mappingConfigList).Error; err != nil {
+		log.Println("获取映射配置表的详细参数信息时数据库出现错误：", err)
+		res.Err = "映射配置表不存在"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	// 开始下载
+	c.Header("Content-Type", "application/octet-stream")
+	c.Header("Content-Disposition", "attachment")
+	c.Header("Content-Transfer-Encoding", "binary")
+
+	for _, mappingConfig := range mappingConfigList {
+		c.File(mappingConfig.Path)
+	}
+}
