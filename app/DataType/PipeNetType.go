@@ -16,3 +16,9 @@ type DeleteMappingConfigData struct {
 type CopyMappingConfigData struct {
 	MappingConfigIdList []string `json:"mapping_config_id_list" binding:"required"`
 }
+
+type EditMappingConfigData struct {
+	ID          string `json:"id" binding:"required"`
+	Name        string `json:"name,omitempty" binding:"required"`
+	Description string `json:"description,omitempty" binding:""`
+}

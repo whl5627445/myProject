@@ -5,6 +5,7 @@ import (
 	"log"
 	"math"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"yssim-go/app/DataBaseModel"
@@ -269,5 +270,60 @@ func GetMappingConfigListView(c *gin.Context) {
 	data["total"] = total
 
 	res.Data = data
+	c.JSON(http.StatusOK, res)
+}
+
+func EditMappingConfigView(c *gin.Context) {
+	/*
+		# 编辑映射配置表基本信息
+		开发人： 周强
+	*/
+	var res DataType.ResponseData
+	userName := c.GetHeader("username")
+	var item DataType.EditMappingConfigData
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+
+	// 验证应用名称命名规则
+	matchSpaceName, _ := regexp.MatchString("^[_0-9a-zA-Z\u4e00-\u9fa5]+$", item.Name) // 由中文、字母、数字、下划线验证
+	if !matchSpaceName {
+		res.Err = "应用名称只能由中文、字母、数字、下划线组成"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	var mappingConfig DataBaseModel.YssimMappingConfig
+	if DB.Where("id = ? AND username = ?", item.ID, userName).First(&mappingConfig); mappingConfig.ID == "" {
+		res.Err = "映射配置表不存在"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	// 验证应用名称是否已存在
+	var mappingConfigName DataBaseModel.YssimMappingConfig
+	DB.Where("name = ? AND username = ?", item.Name, userName).First(&mappingConfigName)
+	if mappingConfigName.ID != "" && mappingConfigName.ID != item.ID {
+		res.Err = "映射配置表名称已存在"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	mappingConfig.Name = item.Name
+	mappingConfig.Description = item.Description
+	if err = DB.Save(&mappingConfig).Error; err != nil {
+		log.Println("编辑映射配置表基本信息时数据库出现错误：", err)
+		res.Err = "编辑失败"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	res.Msg = "编辑成功"
 	c.JSON(http.StatusOK, res)
 }
