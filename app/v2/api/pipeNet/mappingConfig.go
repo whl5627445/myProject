@@ -122,3 +122,31 @@ func DownloadMappingConfigView(c *gin.Context) {
 		c.File(mappingConfig.Path)
 	}
 }
+
+func DeleteMappingConfigView(c *gin.Context) {
+	/*
+		# 删除映射配置表
+		开发人： 周强
+	*/
+	var res DataType.ResponseData
+	userName := c.GetHeader("username")
+	var item DataType.DeleteMappingConfigData
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+
+	// 删除记录
+	var mappingConfig DataBaseModel.YssimMappingConfig
+	if err = DB.Where("id IN ? AND username = ?", item.MappingConfigIdList, userName).Delete(&mappingConfig).Error; err != nil {
+		log.Println("删除映射配置表时数据库出现错误：", err)
+		res.Err = "删除失败，请稍后再试"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	res.Msg = "删除成功"
+	c.JSON(http.StatusOK, res)
+}

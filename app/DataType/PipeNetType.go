@@ -8,3 +8,7 @@ type UploadMappingConfigData struct {
 type DownloadMappingConfigData struct {
 	MappingConfigIdList []string `json:"mapping_config_id_list" binding:"required"`
 }
+
+type DeleteMappingConfigData struct {
+	MappingConfigIdList []string `json:"mapping_config_id_list" binding:"required"`
+}
