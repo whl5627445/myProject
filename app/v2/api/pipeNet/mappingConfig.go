@@ -3,6 +3,7 @@ package pipeNet
 import (
 	"fmt"
 	"log"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -221,5 +222,52 @@ func CopyMappingConfigView(c *gin.Context) {
 	}
 
 	res.Msg = "复制成功"
+	c.JSON(http.StatusOK, res)
+}
+
+func GetMappingConfigListView(c *gin.Context) {
+	/*
+		# 获取映射配置表列表
+		开发人： 周强
+	*/
+	var res DataType.ResponseData
+	userName := c.GetHeader("username")
+	keyWords := c.Query("keywords")
+	pageNumStr := c.Query("page_num") //页码
+	pageNum, _ := strconv.Atoi(pageNumStr)
+
+	var total int64 //总条数s
+	DB.Where("username = ? AND name LIKE ?", userName, "%"+keyWords+"%").Find(&DataBaseModel.YssimMappingConfig{}).Count(&total)
+	pageCount := math.Ceil(float64(total) / 10) //总页数
+
+	var mappingConfigList []DataBaseModel.YssimMappingConfig
+	if err := DB.Limit(10).Offset((pageNum-1)*10).Where("username = ? AND name LIKE ?", userName, "%"+keyWords+"%").Order("create_time desc").Find(&mappingConfigList).Error; err != nil {
+		log.Println("获取映射配置表列表时数据库出现错误：", err)
+		res.Err = "获取映射配置表列表失败，请稍后再试"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	mappingConfigListData := make([]map[string]any, 0)
+	for _, m := range mappingConfigList {
+		data := map[string]any{
+			"id":          m.ID,
+			"username":    m.UserName,
+			"name":        m.Name,
+			"description": m.Description,
+			"create_time": m.CreatedAt,
+			"update_time": m.UpdatedAt,
+		}
+
+		mappingConfigListData = append(mappingConfigListData, data)
+	}
+
+	data := make(map[string]any)
+	data["mapping_config_list"] = mappingConfigListData
+	data["page_count"] = pageCount
+	data["total"] = total
+
+	res.Data = data
 	c.JSON(http.StatusOK, res)
 }
