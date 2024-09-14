@@ -1,10 +1,13 @@
 package pipeNet
 
 import (
+	"archive/zip"
 	"fmt"
+	"io"
 	"log"
 	"math"
 	"net/http"
+	"os"
 	"path"
 	"regexp"
 	"strconv"
@@ -108,24 +111,74 @@ func DownloadMappingConfigView(c *gin.Context) {
 		return
 	}
 
+	// 创建临时的ZIP文件
+	zipFile, err := os.CreateTemp("", "mapping_configs_*.zip")
+	if err != nil {
+		log.Println("创建临时的ZIP文件时出现错误：", err)
+		res.Err = "下载失败，请稍后再试"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	defer os.Remove(zipFile.Name())
+
+	// 创建ZIP writer
+	zipWriter := zip.NewWriter(zipFile)
+	defer zipWriter.Close()
+
 	// 获取映射配置表记录信息
 	var mappingConfigList []DataBaseModel.YssimMappingConfig
 	if err := DB.Where("id IN ? AND username = ?", item.MappingConfigIdList, userName).Find(&mappingConfigList).Error; err != nil {
-		log.Println("获取映射配置表的详细参数信息时数据库出现错误：", err)
+		log.Println("获取映射配置表记录信息时数据库出现错误：", err)
 		res.Err = "映射配置表不存在"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
 	}
 
-	// 开始下载
-	c.Header("Content-Type", "application/octet-stream")
-	c.Header("Content-Transfer-Encoding", "binary")
-
+	// 遍历每个目录，添加json文件到ZIP包
 	for _, mappingConfig := range mappingConfigList {
-		c.Header("Content-Disposition", "attachment; filename="+path.Base(mappingConfig.Path))
-		c.File(mappingConfig.Path)
+		file, err := os.Open(mappingConfig.Path)
+		if err != nil {
+			log.Println("打开映射配置表文件时出现错误：", err)
+			res.Err = "下载失败，请稍后再试"
+			res.Status = 2
+			c.JSON(http.StatusOK, res)
+			return
+		}
+		defer file.Close()
+
+		// 设置文件名
+		fileName := path.Base(mappingConfig.Path)
+
+		// 创建ZIP文件条目
+		zipFileWriter, err := zipWriter.Create(fileName)
+		if err != nil {
+			log.Println("创建ZIP文件条目时出现错误：", err)
+			res.Err = "下载失败，请稍后再试"
+			res.Status = 2
+			c.JSON(http.StatusOK, res)
+			return
+		}
+
+		// 将文件内容写入到ZIP条目
+		_, err = io.Copy(zipFileWriter, file)
+		if err != nil {
+			log.Println("将文件内容写入到ZIP条目时出现错误：", err)
+			res.Err = "下载失败，请稍后再试"
+			res.Status = 2
+			c.JSON(http.StatusOK, res)
+			return
+		}
 	}
+
+	// 关闭ZIP writer，确保所有内容都写入文件
+	zipWriter.Close()
+
+	c.Header("Content-Type", "application/zip")
+	c.Header("Content-Disposition", "attachment; filename=mapping_configs.zip")
+	c.Header("Content-Length", "0")
+	c.File(zipFile.Name())
 }
 
 func DeleteMappingConfigView(c *gin.Context) {
