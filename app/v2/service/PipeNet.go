@@ -73,19 +73,6 @@ func CheckMappingConfigContent(fileHeader *multipart.FileHeader) bool {
 	return true
 }
 
-// 保存管网信息文件
-func SavePipeNetInfoFile(fileHeader *multipart.FileHeader, userName, pipeNetInfoFileId string) (filepath string, ok bool) {
-	file, _ := fileHeader.Open()
-	data, _ := io.ReadAll(file)
-
-	filePath := "static" + "/pipeNetInfoFile/" + userName + "/" + pipeNetInfoFileId + "/" + fileHeader.Filename
-	if ok = fileOperation.WriteFileByte(filePath, data); !ok {
-		log.Println("保存管网信息文件时出现错误")
-		return "", false
-	}
-	return filePath, true
-}
-
 // 保存映射配置表
 func SaveMappingConfig(fileHeader *multipart.FileHeader, userName, mappingConfigId string) (filepath string, ok bool) {
 	file, _ := fileHeader.Open()

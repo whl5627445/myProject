@@ -252,3 +252,34 @@ func GetInfoFileListView(c *gin.Context) {
 	res.Data = data
 	c.JSON(http.StatusOK, res)
 }
+
+func GetInfoView(c *gin.Context) {
+	/*
+		# 获取管网信息文件列表,支持分页/关键词搜索
+		开发人： xqd
+	*/
+	var res DataType.ResponseData
+	userName := c.GetHeader("username")
+	pipeNetInfoId := c.Query("id")
+
+	var pipeNetInfoFileRecord DataBaseModel.YssimPipeNetCad
+	DB.Where("id = ? AND username = ?", pipeNetInfoId, userName).First(&pipeNetInfoFileRecord)
+	if pipeNetInfoFileRecord.ID == "" {
+		res.Err = "not found"
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	// 解析管网信息文件xml
+	err, data := serviceV2.ParseInfoFileXml(pipeNetInfoFileRecord.Path)
+	if err != nil {
+		res.Err = "解析xml失败"
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	// 返回数据
+	res.Data = data
+	c.JSON(http.StatusOK, res)
+
+}

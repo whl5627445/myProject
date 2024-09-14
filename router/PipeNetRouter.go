@@ -24,7 +24,7 @@ func PipeNetRouter(g *gin.Engine) {
 		ModelsV2.POST("/download", API.DownloadInfoFileView)
 		ModelsV2.POST("/delete", API.DeleteInfoFileView)
 		ModelsV2.GET("/list/get", API.GetInfoFileListView)
-		//ModelsV2.GET("/get", API.GetInfoView)
+		ModelsV2.GET("/get", API.GetInfoView)
 
 	}
 }
