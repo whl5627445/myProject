@@ -5,6 +5,7 @@ import (
 	"log"
 	"math"
 	"net/http"
+	"path"
 	"regexp"
 	"strconv"
 	"strings"
@@ -119,10 +120,10 @@ func DownloadMappingConfigView(c *gin.Context) {
 
 	// 开始下载
 	c.Header("Content-Type", "application/octet-stream")
-	c.Header("Content-Disposition", "attachment")
 	c.Header("Content-Transfer-Encoding", "binary")
 
 	for _, mappingConfig := range mappingConfigList {
+		c.Header("Content-Disposition", "attachment; filename="+path.Base(mappingConfig.Path))
 		c.File(mappingConfig.Path)
 	}
 }
