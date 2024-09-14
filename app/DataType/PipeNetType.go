@@ -22,3 +22,12 @@ type EditMappingConfigData struct {
 	Name        string `json:"name,omitempty" binding:"required"`
 	Description string `json:"description,omitempty" binding:""`
 }
+
+type UploadPipeNetInfoFileData struct {
+	Filename    string `form:"filename" binding:"required"`
+	Description string `form:"description" binding:"required"`
+}
+
+type DownloadPipeNetInfoFileData struct {
+	PipeNetInfoFileIdList []string `json:"id_list" binding:"required"`
+}
