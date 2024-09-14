@@ -18,4 +18,13 @@ func PipeNetRouter(g *gin.Engine) {
 		Models.GET("/mapping_config/details/get", API.GetMappingConfigDetailsView)
 		Models.POST("/mapping_config/details/edit", API.EditMappingConfigDetailsView)
 	}
+	var ModelsV2 = g.Group("/pipenet/info")
+	{
+		ModelsV2.POST("/upload", API.UploadInfoFileView)
+		ModelsV2.POST("/download", API.DownloadInfoFileView)
+		//ModelsV2.POST("/delete", API.DeleteInfoFileView)
+		//ModelsV2.GET("/list/get", API.GetInfoFileListView)
+		//ModelsV2.GET("/get", API.GetInfoView)
+
+	}
 }
