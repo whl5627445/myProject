@@ -381,3 +381,34 @@ func EditMappingConfigView(c *gin.Context) {
 	res.Msg = "编辑成功"
 	c.JSON(http.StatusOK, res)
 }
+
+func GetMappingConfigDetailsView(c *gin.Context) {
+	/*
+		# 获取映射配置表的详细参数信息
+		开发人： 周强
+	*/
+	var res DataType.ResponseData
+	userName := c.GetHeader("username")
+	mappingConfigId := c.Query("mapping_config_id")
+	// 获取映射配置表的基本信息
+	var mappingConfig DataBaseModel.YssimMappingConfig
+	if err := DB.Where("id = ? AND username = ?", mappingConfigId, userName).First(&mappingConfig).Error; err != nil {
+		log.Println("获取映射配置表详细参数信息时数据库出现错误：", err)
+		res.Err = "映射配置表不存在"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	// 获取映射配置表的详细参数信息
+	data, err := serviceV2.GetMappingConfigDetails(mappingConfig.Path)
+	if err != nil {
+		res.Err = "获取映射配置表详细参数信息失败"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	res.Data = data
+	c.JSON(http.StatusOK, res)
+}

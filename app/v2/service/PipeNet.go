@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"mime/multipart"
+	"os"
 	"sort"
 	"strings"
 	"yssim-go/library/fileOperation"
@@ -103,6 +104,89 @@ func CopyMappingConfig(mappingConfigPath, userName, newMappingConfigId string) (
 	}
 
 	return dstPath, true
+}
+
+type MappingConfigParseData struct {
+	System string  `json:"system"`
+	Medium string  `json:"medium"`
+	Parts  []*Part `json:"parts"`
+}
+
+type Part struct {
+	Kind          string  `json:"kind"`
+	Name          string  `json:"name"`
+	ModelicaClass string  `json:"modelica_class"`
+	ParameterList []*Pair `json:"parameter_list"`
+	PortList      []*Pair `json:"port_list"`
+}
+
+type Pair struct {
+	SourceName string `json:"source_name"`
+	TargetName string `json:"target_name"`
+}
+
+// 获取映射配置表管道信息详情
+func GetMappingConfigDetails(path string) (res *MappingConfigParseData, err error) {
+	// 读取文件内容
+	contentByte, err := os.ReadFile(path)
+	if err != nil {
+		log.Println("获取映射配置表管道信息详情出错: ", err)
+		return nil, err
+	}
+
+	// 将文件内容映射到MappingConfigData结构体中
+	m := MappingConfigData{}
+	if err := json.Unmarshal(contentByte, &m); err != nil {
+		log.Println("获取映射配置表管道信息详情出错: ", err)
+		return nil, err
+	}
+
+	// 获取管道信息
+	res = &MappingConfigParseData{
+		System: "",
+		Medium: "",
+		Parts:  []*Part{},
+	}
+
+	for _, item := range m.MappingDefinitions {
+		itemKind := item.Kind
+		switch itemKind {
+		case "System":
+			res.System = item.Usages.Default.ModelicaClass
+		case "Medium":
+			res.Medium = item.Usages.Default.ModelicaClass
+		case "Pipe", "Part":
+			// 获取管道信息
+			usagePipe := item.Usages
+			onePipe := &Part{
+				Kind:          item.Kind,
+				Name:          item.Type,
+				ModelicaClass: usagePipe.PipeModel.ModelicaClass,
+				ParameterList: []*Pair{},
+				PortList:      []*Pair{},
+			}
+
+			for _, each := range usagePipe.PipeModel.Parameters {
+				pair := &Pair{
+					SourceName: each.SourceName,
+					TargetName: each.TargetName,
+				}
+				onePipe.ParameterList = append(onePipe.ParameterList, pair)
+			}
+
+			for _, each := range usagePipe.PipeModel.Ports {
+				pair := &Pair{
+					SourceName: each.SourceName,
+					TargetName: each.TargetName,
+				}
+				onePipe.PortList = append(onePipe.PortList, pair)
+			}
+
+			res.Parts = append(res.Parts, onePipe)
+		}
+	}
+
+	return res, nil
 }
 
 func FindFirstCopyNum(nums []int) int {
