@@ -7,10 +7,11 @@ import (
 	"github.com/google/uuid"
 	"io"
 	"log"
+	"math"
 	"net/http"
 	"os"
-	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/DataType"
@@ -93,7 +94,7 @@ func UploadInfoFileView(c *gin.Context) {
 
 func DownloadInfoFileView(c *gin.Context) {
 	/*
-		# 下载映射配置表,支持单个/多个，下载zip文件
+		# 下载管网信息文件,支持单个/多个，下载zip文件
 		开发人： xqd
 	*/
 	var res DataType.ResponseData
@@ -118,7 +119,7 @@ func DownloadInfoFileView(c *gin.Context) {
 	zipWriter := zip.NewWriter(zipFile)
 	defer zipWriter.Close()
 
-	// 获取映射配置表记录信息
+	// 获取管网信息文件表记录信息
 	var pipeNetInfoFileRecordList []DataBaseModel.YssimPipeNetCad
 	if err = DB.Where("id IN ? AND username = ?", item.PipeNetInfoFileIdList, userName).Find(&pipeNetInfoFileRecordList).Error; err != nil {
 		log.Println("获管网信息文件的详细参数信息时数据库出现错误：", err)
@@ -179,34 +180,75 @@ func DownloadInfoFileView(c *gin.Context) {
 
 func DeleteInfoFileView(c *gin.Context) {
 	/*
-		# 下载映射配置表
+		# 删除管网信息文件,支持单个/多个
 		开发人： xqd
 	*/
 	var res DataType.ResponseData
 	userName := c.GetHeader("username")
-	var item DataType.DownloadMappingConfigData
+	var item DataType.DeletePipeNetInfoFileData
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
 
-	// 获取映射配置表记录信息
-	var mappingConfigList []DataBaseModel.YssimMappingConfig
-	if err := DB.Where("id IN ? AND username = ?", item.MappingConfigIdList, userName).Find(&mappingConfigList).Error; err != nil {
-		log.Println("获取映射配置表的详细参数信息时数据库出现错误：", err)
-		res.Err = "映射配置表不存在"
+	// 获取管网信息文件表记录信息
+	var pipeNetInfoFileRecordList []DataBaseModel.YssimPipeNetCad
+	if err = DB.Where("id IN ? AND username = ?", item.PipeNetInfoFileIdList, userName).Delete(&pipeNetInfoFileRecordList).Error; err != nil {
+		log.Println("删除网信息文件的详细参数信息时数据库出现错误：", err)
+		res.Err = "删除失败，请稍后再试"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
 	}
 
-	// 开始下载
-	c.Header("Content-Type", "application/octet-stream")
-	c.Header("Content-Transfer-Encoding", "binary")
+	res.Msg = "删除成功"
+	c.JSON(http.StatusOK, res)
+}
 
-	for _, mappingConfig := range mappingConfigList {
-		c.Header("Content-Disposition", "attachment; filename="+path.Base(mappingConfig.Path))
-		c.File(mappingConfig.Path)
+func GetInfoFileListView(c *gin.Context) {
+	/*
+		# 获取管网信息文件列表,支持分页/关键词搜索
+		开发人： xqd
+	*/
+	var res DataType.ResponseData
+	userName := c.GetHeader("username")
+	keyWords := c.Query("keywords")
+	pageNumStr := c.Query("page_num") //页码
+	pageNum, _ := strconv.Atoi(pageNumStr)
+
+	var total int64 //总条数s
+	DB.Where("username = ? AND name LIKE ?", userName, "%"+keyWords+"%").Find(&DataBaseModel.YssimPipeNetCad{}).Count(&total)
+	pageCount := math.Ceil(float64(total) / 10) //总页数
+
+	var pipeNetInfoFileRecordList []DataBaseModel.YssimPipeNetCad
+	if err := DB.Limit(10).Offset((pageNum-1)*10).Where("username = ? AND name LIKE ?", userName, "%"+keyWords+"%").Order("create_time desc").Find(&pipeNetInfoFileRecordList).Error; err != nil {
+		log.Println("获取管网信息文件列表时数据库出现错误：", err)
+		res.Err = "获取管网信息文件列表失败，请稍后再试"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
 	}
+
+	pipeNetInfoFileRecordListData := make([]map[string]any, 0)
+	for _, m := range pipeNetInfoFileRecordList {
+		data := map[string]any{
+			"id":          m.ID,
+			"username":    m.UserName,
+			"name":        m.Name,
+			"description": m.Description,
+			"create_time": m.CreatedAt,
+			"update_time": m.UpdatedAt,
+		}
+
+		pipeNetInfoFileRecordListData = append(pipeNetInfoFileRecordListData, data)
+	}
+
+	data := make(map[string]any)
+	data["pipe_net_info_list"] = pipeNetInfoFileRecordListData
+	data["page_count"] = pageCount
+	data["total"] = total
+
+	res.Data = data
+	c.JSON(http.StatusOK, res)
 }

@@ -31,3 +31,7 @@ type UploadPipeNetInfoFileData struct {
 type DownloadPipeNetInfoFileData struct {
 	PipeNetInfoFileIdList []string `json:"id_list" binding:"required"`
 }
+
+type DeletePipeNetInfoFileData struct {
+	PipeNetInfoFileIdList []string `json:"id_list" binding:"required"`
+}
