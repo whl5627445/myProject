@@ -2,18 +2,20 @@ package serviceV2
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"mime/multipart"
 	"os"
 	"sort"
 	"strings"
+	"yssim-go/app/DataType"
 	"yssim-go/library/fileOperation"
+
+	jsonpatch "github.com/evanphx/json-patch"
 )
 
 type MappingConfigData struct {
-	Version            any                  `json:"version"`
-	MappingDescription string               `json:"mappingDescription"`
 	MappingDefinitions []*MappingDefinition `json:"mappingDefinitions"`
 }
 
@@ -24,23 +26,18 @@ type MappingDefinition struct {
 }
 
 type UsagePipe struct {
-	Default         *SystemModel `json:"default,omitempty"`
-	PipeModel       *PipeModel   `json:"PipeModel,omitempty"`
-	BranchConnector *PipeModel   `json:"BranchConnector,omitempty"`
+	Default   *SystemModel `json:"default,omitempty"`
+	PipeModel *PipeModel   `json:"PipeModel,omitempty"`
 }
 
 type SystemModel struct {
 	ModelicaClass string `json:"modelicaClass"`
-	PhysicalID    string `json:"physicalID"`
-	Activate      bool   `json:"activate"`
 }
 
 type PipeModel struct {
 	ModelicaClass string         `json:"modelicaClass"`
-	PhysicalID    string         `json:"physicalID"`
 	Ports         []*MappingPair `json:"ports"`
 	Parameters    []*MappingPair `json:"parameters"`
-	Activate      bool           `json:"activate"`
 }
 
 type MappingPair struct {
@@ -187,6 +184,328 @@ func GetMappingConfigDetails(path string) (res *MappingConfigParseData, err erro
 	}
 
 	return res, nil
+}
+
+// 编辑映射配置表管道信息详情
+func EditMappingConfigDetails(path string, requestData *DataType.EditMappingConfigDetailsData, op string) bool {
+	if op != "add" && op != "replace" && op != "remove" {
+		log.Println("传入的json-patch操作方法错误，必须是 add replace remove")
+		return false
+	}
+
+	// 请求数据类型转换为MappingConfigParseData
+	item := ConvertMappingConfigStruct(requestData)
+
+	// 读取文件内容
+	originalContentByte, err := os.ReadFile(path)
+	if err != nil {
+		log.Println("读取映射配置表文件时出现错误", err)
+		return false
+	}
+	// 将文件内容映射到MappingConfigData结构体中
+	m := MappingConfigData{}
+	if err := json.Unmarshal(originalContentByte, &m); err != nil {
+		log.Println("将文件内容映射到MappingConfigData结构体中时出现错误", err)
+		return false
+	}
+
+	// 生成json-patch数据
+	var patches []map[string]any
+
+	switch op {
+	case "add":
+		// 处理添加新参数 add
+		patches = CreateAddJsonPatch(item, &m)
+	case "replace":
+		// 处理更新现有参数 replace
+		patches = CreateReplaceJsonPatch(item, &m)
+	case "remove":
+		// 处理删除现有参数 remove
+		patches = CreateRemoveJsonPatch(item, &m)
+	}
+
+	// 创建补丁对象
+	patchesByte, err := json.Marshal(patches)
+	fmt.Println(string(patchesByte))
+	if err != nil {
+		log.Println("json-patch创建补丁对象时出现错误", err)
+		return false
+	}
+
+	patchObj, err := jsonpatch.DecodePatch(patchesByte)
+	if err != nil {
+		log.Println("json-patch解析补丁对象时出现错误", err)
+		return false
+	}
+
+	// 应用补丁
+	fmt.Println(string(originalContentByte))
+	patchedData, err := patchObj.Apply(originalContentByte)
+	if err != nil {
+		log.Println("json-patch应用补丁修改源数据时出现错误", err)
+		return false
+	}
+
+	// 写回映射配置文件
+	if ok := fileOperation.WriteFileByte(path, patchedData); !ok {
+		log.Println("向映射配置文件中写回数据时出现错误", err)
+		return false
+	}
+
+	return true
+}
+
+func ConvertMappingConfigStruct(item *DataType.EditMappingConfigDetailsData) *MappingConfigParseData {
+	mappingConfigParseData := MappingConfigParseData{
+		System: item.System,
+		Medium: item.Medium,
+		Parts:  []*Part{},
+	}
+
+	for _, part := range item.Parts {
+		newPart := Part{
+			Kind:          part.Kind,
+			Name:          part.Name,
+			ModelicaClass: part.ModelicaClass,
+			ParameterList: []*Pair{},
+			PortList:      []*Pair{},
+		}
+
+		for _, parameter := range part.ParameterList {
+			newParameter := Pair{SourceName: parameter.SourceName, TargetName: parameter.TargetName}
+			newPart.ParameterList = append(newPart.ParameterList, &newParameter)
+		}
+
+		for _, port := range part.PortList {
+			newPort := Pair{SourceName: port.SourceName, TargetName: port.TargetName}
+			newPart.ParameterList = append(newPart.ParameterList, &newPort)
+		}
+
+		mappingConfigParseData.Parts = append(mappingConfigParseData.Parts, &newPart)
+	}
+
+	return &mappingConfigParseData
+}
+
+func GenSystemInfo(systemClass string) MappingDefinition {
+	systemInfo := MappingDefinition{
+		Kind:   "System",
+		Type:   "System",
+		Usages: &UsagePipe{Default: &SystemModel{ModelicaClass: systemClass}},
+	}
+
+	return systemInfo
+}
+
+func GenMediumInfo(mediumClass string) MappingDefinition {
+	systemInfo := MappingDefinition{
+		Kind:   "Medium",
+		Type:   "Medium",
+		Usages: &UsagePipe{Default: &SystemModel{ModelicaClass: mediumClass}},
+	}
+
+	return systemInfo
+}
+
+func GenPartInfo(requestPartInfo *Part) MappingDefinition {
+	partInfo := MappingDefinition{
+		Kind:   requestPartInfo.Kind,
+		Type:   requestPartInfo.Name,
+		Usages: &UsagePipe{PipeModel: &PipeModel{ModelicaClass: requestPartInfo.ModelicaClass}},
+	}
+
+	// 获取零件参数映射信息
+	partInfo.Usages.PipeModel.Parameters = []*MappingPair{}
+	for _, newParameter := range requestPartInfo.ParameterList {
+		newPair := MappingPair{
+			SourceName: newParameter.SourceName,
+			TargetName: newParameter.TargetName,
+		}
+		partInfo.Usages.PipeModel.Parameters = append(partInfo.Usages.PipeModel.Parameters, &newPair)
+	}
+
+	// 获取零件端点映射信息
+	partInfo.Usages.PipeModel.Ports = []*MappingPair{}
+	for _, newParameter := range requestPartInfo.PortList {
+		newPair := MappingPair{
+			SourceName: newParameter.SourceName,
+			TargetName: newParameter.TargetName,
+		}
+		partInfo.Usages.PipeModel.Ports = append(partInfo.Usages.PipeModel.Ports, &newPair)
+	}
+
+	return partInfo
+}
+
+func CreateAddJsonPatch(item *MappingConfigParseData, m *MappingConfigData) (patches []map[string]any) {
+	patches = []map[string]any{}
+
+	var systemAlreadyExist bool
+	var mediumAlreadyExist bool
+	for _, mappingDefinition := range m.MappingDefinitions {
+		if mappingDefinition.Kind == "System" {
+			systemAlreadyExist = true
+		}
+
+		if mappingDefinition.Kind == "Medium" {
+			mediumAlreadyExist = true
+		}
+	}
+
+	if !systemAlreadyExist {
+		systemInfo := GenSystemInfo(item.System)
+		// 生成json-patch格式的数据
+		patch := map[string]any{
+			"op":    "add",
+			"path":  fmt.Sprintf("%s%d", "/mappingDefinitions/", 0),
+			"value": systemInfo,
+		}
+		patches = append(patches, patch)
+	}
+
+	if !mediumAlreadyExist {
+		mediumInfo := GenMediumInfo(item.Medium)
+		// 生成json-patch格式的数据
+		patch := map[string]any{
+			"op":    "add",
+			"path":  fmt.Sprintf("%s%d", "/mappingDefinitions/", 0),
+			"value": mediumInfo,
+		}
+		patches = append(patches, patch)
+	}
+
+	for _, part := range item.Parts {
+		var alreadyExist bool
+		for _, mappingDefinition := range m.MappingDefinitions {
+			if part.Kind == mappingDefinition.Kind && part.Name == mappingDefinition.Type {
+				alreadyExist = true
+				break
+			}
+		}
+
+		if alreadyExist {
+			continue
+		}
+
+		// 生成零件的数据
+		partInfo := GenPartInfo(part)
+
+		// 生成json-patch格式的数据
+		patch := map[string]any{
+			"op":    "add",
+			"path":  fmt.Sprintf("%s%d", "/mappingDefinitions/", 0),
+			"value": partInfo,
+		}
+
+		patches = append(patches, patch)
+	}
+
+	return patches
+}
+
+func CreateReplaceJsonPatch(item *MappingConfigParseData, m *MappingConfigData) (patches []map[string]any) {
+	patches = []map[string]any{}
+	for index, mappingDefinition := range m.MappingDefinitions {
+		// 创建系统信息补丁
+		if mappingDefinition.Kind == "System" {
+			// 生成系统的数据
+			systemInfo := GenSystemInfo(item.System)
+			patch := map[string]any{
+				"op":    "replace",
+				"path":  fmt.Sprintf("%s%d", "/mappingDefinitions/", index),
+				"value": systemInfo,
+			}
+
+			patches = append(patches, patch)
+		}
+
+		// 创建介质信息补丁
+		if mappingDefinition.Kind == "Medium" {
+			// 生成介质的数据
+			mediumInfo := GenMediumInfo(item.Medium)
+			patch := map[string]any{
+				"op":    "replace",
+				"path":  fmt.Sprintf("%s%d", "/mappingDefinitions/", index),
+				"value": mediumInfo,
+			}
+
+			patches = append(patches, patch)
+		}
+
+		// 创建零件信息补丁
+		for _, part := range item.Parts {
+			if part.Kind == mappingDefinition.Kind && part.Name == mappingDefinition.Type {
+				partInfo := GenPartInfo(part)
+				// 生成json-patch格式的数据
+				patch := map[string]any{
+					"op":    "replace",
+					"path":  fmt.Sprintf("%s%d", "/mappingDefinitions/", index),
+					"value": partInfo,
+				}
+
+				patches = append(patches, patch)
+			}
+		}
+	}
+
+	return patches
+}
+
+func CreateRemoveJsonPatch(item *MappingConfigParseData, m *MappingConfigData) (patches []map[string]any) {
+	patches = []map[string]any{}
+	for index, mappingDefinition := range m.MappingDefinitions {
+		// 创建系统信息补丁
+		if mappingDefinition.Kind == "System" && item.System != "" {
+			patch := map[string]any{
+				"op":   "remove",
+				"path": fmt.Sprintf("%s%d", "/mappingDefinitions/", index),
+			}
+
+			patches = append(patches, patch)
+		}
+
+		// 创建介质信息补丁
+		if mappingDefinition.Kind == "Medium" && item.Medium != "" {
+			patch := map[string]any{
+				"op":   "remove",
+				"path": fmt.Sprintf("%s%d", "/mappingDefinitions/", index),
+			}
+
+			patches = append(patches, patch)
+		}
+
+		// 创建零件信息补丁
+		for _, part := range item.Parts {
+			if part.Kind == mappingDefinition.Kind && part.Name == mappingDefinition.Type {
+				patch := map[string]any{
+					"op":   "remove",
+					"path": fmt.Sprintf("%s%d", "/mappingDefinitions/", index),
+				}
+
+				patches = append(patches, patch)
+			}
+		}
+	}
+
+	return patches
+}
+
+// 应用补丁
+func ApplyJsonPatch(patchesByte, originalContentByte []byte) []byte {
+	patchObj, err := jsonpatch.DecodePatch([]byte(patchesByte))
+	if err != nil {
+		log.Println("json-patch解析补丁对象时出现错误", err)
+		return nil
+	}
+
+	// 应用补丁
+	patchedData, err := patchObj.Apply(originalContentByte)
+	if err != nil {
+		log.Println("json-patch应用补丁修改源数据时出现错误", err)
+		return nil
+	}
+
+	return patchedData
 }
 
 func FindFirstCopyNum(nums []int) int {
