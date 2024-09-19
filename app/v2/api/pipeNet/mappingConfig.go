@@ -401,7 +401,7 @@ func GetMappingConfigDetailsView(c *gin.Context) {
 	}
 
 	// 获取映射配置表的详细参数信息
-	data, err := serviceV2.GetMappingConfigDetails(mappingConfig.Path)
+	data, err := serviceV2.GetMappingConfigDetails(mappingConfig.ID, mappingConfig.Name, mappingConfig.Description, mappingConfig.Path)
 	if err != nil {
 		res.Err = "获取映射配置表详细参数信息失败"
 		res.Status = 2

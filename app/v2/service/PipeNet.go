@@ -104,9 +104,12 @@ func CopyMappingConfig(mappingConfigPath, userName, newMappingConfigId string) (
 }
 
 type MappingConfigParseData struct {
-	System string  `json:"system"`
-	Medium string  `json:"medium"`
-	Parts  []*Part `json:"parts"`
+	ID          string  `json:"id"`
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	System      string  `json:"system"`
+	Medium      string  `json:"medium"`
+	Parts       []*Part `json:"parts"`
 }
 
 type Part struct {
@@ -123,7 +126,7 @@ type Pair struct {
 }
 
 // 获取映射配置表管道信息详情
-func GetMappingConfigDetails(path string) (res *MappingConfigParseData, err error) {
+func GetMappingConfigDetails(id, name, description, path string) (res *MappingConfigParseData, err error) {
 	// 读取文件内容
 	contentByte, err := os.ReadFile(path)
 	if err != nil {
@@ -140,9 +143,12 @@ func GetMappingConfigDetails(path string) (res *MappingConfigParseData, err erro
 
 	// 获取管道信息
 	res = &MappingConfigParseData{
-		System: "",
-		Medium: "",
-		Parts:  []*Part{},
+		ID:          id,
+		Name:        name,
+		Description: description,
+		System:      "",
+		Medium:      "",
+		Parts:       []*Part{},
 	}
 
 	for _, item := range m.MappingDefinitions {
@@ -407,7 +413,7 @@ func CreateReplaceJsonPatch(item *MappingConfigParseData, m *MappingConfigData) 
 	patches = []map[string]any{}
 	for index, mappingDefinition := range m.MappingDefinitions {
 		// 创建系统信息补丁
-		if mappingDefinition.Kind == "System" {
+		if mappingDefinition.Kind == "System" && item.System != "" {
 			// 生成系统的数据
 			systemInfo := GenSystemInfo(item.System)
 			patch := map[string]any{
@@ -420,7 +426,7 @@ func CreateReplaceJsonPatch(item *MappingConfigParseData, m *MappingConfigData) 
 		}
 
 		// 创建介质信息补丁
-		if mappingDefinition.Kind == "Medium" {
+		if mappingDefinition.Kind == "Medium" && item.Medium != "" {
 			// 生成介质的数据
 			mediumInfo := GenMediumInfo(item.Medium)
 			patch := map[string]any{

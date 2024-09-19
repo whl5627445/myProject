@@ -41,7 +41,7 @@ type EditMappingConfigDetailsData struct {
 	Op     string  `json:"op" binding:"required"`
 	System string  `json:"system" binding:""`
 	Medium string  `json:"medium" binding:""`
-	Parts  []*Part `json:"parts" binding:"required"`
+	Parts  []*Part `json:"parts" binding:""`
 }
 
 type Part struct {
