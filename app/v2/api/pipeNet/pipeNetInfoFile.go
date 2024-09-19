@@ -3,8 +3,6 @@ package pipeNet
 import (
 	"archive/zip"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"io"
 	"log"
 	"math"
@@ -16,6 +14,9 @@ import (
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/DataType"
 	serviceV2 "yssim-go/app/v2/service"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 func UploadInfoFileView(c *gin.Context) {
@@ -262,7 +263,7 @@ func GetInfoView(c *gin.Context) {
 	}
 
 	// 解析管网信息文件xml
-	err, data := serviceV2.ParseInfoFileXml(pipeNetInfoFileRecord.Path)
+	data, err := serviceV2.ParseInfoFileXml(pipeNetInfoFileRecord.Path)
 	if err != nil {
 		res.Err = "解析xml失败"
 		c.JSON(http.StatusOK, res)

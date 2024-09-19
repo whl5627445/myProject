@@ -3,7 +3,6 @@ package serviceV2
 import (
 	"encoding/xml"
 	"errors"
-	"github.com/google/uuid"
 	"io"
 	"log"
 	"mime/multipart"
@@ -11,6 +10,8 @@ import (
 	"yssim-go/library/fileOperation"
 	"yssim-go/library/stringOperation"
 	"yssim-go/library/xmlOperation"
+
+	"github.com/google/uuid"
 )
 
 // 定义XML结构
@@ -64,17 +65,17 @@ type Node struct {
 	Point     string `xml:"Point,attr"`
 }
 
-func ParseInfoFileXml(path string) (error, Root) {
+func ParseInfoFileXml(path string) (Root, error) {
 	var root Root
 	xmlFile, err := os.Open(path) // 打开XML文件
 	if err != nil {
-		return errors.New("解析失败"), root
+		return root, errors.New("解析失败")
 	}
 	defer xmlFile.Close()
 
 	err = xmlOperation.ParseXML(path, &root)
 	if err != nil {
-		return errors.New("解析失败"), root
+		return root, errors.New("解析失败")
 	}
 	for i := 0; i < len(root.Components); i++ {
 		root.Components[i].LegalName = stringOperation.SanitizeName(root.Components[i].InstanceName)
@@ -91,7 +92,7 @@ func ParseInfoFileXml(path string) (error, Root) {
 		}
 
 	}
-	return nil, root
+	return root, nil
 }
 
 // SaveInfoFileXml 将 Root 结构保存为 XML 文件

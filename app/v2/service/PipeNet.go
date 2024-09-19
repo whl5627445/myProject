@@ -284,7 +284,7 @@ func ConvertMappingConfigStruct(item *DataType.EditMappingConfigDetailsData) *Ma
 
 		for _, port := range part.PortList {
 			newPort := Pair{SourceName: port.SourceName, TargetName: port.TargetName}
-			newPart.ParameterList = append(newPart.ParameterList, &newPort)
+			newPart.PortList = append(newPart.PortList, &newPort)
 		}
 
 		mappingConfigParseData.Parts = append(mappingConfigParseData.Parts, &newPart)
