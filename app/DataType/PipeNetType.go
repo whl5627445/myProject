@@ -46,10 +46,11 @@ type EditMappingConfigDetailsData struct {
 
 type Part struct {
 	Kind          string  `json:"kind" binding:"required"`
-	Name          string  `json:"name" binding:"required"`
-	ModelicaClass string  `json:"modelica_class" binding:"required"`
-	ParameterList []*Pair `json:"parameter_list" binding:"required"`
-	PortList      []*Pair `json:"port_list" binding:"required"`
+	Name          string  `json:"name" binding:""`
+	NewName       string  `json:"newName" binding:""`
+	ModelicaClass string  `json:"modelica_class" binding:""`
+	ParameterList []*Pair `json:"parameter_list" binding:""`
+	PortList      []*Pair `json:"port_list" binding:""`
 }
 
 type Pair struct {

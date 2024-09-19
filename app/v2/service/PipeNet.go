@@ -115,6 +115,7 @@ type MappingConfigParseData struct {
 type Part struct {
 	Kind          string  `json:"kind"`
 	Name          string  `json:"name"`
+	NewName       string  `json:"newName"`
 	ModelicaClass string  `json:"modelica_class"`
 	ParameterList []*Pair `json:"parameter_list"`
 	PortList      []*Pair `json:"port_list"`
@@ -164,6 +165,7 @@ func GetMappingConfigDetails(id, name, description, path string) (res *MappingCo
 			onePipe := &Part{
 				Kind:          item.Kind,
 				Name:          item.Type,
+				NewName:       item.Type,
 				ModelicaClass: usagePipe.PipeModel.ModelicaClass,
 				ParameterList: []*Pair{},
 				PortList:      []*Pair{},
@@ -271,6 +273,7 @@ func ConvertMappingConfigStruct(item *DataType.EditMappingConfigDetailsData) *Ma
 	for _, part := range item.Parts {
 		newPart := Part{
 			Kind:          part.Kind,
+			NewName:       part.NewName,
 			Name:          part.Name,
 			ModelicaClass: part.ModelicaClass,
 			ParameterList: []*Pair{},
@@ -296,7 +299,7 @@ func ConvertMappingConfigStruct(item *DataType.EditMappingConfigDetailsData) *Ma
 func GenSystemInfo(systemClass string) MappingDefinition {
 	systemInfo := MappingDefinition{
 		Kind:   "System",
-		Type:   "System",
+		Type:   "系统",
 		Usages: &UsagePipe{Default: &SystemModel{ModelicaClass: systemClass}},
 	}
 
@@ -306,7 +309,7 @@ func GenSystemInfo(systemClass string) MappingDefinition {
 func GenMediumInfo(mediumClass string) MappingDefinition {
 	systemInfo := MappingDefinition{
 		Kind:   "Medium",
-		Type:   "Medium",
+		Type:   "介质",
 		Usages: &UsagePipe{Default: &SystemModel{ModelicaClass: mediumClass}},
 	}
 
@@ -316,7 +319,7 @@ func GenMediumInfo(mediumClass string) MappingDefinition {
 func GenPartInfo(requestPartInfo *Part) MappingDefinition {
 	partInfo := MappingDefinition{
 		Kind:   requestPartInfo.Kind,
-		Type:   requestPartInfo.Name,
+		Type:   requestPartInfo.NewName,
 		Usages: &UsagePipe{PipeModel: &PipeModel{ModelicaClass: requestPartInfo.ModelicaClass}},
 	}
 
