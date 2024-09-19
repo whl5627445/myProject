@@ -38,15 +38,6 @@ func UploadInfoFileView(c *gin.Context) {
 		return
 	}
 
-	// 验证名称是否已存在
-	var pipeNetInfoFileRecord DataBaseModel.YssimPipeNetCad
-	if DB.Where("name = ? AND username = ?", fileInfo.Filename, userName).First(&pipeNetInfoFileRecord); pipeNetInfoFileRecord.ID != "" {
-		res.Err = "管网信息文件名称已存在"
-		res.Status = 2
-		c.JSON(http.StatusOK, res)
-		return
-	}
-
 	// 限制文件格式
 	if !strings.HasSuffix(varFile.Filename, ".xml") {
 		res.Err = "暂时只支持 *.xml 格式文件上传"
@@ -66,7 +57,7 @@ func UploadInfoFileView(c *gin.Context) {
 	var newPipeNetInfoFileRecord = DataBaseModel.YssimPipeNetCad{
 		ID:          uuid.New().String(),
 		UserName:    userName,
-		Name:        fileInfo.Filename,
+		Name:        varFile.Filename,
 		Description: fileInfo.Description,
 		Path:        "",
 	}

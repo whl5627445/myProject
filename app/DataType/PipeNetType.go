@@ -24,7 +24,7 @@ type EditMappingConfigData struct {
 }
 
 type UploadPipeNetInfoFileData struct {
-	Filename    string `form:"filename" binding:"required"`
+	Filename    string `form:"filename" binding:""`
 	Description string `form:"description" binding:""`
 }
 
