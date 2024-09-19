@@ -47,13 +47,13 @@ func UploadInfoFileView(c *gin.Context) {
 		return
 	}
 
-	// 校验文件内容 待完成
-	//if !serviceV2.CheckMappingConfigContent(varFile) {
-	//	res.Err = "内容格式有误，请检查后再上传"
-	//	res.Status = 2
-	//	c.JSON(http.StatusOK, res)
-	//	return
-	//}
+	// 校验文件内容
+	if !serviceV2.CheckInfoFileXml(varFile) {
+		res.Err = "内容格式有误，请检查后再上传"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
 
 	var newPipeNetInfoFileRecord = DataBaseModel.YssimPipeNetCad{
 		ID:          uuid.New().String(),

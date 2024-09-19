@@ -21,16 +21,17 @@ type Root struct {
 }
 
 type Component struct {
-	InstanceName string      `xml:"InstanceName,attr"`
-	Name         string      `xml:"-"` //防止字段在 XML 中被序列化
-	Id           string      `xml:"-"` //防止字段在 XML 中被序列化
-	LegalName    string      `xml:"LegalName,attr"`
-	PartNumber   string      `xml:"PartNumber.CAD,attr"`
-	TypeCAD      string      `xml:"Type.CAD,attr"`
-	TypeCAE      string      `xml:"Type.CAE,attr"`
-	Comments     string      `xml:"comments,attr"`
-	Properties   []Property  `xml:"Properties>Property"`
-	Parameters   []Parameter `xml:"parameters>parameter"`
+	InstanceName  string      `xml:"InstanceName,attr"`
+	Name          string      `xml:"-"` //防止字段在 XML 中被序列化
+	Id            string      `xml:"-"` //防止字段在 XML 中被序列化
+	LegalName     string      `xml:"LegalName,attr"`
+	PartNumberCAD string      `xml:"PartNumber.CAD,attr"`
+	PartNumberCAE string      `xml:"PartNumber.CAE,attr"`
+	TypeCAD       string      `xml:"Type.CAD,attr"`
+	TypeCAE       string      `xml:"Type.CAE,attr"`
+	Comments      string      `xml:"comments,attr"`
+	Properties    []Property  `xml:"Properties>Property"`
+	Parameters    []Parameter `xml:"parameters>parameter"`
 }
 
 type Property struct {
@@ -63,6 +64,33 @@ type Connector struct {
 type Node struct {
 	Component string `xml:"Component,attr"`
 	Point     string `xml:"Point,attr"`
+}
+
+func CheckInfoFileXml(fileHeader *multipart.FileHeader) bool {
+	// 验证管网信息文件内容
+	file, _ := fileHeader.Open()
+	rawData, _ := io.ReadAll(file)
+	m := Root{}
+	err := xml.Unmarshal(rawData, &m)
+
+	if err != nil {
+		log.Println("验证管网信息文件内容时出现错误：", err)
+		return false
+	}
+
+	if m.Components == nil {
+		log.Println("验证管网信息文件内容时出现错误：找不到Components字段")
+		return false
+	}
+
+	for _, component := range m.Components {
+		if component.InstanceName == "" {
+			log.Println("验证映射配置表内容时出现错误：InstanceName字段为空")
+			return false
+		}
+	}
+
+	return true
 }
 
 func ParseInfoFileXml(path string) (Root, error) {
