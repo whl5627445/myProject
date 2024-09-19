@@ -277,6 +277,12 @@ func GetInfoView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
+	//重新保存为xml
+	fmt.Println(pipeNetInfoFileRecord.Path)
+	err = serviceV2.SaveInfoFileXml(pipeNetInfoFileRecord.Path, data)
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	// 返回数据
 	res.Data = data
