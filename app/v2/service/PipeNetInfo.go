@@ -35,12 +35,14 @@ type Component struct {
 }
 
 type Property struct {
-	Type     string  `xml:"Type,attr"`
-	Name     string  `xml:"Name,attr"`
-	Id       string  `xml:"-"` //防止字段在 XML 中被序列化
-	Points   []Point `xml:"Point"`
-	Value    string  `xml:"Value,attr,omitempty"`
-	Comments string  `xml:"comments,attr"`
+	Type   string  `xml:"Type,attr"`
+	Name   string  `xml:"Name,attr"`
+	Id     string  `xml:"-"` //防止字段在 XML 中被序列化
+	Points []Point `xml:"Point"`
+	//Value    string  `xml:"Value,attr,omitempty"`
+	//Comments string  `xml:"comments,attr,omitempty"`
+	Radius string `xml:"Radius,attr,omitempty"`
+	Unit   string `xml:"Unit,attr,omitempty"`
 }
 
 type Point struct {
@@ -52,6 +54,7 @@ type Point struct {
 type Parameter struct {
 	Name  string `xml:"Name,attr"`
 	Value string `xml:"Value,attr"`
+	Unit  string `xml:"Unit,attr"`
 	Id    string `xml:"-"` //防止字段在 XML 中被序列化
 }
 
