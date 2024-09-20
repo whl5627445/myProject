@@ -290,13 +290,19 @@ func GetMappingConfigListView(c *gin.Context) {
 	keyWords := c.Query("keywords")
 	pageNumStr := c.Query("page_num") //页码
 	pageNum, _ := strconv.Atoi(pageNumStr)
+	pageSizeStr := c.Query("page_size") //每页条数
+	pageSize, _ := strconv.Atoi(pageSizeStr)
+	if pageSize <= 0 {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
 
 	var total int64 //总条数s
 	DB.Where("username = ? AND name LIKE ?", userName, "%"+keyWords+"%").Find(&DataBaseModel.YssimMappingConfig{}).Count(&total)
-	pageCount := math.Ceil(float64(total) / 10) //总页数
+	pageCount := math.Ceil(float64(total) / float64(pageSize)) //总页数
 
 	var mappingConfigList []DataBaseModel.YssimMappingConfig
-	if err := DB.Limit(10).Offset((pageNum-1)*10).Where("username = ? AND name LIKE ?", userName, "%"+keyWords+"%").Order("create_time desc").Find(&mappingConfigList).Error; err != nil {
+	if err := DB.Limit(pageSize).Offset((pageNum-1)*pageSize).Where("username = ? AND name LIKE ?", userName, "%"+keyWords+"%").Order("create_time desc").Find(&mappingConfigList).Error; err != nil {
 		log.Println("获取映射配置表列表时数据库出现错误：", err)
 		res.Err = "获取映射配置表列表失败，请稍后再试"
 		res.Status = 2
