@@ -11,9 +11,11 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/DataType"
 	serviceV2 "yssim-go/app/v2/service"
+	"yssim-go/library/fileOperation"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -99,13 +101,14 @@ func DownloadInfoFileView(c *gin.Context) {
 	}
 
 	// 创建临时的ZIP文件
-	zipFile, err := os.CreateTemp("", "xml_files_*.zip")
-	if err != nil {
+	zipPath := "static/pipeNetInfoFile/tmp/" + time.Now().Local().Format("20060102150405") + "/" + "xml_files.zip"
+	zipFile, ok := fileOperation.CreateFile(zipPath)
+	if !ok {
 		res.Err = "下载失败，请稍后再试"
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	defer os.Remove(zipFile.Name())
+	defer zipFile.Close()
 
 	// 创建ZIP writer
 	zipWriter := zip.NewWriter(zipFile)
@@ -161,13 +164,8 @@ func DownloadInfoFileView(c *gin.Context) {
 
 	// 关闭ZIP writer，确保所有内容都写入文件
 	zipWriter.Close()
-
-	// 设置下载响应头
-	c.Header("Content-Type", "application/zip")
-	c.Header("Content-Disposition", "attachment; filename=xml_files.zip")
-	c.Header("Content-Length", "0")
-	c.File(zipFile.Name())
-
+	res.Data = map[string]string{"url": zipPath}
+	c.JSON(http.StatusOK, res)
 }
 
 func DeleteInfoFileView(c *gin.Context) {

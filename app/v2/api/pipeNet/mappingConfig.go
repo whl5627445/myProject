@@ -12,10 +12,12 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/DataType"
 	serviceV2 "yssim-go/app/v2/service"
 	"yssim-go/config"
+	"yssim-go/library/fileOperation"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -111,16 +113,17 @@ func DownloadMappingConfigView(c *gin.Context) {
 		return
 	}
 
-	// 创建临时的ZIP文件
-	zipFile, err := os.CreateTemp("", "mapping_configs_*.zip")
-	if err != nil {
+	// 创建ZIP文件
+	zipPath := "static/mappingConfig/tmp/" + time.Now().Local().Format("20060102150405") + "/" + "mapping_configs.zip"
+	zipFile, ok := fileOperation.CreateFile(zipPath)
+	if !ok {
 		log.Println("创建临时的ZIP文件时出现错误：", err)
 		res.Err = "下载失败，请稍后再试"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
 	}
-	defer os.Remove(zipFile.Name())
+	defer zipFile.Close()
 
 	// 创建ZIP writer
 	zipWriter := zip.NewWriter(zipFile)
@@ -174,11 +177,8 @@ func DownloadMappingConfigView(c *gin.Context) {
 
 	// 关闭ZIP writer，确保所有内容都写入文件
 	zipWriter.Close()
-
-	c.Header("Content-Type", "application/zip")
-	c.Header("Content-Disposition", "attachment; filename=mapping_configs.zip")
-	c.Header("Content-Length", "0")
-	c.File(zipFile.Name())
+	res.Data = map[string]string{"url": zipPath}
+	c.JSON(http.StatusOK, res)
 }
 
 func DeleteMappingConfigView(c *gin.Context) {
