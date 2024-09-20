@@ -63,6 +63,7 @@ type Connector struct {
 
 type Node struct {
 	Component string `xml:"Component,attr"`
+	LegalName string `xml:"LegalName,attr"`
 	Point     string `xml:"Point,attr"`
 }
 
@@ -119,6 +120,10 @@ func ParseInfoFileXml(path string) (Root, error) {
 			root.Components[i].Parameters[j].Id = uuid.New().String()
 		}
 
+	}
+	for i := 0; i < len(root.Connectors); i++ {
+		root.Connectors[i].From.LegalName = stringOperation.SanitizeName(root.Connectors[i].From.Component)
+		root.Connectors[i].To.LegalName = stringOperation.SanitizeName(root.Connectors[i].To.Component)
 	}
 	return root, nil
 }
