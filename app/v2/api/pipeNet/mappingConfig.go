@@ -447,3 +447,61 @@ func EditMappingConfigDetailsView(c *gin.Context) {
 	res.Msg = "编辑成功"
 	c.JSON(http.StatusOK, res)
 }
+
+func GetInstanceMappingView(c *gin.Context) {
+	/*
+		# 获取映射配置表的详细参数信息
+		开发人： 周强
+	*/
+	var res DataType.ResponseData
+	userName := c.GetHeader("username")
+	pipeNetInfoId := c.Query("pipe_net_info_id")
+	mappingConfigId := c.Query("mapping_config_id")
+
+	// 获取管网信息文件基本信息
+	var pipeNetInfoFileRecord DataBaseModel.YssimPipeNetCad
+	DB.Where("id = ? AND username = ?", pipeNetInfoId, userName).First(&pipeNetInfoFileRecord)
+	if pipeNetInfoFileRecord.ID == "" {
+		res.Err = "not found"
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	// 获取映射配置表的基本信息
+	var mappingConfig DataBaseModel.YssimMappingConfig
+	if err := DB.Where("id = ? AND username = ?", mappingConfigId, userName).First(&mappingConfig).Error; err != nil {
+		log.Println("获取映射配置表详细参数信息时数据库出现错误：", err)
+		res.Err = "映射配置表不存在"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	// 生成实例映射表
+	data, err := serviceV2.GetInstanceMapping(pipeNetInfoFileRecord.ID, mappingConfig.ID, pipeNetInfoFileRecord.Path, mappingConfig.Path)
+	if err != nil {
+		res.Err = "获取映射配置表详细参数信息失败"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	res.Data = data
+	c.JSON(http.StatusOK, res)
+}
+
+func GetInstanceMappingLogView(c *gin.Context) {
+	/*
+		# 获取映射配置表的详细参数信息
+		开发人： 周强
+	*/
+	var res DataType.ResponseData
+	//userName := c.GetHeader("username")
+	pipeNetInfoId := c.Query("pipe_net_info_id")
+	mappingConfigId := c.Query("mapping_config_id")
+
+	// 生成实例映射表
+	data := serviceV2.GetInstanceMappingLog(mappingConfigId, pipeNetInfoId)
+	res.Data = data
+	c.JSON(http.StatusOK, res)
+}

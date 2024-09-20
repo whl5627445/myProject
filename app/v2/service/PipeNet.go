@@ -1,6 +1,7 @@
 package serviceV2
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,7 +10,9 @@ import (
 	"os"
 	"sort"
 	"strings"
+	"time"
 	"yssim-go/app/DataType"
+	"yssim-go/config"
 	"yssim-go/library/fileOperation"
 
 	jsonpatch "github.com/evanphx/json-patch"
@@ -515,6 +518,78 @@ func ApplyJsonPatch(patchesByte, originalContentByte []byte) []byte {
 	}
 
 	return patchedData
+}
+
+// 获取映射配置表管道信息详情
+func GetInstanceMapping(pipeNetInfoFileId, mappingConfigId, pipeNetInfoFilePath, mappingConfigPath string) (res map[string]*Root, err error) {
+
+	// 解析管网信息文件
+	pipeNetXml1, err := ParseInfoFileXml(pipeNetInfoFilePath)
+	var pipeNetXml2 Root
+	data, _ := json.Marshal(&pipeNetXml1)
+	json.Unmarshal(data, &pipeNetXml2)
+
+	// 将管网信息文件第二棵树的Name替换为LegalName
+	for i := 0; i < len(pipeNetXml2.Components); i++ {
+		pipeNetXml2.Components[i].Name = pipeNetXml2.Components[i].LegalName
+	}
+
+	// 解析映射配置表
+	mappingConfig, err := GetMappingConfigDetails("", "", "", mappingConfigPath)
+	haha := map[string]*Part{}
+	for _, part := range mappingConfig.Parts {
+		haha[part.Name] = part
+	}
+
+	logRedisKey := "pipenet" + "_" + mappingConfigId + "_" + pipeNetInfoFileId
+	// 删除之前的日志
+	config.R.Del(context.Background(), logRedisKey)
+	config.R.RPush(context.Background(), logRedisKey, time.Now().Format("2006-01-02 15:04:05"))
+
+	// 开始进行匹配
+	for i := 0; i < len(pipeNetXml2.Components); i++ {
+		var found bool
+		if part, ok := haha[pipeNetXml2.Components[i].TypeCAD]; ok {
+			pipeNetXml2.Components[i].TypeCAE = part.ModelicaClass
+			for j := 0; j < len(pipeNetXml2.Components[i].Parameters); j++ {
+				var foundPamameter bool
+				for _, partInfo := range part.ParameterList {
+					if pipeNetXml2.Components[i].Parameters[j].Name == partInfo.SourceName {
+						pipeNetXml2.Components[i].Parameters[j].Name = partInfo.TargetName
+						foundPamameter = true
+						break
+					}
+				}
+
+				if !foundPamameter {
+					info := fmt.Sprintf("映射配置表中没有找到参数信息：零件: %s CAD类型: %s CAD参数: %s CAE类型: %s CAE参数: 缺失",
+						pipeNetXml2.Components[i].Name, pipeNetXml2.Components[i].TypeCAD, pipeNetXml2.Components[i].Parameters[j].Name, pipeNetXml2.Components[i].TypeCAE)
+					config.R.RPush(context.Background(), logRedisKey, info)
+					pipeNetXml2.Components[i].Parameters[j].Name = ""
+				}
+
+			}
+			found = true
+		}
+		if !found {
+			info := fmt.Sprintf("映射配置表中没有找到零件类型信息: 零件: %s CAD类型: %s CAE类型: 缺失", pipeNetXml2.Components[i].InstanceName, pipeNetXml2.Components[i].TypeCAD)
+			config.R.RPush(context.Background(), logRedisKey, info)
+			pipeNetXml2.Components[i].TypeCAE = ""
+			for j := 0; j < len(pipeNetXml2.Components[i].Parameters); j++ {
+				pipeNetXml2.Components[i].Parameters[j].Name = ""
+			}
+		}
+	}
+
+	res = map[string]*Root{"file_tree": &pipeNetXml1, "mapping_tree": &pipeNetXml2}
+	return res, nil
+}
+
+// 获取映射配置表管道信息详情
+func GetInstanceMappingLog(mappingConfigId, pipeNetInfoFileId string) []string {
+	logRedisKey := "pipenet" + "_" + mappingConfigId + "_" + pipeNetInfoFileId
+	logs, _ := config.R.LRange(context.Background(), logRedisKey, 0, -1).Result()
+	return logs
 }
 
 func FindFirstCopyNum(nums []int) int {
