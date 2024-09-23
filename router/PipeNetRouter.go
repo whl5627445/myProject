@@ -28,6 +28,8 @@ func PipeNetRouter(g *gin.Engine) {
 		ModelsV2.POST("/download", API.DownloadInfoFileView)
 		ModelsV2.POST("/delete", API.DeleteInfoFileView)
 		ModelsV2.GET("/list/get", API.GetInfoFileListView)
+		ModelsV2.POST("/edit", API.EditInfoFileView)
+		ModelsV2.POST("/copy", API.CopyInfoFileView)
 		ModelsV2.GET("/get", API.GetInfoView)
 
 	}

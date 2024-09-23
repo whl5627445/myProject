@@ -7,6 +7,7 @@ import (
 	"log"
 	"mime/multipart"
 	"os"
+	"strings"
 	"yssim-go/library/fileOperation"
 	"yssim-go/library/stringOperation"
 	"yssim-go/library/xmlOperation"
@@ -168,4 +169,23 @@ func SavePipeNetInfoFile(fileHeader *multipart.FileHeader, userName, pipeNetInfo
 		return "", false
 	}
 	return filePath, true
+}
+
+// 复制管网信息文件
+func CopyPipeNetInfoFile(pipeNetInfoFilePath, userName, pipeNetInfoFileId string) (dstPath string, ok bool) {
+	path := "static" + "/pipeNetInfoFile/" + userName + "/" + pipeNetInfoFileId + "/"
+	strs := strings.Split(pipeNetInfoFilePath, "/")
+	dstPath = path + "/" + strs[len(strs)-1]
+
+	if ok := fileOperation.CreateFilePath(path); !ok {
+		log.Println("复制管网信息文件时出现错误：创建文件父路径失败")
+		return "", false
+	}
+
+	if err := fileOperation.CopyDir(pipeNetInfoFilePath, dstPath); err != nil {
+		log.Println("复制管网信息文件时出现错误：", err)
+		return "", false
+	}
+
+	return dstPath, true
 }

@@ -28,6 +28,15 @@ type UploadPipeNetInfoFileData struct {
 	Description string `form:"description" binding:""`
 }
 
+type EditPipeNetInfoFileData struct {
+	ID          string `json:"id" binding:"required"`
+	Name        string `json:"name,omitempty" binding:"required"`
+	Description string `json:"description,omitempty" binding:""`
+}
+type CopyPipeNetInfoFileData struct {
+	PipeNetInfoFileIdList []string `json:"id_list" binding:"required"`
+}
+
 type DownloadPipeNetInfoFileData struct {
 	PipeNetInfoFileIdList []string `json:"id_list" binding:"required"`
 }
