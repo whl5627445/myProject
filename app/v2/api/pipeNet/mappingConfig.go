@@ -15,10 +15,12 @@ import (
 	"time"
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/DataType"
+	"yssim-go/app/v1/service"
 	serviceV2 "yssim-go/app/v2/service"
 	"yssim-go/config"
 	"yssim-go/library/fileOperation"
 
+	"github.com/bytedance/sonic"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -508,6 +510,186 @@ func GetInstanceMappingLogView(c *gin.Context) {
 
 	// 生成实例映射表
 	data := serviceV2.GetInstanceMappingLog(mappingConfigId, pipeNetInfoId)
+	res.Data = data
+	c.JSON(http.StatusOK, res)
+}
+
+func CreatePipeNetModelView(c *gin.Context) {
+	/*
+		# 创建管网模型
+		开发人： 周强
+	*/
+	var res DataType.ResponseData
+	var item DataType.CreatePipeNetModelData
+	err := c.BindJSON(&item)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	username := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
+
+	// 获取管网信息文件基本信息
+	var pipeNetInfoFileRecord DataBaseModel.YssimPipeNetCad
+	DB.Where("id = ? AND username = ?", item.PipeNetInfoId, username).First(&pipeNetInfoFileRecord)
+	if pipeNetInfoFileRecord.ID == "" {
+		res.Err = "not found"
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	// 获取映射配置表的基本信息
+	var mappingConfig DataBaseModel.YssimMappingConfig
+	if err := DB.Where("id = ? AND username = ?", item.MappingConfigId, username).First(&mappingConfig).Error; err != nil {
+		log.Println("获取映射配置表详细参数信息时数据库出现错误：", err)
+		res.Err = "映射配置表不存在"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	// 获取映射配置表的详细参数信息
+	/*mappingConfigData, err := serviceV2.GetMappingConfigDetails(mappingConfig.ID, mappingConfig.Name, mappingConfig.Description, mappingConfig.Path)
+	if err != nil {
+		res.Err = "获取映射配置表详细参数信息失败"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}*/
+
+	// 生成实例映射表
+	data, err := serviceV2.GetInstanceMapping(pipeNetInfoFileRecord.ID, mappingConfig.ID, pipeNetInfoFileRecord.Path, mappingConfig.Path)
+	if err != nil {
+		res.Err = "获取映射配置表详细参数信息失败"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	// 创建空模型
+	matchSpaceName1, _ := regexp.MatchString("^[_a-zA-Z0-9]+$", item.Name) // 字母、数字、下划线验证
+	matchSpaceName2, _ := regexp.MatchString("^[a-zA-Z_]", item.Name)      // 字母、下划线验证
+	if !matchSpaceName1 {
+		res.Err = "模型名称只能由字母数字下划线组成"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	if !matchSpaceName2 {
+		res.Err = "模型名称只能由字母下划线开头"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	createPackageName := item.Name
+	createPackageNameALL := item.Name
+
+	var packageRecord DataBaseModel.YssimModels
+	var newPackage = DataBaseModel.YssimModels{
+		ID:          uuid.New().String(),
+		PackageName: createPackageName,
+		SysUser:     username,
+		FilePath:    "static/UserFiles/UploadFile/" + username + "/" + time.Now().Local().Format("20060102150405") + "/" + createPackageName + "/" + createPackageName + ".mo",
+		UserSpaceId: userSpaceId,
+	}
+	DB.Where("package_name = ? AND sys_or_user IN ? AND userspace_id IN ?", item.Name, []string{"sys", username}, []string{"0", userSpaceId}).First(&packageRecord)
+	if packageRecord.PackageName != "" && item.Vars.InsertTo == "" {
+		res.Err = "模型名称已存在，请修改后再试。"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	if item.Vars.InsertTo != "" {
+		var insertPackageRecord DataBaseModel.YssimModels
+		DB.Where("id = ? AND sys_or_user = ? AND userspace_id = ?", item.PackageId, username, userSpaceId).First(&insertPackageRecord)
+		createPackageNameALL = item.Vars.InsertTo + "." + item.Name
+		modelChildList := service.GetModelChild(item.Vars.InsertTo)
+		for i := 0; i < len(modelChildList); i++ {
+			if modelChildList[i].Name == item.Name {
+				res.Err = "名称已存在，请修改后再试。"
+				res.Status = 2
+				c.JSON(http.StatusOK, res)
+				return
+			}
+		}
+		newPackage = insertPackageRecord
+	} else {
+		DB.Create(&newPackage)
+	}
+	result := service.CreateModelAndPackage(createPackageName, item.Vars.InsertTo, item.Vars.Expand, item.StrType, createPackageNameALL, item.Comment, item.Vars.Partial, item.Vars.Encapsulated, item.Vars.State)
+	if result {
+		saveResult := service.SaveModelCode(createPackageNameALL, newPackage.FilePath)
+		if saveResult {
+			res.Msg = "创建成功"
+			if item.Vars.InsertTo == "" {
+				res.Data = map[string]string{
+					"model_name": newPackage.PackageName,
+					// "model_str": service.GetModelCode(createPackageName),
+					"id": newPackage.ID,
+				}
+			} else {
+				res.Data = map[string]string{
+					"model_name": item.Vars.InsertTo + "." + item.Name,
+					// "model_str": service.GetModelCode(createPackageName),
+					"id": newPackage.ID,
+				}
+			}
+			packageInformation := service.GetPackageInformation()
+			packageInformationJson, _ := sonic.Marshal(packageInformation)
+			DB.Model(DataBaseModel.YssimUserSpace{}).Where("id = ? AND username = ?", userSpaceId, username).Update("package_information", packageInformationJson)
+		} else {
+			DB.Delete(&newPackage)
+			res.Err = "创建模型失败，请稍后再试"
+			res.Status = 2
+			c.JSON(http.StatusOK, res)
+			return
+		}
+	} else {
+		res.Err = "创建模型失败，请稍后再试"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	// 向模型中写入组件代码
+	instanceMapping, _ := data["mapping_tree"]
+	//modelicaCode := "model " + item.Name + "    " + "redeclare package Medium = " + mappingConfigData.Medium + "    "
+	for _, component := range instanceMapping.Components {
+		rotation := strconv.Itoa(0)
+		data := service.GetIconNew(component.TypeCAE, component.LegalName, false)
+		graphics := data["graphics"].(map[string]any)
+		graphics["originDiagram"] = "0, 0"
+		graphics["original_name"] = component.LegalName
+		graphics["name"] = component.LegalName
+		graphics["type"] = "Transformation"
+		graphics["ID"] = "0"
+		graphics["rotateAngle"] = graphics["rotation"]
+		extentDiagram := service.GetModelExtentToString(graphics["coordinate_system"])
+		data["graphics"] = graphics
+		result, msg := service.AddComponent(component.LegalName, component.TypeCAE, item.Name, "0, 0", rotation, extentDiagram)
+		if !result {
+			res.Err = msg
+			res.Status = 2
+			fmt.Println(msg)
+			break
+		} else {
+			service.SetPackageUses(component.TypeCAE, item.Name)
+			service.ModelSave(item.Name)
+		}
+
+		// 向组件中写入参数
+		for _, parameter := range component.Parameters {
+			result = service.SetElementModifierValue(item.Name, component.LegalName+"."+parameter.Name, parameter.Value)
+			if !result {
+				fmt.Printf("向组件中写入参数失败: %s %s %s\n", item.Name, parameter.Name, parameter.Value)
+			}
+		}
+		result = service.SetElementModifierValue(item.Name, component.LegalName+".Medium", "redeclare package Medium = Medium")
+		if !result {
+			fmt.Printf("向组件中写入Medium参数失败\n")
+		}
+		service.ModelSave(item.Name)
+	}
 	res.Data = data
 	c.JSON(http.StatusOK, res)
 }
