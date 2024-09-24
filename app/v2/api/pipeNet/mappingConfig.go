@@ -549,13 +549,13 @@ func CreatePipeNetModelView(c *gin.Context) {
 		return
 	}
 	// 获取映射配置表的详细参数信息
-	/*mappingConfigData, err := serviceV2.GetMappingConfigDetails(mappingConfig.ID, mappingConfig.Name, mappingConfig.Description, mappingConfig.Path)
+	mappingConfigData, err := serviceV2.GetMappingConfigDetails(mappingConfig.ID, mappingConfig.Name, mappingConfig.Description, mappingConfig.Path)
 	if err != nil {
 		res.Err = "获取映射配置表详细参数信息失败"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
-	}*/
+	}
 
 	// 生成实例映射表
 	data, err := serviceV2.GetInstanceMapping(pipeNetInfoFileRecord.ID, mappingConfig.ID, pipeNetInfoFileRecord.Path, mappingConfig.Path)
@@ -651,6 +651,16 @@ func CreatePipeNetModelView(c *gin.Context) {
 		return
 	}
 
+	// 向模型中写入Mdedium代码
+	modelStr := "model " + item.Name + "\n" + "replaceable package Medium = " + mappingConfigData.Medium + ";\n" + "end " + item.Name + ";"
+	parseResult, ok := service.ParseCodeString(modelStr, newPackage.FilePath)
+	if ok && len(parseResult) > 0 {
+		loadResult := service.LoadCodeString(modelStr, newPackage.FilePath)
+		if loadResult {
+			service.ModelSave(parseResult)
+		}
+	}
+
 	// 向模型中写入组件代码
 	instanceMapping, _ := data["mapping_tree"]
 	//modelicaCode := "model " + item.Name + "    " + "redeclare package Medium = " + mappingConfigData.Medium + "    "
@@ -658,6 +668,9 @@ func CreatePipeNetModelView(c *gin.Context) {
 		rotation := strconv.Itoa(0)
 		data := service.GetIconNew(component.TypeCAE, component.LegalName, false)
 		graphics := data["graphics"].(map[string]any)
+		if graphics == nil {
+			continue
+		}
 		graphics["originDiagram"] = "0, 0"
 		graphics["original_name"] = component.LegalName
 		graphics["name"] = component.LegalName
@@ -690,6 +703,28 @@ func CreatePipeNetModelView(c *gin.Context) {
 		}
 		service.ModelSave(item.Name)
 	}
-	res.Data = data
+
+	// 向模型中写入连线代码
+	portNameMapping := map[string]string{
+		"Point1": "port_a",
+		"Point2": "port_b",
+		"Point3": "port_c",
+	}
+	for _, connector := range instanceMapping.Connectors {
+		result := service.AddConnection(
+			item.Name,
+			connector.From.LegalName+"."+portNameMapping[connector.From.Point],
+			connector.To.LegalName+"."+portNameMapping[connector.To.Point],
+			"0,0,127",
+			[]string{},
+		)
+		if !result {
+			fmt.Printf("添加组件连线失败: %s %s %s\n", item.Name, connector.From.LegalName, connector.To.LegalName)
+		}
+		//service.ModelSave(item.Name)
+	}
+	service.ModelSave(item.Name)
+
+	res.Data = map[string]any{"encryption": false, "model": serviceV2.GetModelInstanceData(item.Name)}
 	c.JSON(http.StatusOK, res)
 }

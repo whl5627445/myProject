@@ -845,6 +845,9 @@ func (o *ZmqObject) AddConnection(classNameAll, connectStart, connectEnd, color 
 	}
 	points := strings.Join(linePointsList, ",")
 	annotate := "annotate=Line(points={" + points + "},color={" + color + "}))"
+	if len(linePoints) == 0 {
+		annotate = "annotate=Line(color={" + color + "}))"
+	}
 	cmd := "addConnection(" + connectStart + "," + connectEnd + "," + classNameAll + "," + annotate
 	result, ok := o.SendExpressionNoParsed(cmd)
 	result = bytes.ReplaceAll(result, []byte("\n"), []byte(""))
