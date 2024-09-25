@@ -626,7 +626,12 @@ func WritePipeNetModeCode(modeName, modeNameAll, medium, packageName, packageFil
 	// 向模型中写入Mdedium代码
 	oldCode := serviceV1.GetModelCode(packageName)
 	modelStr := "model " + modeName + "\n" + "replaceable package Medium = " + medium + ";\n" + "end " + modeName + ";"
-	newCodeStr := strings.ReplaceAll(oldCode, "model "+modeName+"\n  end "+modeName+";", modelStr)
+	newCodeStr := ""
+	if modeName != modeNameAll {
+		newCodeStr = strings.ReplaceAll(oldCode, "model "+modeName+"\n  end "+modeName+";", modelStr)
+	} else {
+		newCodeStr = strings.ReplaceAll(oldCode, "model "+modeName+"\nend "+modeName+";", modelStr)
+	}
 	parseResult, ok := serviceV1.ParseCodeString(newCodeStr, packageFilePath)
 	if ok && len(parseResult) > 0 {
 		loadResult := serviceV1.LoadCodeString(newCodeStr, packageFilePath)

@@ -652,6 +652,10 @@ func CreatePipeNetModelView(c *gin.Context) {
 	// 向模型中写入Modelica代码
 	serviceV2.WritePipeNetModeCode(item.Name, createPackageNameALL, mappingConfigData.Medium, newPackage.PackageName, newPackage.FilePath, data["mapping_tree"])
 
-	res.Data = map[string]any{"encryption": false, "model": serviceV2.GetModelInstanceData(createPackageNameALL)}
+	res.Data = map[string]any{
+		"encryption": false,
+		"model":      serviceV2.GetModelInstanceData(createPackageNameALL),
+		"package_id": newPackage.ID,
+	}
 	c.JSON(http.StatusOK, res)
 }
