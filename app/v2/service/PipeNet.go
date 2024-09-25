@@ -9,9 +9,11 @@ import (
 	"mime/multipart"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 	"yssim-go/app/DataType"
+	serviceV1 "yssim-go/app/v1/service"
 	"yssim-go/config"
 	"yssim-go/library/fileOperation"
 
@@ -617,4 +619,78 @@ func FindFirstCopyNum(nums []int) int {
 		}
 		return nums[i] + 1
 	}
+}
+
+// 生成管网模型源码
+func WritePipeNetModeCode(modeName, modeNameAll, medium, packageName, packageFilePath string, instanceMapping *Root) {
+	// 向模型中写入Mdedium代码
+	oldCode := serviceV1.GetModelCode(packageName)
+	modelStr := "model " + modeName + "\n" + "replaceable package Medium = " + medium + ";\n" + "end " + modeName + ";"
+	newCodeStr := strings.ReplaceAll(oldCode, "model "+modeName+"\n  end "+modeName+";", modelStr)
+	parseResult, ok := serviceV1.ParseCodeString(newCodeStr, packageFilePath)
+	if ok && len(parseResult) > 0 {
+		loadResult := serviceV1.LoadCodeString(newCodeStr, packageFilePath)
+		if loadResult {
+			serviceV1.ModelSave(parseResult)
+		}
+	}
+
+	// 向模型中写入组件代码
+	for _, component := range instanceMapping.Components {
+		rotation := strconv.Itoa(0)
+		data := serviceV1.GetIconNew(component.TypeCAE, component.LegalName, false)
+		graphics := data["graphics"].(map[string]any)
+		if graphics == nil {
+			continue
+		}
+		graphics["originDiagram"] = "0, 0"
+		graphics["original_name"] = component.LegalName
+		graphics["name"] = component.LegalName
+		graphics["type"] = "Transformation"
+		graphics["ID"] = "0"
+		graphics["rotateAngle"] = graphics["rotation"]
+		extentDiagram := serviceV1.GetModelExtentToString(graphics["coordinate_system"])
+		data["graphics"] = graphics
+		result, msg := serviceV1.AddComponent(component.LegalName, component.TypeCAE, modeNameAll, "0, 0", rotation, extentDiagram)
+		if !result {
+			fmt.Println(msg)
+			break
+		} else {
+			serviceV1.SetPackageUses(component.TypeCAE, modeNameAll)
+			serviceV1.ModelSave(modeNameAll)
+		}
+
+		// 向组件中写入参数
+		for _, parameter := range component.Parameters {
+			result = serviceV1.SetElementModifierValue(modeNameAll, component.LegalName+"."+parameter.Name, parameter.Value)
+			if !result {
+				fmt.Printf("向组件中写入参数失败: %s %s %s\n", modeNameAll, parameter.Name, parameter.Value)
+			}
+		}
+		result = serviceV1.SetElementModifierValue(modeNameAll, component.LegalName+".Medium", "redeclare package Medium = Medium")
+		if !result {
+			fmt.Printf("向组件中写入Medium参数失败\n")
+		}
+		serviceV1.ModelSave(modeNameAll)
+	}
+
+	// 向模型中写入连线代码
+	portNameMapping := map[string]string{
+		"Point1": "port_a",
+		"Point2": "port_b",
+		"Point3": "port_c",
+	}
+	for _, connector := range instanceMapping.Connectors {
+		result := serviceV1.AddConnection(
+			modeNameAll,
+			connector.From.LegalName+"."+portNameMapping[connector.From.Point],
+			connector.To.LegalName+"."+portNameMapping[connector.To.Point],
+			"0,0,127",
+			[]string{},
+		)
+		if !result {
+			fmt.Printf("添加组件连线失败: %s %s %s\n", modeNameAll, connector.From.LegalName, connector.To.LegalName)
+		}
+	}
+	serviceV1.ModelSave(modeNameAll)
 }

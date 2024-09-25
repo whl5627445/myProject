@@ -624,14 +624,12 @@ func CreatePipeNetModelView(c *gin.Context) {
 			if item.Vars.InsertTo == "" {
 				res.Data = map[string]string{
 					"model_name": newPackage.PackageName,
-					// "model_str": service.GetModelCode(createPackageName),
-					"id": newPackage.ID,
+					"id":         newPackage.ID,
 				}
 			} else {
 				res.Data = map[string]string{
 					"model_name": item.Vars.InsertTo + "." + item.Name,
-					// "model_str": service.GetModelCode(createPackageName),
-					"id": newPackage.ID,
+					"id":         newPackage.ID,
 				}
 			}
 			packageInformation := service.GetPackageInformation()
@@ -651,80 +649,9 @@ func CreatePipeNetModelView(c *gin.Context) {
 		return
 	}
 
-	// 向模型中写入Mdedium代码
-	modelStr := "model " + item.Name + "\n" + "replaceable package Medium = " + mappingConfigData.Medium + ";\n" + "end " + item.Name + ";"
-	parseResult, ok := service.ParseCodeString(modelStr, newPackage.FilePath)
-	if ok && len(parseResult) > 0 {
-		loadResult := service.LoadCodeString(modelStr, newPackage.FilePath)
-		if loadResult {
-			service.ModelSave(parseResult)
-		}
-	}
+	// 向模型中写入Modelica代码
+	serviceV2.WritePipeNetModeCode(item.Name, createPackageNameALL, mappingConfigData.Medium, newPackage.PackageName, newPackage.FilePath, data["mapping_tree"])
 
-	// 向模型中写入组件代码
-	instanceMapping, _ := data["mapping_tree"]
-	//modelicaCode := "model " + item.Name + "    " + "redeclare package Medium = " + mappingConfigData.Medium + "    "
-	for _, component := range instanceMapping.Components {
-		rotation := strconv.Itoa(0)
-		data := service.GetIconNew(component.TypeCAE, component.LegalName, false)
-		graphics := data["graphics"].(map[string]any)
-		if graphics == nil {
-			continue
-		}
-		graphics["originDiagram"] = "0, 0"
-		graphics["original_name"] = component.LegalName
-		graphics["name"] = component.LegalName
-		graphics["type"] = "Transformation"
-		graphics["ID"] = "0"
-		graphics["rotateAngle"] = graphics["rotation"]
-		extentDiagram := service.GetModelExtentToString(graphics["coordinate_system"])
-		data["graphics"] = graphics
-		result, msg := service.AddComponent(component.LegalName, component.TypeCAE, item.Name, "0, 0", rotation, extentDiagram)
-		if !result {
-			res.Err = msg
-			res.Status = 2
-			fmt.Println(msg)
-			break
-		} else {
-			service.SetPackageUses(component.TypeCAE, item.Name)
-			service.ModelSave(item.Name)
-		}
-
-		// 向组件中写入参数
-		for _, parameter := range component.Parameters {
-			result = service.SetElementModifierValue(item.Name, component.LegalName+"."+parameter.Name, parameter.Value)
-			if !result {
-				fmt.Printf("向组件中写入参数失败: %s %s %s\n", item.Name, parameter.Name, parameter.Value)
-			}
-		}
-		result = service.SetElementModifierValue(item.Name, component.LegalName+".Medium", "redeclare package Medium = Medium")
-		if !result {
-			fmt.Printf("向组件中写入Medium参数失败\n")
-		}
-		service.ModelSave(item.Name)
-	}
-
-	// 向模型中写入连线代码
-	portNameMapping := map[string]string{
-		"Point1": "port_a",
-		"Point2": "port_b",
-		"Point3": "port_c",
-	}
-	for _, connector := range instanceMapping.Connectors {
-		result := service.AddConnection(
-			item.Name,
-			connector.From.LegalName+"."+portNameMapping[connector.From.Point],
-			connector.To.LegalName+"."+portNameMapping[connector.To.Point],
-			"0,0,127",
-			[]string{},
-		)
-		if !result {
-			fmt.Printf("添加组件连线失败: %s %s %s\n", item.Name, connector.From.LegalName, connector.To.LegalName)
-		}
-		//service.ModelSave(item.Name)
-	}
-	service.ModelSave(item.Name)
-
-	res.Data = map[string]any{"encryption": false, "model": serviceV2.GetModelInstanceData(item.Name)}
+	res.Data = map[string]any{"encryption": false, "model": serviceV2.GetModelInstanceData(createPackageNameALL)}
 	c.JSON(http.StatusOK, res)
 }
