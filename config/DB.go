@@ -57,5 +57,7 @@ func init() {
 		&DataBaseModel.AppPageComponent{},
 		&DataBaseModel.AppPageComponentsRelease{},
 		&DataBaseModel.AppComponentBases{},
+
+		&DataBaseModel.YssimResourceLib{},
 	)
 }
