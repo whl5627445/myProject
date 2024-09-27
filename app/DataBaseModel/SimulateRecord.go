@@ -49,6 +49,7 @@ type YssimExperimentRecord struct {
 	ExperimentName    string         `gorm:"column:experiment_name;type:varchar(32);comment:仿真实验名称"`
 	ModelName         string         `gorm:"column:model_name;type:varchar(256);comment:模型名称"`
 	ModelVarData      datatypes.JSON `gorm:"column:model_var_data;type:json;comment:模型参数数据"`
+	IsFullModelVar    bool           `gorm:"column:is_full_model_var;type:bool;comment:是否是全量组件参数"`
 	StartTime         string         `gorm:"column:start_time;type:varchar(32);comment:仿真配置当中的开始时间"`
 	StopTime          string         `gorm:"column:stop_time;type:varchar(32);comment:仿真配置当中的结束时间"`
 	Method            string         `gorm:"column:method;default:\"\";type:varchar(32);comment:仿真方法"`
