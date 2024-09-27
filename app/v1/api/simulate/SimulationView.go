@@ -625,6 +625,7 @@ func ExperimentCreateView(c *gin.Context) {
 		Tolerance:         item.SimulateVarData["tolerance"],
 		Interval:          item.SimulateVarData["interval"],
 		ModelVarData:      item.ModelVarData,
+		IsFullModelVar:    item.IsFullModelVar,
 	}
 	err = DB.Create(&experimentRecord).Error
 	if err != nil {

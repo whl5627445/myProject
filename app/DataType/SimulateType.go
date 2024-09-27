@@ -59,6 +59,7 @@ type ExperimentCreateData struct {
 	ExperimentName  string            `json:"experiment_name" binding:"required"`
 	SimulateVarData map[string]string `json:"simulate_var_data" binding:"required"`
 	ModelVarData    datatypes.JSON    `json:"model_var_data" binding:""`
+	IsFullModelVar  bool              `json:"is_full_model_var" binding:""`
 }
 
 type ExperimentDeleteData struct {
