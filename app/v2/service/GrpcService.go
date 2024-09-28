@@ -119,6 +119,7 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 			ExperimentId:      itemMap["experiment_id"],
 			Intervals:         itemMap["interval"],
 			AnotherName:       anotherName,
+			PipeNet:           packageModel.PipeNet,
 		}
 		err = DB.Create(&record).Error
 		if err != nil {
