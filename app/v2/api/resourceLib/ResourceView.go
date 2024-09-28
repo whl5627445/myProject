@@ -1,6 +1,7 @@
 package resource
 
 import (
+	"fmt"
 	"log"
 	"math"
 	"net/http"
@@ -298,6 +299,49 @@ func EditResourceInfoView(c *gin.Context) {
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
+	}
+
+	var updatingPathResources []*DataBaseModel.YssimResourceLib
+	DB.Where("parent_id = ?", item.ID).Find(&updatingPathResources)
+
+	// 广度优先更新所有子节点路径
+	level := 0
+	for len(updatingPathResources) > 0 {
+		var updatingPathResourcesTemp []*DataBaseModel.YssimResourceLib
+		for _, updatingResource := range updatingPathResources {
+			//更新路径
+			curFullPathsOriginal := strings.Split(updatingResource.FullPath, "/")
+			curFullPaths := []string{}
+			for _, path := range curFullPathsOriginal {
+				if path != "" {
+					curFullPaths = append(curFullPaths, path)
+				}
+			}
+			curFullPaths[len(curFullPaths)-1-level] = item.Name
+
+			newPath := ""
+			for _, path := range curFullPaths {
+				newPath = newPath + fmt.Sprintf("%s%s", "/", path)
+			}
+			updatingResource.FullPath = newPath
+
+			// 添加所有子节点
+			if updatingResource.FolderFile == "folder" {
+				var subResources []*DataBaseModel.YssimResourceLib
+				DB.Where("parent_id = ?", updatingResource.ID).Find(&subResources)
+				updatingPathResourcesTemp = append(updatingPathResourcesTemp, subResources...)
+			}
+		}
+
+		if err = DB.Save(&updatingPathResources).Error; err != nil {
+			log.Println("编辑资源库文件夹文件基本信息时数据库出现错误：", err)
+			res.Err = "编辑失败"
+			res.Status = 2
+			c.JSON(http.StatusOK, res)
+			return
+		}
+		updatingPathResources = updatingPathResourcesTemp
+		level += 1
 	}
 
 	res.Msg = "编辑成功"
