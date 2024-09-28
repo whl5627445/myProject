@@ -7,7 +7,7 @@ import (
 )
 
 func ResourceLibRouter(g *gin.Engine) {
-	var Models = g.Group("/resource")
+	var Models = g.Group("/api/v2/resource")
 	{
 		Models.POST("/folder/create", API.CreateResourceFolderView)
 		Models.POST("/file/upload", API.UploadResourceFileView)
