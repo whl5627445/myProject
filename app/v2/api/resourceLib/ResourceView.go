@@ -177,6 +177,31 @@ func SearchSubListView(c *gin.Context) {
 		if r.ParentId == "" {
 			data["full_path"] = "/"
 		}
+
+		// 获取上级每一层文件夹的id
+		path_list := []map[string]string{}
+		strs := strings.Split(data["full_path"].(string), "/")
+		if len(strs) != 0 {
+			for _, subPath := range strs {
+				if subPath == "" {
+					continue
+				}
+				var subResourceFile DataBaseModel.YssimResourceLib
+				if err := DB.Where("name = ?", subPath).First(&subResourceFile).Error; err != nil {
+					res.Err = "查询失败"
+					res.Status = 2
+					c.JSON(http.StatusOK, res)
+					return
+				}
+
+				currentPath := map[string]string{"name": subResourceFile.Name, "id": subResourceFile.ID}
+				path_list = append(path_list, currentPath)
+			}
+		}
+
+		itself := map[string]string{"name": r.Name, "id": r.ID}
+		path_list = append(path_list, itself)
+		data["path_list"] = path_list
 		datalist = append(datalist, data)
 	}
 
@@ -193,6 +218,31 @@ func SearchSubListView(c *gin.Context) {
 			"create_time": r.CreatedAt,
 			"update_time": r.UpdatedAt,
 		}
+
+		// 获取上级每一层文件夹的id
+		path_list := []map[string]string{}
+		strs := strings.Split(data["full_path"].(string), "/")
+		if len(strs) != 0 {
+			for _, subPath := range strs {
+				if subPath == "" {
+					continue
+				}
+				var subResourceFile DataBaseModel.YssimResourceLib
+				if err := DB.Where("name = ?", subPath).First(&subResourceFile).Error; err != nil {
+					res.Err = "查询失败"
+					res.Status = 2
+					c.JSON(http.StatusOK, res)
+					return
+				}
+
+				currentPath := map[string]string{"name": subResourceFile.Name, "id": subResourceFile.ID}
+				path_list = append(path_list, currentPath)
+			}
+		}
+
+		itself := map[string]string{"name": r.Name, "id": r.ID}
+		path_list = append(path_list, itself)
+		data["path_list"] = path_list
 		datalist = append(datalist, data)
 	}
 
