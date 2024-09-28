@@ -33,6 +33,7 @@ type YssimSimulateRecord struct {
 	EnvModelData            datatypes.JSON `gorm:"column:env_model_data;TYPE:json;type:json;comment:仿真模型的依赖"`
 	CreatedAt               *time.Time     `gorm:"column:create_time;autoCreateTime;comment:创建时间"`
 	Deleted                 gorm.DeletedAt `gorm:"column:deleted_at;comment:删除时间"`
+	PipeNet                 bool           `gorm:"column:pipe_net;default:0;type:bool;comment:是否是管网模型"`
 	//StepSize          string `gorm:"column:step_size;default:\"\";type:varchar(32)"`
 	//Solver            string `gorm:"column:solver;default:\"\";type:varchar(32)"`
 	//OutputFormat      string `gorm:"column:output_format;default:\"\";type:varchar(32)"`

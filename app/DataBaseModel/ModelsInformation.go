@@ -24,6 +24,7 @@ type YssimModels struct {
 	Deleted        gorm.DeletedAt `gorm:"column:deleted_at;comment:删除时间"`
 	Default        bool           `gorm:"column:default_version;default:0;type:bool;comment:是否默认加载"`
 	Encryption     bool           `gorm:"column:encryption;default:0;type:bool;comment:是否是加密模型"`
+	PipeNet        bool           `gorm:"column:pipe_net;default:0;type:bool;comment:是否是管网模型"`
 }
 
 type SystemLibrary struct {
