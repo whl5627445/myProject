@@ -411,3 +411,51 @@ func GetInfoView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 
 }
+
+func UpdateInfoFileListView(c *gin.Context) {
+
+	/*
+		# 根据仿真结果更新管网信息文件并下载
+		# 先copy 再更新 再下载
+	*/
+	var res DataType.ResponseData
+	userName := c.GetHeader("username")
+	var item DataType.UpdatePipeNetInfoFileData
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+
+	// 通过结果id查询结果
+	var record DataBaseModel.YssimSimulateRecord
+	DB.Where("id = ? AND username = ?", item.RecordId, userName).First(&record)
+	if record.ID == "" {
+		res.Err = "not found"
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	// 通过模型id查询xml的地址
+	var pipeNetCadDownloadRecord DataBaseModel.YssimPipeNetCadDownload
+	DB.Where("package_id = ? AND username = ?", record.PackageId, userName).First(&pipeNetCadDownloadRecord)
+	if pipeNetCadDownloadRecord.ID == "" {
+		res.Err = "not found"
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	// 更新管网信息文件xml
+	resPath, logList, updateRes := serviceV2.UpdatePipeNetInfoFile(pipeNetCadDownloadRecord.PipeNetPath, pipeNetCadDownloadRecord.MappingPath, record.SimulateModelResultPath)
+
+	if !updateRes {
+		res.Err = "更新失败"
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	res.Msg = "更新成功"
+	res.Data = map[string]any{
+		"url": resPath,
+		"log": logList,
+	}
+	c.JSON(http.StatusOK, res)
+}

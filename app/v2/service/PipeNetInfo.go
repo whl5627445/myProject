@@ -3,11 +3,14 @@ package serviceV2
 import (
 	"encoding/xml"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"mime/multipart"
 	"os"
+	"strconv"
 	"strings"
+	"yssim-go/app/v1/service"
 	"yssim-go/library/fileOperation"
 	"yssim-go/library/stringOperation"
 	"yssim-go/library/xmlOperation"
@@ -137,6 +140,7 @@ func SaveInfoFileXml(path string, root Root) error {
 	// 打开文件以写入
 	xmlFile, err := os.Create(path)
 	if err != nil {
+		log.Println(err)
 		return errors.New("无法创建文件")
 	}
 	defer xmlFile.Close()
@@ -188,4 +192,85 @@ func CopyPipeNetInfoFile(pipeNetInfoFilePath, userName, pipeNetInfoFileId string
 	}
 
 	return dstPath, true
+}
+
+func UpdatePipeNetInfoFile(pipeNetInfoFilePath, mappingConfigPath, simResPath string) (dstPath string, logList []string, ok bool) {
+	var infoList []string
+	// 解析管网信息文件
+	pipeNetXml1, err := ParseInfoFileXml(pipeNetInfoFilePath)
+	if err != nil {
+		return "", infoList, false
+	}
+
+	// 将管网信息文件第二棵树的Name替换为LegalName
+	for i := 0; i < len(pipeNetXml1.Components); i++ {
+		pipeNetXml1.Components[i].Name = pipeNetXml1.Components[i].LegalName
+	}
+
+	// 解析映射配置表
+	mappingConfig, err := GetMappingConfigDetails("", "", "", mappingConfigPath)
+	haha := map[string]*Part{}
+	for _, part := range mappingConfig.Parts {
+		haha[part.Name] = part
+	}
+
+	// 找到要获取的参数
+	// 开始进行匹配
+	for i := 0; i < len(pipeNetXml1.Components); i++ {
+		var found bool
+		if part, ok_ := haha[pipeNetXml1.Components[i].TypeCAD]; ok_ {
+
+			for j := 0; j < len(pipeNetXml1.Components[i].Parameters); j++ {
+				var foundPamameter bool
+				for _, partInfo := range part.ParameterList {
+					// 如果找到匹配对象则执行下面的操作
+					if pipeNetXml1.Components[i].Parameters[j].Name == partInfo.SourceName {
+						// 从结果中获取数据
+						variableNmae := pipeNetXml1.Components[i].Name + "." + partInfo.TargetName
+						log.Println("获取参数值", variableNmae)
+						data, ok__ := service.ReadSimulationResult([]string{variableNmae}, simResPath+"result_res.mat")
+						log.Println(data[1])
+						if ok__ && len(data) > 0 {
+							ordinate := data[1]
+							if len(ordinate) < 1 {
+								break
+							}
+							//abscissa := data[0]
+							value := ordinate[len(ordinate)-1]
+							pipeNetXml1.Components[i].Parameters[j].Value = strconv.FormatFloat(value, 'f', -1, 64)
+							foundPamameter = true
+
+						}
+						break
+
+					}
+				}
+
+				if !foundPamameter {
+					info := fmt.Sprintf("映射配置表中没有找到参数信息：零件: %s CAD类型: %s CAD参数: %s CAE类型: %s CAE参数: 缺失",
+						pipeNetXml1.Components[i].Name, pipeNetXml1.Components[i].TypeCAD, pipeNetXml1.Components[i].Parameters[j].Name, pipeNetXml1.Components[i].TypeCAE)
+					infoList = append(infoList, info)
+				}
+
+			}
+			found = true
+		}
+		if !found {
+			info := fmt.Sprintf("映射配置表中没有找到零件类型信息: 零件: %s CAD类型: %s CAE类型: 缺失", pipeNetXml1.Components[i].InstanceName, pipeNetXml1.Components[i].TypeCAD)
+			infoList = append(infoList, info)
+		}
+	}
+	// 将pipeNetXml1保存为新的xml文件
+	updatePipeNetInfoFilePath := "static" + "/tmp/" + uuid.New().String()
+	if ok = fileOperation.CreateFilePath(updatePipeNetInfoFilePath); !ok {
+		log.Println("更新管网信息文件时出现错误：创建文件父路径失败")
+		return "", infoList, false
+	}
+	err = SaveInfoFileXml(updatePipeNetInfoFilePath+"/updatePipeNetInfoFile.xml", pipeNetXml1)
+	if err != nil {
+		fmt.Println(err)
+		return "", infoList, false
+	}
+
+	return updatePipeNetInfoFilePath + "/updatePipeNetInfoFile.xml", infoList, true
 }

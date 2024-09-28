@@ -58,6 +58,10 @@ type UploadPipeNetInfoFileData struct {
 	Filename    string `form:"filename" binding:"required"`
 	Description string `form:"description" binding:""`
 }
+type UpdatePipeNetInfoFileData struct {
+	//ModelId    string `json:"model_id" binding:"required"`
+	RecordId string `json:"record_id" binding:"required"`
+}
 
 type DownloadPipeNetInfoFileData struct {
 	PipeNetInfoFileIdList []string `json:"id_list" binding:"required"`

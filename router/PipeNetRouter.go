@@ -29,6 +29,8 @@ func PipeNetRouter(g *gin.Engine) {
 		ModelsV2.POST("/copy", API.CopyInfoFileView)
 		ModelsV2.GET("/get", API.GetInfoView)
 
+		ModelsV2.POST("/update", API.UpdateInfoFileListView)
+
 	}
 
 	var ModelsV3 = g.Group("/pipenet/model")
