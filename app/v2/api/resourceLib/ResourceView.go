@@ -37,8 +37,12 @@ func GetRootListView(c *gin.Context) {
 	for _, r := range rootFolders {
 		data := map[string]any{
 			"id":          r.ID,
+			"parent_id":   r.ParentId,
 			"username":    r.UserName,
 			"name":        r.Name,
+			"type":        r.FolderFile,
+			"type_str":    "文件夹",
+			"full_path":   r.FullPath,
 			"description": r.Description,
 			"create_time": r.CreatedAt,
 			"update_time": r.UpdatedAt,

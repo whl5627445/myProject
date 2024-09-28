@@ -15,6 +15,7 @@ func ResourceLibRouter(g *gin.Engine) {
 		Models.GET("/file/content/parse", API.ParseResourceFileContentView)
 		Models.POST("/edit", API.EditResourceInfoView)
 		Models.POST("/delete", API.DeleteResourceView)
+		Models.GET("/root/list/get", API.GetRootListView)
 		Models.GET("/list/get", API.GetResourceListView)
 		Models.GET("/search", API.SearchSubListView)
 	}
