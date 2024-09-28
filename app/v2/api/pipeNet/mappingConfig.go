@@ -591,6 +591,7 @@ func CreatePipeNetModelView(c *gin.Context) {
 		SysUser:     username,
 		FilePath:    "static/UserFiles/UploadFile/" + username + "/" + time.Now().Local().Format("20060102150405") + "/" + createPackageName + "/" + createPackageName + ".mo",
 		UserSpaceId: userSpaceId,
+		PipeNet:     true,
 	}
 	DB.Where("package_name = ? AND sys_or_user IN ? AND userspace_id IN ?", item.Name, []string{"sys", username}, []string{"0", userSpaceId}).First(&packageRecord)
 	if packageRecord.PackageName != "" && item.Vars.InsertTo == "" {
@@ -651,6 +652,35 @@ func CreatePipeNetModelView(c *gin.Context) {
 
 	// 向模型中写入Modelica代码
 	serviceV2.WritePipeNetModeCode(item.Name, createPackageNameALL, mappingConfigData.Medium, newPackage.PackageName, newPackage.FilePath, data["mapping_tree"])
+	fmt.Println(data["mapping_tree"])
+	// 创建更新下载记录
+	var newPipeNetCadDownload = DataBaseModel.YssimPipeNetCadDownload{
+		ID:          uuid.New().String(),
+		UserName:    username,
+		Name:        pipeNetInfoFileRecord.Name,
+		Description: pipeNetInfoFileRecord.Description,
+		PackageId:   newPackage.ID,
+	}
+	// 复制当前管网信息文件
+	newPath, ok := serviceV2.CopyPipeNetInfoFile(pipeNetInfoFileRecord.Path, username, newPipeNetCadDownload.ID)
+	if !ok {
+		res.Err = "创建失败"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	newPipeNetCadDownload.PipeNetPath = newPath
+	// 复制映射表
+	newMappingPath, ok := serviceV2.CopyMappingConfig(mappingConfig.Path, username, newPipeNetCadDownload.ID)
+	if !ok {
+		res.Err = "创建失败"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	newPipeNetCadDownload.PipeNetPath = newPath
+	newPipeNetCadDownload.MappingPath = newMappingPath
+	DB.Create(&newPipeNetCadDownload)
 
 	res.Data = map[string]any{
 		"encryption": false,
