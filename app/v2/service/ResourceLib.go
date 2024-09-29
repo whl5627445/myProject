@@ -2,14 +2,17 @@ package serviceV2
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"log"
 	"mime/multipart"
 	"os"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"yssim-go/library/fileOperation"
+	"yssim-go/library/omc"
 )
 
 // 保存资源文件
@@ -100,4 +103,107 @@ func ParseResourceFileContent(path string) map[string]map[string]any {
 	res[coordName]["yData"] = yData
 
 	return res
+}
+
+func CopyLibFileToResources(packageName, parent string, filePath, fileName string) (bool, string) {
+	pType := omc.OMC.IsPackage(packageName)
+	if !pType {
+		return false, ""
+	}
+	file, _ := os.Open(filePath)
+	fileData, _ := io.ReadAll(file)
+	fileSavePath := resourcesDir(packageName, parent)
+
+	currentNodes := GetResourcesList(packageName, parent)
+
+	filenames := strings.Split(fileName, ".")
+	preName := filenames[0]
+	postfix := filenames[1]
+	regex := regexp.MustCompile(preName + "_copy" + "[0-9]+" + "." + postfix)
+	nums := []int{}
+	findItself := false
+	findCopy := false
+
+	for _, namePair := range currentNodes {
+		if namePair["name"] == fileName {
+			findItself = true
+		}
+
+		if namePair["name"] == preName+"_copy"+"."+postfix {
+			findCopy = true
+		}
+		// 判断字符串是否匹配副本形式正则表达式
+		if regex.MatchString(namePair["name"]) {
+			strs := strings.Split(namePair["name"], "copy")
+			strs = strings.Split(strs[1], ".")
+			num, _ := strconv.Atoi(strs[0])
+			nums = append(nums, num)
+		}
+	}
+
+	newName := ""
+	if !findItself {
+		newName = fileName
+	} else if !findCopy {
+		newName = fmt.Sprintf("%s%s%s", preName+"_copy", ".", postfix)
+	} else {
+		// 获取待创建的副本的编号
+		num := findFirstCopyNum(nums)
+		newName = fmt.Sprintf("%s%d%s%s", preName+"_copy", num, ".", postfix)
+	}
+
+	return fileOperation.WriteFileByte(fileSavePath+"/"+newName, fileData), newName
+}
+
+func resourcesDir(packageName, parent string) string {
+	path := GetSourceFile(packageName)
+	pathList := strings.Split(path, "/")
+	packagePath := pathList[:len(pathList)-1]
+	packagePath = append(packagePath, "Resources")
+	if parent != "" {
+		packagePath = append(packagePath, parent)
+	}
+	resourcesPath := strings.Join(packagePath, "/")
+	return resourcesPath
+}
+
+func GetSourceFile(packageName string) string {
+	return omc.OMC.GetSourceFile(packageName)
+}
+
+func GetResourcesList(packageName, parent string) []map[string]string {
+	resourcesPath := resourcesDir(packageName, parent)
+	data, err := fileOperation.GetDirChild(resourcesPath)
+	if err != nil {
+		log.Println("获取Resources子节点失败，错误： ", err)
+		return nil
+	}
+	return data
+}
+
+func findFirstCopyNum(nums []int) int {
+	sort.Ints(nums)
+	n := len(nums)
+	switch n {
+	case 0:
+		return 1
+	case 1:
+		if nums[0] == 0 || nums[0] == 1 {
+			return nums[0] + 1
+		}
+		return 1
+	default:
+		if nums[0] > 1 {
+			return 1
+		}
+		i, j := 0, 1
+		for j < n {
+			if nums[i]+1 == nums[j] {
+				i, j = i+1, j+1
+			} else {
+				return nums[i] + 1
+			}
+		}
+		return nums[i] + 1
+	}
 }

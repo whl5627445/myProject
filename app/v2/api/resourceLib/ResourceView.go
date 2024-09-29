@@ -564,3 +564,68 @@ func ParseResourceFileContentView(c *gin.Context) {
 	res.Data = serviceV2.ParseResourceFileContent(resourceFile.FilePath)
 	c.JSON(http.StatusOK, res)
 }
+
+func CopyLibFileToResourcesView(c *gin.Context) {
+	/*
+		# 将资源库文件拷贝到Resources
+		开发人： 周强
+	*/
+	var res DataType.ResponseData
+	username := c.GetHeader("username")
+	userSpaceId := c.GetHeader("space_id")
+	var item DataType.CopyLibFileToResourcesData
+	err := c.BindJSON(&item)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+
+	// 获取资源文件信息
+	var resourceFile DataBaseModel.YssimResourceLib
+	if err := DB.Where("id = ?", item.ID).First(&resourceFile).Error; err != nil {
+		res.Err = "没有找到资源"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	if resourceFile.FolderFile == "folder" {
+		res.Err = "不能复制文件夹"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	// 查询要插入的package
+	var packageModel DataBaseModel.YssimModels
+	DB.Where("id = ? AND sys_or_user = ? AND userspace_id = ?", item.PackageId, username, userSpaceId).First(&packageModel)
+	if packageModel.ID == "" {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+
+	names := strings.Split(resourceFile.FilePath, "/")
+	fileName := names[len(names)-1]
+	result, newfileName := serviceV2.CopyLibFileToResources(packageModel.PackageName, item.Parent, resourceFile.FilePath, fileName)
+	if result {
+		res.Msg = "复制文件成功"
+		pathList := []string{}
+		if item.Parent != "" {
+			pathList = append(pathList, item.Parent)
+		}
+
+		pathList = append(pathList, newfileName)
+		data := map[string]string{
+			"path": "modelica://" + packageModel.PackageName + "/Resources/" + strings.Join(pathList, "/"),
+			"name": newfileName,
+		}
+		res.Data = data
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	res.Msg = "复制失败"
+	c.JSON(http.StatusOK, res)
+}

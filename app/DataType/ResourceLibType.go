@@ -22,3 +22,9 @@ type UploadResourceFileData struct {
 	Filename    string `form:"filename" binding:"required"`
 	Description string `form:"description" binding:"required"`
 }
+
+type CopyLibFileToResourcesData struct {
+	ID        string `json:"id" binding:"required"`
+	PackageId string `json:"package_id" binding:"required"`
+	Parent    string `json:"parent" binding:""`
+}

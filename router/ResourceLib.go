@@ -13,6 +13,7 @@ func ResourceLibRouter(g *gin.Engine) {
 		Models.POST("/file/upload", API.UploadResourceFileView)
 		Models.GET("/file/content/get", API.GetResourceFileContentView)
 		Models.GET("/file/content/parse", API.ParseResourceFileContentView)
+		Models.POST("/file/resources/copy", API.CopyLibFileToResourcesView)
 		Models.POST("/edit", API.EditResourceInfoView)
 		Models.POST("/delete", API.DeleteResourceView)
 		Models.GET("/root/list/get", API.GetRootListView)
