@@ -51,13 +51,22 @@ func ComponentParamsToMap(componentParams []map[string]any) map[string]string {
 		for j := 0; j < len(componentParamsList); j++ {
 			v := componentParamsList[j].(map[string]any)["value"]
 			k := componentName + "." + componentParamsList[j].(map[string]any)["name"].(string)
+			if v == nil {
+				resMap[k] = ""
+				continue
+			}
 			typeArray := reflect.TypeOf(v).String()
 			switch typeArray {
 			case "map[string]interface {}":
-				resMap[k] = v.(map[string]any)["value"].(string)
 				parts := strings.Split(k, ".")
 				parts[len(parts)-1] = "fixed"
 				k_ := strings.Join(parts, ".")
+				if v.(map[string]any)["value"] == nil {
+					resMap[k_] = ""
+					continue
+				}
+				resMap[k] = v.(map[string]any)["value"].(string)
+
 				if v.(map[string]any)["isFixed"] == "" {
 					resMap[k_] = ""
 				}
