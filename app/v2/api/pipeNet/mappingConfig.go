@@ -591,7 +591,6 @@ func CreatePipeNetModelView(c *gin.Context) {
 		SysUser:     username,
 		FilePath:    "static/UserFiles/UploadFile/" + username + "/" + time.Now().Local().Format("20060102150405") + "/" + createPackageName + "/" + createPackageName + ".mo",
 		UserSpaceId: userSpaceId,
-		PipeNet:     true,
 	}
 	DB.Where("package_name = ? AND sys_or_user IN ? AND userspace_id IN ?", item.Name, []string{"sys", username}, []string{"0", userSpaceId}).First(&packageRecord)
 	if packageRecord.PackageName != "" && item.Vars.InsertTo == "" {
@@ -660,6 +659,7 @@ func CreatePipeNetModelView(c *gin.Context) {
 		Name:        pipeNetInfoFileRecord.Name,
 		Description: pipeNetInfoFileRecord.Description,
 		PackageId:   newPackage.ID,
+		ModelName:   createPackageNameALL,
 	}
 	// 复制当前管网信息文件
 	newPath, ok := serviceV2.CopyPipeNetInfoFile(pipeNetInfoFileRecord.Path, username, newPipeNetCadDownload.ID)

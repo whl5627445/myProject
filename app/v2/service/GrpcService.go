@@ -95,6 +95,14 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 		return "", errors.New("not found")
 	}
 
+	// 查询是不是管网模型
+	var pipeNetModel DataBaseModel.YssimPipeNetCadDownload
+	DB.Where("package_id = ? AND model_name = ?", itemMap["package_id"], itemMap["model_name"]).First(&pipeNetModel)
+	isPipeNet := false
+	if pipeNetModel.ID == "" {
+		isPipeNet = true
+	}
+
 	// 查询实验id对应的仿真记录
 	var simulateRecord DataBaseModel.YssimSimulateRecord
 	DB.Where("experiment_id = ? AND package_id = ? AND simulate_model_name = ? AND username = ? AND userspace_id = ?", itemMap["experiment_id"], itemMap["package_id"], itemMap["model_name"], itemMap["username"], itemMap["space_id"]).First(&simulateRecord)
@@ -119,7 +127,7 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 			ExperimentId:      itemMap["experiment_id"],
 			Intervals:         itemMap["interval"],
 			AnotherName:       anotherName,
-			PipeNet:           packageModel.PipeNet,
+			PipeNet:           isPipeNet,
 		}
 		err = DB.Create(&record).Error
 		if err != nil {

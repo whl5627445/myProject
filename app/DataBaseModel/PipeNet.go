@@ -52,6 +52,7 @@ type YssimPipeNetCadDownload struct {
 	PipeNetPath string         `gorm:"column:pipe_net_path;type:varchar(256);comment:管网信息文件存放路径"`
 	MappingPath string         `gorm:"column:mapping_path;type:varchar(256);comment:映射表存放路径"`
 	PackageId   string         `gorm:"column:package_id;type:varchar(128);comment:模型id"`
+	ModelName   string         `gorm:"column:model_name;type:varchar(128);comment:模型名"`
 	CreatedAt   *time.Time     `gorm:"column:create_time;autoCreateTime;comment:管网信息文件记录创建时间"`
 	UpdatedAt   *time.Time     `gorm:"column:update_time;comment:管网信息文件记录更新时间"`
 	Deleted     gorm.DeletedAt `gorm:"column:deleted_at;comment:管网信息文件记录删除时间"`
