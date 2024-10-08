@@ -126,6 +126,10 @@ func PackageFileParse(fileName, saveFilePathBase string, file io.Reader) (string
 			packagePath = packageFilePath + "/package.mo"
 		}
 	}
+	// 设置解压后的文件和文件夹权限为 777
+	if err := fileOperation.SetPermissions(saveFilePathBase); err != nil {
+		log.Fatalf("Error setting permissions: %v", err)
+	}
 	packageName, ok := omc.OMC.ParseFile(packagePath)
 	msg := ""
 	if ok {
