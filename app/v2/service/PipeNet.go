@@ -3,6 +3,7 @@ package serviceV2
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -200,10 +201,10 @@ func GetMappingConfigDetails(id, name, description, path string) (res *MappingCo
 }
 
 // 编辑映射配置表管道信息详情
-func EditMappingConfigDetails(path string, requestData *DataType.EditMappingConfigDetailsData, op string) bool {
+func EditMappingConfigDetails(path string, requestData *DataType.EditMappingConfigDetailsData, op string) (bool, error) {
 	if op != "add" && op != "replace" && op != "remove" {
 		log.Println("传入的json-patch操作方法错误，必须是 add replace remove")
-		return false
+		return false, nil
 	}
 
 	// 请求数据类型转换为MappingConfigParseData
@@ -213,13 +214,13 @@ func EditMappingConfigDetails(path string, requestData *DataType.EditMappingConf
 	originalContentByte, err := os.ReadFile(path)
 	if err != nil {
 		log.Println("读取映射配置表文件时出现错误", err)
-		return false
+		return false, nil
 	}
 	// 将文件内容映射到MappingConfigData结构体中
 	m := MappingConfigData{}
 	if err := json.Unmarshal(originalContentByte, &m); err != nil {
 		log.Println("将文件内容映射到MappingConfigData结构体中时出现错误", err)
-		return false
+		return false, nil
 	}
 
 	// 生成json-patch数据
@@ -228,7 +229,10 @@ func EditMappingConfigDetails(path string, requestData *DataType.EditMappingConf
 	switch op {
 	case "add":
 		// 处理添加新参数 add
-		patches = CreateAddJsonPatch(item, &m)
+		hasRepeatedPart, repeatedPartName := false, ""
+		if patches, hasRepeatedPart, repeatedPartName = CreateAddJsonPatch(item, &m); hasRepeatedPart {
+			return false, errors.New(fmt.Sprintf("添加的类型已存在: %s", repeatedPartName))
+		}
 	case "replace":
 		// 处理更新现有参数 replace
 		patches = CreateReplaceJsonPatch(item, &m)
@@ -242,13 +246,13 @@ func EditMappingConfigDetails(path string, requestData *DataType.EditMappingConf
 	fmt.Println(string(patchesByte))
 	if err != nil {
 		log.Println("json-patch创建补丁对象时出现错误", err)
-		return false
+		return false, nil
 	}
 
 	patchObj, err := jsonpatch.DecodePatch(patchesByte)
 	if err != nil {
 		log.Println("json-patch解析补丁对象时出现错误", err)
-		return false
+		return false, nil
 	}
 
 	// 应用补丁
@@ -256,16 +260,16 @@ func EditMappingConfigDetails(path string, requestData *DataType.EditMappingConf
 	patchedData, err := patchObj.Apply(originalContentByte)
 	if err != nil {
 		log.Println("json-patch应用补丁修改源数据时出现错误", err)
-		return false
+		return false, nil
 	}
 
 	// 写回映射配置文件
 	if ok := fileOperation.WriteFileByte(path, patchedData); !ok {
 		log.Println("向映射配置文件中写回数据时出现错误", err)
-		return false
+		return false, nil
 	}
 
-	return true
+	return true, nil
 }
 
 func ConvertMappingConfigStruct(item *DataType.EditMappingConfigDetailsData) *MappingConfigParseData {
@@ -351,7 +355,7 @@ func GenPartInfo(requestPartInfo *Part) MappingDefinition {
 	return partInfo
 }
 
-func CreateAddJsonPatch(item *MappingConfigParseData, m *MappingConfigData) (patches []map[string]any) {
+func CreateAddJsonPatch(item *MappingConfigParseData, m *MappingConfigData) (patches []map[string]any, hasRepeatedPart bool, repeatedPartName string) {
 	patches = []map[string]any{}
 
 	var systemAlreadyExist bool
@@ -389,16 +393,10 @@ func CreateAddJsonPatch(item *MappingConfigParseData, m *MappingConfigData) (pat
 	}
 
 	for _, part := range item.Parts {
-		var alreadyExist bool
 		for _, mappingDefinition := range m.MappingDefinitions {
 			if part.Kind == mappingDefinition.Kind && part.Name == mappingDefinition.Type {
-				alreadyExist = true
-				break
+				return patches, true, part.Name
 			}
-		}
-
-		if alreadyExist {
-			continue
 		}
 
 		// 生成零件的数据
@@ -414,7 +412,7 @@ func CreateAddJsonPatch(item *MappingConfigParseData, m *MappingConfigData) (pat
 		patches = append(patches, patch)
 	}
 
-	return patches
+	return patches, false, ""
 }
 
 func CreateReplaceJsonPatch(item *MappingConfigParseData, m *MappingConfigData) (patches []map[string]any) {

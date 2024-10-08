@@ -445,8 +445,12 @@ func EditMappingConfigDetailsView(c *gin.Context) {
 		return
 	}
 
-	if ok := serviceV2.EditMappingConfigDetails(mappingConfig.Path, &item, item.Op); !ok {
-		res.Err = "编辑失败"
+	if ok, err := serviceV2.EditMappingConfigDetails(mappingConfig.Path, &item, item.Op); !ok {
+		if err != nil {
+			res.Err = err.Error()
+		} else {
+			res.Err = "编辑失败"
+		}
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
