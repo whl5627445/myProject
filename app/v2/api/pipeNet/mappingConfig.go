@@ -47,6 +47,15 @@ func UploadMappingConfigView(c *gin.Context) {
 		return
 	}
 
+	// 验证应用名称命名规则
+	matchSpaceName, _ := regexp.MatchString("^[_0-9a-zA-Z\u4e00-\u9fa5]+$", fileinfo.Filename) // 由中文、字母、数字、下划线验证
+	if !matchSpaceName {
+		res.Err = "名称只能由中文、字母、数字、下划线组成"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
 	// 验证名称是否已存在
 	var mappingConfigName DataBaseModel.YssimMappingConfig
 	if DB.Where("name = ? AND username = ?", fileinfo.Filename, userName).First(&mappingConfigName); mappingConfigName.ID != "" {
@@ -233,11 +242,11 @@ func CopyMappingConfigView(c *gin.Context) {
 		// 生成复制出来的副本的名称
 		var newName string
 		var mappingConfigName DataBaseModel.YssimMappingConfig
-		if DB.Where("username = ? AND name = ?", userName, mappingConfig.Name+"-副本").First(&mappingConfigName); mappingConfigName.ID == "" {
-			newName = mappingConfig.Name + "-副本"
+		if DB.Where("username = ? AND name = ?", userName, mappingConfig.Name+"_副本").First(&mappingConfigName); mappingConfigName.ID == "" {
+			newName = mappingConfig.Name + "_副本"
 		} else {
 			var mappingConfigNameList []DataBaseModel.YssimMappingConfig
-			DB.Where("username = ? AND name REGEXP ?", userName, mappingConfig.Name+"-副本"+"[0-9]+").Find(&mappingConfigNameList)
+			DB.Where("username = ? AND name REGEXP ?", userName, mappingConfig.Name+"_副本"+"[0-9]+").Find(&mappingConfigNameList)
 			nums := []int{}
 			for _, mappingConfigName := range mappingConfigNameList {
 				strs := strings.Split(mappingConfigName.Name, "副本")
@@ -247,7 +256,7 @@ func CopyMappingConfigView(c *gin.Context) {
 
 			// 获取待创建的副本的编号
 			num := serviceV2.FindFirstCopyNum(nums)
-			newName = fmt.Sprintf("%s%d", mappingConfig.Name+"-副本", num)
+			newName = fmt.Sprintf("%s%d", mappingConfig.Name+"_副本", num)
 		}
 
 		var newMappingConfig DataBaseModel.YssimMappingConfig = DataBaseModel.YssimMappingConfig{
@@ -352,7 +361,7 @@ func EditMappingConfigView(c *gin.Context) {
 	// 验证应用名称命名规则
 	matchSpaceName, _ := regexp.MatchString("^[_0-9a-zA-Z\u4e00-\u9fa5]+$", item.Name) // 由中文、字母、数字、下划线验证
 	if !matchSpaceName {
-		res.Err = "应用名称只能由中文、字母、数字、下划线组成"
+		res.Err = "名称只能由中文、字母、数字、下划线组成"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return

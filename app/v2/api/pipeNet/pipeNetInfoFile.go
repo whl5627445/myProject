@@ -41,6 +41,16 @@ func UploadInfoFileView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
+
+	// 验证应用名称命名规则
+	matchSpaceName, _ := regexp.MatchString("^[_0-9a-zA-Z\u4e00-\u9fa5]+$", fileInfo.Filename) // 由中文、字母、数字、下划线验证
+	if !matchSpaceName {
+		res.Err = "名称只能由中文、字母、数字、下划线组成"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
 	// 验证名称是否已存在
 	var pipeNetInfoFileRecord DataBaseModel.YssimPipeNetCad
 	if DB.Where("name = ? AND username = ?", fileInfo.Filename, userName).First(&pipeNetInfoFileRecord); pipeNetInfoFileRecord.ID != "" {
@@ -268,7 +278,7 @@ func EditInfoFileView(c *gin.Context) {
 	// 验证应用名称命名规则
 	matchSpaceName, _ := regexp.MatchString("^[_0-9a-zA-Z\u4e00-\u9fa5]+$", item.Name) // 由中文、字母、数字、下划线验证
 	if !matchSpaceName {
-		res.Err = "应用名称只能由中文、字母、数字、下划线组成"
+		res.Err = "名称只能由中文、字母、数字、下划线组成"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
@@ -327,11 +337,11 @@ func CopyInfoFileView(c *gin.Context) {
 		// 生成复制出来的副本的名称
 		var newName string
 		var pipeNetInfoFileName DataBaseModel.YssimPipeNetCad
-		if DB.Where("username = ? AND name = ?", userName, pipeNetInfoFile.Name+"-副本").First(&pipeNetInfoFileName); pipeNetInfoFileName.ID == "" {
-			newName = pipeNetInfoFile.Name + "-副本"
+		if DB.Where("username = ? AND name = ?", userName, pipeNetInfoFile.Name+"_副本").First(&pipeNetInfoFileName); pipeNetInfoFileName.ID == "" {
+			newName = pipeNetInfoFile.Name + "_副本"
 		} else {
 			var pipeNetInfoFileNameList []DataBaseModel.YssimPipeNetCad
-			DB.Where("username = ? AND name REGEXP ?", userName, pipeNetInfoFile.Name+"-副本"+"[0-9]+").Find(&pipeNetInfoFileNameList)
+			DB.Where("username = ? AND name REGEXP ?", userName, pipeNetInfoFile.Name+"_副本"+"[0-9]+").Find(&pipeNetInfoFileNameList)
 			nums := []int{}
 			for _, mappingConfigName := range pipeNetInfoFileNameList {
 				strs := strings.Split(mappingConfigName.Name, "副本")
@@ -341,7 +351,7 @@ func CopyInfoFileView(c *gin.Context) {
 
 			// 获取待创建的副本的编号
 			num := serviceV2.FindFirstCopyNum(nums)
-			newName = fmt.Sprintf("%s%d", pipeNetInfoFile.Name+"-副本", num)
+			newName = fmt.Sprintf("%s%d", pipeNetInfoFile.Name+"_副本", num)
 		}
 
 		var newPipeNetInfoFile = DataBaseModel.YssimPipeNetCad{
