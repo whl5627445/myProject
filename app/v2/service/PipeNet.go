@@ -717,9 +717,14 @@ func WritePipeNetModeCode(modeName, modeNameAll, medium, packageName, packageFil
 }
 
 // 生成管网模型源码, 代码拼接版
-func WritePipeNetModeCodeNew(modeName, modeNameAll, medium string, packageRecord *DataBaseModel.YssimModels, packageFilePath string, instanceMapping *Root) bool {
-	// 全局代码
+func WritePipeNetModeCodeNew(modeName, modeNameAll, system, medium string, packageRecord *DataBaseModel.YssimModels, packageFilePath string, instanceMapping *Root) bool {
+	// 全局Medium代码
 	modelicaCode := "model " + modeName + "\n" + "replaceable package Medium = " + medium + ";\n"
+
+	// system组件代码
+	if system != "" {
+		modelicaCode = modelicaCode + "inner " + system + " system " + "annotation(Placement(visible = true, transformation(origin = {0, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));\n"
+	}
 
 	// 组件代码
 	for _, component := range instanceMapping.Components {
