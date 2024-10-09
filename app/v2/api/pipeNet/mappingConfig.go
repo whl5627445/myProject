@@ -672,8 +672,14 @@ func CreatePipeNetModelView(c *gin.Context) {
 	}
 
 	// 向模型中写入Modelica代码
-	serviceV2.WritePipeNetModeCode(item.Name, createPackageNameALL, mappingConfigData.Medium, newPackage.PackageName, newPackage.FilePath, data["mapping_tree"])
-	fmt.Println(data["mapping_tree"])
+	//serviceV2.WritePipeNetModeCode(item.Name, createPackageNameALL, mappingConfigData.Medium, newPackage.PackageName, newPackage.FilePath, data["mapping_tree"])
+	if ok := serviceV2.WritePipeNetModeCodeNew(item.Name, createPackageNameALL, mappingConfigData.Medium, &newPackage, newPackage.FilePath, data["mapping_tree"]); !ok {
+		res.Err = "创建模型失败，请稍后再试"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
 	// 创建更新下载记录
 	var newPipeNetCadDownload = DataBaseModel.YssimPipeNetCadDownload{
 		ID:          uuid.New().String(),

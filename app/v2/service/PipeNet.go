@@ -13,11 +13,14 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/DataType"
+	"yssim-go/app/v1/service"
 	serviceV1 "yssim-go/app/v1/service"
 	"yssim-go/config"
 	"yssim-go/library/fileOperation"
 
+	"github.com/bytedance/sonic"
 	jsonpatch "github.com/evanphx/json-patch"
 )
 
@@ -711,4 +714,81 @@ func WritePipeNetModeCode(modeName, modeNameAll, medium, packageName, packageFil
 		}
 	}
 	serviceV1.ModelSave(modeNameAll)
+}
+
+// 生成管网模型源码, 代码拼接版
+func WritePipeNetModeCodeNew(modeName, modeNameAll, medium string, packageRecord *DataBaseModel.YssimModels, packageFilePath string, instanceMapping *Root) bool {
+	// 全局代码
+	modelicaCode := "model " + modeName + "\n" + "replaceable package Medium = " + medium + ";\n"
+
+	// 组件代码
+	for _, component := range instanceMapping.Components {
+		modelicaCode = modelicaCode + component.TypeCAE + " " + component.LegalName + "("
+		for _, parameter := range component.Parameters {
+			if parameter.Name != "" && parameter.Value != "" {
+				modelicaCode = modelicaCode + parameter.Name + "=" + parameter.Value + ", "
+			}
+		}
+		modelicaCode = modelicaCode + "redeclare package Medium = Medium) " + "annotation(Placement(visible = true, transformation(origin = {0, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));\n"
+	}
+
+	// equation代码
+	modelicaCode = modelicaCode + "equation\n"
+
+	// 连线代码
+	portNameMapping := map[string]string{
+		"Point1": "port_a",
+		"Point2": "port_b",
+		"Point3": "port_c",
+	}
+
+	for _, connector := range instanceMapping.Connectors {
+		modelicaCode = modelicaCode + "connect(" + connector.From.LegalName + "." + portNameMapping[connector.From.Point] + ", " + connector.To.LegalName + "." + portNameMapping[connector.To.Point] + ") annotation(Line(color = {0, 0, 127}));\n"
+	}
+
+	modelicaCode = modelicaCode + "annotation(uses(Modelica(version = \"4.0.0\")));\n" + "end " + modeName + ";"
+
+	// 保存modelica源码
+	if packageRecord.ID == "" {
+		return false
+	}
+	nameList := strings.Split(modeNameAll, ".")
+	if len(nameList) > 1 {
+		parentName := strings.Join(nameList[:len(nameList)-1], ".")
+		modelicaCode = "within " + parentName + ";" + modelicaCode
+	}
+	// oldCode := service.GetModelCode(item.ModelName)
+	modelPath := packageRecord.FilePath
+	if strings.HasSuffix(packageRecord.FilePath, "/package.mo") {
+		modelPath = service.GetSourceFile(modeNameAll)
+	}
+
+	parseResult, ok := service.ParseCodeString(modelicaCode, modelPath)
+	if ok && len(parseResult) > 0 {
+		isExist := service.IsExistPackage(parseResult)
+		if isExist && (modeNameAll != parseResult) {
+			log.Println("模型名称重复")
+			return false
+		}
+		loadResult := service.LoadCodeString(modelicaCode, modelPath)
+		if loadResult {
+			if parseResult != modeNameAll {
+				// 判断是否是子模型
+				if !strings.Contains(modeNameAll, ".") {
+					DB.Model(DataBaseModel.YssimModels{}).Where("id = ?", packageRecord.ID).Update("package_name", parseResult)
+
+					packageInformation := service.GetPackageInformation()
+					packageInformationJson, _ := sonic.Marshal(packageInformation)
+					DB.Model(DataBaseModel.YssimUserSpace{}).Where("id = ? AND username = ?", packageRecord.UserSpaceId, packageRecord.SysUser).Update("package_information", packageInformationJson)
+				}
+				service.DeleteLibrary(modeNameAll)
+			}
+			service.ModelSave(parseResult)
+			log.Println("模型保存成功")
+			return true
+		}
+	}
+
+	log.Println("语法错误，请重新检查")
+	return false
 }
