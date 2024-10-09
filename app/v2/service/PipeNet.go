@@ -55,29 +55,98 @@ type MappingPair struct {
 }
 
 // 验证映射配置表内容
-func CheckMappingConfigContent(fileHeader *multipart.FileHeader) bool {
+func CheckMappingConfigContent(fileHeader *multipart.FileHeader) (bool, string) {
 	file, _ := fileHeader.Open()
 	rawData, _ := io.ReadAll(file)
 	m := MappingConfigData{}
+	errMessage := ""
 
+	// 验证基本格式
 	if err := json.Unmarshal(rawData, &m); err != nil {
-		log.Println("验证映射配置表内容时出现错误：", err)
-		return false
+		errMessage = fmt.Sprintf("验证映射配置表时出现错误：%s", err.Error())
+		log.Println(errMessage)
+		return false, errMessage
 	}
 
+	// 验证mappingDefinitions字段
 	if m.MappingDefinitions == nil {
-		log.Println("验证映射配置表内容时出现错误：找不到mappingDefinitions字段")
-		return false
+		errMessage = "验证映射配置表时出现错误: 找不到mappingDefinitions字段"
+		log.Println(errMessage)
+		return false, errMessage
 	}
+
+	// 验证system，medium和零件类型
+	systemMap := map[string]struct{}{}
+	mediumMap := map[string]struct{}{}
+	partMap := map[string]struct{}{}
 
 	for _, mappingDefinition := range m.MappingDefinitions {
 		if mappingDefinition.Kind == "" || mappingDefinition.Type == "" || mappingDefinition.Usages == nil {
-			log.Println("验证映射配置表内容时出现错误：找不到Kind, Type, 或Usages字段")
-			return false
+			errMessage = "验证映射配置表时出现错误：找不到Kind, Type, 或Usages字段"
+			log.Println(errMessage)
+			return false, errMessage
+		}
+
+		switch mappingDefinition.Kind {
+		case "System":
+			if _, ok := systemMap["System"]; ok {
+				errMessage = "验证映射配置表时出现错误: 重复定义了System"
+				log.Println(errMessage)
+				return false, errMessage
+			}
+			systemMap["System"] = struct{}{}
+		case "Medium":
+			if _, ok := mediumMap["Medium"]; ok {
+				errMessage = "验证映射配置表时出现错误: 重复定义了Medium"
+				log.Println(errMessage)
+				return false, errMessage
+			}
+			mediumMap["Medium"] = struct{}{}
+		case "Pipe":
+			if _, ok := partMap[mappingDefinition.Type]; ok {
+				errMessage = fmt.Sprintf("验证映射配置表时出现错误: 重复定义了类型 %s", mappingDefinition.Type)
+				log.Println(errMessage)
+				return false, errMessage
+			}
+			partMap[mappingDefinition.Type] = struct{}{}
+
+			sourceNameMap := map[string]struct{}{}
+			targetNameMap := map[string]struct{}{}
+			for _, parameterPair := range mappingDefinition.Usages.PipeModel.Parameters {
+				if _, ok := sourceNameMap[parameterPair.SourceName]; ok {
+					errMessage = fmt.Sprintf("验证映射配置表时出现错误: 类型'%s'重复定义了参数'%s'", mappingDefinition.Type, parameterPair.SourceName)
+					log.Println(errMessage)
+					return false, errMessage
+				}
+				sourceNameMap[parameterPair.SourceName] = struct{}{}
+
+				if _, ok := targetNameMap[parameterPair.TargetName]; ok {
+					errMessage = fmt.Sprintf("验证映射配置表时出现错误: 类型'%s'重复定义了映射'%s'", mappingDefinition.Type, parameterPair.TargetName)
+					log.Println(errMessage)
+					return false, errMessage
+				}
+				targetNameMap[parameterPair.TargetName] = struct{}{}
+			}
 		}
 	}
 
-	return true
+	if len(systemMap) == 0 {
+		errMessage = "验证映射配置表时出现错误: 没有定义System"
+		log.Println(errMessage)
+		return false, errMessage
+	}
+	if len(mediumMap) == 0 {
+		errMessage = "验证映射配置表时出现错误: 没有定义Medium"
+		log.Println(errMessage)
+		return false, errMessage
+	}
+	if len(partMap) == 0 {
+		errMessage = "验证映射配置表时出现错误: 没有定义任何零件类型"
+		log.Println(errMessage)
+		return false, errMessage
+	}
+
+	return true, errMessage
 }
 
 // 保存映射配置表

@@ -74,8 +74,8 @@ func UploadMappingConfigView(c *gin.Context) {
 	}
 
 	// 校验文件内容
-	if !serviceV2.CheckMappingConfigContent(varFile) {
-		res.Err = "内容格式有误，请检查后再上传"
+	if ok, errMessage := serviceV2.CheckMappingConfigContent(varFile); !ok {
+		res.Err = errMessage
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
