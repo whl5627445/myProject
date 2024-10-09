@@ -163,7 +163,7 @@ func DownloadMappingConfigView(c *gin.Context) {
 		defer file.Close()
 
 		// 设置文件名
-		fileName := path.Base(mappingConfig.Path)
+		fileName := mappingConfig.Name + "_" + path.Base(mappingConfig.Path)
 
 		// 创建ZIP文件条目
 		zipFileWriter, err := zipWriter.Create(fileName)
