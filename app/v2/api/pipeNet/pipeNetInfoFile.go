@@ -8,7 +8,7 @@ import (
 	"math"
 	"net/http"
 	"os"
-	"path/filepath"
+	"path"
 	"regexp"
 	"strconv"
 	"strings"
@@ -144,7 +144,7 @@ func DownloadInfoFileView(c *gin.Context) {
 	}
 
 	// 遍历每个目录，添加XML文件到ZIP包
-	for i, dir := range pipeNetInfoFileRecordList {
+	for _, dir := range pipeNetInfoFileRecordList {
 		file, err := os.Open(dir.Path)
 		if err != nil {
 			res.Err = "下载失败，请稍后再试"
@@ -154,15 +154,7 @@ func DownloadInfoFileView(c *gin.Context) {
 		defer file.Close()
 
 		// 获取文件名
-		_, fileName := filepath.Split(dir.Path)
-		// 获取文件的扩展名
-		ext := filepath.Ext(fileName) // .xml
-
-		// 获取文件名（不含扩展名）
-		baseName := fileName[:len(fileName)-len(ext)] // test
-
-		// 设置新文件名，加上序号
-		newFileName := fmt.Sprintf("%s_%d%s", baseName, i, ext) // test_1.xml
+		newFileName := dir.Name + "_" + path.Base(dir.Path)
 
 		// 创建ZIP文件条目
 		zipFileWriter, err := zipWriter.Create(newFileName)
