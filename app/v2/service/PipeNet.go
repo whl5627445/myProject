@@ -394,7 +394,7 @@ func CreateAddJsonPatch(item *MappingConfigParseData, m *MappingConfigData) (pat
 
 	for _, part := range item.Parts {
 		for _, mappingDefinition := range m.MappingDefinitions {
-			if part.Kind == mappingDefinition.Kind && part.Name == mappingDefinition.Type {
+			if part.Kind == mappingDefinition.Kind && part.NewName == mappingDefinition.Type {
 				return patches, true, part.Name
 			}
 		}
