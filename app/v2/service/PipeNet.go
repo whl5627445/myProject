@@ -235,7 +235,10 @@ func EditMappingConfigDetails(path string, requestData *DataType.EditMappingConf
 		}
 	case "replace":
 		// 处理更新现有参数 replace
-		patches = CreateReplaceJsonPatch(item, &m)
+		hasRepeatedPart, repeatedPartName := false, ""
+		if patches, hasRepeatedPart, repeatedPartName = CreateReplaceJsonPatch(item, &m); hasRepeatedPart {
+			return false, errors.New(fmt.Sprintf("类型名称已存在: %s", repeatedPartName))
+		}
 	case "remove":
 		// 处理删除现有参数 remove
 		patches = CreateRemoveJsonPatch(item, &m)
@@ -395,7 +398,7 @@ func CreateAddJsonPatch(item *MappingConfigParseData, m *MappingConfigData) (pat
 	for _, part := range item.Parts {
 		for _, mappingDefinition := range m.MappingDefinitions {
 			if part.Kind == mappingDefinition.Kind && part.NewName == mappingDefinition.Type {
-				return patches, true, part.Name
+				return patches, true, part.NewName
 			}
 		}
 
@@ -415,8 +418,20 @@ func CreateAddJsonPatch(item *MappingConfigParseData, m *MappingConfigData) (pat
 	return patches, false, ""
 }
 
-func CreateReplaceJsonPatch(item *MappingConfigParseData, m *MappingConfigData) (patches []map[string]any) {
+func CreateReplaceJsonPatch(item *MappingConfigParseData, m *MappingConfigData) (patches []map[string]any, hasRepeatedPart bool, repeatedPartName string) {
 	patches = []map[string]any{}
+
+	// 判断零件类型的新名字是否和已有的零件类型重复
+	for _, part := range item.Parts {
+		if part.NewName != part.Name {
+			for _, mappingDefinition := range m.MappingDefinitions {
+				if part.Kind == mappingDefinition.Kind && part.NewName == mappingDefinition.Type {
+					return patches, true, part.NewName
+				}
+			}
+		}
+	}
+
 	for index, mappingDefinition := range m.MappingDefinitions {
 		// 创建系统信息补丁
 		if mappingDefinition.Kind == "System" && item.System != "" {
@@ -460,7 +475,7 @@ func CreateReplaceJsonPatch(item *MappingConfigParseData, m *MappingConfigData) 
 		}
 	}
 
-	return patches
+	return patches, false, ""
 }
 
 func CreateRemoveJsonPatch(item *MappingConfigParseData, m *MappingConfigData) (patches []map[string]any) {

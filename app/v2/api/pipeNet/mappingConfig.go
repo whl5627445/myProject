@@ -449,14 +449,32 @@ func EditMappingConfigDetailsView(c *gin.Context) {
 		if err != nil {
 			res.Err = err.Error()
 		} else {
-			res.Err = "编辑失败"
+			switch item.Op {
+			case "add":
+				res.Err = "添加失败"
+			case "replace":
+				res.Err = "编辑失败"
+			case "remove":
+				res.Err = "删除失败"
+			default:
+				res.Err = "编辑失败"
+			}
 		}
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
 	}
 
-	res.Msg = "编辑成功"
+	switch item.Op {
+	case "add":
+		res.Msg = "添加成功"
+	case "replace":
+		res.Msg = "编辑成功"
+	case "remove":
+		res.Msg = "删除成功"
+	default:
+		res.Msg = "编辑成功"
+	}
 	c.JSON(http.StatusOK, res)
 }
 
