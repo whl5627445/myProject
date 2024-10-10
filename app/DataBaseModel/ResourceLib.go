@@ -12,8 +12,8 @@ type YssimResourceLib struct {
 	ParentId    string         `gorm:"index;column:parent_id;type:varchar(128);comment:父节点id"`
 	FolderFile  string         `gorm:"column:folder_file;type:varchar(32);comment:资源是文件夹还是文件"`
 	FullPath    string         `gorm:"column:full_path;type:varchar(256);comment:资源文件夹文件节点路径"`
-	Name        string         `gorm:"column:name;type:varchar(32);comment:资源文件夹文件名称"`
-	Description string         `gorm:"column:description;type:varchar(256);comment:资源文件文件描述"`
+	Name        string         `gorm:"column:name;type:varchar(128);comment:资源文件夹文件名称"`
+	Description string         `gorm:"column:description;type:varchar(512);comment:资源文件文件描述"`
 	FilePath    string         `gorm:"column:file_path;type:varchar(256);comment:资源文件存放路径"`
 	CreatedAt   *time.Time     `gorm:"column:create_time;autoCreateTime;comment:资源文件夹文件创建时间"`
 	UpdatedAt   *time.Time     `gorm:"column:update_time;comment:资源文件夹文件更新时间"`

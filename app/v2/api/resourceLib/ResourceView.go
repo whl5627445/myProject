@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/DataType"
 	serviceV2 "yssim-go/app/v2/service"
@@ -25,16 +26,65 @@ func GetRootListView(c *gin.Context) {
 	*/
 	var res DataType.ResponseData
 
-	// 获取顶层文件夹
-	var rootFolders []DataBaseModel.YssimResourceLib
-	if err := DB.Where("parent_id = ?", "").Order("create_time desc").Find(&rootFolders).Error; err != nil {
+	// 预创建的顶层文档
+	rootPreFoldersList := []string{"工况", "动力成品件", "电气成品件", "液压成品件", "环控成品件", "燃油成品件"}
+	var rootPreFolders []DataBaseModel.YssimResourceLib
+	DB.Unscoped().Where("parent_id = ? AND name IN ?", "", rootPreFoldersList).Find(&rootPreFolders)
+	if len(rootPreFolders) == 0 {
+		for _, name := range rootPreFoldersList {
+			preRootFolder := DataBaseModel.YssimResourceLib{
+				ParentId:    "",
+				ID:          uuid.New().String(),
+				UserName:    "",
+				FolderFile:  "folder",
+				FullPath:    "",
+				Name:        name,
+				Description: "",
+				FilePath:    "",
+			}
+
+			DB.Create(&preRootFolder)
+		}
+	}
+
+	// 获取预创建的顶层文件夹
+	var preRootFolders []DataBaseModel.YssimResourceLib
+	if err := DB.Where("parent_id = ? AND name IN ?", "", rootPreFoldersList).Order("create_time desc").Find(&preRootFolders).Error; err != nil {
 		res.Err = "查询失败"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
 	}
 
+	// 获取其他顶层文件夹
+	var rootFolders []DataBaseModel.YssimResourceLib
+	if err := DB.Where("parent_id = ? AND name NOT IN ?", "", rootPreFoldersList).Order("create_time desc").Find(&rootFolders).Error; err != nil {
+		res.Err = "查询失败"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	// 返回数据
 	rootFolderListData := make([]map[string]any, 0)
+
+	for _, r := range preRootFolders {
+		data := map[string]any{
+			"id":          r.ID,
+			"parent_id":   r.ParentId,
+			"username":    r.UserName,
+			"name":        r.Name,
+			"type":        r.FolderFile,
+			"type_str":    "文件夹",
+			"full_path":   r.FullPath,
+			"description": r.Description,
+			"create_time": r.CreatedAt,
+			"update_time": r.UpdatedAt,
+		}
+
+		rootFolderListData = append(rootFolderListData, data)
+	}
+
 	for _, r := range rootFolders {
 		data := map[string]any{
 			"id":          r.ID,
@@ -407,6 +457,22 @@ func CreateResourceFolderView(c *gin.Context) {
 		return
 	}
 
+	if utf8.RuneCountInString(item.Name) > 128 {
+		res.Err = "名称太长"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	// 验证名称命名规则
+	matchSpaceName, _ := regexp.MatchString("^[_0-9a-zA-Z\u4e00-\u9fa5]+$", item.Name) // 由中文、字母、数字、下划线验证
+	if !matchSpaceName {
+		res.Err = "应用名称只能由中文、字母、数字、下划线组成"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
 	var newResourceFolder = DataBaseModel.YssimResourceLib{
 		ParentId:    item.ParentId,
 		ID:          uuid.New().String(),
@@ -454,6 +520,13 @@ func UploadResourceFileView(c *gin.Context) {
 	if err != nil {
 		log.Println("上传映射配置表文件时出现错误：", err)
 		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+
+	if utf8.RuneCountInString(fileinfo.Filename) > 128 {
+		res.Err = "名称太长"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
 		return
 	}
 
