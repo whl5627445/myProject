@@ -24,6 +24,7 @@ func main() {
 		router.ModelRouter(g)
 		router.SimulateRouter(g)
 		router.FileRouter(g)
+		router.ResourceLibRouter(g)
 		router.PipeNetRouter(g)
 	}
 	g.Run(config.ADDR + config.PORT)

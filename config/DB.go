@@ -58,6 +58,8 @@ func init() {
 		&DataBaseModel.AppPageComponentsRelease{},
 		&DataBaseModel.AppComponentBases{},
 
+		&DataBaseModel.YssimResourceLib{},
+
 		&DataBaseModel.YssimPipeNetCad{},
 		&DataBaseModel.YssimMappingConfig{},
 		&DataBaseModel.YssimInstanceMapping{},
