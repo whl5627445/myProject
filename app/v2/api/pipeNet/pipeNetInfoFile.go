@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/DataType"
 	serviceV2 "yssim-go/app/v2/service"
@@ -344,6 +345,13 @@ func CopyInfoFileView(c *gin.Context) {
 			// 获取待创建的副本的编号
 			num := serviceV2.FindFirstCopyNum(nums)
 			newName = fmt.Sprintf("%s%d", pipeNetInfoFile.Name+"_副本", num)
+		}
+
+		if utf8.RuneCountInString(newName) > 128 {
+			res.Err = "名称太长"
+			res.Status = 2
+			c.JSON(http.StatusOK, res)
+			return
 		}
 
 		var newPipeNetInfoFile = DataBaseModel.YssimPipeNetCad{

@@ -10,8 +10,8 @@ import (
 type YssimPipeNetCad struct {
 	ID          string         `gorm:"index;primaryKey;type:varchar(128);comment:管网信息文件记录唯一标识"`
 	UserName    string         `gorm:"index;column:username;type:varchar(32);comment:用户名"`
-	Name        string         `gorm:"column:name;type:varchar(32);comment:管网信息文件记录名称"`
-	Description string         `gorm:"column:description;type:varchar(256);comment:管网信息文件描述"`
+	Name        string         `gorm:"column:name;type:varchar(128);comment:管网信息文件记录名称"`
+	Description string         `gorm:"column:description;type:varchar(512);comment:管网信息文件描述"`
 	Path        string         `gorm:"column:path;type:varchar(256);comment:管网信息文件存放路径"`
 	CreatedAt   *time.Time     `gorm:"column:create_time;autoCreateTime;comment:管网信息文件记录创建时间"`
 	UpdatedAt   *time.Time     `gorm:"column:update_time;comment:管网信息文件记录更新时间"`
@@ -22,8 +22,8 @@ type YssimPipeNetCad struct {
 type YssimMappingConfig struct {
 	ID          string         `gorm:"index;primaryKey;type:varchar(128);comment:映射配置记录唯一标识"`
 	UserName    string         `gorm:"index;column:username;type:varchar(32);comment:用户名"`
-	Name        string         `gorm:"column:name;type:varchar(32);comment:映射配置记录名称"`
-	Description string         `gorm:"column:description;type:varchar(256);comment:映射配置描述"`
+	Name        string         `gorm:"column:name;type:varchar(128);comment:映射配置记录名称"`
+	Description string         `gorm:"column:description;type:varchar(512);comment:映射配置描述"`
 	Path        string         `gorm:"column:path;type:varchar(256);comment:映射配置文件存放路径"`
 	CreatedAt   *time.Time     `gorm:"column:create_time;autoCreateTime;comment:映射配置记录创建时间"`
 	UpdatedAt   *time.Time     `gorm:"column:update_time;comment:映射配置记录更新时间"`

@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/DataType"
 	"yssim-go/app/v1/service"
@@ -257,6 +258,13 @@ func CopyMappingConfigView(c *gin.Context) {
 			// 获取待创建的副本的编号
 			num := serviceV2.FindFirstCopyNum(nums)
 			newName = fmt.Sprintf("%s%d", mappingConfig.Name+"_副本", num)
+		}
+
+		if utf8.RuneCountInString(newName) > 128 {
+			res.Err = "名称太长"
+			res.Status = 2
+			c.JSON(http.StatusOK, res)
+			return
 		}
 
 		var newMappingConfig DataBaseModel.YssimMappingConfig = DataBaseModel.YssimMappingConfig{
