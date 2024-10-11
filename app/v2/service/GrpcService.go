@@ -205,7 +205,7 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 		Token:         itemMap["token"],
 		Params:        params,
 	}
-	_, err = taskManagement.TaskClient.Assignments(taskManagement.TaskCtx, GrpcBuildModelRequest)
+	_, err = taskManagement.CasService.Client.Assignments(context.Background(), GrpcBuildModelRequest)
 	return record.ID, err
 
 }
@@ -242,7 +242,7 @@ func GrpcSimulationProcessOperation(uid string) (*taskManagement.TerminateTaskRe
 	PyOmcSimProcessOperationRequest := &taskManagement.TerminateTaskRequest{
 		Uuid: uid,
 	}
-	replyTest, err := taskManagement.TaskClient.TerminateTask(taskManagement.TaskCtx, PyOmcSimProcessOperationRequest)
+	replyTest, err := taskManagement.CasService.Client.TerminateTask(context.Background(), PyOmcSimProcessOperationRequest)
 	return replyTest, err
 
 }

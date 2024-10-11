@@ -6,4 +6,5 @@ func init() {
 	go checkOMC()
 	go ModelCodeAutoSave()
 	go GcCollectAndUnmap()
+	go ListenTaskDispatcher()
 }
