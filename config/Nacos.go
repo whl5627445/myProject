@@ -3,18 +3,24 @@ package config
 import (
 	"fmt"
 	"github.com/nacos-group/nacos-sdk-go/clients"
+	"github.com/nacos-group/nacos-sdk-go/clients/naming_client"
 	"github.com/nacos-group/nacos-sdk-go/common/constant"
+	"github.com/nacos-group/nacos-sdk-go/common/logger"
 	"github.com/nacos-group/nacos-sdk-go/vo"
+	"log"
 	"strconv"
+	"time"
 )
 
-var clientConfig = constant.ClientConfig{
-	BeatInterval:        1000,
+var ClientConfig = constant.ClientConfig{
 	NamespaceId:         "public", // 如果需要支持多namespace，我们可以场景多个client,它们有不同的NamespaceId。当namespace是public时，此处填空字符串。
 	TimeoutMs:           5000,
 	NotLoadCacheAtStart: true,
+	AppendToStdout:      true,
+	LogSampling:         &logger.SamplingConfig{Initial: 10, Thereafter: 3600 * 12, Tick: time.Second},
+	LogLevel:            "error",
 }
-var serverConfigs = getServerConfigs()
+var ServerConfigs = getServerConfigs()
 
 func getServerConfigs() []constant.ServerConfig {
 	if NacosIp != "" && NacosPort != "" {
@@ -34,23 +40,21 @@ func getServerConfigs() []constant.ServerConfig {
 	}}
 }
 
-func GetHealthInstance(serviceName string) (string, string) {
-	Client, err := clients.NewNamingClient(
-		vo.NacosClientParam{
-			ClientConfig:  &clientConfig,
-			ServerConfigs: serverConfigs,
-		},
-	)
-	if err != nil {
-		fmt.Println("服务注册出现错误： ", err)
-		return "", ""
+func createNamingClient() naming_client.INamingClient {
+	for {
+		var client, err = clients.NewNamingClient(
+			vo.NacosClientParam{
+				ClientConfig:  &ClientConfig,
+				ServerConfigs: ServerConfigs,
+			},
+		)
+		if err != nil {
+			log.Println("连接注册中心出现错误： %s", err)
+			time.Sleep(time.Second * 10)
+			continue
+		}
+		return client
 	}
-	instance, err := Client.SelectOneHealthyInstance(vo.SelectOneHealthInstanceParam{
-		ServiceName: serviceName,
-	})
-	if err != nil {
-		fmt.Println("获取服务实例出现错误： ", err)
-		return "", ""
-	}
-	return instance.Ip, strconv.FormatUint(instance.Port, 10)
 }
+
+var NamingClient = createNamingClient()
