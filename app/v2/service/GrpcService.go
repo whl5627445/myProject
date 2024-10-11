@@ -171,8 +171,8 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 	if packageModel.SysUser != "sys" {
 		//取所有非全量实验的并集参数
 		var experimentRecords []DataBaseModel.YssimExperimentRecord
-		if err := DB.Where("username = ? AND userspace_id = ? AND package_id = ? AND create_time <= ? AND is_full_model_var != ?",
-			itemMap["username"], itemMap["space_id"], itemMap["package_id"], experimentRecord.CreatedAt, 1).Order("create_time").Find(&experimentRecords).Error; err != nil {
+		if err := DB.Where("username = ? AND userspace_id = ? AND package_id = ? AND model_name = ? AND create_time <= ? AND is_full_model_var != ?",
+			itemMap["username"], itemMap["space_id"], itemMap["package_id"], itemMap["model_name"], experimentRecord.CreatedAt, 1).Order("create_time").Find(&experimentRecords).Error; err != nil {
 			return "", errors.New("query error")
 		}
 
