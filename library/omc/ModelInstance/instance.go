@@ -98,13 +98,13 @@ type choices struct {
 	Choice         []map[string]string `json:"choicePreprocessing,omitempty"`
 }
 type placement struct {
-	Transformation     transformation `json:"transformation,omitempty"`
-	IconTransformation transformation `json:"iconTransformation,omitempty"`
+	Transformation     *transformation `json:"transformation,omitempty"`
+	IconTransformation *transformation `json:"iconTransformation,omitempty"`
 }
 type transformation struct {
 	Extents  [][]float64 `json:"extent,omitempty"`
 	Origin   []float64   `json:"origin,omitempty"`
-	Rotation float64     `json:"rotation,omitempty"`
+	Rotation *float64    `json:"rotation,omitempty"`
 }
 type Diagram struct {
 	CoordinateSystem *coordinateSystem `json:"coordinateSystem,omitempty"`
@@ -680,20 +680,79 @@ func (a *annotation) getParameterChoices(parameter *Parameter) {
 	}
 }
 
-// GetElementsExtents 获取模型组件icon数据列表，包括模型本身的与继承过来的
-func (p *placement) GetElementsExtents() [][]float64 {
-	if p.IconTransformation.Extents != nil {
+// GetElementsIconExtents 获取元素的Extents数据，从IconTransformation中
+func (p *placement) GetElementsIconExtents() [][]float64 {
+	if p.IconTransformation != nil {
 		return p.IconTransformation.Extents
 	}
-	return p.Transformation.Extents
+
+	if p.Transformation != nil {
+		return p.Transformation.Extents
+	}
+
+	return nil
 }
 
-// GetElementsOrigin 获取模型组件icon数据列表，包括模型本身的与继承过来的
-func (p *placement) GetElementsOrigin() []float64 {
-	if p.IconTransformation.Origin != nil {
+// GetElementsIconOrigin 获取元素的Origin数据，从IconTransformation中
+func (p *placement) GetElementsIconOrigin() []float64 {
+	if p.IconTransformation != nil {
 		return p.IconTransformation.Origin
 	}
-	return p.Transformation.Origin
+
+	if p.Transformation != nil {
+		return p.Transformation.Origin
+	}
+
+	return nil
+}
+
+// GetElementsIconRotation 获取元素的Rotation数据，从IconTransformation中
+func (p *placement) GetElementsIconRotation() float64 {
+	if p.IconTransformation != nil {
+		if p.IconTransformation.Rotation != nil {
+			return *(p.IconTransformation.Rotation)
+		}
+		return 0
+	}
+
+	if p.Transformation != nil {
+		if p.Transformation.Rotation != nil {
+			return *(p.Transformation.Rotation)
+		}
+		return 0
+	}
+
+	return 0
+}
+
+// GetElementsExtents 获取元素的Extents数据，从Transformation中
+func (p *placement) GetElementsExtents() [][]float64 {
+	if p.Transformation != nil {
+		return p.Transformation.Extents
+	}
+
+	return nil
+}
+
+// GetElementsOrigin 获取元素的Origin数据，从Transformation中
+func (p *placement) GetElementsOrigin() []float64 {
+	if p.Transformation != nil {
+		return p.Transformation.Origin
+	}
+
+	return nil
+}
+
+// GetElementsRotation 获取元素的Rotation数据，从Transformation中
+func (p *placement) GetElementsRotation() float64 {
+	if p.Transformation != nil {
+		if p.Transformation.Rotation != nil {
+			return *(p.Transformation.Rotation)
+		}
+		return 0
+	}
+
+	return 0
 }
 
 // hasReplaceablePlacement 判断Prefixes中是否包含放置点范围数据，并且返回范围数据

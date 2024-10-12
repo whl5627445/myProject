@@ -132,7 +132,7 @@ func getElementsGraphicsList(modelInstance *instance.ModelInstance, parentName s
 		if e.Annotation.Placement != nil {
 			modelIconList["origin"] = e.Annotation.Placement.GetElementsOrigin()
 			modelIconList["extents"] = e.Annotation.Placement.GetElementsExtents()
-			modelIconList["rotation"] = e.Annotation.Placement.Transformation.Rotation
+			modelIconList["rotation"] = e.Annotation.Placement.GetElementsRotation()
 		} else {
 			modelIconList["extents"] = replaceableExtent
 		}
@@ -212,9 +212,9 @@ func getElementsConnectorList(modelInstance *instance.ModelInstance, parentName 
 			modelIconList["modelName"] = modelInstance.Name
 			modelIconList["outputType"] = getOutputType(connectorSizingMap, e.Dims.Absyn, e.Dims.Typed)
 			modelIconList["parentName"] = parentName
-			modelIconList["origin"] = e.Annotation.Placement.GetElementsOrigin()
-			modelIconList["extents"] = e.Annotation.Placement.GetElementsExtents()
-			modelIconList["rotation"] = e.Annotation.Placement.Transformation.Rotation
+			modelIconList["origin"] = e.Annotation.Placement.GetElementsIconOrigin()
+			modelIconList["extents"] = e.Annotation.Placement.GetElementsIconExtents()
+			modelIconList["rotation"] = e.Annotation.Placement.GetElementsIconRotation()
 			connectorList = append(connectorList, modelIconList)
 			connectorDumpMap[e.Name] = typeInstance.Name
 		}
