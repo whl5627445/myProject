@@ -2,7 +2,6 @@ package service
 
 import (
 	"strings"
-
 	"yssim-go/library/omc"
 )
 
@@ -149,7 +148,7 @@ func SaveModel(className, copiedClassName, parentName, copeOrDelete, fileName st
 			// SaveModelSource(className, fileName)
 			// omc.OMC.SetSourceFile(className, fileName)
 			// go SaveModelToFile(className, fileName)
-			SaveModelCode(className, fileName)
+			SaveModelToFile(className, fileName)
 		}
 	}
 

@@ -37,6 +37,7 @@ func StartOMC(result chan bool) {
 	time.Sleep(2 * time.Second)
 	OMCInstance.Mu.Lock()
 	if OMCInstance.Cmd != nil {
+		OMCInstance.Mu.Unlock()
 		result <- true
 		logrus.Println("OMC实例已存在，无需重复启动")
 		return
@@ -52,6 +53,7 @@ func StartOMC(result chan bool) {
 	}
 	err = cmd.Start()
 	if err != nil {
+		OMCInstance.Mu.Unlock()
 		result <- false
 		logrus.Println("启动OMC实例失败， 错误： ", err)
 		return

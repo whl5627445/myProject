@@ -270,3 +270,19 @@ func FindFileBySuffixName(suffixName, rootPath string) []string {
 	}
 	return eligibleFiles
 }
+
+// 设置文件和文件夹权限为 777
+func SetPermissions(dir string) error {
+	return filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// 设置权限为 777
+		if err = os.Chmod(path, 0777); err != nil {
+			return err
+		}
+
+		return nil
+	})
+}

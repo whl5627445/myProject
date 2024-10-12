@@ -95,6 +95,14 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 		return "", errors.New("not found")
 	}
 
+	// 查询是不是管网模型
+	var pipeNetModel DataBaseModel.YssimPipeNetCadDownload
+	DB.Where("package_id = ? AND model_name = ?", itemMap["package_id"], itemMap["model_name"]).First(&pipeNetModel)
+	isPipeNet := false
+	if pipeNetModel.ID == "" {
+		isPipeNet = true
+	}
+
 	// 查询实验id对应的仿真记录
 	var simulateRecord DataBaseModel.YssimSimulateRecord
 	DB.Where("experiment_id = ? AND package_id = ? AND simulate_model_name = ? AND username = ? AND userspace_id = ?", itemMap["experiment_id"], itemMap["package_id"], itemMap["model_name"], itemMap["username"], itemMap["space_id"]).First(&simulateRecord)
@@ -119,6 +127,7 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 			ExperimentId:      itemMap["experiment_id"],
 			Intervals:         itemMap["interval"],
 			AnotherName:       anotherName,
+			PipeNet:           isPipeNet,
 		}
 		err = DB.Create(&record).Error
 		if err != nil {
@@ -171,8 +180,8 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 	if packageModel.SysUser != "sys" {
 		//取所有非全量实验的并集参数
 		var experimentRecords []DataBaseModel.YssimExperimentRecord
-		if err := DB.Where("username = ? AND userspace_id = ? AND package_id = ? AND create_time <= ? AND is_full_model_var != ?",
-			itemMap["username"], itemMap["space_id"], itemMap["package_id"], experimentRecord.CreatedAt, 1).Order("create_time").Find(&experimentRecords).Error; err != nil {
+		if err := DB.Where("username = ? AND userspace_id = ? AND package_id = ? AND model_name = ? AND create_time <= ? AND is_full_model_var != ?",
+			itemMap["username"], itemMap["space_id"], itemMap["package_id"], itemMap["model_name"], experimentRecord.CreatedAt, 1).Order("create_time").Find(&experimentRecords).Error; err != nil {
 			return "", errors.New("query error")
 		}
 
@@ -205,7 +214,7 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 		Token:         itemMap["token"],
 		Params:        params,
 	}
-	_, err = taskManagement.TaskClient.Assignments(taskManagement.TaskCtx, GrpcBuildModelRequest)
+	_, err = taskManagement.CasService.Client.Assignments(context.Background(), GrpcBuildModelRequest)
 	return record.ID, err
 
 }
@@ -242,7 +251,7 @@ func GrpcSimulationProcessOperation(uid string) (*taskManagement.TerminateTaskRe
 	PyOmcSimProcessOperationRequest := &taskManagement.TerminateTaskRequest{
 		Uuid: uid,
 	}
-	replyTest, err := taskManagement.TaskClient.TerminateTask(taskManagement.TaskCtx, PyOmcSimProcessOperationRequest)
+	replyTest, err := taskManagement.CasService.Client.TerminateTask(context.Background(), PyOmcSimProcessOperationRequest)
 	return replyTest, err
 
 }
