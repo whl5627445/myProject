@@ -417,11 +417,18 @@ func iconInputOutputs(cData [][]any, caData [][]any, modelName, parentName strin
 				data["extents"] = [][]float64{{extentX1, extentY1}, {extentX2, extentY2}}
 			}
 			data["rotation"] = rotateAngle
-			if cDataFilter[i][14].(string) != "[]" {
-				data["outputType"] = map[string]any{"name": cDataFilter[i][14].(string)}
+
+			connectorSizingName := cDataFilter[i][14].(string)
+			if connectorSizingName != "[]" {
+				if strings.Contains(connectorSizingName, "[") && strings.Contains(connectorSizingName, "]") {
+					connectorSizingName = connectorSizingName[1 : len(connectorSizingName)-1]
+					data["outputType"] = map[string]any{"name": connectorSizingName, "connectorSizing": true, "num": "0"}
+				} else {
+					data["outputType"] = map[string]any{"name": connectorSizingName, "connectorSizing": true, "num": "0"}
+				}
 			}
 			if cDataFilter[i][16] != "" {
-				data["outputType"] = map[string]any{"name": cDataFilter[i][16], "connectorSizing": true}
+				data["outputType"] = map[string]any{"name": cDataFilter[i][16], "connectorSizing": true, "num": "0"}
 			}
 			data["connectors"] = make([]map[string]any, 0)
 			iconInstance := getModelInstance(classname)
