@@ -19,8 +19,9 @@ var MoldelCompileStatus = map[string]string{"1": "编译排队中", "2": "正在
 var ClassTypeAll = map[string]bool{"model": true, "class": true, "connector": true, "block": true, "function": true, "record": true, "expandable connector": true}
 
 const gatewayConnect = "http://gateway:6535"
-const DymolaSimutalionConnect = gatewayConnect + "/dymola"
-const OmcFlaskConnect = gatewayConnect + "/omc-python"
+
+// const DymolaSimutalionConnect = gatewayConnect + "/dymola"
+const FmuExportConnect = gatewayConnect + "/fmu-export"
 const ADDR = "0.0.0.0:"
 const CADConnect = gatewayConnect + "/caa"
 

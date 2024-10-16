@@ -554,15 +554,13 @@ func FmuExportModelView(c *gin.Context) {
 	}
 	userSpaceId := c.GetHeader("space_id")
 	username := c.GetHeader("username")
-	token := c.GetHeader("Authorization")
-	fileName := ""
+
 	filePath := ""
 
 	var packageModel DataBaseModel.YssimModels
 	DB.Where("id = ? AND sys_or_user = ? AND userspace_id = ?", item.PackageId, username, userSpaceId).First(&packageModel)
 	if packageModel.FilePath != "" {
 		filePath = packageModel.FilePath
-		fileName = packageModel.PackageName
 	}
 	// 获取依赖
 	envLibrary := service.GetEnvLibrary(packageModel.PackageName, username, userSpaceId)
@@ -573,8 +571,7 @@ func FmuExportModelView(c *gin.Context) {
 		newFileName, ok, errTips = service.OmcFmuExportWithLibrary(item.FmuPar, envLibrary, username, item.FmuName, item.PackageName, item.ModelName, filePath)
 
 	} else {
-		newFileName, ok, errTips = service.DymolaFmuExportWithLibrary(item.FmuPar, envLibrary, token, username, item.FmuName, item.PackageName, item.ModelName, fileName, filePath)
-
+		newFileName, ok, errTips = service.DymolaFmuExportWithLibrary(item.FmuPar, envLibrary, username, item.FmuName, item.ModelName)
 	}
 	if ok {
 
