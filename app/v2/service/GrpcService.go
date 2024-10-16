@@ -99,7 +99,7 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 	var pipeNetModel DataBaseModel.YssimPipeNetCadDownload
 	DB.Where("package_id = ? AND model_name = ?", itemMap["package_id"], itemMap["model_name"]).First(&pipeNetModel)
 	isPipeNet := false
-	if pipeNetModel.ID == "" {
+	if pipeNetModel.ID != "" {
 		isPipeNet = true
 	}
 
