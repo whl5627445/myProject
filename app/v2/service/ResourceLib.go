@@ -117,8 +117,15 @@ func CopyLibFileToResources(packageName, parent string, filePath, fileName strin
 	currentNodes := GetResourcesList(packageName, parent)
 
 	filenames := strings.Split(fileName, ".")
-	preName := filenames[0]
-	postfix := filenames[1]
+	filenamesLength := len(filenames)
+	preName := ""
+	postfix := ""
+	for i := 0; i < filenamesLength-1; i++ {
+		preName = preName + filenames[i] + "."
+	}
+	preName = preName[0 : len(preName)-1]
+	postfix = filenames[filenamesLength-1]
+
 	regex := regexp.MustCompile(preName + "_copy" + "[0-9]+" + "." + postfix)
 	nums := []int{}
 	findItself := false
