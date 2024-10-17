@@ -564,6 +564,15 @@ func UploadResourceFileView(c *gin.Context) {
 		return
 	}
 
+	// 验证文件本身名称命名规则
+	matchSpaceName, _ = regexp.MatchString("^[_0-9a-zA-Z]+$", strings.TrimSuffix(varFile.Filename, ".txt")) // 由字母、数字、下划线验证
+	if !matchSpaceName {
+		res.Err = "文件名称只能由字母、数字、下划线组成"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
 	var resourceLib DataBaseModel.YssimResourceLib = DataBaseModel.YssimResourceLib{
 		ParentId:    fileinfo.ParentId,
 		ID:          uuid.New().String(),
