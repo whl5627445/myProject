@@ -638,17 +638,50 @@ func GetInstanceMapping(pipeNetInfoFileId, mappingConfigId, pipeNetInfoFilePath,
 		var found bool
 		if part, ok := haha[pipeNetXml2.Components[i].TypeCAD]; ok {
 			pipeNetXml2.Components[i].TypeCAE = part.ModelicaClass
+
+			// 获取并生成angle向量参数
+			if pipeNetXml2.Components[i].TypeCAD == "弯管" {
+				angleList := []string{}
+				for j := 0; j < len(pipeNetXml2.Components[i].Properties); j++ {
+					if pipeNetXml2.Components[i].Properties[j].Angle != "" {
+						angleList = append(angleList, pipeNetXml2.Components[i].Properties[j].Angle)
+					}
+				}
+
+				angleListLen := len(angleList)
+				if angleListLen > 0 {
+					angleStr := "{"
+					for j, eachAngle := range angleList {
+						if j != angleListLen-1 {
+							angleStr = angleStr + eachAngle + ", "
+						} else {
+							angleStr = angleStr + eachAngle
+						}
+					}
+					angleStr = angleStr + "}"
+					angleParameterCAD := Parameter{Name: "角度", Value: angleStr, Unit: "m", Id: "1"}
+					angleParameterCAE := Parameter{Name: "angles", Value: angleStr, Unit: "m", Id: "1"}
+					pipeNetXml1.Components[i].Parameters = append(pipeNetXml1.Components[i].Parameters, angleParameterCAD)
+					pipeNetXml2.Components[i].Parameters = append(pipeNetXml2.Components[i].Parameters, angleParameterCAE)
+				}
+			}
+
+			// 生成常规参数
 			for j := 0; j < len(pipeNetXml2.Components[i].Parameters); j++ {
 				var foundPamameter bool
 				for _, partInfo := range part.ParameterList {
 					if pipeNetXml2.Components[i].Parameters[j].Name == partInfo.SourceName {
 						pipeNetXml2.Components[i].Parameters[j].Name = partInfo.TargetName
+						// 生成length向量参数
+						if pipeNetXml2.Components[i].Parameters[j].Name == "length" && pipeNetXml2.Components[i].TypeCAD == "弯管" {
+							pipeNetXml2.Components[i].Parameters[j].Value = "{" + pipeNetXml2.Components[i].Parameters[j].Value + "}"
+						}
 						foundPamameter = true
 						break
 					}
 				}
 
-				if !foundPamameter {
+				if !foundPamameter && pipeNetXml2.Components[i].Parameters[j].Name != "angles" {
 					info := fmt.Sprintf("映射配置表中没有找到参数信息：零件: %s CAD类型: %s CAD参数: %s CAE类型: %s CAE参数: 缺失",
 						pipeNetXml2.Components[i].Name, pipeNetXml2.Components[i].TypeCAD, pipeNetXml2.Components[i].Parameters[j].Name, pipeNetXml2.Components[i].TypeCAE)
 					config.R.RPush(context.Background(), logRedisKey, info)
@@ -796,14 +829,16 @@ func WritePipeNetModeCodeNew(modeName, modeNameAll, system, medium string, packa
 	}
 
 	// 组件代码
+	componentTypeCADMap := map[string]string{}
 	for _, component := range instanceMapping.Components {
+		componentTypeCADMap[component.LegalName] = component.TypeCAD
 		modelicaCode = modelicaCode + component.TypeCAE + " " + component.LegalName + "("
 		for _, parameter := range component.Parameters {
 			if parameter.Name != "" && parameter.Value != "" {
 				modelicaCode = modelicaCode + parameter.Name + "=" + parameter.Value + ", "
 			}
 		}
-		modelicaCode = modelicaCode + "redeclare package Medium = Medium) " + "annotation(Placement(visible = true, transformation(origin = {0, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));\n"
+		modelicaCode = modelicaCode + "redeclare package Medium = Medium)" + " \"" + component.InstanceName + "\" " + "annotation(Placement(visible = true, transformation(origin = {0, 0}, extent = {{-10, -10}, {10, 10}}, rotation = 0)));\n"
 	}
 
 	// equation代码
@@ -817,7 +852,27 @@ func WritePipeNetModeCodeNew(modeName, modeNameAll, system, medium string, packa
 	}
 
 	for _, connector := range instanceMapping.Connectors {
-		modelicaCode = modelicaCode + "connect(" + connector.From.LegalName + "." + portNameMapping[connector.From.Point] + ", " + connector.To.LegalName + "." + portNameMapping[connector.To.Point] + ") annotation(Line(color = {0, 0, 127}));\n"
+		fromPoint := connector.From.LegalName + "." + portNameMapping[connector.From.Point]
+		toPoint := connector.To.LegalName + "." + portNameMapping[connector.To.Point]
+
+		// 对弯管的连线端点进行特殊处理
+		if componentTypeCADMap[connector.From.LegalName] == "弯管" {
+			if connector.From.Point == "Point1" {
+				fromPoint = connector.From.LegalName + "." + portNameMapping["Point1"]
+			} else {
+				fromPoint = connector.From.LegalName + "." + portNameMapping["Point2"]
+			}
+		}
+
+		if componentTypeCADMap[connector.To.LegalName] == "弯管" {
+			if connector.To.Point == "Point1" {
+				toPoint = connector.To.LegalName + "." + portNameMapping["Point1"]
+			} else {
+				toPoint = connector.To.LegalName + "." + portNameMapping["Point2"]
+			}
+		}
+
+		modelicaCode = modelicaCode + "connect(" + fromPoint + ", " + toPoint + ") annotation(Line(color = {0, 0, 127}));\n"
 	}
 
 	modelicaCode = modelicaCode + "annotation(uses(Modelica(version = \"4.0.0\")));\n" + "end " + modeName + ";"

@@ -47,6 +47,7 @@ type Property struct {
 	//Comments string  `xml:"comments,attr,omitempty"`
 	Radius string `xml:"Radius,attr,omitempty"`
 	Unit   string `xml:"Unit,attr,omitempty"`
+	Angle  string `xml:"Angle,attr,omitempty"`
 }
 
 type Point struct {
