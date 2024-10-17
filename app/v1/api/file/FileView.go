@@ -281,7 +281,12 @@ func CreateModelPackageView(c *gin.Context) {
 		}
 		newPackage = insertPackageRecord
 	} else {
-		DB.Create(&newPackage)
+		if err = DB.Create(&newPackage).Error; err != nil {
+			res.Err = "创建失败，请稍后再试"
+			res.Status = 2
+			c.JSON(http.StatusOK, res)
+			return
+		}
 	}
 	result := service.CreateModelAndPackage(createPackageName, item.Vars.InsertTo, item.Vars.Expand, item.StrType, createPackageNameALL, item.Comment, item.Vars.Partial, item.Vars.Encapsulated, item.Vars.State)
 	if result {
