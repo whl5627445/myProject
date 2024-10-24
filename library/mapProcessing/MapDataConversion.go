@@ -47,6 +47,9 @@ func ComponentParamsToMap(componentParams []map[string]any) map[string]string {
 	resMap := make(map[string]string)
 	for i := 0; i < len(componentParams); i++ {
 		componentName := componentParams[i]["name"].(string)
+		if componentParams[i]["parameters"] == nil {
+			continue
+		}
 		componentParamsList := componentParams[i]["parameters"].([]any)
 		for j := 0; j < len(componentParamsList); j++ {
 			v := componentParamsList[j].(map[string]any)["value"]
