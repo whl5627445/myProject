@@ -25,6 +25,7 @@ type Root struct {
 }
 
 type Component struct {
+	PathName      string      `xml:"Pathname,attr"`
 	InstanceName  string      `xml:"InstanceName,attr"`
 	Name          string      `xml:"-"` //防止字段在 XML 中被序列化
 	Id            string      `xml:"-"` //防止字段在 XML 中被序列化
@@ -33,9 +34,9 @@ type Component struct {
 	PartNumberCAE string      `xml:"PartNumber.CAE,attr"`
 	TypeCAD       string      `xml:"Type.CAD,attr"`
 	TypeCAE       string      `xml:"Type.CAE,attr"`
-	Comments      string      `xml:"comments,attr"`
+	Comments      string      `xml:"Comments,attr"`
 	Properties    []Property  `xml:"Properties>Property"`
-	Parameters    []Parameter `xml:"parameters>parameter"`
+	Parameters    []Parameter `xml:"Parameters>Parameter"`
 }
 
 type Property struct {
@@ -115,8 +116,8 @@ func ParseInfoFileXml(path string) (Root, error) {
 		return root, errors.New("解析失败")
 	}
 	for i := 0; i < len(root.Components); i++ {
-		root.Components[i].LegalName = stringOperation.SanitizeName(root.Components[i].InstanceName)
-		root.Components[i].Name = root.Components[i].InstanceName
+		root.Components[i].LegalName = stringOperation.SanitizeName(root.Components[i].PathName)
+		root.Components[i].Name = root.Components[i].PathName
 		root.Components[i].Id = uuid.New().String()
 		for j := 0; j < len(root.Components[i].Properties); j++ {
 			root.Components[i].Properties[j].Id = uuid.New().String()
