@@ -851,7 +851,7 @@ func WritePipeNetModeCodeNew(modeName, modeNameAll, system, medium string, packa
 		"Point3": "port_c",
 	}
 
-	// 成品件端口
+	// 加油控制活门端口
 	closedVolumePortNameMapping := map[string]string{
 		"Point1": "ports[1]",
 		"Point2": "ports[2]",
@@ -864,12 +864,12 @@ func WritePipeNetModeCodeNew(modeName, modeNameAll, system, medium string, packa
 		fromPoint := connector.From.LegalName + "." + portNameMapping[connector.From.Point]
 		toPoint := connector.To.LegalName + "." + portNameMapping[connector.To.Point]
 
-		// 对成品件的连线端点进行特殊处理
-		if componentTypeCADMap[connector.From.LegalName] == "成品件" {
+		// 对加油控制活门的连线端点进行特殊处理
+		if componentTypeCADMap[connector.From.LegalName] == "加油控制活门" {
 			fromPoint = connector.From.LegalName + "." + closedVolumePortNameMapping[connector.From.Point]
 		}
 
-		if componentTypeCADMap[connector.To.LegalName] == "成品件" {
+		if componentTypeCADMap[connector.To.LegalName] == "加油控制活门" {
 			toPoint = connector.To.LegalName + "." + closedVolumePortNameMapping[connector.To.Point]
 		}
 
