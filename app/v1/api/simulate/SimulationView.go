@@ -534,8 +534,8 @@ func ExperimentExistsView(c *gin.Context) {
 
 	// 查询当前用户空间的package id所有的experiment记录
 	var experimentRecordList []DataBaseModel.YssimExperimentRecord
-	DB.Where("package_id = ? AND username =? AND userspace_id =?",
-		item.PackageId, username, userSpaceId).Find(&experimentRecordList)
+	DB.Where("package_id = ? AND username =? AND userspace_id =? AND model_name =?",
+		item.PackageId, username, userSpaceId, item.ModelName).Find(&experimentRecordList)
 
 	// 遍历每一条数据库记录，把每一条数据库记录和当前请求数据对比
 	for _, experimentRecord := range experimentRecordList {
