@@ -10,16 +10,16 @@ import (
 	"github.com/bytedance/sonic"
 )
 
-func GetMessagesStringInternal() []map[string]string {
+func GetMessagesStringInternal() []map[string]interface{} {
 	data := omc.OMC.GetMessagesStringInternal()
 	if len(data) < 1 {
-		return []map[string]string{}
+		return []map[string]interface{}{}
 	}
 	dataList := strings.Split(data, ";,")
-	var messageList []map[string]string
+	var messageList []map[string]interface{}
 	for i := 0; i < len(dataList); i++ {
 		dl := strings.Split(strings.TrimSpace(dataList[i]), ",\n")
-		messageMap := make(map[string]string)
+		messageMap := make(map[string]interface{})
 		for j := 0; j < len(dl); j++ {
 			jl := strings.TrimSpace(dl[j])
 			switch true {
@@ -39,7 +39,8 @@ func GetMessagesStringInternal() []map[string]string {
 				messageMap["type"] = level[len(level)-1]
 			}
 		}
-		if len(messageMap["message"]) > 0 {
+		_, ok := messageMap["message"].(string)
+		if ok && len(messageMap["message"].(string)) > 0 {
 			messageList = append(messageList, messageMap)
 		}
 	}
@@ -47,6 +48,29 @@ func GetMessagesStringInternal() []map[string]string {
 }
 
 func MessageNotice(mes any) bool {
+	// 替换敏感词
+	mesMap, ok := mes.(map[string]interface{})
+	if ok {
+		newMesString := ""
+		replacedMesString, isString := mesMap["message"].(string)
+
+		if isString {
+			replacedMesStringSlice := strings.Split(replacedMesString, " ")
+			for _, word := range replacedMesStringSlice {
+				wordLowwer := strings.ToLower(word)
+				if _, ok := config.SensitiveWords[wordLowwer]; ok {
+					newMesString = newMesString + " " + "YSLAB"
+				} else {
+					newMesString = newMesString + " " + word
+				}
+			}
+
+			mesMap["message"] = newMesString
+			mes = mesMap
+		}
+	}
+
+	// 推送消息
 	mesJson, _ := sonic.Marshal(mes)
 	userName := config.USERNAME
 	reply, err := config.R.LPush(context.Background(), userName+"_"+"notification", mesJson).Result()

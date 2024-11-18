@@ -17,6 +17,7 @@ var Units = [][]string{{"rad", "deg"}, {"rad/s", "deg/s", "Hz", "rpm", "rev/min"
 var MoldelSimutalionStatus = map[string]string{"1": "仿真排队中", "2": "正在仿真", "3": "仿真失败", "4": "仿真完成", "5": "删除任务", "6": "正在编译", "7": "仿真终止"}
 var MoldelCompileStatus = map[string]string{"1": "编译排队中", "2": "正在编译", "3": "编译失败", "4": "编译完成"}
 var ClassTypeAll = map[string]bool{"model": true, "class": true, "connector": true, "block": true, "function": true, "record": true, "expandable connector": true}
+var SensitiveWords = map[string]bool{"dymola": true, "omc": true, "openmodelica": true} // 需要被替换的敏感词
 
 const gatewayConnect = "http://gateway:6535"
 
