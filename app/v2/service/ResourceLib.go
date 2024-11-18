@@ -54,7 +54,7 @@ func ParseResourceFileContent(path string) map[string]map[string]any {
 	column := 0
 	var xData []float64
 	var yData [][]float64
-	var compiledRegexpOnlyHasNum = regexp.MustCompile(`^[\d .]+$`)
+	var compiledRegexpOnlyHasNum = regexp.MustCompile(`^[\d\s\t.]+$`)
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() { // 逐行扫描
@@ -88,7 +88,9 @@ func ParseResourceFileContent(path string) map[string]map[string]any {
 		}
 
 		if onlyHasSum := compiledRegexpOnlyHasNum.MatchString(line); onlyHasSum {
-			strs := strings.Fields(line)
+			strs := strings.FieldsFunc(line, func(r rune) bool {
+				return r == ' ' || r == '\t'
+			})
 			xdata, _ := strconv.ParseFloat(strs[0], 64)
 			xData = append(xData, xdata)
 			for i := 1; i < column; i++ {
