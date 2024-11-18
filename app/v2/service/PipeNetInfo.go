@@ -58,10 +58,11 @@ type Point struct {
 }
 
 type Parameter struct {
-	Name  string `xml:"Name,attr"`
-	Value string `xml:"Value,attr"`
-	Unit  string `xml:"Unit,attr"`
-	Id    string `xml:"-"` //防止字段在 XML 中被序列化
+	Name       string `xml:"Name,attr"`
+	Value      string `xml:"Value,attr"`
+	Unit       string `xml:"Unit,attr"`
+	Suggestion string `xml:"Suggestion,attr"`
+	Id         string `xml:"-"` //防止字段在 XML 中被序列化
 }
 
 type Connector struct {
@@ -239,7 +240,7 @@ func UpdatePipeNetInfoFile(pipeNetInfoFilePath, mappingConfigPath, simResPath st
 							}
 							//abscissa := data[0]
 							value := ordinate[len(ordinate)-1]
-							pipeNetXml1.Components[i].Parameters[j].Value = strconv.FormatFloat(value, 'f', -1, 64)
+							pipeNetXml1.Components[i].Parameters[j].Suggestion = strconv.FormatFloat(value, 'f', -1, 64)
 							foundPamameter = true
 
 						}
