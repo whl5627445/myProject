@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 	"yssim-go/grpc/taskManagement"
+	"yssim-go/library/fileOperation"
 	"yssim-go/library/mapProcessing"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -120,7 +121,7 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 	var experimentRecord DataBaseModel.YssimExperimentRecord
 	DB.Where("id = ? ", itemMap["experiment_id"]).First(&experimentRecord)
 	if experimentRecord.ID == "" {
-		anotherName = "实验(默认)的结果"
+		return "", errors.New("not found")
 	} else {
 		anotherName = experimentRecord.ExperimentName + "的结果"
 	}
@@ -149,19 +150,19 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 		// SimulateStatus "1"初始(正在准备)  "2"执行  "3"失败(编译失败or仿真运行失败)  "4"成功结束  "5"关闭(killed)  "6"编译阶段
 		record = DataBaseModel.YssimSimulateRecord{
 			ID:                uuid.New().String(),
-			PackageId:         itemMap["package_id"],
-			UserspaceId:       itemMap["space_id"],
-			UserName:          itemMap["username"],
-			SimulateModelName: itemMap["model_name"],
+			PackageId:         experimentRecord.PackageId,
+			UserspaceId:       experimentRecord.UserspaceId,
+			UserName:          experimentRecord.UserName,
+			SimulateModelName: experimentRecord.ModelName,
 			SimulateStatus:    "1",
-			StartTime:         itemMap["start_time"],
-			StopTime:          itemMap["stop_time"],
-			Method:            itemMap["method"],
-			SimulateType:      itemMap["simulate_type"],
-			NumberOfIntervals: itemMap["number_of_intervals"],
-			Tolerance:         itemMap["tolerance"],
+			StartTime:         experimentRecord.StartTime,
+			StopTime:          experimentRecord.StopTime,
+			Method:            experimentRecord.Method,
+			SimulateType:      experimentRecord.SimulateType,
+			NumberOfIntervals: experimentRecord.NumberOfIntervals,
+			Tolerance:         experimentRecord.Tolerance,
 			ExperimentId:      itemMap["experiment_id"],
-			Intervals:         itemMap["interval"],
+			Intervals:         experimentRecord.Interval,
 			AnotherName:       anotherName,
 			PipeNet:           isPipeNet,
 		}
@@ -171,17 +172,28 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 		}
 		// 创建结果文件夹,并存入数据库
 		resultFilePath := "static/UserFiles/ModelResult/" + itemMap["username"] + "/" + strings.ReplaceAll(itemMap["model_name"], ".", "-") + "/" + time.Now().Local().Format("20060102150405") + "/"
-		// fileOperation.CreateFilePath(resultFilePath)
+		createFilePathRes := fileOperation.CreateFilePath(resultFilePath)
+		log.Println(resultFilePath)
+		log.Println("创建路径结果", createFilePathRes)
+
+		// 设置解压后的文件和文件夹权限为 777
+		if err_ := fileOperation.SetPermissions(resultFilePath); err_ != nil {
+			log.Println("Error setting permissions: %v", err)
+		}
 		record.SimulateModelResultPath = resultFilePath
 		config.DB.Save(&record)
 	} else {
+		// 设置解压后的文件和文件夹权限为 777
+		if err_ := fileOperation.SetPermissions(record.SimulateModelResultPath); err_ != nil {
+			log.Println("Error setting permissions: %v", err)
+		}
 		//如果有找到记录，则用老的记录,并更新仿真参数
-		simulateRecord.StartTime = itemMap["start_time"]
-		simulateRecord.StopTime = itemMap["stop_time"]
-		simulateRecord.Method = itemMap["method"]
-		simulateRecord.NumberOfIntervals = itemMap["number_of_intervals"]
-		simulateRecord.Tolerance = itemMap["tolerance"]
-		simulateRecord.SimulateType = itemMap["simulate_type"]
+		//simulateRecord.StartTime = itemMap["start_time"]
+		//simulateRecord.StopTime = itemMap["stop_time"]
+		//simulateRecord.Method = itemMap["method"]
+		//simulateRecord.NumberOfIntervals = itemMap["number_of_intervals"]
+		//simulateRecord.Tolerance = itemMap["tolerance"]
+		//simulateRecord.SimulateType = itemMap["simulate_type"]
 
 		//删除mongo中的记录
 		if simulateRecord.TaskId != "" {
