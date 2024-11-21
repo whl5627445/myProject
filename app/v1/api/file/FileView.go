@@ -568,7 +568,7 @@ func FmuExportModelView(c *gin.Context) {
 		filePath = packageModel.FilePath
 	}
 	// 获取依赖
-	envLibrary := service.GetEnvLibrary(packageModel.PackageName, username, userSpaceId)
+	envLibrary := service.GetEnvLibraryAll(username, userSpaceId)
 	newFileName := ""
 	ok := false
 	errTips := ""
