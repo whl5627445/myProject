@@ -176,7 +176,7 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 		log.Println(resultFilePath)
 		log.Println("创建路径结果", createFilePathRes)
 
-		// 设置解压后的文件和文件夹权限为 777
+		// 设置文件夹权限为 777
 		if err_ := fileOperation.SetPermissions(resultFilePath); err_ != nil {
 			log.Println(resultFilePath)
 			log.Println("Error setting permissions:", err_)
@@ -184,10 +184,14 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 		record.SimulateModelResultPath = resultFilePath
 		config.DB.Save(&record)
 	} else {
-		// 设置解压后的文件和文件夹权限为 777
+		// 设置文件夹权限为 777
 		if err_ := fileOperation.SetPermissions(simulateRecord.SimulateModelResultPath); err_ != nil {
 			log.Println(simulateRecord.SimulateModelResultPath)
 			log.Println("Error setting permissions:", err_)
+		}
+		err_ := fileOperation.ClearDirectory(simulateRecord.SimulateModelResultPath)
+		if err_ != nil {
+			log.Println(err_)
 		}
 		//如果有找到记录，则用老的记录,并更新仿真参数
 		//simulateRecord.StartTime = itemMap["start_time"]
