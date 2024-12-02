@@ -84,6 +84,7 @@ func GetModelStateView(c *gin.Context) {
 
 	var res DataType.ResponseData
 	stateData := service.GetSimulationState(modelRecord.ID, modelRecord.StartTime, modelRecord.StopTime, modelRecord.Intervals, modelRecord.Percentage)
+	stateData["simulate_status_msg"] = config.MoldelSimutalionStatus_[modelRecord.SimulateStatus]
 
 	res.Data = stateData
 	c.JSON(http.StatusOK, res)

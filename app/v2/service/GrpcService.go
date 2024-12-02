@@ -193,6 +193,9 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 		if err_ != nil {
 			log.Println(err_)
 		}
+		simulateRecord.SimulateEndTime = 0
+		simulateRecord.SimulateStartTime = 0
+		simulateRecord.SimulateStatus = "1"
 		//如果有找到记录，则用老的记录,并更新仿真参数
 		//simulateRecord.StartTime = itemMap["start_time"]
 		//simulateRecord.StopTime = itemMap["stop_time"]
