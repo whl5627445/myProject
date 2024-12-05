@@ -286,3 +286,36 @@ func SetPermissions(dir string) error {
 		return nil
 	})
 }
+
+// 清空文件夹
+func ClearDirectory(dir string) error {
+	// 读取目录内容
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return err
+	}
+	fmt.Println(entries)
+
+	// 遍历目录中的每个条目
+	for _, entry := range entries {
+		fullPath := filepath.Join(dir, entry.Name())
+
+		if entry.IsDir() {
+			// 如果是子目录，递归清空子目录
+			err := os.RemoveAll(fullPath)
+			fmt.Println(fullPath)
+			if err != nil {
+				return err
+			}
+		} else {
+			// 如果是文件，直接删除
+			err := os.Remove(fullPath)
+			fmt.Println(fullPath)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}

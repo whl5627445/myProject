@@ -317,7 +317,7 @@ func EditResourceInfoView(c *gin.Context) {
 	// 验证应用名称命名规则
 	matchSpaceName, _ := regexp.MatchString("^[_0-9a-zA-Z\u4e00-\u9fa5]+$", item.Name) // 由中文、字母、数字、下划线验证
 	if !matchSpaceName {
-		res.Err = "应用名称只能由中文、字母、数字、下划线组成"
+		res.Err = "名称只能由中文、字母、数字、下划线组成"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
@@ -467,7 +467,15 @@ func CreateResourceFolderView(c *gin.Context) {
 	// 验证名称命名规则
 	matchSpaceName, _ := regexp.MatchString("^[_0-9a-zA-Z\u4e00-\u9fa5]+$", item.Name) // 由中文、字母、数字、下划线验证
 	if !matchSpaceName {
-		res.Err = "应用名称只能由中文、字母、数字、下划线组成"
+		res.Err = "名称只能由中文、字母、数字、下划线组成"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	var sameNameSubResource DataBaseModel.YssimResourceLib
+	if DB.Where("parent_id = ? AND name = ?", item.ParentId, item.Name).First(&sameNameSubResource); sameNameSubResource.ID != "" {
+		res.Err = "名称已存在"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
@@ -533,7 +541,7 @@ func UploadResourceFileView(c *gin.Context) {
 	// 验证名称命名规则
 	matchSpaceName, _ := regexp.MatchString("^[_0-9a-zA-Z\u4e00-\u9fa5]+$", fileinfo.Filename) // 由中文、字母、数字、下划线验证
 	if !matchSpaceName {
-		res.Err = "应用名称只能由中文、字母、数字、下划线组成"
+		res.Err = "名称只能由中文、字母、数字、下划线组成"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return
@@ -551,6 +559,15 @@ func UploadResourceFileView(c *gin.Context) {
 	// 限制文件格式
 	if !strings.HasSuffix(varFile.Filename, ".txt") {
 		res.Err = "暂时只支持 *.txt 格式文件上传"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	// 验证文件本身名称命名规则
+	matchSpaceName, _ = regexp.MatchString("^[_0-9a-zA-Z]+$", strings.TrimSuffix(varFile.Filename, ".txt")) // 由字母、数字、下划线验证
+	if !matchSpaceName {
+		res.Err = "文件名称只能由字母、数字、下划线组成"
 		res.Status = 2
 		c.JSON(http.StatusOK, res)
 		return

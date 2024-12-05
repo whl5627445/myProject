@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	serviceV2 "yssim-go/app/v2/service"
 	"yssim-go/library/stringOperation"
 
 	"yssim-go/app/DataBaseModel"
@@ -756,6 +757,16 @@ func CopyClassView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
+
+	// 查询被复制的模型是不是管网模型
+	var pipeNetModel DataBaseModel.YssimPipeNetCadDownload
+	dbModel.Where("package_id = ? AND model_name = ? AND username = ?", item.FromPackageId, item.CopiedClassName, userName).First(&pipeNetModel)
+	isPipeNet := false
+	if pipeNetModel.ID != "" {
+		isPipeNet = true
+	}
+	fmt.Println("管网模型：：：：：：", isPipeNet)
+
 	filePath := ""
 	if item.ParentName != "" {
 		packageName = packageModel.PackageName
@@ -804,6 +815,43 @@ func CopyClassView(c *gin.Context) {
 			service.SetPackageUses(item.CopiedClassName, item.ModelName)
 			service.ModelSave(item.ModelName)
 		}
+		// 如果是管网模型YssimPipeNetCadDownload新建记录
+		if isPipeNet {
+			newPipeNetPackageId := newModel.ID
+			newPipeNetModelName := item.ModelName
+			if item.ParentName != "" {
+				newPipeNetPackageId = item.ToPackageId
+				newPipeNetModelName = item.ParentName + "." + item.ModelName
+			}
+			// 创建更新下载记录
+			var newPipeNetCadDownload = DataBaseModel.YssimPipeNetCadDownload{
+				ID:          uuid.New().String(),
+				UserName:    userName,
+				Name:        pipeNetModel.Name,
+				Description: pipeNetModel.Description,
+				PackageId:   newPipeNetPackageId,
+				ModelName:   newPipeNetModelName,
+			}
+			// 复制当前管网信息文件
+			newPath, ok := serviceV2.CopyPipeNetInfoFile(pipeNetModel.PipeNetPath, userName, newPipeNetCadDownload.ID)
+			if !ok {
+				res.Err = "创建失败"
+				res.Status = 2
+				c.JSON(http.StatusOK, res)
+				return
+			}
+			newPipeNetCadDownload.PipeNetPath = newPath
+			// 复制映射表
+			newMappingPath, ok := serviceV2.CopyMappingConfig(pipeNetModel.MappingPath, userName, newPipeNetCadDownload.ID)
+			if !ok {
+				res.Err = "创建失败"
+				res.Status = 2
+				c.JSON(http.StatusOK, res)
+				return
+			}
+			newPipeNetCadDownload.MappingPath = newMappingPath
+			dbModel.Create(&newPipeNetCadDownload)
+		}
 
 	} else {
 		res.Msg = msg
@@ -839,12 +887,22 @@ func DeletePackageAndModelView(c *gin.Context) {
 	if result {
 		res.Msg = msg
 		if item.ParentName == "" {
-			var simulateRecord []DataBaseModel.YssimSimulateRecord
-			dbModel.Where("package_id = ? AND username = ? AND userspace_id = ?", item.PackageId, userName, userSpaceId).Find(&simulateRecord)
 			dbModel.Delete(&packageModel)
 		} else {
 			service.ModelSave(item.ParentName)
 		}
+		// 结束仿真和删除仿真记录
+		var simulateRecord []DataBaseModel.YssimSimulateRecord
+		dbModel.Where("package_id = ? AND username = ? AND userspace_id = ?", item.PackageId, userName, userSpaceId).Find(&simulateRecord)
+		for i := 0; i < len(simulateRecord); i++ {
+			serviceV2.DeleteSimulateTask(simulateRecord[i].TaskId, simulateRecord[i].SimulateModelResultPath)
+		}
+		dbModel.Delete(&simulateRecord)
+		// 删除管网记录
+		var pipeModel []DataBaseModel.YssimPipeNetCadDownload
+		dbModel.Where("package_id = ? AND username = ? AND model_name=?", item.PackageId, userName, item.ModelName).Find(&pipeModel)
+		dbModel.Delete(&pipeModel)
+
 		var modelCollection []DataBaseModel.YssimModelsCollection
 		dbModel.Where("package_id = ? AND model_name = ? AND userspace_id = ?", packageModel.ID, item.ModelName, userSpaceId).Find(&modelCollection)
 		dbModel.Delete(&modelCollection)

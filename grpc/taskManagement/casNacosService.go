@@ -14,7 +14,7 @@ type SubscribeServiceAndClient struct {
 	UpdateTime int64
 }
 
-var CasService *SubscribeServiceAndClient
+var CasService *SubscribeServiceAndClient = new(SubscribeServiceAndClient)
 
 // connectCasServiceClient 初始化CAS服务的实例
 func connectCasServiceClient(subscribeService model.SubscribeService) *SubscribeServiceAndClient {
