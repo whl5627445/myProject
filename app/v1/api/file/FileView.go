@@ -178,6 +178,9 @@ func UpdateModelPackageView(c *gin.Context) {
 		loadResult := service.LoadCodeString(modelStr, modelPath)
 		if loadResult {
 			if parseResult != item.ModelName {
+				//如果是管网模型，则更新管网数据表
+				DB.Model(DataBaseModel.YssimPipeNetCadDownload{}).Where("package_id = ? AND model_name = ?", item.PackageId, item.ModelName).Update("model_name", parseResult)
+
 				// 判断是否是子模型
 				if !strings.Contains(item.ModelName, ".") {
 					DB.Model(DataBaseModel.YssimModels{}).Where("id = ? AND sys_or_user = ? AND userspace_id = ?", item.PackageId, username, userSpaceId).Update("package_name", parseResult)
