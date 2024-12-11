@@ -14,7 +14,7 @@ type YssimModels struct {
 	PackageName    string         `gorm:"index;column:package_name;type:varchar(128);comment:package名称，一般称为包名或库的名字"`
 	Version        string         `gorm:"column:version;default:\"\";type:varchar(32);comment:package版本号"`
 	SysUser        string         `gorm:"index;column:sys_or_user;default:\"\";type:varchar(32);comment:是用户模型的话则为用户名，系统模型则是sys"`
-	FilePath       string         `gorm:"column:file_path;default:\"\";type:varchar(256);comment:用户模型所在路径，常驻系统模型则为空"`
+	FilePath       string         `gorm:"column:file_path;default:\"\";type:varchar(512);comment:用户模型所在路径，常驻系统模型则为空"`
 	CreatedAt      *time.Time     `gorm:"column:create_time;autoCreateTime;comment:创建时间"`
 	UpdatedAt      *time.Time     `gorm:"column:update_time;comment:更新时间"`
 	UserSpaceId    string         `gorm:"column:userspace_id;default:\"\";type:varchar(128);comment:package所在用户空间的唯一识别标识"`
@@ -24,6 +24,7 @@ type YssimModels struct {
 	Deleted        gorm.DeletedAt `gorm:"column:deleted_at;comment:删除时间"`
 	Default        bool           `gorm:"column:default_version;default:0;type:bool;comment:是否默认加载"`
 	Encryption     bool           `gorm:"column:encryption;default:0;type:bool;comment:是否是加密模型"`
+	//PipeNet        bool           `gorm:"column:pipe_net;default:0;type:bool;comment:是否是管网模型"`
 }
 
 type SystemLibrary struct {

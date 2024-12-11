@@ -49,6 +49,7 @@ type SimulateTerminateData struct {
 
 type ExperimentExistsData struct {
 	PackageId       string            `json:"package_id" binding:"required"`
+	ModelName       string            `json:"model_name" binding:"required"`
 	SimulateVarData map[string]string `json:"simulate_var_data" binding:"required"`
 	ModelVarData    datatypes.JSON    `json:"model_var_data" binding:""`
 }
@@ -59,6 +60,7 @@ type ExperimentCreateData struct {
 	ExperimentName  string            `json:"experiment_name" binding:"required"`
 	SimulateVarData map[string]string `json:"simulate_var_data" binding:"required"`
 	ModelVarData    datatypes.JSON    `json:"model_var_data" binding:""`
+	IsFullModelVar  bool              `json:"is_full_model_var" binding:""`
 }
 
 type ExperimentDeleteData struct {
@@ -84,6 +86,11 @@ type ExperimentNameEditData struct {
 type ExperimentCompareData struct {
 	PackageId        string   `json:"package_id" binding:"required"`
 	ExperimentIdList []string `json:"experiment_id_list" binding:"required"`
+}
+
+type SimulateRecordCompareData struct {
+	PackageId    string   `json:"package_id" binding:"required"`
+	RecordIdList []string `json:"record_id_list" binding:"required"`
 }
 
 type SnapshotCreatData struct {

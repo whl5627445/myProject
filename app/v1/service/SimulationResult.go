@@ -172,6 +172,14 @@ type booleanType struct {
 	Unit       string   `xml:"unit,attr"`
 }
 
+type integerType struct {
+	XMLName    xml.Name `xml:"Integer"`
+	Start      string   `xml:"start,attr"`
+	Fixed      string   `xml:"fixed,attr"`
+	UseNominal string   `xml:"useNominal,attr"`
+	Unit       string   `xml:"unit,attr"`
+}
+
 type defaultExperiment struct {
 	XMLName        xml.Name `xml:"DefaultExperiment"`
 	StartTime      string   `xml:"startTime,attr"`
@@ -207,6 +215,7 @@ type scalarVariable struct {
 	Initial   string      `xml:"initial,attr"`
 	Real      realType    `xml:"Real,omitempty"`
 	Boolean   booleanType `xml:"Boolean,omitempty"`
+	Integer   integerType `xml:"Integer,omitempty"`
 }
 
 type modelVariables struct {
@@ -354,6 +363,44 @@ func SimulationResultTree(path, parent, keyWords string) []map[string]any {
 	return dataList
 }
 
+func SimulateResultParameters(path, parent, keyWords string) []any {
+	v, ok := treeCache[path+"result_init.xml"]
+	if !ok {
+		v = xmlInit{}
+		err := xmlOperation.ParseXML(path+"result_init.xml", &v)
+		treeCache[path+"result_init.xml"] = v
+		if err != nil {
+			log.Println(err)
+		}
+	}
+	parentName := ""
+	if parent != "" {
+		parentName = parent + "."
+	}
+	scalarVariableList := v.ModelVariables.ScalarVariable
+	scalarVariableMap := make(map[string]scalarVariable, 0)
+	var dataList []any
+	nameMap := map[string]bool{}
+	var splitName []string
+	var name, trimPrefixName string
+	for _, variable := range scalarVariableList {
+		name = variable.Name
+		trimPrefixName = strings.TrimPrefix(name, parent+".")
+		if strings.HasPrefix(name, parentName) && strings.Contains(strings.ToLower(name), strings.ToLower(keyWords)) {
+			scalarVariableMap[name] = variable
+			if !strings.HasPrefix(name, "der(") && !strings.HasPrefix(name, "$") {
+				splitName = strings.Split(trimPrefixName, ".")
+			} else {
+				continue
+			}
+			if !nameMap[splitName[0]] {
+				dataList = append(dataList, GetSimulateResultParameters(splitName, scalarVariableMap[name], nameMap))
+			}
+		}
+	}
+	return dataList
+}
+
 func SetResultTree(splitName []string, scalarVariableMap scalarVariable, id int, nameMap map[string]bool, path string) map[string]any {
 	data := map[string]any{
 		"variables":           splitName[0],
@@ -379,6 +426,33 @@ func SetResultTree(splitName []string, scalarVariableMap scalarVariable, id int,
 		data["start"] = ""
 	}
 	id += 1
+	nameMap[splitName[0]] = true
+	return data
+}
+
+func GetSimulateResultParameters(splitName []string, scalarVariableMap scalarVariable, nameMap map[string]bool) map[string]any {
+	data := map[string]any{}
+
+	if scalarVariableMap.Variability == "continuous" {
+		data["name"] = splitName[0] + ".start"
+		if scalarVariableMap.Boolean.XMLName.Local == "Boolean" {
+			data["value"] = map[string]any{"value": scalarVariableMap.Boolean.Start, "isFixed": scalarVariableMap.Boolean.Fixed}
+		} else if scalarVariableMap.Real.XMLName.Local == "Real" {
+			data["value"] = map[string]any{"value": scalarVariableMap.Real.Start, "isFixed": scalarVariableMap.Real.Fixed}
+		} else if scalarVariableMap.Integer.XMLName.Local == "Integer" {
+			data["value"] = map[string]any{"value": scalarVariableMap.Integer.Start, "isFixed": scalarVariableMap.Integer.Fixed}
+		}
+	} else {
+		data["name"] = splitName[0]
+		if scalarVariableMap.Boolean.XMLName.Local == "Boolean" {
+			data["value"] = scalarVariableMap.Boolean.Start
+		} else if scalarVariableMap.Real.XMLName.Local == "Real" {
+			data["value"] = scalarVariableMap.Real.Start
+		} else if scalarVariableMap.Integer.XMLName.Local == "Integer" {
+			data["value"] = scalarVariableMap.Integer.Start
+		}
+	}
+
 	nameMap[splitName[0]] = true
 	return data
 }

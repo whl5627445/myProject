@@ -2,7 +2,6 @@ package service
 
 import (
 	"strings"
-
 	"yssim-go/library/omc"
 )
 
@@ -87,8 +86,8 @@ func copyModel(copiedClassName, className, parentName string) (bool, string) {
 		return false, "包类型不允许复制，请继承使用"
 	}
 	if parentName == "" {
-		parentName = "TopLevel"
-		// parentName = "__OpenModelica_TopLevel"  // 1.23开始改用此标记
+		// parentName = "TopLevel"
+		parentName = "__OpenModelica_TopLevel" // 1.23开始改用此标记
 	} else {
 		parentInformation := omc.OMC.GetClassRestriction(parentName)
 		if parentInformation != "package" {
@@ -149,7 +148,7 @@ func SaveModel(className, copiedClassName, parentName, copeOrDelete, fileName st
 			// SaveModelSource(className, fileName)
 			// omc.OMC.SetSourceFile(className, fileName)
 			// go SaveModelToFile(className, fileName)
-			SaveModelCode(className, fileName)
+			SaveModelToFile(className, fileName)
 		}
 	}
 

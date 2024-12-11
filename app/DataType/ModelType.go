@@ -184,6 +184,12 @@ type LoginUserSpaceModel struct {
 	SpaceId string `json:"space_id" binding:"required"`
 }
 
+type LoadingModel struct {
+	Id      string `json:"id" binding:""`
+	Name    string `json:"name" binding:"required"`
+	Version string `json:"version" binding:""`
+}
+
 type AppModelMarkData struct {
 	PackageId      string `json:"package_id" binding:"required"`
 	ModelName      string `json:"model_name" binding:"required"`

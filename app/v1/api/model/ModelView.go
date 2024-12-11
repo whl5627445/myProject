@@ -1,18 +1,22 @@
 package API
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
-
+	serviceV2 "yssim-go/app/v2/service"
 	"yssim-go/library/stringOperation"
 
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/DataType"
 	"yssim-go/app/v1/service"
+	"yssim-go/library/fileOperation"
 	"yssim-go/library/omc"
 
 	"github.com/bytedance/sonic"
@@ -307,6 +311,10 @@ func ModelRename(c *gin.Context) {
 				// 判断是否是子模型
 				if !strings.Contains(item.ModelName, ".") {
 					dbModel.Model(DataBaseModel.YssimModels{}).Where("id = ? AND sys_or_user = ? AND userspace_id = ?", item.PackageId, userName, userSpaceId).Update("package_name", parseResult)
+
+					packageInformation := service.GetPackageInformation()
+					packageInformationJson, _ := sonic.Marshal(packageInformation)
+					dbModel.Model(DataBaseModel.YssimUserSpace{}).Where("id = ? AND username = ?", userSpaceId, userName).Update("package_information", packageInformationJson)
 				}
 				service.DeleteLibrary(item.ModelName)
 			}
@@ -749,6 +757,16 @@ func CopyClassView(c *gin.Context) {
 		c.JSON(http.StatusOK, res)
 		return
 	}
+
+	// 查询被复制的模型是不是管网模型
+	var pipeNetModel DataBaseModel.YssimPipeNetCadDownload
+	dbModel.Where("package_id = ? AND model_name = ? AND username = ?", item.FromPackageId, item.CopiedClassName, userName).First(&pipeNetModel)
+	isPipeNet := false
+	if pipeNetModel.ID != "" {
+		isPipeNet = true
+	}
+	fmt.Println("管网模型：：：：：：", isPipeNet)
+
 	filePath := ""
 	if item.ParentName != "" {
 		packageName = packageModel.PackageName
@@ -797,6 +815,43 @@ func CopyClassView(c *gin.Context) {
 			service.SetPackageUses(item.CopiedClassName, item.ModelName)
 			service.ModelSave(item.ModelName)
 		}
+		// 如果是管网模型YssimPipeNetCadDownload新建记录
+		if isPipeNet {
+			newPipeNetPackageId := newModel.ID
+			newPipeNetModelName := item.ModelName
+			if item.ParentName != "" {
+				newPipeNetPackageId = item.ToPackageId
+				newPipeNetModelName = item.ParentName + "." + item.ModelName
+			}
+			// 创建更新下载记录
+			var newPipeNetCadDownload = DataBaseModel.YssimPipeNetCadDownload{
+				ID:          uuid.New().String(),
+				UserName:    userName,
+				Name:        pipeNetModel.Name,
+				Description: pipeNetModel.Description,
+				PackageId:   newPipeNetPackageId,
+				ModelName:   newPipeNetModelName,
+			}
+			// 复制当前管网信息文件
+			newPath, ok := serviceV2.CopyPipeNetInfoFile(pipeNetModel.PipeNetPath, userName, newPipeNetCadDownload.ID)
+			if !ok {
+				res.Err = "创建失败"
+				res.Status = 2
+				c.JSON(http.StatusOK, res)
+				return
+			}
+			newPipeNetCadDownload.PipeNetPath = newPath
+			// 复制映射表
+			newMappingPath, ok := serviceV2.CopyMappingConfig(pipeNetModel.MappingPath, userName, newPipeNetCadDownload.ID)
+			if !ok {
+				res.Err = "创建失败"
+				res.Status = 2
+				c.JSON(http.StatusOK, res)
+				return
+			}
+			newPipeNetCadDownload.MappingPath = newMappingPath
+			dbModel.Create(&newPipeNetCadDownload)
+		}
 
 	} else {
 		res.Msg = msg
@@ -832,12 +887,22 @@ func DeletePackageAndModelView(c *gin.Context) {
 	if result {
 		res.Msg = msg
 		if item.ParentName == "" {
-			var simulateRecord []DataBaseModel.YssimSimulateRecord
-			dbModel.Where("package_id = ? AND username = ? AND userspace_id = ?", item.PackageId, userName, userSpaceId).Find(&simulateRecord)
 			dbModel.Delete(&packageModel)
 		} else {
 			service.ModelSave(item.ParentName)
 		}
+		// 结束仿真和删除仿真记录
+		var simulateRecord []DataBaseModel.YssimSimulateRecord
+		dbModel.Where("package_id = ? AND username = ? AND userspace_id = ?", item.PackageId, userName, userSpaceId).Find(&simulateRecord)
+		for i := 0; i < len(simulateRecord); i++ {
+			serviceV2.DeleteSimulateTask(simulateRecord[i].TaskId, simulateRecord[i].SimulateModelResultPath)
+		}
+		dbModel.Delete(&simulateRecord)
+		// 删除管网记录
+		var pipeModel []DataBaseModel.YssimPipeNetCadDownload
+		dbModel.Where("package_id = ? AND username = ? AND model_name=?", item.PackageId, userName, item.ModelName).Find(&pipeModel)
+		dbModel.Delete(&pipeModel)
+
 		var modelCollection []DataBaseModel.YssimModelsCollection
 		dbModel.Where("package_id = ? AND model_name = ? AND userspace_id = ?", packageModel.ID, item.ModelName, userSpaceId).Find(&modelCollection)
 		dbModel.Delete(&modelCollection)
@@ -1638,6 +1703,43 @@ func UnLoadModelView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+func GetPackageAndVersionView(c *gin.Context) {
+	/*
+		# 获取模型库和版本
+	*/
+
+	userSpaceId := c.GetHeader("space_id")
+	var packageModel []DataBaseModel.YssimModels
+	var ids []string
+	dbModel.Where("sys_or_user IN ? AND userspace_id IN ?", []string{"sys", userName}, []string{"0", userSpaceId}).Order("create_time desc").Find(&packageModel)
+	dbModel.Model(&DataBaseModel.SystemLibrary{}).Where("username = ? AND encryption = ?", userName, true).Or("encryption = ?", false).Select("id").Scan(&ids)
+	var res DataType.ResponseData
+	var data []map[string]string
+	for i := 0; i < len(packageModel); i++ {
+		d := map[string]string{
+			"package_id":   packageModel[i].ID,
+			"package_name": packageModel[i].PackageName,
+			"version":      packageModel[i].Version,
+			"update_time":  packageModel[i].UpdatedAt.Format("06-01-02 15:04"),
+		}
+		for _, id := range ids {
+			libraryId := packageModel[i].LibraryId
+			if libraryId == id {
+				d["sys_user"] = "sys"
+				break
+			} else {
+				d["sys_user"] = packageModel[i].SysUser
+			}
+		}
+		if packageModel[i].SysUser == "sys" || d["sys_user"] == "sys" {
+			d["update_time"] = "-"
+		}
+		data = append(data, d)
+	}
+	res.Data = data
+	c.JSON(http.StatusOK, res)
+}
+
 func GetIconView(c *gin.Context) {
 	/*
 		# 获取模型的图标信息
@@ -1718,6 +1820,320 @@ func Test(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+func AppModelMarkView(c *gin.Context) {
+	/*
+		# 标记模型为可用数据源,(执行一次仿真)
+		开发人： 徐庆达
+	*/
+	var res DataType.ResponseData
+
+	userSpaceId := c.GetHeader("space_id")
+	var item DataType.AppModelMarkData
+	err := c.BindJSON(&item)
+	if err != nil {
+		log.Println("导出数据源数据错误： ", err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	// 检测数据源名称是否重复
+	var record DataBaseModel.AppDataSource
+	dbModel.Where("package_id = ? AND username = ? AND group_name = ? AND data_source_name = ?", item.PackageId, userName, item.GroupName, item.DataSourceName).First(&record)
+	if record.ID != "" {
+		res.Err = "名称重复"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	CompilePath := "static/UserFiles/modelDataSource/" + userName + "/" + strings.ReplaceAll(item.ModelName, ".", "-") + "/" + time.Now().Local().Format("20060102150405") + "/"
+	// 数据源表中创建一条记录
+	dataSource := DataBaseModel.AppDataSource{
+		ID:             uuid.New().String(),
+		UserName:       userName,
+		UserSpaceId:    userSpaceId,
+		PackageId:      item.PackageId,
+		ModelName:      item.ModelName,
+		CompilePath:    CompilePath,
+		CompileType:    item.CompileType,
+		ExperimentId:   item.ExperimentId,
+		GroupName:      item.GroupName,
+		DataSourceName: item.DataSourceName,
+		CompileStatus:  0,
+	}
+	err = dbModel.Create(&dataSource).Error
+	record = dataSource
+	if err != nil {
+		log.Println("标记数据源时创建数据库记录失败： ", err)
+		res.Status = 2
+		res.Err = "创建失败"
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	_, err = service.GrpcTranslate(record)
+	if err != nil {
+		log.Println("提交任务失败： ", err)
+		res.Status = 2
+		res.Err = "创建失败"
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	res.Msg = "请等待导出完成。"
+	c.JSON(http.StatusOK, res)
+
+}
+
+func CADParseView(c *gin.Context) {
+	/*
+		解析CAD文件
+	*/
+	var res DataType.ResponseData
+	var model DataBaseModel.YssimModels
+
+	dbModel.Where("package_name = ? AND version = ?", "Modelica", "4.0.0").First(&model)
+	var item DataType.FilePathData
+	err := c.BindJSON(&item)
+	if err != nil {
+		log.Println("参数验证失败： ", err)
+		c.JSON(http.StatusBadRequest, "参数错误")
+		return
+	}
+	data, code := service.GetXmlData(item.FilePath, userName)
+	if code != 200 {
+		res.Err = data
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	modelName := map[string]any{
+		"straight_tube": map[string]any{"id": model.ID, "model_name": []string{"Modelica.Fluid.Pipes.StaticPipe", "Modelica.Fluid.Pipes.DynamicPipe"}},
+		"bendable_tube": map[string]any{"id": model.ID, "model_name": []string{"Modelica.Fluid.Fittings.Bends.CurvedBend"}},
+		"tee_tube": map[string]any{"id": model.ID,
+			"model_name": []string{"Modelica.Fluid.Fittings.TeeJunctionIdeal"}},
+	}
+	components := service.CADParseParts(data)
+
+	res.Data = map[string]any{"components": components, "model": modelName}
+
+	c.JSON(http.StatusOK, res)
+}
+
+func CADParseXmlView(c *gin.Context) {
+	/*
+		解析CAD文件
+	*/
+	var res DataType.ResponseData
+	var model DataBaseModel.YssimModels
+	file, err := c.FormFile("xmlFile")
+	if err != nil {
+		res.Err = "文件上传失败"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	xml := service.HandleXMLUpload(file)
+	if xml == "" {
+		res.Err = "文件解析失败"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	dbModel.Where("package_name = ? AND version = ?", "Modelica", "4.0.0").First(&model)
+	modelName := map[string]any{
+		"straight_tube": map[string]any{"id": model.ID,
+			"model_name": []string{"Modelica.Fluid.Pipes.StaticPipe", "Modelica.Fluid.Pipes.DynamicPipe"}},
+		"bendable_tube": map[string]any{"id": model.ID,
+			"model_name": []string{"Modelica.Fluid.Fittings.Bends.CurvedBend"}},
+		"tee_tube": map[string]any{"id": model.ID,
+			"model_name": []string{"Modelica.Fluid.Fittings.TeeJunctionIdeal"}},
+	}
+
+	components := service.CADParseParts(xml)
+
+	res.Data = map[string]any{"components": components, "model": modelName}
+
+	c.JSON(http.StatusOK, res)
+}
+
+func CADFilesUploadView(c *gin.Context) {
+	/*
+		# 上传xml文件进行解析
+	*/
+	var res DataType.ResponseData
+
+	form, err := c.MultipartForm()
+	if err != nil {
+		res.Err = "文件上传失败"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	res.Data = service.CadFilesUpload(form, userName)
+	res.Msg = "文件上传成功"
+	c.JSON(http.StatusOK, res)
+}
+
+func CADMappingModelView(c *gin.Context) {
+	/*
+		利用前端传回的CAD解析数据进行模型映射
+	*/
+
+	var res DataType.ResponseData
+
+	userSpaceId := c.GetHeader("space_id")
+	var item DataType.CADMappingModelData
+	err := c.BindJSON(&item)
+	if err != nil {
+		log.Println("导出数据源数据错误： ", err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	var packageModel DataBaseModel.YssimModels
+	dbModel.Where("sys_or_user = ?  AND userspace_id = ? AND id = ?", userName, userSpaceId, item.PackageId).First(&packageModel)
+	if packageModel.ID == "" {
+		res.Err = "建模失败， 请检查当前模型是否为您的自建模型"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	if len(item.ModelMapping) != len(item.Information) {
+		res.Err = "数据错误， 所选零件数量与CAD解析数据不等"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	for i := 0; i < len(item.ModelMapping); i++ {
+		if len(item.ModelMapping[i].ModelName) != len(item.Information[i].ModelInformation) {
+			res.Err = "建模失败， 映射模型数据与零件对应组件数量不等"
+			res.Status = 2
+			c.JSON(http.StatusOK, res)
+			return
+		}
+	}
+	componentsNames := make(map[string][]map[string]string)
+	for i := 0; i < len(item.ModelMapping); i++ {
+		service.CADMappingModel(item.ModelName, item.ModelMapping[i].ModelName, item.Information[i], componentsNames)
+	}
+	for _, information := range item.Information {
+		if information.Type == "CATTubTeeJunction" {
+			service.ThreeWayManage(item.ModelName, componentsNames, information.ConnectedRelation)
+		}
+	}
+	service.ModelSave(item.ModelName)
+	res.Msg = "建模完成"
+	c.JSON(http.StatusOK, res)
+}
+
+func GetSystemLibraryView(c *gin.Context) {
+	/*
+		# 模型管理 获取系统模型
+	*/
+	var res DataType.ResponseData
+	var system []DataBaseModel.SystemLibrary
+
+	spaceId := c.Query("space_id")
+	if spaceId == "" {
+		res.Err = "参数不能为空"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	subQuery := dbModel.Model(&DataBaseModel.YssimModels{}).Where("sys_or_user = ? AND userspace_id = ? AND library_id IS NOT NULL AND library_id != ?", userName, spaceId, "").Select("library_id")
+	err := dbModel.Where("encryption = ? AND id NOT IN (?)", false, subQuery).Or("username = ? AND id NOT IN (?)", userName, subQuery).Order("create_time desc").Find(&system).Error
+	if err != nil {
+		res.Status = 2
+		res.Err = "未查询到系统模型"
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	var data []map[string]any
+	for i := 0; i < len(system); i++ {
+		d := map[string]any{
+			"id":              system[i].ID,
+			"user_name":       system[i].UserName,
+			"package_name":    system[i].PackageName,
+			"file_path":       system[i].FilePath,
+			"version_control": system[i].VersionControl,
+			"version_branch":  system[i].VersionBranch,
+			"version_tag":     system[i].VersionTag,
+			"encryption":      system[i].Encryption,
+		}
+		data = append(data, d)
+	}
+	res.Msg = "查询成功"
+	res.Data = data
+	c.JSON(http.StatusOK, res)
+}
+
+func DeleteDependencyLibraryView(c *gin.Context) {
+	/*
+		# 模型管理  删除依赖库模型数据
+	*/
+	var res DataType.ResponseData
+	var model []DataBaseModel.YssimModels
+	var item DataType.DeleteDependencyLibraryData
+	e := c.BindJSON(&item)
+	if e != nil {
+		c.JSON(http.StatusBadRequest, "参数验证失败")
+		return
+	}
+	err := dbModel.Where("id IN (?)", item.Ids).Find(&model).Error
+	if err != nil {
+		res.Status = 2
+		res.Err = "删除失败，查看id是否正确"
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	dbModel.Delete(&model)
+	res.Msg = "删除成功"
+	c.JSON(http.StatusOK, res)
+}
+
+func CreateDependencyLibraryView(c *gin.Context) {
+	/*
+		# 模型管理 创建依赖库数据
+	*/
+	var res DataType.ResponseData
+	var item DataType.CreateDependencyLibraryData
+	var models DataBaseModel.YssimModels
+	var system DataBaseModel.SystemLibrary
+
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "参数验证失败")
+		return
+	}
+	dbModel.Where("id = ? AND username = ?", item.ID, item.UserName).First(&system)
+	dbModel.Where("sys_or_user = ? AND library_id = ? AND userspace_id = ?", userName, system.ID, item.SpaceId).First(&models)
+	if models.ID != "" {
+		res.Err = "模型已存在"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	var newDependencyLibrary = DataBaseModel.YssimModels{
+		ID:             uuid.New().String(),
+		LibraryId:      system.ID,
+		PackageName:    system.PackageName,
+		Version:        system.Version,
+		SysUser:        userName,
+		FilePath:       system.FilePath,
+		UserSpaceId:    item.SpaceId,
+		VersionControl: system.VersionControl,
+		VersionBranch:  system.VersionBranch,
+		VersionTag:     system.VersionTag,
+		Encryption:     system.Encryption,
+	}
+	err = dbModel.Create(&newDependencyLibrary).Error
+	if err != nil {
+		res.Status = 2
+		res.Err = "创建失败"
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	res.Msg = "创建成功"
+	c.JSON(http.StatusOK, res)
+}
+
 func GetUMLView(c *gin.Context) {
 	/*
 		根据路径名获取模型的uml图
@@ -1737,6 +2153,70 @@ func GetUMLView(c *gin.Context) {
 	}
 	res.Msg = "获取成功"
 	res.Data = result
+	c.JSON(http.StatusOK, res)
+}
+
+func GetDependencyLibraryView(c *gin.Context) {
+	/*
+		# 模型管理获取依赖库的数据
+	*/
+	var res DataType.ResponseData
+	var model []DataBaseModel.YssimModels
+
+	userSpaceId := c.Query("space_id")
+	if userSpaceId == "" {
+		res.Err = "参数不能为空"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	subQuery := dbModel.Model(&DataBaseModel.SystemLibrary{}).Where("username = ? AND encryption = ?", userName, true).Or("encryption = ?", false).Select("id")
+	err := dbModel.Where("userspace_id = ? AND sys_or_user != ? AND sys_or_user = ? AND library_id IS NOT NULL AND library_id != ? AND library_id IN (?)", userSpaceId, "sys", userName, "", subQuery).Order("create_time desc").Find(&model).Error
+	if err != nil {
+		res.Status = 2
+		res.Err = "无依赖模型"
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	var data []map[string]any
+	for i := 0; i < len(model); i++ {
+		d := map[string]any{
+			"id":              model[i].ID,
+			"package_name":    model[i].PackageName,
+			"version":         model[i].Version,
+			"sys_or_user":     model[i].SysUser,
+			"file_path":       model[i].FilePath,
+			"version_control": model[i].VersionControl,
+			"version_branch":  model[i].VersionBranch,
+			"version_tag":     model[i].VersionTag,
+			"default_version": model[i].Default,
+		}
+		data = append(data, d)
+	}
+	res.Msg = "查询成功"
+	res.Data = data
+	c.JSON(http.StatusOK, res)
+}
+
+func GetAvailableLibrariesView(c *gin.Context) {
+	/*
+		根据username used 查询可用库列表  0未占用 1占用  查询used为0
+	*/
+	var res DataType.ResponseData
+
+	var userLibraries []DataBaseModel.UserLibrary
+	dbModel.Where("username = ? AND used = ?", userName, false).Find(&userLibraries)
+	var data []map[string]any
+	for _, library := range userLibraries {
+		d := map[string]any{
+			"id":             library.ID,
+			"package_name":   library.PackageName,
+			"version_branch": library.VersionBranch,
+		}
+		data = append(data, d)
+	}
+	res.Msg = "查询成功"
+	res.Data = data
 	c.JSON(http.StatusOK, res)
 }
 
@@ -1803,6 +2283,857 @@ func GetExtendedModelView(c *gin.Context) {
 	} else {
 		res.Err = "此模型没有父类"
 		res.Status = 2
+	}
+	c.JSON(http.StatusOK, res)
+}
+
+func GetVersionAvailableLibrariesView(c *gin.Context) {
+	/*
+		根据sys_or_user  userspace_id   查询可编辑的模型库
+	*/
+	var res DataType.ResponseData
+	sysOrUser := c.GetHeader("username")
+	userspaceId := c.Query("space_id")
+	var versionModels []DataBaseModel.YssimModels
+	var noVersionModels []DataBaseModel.YssimModels
+	subQuery := dbModel.Model(&DataBaseModel.SystemLibrary{}).Where("username = ? AND encryption = ?", sysOrUser, true).Or("encryption = ?", false).Select("id")
+	dbModel.Where("sys_or_user = ? AND userspace_id = ? AND version_control = ? AND library_id not in(?)", sysOrUser, userspaceId, true, subQuery).Find(&versionModels)
+	dbModel.Where("sys_or_user = ? AND userspace_id = ? AND  library_id = ?", sysOrUser, userspaceId, "").Find(&noVersionModels)
+
+	result := make(map[string][]DataType.GetVersionLibraryData)
+	result["version"] = []DataType.GetVersionLibraryData{}
+	result["noVersion"] = []DataType.GetVersionLibraryData{}
+	for _, model := range versionModels {
+		versionLibraryData := DataType.GetVersionLibraryData{
+			Id:             model.ID,
+			PackageName:    model.PackageName,
+			LibraryId:      model.LibraryId,
+			VersionControl: model.VersionControl,
+			VersionBranch:  model.VersionBranch,
+			Version:        model.Version,
+		}
+		result["version"] = append(result["version"], versionLibraryData)
+	}
+	for _, model := range noVersionModels {
+		versionLibraryData := DataType.GetVersionLibraryData{
+			Id:             model.ID,
+			PackageName:    model.PackageName,
+			VersionControl: model.VersionControl,
+			VersionBranch:  model.VersionBranch,
+		}
+		result["noVersion"] = append(result["noVersion"], versionLibraryData)
+	}
+	res.Data = result
+	c.JSON(http.StatusOK, res)
+}
+
+func DeleteVersionAvailableLibrariesView(c *gin.Context) {
+	/*
+		根据sys_or_user  userspace_id  删除可编辑模型库
+	*/
+	var res DataType.ResponseData
+	var username = c.GetHeader("username")
+	var deleteLibrary DataType.DeleteVersionLibraryData
+	err := c.BindJSON(&deleteLibrary)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	if deleteLibrary.VersionControl {
+		var userLibrary DataBaseModel.UserLibrary
+		dbModel.Where("id = ? AND username = ?", deleteLibrary.LibraryId, username).First(&userLibrary)
+		if userLibrary.ID == "" {
+			res.Status = 2
+			res.Err = "删除失败,未查询到该模型"
+			c.JSON(http.StatusOK, res)
+			return
+		}
+		dbModel.Model(&userLibrary).Update("used", false)
+	}
+	var yssimModel DataBaseModel.YssimModels
+	dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id = ? ", deleteLibrary.Id, username, deleteLibrary.SpaceId).First(&yssimModel)
+	if yssimModel.ID == "" {
+		res.Status = 2
+		res.Err = "删除失败，未查询到该模型"
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	dbModel.Delete(&yssimModel)
+	packageInformation := service.GetPackageInformation()
+	service.DeleteLibrary(yssimModel.PackageName)
+	delete(packageInformation, yssimModel.PackageName)
+	packageInformationJson, _ := sonic.Marshal(packageInformation)
+	dbModel.Model(DataBaseModel.YssimUserSpace{}).Where("id = ? AND username = ?", deleteLibrary.SpaceId, username).Update("package_information", packageInformationJson)
+
+	res.Msg = "删除成功"
+	c.JSON(http.StatusOK, res)
+
+}
+
+func CreateVersionAvailableLibrariesView(c *gin.Context) {
+	/*
+			创建可编辑有版本的模型库
+			先检查模型是否已加载，如果已加载，就卸载掉
+		    加载mo文件，获取版本号，如果获取成功更新数据库，获取失败，返回解析mo文件失败
+	*/
+	var res DataType.ResponseData
+
+	var username = c.GetHeader("username")
+
+	var createLibrary DataType.CreateVersionLibraryData
+	err := c.BindJSON(&createLibrary)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	var userLibrary DataBaseModel.UserLibrary
+	dbModel.Where("id = ? AND username = ? ", createLibrary.Id, username).First(&userLibrary)
+	if userLibrary.ID == "" {
+		res.Status = 2
+		res.Err = "未查询到该模型,添加失败"
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	var yssimModels []DataBaseModel.YssimModels
+	dbModel.Where("sys_or_user = ? AND userspace_id = ?", username, createLibrary.SpaceId).Find(&yssimModels)
+	for _, model := range yssimModels {
+		if model.PackageName == userLibrary.PackageName {
+			res.Status = 2
+			res.Err = "该空间下已有同名的模型"
+			c.JSON(http.StatusOK, res)
+			return
+		}
+	}
+	flag := service.ExistClass(userLibrary.PackageName)
+	if flag {
+		service.DeleteLibrary(userLibrary.PackageName)
+	}
+	flag = service.LoadPackage(userLibrary.PackageName, "", userLibrary.FilePath)
+	if !flag {
+		res.Status = 2
+		res.Err = "加载模型失败"
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	version := service.GetVersion(userLibrary.PackageName)
+	var newVersionLibrary = DataBaseModel.YssimModels{
+		ID:             uuid.New().String(),
+		LibraryId:      userLibrary.ID,
+		PackageName:    userLibrary.PackageName,
+		Version:        version,
+		SysUser:        username,
+		FilePath:       userLibrary.FilePath,
+		UserSpaceId:    createLibrary.SpaceId,
+		VersionControl: userLibrary.VersionControl,
+		VersionBranch:  userLibrary.VersionBranch,
+		VersionTag:     userLibrary.VersionTag,
+	}
+	err = dbModel.Create(&newVersionLibrary).Error
+	if err != nil {
+		res.Status = 2
+		res.Err = "创建失败"
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	dbModel.Model(&userLibrary).Update("used", true)
+	res.Msg = "创建成功"
+	c.JSON(http.StatusOK, res)
+}
+
+func InitVersionControlView(c *gin.Context) {
+	/*
+		将无版本控制的包初始化为有版本控制
+	*/
+	var res DataType.ResponseData
+	var item DataType.InitVersionControlData
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	// 检查是否已经存在
+	var record DataBaseModel.UserLibrary
+	dbModel.Where("username = ? AND repository_address = ?", userName, item.RepositoryAddress).First(&record)
+	if record.ID != "" {
+		res.Err = "该存储库已经存在！"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	// 查询无版本控制的包
+	var noVersionRecord DataBaseModel.YssimModels
+	dbModel.Where("id = ?", item.NoVersionPackageId).First(&noVersionRecord)
+	var errorMessage string
+	// 克隆到本地
+	repositoryPath, _, errorMessage, cloneRes := service.RepositoryClone(item.RepositoryAddress, "", userName)
+	if cloneRes {
+		// 克隆成功
+		// 将无版本控制的包添加到有版本控制
+		addVersionRes, msg := service.InitVersionControl(noVersionRecord.FilePath, repositoryPath, item.UserName, item.PassWord)
+		errorMessage = msg
+		if addVersionRes {
+			packageName, packagePath, msg_, ok := service.GitPackageFileParse(repositoryPath)
+			errorMessage = msg_
+			if ok {
+				// 分支名称默认是master
+				versionBranch := "master"
+				// 获取克隆到本地的存储库的tag
+				versionTag := service.GetTag(repositoryPath)
+				anotherName, _ := service.GetRepositoryName(item.RepositoryAddress)
+				versionRecord := DataBaseModel.UserLibrary{
+					ID:                uuid.New().String(),
+					UserName:          userName,
+					PackageName:       packageName,            // package名称，一般称为包名或库的名字
+					FilePath:          packagePath,            // package所在路径
+					VersionControl:    true,                   // 是否有版本控制
+					VersionBranch:     versionBranch,          // 版本控制分支
+					VersionTag:        versionTag,             // 版本控制tag
+					AnotherName:       anotherName,            // 别名
+					RepositoryAddress: item.RepositoryAddress, // 存储库地址
+				}
+				err = dbModel.Create(&versionRecord).Error
+				dbModel.Delete(&noVersionRecord)
+				res.Msg = "初始化成功!"
+				c.JSON(http.StatusOK, res)
+				return
+			}
+		}
+	}
+	os.RemoveAll(repositoryPath)
+	res.Err = errorMessage
+	res.Status = 2
+	c.JSON(http.StatusOK, res)
+}
+
+func RepositoryCloneView(c *gin.Context) {
+	/*
+		添加存储库接口：根据git地址拉去存储库
+	*/
+	var res DataType.ResponseData
+	var item DataType.RepositoryCloneData
+
+	// userSpaceId := c.GetHeader("space_id")
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+
+	// 检查是否已经存在
+	var record DataBaseModel.UserLibrary
+	dbModel.Where("username = ? AND repository_address = ?", userName, item.RepositoryAddress).First(&record)
+	if record.ID != "" {
+		res.Err = "该存储库已经存在！"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	var errorMessage string
+	// 克隆到本地
+	repositoryPath, _, errorMessage, cloneRes := service.RepositoryClone(item.RepositoryAddress, item.Branch, userName)
+
+	if cloneRes { // 克隆成功
+		// 分支名称默认是master
+		versionBranch := "master"
+		if item.Branch != "" {
+			versionBranch = item.Branch
+		}
+		// 获取克隆到本地的存储库的tag
+		versionTag := service.GetTag(repositoryPath)
+
+		// 解析包文件
+		packageName, packagePath, msg_, ok := service.GitPackageFileParse(repositoryPath)
+		errorMessage = msg_
+
+		if ok { // 创建数据库记录
+			libraryRecord := DataBaseModel.UserLibrary{
+				ID:                uuid.New().String(),
+				UserName:          userName,
+				PackageName:       packageName,            // package名称，一般称为包名或库的名字
+				FilePath:          packagePath,            // package所在路径
+				VersionControl:    true,                   // 是否有版本控制
+				VersionBranch:     versionBranch,          // 版本控制分支
+				VersionTag:        versionTag,             // 版本控制tag
+				AnotherName:       item.Name,              // 别名
+				RepositoryAddress: item.RepositoryAddress, // 存储库地址
+				// Version:     packageVersion, //package版本号
+				// Used:           bool           			//是否已经被某空间使用
+
+			}
+			err = dbModel.Create(&libraryRecord).Error
+			res.Msg = "拉取成功"
+			c.JSON(http.StatusOK, res)
+			return
+		}
+	}
+	res.Err = errorMessage
+	res.Status = 2
+	c.JSON(http.StatusOK, res)
+
+}
+
+func RepositoryDeleteView(c *gin.Context) {
+	/*
+		删除存储库
+	*/
+	var res DataType.ResponseData
+	var item DataType.RepositoryDeleteData
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	// 删除UserLibrary数据库记录
+	var userLibraryRecord DataBaseModel.UserLibrary
+	dbModel.Where("id = ?", item.ID).First(&userLibraryRecord)
+	dbModel.Delete(&userLibraryRecord)
+	// 删除YssimModels数据库记录
+	var yssimModelsRecord []DataBaseModel.YssimModels
+	dbModel.Where("library_id = ?", item.ID).Find(&yssimModelsRecord)
+	dbModel.Delete(&yssimModelsRecord)
+	// 删除包文件
+	fileOperation.DeleteProjectPath(userLibraryRecord.FilePath)
+	res.Msg = "删除成功"
+	c.JSON(http.StatusOK, res)
+}
+
+func RepositoryGetView(c *gin.Context) {
+	/*
+		获取存储库列表
+	*/
+	var res DataType.ResponseData
+
+	// 删除数据库记录
+	var records []DataBaseModel.UserLibrary
+	dbModel.Where("username = ? ", userName).Order("create_time desc").Find(&records)
+	var data []map[string]any
+	for i := 0; i < len(records); i++ {
+		d := map[string]any{
+			"id":           records[i].ID,
+			"package_name": records[i].PackageName,
+			// "version":            records[i].Version,
+			"another_name":       records[i].AnotherName,
+			"repository_address": records[i].RepositoryAddress,
+			"version_branch":     records[i].VersionBranch,
+			// "create_time":        records[i].CreatedAt,
+		}
+		data = append(data, d)
+	}
+	res.Msg = "查询成功"
+	res.Data = data
+	c.JSON(http.StatusOK, res)
+}
+
+func GetParameterCalibrationRootView(c *gin.Context) {
+	/*
+		参数标定的package获取与筛选
+	*/
+	var res DataType.ResponseData
+
+	userSpaceId := c.Query("space_id")
+	if userSpaceId == "" {
+		userSpaceId = c.GetHeader("space_id")
+	}
+	var modelData []map[string]any
+	var packageModel []DataBaseModel.YssimModels
+	// var space DataBaseModel.YssimUserSpace
+	// dbModel.Where("id = ? AND username = ?", userSpaceId, userName).First(&space)
+	subQuery := dbModel.Model(&DataBaseModel.SystemLibrary{}).Where("encryption = ?", true).Or("encryption = ? AND username = ?", false, userName).Select("id")
+	dbModel.Where("sys_or_user = ? AND userspace_id = ? AND encryption = ? AND library_id = ''", userName, userSpaceId, false).
+		Or("sys_or_user = ? AND userspace_id = ? AND library_id NOT IN (?)", userName, userSpaceId, subQuery).Find(&packageModel)
+	libraryAndVersions := service.GetLibraryAndVersions()
+	for i := 0; i < len(packageModel); i++ {
+		loadVersions, ok := libraryAndVersions[packageModel[i].PackageName]
+		if ok && loadVersions == packageModel[i].Version {
+			t := service.GetModelType(packageModel[i].PackageName)
+			data := map[string]any{
+				"package_id":      packageModel[i].ID,
+				"package_name":    packageModel[i].PackageName,
+				"package_version": packageModel[i].Version,
+				"model_name":      packageModel[i].PackageName,
+				"haschild":        service.GetModelHasChild(packageModel[i].PackageName),
+				"type":            t,
+			}
+
+			if data != nil {
+				modelData = append(modelData, data)
+			}
+		}
+	}
+	res.Data = modelData
+	c.JSON(http.StatusOK, res)
+}
+
+func GetParameterCalibrationListView(c *gin.Context) {
+	/*
+		# 参数标定的package子节点获取与筛选
+	*/
+	parent := c.Query("parent")
+	packageId := c.Query("package_id")
+	userSpaceId := c.Query("space_id")
+	var packageModel DataBaseModel.YssimModels
+	dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id = ?", packageId, userName, userSpaceId).First(&packageModel)
+	if packageModel.ID == "" {
+		c.JSON(http.StatusBadRequest, "数据错误")
+		return
+	}
+	var res DataType.ResponseData
+	modelChildList := service.GetCalibrationModelChild(parent)
+	var modelChildListNew []any
+	for i := 0; i < len(modelChildList); i++ {
+		if !modelChildList[i].HasChild && modelChildList[i].Type == "package" {
+			continue
+		}
+		modelChildListNew = append(modelChildListNew, modelChildList[i])
+	}
+	res.Data = modelChildListNew
+	c.JSON(http.StatusOK, res)
+}
+
+func GetParameterCalibrationRecordView(c *gin.Context) {
+	/*
+		# 获取某模型的参数标定记录数据，如果没有，则创建
+	*/
+	packageId := c.Query("package_id")
+	userSpaceId := c.Query("space_id")
+	modelName := c.Query("model_name")
+	var record DataBaseModel.ParameterCalibrationRecord
+	simulationOptions := service.GetSimulationOptions(modelName)
+
+	dbModel.Where(DataBaseModel.ParameterCalibrationRecord{
+		UserSpaceId: userSpaceId,
+		PackageId:   packageId,
+		UserName:    userName,
+		ModelName:   modelName,
+	}).Attrs(DataBaseModel.ParameterCalibrationRecord{
+		ID:                uuid.New().String(),
+		StartTime:         simulationOptions["startTime"],
+		StopTime:          simulationOptions["stopTime"],
+		Tolerance:         simulationOptions["tolerance"],
+		NumberOfIntervals: simulationOptions["numberOfIntervals"],
+		Interval:          simulationOptions["interval"],
+		Method:            simulationOptions["method"],
+	}).FirstOrCreate(&record)
+	var res DataType.ResponseData
+	res.Data = map[string]any{
+		"id":                               record.ID,
+		"start_time":                       record.StartTime,
+		"stop_time":                        record.StopTime,
+		"tolerance":                        record.Tolerance,
+		"number_of_intervals":              record.NumberOfIntervals,
+		"interval":                         record.Interval,
+		"method":                           record.Method,
+		"compile_status":                   record.CompileStatus,
+		"actual_data":                      record.ActualData,
+		"rated_condition":                  record.RatedCondition,
+		"formula":                          record.Formula,
+		"coefficient_name":                 record.CoefficientName,
+		"coefficient_value":                record.Coefficient,
+		"coefficient_score":                record.CoefficientScore,
+		"associated_parameters":            record.AssociatedParameters,
+		"condition_parameters":             record.ConditionParameters,
+		"formula_string":                   record.FormulaString,
+		"result_parameters":                record.ResultParameters,
+		"percentage":                       record.Percentage,
+		"coefficient_component_parameters": record.ComponentParameters,
+	}
+	c.JSON(http.StatusOK, res)
+}
+
+func SetActualDataView(c *gin.Context) {
+	/*
+		# 设置参数标定功能模型的实测参数字段与数据
+	*/
+	var item DataType.SetActualData
+	err := c.BindJSON(&item)
+	if err != nil {
+		log.Println("实测数据错误：", err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	actualDataList, _ := sonic.Marshal(&item.ActualDataList)
+	dbModel.Model(DataBaseModel.ParameterCalibrationRecord{}).Where("id = ? AND package_id = ? AND username = ?", item.ID, item.PackageId, userName).UpdateColumn("actual_data", actualDataList)
+	var res DataType.ResponseData
+	c.JSON(http.StatusOK, res)
+}
+
+func SetRatedConditionView(c *gin.Context) {
+	/*
+		# 设置参数标定功能模型的额定工况参数
+	*/
+	var item DataType.SetRatedConditionData
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	// var ratedConditionList []any
+	ratedConditionList, _ := sonic.Marshal(&item.RatedConditionList)
+	dbModel.Model(DataBaseModel.ParameterCalibrationRecord{}).Where("id = ? AND package_id = ? AND username = ?", item.ID, item.PackageId, userName).UpdateColumn("rated_condition", ratedConditionList)
+	var res DataType.ResponseData
+	c.JSON(http.StatusOK, res)
+}
+
+func SetConditionParametersView(c *gin.Context) {
+	/*
+		# 设置参数标定功能模型的条件参数
+	*/
+	var item DataType.SetConditionParametersData
+	err := c.BindJSON(&item)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	conditionParametersList, _ := sonic.Marshal(&item.ConditionParametersList)
+	dbModel.Model(DataBaseModel.ParameterCalibrationRecord{}).Where("id = ? AND package_id = ? AND username = ?", item.ID, item.PackageId, userName).UpdateColumn("condition_parameters", conditionParametersList)
+	var res DataType.ResponseData
+	c.JSON(http.StatusOK, res)
+}
+
+func SetResultParametersView(c *gin.Context) {
+	/*
+		# 设置参数标定功能模型的结果参数
+	*/
+	var item DataType.SetResultParametersData
+	err := c.BindJSON(&item)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	resultParametersList, _ := sonic.Marshal(&item.ResultParametersList)
+	dbModel.Model(DataBaseModel.ParameterCalibrationRecord{}).Where("id = ? AND package_id = ? AND username = ?", item.ID, item.PackageId, userName).UpdateColumn("result_parameters", resultParametersList)
+	var res DataType.ResponseData
+	c.JSON(http.StatusOK, res)
+}
+
+func GetVariableParameterView(c *gin.Context) {
+	/*
+	  # 获取参数标定功能模型的额定工况参数与条件参数节点
+	*/
+	recordId := c.Query("id")
+	packageId := c.Query("package_id")
+	parentNode := c.Query("parent")
+	var record DataBaseModel.ParameterCalibrationRecord
+	dbModel.Where("id = ? AND package_id = ? AND username = ?", recordId, packageId, userName).First(&record)
+	if record.ID == "" {
+		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+	var result []map[string]any
+
+	var res DataType.ResponseData
+	if record.CompileStatus == "4" {
+		// OMC仿真完输出的xml文件
+		result = service.GetVariableParameter(record.CompilePath+"/result_init.xml", parentNode, false)
+	} else {
+		res.Err = "查询失败"
+		res.Status = 2
+	}
+
+	sortByFirstLetter := func(i, j int) bool {
+		// 从每个map中提取指定键的值进行比较
+		value1 := fmt.Sprintf("%v", result[i]["variables"])
+		value2 := fmt.Sprintf("%v", result[j]["variables"])
+		return strings.ToLower(string(value1[0])) < strings.ToLower(string(value2[0]))
+	}
+	// 使用排序函数对切片进行排序
+	sort.Slice(result, sortByFirstLetter)
+	res.Data = result
+	c.JSON(http.StatusOK, res)
+}
+
+func GetResultVariableParameterView(c *gin.Context) {
+	/*
+	  # 获取参数标定功能模型的结果参数节点
+	*/
+	recordId := c.Query("id")
+	parentNode := c.Query("parent")
+	var record DataBaseModel.ParameterCalibrationRecord
+	dbModel.Where("id = ? AND username = ?", recordId, userName).First(&record)
+	if record.ID == "" {
+		c.JSON(http.StatusBadRequest, "not found")
+		return
+	}
+	var result []map[string]any
+
+	var res DataType.ResponseData
+	if record.CompileStatus == "4" {
+		// OMC仿真完输出的xml文件
+		result = service.GetVariableParameter(record.CompilePath+"/result_init.xml", parentNode, true)
+	} else {
+		res.Err = "查询失败"
+		res.Status = 2
+	}
+
+	sortByFirstLetter := func(i, j int) bool {
+		// 从每个map中提取指定键的值进行比较
+		value1 := fmt.Sprintf("%v", result[i]["variables"])
+		value2 := fmt.Sprintf("%v", result[j]["variables"])
+		return strings.ToLower(string(value1[0])) < strings.ToLower(string(value2[0]))
+	}
+	// 使用排序函数对切片进行排序
+	sort.Slice(result, sortByFirstLetter)
+	res.Data = result
+	c.JSON(http.StatusOK, res)
+}
+
+func ParameterCalibrationFormulaParserView(c *gin.Context) {
+	/*
+		# 设置参数标定功能公式解析
+	*/
+	var item DataType.FormulaParserData
+	var res DataType.ResponseData
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	formulaData, variableList, coefficientNameList, err := service.GetFormulaList(item.FormulaStr)
+	if err != nil {
+		res.Err = err.Error()
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	formula, _ := sonic.Marshal(&formulaData)
+	coefficientName, _ := sonic.Marshal(&coefficientNameList)
+	variables, _ := sonic.Marshal(&variableList)
+	dbModel.Model(DataBaseModel.ParameterCalibrationRecord{}).Where("id = ? AND package_id = ? AND username = ?", item.ID, item.PackageId, userName).Updates(
+		map[string]any{"formula": formula, "coefficient_name": coefficientName, "variable_list": variables, "formula_string": item.FormulaStr})
+	res.Data = map[string]any{"variable": variableList, "formula": formulaData}
+	c.JSON(http.StatusOK, res)
+}
+
+func SetAssociatedParametersView(c *gin.Context) {
+	/*
+	  # 设置参数标定功能模型的拟合计算中的关联参数
+	*/
+
+	var item DataType.AssociatedParametersData
+	err := c.BindJSON(&item)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	parameters, _ := sonic.Marshal(&item.Parameters)
+	dbModel.Model(DataBaseModel.ParameterCalibrationRecord{}).Where("id = ? AND package_id = ? AND username = ?", item.ID, item.PackageId, userName).UpdateColumn("associated_parameters", parameters)
+	var res DataType.ResponseData
+	c.JSON(http.StatusOK, res)
+}
+
+func FittingCalculationView(c *gin.Context) {
+	/*
+		# 进行模型参数标定的拟合计算
+	*/
+	var item DataType.FittingCalculationData
+	var res DataType.ResponseData
+	err := c.BindJSON(&item)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+
+	var record DataBaseModel.ParameterCalibrationRecord
+	dbModel.Where("id = ? AND username = ?", item.ID, userName).First(&record)
+	if record.ID == "" {
+		res.Err = "未找到记录"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	result, err := service.GrpcFittingCalculation(item.ID)
+	if err != nil {
+		res.Err = "系统出现错误，请联系管理员"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	if result.Status != 0 {
+		res.Err = result.Err
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	coefficient, _ := sonic.Marshal(&result.Coefficient)
+	dbModel.Model(&record).Updates(map[string]any{"coefficient": coefficient, "coefficient_score": result.Score})
+	var formulaList []map[string]string
+	var coefficientNameList []string
+	var coefficientList []map[string]any
+	_ = sonic.Unmarshal(record.Formula, &formulaList)
+	_ = sonic.Unmarshal(record.CoefficientName, &coefficientNameList)
+	for i := 0; i < len(coefficientNameList); i++ {
+		coefficientList = append(coefficientList, map[string]any{"name": coefficientNameList[i], "value": result.Coefficient[i]})
+	}
+	res.Data = map[string]any{"coefficient": coefficientList, "score": result.Score}
+	c.JSON(http.StatusOK, res)
+}
+
+func FittingCoefficientSetView(c *gin.Context) {
+	/*
+		# 模型参数标定的拟合系数，设置到模型组件的哪个参数
+	*/
+	var item DataType.FittingCoefficientSetData
+	var res DataType.ResponseData
+	err := c.BindJSON(&item)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	var record DataBaseModel.ParameterCalibrationRecord
+	dbModel.Where("id = ? AND username = ?", item.ID, userName).First(&record)
+	if record.ID == "" {
+		res.Err = "未找到记录"
+		res.Status = 2
+		c.JSON(http.StatusOK, res)
+		return
+	}
+	parameters, _ := sonic.Marshal(&map[string]any{"name": item.Name, "value": item.Value})
+	dbModel.Model(&record).Updates(map[string]any{"component_parameters": parameters})
+	c.JSON(http.StatusOK, res)
+}
+
+func SetParameterCalibrationSimulationOptionsView(c *gin.Context) {
+	/*
+		# 设置某模型的参数标定的仿真求解设置信息
+	*/
+	var item DataType.SimulationOptionsData
+	err := c.BindJSON(&item)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+
+	dbModel.Model(DataBaseModel.ParameterCalibrationRecord{}).Where("id = ? AND package_id = ? AND model_name = ? AND username = ?", item.ID, item.PackageId, item.ModelName, userName).
+		Updates(&item.Options)
+	var res DataType.ResponseData
+	c.JSON(http.StatusOK, res)
+}
+
+func GetParameterCalibrationTemplateView(c *gin.Context) {
+	/*
+		# 获取参数标定模板
+	*/
+	var res DataType.ResponseData
+	recordId := c.Query("id")
+	var template []DataBaseModel.ParameterCalibrationTemplate
+	if recordId == "" {
+		dbModel.Where("username = ?", config.USERNAME).Find(&template)
+	} else {
+		dbModel.Where("id = ?", recordId).First(&template)
+	}
+	dataList := []map[string]any{}
+	for _, calibrationTemplate := range template {
+		d := map[string]any{
+			"id":         calibrationTemplate.ID,
+			"name":       calibrationTemplate.TemplateName,
+			"record_id":  calibrationTemplate.RecordID,
+			"model_name": calibrationTemplate.ModelName,
+			"package_id": calibrationTemplate.PackageId,
+			"space_id":   calibrationTemplate.UserSpaceId,
+		}
+		dataList = append(dataList, d)
+	}
+	res.Data = dataList
+	c.JSON(http.StatusOK, res)
+}
+
+func CreateParameterCalibrationTemplateView(c *gin.Context) {
+	/*
+		# 创建参数标定模板
+	*/
+	var res DataType.ResponseData
+	var item DataType.CreateCalibrationTemplateData
+	err := c.BindJSON(&item)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	var record map[string]any
+	var template DataBaseModel.ParameterCalibrationTemplate
+
+	dbModel.Model(&DataBaseModel.ParameterCalibrationRecord{}).Where("id = ?", item.ID).First(&record)
+	if record == nil {
+		log.Println("未查到模型标定记录，请先创建记录再保存模板")
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	template.ID = uuid.New().String()
+	template.TemplateName = item.TemplateName
+	dbModel.Create(&template)
+	record["record_id"] = record["id"]
+	delete(record, "id")
+	dbModel.Model(&DataBaseModel.ParameterCalibrationTemplate{}).Where("id = ?", template.ID).Updates(&record)
+	res.Msg = "模板创建成功"
+	c.JSON(http.StatusOK, res)
+}
+
+func DeleteParameterCalibrationTemplateView(c *gin.Context) {
+	/*
+		# 删除参数标定模板
+	*/
+	var res DataType.ResponseData
+	var item DataType.DeleteCalibrationTemplateData
+	err := c.BindJSON(&item)
+	if err != nil {
+		log.Println(err)
+		c.JSON(http.StatusBadRequest, "")
+		return
+	}
+	dbModel.Delete(&DataBaseModel.ParameterCalibrationTemplate{}, "id", item.ID)
+	res.Msg = "模板删除成功"
+	c.JSON(http.StatusOK, res)
+}
+
+func GetParameterCalibrationResultView(c *gin.Context) {
+	/*
+		# 获取参数标定结果
+	*/
+	var res DataType.ResponseData
+	recordId := c.Query("id")
+	var record DataBaseModel.ParameterCalibrationRecord
+	dbModel.Where("id = ? AND username = ?", recordId, userName).First(&record)
+	var resultMap map[string]map[string][]float64
+	var resultParameters []map[string]any
+	var actualData []map[string]any
+
+	_ = sonic.Unmarshal(record.SimulateResult, &resultMap)
+	_ = sonic.Unmarshal(record.ResultParameters, &resultParameters)
+	_ = sonic.Unmarshal(record.ActualData, &actualData)
+	simulationResult, simulationLen := service.GetConditionSimulateResult(resultMap)
+	res.Data = map[string]any{
+		"result":               service.GetConditionResult(resultParameters, actualData, simulationResult, simulationLen),
+		"condition_parameters": record.ConditionParameters,
+		"actual_name":          record.VariableList,
+	}
+	c.JSON(http.StatusOK, res)
+}
+
+func GetParameterCalibrationTemplateResultView(c *gin.Context) {
+	/*
+		# 获取参数标定模板结果
+	*/
+	var res DataType.ResponseData
+	recordId := c.Query("id")
+	var record DataBaseModel.ParameterCalibrationTemplate
+	dbModel.Where("id = ? AND username = ?", recordId, userName).First(&record)
+	var resultMap map[string]map[string][]float64
+	var resultParameters []map[string]any
+	var actualData []map[string]any
+
+	_ = sonic.Unmarshal(record.SimulateResult, &resultMap)
+	_ = sonic.Unmarshal(record.ResultParameters, &resultParameters)
+	_ = sonic.Unmarshal(record.ActualData, &actualData)
+	simulationResult, simulationLen := service.GetConditionSimulateResult(resultMap)
+	res.Data = map[string]any{
+		"result":               service.GetConditionResult(resultParameters, actualData, simulationResult, simulationLen),
+		"condition_parameters": record.ConditionParameters,
+		"actual_name":          record.VariableList,
 	}
 	c.JSON(http.StatusOK, res)
 }
