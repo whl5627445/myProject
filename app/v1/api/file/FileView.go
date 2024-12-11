@@ -180,6 +180,10 @@ func UpdateModelPackageView(c *gin.Context) {
 			if parseResult != item.ModelName {
 				//如果是管网模型，则更新管网数据表
 				DB.Model(DataBaseModel.YssimPipeNetCadDownload{}).Where("package_id = ? AND model_name = ?", item.PackageId, item.ModelName).Update("model_name", parseResult)
+				//更改实验记录的模型名
+				DB.Model(DataBaseModel.YssimExperimentRecord{}).Where("package_id = ? AND userspace_id = ? AND username = ? AND model_name = ?", item.PackageId, userSpaceId, username, item.ModelName).Update("model_name", parseResult)
+				//更改仿真历史记录的模型名
+				DB.Model(DataBaseModel.YssimSimulateRecord{}).Where("username = ? AND simulate_model_name = ? AND userspace_id = ?  AND package_id = ?", username, item.ModelName, userSpaceId, item.PackageId).Update("simulate_model_name", parseResult)
 
 				// 判断是否是子模型
 				if !strings.Contains(item.ModelName, ".") {
