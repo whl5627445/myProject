@@ -1,11 +1,12 @@
 package Init
 
 import (
-	"github.com/nacos-group/nacos-sdk-go/model"
-	"github.com/nacos-group/nacos-sdk-go/util"
 	"log"
 	"strconv"
 	"time"
+
+	"github.com/nacos-group/nacos-sdk-go/model"
+	"github.com/nacos-group/nacos-sdk-go/util"
 	"yssim-go/grpc/taskManagement"
 
 	"yssim-go/config"
@@ -59,9 +60,9 @@ func ListenTaskDispatcher() {
 		GroupName:   "DEFAULT_GROUP",
 		SubscribeCallback: func(services []model.SubscribeService, err error) {
 			log.Println("监听到变化:%s \n", util.ToJsonString(services))
-			//taskManagement.GetHealthInstance("TaskDispatcher")
+			// taskManagement.GetHealthInstance("TaskDispatcher")
 			// 如果变化，
-			taskManagement.ConnectTaskDispatcherClientList(services)
+			TaskManagement.ConnectTaskDispatcherClientList(services)
 		},
 	}
 	err := config.NamingClient.Subscribe(subscribeParam)
