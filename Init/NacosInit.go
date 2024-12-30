@@ -60,7 +60,7 @@ func ListenTaskDispatcher() {
 		GroupName:   "DEFAULT_GROUP",
 		SubscribeCallback: func(services []model.SubscribeService, err error) {
 			log.Println("监听到变化:%s \n", util.ToJsonString(services))
-			// taskManagement.GetHealthInstance("TaskDispatcher")
+			// TaskManagement.GetHealthInstance("TaskDispatcher")
 			// 如果变化，
 			TaskManagement.ConnectTaskDispatcherClientList(services)
 		},
