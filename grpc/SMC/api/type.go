@@ -1,160 +1,102 @@
 package api
 
-//	type ModelInstance struct {
-//		Name                string             `json:"name,omitempty"`
-//		ClassDefinitionList []*ClassDefinition `json:"class_definition_list,omitempty"`
-//	}
 type ClassDefinition struct {
-	Final          bool            `json:"final,omitempty"`
-	Encapsulated   bool            `json:"encapsulated,omitempty"`
-	ClassPrefixes  *ClassPrefixes  `json:"class_prefixes,omitempty"`
-	ClassSpecifier *ClassSpecifier `json:"class_specifier,omitempty"`
-	Start          int             `json:"start,omitempty"`
-	Stop           int             `json:"stop,omitempty"`
-	Path           string          `json:"path,omitempty"`
-	PackageName    string          `json:"package_name,omitempty"`
+	Final          bool            `json:"final,omitempty"`           // final关键字标记
+	Encapsulated   bool            `json:"encapsulated,omitempty"`    // encapsulated关键字标记
+	ClassPrefixes  *ClassPrefixes  `json:"class_prefixes,omitempty"`  // 模型前缀
+	ClassSpecifier *ClassSpecifier `json:"class_specifier,omitempty"` // 模型主要部分的数据
+	WithinName     string          `json:"within_name,omitempty"`     // within关键字后标记的所属包名
+	PackageName    string          `json:"package_name,omitempty"`    // 模型所属哪个顶层包名
 	Hash           string          `json:"hash,omitempty"`
 }
 
 type ClassPrefixes struct {
-	Partial  bool   `json:"partial,omitempty"`
-	Prefixes string `json:"prefixes,omitempty"`
+	Partial  bool   `json:"partial,omitempty"`  // partial关键字标记
+	Prefixes string `json:"prefixes,omitempty"` // 模型前缀。类似model、package、record
 }
 
 type ClassSpecifier struct {
-	ClassSpecifierType string                `json:"class_specifier_type,omitempty"`
-	Name               string                `json:"name,omitempty"`
-	Parent             string                `json:"parent,omitempty"`
-	Description        string                `json:"description,omitempty"`
-	Extends            bool                  `json:"extends,omitempty"`
-	ClassModification  []*Argument           `json:"class_modification,omitempty"` // *ClassModification
-	Composition        *Composition          `json:"composition,omitempty"`
-	AnnotationClause   []*Argument           `json:"annotation,omitempty"`
-	BasePrefix         string                `json:"base_prefix,omitempty"`
-	TypeSpecifier      string                `json:"specifier,omitempty"`
-	ArraySubscripts    []string              `json:"array_subscripts,omitempty"`
-	Enumeration        bool                  `json:"enumeration,omitempty"`
-	EnumList           []*EnumerationLiteral `json:"enum_list,omitempty"`
-	// FullName           string                `json:"full_name,omitempty"`
-	// Hash               string                `json:"hash,omitempty"`
-}
-
-type LongClassSpecifier struct {
-	Name              string       `json:"name,omitempty"`
-	FullName          string       `json:"full_name,omitempty"`
-	Hash              string       `json:"hash,omitempty"`
-	Parent            string       `json:"parent,omitempty"`
-	Description       string       `json:"description,omitempty"`
-	Extends           bool         `json:"extends,omitempty"`
-	ClassModification []*Argument  `json:"class_modification,omitempty"` // *ClassModification
-	Composition       *Composition `json:"composition,omitempty"`
+	ClassSpecifierType string                `json:"class_specifier_type,omitempty"` // 模型说明符类型、 有LongClassSpecifier、ShortClassSpecifier两类
+	Name               string                `json:"name,omitempty"`                 // 模型短类名，类似于Modelica.Blocks.Examples.PID_Controller中的PID_Controller名称
+	Parent             string                `json:"parent,omitempty"`               // 模型的父节点
+	Description        string                `json:"description,omitempty"`          // 模型的描述
+	Extends            bool                  `json:"extends,omitempty"`              // 标记是否是继承项
+	ClassModification  []*Argument           `json:"class_modification,omitempty"`   // 模型与组件修饰符列表
+	Composition        *Composition          `json:"composition,omitempty"`          // 模型组成，一般是组件、方程、算法、annotation等
+	AnnotationClause   []*Argument           `json:"annotation,omitempty"`           // 模型注解，包含图形信息、图标信息、文档以及实验等信息
+	BasePrefix         string                `json:"base_prefix,omitempty"`          // 表示output、input等
+	TypeSpecifier      string                `json:"specifier,omitempty"`            // 表示模型的基本类型
+	ArraySubscripts    []string              `json:"array_subscripts,omitempty"`     // 数组表示
+	Enumeration        bool                  `json:"enumeration,omitempty"`          // 是否是枚举类型
+	EnumList           []*EnumerationLiteral `json:"enum_list,omitempty"`            // 枚举类型的选项列表
+	Hash               string                `json:"hash,omitempty"`
 }
 
 type ShortClassSpecifier struct {
-	Name              string                `json:"name,omitempty"`
-	FullName          string                `json:"full_name,omitempty"`
+	Name              string                `json:"name,omitempty"`               // 模型短类名，类似于Modelica.Blocks.Examples.PID_Controller中的PID_Controller名称
+	Parent            string                `json:"parent,omitempty"`             // 模型的父节点
+	Description       string                `json:"description,omitempty"`        // 模型的描述
+	AnnotationClause  []*Argument           `json:"annotation,omitempty"`         // 模型注解，包含图形信息、图标信息、文档以及实验等信息
+	BasePrefix        string                `json:"base_prefix,omitempty"`        // 表示output、input等
+	TypeSpecifier     string                `json:"specifier,omitempty"`          // 表示模型的基本类型
+	ArraySubscripts   []string              `json:"array_subscripts,omitempty"`   // 数组表示
+	Enumeration       bool                  `json:"enumeration,omitempty"`        // 是否是枚举类型
+	EnumList          []*EnumerationLiteral `json:"enum_list,omitempty"`          // 枚举类型的选项列表
+	ClassModification []*Argument           `json:"class_modification,omitempty"` // 模型与组件修饰符列表
 	Hash              string                `json:"hash,omitempty"`
-	Parent            string                `json:"parent,omitempty"`
-	Description       string                `json:"description,omitempty"`
-	AnnotationClause  []*Argument           `json:"annotation,omitempty"`
-	BasePrefix        string                `json:"base_prefix,omitempty"`
-	TypeSpecifier     string                `json:"specifier,omitempty"`
-	ArraySubscripts   []string              `json:"array_subscripts,omitempty"`
-	Enumeration       bool                  `json:"enumeration,omitempty"`
-	EnumList          []*EnumerationLiteral `json:"enum_list,omitempty"`
-	ClassModification []*Argument           `json:"class_modification,omitempty"` // *ClassModification
-}
-
-type DerClassSpecifier struct {
-	Name             string      `json:"name,omitempty"`
-	FullName         string      `json:"full_name,omitempty"`
-	Hash             string      `json:"hash,omitempty"`
-	Parent           string      `json:"parent,omitempty"`
-	TypeSpecifier    string      `json:"specifier,omitempty"`
-	Description      string      `json:"description,omitempty"`
-	AnnotationClause []*Argument `json:"annotation,omitempty"`
+	FullName          string                `json:"-"`
 }
 
 type EnumerationLiteral struct {
-	Name        string       `json:"name,omitempty"`
-	Description *Description `json:"description,omitempty"`
+	Name        string       `json:"name,omitempty"`        // 枚举选项名称
+	Description *Description `json:"description,omitempty"` // 枚举选项的描述
 }
 
 type Composition struct {
-	ElementList           []*Element             `json:"elements,omitempty"`
-	PublicElementList     []*Element             `json:"public_element_list,omitempty"`
-	ProtectedElementList  []*Element             `json:"protected_element_list,omitempty"`
-	EquationSection       []*EquationSection     `json:"equation_section,omitempty"`
-	AlgorithmSection      []*AlgorithmSection    `json:"algorithm_section,omitempty"`    // *AlgorithmSection
-	ExternalComposition   []*ExternalComposition `json:"external_composition,omitempty"` // *ExternalComposition
-	LanguageSpecification string                 `json:"language_specification,omitempty"`
-	ExternalFunctionCall  *ExternalFunctionCall  `json:"external_function_call,omitempty"` // *ExternalFunctionCall
-	AnnotationClause      []*Argument            `json:"annotation,omitempty"`             // *AnnotationClause
-}
-
-type ExternalComposition struct {
-	LanguageSpecification string                `json:"language_specification,omitempty"`
-	ExternalFunctionCall  *ExternalFunctionCall `json:"external_function_call,omitempty"`
-	AnnotationClause      []*Argument           `json:"annotation,omitempty"` // *AnnotationClause
-}
-
-type ExternalFunctionCall struct {
-	ComponentReference string   `json:"component_reference,omitempty"`
-	Name               string   `json:"name,omitempty"`
-	ExpressionList     []string `json:"expression_list,omitempty"`
+	ElementList          []*Element         `json:"elements,omitempty"`               // 模型组件列表
+	PublicElementList    []*Element         `json:"public_element_list,omitempty"`    // 公开的组件
+	ProtectedElementList []*Element         `json:"protected_element_list,omitempty"` // 受保护的组件
+	EquationSection      []*EquationSection `json:"equation_section,omitempty"`       // 方程列表
+	AnnotationClause     []*Argument        `json:"annotation,omitempty"`             // 模型注解，包含图形信息、图标信息、文档以及实验等信息
 }
 
 type Element struct {
-	ImportClause                   bool                            `json:"import_clause,omitempty"`
-	ImportClauseName               string                          `json:"import_clause_name,omitempty"`
-	ExtendsClause                  bool                            `json:"extends,omitempty"`
-	TypeSpecifier                  string                          `json:"specifier,omitempty"`
-	InheritanceModification        []*InheritanceModification      `json:"inheritance_modification,omitempty"`
-	AnnotationClause               []*Argument                     `json:"annotation,omitempty"`
-	Binding                        string                          `json:"binding,omitempty"`
-	Redeclare                      bool                            `json:"redeclare,omitempty"`
-	Final                          bool                            `json:"final,omitempty"`
-	Inner                          bool                            `json:"inner,omitempty"`
-	Outer                          bool                            `json:"outer,omitempty"`
-	ClassDefinition                *ClassDefinition                `json:"class_definition,omitempty"`
-	TypePrefix                     string                          `json:"prefix,omitempty"`
-	ArraySubscripts                []string                        `json:"array_subscripts,omitempty"`
-	Name                           string                          `json:"name,omitempty"`
-	ConditionAttribute             string                          `json:"condition_attribute,omitempty"`
-	Replaceable                    bool                            `json:"replaceable,omitempty"`
-	ConstrainingClause             *ConstrainingClause             `json:"constraining_clause,omitempty"`
-	Constrainedby                  bool                            `json:"constrainedby,omitempty"`
-	ClassModification              []*Argument                     `json:"class_modification,omitempty"`
-	DescriptionString              string                          `json:"description,omitempty"`
-	Modification                   *Modification                   `json:"modification,omitempty"` // Modification
-	FullName                       string                          `json:"full_name,omitempty"`
+	ImportClause                   bool                            `json:"import_clause,omitempty"`                     // 标记是否是导入的包
+	ImportClauseName               string                          `json:"import_clause_name,omitempty"`                // 导入包的名称
+	ExtendsClause                  bool                            `json:"extends,omitempty"`                           // 标记是否是继承项
+	TypeSpecifier                  string                          `json:"specifier,omitempty"`                         // 表示模型的基本类型
+	InheritanceModification        []*InheritanceModification      `json:"inheritance_modification,omitempty"`          // 继承的修改项
+	AnnotationClause               []*Argument                     `json:"annotation,omitempty"`                        // 注解，包含图形信息、图标信息、坐标以及一些分组等信息
+	Binding                        string                          `json:"binding,omitempty"`                           // 绑定的值
+	Redeclare                      bool                            `json:"redeclare,omitempty"`                         // redeclare关键字标记
+	Final                          bool                            `json:"final,omitempty"`                             // final关键字标记
+	Inner                          bool                            `json:"inner,omitempty"`                             // inner关键字标记
+	Outer                          bool                            `json:"outer,omitempty"`                             // outer关键字标记
+	ClassDefinition                *ClassDefinition                `json:"class_definition,omitempty"`                  // 模型中子模型项
+	TypePrefix                     string                          `json:"prefix,omitempty"`                            // 前缀
+	ArraySubscripts                []string                        `json:"array_subscripts,omitempty"`                  // 数组表示
+	Name                           string                          `json:"name,omitempty"`                              // 名称
+	ConditionAttribute             string                          `json:"condition_attribute,omitempty"`               // 条件表达式，一般用于表达是否启用
+	Replaceable                    bool                            `json:"replaceable,omitempty"`                       // replaceable关键字标记
+	ConstrainingClause             *ConstrainingClause             `json:"constraining,omitempty"`                      // 约束条件
+	ClassModification              []*Argument                     `json:"class_modification,omitempty"`                // 修饰符列表
+	DescriptionString              string                          `json:"description,omitempty"`                       // 描述
+	Modification                   *Modification                   `json:"modification,omitempty"`                      // 表示修改项
+	Parent                         string                          `json:"parent,omitempty"`                            // 模型的父节点
+	Instance                       *ClassDefinition                `json:"instance,omitempty"`                          // 模型实例数据
+	ClassOrInheritanceModification *ClassOrInheritanceModification `json:"class_or_inheritance_modification,omitempty"` // 类或继承项的修改项
 	Hash                           string                          `json:"hash,omitempty"`
-	Parent                         string                          `json:"parent,omitempty"`
-	ClassOrInheritanceModification *ClassOrInheritanceModification `json:"class_or_inheritance_modification,omitempty"`
-	Instance                       *ClassDefinition                `json:"instance,omitempty"`
-}
-
-type ImportClause struct {
-	Import      bool         `json:"import,omitempty"`
-	Name        string       `json:"name,omitempty"`
-	Description *Description `json:"description,omitempty"`
-}
-
-type ExtendsClause struct {
-	Extends                        bool                            `json:"extends,omitempty"`
-	TypeSpecifier                  string                          `json:"specifier,omitempty"`
-	ClassOrInheritanceModification *ClassOrInheritanceModification `json:"class_or_inheritance_modification,omitempty"`
-	AnnotationClause               *AnnotationClause               `json:"annotation,omitempty"`
+	FullName                       string                          `json:"-"`
 }
 
 type ConstrainingClause struct {
-	Constrainedby     bool        `json:"constrainedby,omitempty"`
-	TypeSpecifier     string      `json:"specifier,omitempty"`
-	ClassModification []*Argument `json:"class_modification,omitempty"`
+	Constrainedby     bool        `json:"constrainedby,omitempty"`      // constrainedby关键字标记
+	TypeSpecifier     string      `json:"specifier,omitempty"`          // 表示基本类型
+	ClassModification []*Argument `json:"class_modification,omitempty"` // 类修改项
 }
 
 type ClassOrInheritanceModification struct {
-	ArgumentList            []*Argument                `json:"argument,omitempty"` // Argument
+	ArgumentList            []*Argument                `json:"argument_list,omitempty"`
 	InheritanceModification []*InheritanceModification `json:"inheritance_modification,omitempty"`
 }
 
@@ -164,325 +106,86 @@ type InheritanceModification struct {
 	Name            string      `json:"name,omitempty"`
 }
 type Connection struct {
-	Left  string `json:"left,omitempty"`
-	Right string `json:"right,omitempty"`
-}
-
-type ConnectionAnnotation struct {
-	Line map[string]any `json:"line,omitempty"`
-}
-
-type ComponentClause struct {
-	TypePrefix      string                  `json:"prefix,omitempty"`
-	TypeSpecifier   string                  `json:"specifier,omitempty"`
-	ArraySubscripts []string                `json:"array_subscripts,omitempty"`
-	ComponentList   []*ComponentDeclaration `json:"component_list,omitempty"`
-}
-
-type ComponentList struct {
-	ComponentList []*ComponentDeclaration `json:"component_list,omitempty"`
-}
-
-type ComponentDeclaration struct {
-	ArraySubscripts    []string      `json:"array_subscripts,omitempty"`
-	Modification       *Modification `json:"modification,omitempty"` // Modification
-	Name               string        `json:"name,omitempty"`
-	DescriptionString  string        `json:"description,omitempty"`
-	AnnotationClause   []*Argument   `json:"annotation,omitempty"`
-	ConditionAttribute string        `json:"condition_attribute,omitempty"`
+	Left  string `json:"left,omitempty"`  // 起始节点
+	Right string `json:"right,omitempty"` // 终止节点
 }
 
 type Declaration struct {
-	ArraySubscripts []string      `json:"array_subscripts,omitempty"`
-	Modification    *Modification `json:"modification,omitempty"` // Modification
-	Name            string        `json:"name,omitempty"`
+	ArraySubscripts []string      `json:"array_subscripts,omitempty"` // 数组表示
+	Modification    *Modification `json:"modification,omitempty"`     // 修改项
+	Name            string        `json:"name,omitempty"`             // 名称
 }
 
 type Modification struct {
-	ClassModification      []*Argument             `json:"class_modification,omitempty"`
-	ModificationExpression *ModificationExpression `json:"modification_expression,omitempty"`
-	Expression             string                  `json:"expression,omitempty"`
+	ClassModification      []*Argument             `json:"class_modification,omitempty"`      // 类修改项
+	ModificationExpression *ModificationExpression `json:"modification_expression,omitempty"` // 修改项表达式
+	Expression             string                  `json:"expression,omitempty"`              // 表达式
 }
 
 type ModificationExpression struct {
-	Expression string `json:"expression,omitempty"`
-	Break      bool   `json:"break,omitempty"`
-}
-type ClassModification struct {
-	ArgumentList []*Argument `json:"argument_list,omitempty"`
-}
-type Argument struct {
-	Each                             bool                              `json:"each,omitempty"`
-	Final                            bool                              `json:"final,omitempty"`
-	Name                             string                            `json:"name,omitempty"`
-	Data                             any                               `json:"data,omitempty"`
-	Binding                          string                            `json:"binding,omitempty"`
-	Children                         []*Argument                       `json:"children,omitempty"`
-	ElementReplaceable               *ElementReplaceable               `json:"element_replaceable,omitempty"`
-	ElementModification              *ElementModification              `json:"element_modification,omitempty"`
-	ElementRedeclaration             *ElementRedeclaration             `json:"element_redeclaration,omitempty"`
-	ElementModificationOrReplaceable *ElementModificationOrReplaceable `json:"element_modification_or_replaceable,omitempty"`
+	Expression string `json:"expression,omitempty"` // 表达式
+	Break      bool   `json:"break,omitempty"`      // 标记break关键字
 }
 
-type ElementModificationOrReplaceable struct {
-	Each                bool                 `json:"each,omitempty"`
-	Final               bool                 `json:"final,omitempty"`
-	Name                string               `json:"name,omitempty"`
-	ElementModification *ElementModification `json:"element_modification,omitempty"`
-	ElementReplaceable  *ElementReplaceable  `json:"element_replaceable,omitempty"`
+type Argument struct {
+	Each                 bool                  `json:"each,omitempty"`                  // 标记each关键字
+	Final                bool                  `json:"final,omitempty"`                 // 标记final关键字
+	Name                 string                `json:"name,omitempty"`                  // 名称
+	Data                 any                   `json:"data,omitempty"`                  // 绑定的数据对象
+	Binding              string                `json:"binding,omitempty"`               // 绑定的数据
+	Children             []*Argument           `json:"children,omitempty"`              // 子节点，结构完全一致
+	ElementReplaceable   *ElementReplaceable   `json:"element_replaceable,omitempty"`   // 可更换组件
+	ElementModification  *ElementModification  `json:"element_modification,omitempty"`  // 元素修改项
+	ElementRedeclaration *ElementRedeclaration `json:"element_redeclaration,omitempty"` // 元素重新声明
 }
 
 type ElementModification struct {
-	Name              string        `json:"name,omitempty"`
-	Modification      *Modification `json:"modification,omitempty"`
-	DescriptionString string        `json:"description,omitempty"`
+	Name              string        `json:"name,omitempty"`         // 名称
+	Modification      *Modification `json:"modification,omitempty"` // 表示修改项
+	DescriptionString string        `json:"description,omitempty"`  // 描述
 }
 type ElementRedeclaration struct {
-	Redeclare           bool                 `json:"redeclare,omitempty"`
-	Each                bool                 `json:"each,omitempty"`
-	Final               bool                 `json:"final,omitempty"`
-	ClassPrefixes       *ClassPrefixes       `json:"class_prefixes,omitempty"`
-	ShortClassSpecifier *ShortClassSpecifier `json:"short_class_specifier,omitempty"` // ShortClassSpecifier
-	ComponentClause1    *ComponentClause1    `json:"component_clause_1,omitempty"`
-	ElementReplaceable  *ElementReplaceable  `json:"element_replaceable,omitempty"`
+	Redeclare           bool                 `json:"redeclare,omitempty"`             // redeclare关键字标记
+	Each                bool                 `json:"each,omitempty"`                  // each关键字标记
+	Final               bool                 `json:"final,omitempty"`                 // final关键字标记
+	ClassPrefixes       *ClassPrefixes       `json:"class_prefixes,omitempty"`        // 前缀
+	ShortClassSpecifier *ShortClassSpecifier `json:"short_class_specifier,omitempty"` // 短类数据
+	ComponentClause1    *ComponentClause1    `json:"component_clause_1,omitempty"`    // 组件子语句，类似表达式
+	ElementReplaceable  *ElementReplaceable  `json:"element_replaceable,omitempty"`   // 组件替换
 }
 
 type ElementReplaceable struct {
-	Replaceable         bool                 `json:"replaceable,omitempty"`
-	ClassPrefixes       *ClassPrefixes       `json:"class_prefixes,omitempty"`
-	ShortClassSpecifier *ShortClassSpecifier `json:"short_class_specifier,omitempty"` // ShortClassSpecifier
-	TypePrefix          string               `json:"prefix,omitempty"`
-	TypeSpecifier       string               `json:"specifier,omitempty"`
-	Declaration         *Declaration         `json:"declaration,omitempty"`
-	Description         *Description         `json:"description,omitempty"`
-	Constrainedby       bool                 `json:"constrainedby,omitempty"`
-	ClassModification   []*Argument          `json:"class_modification,omitempty"`
+	Replaceable         bool                 `json:"replaceable,omitempty"`           // replaceable关键字标记
+	ClassPrefixes       *ClassPrefixes       `json:"class_prefixes,omitempty"`        // 前缀
+	ShortClassSpecifier *ShortClassSpecifier `json:"short_class_specifier,omitempty"` // 短类数据
+	TypePrefix          string               `json:"prefix,omitempty"`                // 类型前缀
+	TypeSpecifier       string               `json:"specifier,omitempty"`             // 说明符
+	Declaration         *Declaration         `json:"declaration,omitempty"`           // 声明
+	Description         *Description         `json:"description,omitempty"`           // 描述
+	Constrainedby       bool                 `json:"constrainedby,omitempty"`         // constrainedby关键字标记
+	ClassModification   []*Argument          `json:"class_modification,omitempty"`    // 类修改项
 }
 
 type ComponentClause1 struct {
-	TypePrefix    string       `json:"prefix,omitempty"`
-	TypeSpecifier string       `json:"specifier,omitempty"`
-	Declaration   *Declaration `json:"declaration,omitempty"`
-	Description   *Description `json:"description,omitempty"`
-}
-
-type ComponentDeclaration1 struct {
-	Declaration *Declaration `json:"declaration,omitempty"`
-	Description *Description `json:"description,omitempty"`
-}
-
-type ShortClassDefinition struct {
-	ClassPrefixes       *ClassPrefixes `json:"class_prefixes,omitempty"`
-	ShortClassSpecifier string         `json:"short_class_specifier,omitempty"` // ShortClassSpecifier
+	TypePrefix    string       `json:"prefix,omitempty"`      // 类型前缀
+	TypeSpecifier string       `json:"specifier,omitempty"`   // 说明符
+	Declaration   *Declaration `json:"declaration,omitempty"` // 声明
+	Description   *Description `json:"description,omitempty"` // 描述
 }
 
 type EquationSection struct {
-	Initial      bool        `json:"initial,omitempty"`
-	EquationList []*Equation `json:"equation_list,omitempty"`
-}
-
-type AlgorithmSection struct {
-	Initial       bool     `json:"initial,omitempty"`
-	StatementList []string `json:"statement_list,omitempty"` // []*Statement
+	Initial      bool        `json:"initial,omitempty"`       // initial关键字标记
+	EquationList []*Equation `json:"equation_list,omitempty"` // 方程列表
 }
 
 type Equation struct {
-	EquationName      string      `json:"equation_name,omitempty"`
-	Connection        *Connection `json:"connection,omitempty"`
-	EquationString    string      `json:"equation_string,omitempty"`
-	DescriptionString string      `json:"description,omitempty"`
-	Annotation        []*Argument `json:"annotation,omitempty"`
-}
-
-type Statement struct {
-	ComponentReference   string                `json:"component_reference,omitempty"`
-	Expression           Expression            `json:"expression,omitempty"`
-	FunctionCallArgs     *FunctionCallArgs     `json:"function_call_args,omitempty"`
-	OutputExpressionList *OutputExpressionList `json:"output_expression_list,omitempty"`
-	Break                bool                  `json:"break,omitempty"`
-	Return               bool                  `json:"return,omitempty"`
-	IfStatement          string                `json:"if_statement,omitempty"`
-	ForStatement         string                `json:"for_statement,omitempty"`
-	WhileStatement       string                `json:"while_statement,omitempty"`
-	WhenStatement        string                `json:"when_statement,omitempty"`
-	Description          *Description          `json:"description,omitempty"`
-}
-
-type ComponentReference struct {
-	ArraySubscripts *ArraySubscripts `json:"array_subscripts,omitempty"`
-}
-
-type FunctionCallArgs struct {
-}
-
-type ArraySubscripts struct {
-	Subscripts []any `json:"subscripts,omitempty"`
+	EquationName      string      `json:"equation_name,omitempty"` // 方程名称
+	Connection        *Connection `json:"connection,omitempty"`    // 方程连接
+	DescriptionString string      `json:"description,omitempty"`   // 描述
+	Annotation        []*Argument `json:"annotation,omitempty"`    // 注解
 }
 
 type Description struct {
-	DescriptionString string      `json:"description,omitempty"`
-	AnnotationClause  []*Argument `json:"annotation,omitempty"`
-}
-
-type AnnotationClause struct {
-	ClassModification []*Argument `json:"class_modification,omitempty"`
-}
-
-type Expression struct {
-	SimpleExpression *SimpleExpression `json:"simple_expression,omitempty"`
-	IfElseExpression *IfElseExpression `json:"if_else_expression,omitempty"`
-}
-
-type SimpleExpression struct {
-	LogicalExpression []*LogicalExpression `json:"logical_expression,omitempty"`
-}
-
-type IfElseExpression struct {
-	If         string                  `json:"if_expression,omitempty"`
-	Then       string                  `json:"then_expression,omitempty"`
-	ElseIfThen []*ElseIfThenExpression `json:"else_if_then_expression,omitempty"`
-	Else       string                  `json:"else_expression,omitempty"`
-}
-
-type ElseIfThenExpression struct {
-	ElseIf string `json:"else_if_expression,omitempty"`
-	Then   string `json:"then_expression,omitempty"`
-}
-
-type LogicalExpression struct {
-	LogicalTerm []*LogicalTerm `json:"logical_term,omitempty"`
-}
-
-type LogicalTerm struct {
-	LogicalFactor []*LogicalFactor `json:"logical_factor,omitempty"`
-}
-
-type LogicalFactor struct {
-	Relation *Relation `json:"relation,omitempty"`
-	Not      bool      `json:"not,omitempty"`
-}
-
-type Relation struct {
-	ArithmeticExpression           *ArithmeticExpression           `json:"arithmetic_expression,omitempty"`
-	RelationalArithmeticExpression *RelationalArithmeticExpression `json:"relational_arithmetic_expression,omitempty"`
-}
-
-type RelationalArithmeticExpression struct {
-	RelationalOperator   string                `json:"relational_operator,omitempty"`
-	ArithmeticExpression *ArithmeticExpression `json:"arithmetic_expression,omitempty"`
-}
-
-type ArithmeticExpression struct {
-	AddOperator string     `json:"add_operator,omitempty"`
-	Term        *Term      `json:"term,omitempty"`
-	AddTerm     []*AddTerm `json:"add_term,omitempty"`
-}
-
-type AddTerm struct {
-	AddOperator string `json:"add_operator,omitempty"`
-	Term        *Term  `json:"term,omitempty"`
-}
-
-type Term struct {
-	Factor    *Factor      `json:"factor,omitempty"`
-	MulFactor []*MulFactor `json:"mul_factor,omitempty"`
-}
-type MulFactor struct {
-	Factor      *Factor `json:"factor,omitempty"`
-	MulOperator string  `json:"mul_operator,omitempty"`
-}
-
-type Factor struct {
-	Primary            *Primary            `json:"Primary,omitempty"`
-	ExponentialPrimary *ExponentialPrimary `json:"exponential_primary,omitempty"`
-}
-
-type ExponentialPrimary struct {
-	ExponentialOperator string   `json:"exponential_operator,omitempty"`
-	Primary             *Primary `json:"Primary,omitempty"`
-}
-
-type Primary struct {
-	Text                   string                  `json:"text,omitempty"`
-	UnsignedNumber         string                  `json:"UNSIGNED_NUMBER,omitempty"`
-	STRING                 string                  `json:"STRING,omitempty"`
-	False                  bool                    `json:"false,omitempty"`
-	True                   bool                    `json:"true,omitempty"`
-	CdipFunctionCallArgs   *CdipFunctionCallArgs   `json:"cdip_function_call_args,omitempty"`
-	ComponentReference     string                  `json:"component_reference,omitempty"`
-	OutputExpressionList   *OutputExpressionList   `json:"output_expression_list,omitempty"`
-	ExpressionListMultiple *ExpressionListMultiple `json:"expression_list__multiple,omitempty"`
-	ArrayArguments         *ArrayArguments         `json:"array_arguments,omitempty"`
-}
-
-type CdipFunctionCallArgs struct {
-	ComponentReference string             `json:"component_reference,omitempty"`
-	Der                bool               `json:"der,omitempty"`
-	Initial            bool               `json:"initial,omitempty"`
-	Pure               bool               `json:"pure,omitempty"`
-	FunctionCallArgs   *FunctionArguments `json:"function_arguments,omitempty"`
-}
-
-type ExpressionListMultiple struct {
-	ExpressionList [][]string `json:"expression_list,omitempty"`
-}
-
-type FunctionArguments struct {
-	ExpressionFunctionArgumentsNonFirstOrForIndices     *ExpressionFunctionArgumentsNonFirstOrForIndices     `json:"expression__function_arguments_non_first_or_for_indices,omitempty"`
-	FunctionPartialApplicationFunctionArgumentsNonFirst *FunctionPartialApplicationFunctionArgumentsNonFirst `json:"function_partial_application__function_arguments_non_first,omitempty"`
-	NamedArguments                                      *NamedArguments                                      `json:"named_arguments,omitempty"`
-}
-
-type ExpressionFunctionArgumentsNonFirstOrForIndices struct {
-	Expression                string                     `json:"expression,omitempty"`
-	FunctionArgumentsNonFirst *FunctionArgumentsNonFirst `json:"function_arguments_non_first,omitempty"`
-	ForIndices                *ForIndices                `json:"for_indices,omitempty"`
-}
-type FunctionPartialApplicationFunctionArgumentsNonFirst struct {
-	FunctionPartialApplication *FunctionPartialApplication `json:"function_partial_application,omitempty"`
-	FunctionArgumentsNonFirst  *FunctionArgumentsNonFirst  `json:"function_arguments_non_first,omitempty"`
-}
-
-type FunctionArgumentsNonFirst struct {
-	FunctionArgumentsOrNonFirst *FunctionArgumentsOrNonFirst `json:"function_arguments_or_non_first,omitempty"`
-	NamedArguments              *NamedArguments              `json:"named_arguments,omitempty"`
-}
-type FunctionArgumentsOrNonFirst struct {
-	FunctionArgument          *FunctionArgument          `json:"function_argument,omitempty"`
-	FunctionArgumentsNonFirst *FunctionArgumentsNonFirst `json:"function_arguments_non_first,omitempty"`
-}
-
-type ArrayArguments struct {
-	Expression             string                  `json:"expression,omitempty"`
-	ArrayArgumentsNonFirst *ArrayArgumentsNonFirst `json:"array_arguments_non_first,omitempty"`
-	ForIndices             *ForIndices             `json:"for_indices,omitempty"`
-}
-
-type ArrayArgumentsNonFirst struct {
-	Expression             string                  `json:"expression,omitempty"`
-	ArrayArgumentsNonFirst *ArrayArgumentsNonFirst `json:"array_arguments_non_first,omitempty"`
-}
-
-type NamedArguments struct {
-	IDENT            []string            `json:"IDENT,omitempty"`
-	FunctionArgument []*FunctionArgument `json:"function_argument,omitempty"`
-}
-
-type FunctionArgument struct {
-	FunctionPartialApplication *FunctionPartialApplication `json:"function_partial_application,omitempty"`
-	Expression                 string                      `json:"expression,omitempty"`
-}
-
-type FunctionPartialApplication struct {
-	TypeSpecifier  string          `json:"type_specifier,omitempty"`
-	NamedArguments *NamedArguments `json:"named_arguments,omitempty"`
-}
-
-type ForIndices struct {
-	IDENTList      []string `json:"IDENT,omitempty"`
-	ExpressionList []string `json:"expression,omitempty"`
-}
-
-type OutputExpressionList struct {
-	Expression []string `json:"expression,omitempty"`
+	DescriptionString string      `json:"description,omitempty"` // 描述
+	AnnotationClause  []*Argument `json:"annotation,omitempty"`  // 注解
 }
