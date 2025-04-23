@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/bytedance/sonic"
 	smc "yssim-go/grpc/SMC"
 )
 
@@ -22,7 +21,7 @@ func LoadFile(path string) (bool, error) {
 	return true, nil
 }
 
-func GetModelInstance(modelName string) (*ClassDefinition, error) {
+func GetModelInstance(modelName string) (*smc.ClassDefinition, error) {
 	req := &smc.ModelInstanceRequest{
 		ModelName: modelName,
 	}
@@ -30,10 +29,6 @@ func GetModelInstance(modelName string) (*ClassDefinition, error) {
 	if err != nil {
 		return nil, err
 	}
-	m := &ClassDefinition{}
-	err = sonic.Unmarshal(result.Model, m)
-	if err != nil {
-		return nil, err
-	}
-	return m, nil
+
+	return result.Model, nil
 }
