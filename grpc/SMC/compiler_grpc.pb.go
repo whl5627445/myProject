@@ -21,6 +21,8 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	SMC_GetModelInstance_FullMethodName = "/SMC/GetModelInstance"
 	SMC_LoadFile_FullMethodName         = "/SMC/LoadFile"
+	SMC_GetModelAST_FullMethodName      = "/SMC/GetModelAST"
+	SMC_GetModelCode_FullMethodName     = "/SMC/GetModelCode"
 )
 
 // SMCClient is the client API for SMC service.
@@ -29,6 +31,8 @@ const (
 type SMCClient interface {
 	GetModelInstance(ctx context.Context, in *ModelInstanceRequest, opts ...grpc.CallOption) (*ModelInstanceResponse, error)
 	LoadFile(ctx context.Context, in *LoadFileRequest, opts ...grpc.CallOption) (*LoadFileResponse, error)
+	GetModelAST(ctx context.Context, in *ModelNameRequest, opts ...grpc.CallOption) (*ModelASTResponse, error)
+	GetModelCode(ctx context.Context, in *ModelNameRequest, opts ...grpc.CallOption) (*ModelCodeResponse, error)
 }
 
 type sMCClient struct {
@@ -59,12 +63,34 @@ func (c *sMCClient) LoadFile(ctx context.Context, in *LoadFileRequest, opts ...g
 	return out, nil
 }
 
+func (c *sMCClient) GetModelAST(ctx context.Context, in *ModelNameRequest, opts ...grpc.CallOption) (*ModelASTResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ModelASTResponse)
+	err := c.cc.Invoke(ctx, SMC_GetModelAST_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sMCClient) GetModelCode(ctx context.Context, in *ModelNameRequest, opts ...grpc.CallOption) (*ModelCodeResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ModelCodeResponse)
+	err := c.cc.Invoke(ctx, SMC_GetModelCode_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SMCServer is the server API for SMC service.
 // All implementations must embed UnimplementedSMCServer
 // for forward compatibility.
 type SMCServer interface {
 	GetModelInstance(context.Context, *ModelInstanceRequest) (*ModelInstanceResponse, error)
 	LoadFile(context.Context, *LoadFileRequest) (*LoadFileResponse, error)
+	GetModelAST(context.Context, *ModelNameRequest) (*ModelASTResponse, error)
+	GetModelCode(context.Context, *ModelNameRequest) (*ModelCodeResponse, error)
 	mustEmbedUnimplementedSMCServer()
 }
 
@@ -80,6 +106,12 @@ func (UnimplementedSMCServer) GetModelInstance(context.Context, *ModelInstanceRe
 }
 func (UnimplementedSMCServer) LoadFile(context.Context, *LoadFileRequest) (*LoadFileResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LoadFile not implemented")
+}
+func (UnimplementedSMCServer) GetModelAST(context.Context, *ModelNameRequest) (*ModelASTResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetModelAST not implemented")
+}
+func (UnimplementedSMCServer) GetModelCode(context.Context, *ModelNameRequest) (*ModelCodeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetModelCode not implemented")
 }
 func (UnimplementedSMCServer) mustEmbedUnimplementedSMCServer() {}
 func (UnimplementedSMCServer) testEmbeddedByValue()             {}
@@ -138,6 +170,42 @@ func _SMC_LoadFile_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SMC_GetModelAST_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ModelNameRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).GetModelAST(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_GetModelAST_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).GetModelAST(ctx, req.(*ModelNameRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SMC_GetModelCode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ModelNameRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).GetModelCode(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_GetModelCode_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).GetModelCode(ctx, req.(*ModelNameRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // SMC_ServiceDesc is the grpc.ServiceDesc for SMC service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -152,6 +220,14 @@ var SMC_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "LoadFile",
 			Handler:    _SMC_LoadFile_Handler,
+		},
+		{
+			MethodName: "GetModelAST",
+			Handler:    _SMC_GetModelAST_Handler,
+		},
+		{
+			MethodName: "GetModelCode",
+			Handler:    _SMC_GetModelCode_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

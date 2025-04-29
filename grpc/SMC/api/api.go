@@ -32,3 +32,27 @@ func GetModelInstance(modelName string) (*smc.ClassDefinition, error) {
 
 	return result.Model, nil
 }
+
+func GetModelAST(modelName string) (*smc.ClassDefinition, error) {
+	req := &smc.ModelNameRequest{
+		ModelName: modelName,
+	}
+	result, err := smc.SMC.GetModelAST(context.Background(), req)
+	if err != nil {
+		return nil, err
+	}
+
+	return result.Model, nil
+}
+
+func GetModelCode(modelName string) (string, error) {
+	req := &smc.ModelNameRequest{
+		ModelName: modelName,
+	}
+	result, err := smc.SMC.GetModelCode(context.Background(), req)
+	if err != nil {
+		return "", err
+	}
+
+	return result.Code, nil
+}
