@@ -1,5 +1,8 @@
 package api
 
+// TODO：该文件数据结构暂时没有用
+// TODO：该文件数据结构暂时没有用到
+
 type ClassDefinition struct {
 	Final          bool            `json:"final,omitempty"`           // final关键字标记
 	Encapsulated   bool            `json:"encapsulated,omitempty"`    // encapsulated关键字标记
