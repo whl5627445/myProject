@@ -29,7 +29,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SMCClient interface {
-	GetModelInstance(ctx context.Context, in *ModelInstanceRequest, opts ...grpc.CallOption) (*ModelInstanceResponse, error)
+	GetModelInstance(ctx context.Context, in *ModelNameRequest, opts ...grpc.CallOption) (*ModelInstanceResponse, error)
 	LoadFile(ctx context.Context, in *LoadFileRequest, opts ...grpc.CallOption) (*LoadFileResponse, error)
 	GetModelAST(ctx context.Context, in *ModelNameRequest, opts ...grpc.CallOption) (*ModelASTResponse, error)
 	GetModelCode(ctx context.Context, in *ModelNameRequest, opts ...grpc.CallOption) (*ModelCodeResponse, error)
@@ -43,7 +43,7 @@ func NewSMCClient(cc grpc.ClientConnInterface) SMCClient {
 	return &sMCClient{cc}
 }
 
-func (c *sMCClient) GetModelInstance(ctx context.Context, in *ModelInstanceRequest, opts ...grpc.CallOption) (*ModelInstanceResponse, error) {
+func (c *sMCClient) GetModelInstance(ctx context.Context, in *ModelNameRequest, opts ...grpc.CallOption) (*ModelInstanceResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ModelInstanceResponse)
 	err := c.cc.Invoke(ctx, SMC_GetModelInstance_FullMethodName, in, out, cOpts...)
@@ -87,7 +87,7 @@ func (c *sMCClient) GetModelCode(ctx context.Context, in *ModelNameRequest, opts
 // All implementations must embed UnimplementedSMCServer
 // for forward compatibility.
 type SMCServer interface {
-	GetModelInstance(context.Context, *ModelInstanceRequest) (*ModelInstanceResponse, error)
+	GetModelInstance(context.Context, *ModelNameRequest) (*ModelInstanceResponse, error)
 	LoadFile(context.Context, *LoadFileRequest) (*LoadFileResponse, error)
 	GetModelAST(context.Context, *ModelNameRequest) (*ModelASTResponse, error)
 	GetModelCode(context.Context, *ModelNameRequest) (*ModelCodeResponse, error)
@@ -101,7 +101,7 @@ type SMCServer interface {
 // pointer dereference when methods are called.
 type UnimplementedSMCServer struct{}
 
-func (UnimplementedSMCServer) GetModelInstance(context.Context, *ModelInstanceRequest) (*ModelInstanceResponse, error) {
+func (UnimplementedSMCServer) GetModelInstance(context.Context, *ModelNameRequest) (*ModelInstanceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetModelInstance not implemented")
 }
 func (UnimplementedSMCServer) LoadFile(context.Context, *LoadFileRequest) (*LoadFileResponse, error) {
@@ -135,7 +135,7 @@ func RegisterSMCServer(s grpc.ServiceRegistrar, srv SMCServer) {
 }
 
 func _SMC_GetModelInstance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ModelInstanceRequest)
+	in := new(ModelNameRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -147,7 +147,7 @@ func _SMC_GetModelInstance_Handler(srv interface{}, ctx context.Context, dec fun
 		FullMethod: SMC_GetModelInstance_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SMCServer).GetModelInstance(ctx, req.(*ModelInstanceRequest))
+		return srv.(SMCServer).GetModelInstance(ctx, req.(*ModelNameRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

@@ -22,7 +22,7 @@ func LoadFile(path string) (bool, error) {
 }
 
 func GetModelInstance(modelName string) (*smc.ClassDefinition, error) {
-	req := &smc.ModelInstanceRequest{
+	req := &smc.ModelNameRequest{
 		ModelName: modelName,
 	}
 	result, err := smc.SMC.GetModelInstance(context.Background(), req)
