@@ -1,4 +1,4 @@
-package taskManagement
+package TaskManagement
 
 //func StartTaskGrpc() (TaskAssignmentsClient, context.Context) {
 //	TaskDispatcherIp, TaskDispatcherPort := config.GetHealthInstance("TaskDispatcher")

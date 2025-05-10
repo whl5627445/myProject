@@ -1,11 +1,12 @@
-package taskManagement
+package TaskManagement
 
 import (
+	"log"
+	"strconv"
+
 	"github.com/nacos-group/nacos-sdk-go/model"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"log"
-	"strconv"
 )
 
 type SubscribeServiceAndClient struct {
@@ -14,7 +15,7 @@ type SubscribeServiceAndClient struct {
 	UpdateTime int64
 }
 
-var CasService *SubscribeServiceAndClient = new(SubscribeServiceAndClient)
+var CasService = new(SubscribeServiceAndClient)
 
 // connectCasServiceClient 初始化CAS服务的实例
 func connectCasServiceClient(subscribeService model.SubscribeService) *SubscribeServiceAndClient {

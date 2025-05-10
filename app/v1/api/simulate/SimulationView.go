@@ -84,6 +84,7 @@ func GetModelStateView(c *gin.Context) {
 
 	var res DataType.ResponseData
 	stateData := service.GetSimulationState(modelRecord.ID, modelRecord.StartTime, modelRecord.StopTime, modelRecord.Intervals, modelRecord.Percentage)
+	stateData["simulate_status_msg"] = config.MoldelSimutalionStatus_[modelRecord.SimulateStatus]
 
 	res.Data = stateData
 	c.JSON(http.StatusOK, res)
@@ -293,6 +294,7 @@ func SimulateResultListView(c *gin.Context) {
 	pageNumInt, _ := strconv.Atoi(pageNumStr)
 	var totle int64 //总条数
 	var recordList []DataBaseModel.YssimSimulateRecord
+	var experimentList []DataBaseModel.YssimExperimentRecord
 	var resData map[string]any
 	resData = make(map[string]any)
 	var dataList []map[string]any
@@ -302,6 +304,18 @@ func SimulateResultListView(c *gin.Context) {
 		DB.Where("username = ? AND userspace_id = ?", username, userSpaceId).Find(&recordList).Count(&totle)
 		DB.Limit(10).Offset((pageNumInt-1)*10).Where("username = ? AND userspace_id = ?", username, userSpaceId).Order("simulate_start_time desc").Find(&recordList)
 	}
+	// 获取实验名称
+	var experimentIdList []string
+	for i := 0; i < len(recordList); i++ {
+		experimentIdList = append(experimentIdList, recordList[i].ExperimentId)
+	}
+	DB.Where("id IN ?", experimentIdList).Find(&experimentList)
+	var experimentMap map[string]string
+	experimentMap = make(map[string]string)
+	for i := 0; i < len(experimentList); i++ {
+		experimentMap[experimentList[i].ID] = experimentList[i].ExperimentName
+	}
+
 	pageCount := math.Ceil(float64(totle) / 10) //总页数
 	for i := 0; i < len(recordList); i++ {
 		simulateStartTime := time.Unix(recordList[i].SimulateStartTime, 0)
@@ -311,6 +325,10 @@ func SimulateResultListView(c *gin.Context) {
 		if recordList[i].SimulateStartTime == 0 {
 			simulateRunTime = "-"
 			simulateStartTimeStr = "-"
+		}
+		experimentName := ""
+		if value, exists := experimentMap[recordList[i].ExperimentId]; exists {
+			experimentName = value
 		}
 		data := map[string]any{
 			"index":               i + 1,
@@ -323,6 +341,7 @@ func SimulateResultListView(c *gin.Context) {
 			"simulate_run_time":   simulateRunTime,
 			"another_name":        recordList[i].AnotherName,
 			"simulate_percentage": recordList[i].Percentage,
+			"experiment_name":     experimentName,
 			"pipe_net":            recordList[i].PipeNet,
 		}
 		dataList = append(dataList, data)

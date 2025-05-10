@@ -852,12 +852,12 @@ func WritePipeNetModeCodeNew(modeName, modeNameAll, system, medium string, packa
 	}
 
 	// 加油控制活门端口
-	closedVolumePortNameMapping := map[string]string{
+	/*closedVolumePortNameMapping := map[string]string{
 		"Point1": "ports[1]",
 		"Point2": "ports[2]",
 		"Point3": "ports[3]",
 		"Point4": "ports[4]",
-	}
+	}*/
 
 	for _, connector := range instanceMapping.Connectors {
 		// 对普通管的连线端点进行处理
@@ -865,13 +865,13 @@ func WritePipeNetModeCodeNew(modeName, modeNameAll, system, medium string, packa
 		toPoint := connector.To.LegalName + "." + portNameMapping[connector.To.Point]
 
 		// 对加油控制活门的连线端点进行特殊处理
-		if componentTypeCADMap[connector.From.LegalName] == "加油控制活门" {
+		/*if componentTypeCADMap[connector.From.LegalName] == "加油控制活门" {
 			fromPoint = connector.From.LegalName + "." + closedVolumePortNameMapping[connector.From.Point]
 		}
 
 		if componentTypeCADMap[connector.To.LegalName] == "加油控制活门" {
 			toPoint = connector.To.LegalName + "." + closedVolumePortNameMapping[connector.To.Point]
-		}
+		}*/
 
 		// 对弯管的连线端点进行特殊处理
 		if componentTypeCADMap[connector.From.LegalName] == "弯管" {

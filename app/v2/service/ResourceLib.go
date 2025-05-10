@@ -91,11 +91,14 @@ func ParseResourceFileContent(path string) map[string]map[string]any {
 			strs := strings.FieldsFunc(line, func(r rune) bool {
 				return r == ' ' || r == '\t'
 			})
-			xdata, _ := strconv.ParseFloat(strs[0], 64)
-			xData = append(xData, xdata)
-			for i := 1; i < column; i++ {
-				ydata, _ := strconv.ParseFloat(strs[i], 64)
-				yData[i-1] = append(yData[i-1], ydata)
+
+			if len(strs) > 0 {
+				xdata, _ := strconv.ParseFloat(strs[0], 64)
+				xData = append(xData, xdata)
+				for i := 1; i < column; i++ {
+					ydata, _ := strconv.ParseFloat(strs[i], 64)
+					yData[i-1] = append(yData[i-1], ydata)
+				}
 			}
 		}
 	}

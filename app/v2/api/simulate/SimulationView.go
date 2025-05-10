@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"net/http"
+	"time"
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/DataType"
 	serviceV2 "yssim-go/app/v2/service"
@@ -126,6 +127,7 @@ func SimulateTerminateView(c *gin.Context) {
 	}
 
 	resultRecord.SimulateStatus = "7"
+	resultRecord.SimulateEndTime = int64(int(time.Now().Unix()))
 	resultRecord.SimulateStart = false
 	if err := config.DB.Save(&resultRecord).Error; err != nil {
 		res.Err = "仿真已终止，但仿真状态更新失败"

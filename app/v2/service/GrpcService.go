@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 	"time"
+
 	"yssim-go/grpc/taskManagement"
 	"yssim-go/library/fileOperation"
 	"yssim-go/library/mapProcessing"
@@ -145,7 +146,7 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 	DB.Where("experiment_id = ? AND package_id = ? AND simulate_model_name = ? AND username = ? AND userspace_id = ?", itemMap["experiment_id"], itemMap["package_id"], itemMap["model_name"], itemMap["username"], itemMap["space_id"]).First(&simulateRecord)
 	record := DataBaseModel.YssimSimulateRecord{}
 
-	//如果没有找到记录，则新建实验记录
+	// 如果没有找到记录，则新建实验记录
 	if simulateRecord.ID == "" {
 		// SimulateStatus "1"初始(正在准备)  "2"执行  "3"失败(编译失败or仿真运行失败)  "4"成功结束  "5"关闭(killed)  "6"编译阶段
 		record = DataBaseModel.YssimSimulateRecord{
@@ -193,15 +194,18 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 		if err_ != nil {
 			log.Println(err_)
 		}
-		//如果有找到记录，则用老的记录,并更新仿真参数
-		//simulateRecord.StartTime = itemMap["start_time"]
-		//simulateRecord.StopTime = itemMap["stop_time"]
-		//simulateRecord.Method = itemMap["method"]
-		//simulateRecord.NumberOfIntervals = itemMap["number_of_intervals"]
-		//simulateRecord.Tolerance = itemMap["tolerance"]
-		//simulateRecord.SimulateType = itemMap["simulate_type"]
+		simulateRecord.SimulateEndTime = 0
+		simulateRecord.SimulateStartTime = 0
+		simulateRecord.SimulateStatus = "1"
+		// 如果有找到记录，则用老的记录,并更新仿真参数
+		// simulateRecord.StartTime = itemMap["start_time"]
+		// simulateRecord.StopTime = itemMap["stop_time"]
+		// simulateRecord.Method = itemMap["method"]
+		// simulateRecord.NumberOfIntervals = itemMap["number_of_intervals"]
+		// simulateRecord.Tolerance = itemMap["tolerance"]
+		// simulateRecord.SimulateType = itemMap["simulate_type"]
 
-		//删除mongo中的记录
+		// 删除mongo中的记录
 		if simulateRecord.TaskId != "" {
 			coll := MB.Database("SimulationTasks").Collection("task_model")
 			filter := bson.D{{"_id", simulateRecord.TaskId}}
@@ -230,9 +234,9 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 	config.DB.Save(&record)
 
 	// 获取实验参数
-	params := []*taskManagement.ParamObj{}
+	params := []*TaskManagement.ParamObj{}
 	if packageModel.SysUser != "sys" {
-		//取所有非全量实验的并集参数
+		// 取所有非全量实验的并集参数
 		var experimentRecords []DataBaseModel.YssimExperimentRecord
 		if err := DB.Where("username = ? AND userspace_id = ? AND package_id = ? AND model_name = ? AND create_time <= ? AND is_full_model_var != ?",
 			itemMap["username"], itemMap["space_id"], itemMap["package_id"], itemMap["model_name"], experimentRecord.CreatedAt, 1).Order("create_time").Find(&experimentRecords).Error; err != nil {
@@ -252,13 +256,13 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 		mapAttributesStr := mapProcessing.GetUnionComponentParams(componentParamsMap)
 
 		for component, value := range mapAttributesStr {
-			param := &taskManagement.ParamObj{Key: component, Value: value, IsFile: false}
+			param := &TaskManagement.ParamObj{Key: component, Value: value, IsFile: false}
 			params = append(params, param)
 		}
 	}
 
 	// 发送仿真请求
-	GrpcBuildModelRequest := &taskManagement.TaskAssignmentsRequest{
+	GrpcBuildModelRequest := &TaskManagement.TaskAssignmentsRequest{
 		Uuid:          record.TaskId,
 		Application:   "SimulationModeling",
 		ResultAddress: record.SimulateModelResultPath,
@@ -268,7 +272,7 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 		Token:         itemMap["token"],
 		Params:        params,
 	}
-	_, err = taskManagement.CasService.Client.Assignments(context.Background(), GrpcBuildModelRequest)
+	_, err = TaskManagement.CasService.Client.Assignments(context.Background(), GrpcBuildModelRequest)
 	return record.ID, err
 
 }
@@ -300,12 +304,12 @@ func TerminateSimulateTask(taskID string) error {
 	return nil
 }
 
-func GrpcSimulationProcessOperation(uid string) (*taskManagement.TerminateTaskResponse, error) {
+func GrpcSimulationProcessOperation(uid string) (*TaskManagement.TerminateTaskResponse, error) {
 
-	PyOmcSimProcessOperationRequest := &taskManagement.TerminateTaskRequest{
+	PyOmcSimProcessOperationRequest := &TaskManagement.TerminateTaskRequest{
 		Uuid: uid,
 	}
-	replyTest, err := taskManagement.CasService.Client.TerminateTask(context.Background(), PyOmcSimProcessOperationRequest)
+	replyTest, err := TaskManagement.CasService.Client.TerminateTask(context.Background(), PyOmcSimProcessOperationRequest)
 	return replyTest, err
 
 }

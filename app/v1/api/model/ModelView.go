@@ -308,6 +308,13 @@ func ModelRename(c *gin.Context) {
 		loadResult := service.LoadCodeString(modelCode, modelPath)
 		if loadResult {
 			if parseResult != item.ModelName {
+				//如果是管网模型，则更新管网数据表
+				dbModel.Model(DataBaseModel.YssimPipeNetCadDownload{}).Where("package_id = ? AND model_name = ?", item.PackageId, item.ModelName).Update("model_name", parseResult)
+				//更改实验记录的模型名
+				dbModel.Model(DataBaseModel.YssimExperimentRecord{}).Where("package_id = ? AND userspace_id = ? AND username = ? AND model_name = ?", item.PackageId, userSpaceId, userName, item.ModelName).Update("model_name", parseResult)
+				//更改仿真历史记录的模型名
+				dbModel.Model(DataBaseModel.YssimSimulateRecord{}).Where("username = ? AND simulate_model_name = ? AND userspace_id = ?  AND package_id = ?", userName, item.ModelName, userSpaceId, item.PackageId).Update("simulate_model_name", parseResult)
+
 				// 判断是否是子模型
 				if !strings.Contains(item.ModelName, ".") {
 					dbModel.Model(DataBaseModel.YssimModels{}).Where("id = ? AND sys_or_user = ? AND userspace_id = ?", item.PackageId, userName, userSpaceId).Update("package_name", parseResult)
