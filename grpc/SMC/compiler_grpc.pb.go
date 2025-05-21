@@ -19,20 +19,52 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	SMC_GetModelInstance_FullMethodName = "/SMC/GetModelInstance"
-	SMC_LoadFile_FullMethodName         = "/SMC/LoadFile"
-	SMC_GetModelAST_FullMethodName      = "/SMC/GetModelAST"
-	SMC_GetModelCode_FullMethodName     = "/SMC/GetModelCode"
+	SMC_LoadFile_FullMethodName                = "/SMC/LoadFile"
+	SMC_LoadLibrary_FullMethodName             = "/SMC/LoadLibrary"
+	SMC_ParserCode_FullMethodName              = "/SMC/ParserCode"
+	SMC_ParserModelCode_FullMethodName         = "/SMC/ParserModelCode"
+	SMC_GetModelCode_FullMethodName            = "/SMC/GetModelCode"
+	SMC_GetModelInstance_FullMethodName        = "/SMC/GetModelInstance"
+	SMC_GetModelAST_FullMethodName             = "/SMC/GetModelAST"
+	SMC_GetClassNames_FullMethodName           = "/SMC/GetClassNames"
+	SMC_Save_FullMethodName                    = "/SMC/Save"
+	SMC_GetSubTypeOf_FullMethodName            = "/SMC/GetSubTypeOf"
+	SMC_AddElement_FullMethodName              = "/SMC/AddElement"
+	SMC_SetElementAnnotation_FullMethodName    = "/SMC/SetElementAnnotation"
+	SMC_DeleteElement_FullMethodName           = "/SMC/DeleteElement"
+	SMC_AddConnection_FullMethodName           = "/SMC/AddConnection"
+	SMC_SetConnectionAnnotation_FullMethodName = "/SMC/SetConnectionAnnotation"
+	SMC_DeleteConnection_FullMethodName        = "/SMC/DeleteConnection"
+	SMC_SetClassAnnotation_FullMethodName      = "/SMC/SetClassAnnotation"
+	SMC_SetModelicaPath_FullMethodName         = "/SMC/SetModelicaPath"
+	SMC_GetModelicaPath_FullMethodName         = "/SMC/GetModelicaPath"
+	SMC_GetErrors_FullMethodName               = "/SMC/GetErrors"
 )
 
 // SMCClient is the client API for SMC service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SMCClient interface {
-	GetModelInstance(ctx context.Context, in *ModelNameRequest, opts ...grpc.CallOption) (*ModelInstanceResponse, error)
 	LoadFile(ctx context.Context, in *LoadFileRequest, opts ...grpc.CallOption) (*LoadFileResponse, error)
-	GetModelAST(ctx context.Context, in *ModelNameRequest, opts ...grpc.CallOption) (*ModelASTResponse, error)
-	GetModelCode(ctx context.Context, in *ModelNameRequest, opts ...grpc.CallOption) (*ModelCodeResponse, error)
+	LoadLibrary(ctx context.Context, in *LoadLibraryRequest, opts ...grpc.CallOption) (*LoadLibraryResponse, error)
+	ParserCode(ctx context.Context, in *ParserCodeRequest, opts ...grpc.CallOption) (*ParserCodeResponse, error)
+	ParserModelCode(ctx context.Context, in *ParserModelCodeRequest, opts ...grpc.CallOption) (*ParserModelCodeResponse, error)
+	GetModelCode(ctx context.Context, in *ClassNameRequest, opts ...grpc.CallOption) (*ModelCodeResponse, error)
+	GetModelInstance(ctx context.Context, in *ClassNameRequest, opts ...grpc.CallOption) (*ModelInstanceResponse, error)
+	GetModelAST(ctx context.Context, in *ClassNameRequest, opts ...grpc.CallOption) (*ModelASTResponse, error)
+	GetClassNames(ctx context.Context, in *ClassNamesRequest, opts ...grpc.CallOption) (*ClassNamesResponse, error)
+	Save(ctx context.Context, in *ClassNameRequest, opts ...grpc.CallOption) (*SaveModelResponse, error)
+	GetSubTypeOf(ctx context.Context, in *GetSubTypeOfRequest, opts ...grpc.CallOption) (*GetSubTypeOfResponse, error)
+	AddElement(ctx context.Context, in *AddElementRequest, opts ...grpc.CallOption) (*AddElementResponse, error)
+	SetElementAnnotation(ctx context.Context, in *SetElementAnnotationRequest, opts ...grpc.CallOption) (*SetElementAnnotationResponse, error)
+	DeleteElement(ctx context.Context, in *DeleteElementRequest, opts ...grpc.CallOption) (*DeleteElementResponse, error)
+	AddConnection(ctx context.Context, in *AddConnectionRequest, opts ...grpc.CallOption) (*AddConnectionResponse, error)
+	SetConnectionAnnotation(ctx context.Context, in *SetConnectionAnnotationRequest, opts ...grpc.CallOption) (*SetConnectionAnnotationResponse, error)
+	DeleteConnection(ctx context.Context, in *DeleteConnectionRequest, opts ...grpc.CallOption) (*DeleteConnectionResponse, error)
+	SetClassAnnotation(ctx context.Context, in *SetClassAnnotationRequest, opts ...grpc.CallOption) (*SetClassAnnotationResponse, error)
+	SetModelicaPath(ctx context.Context, in *SetModelicaPathRequest, opts ...grpc.CallOption) (*SetModelicaPathResponse, error)
+	GetModelicaPath(ctx context.Context, in *GetModelicaPathRequest, opts ...grpc.CallOption) (*GetModelicaPathResponse, error)
+	GetErrors(ctx context.Context, in *GetErrorsRequest, opts ...grpc.CallOption) (*GetErrorsResponse, error)
 }
 
 type sMCClient struct {
@@ -41,16 +73,6 @@ type sMCClient struct {
 
 func NewSMCClient(cc grpc.ClientConnInterface) SMCClient {
 	return &sMCClient{cc}
-}
-
-func (c *sMCClient) GetModelInstance(ctx context.Context, in *ModelNameRequest, opts ...grpc.CallOption) (*ModelInstanceResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ModelInstanceResponse)
-	err := c.cc.Invoke(ctx, SMC_GetModelInstance_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *sMCClient) LoadFile(ctx context.Context, in *LoadFileRequest, opts ...grpc.CallOption) (*LoadFileResponse, error) {
@@ -63,7 +85,57 @@ func (c *sMCClient) LoadFile(ctx context.Context, in *LoadFileRequest, opts ...g
 	return out, nil
 }
 
-func (c *sMCClient) GetModelAST(ctx context.Context, in *ModelNameRequest, opts ...grpc.CallOption) (*ModelASTResponse, error) {
+func (c *sMCClient) LoadLibrary(ctx context.Context, in *LoadLibraryRequest, opts ...grpc.CallOption) (*LoadLibraryResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(LoadLibraryResponse)
+	err := c.cc.Invoke(ctx, SMC_LoadLibrary_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sMCClient) ParserCode(ctx context.Context, in *ParserCodeRequest, opts ...grpc.CallOption) (*ParserCodeResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ParserCodeResponse)
+	err := c.cc.Invoke(ctx, SMC_ParserCode_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sMCClient) ParserModelCode(ctx context.Context, in *ParserModelCodeRequest, opts ...grpc.CallOption) (*ParserModelCodeResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ParserModelCodeResponse)
+	err := c.cc.Invoke(ctx, SMC_ParserModelCode_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sMCClient) GetModelCode(ctx context.Context, in *ClassNameRequest, opts ...grpc.CallOption) (*ModelCodeResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ModelCodeResponse)
+	err := c.cc.Invoke(ctx, SMC_GetModelCode_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sMCClient) GetModelInstance(ctx context.Context, in *ClassNameRequest, opts ...grpc.CallOption) (*ModelInstanceResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ModelInstanceResponse)
+	err := c.cc.Invoke(ctx, SMC_GetModelInstance_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sMCClient) GetModelAST(ctx context.Context, in *ClassNameRequest, opts ...grpc.CallOption) (*ModelASTResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ModelASTResponse)
 	err := c.cc.Invoke(ctx, SMC_GetModelAST_FullMethodName, in, out, cOpts...)
@@ -73,10 +145,130 @@ func (c *sMCClient) GetModelAST(ctx context.Context, in *ModelNameRequest, opts 
 	return out, nil
 }
 
-func (c *sMCClient) GetModelCode(ctx context.Context, in *ModelNameRequest, opts ...grpc.CallOption) (*ModelCodeResponse, error) {
+func (c *sMCClient) GetClassNames(ctx context.Context, in *ClassNamesRequest, opts ...grpc.CallOption) (*ClassNamesResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ModelCodeResponse)
-	err := c.cc.Invoke(ctx, SMC_GetModelCode_FullMethodName, in, out, cOpts...)
+	out := new(ClassNamesResponse)
+	err := c.cc.Invoke(ctx, SMC_GetClassNames_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sMCClient) Save(ctx context.Context, in *ClassNameRequest, opts ...grpc.CallOption) (*SaveModelResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SaveModelResponse)
+	err := c.cc.Invoke(ctx, SMC_Save_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sMCClient) GetSubTypeOf(ctx context.Context, in *GetSubTypeOfRequest, opts ...grpc.CallOption) (*GetSubTypeOfResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetSubTypeOfResponse)
+	err := c.cc.Invoke(ctx, SMC_GetSubTypeOf_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sMCClient) AddElement(ctx context.Context, in *AddElementRequest, opts ...grpc.CallOption) (*AddElementResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AddElementResponse)
+	err := c.cc.Invoke(ctx, SMC_AddElement_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sMCClient) SetElementAnnotation(ctx context.Context, in *SetElementAnnotationRequest, opts ...grpc.CallOption) (*SetElementAnnotationResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetElementAnnotationResponse)
+	err := c.cc.Invoke(ctx, SMC_SetElementAnnotation_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sMCClient) DeleteElement(ctx context.Context, in *DeleteElementRequest, opts ...grpc.CallOption) (*DeleteElementResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteElementResponse)
+	err := c.cc.Invoke(ctx, SMC_DeleteElement_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sMCClient) AddConnection(ctx context.Context, in *AddConnectionRequest, opts ...grpc.CallOption) (*AddConnectionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AddConnectionResponse)
+	err := c.cc.Invoke(ctx, SMC_AddConnection_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sMCClient) SetConnectionAnnotation(ctx context.Context, in *SetConnectionAnnotationRequest, opts ...grpc.CallOption) (*SetConnectionAnnotationResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetConnectionAnnotationResponse)
+	err := c.cc.Invoke(ctx, SMC_SetConnectionAnnotation_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sMCClient) DeleteConnection(ctx context.Context, in *DeleteConnectionRequest, opts ...grpc.CallOption) (*DeleteConnectionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteConnectionResponse)
+	err := c.cc.Invoke(ctx, SMC_DeleteConnection_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sMCClient) SetClassAnnotation(ctx context.Context, in *SetClassAnnotationRequest, opts ...grpc.CallOption) (*SetClassAnnotationResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetClassAnnotationResponse)
+	err := c.cc.Invoke(ctx, SMC_SetClassAnnotation_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sMCClient) SetModelicaPath(ctx context.Context, in *SetModelicaPathRequest, opts ...grpc.CallOption) (*SetModelicaPathResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetModelicaPathResponse)
+	err := c.cc.Invoke(ctx, SMC_SetModelicaPath_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sMCClient) GetModelicaPath(ctx context.Context, in *GetModelicaPathRequest, opts ...grpc.CallOption) (*GetModelicaPathResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetModelicaPathResponse)
+	err := c.cc.Invoke(ctx, SMC_GetModelicaPath_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sMCClient) GetErrors(ctx context.Context, in *GetErrorsRequest, opts ...grpc.CallOption) (*GetErrorsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetErrorsResponse)
+	err := c.cc.Invoke(ctx, SMC_GetErrors_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -87,10 +279,26 @@ func (c *sMCClient) GetModelCode(ctx context.Context, in *ModelNameRequest, opts
 // All implementations must embed UnimplementedSMCServer
 // for forward compatibility.
 type SMCServer interface {
-	GetModelInstance(context.Context, *ModelNameRequest) (*ModelInstanceResponse, error)
 	LoadFile(context.Context, *LoadFileRequest) (*LoadFileResponse, error)
-	GetModelAST(context.Context, *ModelNameRequest) (*ModelASTResponse, error)
-	GetModelCode(context.Context, *ModelNameRequest) (*ModelCodeResponse, error)
+	LoadLibrary(context.Context, *LoadLibraryRequest) (*LoadLibraryResponse, error)
+	ParserCode(context.Context, *ParserCodeRequest) (*ParserCodeResponse, error)
+	ParserModelCode(context.Context, *ParserModelCodeRequest) (*ParserModelCodeResponse, error)
+	GetModelCode(context.Context, *ClassNameRequest) (*ModelCodeResponse, error)
+	GetModelInstance(context.Context, *ClassNameRequest) (*ModelInstanceResponse, error)
+	GetModelAST(context.Context, *ClassNameRequest) (*ModelASTResponse, error)
+	GetClassNames(context.Context, *ClassNamesRequest) (*ClassNamesResponse, error)
+	Save(context.Context, *ClassNameRequest) (*SaveModelResponse, error)
+	GetSubTypeOf(context.Context, *GetSubTypeOfRequest) (*GetSubTypeOfResponse, error)
+	AddElement(context.Context, *AddElementRequest) (*AddElementResponse, error)
+	SetElementAnnotation(context.Context, *SetElementAnnotationRequest) (*SetElementAnnotationResponse, error)
+	DeleteElement(context.Context, *DeleteElementRequest) (*DeleteElementResponse, error)
+	AddConnection(context.Context, *AddConnectionRequest) (*AddConnectionResponse, error)
+	SetConnectionAnnotation(context.Context, *SetConnectionAnnotationRequest) (*SetConnectionAnnotationResponse, error)
+	DeleteConnection(context.Context, *DeleteConnectionRequest) (*DeleteConnectionResponse, error)
+	SetClassAnnotation(context.Context, *SetClassAnnotationRequest) (*SetClassAnnotationResponse, error)
+	SetModelicaPath(context.Context, *SetModelicaPathRequest) (*SetModelicaPathResponse, error)
+	GetModelicaPath(context.Context, *GetModelicaPathRequest) (*GetModelicaPathResponse, error)
+	GetErrors(context.Context, *GetErrorsRequest) (*GetErrorsResponse, error)
 	mustEmbedUnimplementedSMCServer()
 }
 
@@ -101,17 +309,65 @@ type SMCServer interface {
 // pointer dereference when methods are called.
 type UnimplementedSMCServer struct{}
 
-func (UnimplementedSMCServer) GetModelInstance(context.Context, *ModelNameRequest) (*ModelInstanceResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetModelInstance not implemented")
-}
 func (UnimplementedSMCServer) LoadFile(context.Context, *LoadFileRequest) (*LoadFileResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LoadFile not implemented")
 }
-func (UnimplementedSMCServer) GetModelAST(context.Context, *ModelNameRequest) (*ModelASTResponse, error) {
+func (UnimplementedSMCServer) LoadLibrary(context.Context, *LoadLibraryRequest) (*LoadLibraryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LoadLibrary not implemented")
+}
+func (UnimplementedSMCServer) ParserCode(context.Context, *ParserCodeRequest) (*ParserCodeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ParserCode not implemented")
+}
+func (UnimplementedSMCServer) ParserModelCode(context.Context, *ParserModelCodeRequest) (*ParserModelCodeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ParserModelCode not implemented")
+}
+func (UnimplementedSMCServer) GetModelCode(context.Context, *ClassNameRequest) (*ModelCodeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetModelCode not implemented")
+}
+func (UnimplementedSMCServer) GetModelInstance(context.Context, *ClassNameRequest) (*ModelInstanceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetModelInstance not implemented")
+}
+func (UnimplementedSMCServer) GetModelAST(context.Context, *ClassNameRequest) (*ModelASTResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetModelAST not implemented")
 }
-func (UnimplementedSMCServer) GetModelCode(context.Context, *ModelNameRequest) (*ModelCodeResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetModelCode not implemented")
+func (UnimplementedSMCServer) GetClassNames(context.Context, *ClassNamesRequest) (*ClassNamesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetClassNames not implemented")
+}
+func (UnimplementedSMCServer) Save(context.Context, *ClassNameRequest) (*SaveModelResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Save not implemented")
+}
+func (UnimplementedSMCServer) GetSubTypeOf(context.Context, *GetSubTypeOfRequest) (*GetSubTypeOfResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSubTypeOf not implemented")
+}
+func (UnimplementedSMCServer) AddElement(context.Context, *AddElementRequest) (*AddElementResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddElement not implemented")
+}
+func (UnimplementedSMCServer) SetElementAnnotation(context.Context, *SetElementAnnotationRequest) (*SetElementAnnotationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetElementAnnotation not implemented")
+}
+func (UnimplementedSMCServer) DeleteElement(context.Context, *DeleteElementRequest) (*DeleteElementResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteElement not implemented")
+}
+func (UnimplementedSMCServer) AddConnection(context.Context, *AddConnectionRequest) (*AddConnectionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddConnection not implemented")
+}
+func (UnimplementedSMCServer) SetConnectionAnnotation(context.Context, *SetConnectionAnnotationRequest) (*SetConnectionAnnotationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetConnectionAnnotation not implemented")
+}
+func (UnimplementedSMCServer) DeleteConnection(context.Context, *DeleteConnectionRequest) (*DeleteConnectionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteConnection not implemented")
+}
+func (UnimplementedSMCServer) SetClassAnnotation(context.Context, *SetClassAnnotationRequest) (*SetClassAnnotationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetClassAnnotation not implemented")
+}
+func (UnimplementedSMCServer) SetModelicaPath(context.Context, *SetModelicaPathRequest) (*SetModelicaPathResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetModelicaPath not implemented")
+}
+func (UnimplementedSMCServer) GetModelicaPath(context.Context, *GetModelicaPathRequest) (*GetModelicaPathResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetModelicaPath not implemented")
+}
+func (UnimplementedSMCServer) GetErrors(context.Context, *GetErrorsRequest) (*GetErrorsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetErrors not implemented")
 }
 func (UnimplementedSMCServer) mustEmbedUnimplementedSMCServer() {}
 func (UnimplementedSMCServer) testEmbeddedByValue()             {}
@@ -134,24 +390,6 @@ func RegisterSMCServer(s grpc.ServiceRegistrar, srv SMCServer) {
 	s.RegisterService(&SMC_ServiceDesc, srv)
 }
 
-func _SMC_GetModelInstance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ModelNameRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SMCServer).GetModelInstance(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: SMC_GetModelInstance_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SMCServer).GetModelInstance(ctx, req.(*ModelNameRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _SMC_LoadFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(LoadFileRequest)
 	if err := dec(in); err != nil {
@@ -170,26 +408,62 @@ func _SMC_LoadFile_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
-func _SMC_GetModelAST_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ModelNameRequest)
+func _SMC_LoadLibrary_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LoadLibraryRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(SMCServer).GetModelAST(ctx, in)
+		return srv.(SMCServer).LoadLibrary(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: SMC_GetModelAST_FullMethodName,
+		FullMethod: SMC_LoadLibrary_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SMCServer).GetModelAST(ctx, req.(*ModelNameRequest))
+		return srv.(SMCServer).LoadLibrary(ctx, req.(*LoadLibraryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SMC_ParserCode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ParserCodeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).ParserCode(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_ParserCode_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).ParserCode(ctx, req.(*ParserCodeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SMC_ParserModelCode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ParserModelCodeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).ParserModelCode(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_ParserModelCode_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).ParserModelCode(ctx, req.(*ParserModelCodeRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _SMC_GetModelCode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ModelNameRequest)
+	in := new(ClassNameRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -201,7 +475,277 @@ func _SMC_GetModelCode_Handler(srv interface{}, ctx context.Context, dec func(in
 		FullMethod: SMC_GetModelCode_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SMCServer).GetModelCode(ctx, req.(*ModelNameRequest))
+		return srv.(SMCServer).GetModelCode(ctx, req.(*ClassNameRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SMC_GetModelInstance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ClassNameRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).GetModelInstance(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_GetModelInstance_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).GetModelInstance(ctx, req.(*ClassNameRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SMC_GetModelAST_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ClassNameRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).GetModelAST(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_GetModelAST_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).GetModelAST(ctx, req.(*ClassNameRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SMC_GetClassNames_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ClassNamesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).GetClassNames(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_GetClassNames_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).GetClassNames(ctx, req.(*ClassNamesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SMC_Save_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ClassNameRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).Save(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_Save_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).Save(ctx, req.(*ClassNameRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SMC_GetSubTypeOf_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetSubTypeOfRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).GetSubTypeOf(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_GetSubTypeOf_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).GetSubTypeOf(ctx, req.(*GetSubTypeOfRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SMC_AddElement_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddElementRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).AddElement(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_AddElement_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).AddElement(ctx, req.(*AddElementRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SMC_SetElementAnnotation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetElementAnnotationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).SetElementAnnotation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_SetElementAnnotation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).SetElementAnnotation(ctx, req.(*SetElementAnnotationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SMC_DeleteElement_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteElementRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).DeleteElement(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_DeleteElement_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).DeleteElement(ctx, req.(*DeleteElementRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SMC_AddConnection_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddConnectionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).AddConnection(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_AddConnection_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).AddConnection(ctx, req.(*AddConnectionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SMC_SetConnectionAnnotation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetConnectionAnnotationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).SetConnectionAnnotation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_SetConnectionAnnotation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).SetConnectionAnnotation(ctx, req.(*SetConnectionAnnotationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SMC_DeleteConnection_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteConnectionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).DeleteConnection(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_DeleteConnection_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).DeleteConnection(ctx, req.(*DeleteConnectionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SMC_SetClassAnnotation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetClassAnnotationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).SetClassAnnotation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_SetClassAnnotation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).SetClassAnnotation(ctx, req.(*SetClassAnnotationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SMC_SetModelicaPath_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetModelicaPathRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).SetModelicaPath(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_SetModelicaPath_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).SetModelicaPath(ctx, req.(*SetModelicaPathRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SMC_GetModelicaPath_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetModelicaPathRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).GetModelicaPath(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_GetModelicaPath_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).GetModelicaPath(ctx, req.(*GetModelicaPathRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SMC_GetErrors_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetErrorsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).GetErrors(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_GetErrors_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).GetErrors(ctx, req.(*GetErrorsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -214,20 +758,84 @@ var SMC_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*SMCServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "GetModelInstance",
-			Handler:    _SMC_GetModelInstance_Handler,
-		},
-		{
 			MethodName: "LoadFile",
 			Handler:    _SMC_LoadFile_Handler,
+		},
+		{
+			MethodName: "LoadLibrary",
+			Handler:    _SMC_LoadLibrary_Handler,
+		},
+		{
+			MethodName: "ParserCode",
+			Handler:    _SMC_ParserCode_Handler,
+		},
+		{
+			MethodName: "ParserModelCode",
+			Handler:    _SMC_ParserModelCode_Handler,
+		},
+		{
+			MethodName: "GetModelCode",
+			Handler:    _SMC_GetModelCode_Handler,
+		},
+		{
+			MethodName: "GetModelInstance",
+			Handler:    _SMC_GetModelInstance_Handler,
 		},
 		{
 			MethodName: "GetModelAST",
 			Handler:    _SMC_GetModelAST_Handler,
 		},
 		{
-			MethodName: "GetModelCode",
-			Handler:    _SMC_GetModelCode_Handler,
+			MethodName: "GetClassNames",
+			Handler:    _SMC_GetClassNames_Handler,
+		},
+		{
+			MethodName: "Save",
+			Handler:    _SMC_Save_Handler,
+		},
+		{
+			MethodName: "GetSubTypeOf",
+			Handler:    _SMC_GetSubTypeOf_Handler,
+		},
+		{
+			MethodName: "AddElement",
+			Handler:    _SMC_AddElement_Handler,
+		},
+		{
+			MethodName: "SetElementAnnotation",
+			Handler:    _SMC_SetElementAnnotation_Handler,
+		},
+		{
+			MethodName: "DeleteElement",
+			Handler:    _SMC_DeleteElement_Handler,
+		},
+		{
+			MethodName: "AddConnection",
+			Handler:    _SMC_AddConnection_Handler,
+		},
+		{
+			MethodName: "SetConnectionAnnotation",
+			Handler:    _SMC_SetConnectionAnnotation_Handler,
+		},
+		{
+			MethodName: "DeleteConnection",
+			Handler:    _SMC_DeleteConnection_Handler,
+		},
+		{
+			MethodName: "SetClassAnnotation",
+			Handler:    _SMC_SetClassAnnotation_Handler,
+		},
+		{
+			MethodName: "SetModelicaPath",
+			Handler:    _SMC_SetModelicaPath_Handler,
+		},
+		{
+			MethodName: "GetModelicaPath",
+			Handler:    _SMC_GetModelicaPath_Handler,
+		},
+		{
+			MethodName: "GetErrors",
+			Handler:    _SMC_GetErrors_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
