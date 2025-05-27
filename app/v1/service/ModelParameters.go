@@ -460,7 +460,7 @@ func (m *modelParameters) getParameter(className string, varName string, p []any
 	choices := func() map[string]any {
 		for index, d := range dList {
 			if d == "choices" && index+1 <= len(dList)-1 { // 如果有choices关键字, 并包含true和false两个值,则表示该值以checkBox的形式出现, omc的固定返回格式
-				if dList[index+1].([]any)[0] == "true" && dList[index+1].([]any)[1] == "false" {
+				if (dList[index+1].([]any)[0] == "true" && dList[index+1].([]any)[1] == "false") || (dList[index+1].([]any)[0] == "false" && dList[index+1].([]any)[1] == "true") {
 					return map[string]any{"checkBox": true} // 这里用checkBox标记,下
 				}
 				return map[string]any{"value": dList[index+1], "checkBox": false}

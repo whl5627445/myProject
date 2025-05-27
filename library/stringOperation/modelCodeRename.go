@@ -3,6 +3,7 @@ package stringOperation
 import (
 	"regexp"
 	"strings"
+	"unicode"
 )
 
 func ModelRenam(modelCode, oldName, NewName string) string {
@@ -63,4 +64,25 @@ func ModelRenam(modelCode, oldName, NewName string) string {
 		}
 	}
 	return modelCode
+}
+
+func SanitizeName(input string) string {
+	// 将字符串中的中文字符和特殊符号转换为下划线
+	// 定义正则表达式，匹配非英文、数字、下划线的字符
+	re := regexp.MustCompile(`[^\w]`)
+
+	// 遍历字符串，将中文字符替换为下划线
+	result := []rune{}
+	for _, r := range input {
+		if unicode.Is(unicode.Han, r) { // 检查是否为中文字符
+			result = append(result, '_')
+		} else {
+			result = append(result, r)
+		}
+	}
+
+	// 将其他非英文、数字、下划线的字符替换为下划线
+	sanitizedString := re.ReplaceAllString(string(result), "_")
+
+	return sanitizedString
 }

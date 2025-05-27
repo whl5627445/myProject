@@ -14,7 +14,7 @@ import (
 	"yssim-go/library/stringOperation"
 )
 
-func GetIcon(modelName, componentName string, icon bool) map[string]any {
+func GetIcon(modelName, componentName string, icon bool, displayAllConnector bool) map[string]any {
 	data := make(map[string]any)
 	iconData := omc.OMC.GetIconAnnotation(modelName)
 	modelType := omc.OMC.GetClassRestriction(modelName)
@@ -29,11 +29,30 @@ func GetIcon(modelName, componentName string, icon bool) map[string]any {
 			return data
 		}
 	}
+
 	graphics := map[string]any{}
-	if (modelType != "connector" && modelType != "expandable connector") || (icon && (modelType == "connector" || modelType == "expandable connector")) {
+	if icon {
 		graphics = getIconAnnotationGraphics(modelName, modelType, componentName)
 	} else {
-		graphics = getDiagramAnnotationGraphics(modelName, modelType)
+		if modelType == "connector" || modelType == "expandable connector" {
+			graphics = getDiagramAnnotationGraphics(modelName, modelType)
+			if graphics != nil {
+				iconInstance := getModelInstance(modelName)
+				iconInstance.DataPreprocessing()
+				graphics["direction"] = iconInstance.Prefixes.Direction
+				graphics["restriction"] = iconInstance.Restriction
+				graphics["type"] = getConnectorType(componentName, iconInstance)
+				graphics["visibleList"] = GetConnectionOption(componentName, iconInstance, nil)
+				graphics["connectors"] = getElementsConnectorList(iconInstance, componentName, displayAllConnector)
+			}
+		} else {
+			graphics = getIconAnnotationGraphics(modelName, modelType, componentName)
+			if modelType != "model" && graphics != nil {
+				iconInstance := getModelInstance(modelName)
+				iconInstance.DataPreprocessing()
+				graphics["connectors"] = getElementsConnectorList(iconInstance, componentName, displayAllConnector)
+			}
+		}
 	}
 
 	data = map[string]any{
@@ -154,16 +173,6 @@ func getDiagramAnnotationGraphics(modelName, modelType string) map[string]any {
 	data["parentName"] = ""
 	data["visible"] = true
 	data["rotation"] = 0
-	iconInstance := getModelInstance(modelName)
-	iconInstance.DataPreprocessing()
-	data["direction"] = iconInstance.Prefixes.Direction
-	data["restriction"] = iconInstance.Restriction
-	data["type"] = ""
-	if iconInstance.Elements[0].BaseClass != nil && iconInstance.Elements[0].BaseClass.BasicType {
-		data["type"] = iconInstance.Elements[0].BaseClass.Name
-	}
-	data["visibleList"] = serviceV1.GetConnectionOption(modelName, modelType)
-	data["connectors"] = make([]any, 0)
 	data["subShapes"] = subShapes
 	data["extents"] = [][]float64{
 		{coordinateSystem.Extent[0][0] * coordinateSystem.InitialScale, coordinateSystem.Extent[0][1] * coordinateSystem.InitialScale},
@@ -262,11 +271,13 @@ func iconSubShapes(cData []any, modelName string) []map[string]any {
 			data["thickness"] = thickness
 			data["fillPattern"] = map[string]any{"name": drawingDataList[6]}
 			data["extentsPoints"] = twoDimensionalProcessing(drawingDataList[8].([]any))
+			data["varName"] = ""
 			typeOriginalTextString, ok := drawingDataList[9].([]any)
 			if ok {
 				data["textString"] = typeOriginalTextString[0]
 			} else {
 				originalTextString := drawingDataList[9].(string)
+				varName := ""
 				data["textType"] = "var"
 				if strings.Contains(originalTextString, "%") {
 					data["textType"] = "text"
@@ -275,7 +286,7 @@ func iconSubShapes(cData []any, modelName string) []map[string]any {
 				for _, t := range textList {
 					pSignIndex := strings.Index(t, "%")
 					if pSignIndex != -1 {
-						varName := t[pSignIndex+1:]
+						varName = t[pSignIndex+1:]
 						varValue := ""
 						Unit := ""
 						if varName != "name" {
@@ -298,6 +309,7 @@ func iconSubShapes(cData []any, modelName string) []map[string]any {
 						}
 					}
 				}
+				data["varName"] = varName
 				data["textString"] = originalTextString
 			}
 			fontSize, _ := strconv.ParseFloat(drawingDataList[10].(string), 64)
@@ -311,10 +323,9 @@ func iconSubShapes(cData []any, modelName string) []map[string]any {
 			data["thickness"] = thickness
 			data["fillPattern"] = map[string]any{"name": drawingDataList[6]}
 			data["borderPattern"] = map[string]any{"name": drawingDataList[8]}
-			data["borderPattern"] = drawingDataList[8]
 			data["extentsPoints"] = twoDimensionalProcessing(drawingDataList[9].([]any))
 			radius, _ := strconv.ParseFloat(drawingDataList[10].(string), 64)
-			data["radius"] = radius
+			data["borderRadius"] = radius
 		case "Ellipse":
 			thickness, _ := strconv.ParseFloat(drawingDataList[7].(string), 64)
 			data["thickness"] = thickness
@@ -406,11 +417,18 @@ func iconInputOutputs(cData [][]any, caData [][]any, modelName, parentName strin
 				data["extents"] = [][]float64{{extentX1, extentY1}, {extentX2, extentY2}}
 			}
 			data["rotation"] = rotateAngle
-			if cDataFilter[i][14].(string) != "[]" {
-				data["outputType"] = map[string]any{"name": cDataFilter[i][14].(string)}
+
+			connectorSizingName := cDataFilter[i][14].(string)
+			if connectorSizingName != "[]" {
+				if strings.Contains(connectorSizingName, "[") && strings.Contains(connectorSizingName, "]") {
+					connectorSizingName = connectorSizingName[1 : len(connectorSizingName)-1]
+					data["outputType"] = map[string]any{"name": connectorSizingName, "connectorSizing": true, "num": "0"}
+				} else {
+					data["outputType"] = map[string]any{"name": connectorSizingName, "connectorSizing": true, "num": "0"}
+				}
 			}
 			if cDataFilter[i][16] != "" {
-				data["outputType"] = map[string]any{"name": cDataFilter[i][16], "connectorSizing": true}
+				data["outputType"] = map[string]any{"name": cDataFilter[i][16], "connectorSizing": true, "num": "0"}
 			}
 			data["connectors"] = make([]map[string]any, 0)
 			iconInstance := getModelInstance(classname)
@@ -419,9 +437,11 @@ func iconInputOutputs(cData [][]any, caData [][]any, modelName, parentName strin
 			data["restriction"] = iconInstance.Restriction
 
 			data["type"] = ""
-			if iconInstance.Elements[0].BaseClass != nil && iconInstance.Elements[0].BaseClass.BasicType {
+			if len(iconInstance.Elements) > 0 && iconInstance.Elements[0].BaseClass != nil && iconInstance.Elements[0].BaseClass.BasicType {
 				data["type"] = iconInstance.Elements[0].BaseClass.Name
 			}
+			data["type"] = getConnectorType(data["name"].(string), iconInstance)
+
 			nameList := modelComponent.GetICList(classname)
 			IconAnnotationData := getIconAnnotation(nameList)
 			data["subShapes"] = iconSubShapes(IconAnnotationData, modelName)

@@ -29,9 +29,11 @@ type YssimSimulateRecord struct {
 	Tolerance               string         `gorm:"column:tolerance;default:\"\";type:varchar(32);comment:仿真时的容差"`
 	SimulateStart           bool           `gorm:"column:simulate_start;type:int;comment:仿真任务是否开始"`
 	AnotherName             string         `gorm:"column:another_name;type:varchar(32);comment:仿真记录别名"`
+	TaskId                  string         `gorm:"column:task_id;type:varchar(128);comment:仿真任务唯一标识"`
 	EnvModelData            datatypes.JSON `gorm:"column:env_model_data;TYPE:json;type:json;comment:仿真模型的依赖"`
 	CreatedAt               *time.Time     `gorm:"column:create_time;autoCreateTime;comment:创建时间"`
 	Deleted                 gorm.DeletedAt `gorm:"column:deleted_at;comment:删除时间"`
+	PipeNet                 bool           `gorm:"column:pipe_net;default:0;type:bool;comment:是否是管网模型"`
 	//StepSize          string `gorm:"column:step_size;default:\"\";type:varchar(32)"`
 	//Solver            string `gorm:"column:solver;default:\"\";type:varchar(32)"`
 	//OutputFormat      string `gorm:"column:output_format;default:\"\";type:varchar(32)"`
@@ -48,6 +50,7 @@ type YssimExperimentRecord struct {
 	ExperimentName    string         `gorm:"column:experiment_name;type:varchar(32);comment:仿真实验名称"`
 	ModelName         string         `gorm:"column:model_name;type:varchar(256);comment:模型名称"`
 	ModelVarData      datatypes.JSON `gorm:"column:model_var_data;type:json;comment:模型参数数据"`
+	IsFullModelVar    bool           `gorm:"column:is_full_model_var;type:bool;comment:是否是全量组件参数"`
 	StartTime         string         `gorm:"column:start_time;type:varchar(32);comment:仿真配置当中的开始时间"`
 	StopTime          string         `gorm:"column:stop_time;type:varchar(32);comment:仿真配置当中的结束时间"`
 	Method            string         `gorm:"column:method;default:\"\";type:varchar(32);comment:仿真方法"`

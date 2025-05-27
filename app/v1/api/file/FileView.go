@@ -178,9 +178,20 @@ func UpdateModelPackageView(c *gin.Context) {
 		loadResult := service.LoadCodeString(modelStr, modelPath)
 		if loadResult {
 			if parseResult != item.ModelName {
+				//如果是管网模型，则更新管网数据表
+				DB.Model(DataBaseModel.YssimPipeNetCadDownload{}).Where("package_id = ? AND model_name = ?", item.PackageId, item.ModelName).Update("model_name", parseResult)
+				//更改实验记录的模型名
+				DB.Model(DataBaseModel.YssimExperimentRecord{}).Where("package_id = ? AND userspace_id = ? AND username = ? AND model_name = ?", item.PackageId, userSpaceId, username, item.ModelName).Update("model_name", parseResult)
+				//更改仿真历史记录的模型名
+				DB.Model(DataBaseModel.YssimSimulateRecord{}).Where("username = ? AND simulate_model_name = ? AND userspace_id = ?  AND package_id = ?", username, item.ModelName, userSpaceId, item.PackageId).Update("simulate_model_name", parseResult)
+
 				// 判断是否是子模型
 				if !strings.Contains(item.ModelName, ".") {
 					DB.Model(DataBaseModel.YssimModels{}).Where("id = ? AND sys_or_user = ? AND userspace_id = ?", item.PackageId, username, userSpaceId).Update("package_name", parseResult)
+
+					packageInformation := service.GetPackageInformation()
+					packageInformationJson, _ := sonic.Marshal(packageInformation)
+					DB.Model(DataBaseModel.YssimUserSpace{}).Where("id = ? AND username = ?", userSpaceId, username).Update("package_information", packageInformationJson)
 				}
 				service.DeleteLibrary(item.ModelName)
 			}
@@ -277,7 +288,12 @@ func CreateModelPackageView(c *gin.Context) {
 		}
 		newPackage = insertPackageRecord
 	} else {
-		DB.Create(&newPackage)
+		if err = DB.Create(&newPackage).Error; err != nil {
+			res.Err = "创建失败，请稍后再试"
+			res.Status = 2
+			c.JSON(http.StatusOK, res)
+			return
+		}
 	}
 	result := service.CreateModelAndPackage(createPackageName, item.Vars.InsertTo, item.Vars.Expand, item.StrType, createPackageNameALL, item.Comment, item.Vars.Partial, item.Vars.Encapsulated, item.Vars.State)
 	if result {
@@ -550,18 +566,16 @@ func FmuExportModelView(c *gin.Context) {
 	}
 	userSpaceId := c.GetHeader("space_id")
 	username := c.GetHeader("username")
-	token := c.GetHeader("Authorization")
-	fileName := ""
+
 	filePath := ""
 
 	var packageModel DataBaseModel.YssimModels
 	DB.Where("id = ? AND sys_or_user = ? AND userspace_id = ?", item.PackageId, username, userSpaceId).First(&packageModel)
 	if packageModel.FilePath != "" {
 		filePath = packageModel.FilePath
-		fileName = packageModel.PackageName
 	}
 	// 获取依赖
-	envLibrary := service.GetEnvLibrary(packageModel.PackageName, username, userSpaceId)
+	envLibrary := service.GetEnvLibraryAll(username, userSpaceId)
 	newFileName := ""
 	ok := false
 	errTips := ""
@@ -569,8 +583,7 @@ func FmuExportModelView(c *gin.Context) {
 		newFileName, ok, errTips = service.OmcFmuExportWithLibrary(item.FmuPar, envLibrary, username, item.FmuName, item.PackageName, item.ModelName, filePath)
 
 	} else {
-		newFileName, ok, errTips = service.DymolaFmuExportWithLibrary(item.FmuPar, envLibrary, token, username, item.FmuName, item.PackageName, item.ModelName, fileName, filePath)
-
+		newFileName, ok, errTips = service.DymolaFmuExportWithLibrary(item.FmuPar, envLibrary, username, item.FmuName, item.ModelName)
 	}
 	if ok {
 

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -28,40 +29,40 @@ type OutputData struct {
 var DB = config.DB
 
 // GetEnvLibraryAll 获取当前环境下的所有已经加载的包和系统库
-// func GetEnvLibraryAll(userName, spaceId string) map[string]string {
-//
-//	// 获取系统模型
-//	environmentModelData := make(map[string]string)
-//	var envPackageModel []DataBaseModel.YssimModels
-//	DB.Where("sys_or_user =  ? AND userspace_id = ?", "sys", "0").Find(&envPackageModel)
-//	libraryAndVersions := GetLibraryAndVersions()
-//	for i := 0; i < len(envPackageModel); i++ {
-//		p, ok := libraryAndVersions[envPackageModel[i].PackageName]
-//		if ok && p == envPackageModel[i].Version {
-//			environmentModelData[envPackageModel[i].PackageName] = envPackageModel[i].Version
-//		}
-//	}
-//	// 获取用户模型
-//	DB.Where("sys_or_user = ? AND userspace_id = ?", userName, spaceId).Find(&envPackageModel)
-//	for i := 0; i < len(envPackageModel); i++ {
-//		loadVersions, ok := libraryAndVersions[envPackageModel[i].PackageName]
-//		if ok && loadVersions == envPackageModel[i].Version {
-//			environmentModelData[envPackageModel[i].PackageName] = envPackageModel[i].FilePath
-//		}
-//	}
-//
-//	// 获取加密模型
-//	var encryptionPackageModel []DataBaseModel.YssimModels
-//	DB.Where("sys_or_user =  ? AND userspace_id = ? AND encryption = ?", userName, spaceId, 1).Find(&encryptionPackageModel)
-//	for i := 0; i < len(encryptionPackageModel); i++ {
-//		packageVersion, ok := libraryAndVersions[encryptionPackageModel[i].PackageName]
-//		if ok && packageVersion == encryptionPackageModel[i].Version {
-//			environmentModelData[encryptionPackageModel[i].PackageName] = encryptionPackageModel[i].FilePath
-//		}
-//	}
-//	return environmentModelData
-//
-// }
+func GetEnvLibraryAll(userName, spaceId string) map[string]string {
+
+	// 获取系统模型
+	environmentModelData := make(map[string]string)
+	var envPackageModel []DataBaseModel.YssimModels
+	DB.Where("sys_or_user =  ? AND userspace_id = ?", "sys", "0").Find(&envPackageModel)
+	libraryAndVersions := GetLibraryAndVersions()
+	for i := 0; i < len(envPackageModel); i++ {
+		p, ok := libraryAndVersions[envPackageModel[i].PackageName]
+		if ok && p == envPackageModel[i].Version {
+			environmentModelData[envPackageModel[i].PackageName] = envPackageModel[i].Version
+		}
+	}
+	// 获取用户模型
+	DB.Where("sys_or_user = ? AND userspace_id = ?", userName, spaceId).Find(&envPackageModel)
+	for i := 0; i < len(envPackageModel); i++ {
+		loadVersions, ok := libraryAndVersions[envPackageModel[i].PackageName]
+		if ok && loadVersions == envPackageModel[i].Version {
+			environmentModelData[envPackageModel[i].PackageName] = envPackageModel[i].FilePath
+		}
+	}
+
+	// 获取加密模型
+	var encryptionPackageModel []DataBaseModel.YssimModels
+	DB.Where("sys_or_user =  ? AND userspace_id = ? AND encryption = ?", userName, spaceId, 1).Find(&encryptionPackageModel)
+	for i := 0; i < len(encryptionPackageModel); i++ {
+		packageVersion, ok := libraryAndVersions[encryptionPackageModel[i].PackageName]
+		if ok && packageVersion == encryptionPackageModel[i].Version {
+			environmentModelData[encryptionPackageModel[i].PackageName] = encryptionPackageModel[i].FilePath
+		}
+	}
+	return environmentModelData
+
+}
 
 // GetEnvLibrary 获取已经加载的依赖包和系统库
 func GetEnvLibrary(packageName, userName, spaceId string) map[string]string {
@@ -260,25 +261,20 @@ func GrpcSimulation(itemMap map[string]string) (string, error) {
 
 	// 将实验参数写入模型
 	if packageModel.SysUser != "sys" {
-		// YssimExperimentRecord表的json数据绑定到结构体
-		var componentValue modelVarData
-		if experimentRecord.ModelVarData.String() != "" {
-			err := sonic.Unmarshal(experimentRecord.ModelVarData, &componentValue)
-			if err == nil {
-				mapAttributesStr := mapProcessing.MapDataConversion(componentValue.FinalAttributesStr)
-				// 设置组件参数
-				result := SetComponentModifierValue(experimentRecord.ModelName, mapAttributesStr)
-				if result {
-					log.Println("重新设置参数-完成。")
-				} else {
-					log.Println("重新设置参数-失败: ", mapAttributesStr)
-				}
-			} else {
-				log.Println("modelVarData: ", experimentRecord.ModelVarData)
-				log.Println("err: ", err)
-				log.Println("json2map filed!")
-			}
+		var componentParams []map[string]any
+		if err = json.Unmarshal([]byte(experimentRecord.ModelVarData), &componentParams); err != nil {
+			log.Println("json to list filed!")
 		}
+		mapAttributesStr := mapProcessing.ComponentParamsToMap(componentParams)
+
+		result := SetComponentModifierValue(experimentRecord.ModelName, mapAttributesStr)
+		if result {
+			log.Println("重新设置参数-完成。")
+			ModelSave(experimentRecord.ModelName)
+		} else {
+			log.Println("重新设置参数-失败: ", mapAttributesStr)
+		}
+
 	}
 	// 构建仿真参数
 	SimulationPraData := map[string]string{

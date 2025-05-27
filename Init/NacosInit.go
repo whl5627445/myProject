@@ -5,39 +5,15 @@ import (
 	"strconv"
 	"time"
 
-	"google.golang.org/grpc/grpclog"
+	"github.com/nacos-group/nacos-sdk-go/model"
+	"github.com/nacos-group/nacos-sdk-go/util"
+	"yssim-go/grpc/taskManagement"
+
 	"yssim-go/config"
 
 	"github.com/nacos-group/nacos-sdk-go/clients"
-	"github.com/nacos-group/nacos-sdk-go/common/constant"
 	"github.com/nacos-group/nacos-sdk-go/vo"
 )
-
-var clientConfig = constant.ClientConfig{
-	BeatInterval:        1000,
-	NamespaceId:         "public", // 如果需要支持多namespace，我们可以场景多个client,它们有不同的NamespaceId。当namespace是public时，此处填空字符串。
-	TimeoutMs:           5000,
-	NotLoadCacheAtStart: true,
-}
-var serverConfigs = getServerConfigs()
-
-func getServerConfigs() []constant.ServerConfig {
-	if config.NacosIp != "" && config.NacosPort != "" {
-		Port, err := strconv.ParseUint(config.NacosPort, 10, 64)
-		if err != nil {
-			grpclog.Error("nacos port 解析失败： ", err.Error())
-		}
-		return []constant.ServerConfig{{
-			IpAddr: config.NacosIp,
-			Port:   Port,
-		}}
-	}
-
-	return []constant.ServerConfig{{
-		IpAddr: "nacos",
-		Port:   8848,
-	}}
-}
 
 func Register() {
 	// if config.DEBUG != "" {
@@ -46,8 +22,8 @@ func Register() {
 	for {
 		Client, err := clients.NewNamingClient(
 			vo.NacosClientParam{
-				ClientConfig:  &clientConfig,
-				ServerConfigs: serverConfigs,
+				ClientConfig:  &config.ClientConfig,
+				ServerConfigs: config.ServerConfigs,
 			},
 		)
 		if err != nil {
@@ -74,5 +50,26 @@ func Register() {
 			log.Println("服务注册失败正在准备重新尝试: ", err)
 			time.Sleep(time.Second * 10)
 		}
+	}
+}
+
+// ListenTaskDispatcher 监听调度中心的实例变化，如果实例列表发生变化，则运行对应的函数逻辑
+func ListenTaskDispatcher() {
+	subscribeParam := &vo.SubscribeParam{
+		ServiceName: "TaskDispatcher",
+		GroupName:   "DEFAULT_GROUP",
+		SubscribeCallback: func(services []model.SubscribeService, err error) {
+			log.Println("监听到变化:%s \n", util.ToJsonString(services))
+			// TaskManagement.GetHealthInstance("TaskDispatcher")
+			// 如果变化，
+			TaskManagement.ConnectTaskDispatcherClientList(services)
+		},
+	}
+	err := config.NamingClient.Subscribe(subscribeParam)
+
+	if err != nil {
+		return
+	} else {
+		log.Println(err)
 	}
 }

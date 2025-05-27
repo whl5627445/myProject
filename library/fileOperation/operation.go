@@ -270,3 +270,52 @@ func FindFileBySuffixName(suffixName, rootPath string) []string {
 	}
 	return eligibleFiles
 }
+
+// 设置文件和文件夹权限为 777
+func SetPermissions(dir string) error {
+	return filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// 设置权限为 777
+		if err = os.Chmod(path, 0777); err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+// 清空文件夹
+func ClearDirectory(dir string) error {
+	// 读取目录内容
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return err
+	}
+	fmt.Println(entries)
+
+	// 遍历目录中的每个条目
+	for _, entry := range entries {
+		fullPath := filepath.Join(dir, entry.Name())
+
+		if entry.IsDir() {
+			// 如果是子目录，递归清空子目录
+			err := os.RemoveAll(fullPath)
+			fmt.Println(fullPath)
+			if err != nil {
+				return err
+			}
+		} else {
+			// 如果是文件，直接删除
+			err := os.Remove(fullPath)
+			fmt.Println(fullPath)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
