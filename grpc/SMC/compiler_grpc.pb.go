@@ -19,26 +19,31 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	SMC_LoadFile_FullMethodName                = "/SMC/LoadFile"
-	SMC_LoadLibrary_FullMethodName             = "/SMC/LoadLibrary"
-	SMC_ParserCode_FullMethodName              = "/SMC/ParserCode"
-	SMC_ParserModelCode_FullMethodName         = "/SMC/ParserModelCode"
-	SMC_GetModelCode_FullMethodName            = "/SMC/GetModelCode"
-	SMC_GetModelInstance_FullMethodName        = "/SMC/GetModelInstance"
-	SMC_GetModelAST_FullMethodName             = "/SMC/GetModelAST"
-	SMC_GetClassNames_FullMethodName           = "/SMC/GetClassNames"
-	SMC_Save_FullMethodName                    = "/SMC/Save"
-	SMC_GetSubTypeOf_FullMethodName            = "/SMC/GetSubTypeOf"
-	SMC_AddElement_FullMethodName              = "/SMC/AddElement"
-	SMC_SetElementAnnotation_FullMethodName    = "/SMC/SetElementAnnotation"
-	SMC_DeleteElement_FullMethodName           = "/SMC/DeleteElement"
-	SMC_AddConnection_FullMethodName           = "/SMC/AddConnection"
-	SMC_SetConnectionAnnotation_FullMethodName = "/SMC/SetConnectionAnnotation"
-	SMC_DeleteConnection_FullMethodName        = "/SMC/DeleteConnection"
-	SMC_SetClassAnnotation_FullMethodName      = "/SMC/SetClassAnnotation"
-	SMC_SetModelicaPath_FullMethodName         = "/SMC/SetModelicaPath"
-	SMC_GetModelicaPath_FullMethodName         = "/SMC/GetModelicaPath"
-	SMC_GetErrors_FullMethodName               = "/SMC/GetErrors"
+	SMC_LoadFile_FullMethodName                   = "/SMC/LoadFile"
+	SMC_LoadLibrary_FullMethodName                = "/SMC/LoadLibrary"
+	SMC_GetLoadLibrariesAndVersion_FullMethodName = "/SMC/GetLoadLibrariesAndVersion"
+	SMC_UnLoadLibrary_FullMethodName              = "/SMC/UnLoadLibrary"
+	SMC_ParserCode_FullMethodName                 = "/SMC/ParserCode"
+	SMC_ParserModelCode_FullMethodName            = "/SMC/ParserModelCode"
+	SMC_GetModelCode_FullMethodName               = "/SMC/GetModelCode"
+	SMC_GetModelInstance_FullMethodName           = "/SMC/GetModelInstance"
+	SMC_GetModelAST_FullMethodName                = "/SMC/GetModelAST"
+	SMC_GetClassNames_FullMethodName              = "/SMC/GetClassNames"
+	SMC_Save_FullMethodName                       = "/SMC/Save"
+	SMC_GetSubTypeOf_FullMethodName               = "/SMC/GetSubTypeOf"
+	SMC_CopyClass_FullMethodName                  = "/SMC/CopyClass"
+	SMC_AddElement_FullMethodName                 = "/SMC/AddElement"
+	SMC_SetElementAnnotation_FullMethodName       = "/SMC/SetElementAnnotation"
+	SMC_DeleteElement_FullMethodName              = "/SMC/DeleteElement"
+	SMC_AddConnection_FullMethodName              = "/SMC/AddConnection"
+	SMC_SetConnectionAnnotation_FullMethodName    = "/SMC/SetConnectionAnnotation"
+	SMC_DeleteConnection_FullMethodName           = "/SMC/DeleteConnection"
+	SMC_SetClassAnnotation_FullMethodName         = "/SMC/SetClassAnnotation"
+	SMC_GetUses_FullMethodName                    = "/SMC/GetUses"
+	SMC_SetUses_FullMethodName                    = "/SMC/SetUses"
+	SMC_SetModelicaPath_FullMethodName            = "/SMC/SetModelicaPath"
+	SMC_GetModelicaPath_FullMethodName            = "/SMC/GetModelicaPath"
+	SMC_GetErrors_FullMethodName                  = "/SMC/GetErrors"
 )
 
 // SMCClient is the client API for SMC service.
@@ -47,6 +52,8 @@ const (
 type SMCClient interface {
 	LoadFile(ctx context.Context, in *LoadFileRequest, opts ...grpc.CallOption) (*LoadFileResponse, error)
 	LoadLibrary(ctx context.Context, in *LoadLibraryRequest, opts ...grpc.CallOption) (*LoadLibraryResponse, error)
+	GetLoadLibrariesAndVersion(ctx context.Context, in *LoadLibrariesAndVersionRequest, opts ...grpc.CallOption) (*LoadLibrariesAndVersionResponse, error)
+	UnLoadLibrary(ctx context.Context, in *UnLoadLibraryRequest, opts ...grpc.CallOption) (*UnLoadLibraryResponse, error)
 	ParserCode(ctx context.Context, in *ParserCodeRequest, opts ...grpc.CallOption) (*ParserCodeResponse, error)
 	ParserModelCode(ctx context.Context, in *ParserModelCodeRequest, opts ...grpc.CallOption) (*ParserModelCodeResponse, error)
 	GetModelCode(ctx context.Context, in *ClassNameRequest, opts ...grpc.CallOption) (*ModelCodeResponse, error)
@@ -55,6 +62,7 @@ type SMCClient interface {
 	GetClassNames(ctx context.Context, in *ClassNamesRequest, opts ...grpc.CallOption) (*ClassNamesResponse, error)
 	Save(ctx context.Context, in *ClassNameRequest, opts ...grpc.CallOption) (*SaveModelResponse, error)
 	GetSubTypeOf(ctx context.Context, in *GetSubTypeOfRequest, opts ...grpc.CallOption) (*GetSubTypeOfResponse, error)
+	CopyClass(ctx context.Context, in *CopyClassRequest, opts ...grpc.CallOption) (*CopyClassResponse, error)
 	AddElement(ctx context.Context, in *AddElementRequest, opts ...grpc.CallOption) (*AddElementResponse, error)
 	SetElementAnnotation(ctx context.Context, in *SetElementAnnotationRequest, opts ...grpc.CallOption) (*SetElementAnnotationResponse, error)
 	DeleteElement(ctx context.Context, in *DeleteElementRequest, opts ...grpc.CallOption) (*DeleteElementResponse, error)
@@ -62,6 +70,8 @@ type SMCClient interface {
 	SetConnectionAnnotation(ctx context.Context, in *SetConnectionAnnotationRequest, opts ...grpc.CallOption) (*SetConnectionAnnotationResponse, error)
 	DeleteConnection(ctx context.Context, in *DeleteConnectionRequest, opts ...grpc.CallOption) (*DeleteConnectionResponse, error)
 	SetClassAnnotation(ctx context.Context, in *SetClassAnnotationRequest, opts ...grpc.CallOption) (*SetClassAnnotationResponse, error)
+	GetUses(ctx context.Context, in *GetUsesRequest, opts ...grpc.CallOption) (*GetUsesResponse, error)
+	SetUses(ctx context.Context, in *SetUsesRequest, opts ...grpc.CallOption) (*SetUsesResponse, error)
 	SetModelicaPath(ctx context.Context, in *SetModelicaPathRequest, opts ...grpc.CallOption) (*SetModelicaPathResponse, error)
 	GetModelicaPath(ctx context.Context, in *GetModelicaPathRequest, opts ...grpc.CallOption) (*GetModelicaPathResponse, error)
 	GetErrors(ctx context.Context, in *GetErrorsRequest, opts ...grpc.CallOption) (*GetErrorsResponse, error)
@@ -89,6 +99,26 @@ func (c *sMCClient) LoadLibrary(ctx context.Context, in *LoadLibraryRequest, opt
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(LoadLibraryResponse)
 	err := c.cc.Invoke(ctx, SMC_LoadLibrary_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sMCClient) GetLoadLibrariesAndVersion(ctx context.Context, in *LoadLibrariesAndVersionRequest, opts ...grpc.CallOption) (*LoadLibrariesAndVersionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(LoadLibrariesAndVersionResponse)
+	err := c.cc.Invoke(ctx, SMC_GetLoadLibrariesAndVersion_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sMCClient) UnLoadLibrary(ctx context.Context, in *UnLoadLibraryRequest, opts ...grpc.CallOption) (*UnLoadLibraryResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UnLoadLibraryResponse)
+	err := c.cc.Invoke(ctx, SMC_UnLoadLibrary_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -175,6 +205,16 @@ func (c *sMCClient) GetSubTypeOf(ctx context.Context, in *GetSubTypeOfRequest, o
 	return out, nil
 }
 
+func (c *sMCClient) CopyClass(ctx context.Context, in *CopyClassRequest, opts ...grpc.CallOption) (*CopyClassResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CopyClassResponse)
+	err := c.cc.Invoke(ctx, SMC_CopyClass_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *sMCClient) AddElement(ctx context.Context, in *AddElementRequest, opts ...grpc.CallOption) (*AddElementResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(AddElementResponse)
@@ -245,6 +285,26 @@ func (c *sMCClient) SetClassAnnotation(ctx context.Context, in *SetClassAnnotati
 	return out, nil
 }
 
+func (c *sMCClient) GetUses(ctx context.Context, in *GetUsesRequest, opts ...grpc.CallOption) (*GetUsesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetUsesResponse)
+	err := c.cc.Invoke(ctx, SMC_GetUses_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sMCClient) SetUses(ctx context.Context, in *SetUsesRequest, opts ...grpc.CallOption) (*SetUsesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetUsesResponse)
+	err := c.cc.Invoke(ctx, SMC_SetUses_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *sMCClient) SetModelicaPath(ctx context.Context, in *SetModelicaPathRequest, opts ...grpc.CallOption) (*SetModelicaPathResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(SetModelicaPathResponse)
@@ -281,6 +341,8 @@ func (c *sMCClient) GetErrors(ctx context.Context, in *GetErrorsRequest, opts ..
 type SMCServer interface {
 	LoadFile(context.Context, *LoadFileRequest) (*LoadFileResponse, error)
 	LoadLibrary(context.Context, *LoadLibraryRequest) (*LoadLibraryResponse, error)
+	GetLoadLibrariesAndVersion(context.Context, *LoadLibrariesAndVersionRequest) (*LoadLibrariesAndVersionResponse, error)
+	UnLoadLibrary(context.Context, *UnLoadLibraryRequest) (*UnLoadLibraryResponse, error)
 	ParserCode(context.Context, *ParserCodeRequest) (*ParserCodeResponse, error)
 	ParserModelCode(context.Context, *ParserModelCodeRequest) (*ParserModelCodeResponse, error)
 	GetModelCode(context.Context, *ClassNameRequest) (*ModelCodeResponse, error)
@@ -289,6 +351,7 @@ type SMCServer interface {
 	GetClassNames(context.Context, *ClassNamesRequest) (*ClassNamesResponse, error)
 	Save(context.Context, *ClassNameRequest) (*SaveModelResponse, error)
 	GetSubTypeOf(context.Context, *GetSubTypeOfRequest) (*GetSubTypeOfResponse, error)
+	CopyClass(context.Context, *CopyClassRequest) (*CopyClassResponse, error)
 	AddElement(context.Context, *AddElementRequest) (*AddElementResponse, error)
 	SetElementAnnotation(context.Context, *SetElementAnnotationRequest) (*SetElementAnnotationResponse, error)
 	DeleteElement(context.Context, *DeleteElementRequest) (*DeleteElementResponse, error)
@@ -296,6 +359,8 @@ type SMCServer interface {
 	SetConnectionAnnotation(context.Context, *SetConnectionAnnotationRequest) (*SetConnectionAnnotationResponse, error)
 	DeleteConnection(context.Context, *DeleteConnectionRequest) (*DeleteConnectionResponse, error)
 	SetClassAnnotation(context.Context, *SetClassAnnotationRequest) (*SetClassAnnotationResponse, error)
+	GetUses(context.Context, *GetUsesRequest) (*GetUsesResponse, error)
+	SetUses(context.Context, *SetUsesRequest) (*SetUsesResponse, error)
 	SetModelicaPath(context.Context, *SetModelicaPathRequest) (*SetModelicaPathResponse, error)
 	GetModelicaPath(context.Context, *GetModelicaPathRequest) (*GetModelicaPathResponse, error)
 	GetErrors(context.Context, *GetErrorsRequest) (*GetErrorsResponse, error)
@@ -314,6 +379,12 @@ func (UnimplementedSMCServer) LoadFile(context.Context, *LoadFileRequest) (*Load
 }
 func (UnimplementedSMCServer) LoadLibrary(context.Context, *LoadLibraryRequest) (*LoadLibraryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LoadLibrary not implemented")
+}
+func (UnimplementedSMCServer) GetLoadLibrariesAndVersion(context.Context, *LoadLibrariesAndVersionRequest) (*LoadLibrariesAndVersionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLoadLibrariesAndVersion not implemented")
+}
+func (UnimplementedSMCServer) UnLoadLibrary(context.Context, *UnLoadLibraryRequest) (*UnLoadLibraryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UnLoadLibrary not implemented")
 }
 func (UnimplementedSMCServer) ParserCode(context.Context, *ParserCodeRequest) (*ParserCodeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ParserCode not implemented")
@@ -339,6 +410,9 @@ func (UnimplementedSMCServer) Save(context.Context, *ClassNameRequest) (*SaveMod
 func (UnimplementedSMCServer) GetSubTypeOf(context.Context, *GetSubTypeOfRequest) (*GetSubTypeOfResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetSubTypeOf not implemented")
 }
+func (UnimplementedSMCServer) CopyClass(context.Context, *CopyClassRequest) (*CopyClassResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CopyClass not implemented")
+}
 func (UnimplementedSMCServer) AddElement(context.Context, *AddElementRequest) (*AddElementResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddElement not implemented")
 }
@@ -359,6 +433,12 @@ func (UnimplementedSMCServer) DeleteConnection(context.Context, *DeleteConnectio
 }
 func (UnimplementedSMCServer) SetClassAnnotation(context.Context, *SetClassAnnotationRequest) (*SetClassAnnotationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetClassAnnotation not implemented")
+}
+func (UnimplementedSMCServer) GetUses(context.Context, *GetUsesRequest) (*GetUsesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUses not implemented")
+}
+func (UnimplementedSMCServer) SetUses(context.Context, *SetUsesRequest) (*SetUsesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetUses not implemented")
 }
 func (UnimplementedSMCServer) SetModelicaPath(context.Context, *SetModelicaPathRequest) (*SetModelicaPathResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetModelicaPath not implemented")
@@ -422,6 +502,42 @@ func _SMC_LoadLibrary_Handler(srv interface{}, ctx context.Context, dec func(int
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SMCServer).LoadLibrary(ctx, req.(*LoadLibraryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SMC_GetLoadLibrariesAndVersion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LoadLibrariesAndVersionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).GetLoadLibrariesAndVersion(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_GetLoadLibrariesAndVersion_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).GetLoadLibrariesAndVersion(ctx, req.(*LoadLibrariesAndVersionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SMC_UnLoadLibrary_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UnLoadLibraryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).UnLoadLibrary(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_UnLoadLibrary_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).UnLoadLibrary(ctx, req.(*UnLoadLibraryRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -570,6 +686,24 @@ func _SMC_GetSubTypeOf_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SMC_CopyClass_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CopyClassRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).CopyClass(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_CopyClass_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).CopyClass(ctx, req.(*CopyClassRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _SMC_AddElement_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AddElementRequest)
 	if err := dec(in); err != nil {
@@ -696,6 +830,42 @@ func _SMC_SetClassAnnotation_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SMC_GetUses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUsesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).GetUses(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_GetUses_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).GetUses(ctx, req.(*GetUsesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SMC_SetUses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetUsesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).SetUses(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_SetUses_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).SetUses(ctx, req.(*SetUsesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _SMC_SetModelicaPath_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SetModelicaPathRequest)
 	if err := dec(in); err != nil {
@@ -766,6 +936,14 @@ var SMC_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _SMC_LoadLibrary_Handler,
 		},
 		{
+			MethodName: "GetLoadLibrariesAndVersion",
+			Handler:    _SMC_GetLoadLibrariesAndVersion_Handler,
+		},
+		{
+			MethodName: "UnLoadLibrary",
+			Handler:    _SMC_UnLoadLibrary_Handler,
+		},
+		{
 			MethodName: "ParserCode",
 			Handler:    _SMC_ParserCode_Handler,
 		},
@@ -798,6 +976,10 @@ var SMC_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _SMC_GetSubTypeOf_Handler,
 		},
 		{
+			MethodName: "CopyClass",
+			Handler:    _SMC_CopyClass_Handler,
+		},
+		{
 			MethodName: "AddElement",
 			Handler:    _SMC_AddElement_Handler,
 		},
@@ -824,6 +1006,14 @@ var SMC_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetClassAnnotation",
 			Handler:    _SMC_SetClassAnnotation_Handler,
+		},
+		{
+			MethodName: "GetUses",
+			Handler:    _SMC_GetUses_Handler,
+		},
+		{
+			MethodName: "SetUses",
+			Handler:    _SMC_SetUses_Handler,
 		},
 		{
 			MethodName: "SetModelicaPath",
