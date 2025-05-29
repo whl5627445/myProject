@@ -27,22 +27,42 @@ const (
 	SMC_ParserModelCode_FullMethodName            = "/SMC/ParserModelCode"
 	SMC_GetModelCode_FullMethodName               = "/SMC/GetModelCode"
 	SMC_GetModelInstance_FullMethodName           = "/SMC/GetModelInstance"
-	SMC_GetModelAST_FullMethodName                = "/SMC/GetModelAST"
 	SMC_GetClassNames_FullMethodName              = "/SMC/GetClassNames"
+	SMC_RenameComponentInClass_FullMethodName     = "/SMC/RenameComponentInClass"
 	SMC_Save_FullMethodName                       = "/SMC/Save"
 	SMC_GetSubTypeOf_FullMethodName               = "/SMC/GetSubTypeOf"
+	SMC_GetInheritedClasses_FullMethodName        = "/SMC/GetInheritedClasses"
+	SMC_IsPackage_FullMethodName                  = "/SMC/IsPackage"
+	SMC_GetClassRestriction_FullMethodName        = "/SMC/GetClassRestriction"
+	SMC_ExistClass_FullMethodName                 = "/SMC/ExistClass"
 	SMC_CopyClass_FullMethodName                  = "/SMC/CopyClass"
+	SMC_DeleteClass_FullMethodName                = "/SMC/DeleteClass"
 	SMC_AddElement_FullMethodName                 = "/SMC/AddElement"
 	SMC_SetElementAnnotation_FullMethodName       = "/SMC/SetElementAnnotation"
 	SMC_DeleteElement_FullMethodName              = "/SMC/DeleteElement"
 	SMC_AddConnection_FullMethodName              = "/SMC/AddConnection"
 	SMC_SetConnectionAnnotation_FullMethodName    = "/SMC/SetConnectionAnnotation"
 	SMC_DeleteConnection_FullMethodName           = "/SMC/DeleteConnection"
+	SMC_GetModelAST_FullMethodName                = "/SMC/GetModelAST"
+	SMC_SetElementComment_FullMethodName          = "/SMC/SetElementComment"
+	SMC_SetElementVariability_FullMethodName      = "/SMC/SetElementVariability"
+	SMC_SetElementCausality_FullMethodName        = "/SMC/SetElementCausality"
+	SMC_SetElementProperties_FullMethodName       = "/SMC/SetElementProperties"
+	SMC_SetElementInnerAndOuter_FullMethodName    = "/SMC/SetElementInnerAndOuter"
+	SMC_SetElementDimensions_FullMethodName       = "/SMC/SetElementDimensions"
+	SMC_SetElementModifier_FullMethodName         = "/SMC/SetElementModifier"
+	SMC_SetExtendsModifier_FullMethodName         = "/SMC/SetExtendsModifier"
 	SMC_SetClassAnnotation_FullMethodName         = "/SMC/SetClassAnnotation"
 	SMC_GetUses_FullMethodName                    = "/SMC/GetUses"
 	SMC_SetUses_FullMethodName                    = "/SMC/SetUses"
+	SMC_GetDiagramAnnotation_FullMethodName       = "/SMC/GetDiagramAnnotation"
+	SMC_GetIconAnnotation_FullMethodName          = "/SMC/GetIconAnnotation"
+	SMC_GetDefaultComponentName_FullMethodName    = "/SMC/GetDefaultComponentName"
+	SMC_GetClassDocumentation_FullMethodName      = "/SMC/GetClassDocumentation"
 	SMC_SetModelicaPath_FullMethodName            = "/SMC/SetModelicaPath"
 	SMC_GetModelicaPath_FullMethodName            = "/SMC/GetModelicaPath"
+	SMC_GetSourceFile_FullMethodName              = "/SMC/GetSourceFile"
+	SMC_SetSourceFile_FullMethodName              = "/SMC/SetSourceFile"
 	SMC_GetErrors_FullMethodName                  = "/SMC/GetErrors"
 )
 
@@ -58,22 +78,42 @@ type SMCClient interface {
 	ParserModelCode(ctx context.Context, in *ParserModelCodeRequest, opts ...grpc.CallOption) (*ParserModelCodeResponse, error)
 	GetModelCode(ctx context.Context, in *ClassNameRequest, opts ...grpc.CallOption) (*ModelCodeResponse, error)
 	GetModelInstance(ctx context.Context, in *ClassNameRequest, opts ...grpc.CallOption) (*ModelInstanceResponse, error)
-	GetModelAST(ctx context.Context, in *ClassNameRequest, opts ...grpc.CallOption) (*ModelASTResponse, error)
 	GetClassNames(ctx context.Context, in *ClassNamesRequest, opts ...grpc.CallOption) (*ClassNamesResponse, error)
+	RenameComponentInClass(ctx context.Context, in *RenameComponentInClassRequest, opts ...grpc.CallOption) (*RenameComponentInClassResponse, error)
 	Save(ctx context.Context, in *ClassNameRequest, opts ...grpc.CallOption) (*SaveModelResponse, error)
 	GetSubTypeOf(ctx context.Context, in *GetSubTypeOfRequest, opts ...grpc.CallOption) (*GetSubTypeOfResponse, error)
+	GetInheritedClasses(ctx context.Context, in *GetInheritedClassesRequest, opts ...grpc.CallOption) (*GetInheritedClassesResponse, error)
+	IsPackage(ctx context.Context, in *IsPackageRequest, opts ...grpc.CallOption) (*IsPackageResponse, error)
+	GetClassRestriction(ctx context.Context, in *GetClassRestrictionRequest, opts ...grpc.CallOption) (*GetClassRestrictionResponse, error)
+	ExistClass(ctx context.Context, in *ExistClassRequest, opts ...grpc.CallOption) (*ExistClassResponse, error)
 	CopyClass(ctx context.Context, in *CopyClassRequest, opts ...grpc.CallOption) (*CopyClassResponse, error)
+	DeleteClass(ctx context.Context, in *DeleteClassRequest, opts ...grpc.CallOption) (*DeleteClassResponse, error)
 	AddElement(ctx context.Context, in *AddElementRequest, opts ...grpc.CallOption) (*AddElementResponse, error)
 	SetElementAnnotation(ctx context.Context, in *SetElementAnnotationRequest, opts ...grpc.CallOption) (*SetElementAnnotationResponse, error)
 	DeleteElement(ctx context.Context, in *DeleteElementRequest, opts ...grpc.CallOption) (*DeleteElementResponse, error)
 	AddConnection(ctx context.Context, in *AddConnectionRequest, opts ...grpc.CallOption) (*AddConnectionResponse, error)
 	SetConnectionAnnotation(ctx context.Context, in *SetConnectionAnnotationRequest, opts ...grpc.CallOption) (*SetConnectionAnnotationResponse, error)
 	DeleteConnection(ctx context.Context, in *DeleteConnectionRequest, opts ...grpc.CallOption) (*DeleteConnectionResponse, error)
+	GetModelAST(ctx context.Context, in *ClassNameRequest, opts ...grpc.CallOption) (*ModelASTResponse, error)
+	SetElementComment(ctx context.Context, in *SetElementCommentRequest, opts ...grpc.CallOption) (*SetElementCommentResponse, error)
+	SetElementVariability(ctx context.Context, in *SetElementVariabilityRequest, opts ...grpc.CallOption) (*SetElementVariabilityResponse, error)
+	SetElementCausality(ctx context.Context, in *SetElementCausalityRequest, opts ...grpc.CallOption) (*SetElementCausalityResponse, error)
+	SetElementProperties(ctx context.Context, in *SetElementPropertiesRequest, opts ...grpc.CallOption) (*SetElementPropertiesResponse, error)
+	SetElementInnerAndOuter(ctx context.Context, in *SetElementInnerAndOuterRequest, opts ...grpc.CallOption) (*SetElementInnerAndOuterResponse, error)
+	SetElementDimensions(ctx context.Context, in *SetElementDimensionsRequest, opts ...grpc.CallOption) (*SetElementDimensionsResponse, error)
+	SetElementModifier(ctx context.Context, in *SetElementModifierRequest, opts ...grpc.CallOption) (*SetElementModifierResponse, error)
+	SetExtendsModifier(ctx context.Context, in *SetExtendsModifierRequest, opts ...grpc.CallOption) (*SetExtendsModifierResponse, error)
 	SetClassAnnotation(ctx context.Context, in *SetClassAnnotationRequest, opts ...grpc.CallOption) (*SetClassAnnotationResponse, error)
 	GetUses(ctx context.Context, in *GetUsesRequest, opts ...grpc.CallOption) (*GetUsesResponse, error)
 	SetUses(ctx context.Context, in *SetUsesRequest, opts ...grpc.CallOption) (*SetUsesResponse, error)
+	GetDiagramAnnotation(ctx context.Context, in *GetDiagramAnnotationRequest, opts ...grpc.CallOption) (*GetDiagramAnnotationResponse, error)
+	GetIconAnnotation(ctx context.Context, in *GetIconAnnotationRequest, opts ...grpc.CallOption) (*GetIconAnnotationResponse, error)
+	GetDefaultComponentName(ctx context.Context, in *GetDefaultComponentNameRequest, opts ...grpc.CallOption) (*GetDefaultComponentNameResponse, error)
+	GetClassDocumentation(ctx context.Context, in *GetClassDocumentationRequest, opts ...grpc.CallOption) (*GetClassDocumentationResponse, error)
 	SetModelicaPath(ctx context.Context, in *SetModelicaPathRequest, opts ...grpc.CallOption) (*SetModelicaPathResponse, error)
 	GetModelicaPath(ctx context.Context, in *GetModelicaPathRequest, opts ...grpc.CallOption) (*GetModelicaPathResponse, error)
+	GetSourceFile(ctx context.Context, in *GetSourceFileRequest, opts ...grpc.CallOption) (*GetSourceFileResponse, error)
+	SetSourceFile(ctx context.Context, in *SetSourceFileRequest, opts ...grpc.CallOption) (*SetSourceFileResponse, error)
 	GetErrors(ctx context.Context, in *GetErrorsRequest, opts ...grpc.CallOption) (*GetErrorsResponse, error)
 }
 
@@ -165,20 +205,20 @@ func (c *sMCClient) GetModelInstance(ctx context.Context, in *ClassNameRequest, 
 	return out, nil
 }
 
-func (c *sMCClient) GetModelAST(ctx context.Context, in *ClassNameRequest, opts ...grpc.CallOption) (*ModelASTResponse, error) {
+func (c *sMCClient) GetClassNames(ctx context.Context, in *ClassNamesRequest, opts ...grpc.CallOption) (*ClassNamesResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ModelASTResponse)
-	err := c.cc.Invoke(ctx, SMC_GetModelAST_FullMethodName, in, out, cOpts...)
+	out := new(ClassNamesResponse)
+	err := c.cc.Invoke(ctx, SMC_GetClassNames_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *sMCClient) GetClassNames(ctx context.Context, in *ClassNamesRequest, opts ...grpc.CallOption) (*ClassNamesResponse, error) {
+func (c *sMCClient) RenameComponentInClass(ctx context.Context, in *RenameComponentInClassRequest, opts ...grpc.CallOption) (*RenameComponentInClassResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ClassNamesResponse)
-	err := c.cc.Invoke(ctx, SMC_GetClassNames_FullMethodName, in, out, cOpts...)
+	out := new(RenameComponentInClassResponse)
+	err := c.cc.Invoke(ctx, SMC_RenameComponentInClass_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -205,10 +245,60 @@ func (c *sMCClient) GetSubTypeOf(ctx context.Context, in *GetSubTypeOfRequest, o
 	return out, nil
 }
 
+func (c *sMCClient) GetInheritedClasses(ctx context.Context, in *GetInheritedClassesRequest, opts ...grpc.CallOption) (*GetInheritedClassesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetInheritedClassesResponse)
+	err := c.cc.Invoke(ctx, SMC_GetInheritedClasses_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sMCClient) IsPackage(ctx context.Context, in *IsPackageRequest, opts ...grpc.CallOption) (*IsPackageResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(IsPackageResponse)
+	err := c.cc.Invoke(ctx, SMC_IsPackage_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sMCClient) GetClassRestriction(ctx context.Context, in *GetClassRestrictionRequest, opts ...grpc.CallOption) (*GetClassRestrictionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetClassRestrictionResponse)
+	err := c.cc.Invoke(ctx, SMC_GetClassRestriction_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sMCClient) ExistClass(ctx context.Context, in *ExistClassRequest, opts ...grpc.CallOption) (*ExistClassResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ExistClassResponse)
+	err := c.cc.Invoke(ctx, SMC_ExistClass_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *sMCClient) CopyClass(ctx context.Context, in *CopyClassRequest, opts ...grpc.CallOption) (*CopyClassResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CopyClassResponse)
 	err := c.cc.Invoke(ctx, SMC_CopyClass_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sMCClient) DeleteClass(ctx context.Context, in *DeleteClassRequest, opts ...grpc.CallOption) (*DeleteClassResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteClassResponse)
+	err := c.cc.Invoke(ctx, SMC_DeleteClass_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -275,6 +365,96 @@ func (c *sMCClient) DeleteConnection(ctx context.Context, in *DeleteConnectionRe
 	return out, nil
 }
 
+func (c *sMCClient) GetModelAST(ctx context.Context, in *ClassNameRequest, opts ...grpc.CallOption) (*ModelASTResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ModelASTResponse)
+	err := c.cc.Invoke(ctx, SMC_GetModelAST_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sMCClient) SetElementComment(ctx context.Context, in *SetElementCommentRequest, opts ...grpc.CallOption) (*SetElementCommentResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetElementCommentResponse)
+	err := c.cc.Invoke(ctx, SMC_SetElementComment_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sMCClient) SetElementVariability(ctx context.Context, in *SetElementVariabilityRequest, opts ...grpc.CallOption) (*SetElementVariabilityResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetElementVariabilityResponse)
+	err := c.cc.Invoke(ctx, SMC_SetElementVariability_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sMCClient) SetElementCausality(ctx context.Context, in *SetElementCausalityRequest, opts ...grpc.CallOption) (*SetElementCausalityResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetElementCausalityResponse)
+	err := c.cc.Invoke(ctx, SMC_SetElementCausality_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sMCClient) SetElementProperties(ctx context.Context, in *SetElementPropertiesRequest, opts ...grpc.CallOption) (*SetElementPropertiesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetElementPropertiesResponse)
+	err := c.cc.Invoke(ctx, SMC_SetElementProperties_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sMCClient) SetElementInnerAndOuter(ctx context.Context, in *SetElementInnerAndOuterRequest, opts ...grpc.CallOption) (*SetElementInnerAndOuterResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetElementInnerAndOuterResponse)
+	err := c.cc.Invoke(ctx, SMC_SetElementInnerAndOuter_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sMCClient) SetElementDimensions(ctx context.Context, in *SetElementDimensionsRequest, opts ...grpc.CallOption) (*SetElementDimensionsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetElementDimensionsResponse)
+	err := c.cc.Invoke(ctx, SMC_SetElementDimensions_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sMCClient) SetElementModifier(ctx context.Context, in *SetElementModifierRequest, opts ...grpc.CallOption) (*SetElementModifierResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetElementModifierResponse)
+	err := c.cc.Invoke(ctx, SMC_SetElementModifier_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sMCClient) SetExtendsModifier(ctx context.Context, in *SetExtendsModifierRequest, opts ...grpc.CallOption) (*SetExtendsModifierResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetExtendsModifierResponse)
+	err := c.cc.Invoke(ctx, SMC_SetExtendsModifier_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *sMCClient) SetClassAnnotation(ctx context.Context, in *SetClassAnnotationRequest, opts ...grpc.CallOption) (*SetClassAnnotationResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(SetClassAnnotationResponse)
@@ -305,6 +485,46 @@ func (c *sMCClient) SetUses(ctx context.Context, in *SetUsesRequest, opts ...grp
 	return out, nil
 }
 
+func (c *sMCClient) GetDiagramAnnotation(ctx context.Context, in *GetDiagramAnnotationRequest, opts ...grpc.CallOption) (*GetDiagramAnnotationResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetDiagramAnnotationResponse)
+	err := c.cc.Invoke(ctx, SMC_GetDiagramAnnotation_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sMCClient) GetIconAnnotation(ctx context.Context, in *GetIconAnnotationRequest, opts ...grpc.CallOption) (*GetIconAnnotationResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetIconAnnotationResponse)
+	err := c.cc.Invoke(ctx, SMC_GetIconAnnotation_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sMCClient) GetDefaultComponentName(ctx context.Context, in *GetDefaultComponentNameRequest, opts ...grpc.CallOption) (*GetDefaultComponentNameResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetDefaultComponentNameResponse)
+	err := c.cc.Invoke(ctx, SMC_GetDefaultComponentName_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sMCClient) GetClassDocumentation(ctx context.Context, in *GetClassDocumentationRequest, opts ...grpc.CallOption) (*GetClassDocumentationResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetClassDocumentationResponse)
+	err := c.cc.Invoke(ctx, SMC_GetClassDocumentation_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *sMCClient) SetModelicaPath(ctx context.Context, in *SetModelicaPathRequest, opts ...grpc.CallOption) (*SetModelicaPathResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(SetModelicaPathResponse)
@@ -319,6 +539,26 @@ func (c *sMCClient) GetModelicaPath(ctx context.Context, in *GetModelicaPathRequ
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetModelicaPathResponse)
 	err := c.cc.Invoke(ctx, SMC_GetModelicaPath_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sMCClient) GetSourceFile(ctx context.Context, in *GetSourceFileRequest, opts ...grpc.CallOption) (*GetSourceFileResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetSourceFileResponse)
+	err := c.cc.Invoke(ctx, SMC_GetSourceFile_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sMCClient) SetSourceFile(ctx context.Context, in *SetSourceFileRequest, opts ...grpc.CallOption) (*SetSourceFileResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SetSourceFileResponse)
+	err := c.cc.Invoke(ctx, SMC_SetSourceFile_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -347,22 +587,42 @@ type SMCServer interface {
 	ParserModelCode(context.Context, *ParserModelCodeRequest) (*ParserModelCodeResponse, error)
 	GetModelCode(context.Context, *ClassNameRequest) (*ModelCodeResponse, error)
 	GetModelInstance(context.Context, *ClassNameRequest) (*ModelInstanceResponse, error)
-	GetModelAST(context.Context, *ClassNameRequest) (*ModelASTResponse, error)
 	GetClassNames(context.Context, *ClassNamesRequest) (*ClassNamesResponse, error)
+	RenameComponentInClass(context.Context, *RenameComponentInClassRequest) (*RenameComponentInClassResponse, error)
 	Save(context.Context, *ClassNameRequest) (*SaveModelResponse, error)
 	GetSubTypeOf(context.Context, *GetSubTypeOfRequest) (*GetSubTypeOfResponse, error)
+	GetInheritedClasses(context.Context, *GetInheritedClassesRequest) (*GetInheritedClassesResponse, error)
+	IsPackage(context.Context, *IsPackageRequest) (*IsPackageResponse, error)
+	GetClassRestriction(context.Context, *GetClassRestrictionRequest) (*GetClassRestrictionResponse, error)
+	ExistClass(context.Context, *ExistClassRequest) (*ExistClassResponse, error)
 	CopyClass(context.Context, *CopyClassRequest) (*CopyClassResponse, error)
+	DeleteClass(context.Context, *DeleteClassRequest) (*DeleteClassResponse, error)
 	AddElement(context.Context, *AddElementRequest) (*AddElementResponse, error)
 	SetElementAnnotation(context.Context, *SetElementAnnotationRequest) (*SetElementAnnotationResponse, error)
 	DeleteElement(context.Context, *DeleteElementRequest) (*DeleteElementResponse, error)
 	AddConnection(context.Context, *AddConnectionRequest) (*AddConnectionResponse, error)
 	SetConnectionAnnotation(context.Context, *SetConnectionAnnotationRequest) (*SetConnectionAnnotationResponse, error)
 	DeleteConnection(context.Context, *DeleteConnectionRequest) (*DeleteConnectionResponse, error)
+	GetModelAST(context.Context, *ClassNameRequest) (*ModelASTResponse, error)
+	SetElementComment(context.Context, *SetElementCommentRequest) (*SetElementCommentResponse, error)
+	SetElementVariability(context.Context, *SetElementVariabilityRequest) (*SetElementVariabilityResponse, error)
+	SetElementCausality(context.Context, *SetElementCausalityRequest) (*SetElementCausalityResponse, error)
+	SetElementProperties(context.Context, *SetElementPropertiesRequest) (*SetElementPropertiesResponse, error)
+	SetElementInnerAndOuter(context.Context, *SetElementInnerAndOuterRequest) (*SetElementInnerAndOuterResponse, error)
+	SetElementDimensions(context.Context, *SetElementDimensionsRequest) (*SetElementDimensionsResponse, error)
+	SetElementModifier(context.Context, *SetElementModifierRequest) (*SetElementModifierResponse, error)
+	SetExtendsModifier(context.Context, *SetExtendsModifierRequest) (*SetExtendsModifierResponse, error)
 	SetClassAnnotation(context.Context, *SetClassAnnotationRequest) (*SetClassAnnotationResponse, error)
 	GetUses(context.Context, *GetUsesRequest) (*GetUsesResponse, error)
 	SetUses(context.Context, *SetUsesRequest) (*SetUsesResponse, error)
+	GetDiagramAnnotation(context.Context, *GetDiagramAnnotationRequest) (*GetDiagramAnnotationResponse, error)
+	GetIconAnnotation(context.Context, *GetIconAnnotationRequest) (*GetIconAnnotationResponse, error)
+	GetDefaultComponentName(context.Context, *GetDefaultComponentNameRequest) (*GetDefaultComponentNameResponse, error)
+	GetClassDocumentation(context.Context, *GetClassDocumentationRequest) (*GetClassDocumentationResponse, error)
 	SetModelicaPath(context.Context, *SetModelicaPathRequest) (*SetModelicaPathResponse, error)
 	GetModelicaPath(context.Context, *GetModelicaPathRequest) (*GetModelicaPathResponse, error)
+	GetSourceFile(context.Context, *GetSourceFileRequest) (*GetSourceFileResponse, error)
+	SetSourceFile(context.Context, *SetSourceFileRequest) (*SetSourceFileResponse, error)
 	GetErrors(context.Context, *GetErrorsRequest) (*GetErrorsResponse, error)
 	mustEmbedUnimplementedSMCServer()
 }
@@ -398,11 +658,11 @@ func (UnimplementedSMCServer) GetModelCode(context.Context, *ClassNameRequest) (
 func (UnimplementedSMCServer) GetModelInstance(context.Context, *ClassNameRequest) (*ModelInstanceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetModelInstance not implemented")
 }
-func (UnimplementedSMCServer) GetModelAST(context.Context, *ClassNameRequest) (*ModelASTResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetModelAST not implemented")
-}
 func (UnimplementedSMCServer) GetClassNames(context.Context, *ClassNamesRequest) (*ClassNamesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetClassNames not implemented")
+}
+func (UnimplementedSMCServer) RenameComponentInClass(context.Context, *RenameComponentInClassRequest) (*RenameComponentInClassResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RenameComponentInClass not implemented")
 }
 func (UnimplementedSMCServer) Save(context.Context, *ClassNameRequest) (*SaveModelResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Save not implemented")
@@ -410,8 +670,23 @@ func (UnimplementedSMCServer) Save(context.Context, *ClassNameRequest) (*SaveMod
 func (UnimplementedSMCServer) GetSubTypeOf(context.Context, *GetSubTypeOfRequest) (*GetSubTypeOfResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetSubTypeOf not implemented")
 }
+func (UnimplementedSMCServer) GetInheritedClasses(context.Context, *GetInheritedClassesRequest) (*GetInheritedClassesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetInheritedClasses not implemented")
+}
+func (UnimplementedSMCServer) IsPackage(context.Context, *IsPackageRequest) (*IsPackageResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method IsPackage not implemented")
+}
+func (UnimplementedSMCServer) GetClassRestriction(context.Context, *GetClassRestrictionRequest) (*GetClassRestrictionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetClassRestriction not implemented")
+}
+func (UnimplementedSMCServer) ExistClass(context.Context, *ExistClassRequest) (*ExistClassResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExistClass not implemented")
+}
 func (UnimplementedSMCServer) CopyClass(context.Context, *CopyClassRequest) (*CopyClassResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CopyClass not implemented")
+}
+func (UnimplementedSMCServer) DeleteClass(context.Context, *DeleteClassRequest) (*DeleteClassResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteClass not implemented")
 }
 func (UnimplementedSMCServer) AddElement(context.Context, *AddElementRequest) (*AddElementResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddElement not implemented")
@@ -431,6 +706,33 @@ func (UnimplementedSMCServer) SetConnectionAnnotation(context.Context, *SetConne
 func (UnimplementedSMCServer) DeleteConnection(context.Context, *DeleteConnectionRequest) (*DeleteConnectionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteConnection not implemented")
 }
+func (UnimplementedSMCServer) GetModelAST(context.Context, *ClassNameRequest) (*ModelASTResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetModelAST not implemented")
+}
+func (UnimplementedSMCServer) SetElementComment(context.Context, *SetElementCommentRequest) (*SetElementCommentResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetElementComment not implemented")
+}
+func (UnimplementedSMCServer) SetElementVariability(context.Context, *SetElementVariabilityRequest) (*SetElementVariabilityResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetElementVariability not implemented")
+}
+func (UnimplementedSMCServer) SetElementCausality(context.Context, *SetElementCausalityRequest) (*SetElementCausalityResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetElementCausality not implemented")
+}
+func (UnimplementedSMCServer) SetElementProperties(context.Context, *SetElementPropertiesRequest) (*SetElementPropertiesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetElementProperties not implemented")
+}
+func (UnimplementedSMCServer) SetElementInnerAndOuter(context.Context, *SetElementInnerAndOuterRequest) (*SetElementInnerAndOuterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetElementInnerAndOuter not implemented")
+}
+func (UnimplementedSMCServer) SetElementDimensions(context.Context, *SetElementDimensionsRequest) (*SetElementDimensionsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetElementDimensions not implemented")
+}
+func (UnimplementedSMCServer) SetElementModifier(context.Context, *SetElementModifierRequest) (*SetElementModifierResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetElementModifier not implemented")
+}
+func (UnimplementedSMCServer) SetExtendsModifier(context.Context, *SetExtendsModifierRequest) (*SetExtendsModifierResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetExtendsModifier not implemented")
+}
 func (UnimplementedSMCServer) SetClassAnnotation(context.Context, *SetClassAnnotationRequest) (*SetClassAnnotationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetClassAnnotation not implemented")
 }
@@ -440,11 +742,29 @@ func (UnimplementedSMCServer) GetUses(context.Context, *GetUsesRequest) (*GetUse
 func (UnimplementedSMCServer) SetUses(context.Context, *SetUsesRequest) (*SetUsesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetUses not implemented")
 }
+func (UnimplementedSMCServer) GetDiagramAnnotation(context.Context, *GetDiagramAnnotationRequest) (*GetDiagramAnnotationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDiagramAnnotation not implemented")
+}
+func (UnimplementedSMCServer) GetIconAnnotation(context.Context, *GetIconAnnotationRequest) (*GetIconAnnotationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetIconAnnotation not implemented")
+}
+func (UnimplementedSMCServer) GetDefaultComponentName(context.Context, *GetDefaultComponentNameRequest) (*GetDefaultComponentNameResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDefaultComponentName not implemented")
+}
+func (UnimplementedSMCServer) GetClassDocumentation(context.Context, *GetClassDocumentationRequest) (*GetClassDocumentationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetClassDocumentation not implemented")
+}
 func (UnimplementedSMCServer) SetModelicaPath(context.Context, *SetModelicaPathRequest) (*SetModelicaPathResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetModelicaPath not implemented")
 }
 func (UnimplementedSMCServer) GetModelicaPath(context.Context, *GetModelicaPathRequest) (*GetModelicaPathResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetModelicaPath not implemented")
+}
+func (UnimplementedSMCServer) GetSourceFile(context.Context, *GetSourceFileRequest) (*GetSourceFileResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSourceFile not implemented")
+}
+func (UnimplementedSMCServer) SetSourceFile(context.Context, *SetSourceFileRequest) (*SetSourceFileResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetSourceFile not implemented")
 }
 func (UnimplementedSMCServer) GetErrors(context.Context, *GetErrorsRequest) (*GetErrorsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetErrors not implemented")
@@ -614,24 +934,6 @@ func _SMC_GetModelInstance_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
-func _SMC_GetModelAST_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ClassNameRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SMCServer).GetModelAST(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: SMC_GetModelAST_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SMCServer).GetModelAST(ctx, req.(*ClassNameRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _SMC_GetClassNames_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ClassNamesRequest)
 	if err := dec(in); err != nil {
@@ -646,6 +948,24 @@ func _SMC_GetClassNames_Handler(srv interface{}, ctx context.Context, dec func(i
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SMCServer).GetClassNames(ctx, req.(*ClassNamesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SMC_RenameComponentInClass_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RenameComponentInClassRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).RenameComponentInClass(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_RenameComponentInClass_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).RenameComponentInClass(ctx, req.(*RenameComponentInClassRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -686,6 +1006,78 @@ func _SMC_GetSubTypeOf_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SMC_GetInheritedClasses_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetInheritedClassesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).GetInheritedClasses(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_GetInheritedClasses_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).GetInheritedClasses(ctx, req.(*GetInheritedClassesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SMC_IsPackage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IsPackageRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).IsPackage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_IsPackage_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).IsPackage(ctx, req.(*IsPackageRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SMC_GetClassRestriction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetClassRestrictionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).GetClassRestriction(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_GetClassRestriction_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).GetClassRestriction(ctx, req.(*GetClassRestrictionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SMC_ExistClass_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExistClassRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).ExistClass(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_ExistClass_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).ExistClass(ctx, req.(*ExistClassRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _SMC_CopyClass_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CopyClassRequest)
 	if err := dec(in); err != nil {
@@ -700,6 +1092,24 @@ func _SMC_CopyClass_Handler(srv interface{}, ctx context.Context, dec func(inter
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SMCServer).CopyClass(ctx, req.(*CopyClassRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SMC_DeleteClass_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteClassRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).DeleteClass(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_DeleteClass_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).DeleteClass(ctx, req.(*DeleteClassRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -812,6 +1222,168 @@ func _SMC_DeleteConnection_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SMC_GetModelAST_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ClassNameRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).GetModelAST(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_GetModelAST_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).GetModelAST(ctx, req.(*ClassNameRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SMC_SetElementComment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetElementCommentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).SetElementComment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_SetElementComment_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).SetElementComment(ctx, req.(*SetElementCommentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SMC_SetElementVariability_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetElementVariabilityRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).SetElementVariability(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_SetElementVariability_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).SetElementVariability(ctx, req.(*SetElementVariabilityRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SMC_SetElementCausality_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetElementCausalityRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).SetElementCausality(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_SetElementCausality_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).SetElementCausality(ctx, req.(*SetElementCausalityRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SMC_SetElementProperties_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetElementPropertiesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).SetElementProperties(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_SetElementProperties_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).SetElementProperties(ctx, req.(*SetElementPropertiesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SMC_SetElementInnerAndOuter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetElementInnerAndOuterRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).SetElementInnerAndOuter(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_SetElementInnerAndOuter_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).SetElementInnerAndOuter(ctx, req.(*SetElementInnerAndOuterRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SMC_SetElementDimensions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetElementDimensionsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).SetElementDimensions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_SetElementDimensions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).SetElementDimensions(ctx, req.(*SetElementDimensionsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SMC_SetElementModifier_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetElementModifierRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).SetElementModifier(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_SetElementModifier_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).SetElementModifier(ctx, req.(*SetElementModifierRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SMC_SetExtendsModifier_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetExtendsModifierRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).SetExtendsModifier(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_SetExtendsModifier_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).SetExtendsModifier(ctx, req.(*SetExtendsModifierRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _SMC_SetClassAnnotation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SetClassAnnotationRequest)
 	if err := dec(in); err != nil {
@@ -866,6 +1438,78 @@ func _SMC_SetUses_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SMC_GetDiagramAnnotation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetDiagramAnnotationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).GetDiagramAnnotation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_GetDiagramAnnotation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).GetDiagramAnnotation(ctx, req.(*GetDiagramAnnotationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SMC_GetIconAnnotation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetIconAnnotationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).GetIconAnnotation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_GetIconAnnotation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).GetIconAnnotation(ctx, req.(*GetIconAnnotationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SMC_GetDefaultComponentName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetDefaultComponentNameRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).GetDefaultComponentName(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_GetDefaultComponentName_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).GetDefaultComponentName(ctx, req.(*GetDefaultComponentNameRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SMC_GetClassDocumentation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetClassDocumentationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).GetClassDocumentation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_GetClassDocumentation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).GetClassDocumentation(ctx, req.(*GetClassDocumentationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _SMC_SetModelicaPath_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SetModelicaPathRequest)
 	if err := dec(in); err != nil {
@@ -898,6 +1542,42 @@ func _SMC_GetModelicaPath_Handler(srv interface{}, ctx context.Context, dec func
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SMCServer).GetModelicaPath(ctx, req.(*GetModelicaPathRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SMC_GetSourceFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetSourceFileRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).GetSourceFile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_GetSourceFile_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).GetSourceFile(ctx, req.(*GetSourceFileRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SMC_SetSourceFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetSourceFileRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SMCServer).SetSourceFile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SMC_SetSourceFile_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SMCServer).SetSourceFile(ctx, req.(*SetSourceFileRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -960,12 +1640,12 @@ var SMC_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _SMC_GetModelInstance_Handler,
 		},
 		{
-			MethodName: "GetModelAST",
-			Handler:    _SMC_GetModelAST_Handler,
-		},
-		{
 			MethodName: "GetClassNames",
 			Handler:    _SMC_GetClassNames_Handler,
+		},
+		{
+			MethodName: "RenameComponentInClass",
+			Handler:    _SMC_RenameComponentInClass_Handler,
 		},
 		{
 			MethodName: "Save",
@@ -976,8 +1656,28 @@ var SMC_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _SMC_GetSubTypeOf_Handler,
 		},
 		{
+			MethodName: "GetInheritedClasses",
+			Handler:    _SMC_GetInheritedClasses_Handler,
+		},
+		{
+			MethodName: "IsPackage",
+			Handler:    _SMC_IsPackage_Handler,
+		},
+		{
+			MethodName: "GetClassRestriction",
+			Handler:    _SMC_GetClassRestriction_Handler,
+		},
+		{
+			MethodName: "ExistClass",
+			Handler:    _SMC_ExistClass_Handler,
+		},
+		{
 			MethodName: "CopyClass",
 			Handler:    _SMC_CopyClass_Handler,
+		},
+		{
+			MethodName: "DeleteClass",
+			Handler:    _SMC_DeleteClass_Handler,
 		},
 		{
 			MethodName: "AddElement",
@@ -1004,6 +1704,42 @@ var SMC_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _SMC_DeleteConnection_Handler,
 		},
 		{
+			MethodName: "GetModelAST",
+			Handler:    _SMC_GetModelAST_Handler,
+		},
+		{
+			MethodName: "SetElementComment",
+			Handler:    _SMC_SetElementComment_Handler,
+		},
+		{
+			MethodName: "SetElementVariability",
+			Handler:    _SMC_SetElementVariability_Handler,
+		},
+		{
+			MethodName: "SetElementCausality",
+			Handler:    _SMC_SetElementCausality_Handler,
+		},
+		{
+			MethodName: "SetElementProperties",
+			Handler:    _SMC_SetElementProperties_Handler,
+		},
+		{
+			MethodName: "SetElementInnerAndOuter",
+			Handler:    _SMC_SetElementInnerAndOuter_Handler,
+		},
+		{
+			MethodName: "SetElementDimensions",
+			Handler:    _SMC_SetElementDimensions_Handler,
+		},
+		{
+			MethodName: "SetElementModifier",
+			Handler:    _SMC_SetElementModifier_Handler,
+		},
+		{
+			MethodName: "SetExtendsModifier",
+			Handler:    _SMC_SetExtendsModifier_Handler,
+		},
+		{
 			MethodName: "SetClassAnnotation",
 			Handler:    _SMC_SetClassAnnotation_Handler,
 		},
@@ -1016,12 +1752,36 @@ var SMC_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _SMC_SetUses_Handler,
 		},
 		{
+			MethodName: "GetDiagramAnnotation",
+			Handler:    _SMC_GetDiagramAnnotation_Handler,
+		},
+		{
+			MethodName: "GetIconAnnotation",
+			Handler:    _SMC_GetIconAnnotation_Handler,
+		},
+		{
+			MethodName: "GetDefaultComponentName",
+			Handler:    _SMC_GetDefaultComponentName_Handler,
+		},
+		{
+			MethodName: "GetClassDocumentation",
+			Handler:    _SMC_GetClassDocumentation_Handler,
+		},
+		{
 			MethodName: "SetModelicaPath",
 			Handler:    _SMC_SetModelicaPath_Handler,
 		},
 		{
 			MethodName: "GetModelicaPath",
 			Handler:    _SMC_GetModelicaPath_Handler,
+		},
+		{
+			MethodName: "GetSourceFile",
+			Handler:    _SMC_GetSourceFile_Handler,
+		},
+		{
+			MethodName: "SetSourceFile",
+			Handler:    _SMC_SetSourceFile_Handler,
 		},
 		{
 			MethodName: "GetErrors",
