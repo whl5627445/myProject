@@ -19,7 +19,7 @@ var CasService = new(SubscribeServiceAndClient)
 
 // connectCasServiceClient 初始化CAS服务的实例
 func connectCasServiceClient(subscribeService model.SubscribeService) *SubscribeServiceAndClient {
-	conn, err := grpc.Dial(subscribeService.Ip+":"+strconv.FormatUint(subscribeService.Port, 10), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(subscribeService.Ip+":"+strconv.FormatUint(subscribeService.Port, 10), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Println("did not connect: %v", err)
 	}
@@ -31,7 +31,7 @@ func connectCasServiceClient(subscribeService model.SubscribeService) *Subscribe
 	return i
 }
 
-// 初始化计算节点的实例列表
+// ConnectTaskDispatcherClientList 初始化计算节点的实例列表
 func ConnectTaskDispatcherClientList(instanceList []model.SubscribeService) {
 	for _, instance := range instanceList {
 		if !instance.Healthy {
