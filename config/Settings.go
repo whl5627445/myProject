@@ -51,4 +51,4 @@ var DebugDB = os.Getenv("DebugDB")       // 192.168.121.12:13306
 var DebugRedis = os.Getenv("DebugRedis") // 192.168.121.12:6379
 var DebugMongo = os.Getenv("DebugMongo") // 192.168.121.12:27017
 
-const SmcAddr = "127.0.0.1:7780"
+const WorkSpaceContainerManagerAddr = "workspacemanager:36790"

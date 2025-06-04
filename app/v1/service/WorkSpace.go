@@ -2,7 +2,8 @@ package service
 
 import (
 	"time"
-	"yssim-go/config"
+
+	"yssim-go/grpc/WorkSpace"
 	"yssim-go/library/fileOperation"
 )
 
@@ -13,23 +14,15 @@ func CreatWorkSpace(userName, SpaceName string) (string, bool) {
 	fileOperation.CreateFile(FilePath)
 	modelStr := CreateWorkSpace("Workspace", "", "", "package", "", false, false)
 	ok := fileOperation.WriteFile(FilePath, modelStr)
-	//ok = SaveModelSource("Workspace", FilePath)
+	// ok = SaveModelSource("Workspace", FilePath)
 	return FilePath, ok
 
 }
 
-func SetWorkSpaceId(spaceId *string) bool {
-	result := GetWorkSpaceId(spaceId)
-	if !result {
-		config.UserSpaceId = *spaceId
-	}
-	return result
+func StartSMC(id string) (bool, error) {
+	return WorkSpace.WS.Create(id)
 }
 
-func GetWorkSpaceId(spaceId *string) bool {
-	userSpaceId := config.UserSpaceId
-	if *spaceId == userSpaceId {
-		return true
-	}
-	return false
+func StopSMC(id string) bool {
+	return WorkSpace.WS.Remove(id)
 }
