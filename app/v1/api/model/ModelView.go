@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
 	serviceV2 "yssim-go/app/v2/service"
 	"yssim-go/library/stringOperation"
 
@@ -28,7 +29,6 @@ import (
 )
 
 var dbModel = config.DB
-var userName = config.USERNAME
 
 func GetSysRootModelView(c *gin.Context) {
 	/*
@@ -36,6 +36,7 @@ func GetSysRootModelView(c *gin.Context) {
 	*/
 	var res DataType.ResponseData
 	keywords := c.Query("keywords")
+	userName := c.GetHeader("username")
 
 	//
 	// userSpaceId := c.Query("space_id")
@@ -82,6 +83,8 @@ func GetUserRootModelView(c *gin.Context) {
 	if userSpaceId == "" {
 		userSpaceId = c.GetHeader("space_id")
 	}
+	userName := c.GetHeader("username")
+
 	keywords := c.Query("keywords")
 	var res DataType.ResponseData
 	var modelData []map[string]any
@@ -127,6 +130,8 @@ func GetUserPackageView(c *gin.Context) {
 	*/
 
 	userSpaceId := c.GetHeader("space_id")
+	userName := c.GetHeader("username")
+
 	var res DataType.ResponseData
 	var modelData []map[string]any
 	var packageModel []DataBaseModel.YssimModels
@@ -155,6 +160,7 @@ func GetListModelView(c *gin.Context) {
 	*/
 	modelName := c.Query("model_name")
 	packageId := c.Query("package_id")
+	userName := c.GetHeader("username")
 
 	userSpaceId := c.GetHeader("space_id")
 	var packageModel DataBaseModel.YssimModels
@@ -195,7 +201,7 @@ func GetGraphicsDataView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
-
+	userName := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
 	var packageModel DataBaseModel.YssimModels
 	packageName := strings.Split(item.ModelName, ".")[0]
@@ -228,6 +234,8 @@ func GetModelCodeView(c *gin.Context) {
 	*/
 
 	userSpaceId := c.GetHeader("space_id")
+	userName := c.GetHeader("username")
+
 	modelName := c.Query("model_name")
 	packageId := c.Query("package_id")
 	var res DataType.ResponseData
@@ -256,6 +264,8 @@ func ModelRename(c *gin.Context) {
 	var res DataType.ResponseData
 	var item DataType.ModelRenameData
 	userSpaceId := c.GetHeader("space_id")
+	userName := c.GetHeader("username")
+
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, res)
@@ -357,6 +367,8 @@ func GetModelResourcesReferenceView(c *gin.Context) {
 	*/
 
 	userSpaceId := c.GetHeader("space_id")
+	userName := c.GetHeader("username")
+
 	var res DataType.ResponseData
 	var item DataType.PackageResourcesData
 	err := c.BindJSON(&item)
@@ -450,6 +462,8 @@ func SetModelParametersView(c *gin.Context) {
 	var res DataType.ResponseData
 
 	userSpaceId := c.GetHeader("space_id")
+	userName := c.GetHeader("username")
+
 	err := c.BindJSON(&item)
 	if err != nil {
 		log.Println(err)
@@ -498,6 +512,8 @@ func SetModelParametersUnitView(c *gin.Context) {
 	var res DataType.ResponseData
 
 	userSpaceId := c.GetHeader("space_id")
+	userName := c.GetHeader("username")
+
 	err := c.BindJSON(&item)
 	if err != nil {
 		log.Println(err)
@@ -546,6 +562,8 @@ func AddModelParametersView(c *gin.Context) {
 	var res DataType.ResponseData
 
 	userSpaceId := c.GetHeader("space_id")
+	userName := c.GetHeader("username")
+
 	var item DataType.AddComponentParametersData
 	err := c.BindJSON(&item)
 	if err != nil {
@@ -584,6 +602,8 @@ func DeleteModelParametersView(c *gin.Context) {
 	var res DataType.ResponseData
 
 	userSpaceId := c.GetHeader("space_id")
+	userName := c.GetHeader("username")
+
 	err := c.BindJSON(&item)
 	if err != nil {
 		log.Println(err)
@@ -658,6 +678,8 @@ func SetComponentPropertiesView(c *gin.Context) {
 	var item DataType.SetComponentPropertiesData
 
 	userSpaceId := c.GetHeader("space_id")
+	userName := c.GetHeader("username")
+
 	err := c.BindJSON(&item)
 	if err != nil {
 		res.Status = 2
@@ -709,6 +731,8 @@ func CopyClassView(c *gin.Context) {
 	*/
 
 	userSpaceId := c.GetHeader("space_id")
+	userName := c.GetHeader("username")
+
 	var item DataType.CopyClassData
 	var res DataType.ResponseData
 	err := c.BindJSON(&item)
@@ -876,6 +900,8 @@ func DeletePackageAndModelView(c *gin.Context) {
 	*/
 
 	userSpaceId := c.GetHeader("space_id")
+	userName := c.GetHeader("username")
+
 	var item DataType.DeleteClassData
 	err := c.BindJSON(&item)
 	if err != nil {
@@ -951,6 +977,8 @@ func AddModelComponentView(c *gin.Context) {
 	*/
 
 	userSpaceId := c.GetHeader("space_id")
+	userName := c.GetHeader("username")
+
 	var res DataType.ResponseData
 	var item DataType.AddComponentData
 	err := c.BindJSON(&item)
@@ -999,6 +1027,8 @@ func DeleteModelComponentView(c *gin.Context) {
 	*/
 
 	userSpaceId := c.GetHeader("space_id")
+	userName := c.GetHeader("username")
+
 	var res DataType.ResponseData
 	var item DataType.DeleteComponentData
 	err := c.BindJSON(&item)
@@ -1051,6 +1081,8 @@ func UpdateModelComponentView(c *gin.Context) {
 	*/
 
 	userSpaceId := c.GetHeader("space_id")
+	userName := c.GetHeader("username")
+
 	var res DataType.ResponseData
 	var item DataType.UpdateComponentData
 	err := c.BindJSON(&item)
@@ -1093,6 +1125,8 @@ func BatchUpdateModelComponentView(c *gin.Context) {
 	*/
 
 	userSpaceId := c.GetHeader("space_id")
+	userName := c.GetHeader("username")
+
 	var res DataType.ResponseData
 	var data DataType.BatchUpdateComponentData
 	err := c.BindJSON(&data)
@@ -1141,6 +1175,8 @@ func CreateConnectionAnnotationView(c *gin.Context) {
 	*/
 
 	userSpaceId := c.GetHeader("space_id")
+	userName := c.GetHeader("username")
+
 	var res DataType.ResponseData
 	var item DataType.UpdateConnectionAnnotationData
 	err := c.BindJSON(&item)
@@ -1182,6 +1218,8 @@ func UpdateConnectionNamesView(c *gin.Context) {
 	*/
 
 	userSpaceId := c.GetHeader("space_id")
+	userName := c.GetHeader("username")
+
 	var res DataType.ResponseData
 	var item DataType.UpdateConnectionNamesData
 	err := c.BindJSON(&item)
@@ -1221,6 +1259,8 @@ func DeleteConnectionAnnotationView(c *gin.Context) {
 	*/
 
 	userSpaceId := c.GetHeader("space_id")
+	userName := c.GetHeader("username")
+
 	var res DataType.ResponseData
 	var item DataType.DeleteConnectionData
 	err := c.BindJSON(&item)
@@ -1262,6 +1302,8 @@ func UpdateConnectionAnnotationView(c *gin.Context) {
 	*/
 
 	userSpaceId := c.GetHeader("space_id")
+	userName := c.GetHeader("username")
+
 	var res DataType.ResponseData
 	var item DataType.UpdateConnectionAnnotationData
 	err := c.BindJSON(&item)
@@ -1368,6 +1410,8 @@ func SetModelDocumentView(c *gin.Context) {
 	*/
 
 	userSpaceId := c.GetHeader("space_id")
+	userName := c.GetHeader("username")
+
 	var res DataType.ResponseData
 	var item DataType.SetModelDocumentData
 	err := c.BindJSON(&item)
@@ -1432,6 +1476,8 @@ func CreateCollectionModelView(c *gin.Context) {
 	var res DataType.ResponseData
 
 	userSpaceId := c.GetHeader("space_id")
+	userName := c.GetHeader("username")
+
 	var item DataType.ModelCollectionData
 	err := c.BindJSON(&item)
 	if err != nil {
@@ -1492,6 +1538,8 @@ func GetCollectionModelView(c *gin.Context) {
 	*/
 
 	userSpaceId := c.GetHeader("space_id")
+	userName := c.GetHeader("username")
+
 	var res DataType.ResponseData
 	var modelData []map[string]any
 	var modelCollections []map[string]any
@@ -1556,7 +1604,8 @@ func SearchModelView(c *gin.Context) {
 	*/
 
 	userSpaceId := c.GetHeader("space_id")
-	// userSpaceId := c.Query("space_id")
+	userName := c.GetHeader("username")
+
 	keywords := c.Query("keywords")
 	parent := c.Query("parent")
 	var res DataType.ResponseData
@@ -1590,6 +1639,8 @@ func SearchFunctionTypeView(c *gin.Context) {
 	var models []DataBaseModel.YssimModels
 
 	userSpaceId := c.GetHeader("space_id")
+	userName := c.GetHeader("username")
+
 	var data []map[string]any
 	libraryAndVersions := service.GetLibraryAndVersions()
 	if parent == "" {
@@ -1626,6 +1677,8 @@ func LoadModelView(c *gin.Context) {
 	*/
 
 	userSpaceId := c.GetHeader("space_id")
+	userName := c.GetHeader("username")
+
 	var res DataType.ResponseData
 	var loadPackage DataType.LoadPackageData
 	var packageModel DataBaseModel.YssimModels
@@ -1681,6 +1734,8 @@ func UnLoadModelView(c *gin.Context) {
 	*/
 
 	userSpaceId := c.GetHeader("space_id")
+	userName := c.GetHeader("username")
+
 	var res DataType.ResponseData
 	var unLoadPackage DataType.UnLoadPackageData
 	var packageModel DataBaseModel.YssimModels
@@ -1716,6 +1771,8 @@ func GetPackageAndVersionView(c *gin.Context) {
 	*/
 
 	userSpaceId := c.GetHeader("space_id")
+	userName := c.GetHeader("username")
+
 	var packageModel []DataBaseModel.YssimModels
 	var ids []string
 	dbModel.Where("sys_or_user IN ? AND userspace_id IN ?", []string{"sys", userName}, []string{"0", userSpaceId}).Order("create_time desc").Find(&packageModel)
@@ -1786,6 +1843,8 @@ func LoginUserSpaceView(c *gin.Context) {
 	//	c.JSON(http.StatusOK, res)
 	//	return
 	// }
+	userName := c.GetHeader("username")
+
 	var space DataBaseModel.YssimUserSpace
 	dbModel.Model(space).Where("id = ? AND username = ?", item.SpaceId, userName).First(&space)
 	if space.ID == "" {
@@ -1835,6 +1894,8 @@ func AppModelMarkView(c *gin.Context) {
 	var res DataType.ResponseData
 
 	userSpaceId := c.GetHeader("space_id")
+	userName := c.GetHeader("username")
+
 	var item DataType.AppModelMarkData
 	err := c.BindJSON(&item)
 	if err != nil {
@@ -1894,6 +1955,7 @@ func CADParseView(c *gin.Context) {
 	*/
 	var res DataType.ResponseData
 	var model DataBaseModel.YssimModels
+	userName := c.GetHeader("username")
 
 	dbModel.Where("package_name = ? AND version = ?", "Modelica", "4.0.0").First(&model)
 	var item DataType.FilePathData
@@ -1965,6 +2027,7 @@ func CADFilesUploadView(c *gin.Context) {
 		# 上传xml文件进行解析
 	*/
 	var res DataType.ResponseData
+	userName := c.GetHeader("username")
 
 	form, err := c.MultipartForm()
 	if err != nil {
@@ -1986,7 +2049,9 @@ func CADMappingModelView(c *gin.Context) {
 
 	var res DataType.ResponseData
 
+	userName := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
+
 	var item DataType.CADMappingModelData
 	err := c.BindJSON(&item)
 	if err != nil {
@@ -2037,7 +2102,9 @@ func GetSystemLibraryView(c *gin.Context) {
 	var res DataType.ResponseData
 	var system []DataBaseModel.SystemLibrary
 
+	userName := c.GetHeader("username")
 	spaceId := c.Query("space_id")
+
 	if spaceId == "" {
 		res.Err = "参数不能为空"
 		res.Status = 2
@@ -2103,6 +2170,7 @@ func CreateDependencyLibraryView(c *gin.Context) {
 	var item DataType.CreateDependencyLibraryData
 	var models DataBaseModel.YssimModels
 	var system DataBaseModel.SystemLibrary
+	userName := c.GetHeader("username")
 
 	err := c.BindJSON(&item)
 	if err != nil {
@@ -2171,6 +2239,8 @@ func GetDependencyLibraryView(c *gin.Context) {
 	var model []DataBaseModel.YssimModels
 
 	userSpaceId := c.Query("space_id")
+	userName := c.GetHeader("username")
+
 	if userSpaceId == "" {
 		res.Err = "参数不能为空"
 		res.Status = 2
@@ -2210,6 +2280,7 @@ func GetAvailableLibrariesView(c *gin.Context) {
 		根据username used 查询可用库列表  0未占用 1占用  查询used为0
 	*/
 	var res DataType.ResponseData
+	userName := c.GetHeader("username")
 
 	var userLibraries []DataBaseModel.UserLibrary
 	dbModel.Where("username = ? AND used = ?", userName, false).Find(&userLibraries)
@@ -2248,6 +2319,8 @@ func GetExtendedModelView(c *gin.Context) {
 	var models DataBaseModel.YssimModels
 
 	spaceId := c.GetHeader("space_id")
+	userName := c.GetHeader("username")
+
 	modelName := c.Query("model_name")
 	if strings.TrimSpace(modelName) == "" {
 		res.Err = "参数为空"
@@ -2453,6 +2526,8 @@ func InitVersionControlView(c *gin.Context) {
 	*/
 	var res DataType.ResponseData
 	var item DataType.InitVersionControlData
+	userName := c.GetHeader("username")
+
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
@@ -2518,6 +2593,7 @@ func RepositoryCloneView(c *gin.Context) {
 	*/
 	var res DataType.ResponseData
 	var item DataType.RepositoryCloneData
+	userName := c.GetHeader("username")
 
 	// userSpaceId := c.GetHeader("space_id")
 	err := c.BindJSON(&item)
@@ -2612,6 +2688,8 @@ func RepositoryGetView(c *gin.Context) {
 
 	// 删除数据库记录
 	var records []DataBaseModel.UserLibrary
+	userName := c.GetHeader("username")
+
 	dbModel.Where("username = ? ", userName).Order("create_time desc").Find(&records)
 	var data []map[string]any
 	for i := 0; i < len(records); i++ {
@@ -2641,6 +2719,8 @@ func GetParameterCalibrationRootView(c *gin.Context) {
 	if userSpaceId == "" {
 		userSpaceId = c.GetHeader("space_id")
 	}
+	userName := c.GetHeader("username")
+
 	var modelData []map[string]any
 	var packageModel []DataBaseModel.YssimModels
 	// var space DataBaseModel.YssimUserSpace
@@ -2678,6 +2758,8 @@ func GetParameterCalibrationListView(c *gin.Context) {
 	parent := c.Query("parent")
 	packageId := c.Query("package_id")
 	userSpaceId := c.Query("space_id")
+	userName := c.GetHeader("username")
+
 	var packageModel DataBaseModel.YssimModels
 	dbModel.Where("id = ? AND sys_or_user = ? AND userspace_id = ?", packageId, userName, userSpaceId).First(&packageModel)
 	if packageModel.ID == "" {
@@ -2703,6 +2785,8 @@ func GetParameterCalibrationRecordView(c *gin.Context) {
 	*/
 	packageId := c.Query("package_id")
 	userSpaceId := c.Query("space_id")
+	userName := c.GetHeader("username")
+
 	modelName := c.Query("model_name")
 	var record DataBaseModel.ParameterCalibrationRecord
 	simulationOptions := service.GetSimulationOptions(modelName)
@@ -2752,6 +2836,8 @@ func SetActualDataView(c *gin.Context) {
 		# 设置参数标定功能模型的实测参数字段与数据
 	*/
 	var item DataType.SetActualData
+	userName := c.GetHeader("username")
+
 	err := c.BindJSON(&item)
 	if err != nil {
 		log.Println("实测数据错误：", err)
@@ -2769,6 +2855,8 @@ func SetRatedConditionView(c *gin.Context) {
 		# 设置参数标定功能模型的额定工况参数
 	*/
 	var item DataType.SetRatedConditionData
+	userName := c.GetHeader("username")
+
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
@@ -2786,6 +2874,8 @@ func SetConditionParametersView(c *gin.Context) {
 		# 设置参数标定功能模型的条件参数
 	*/
 	var item DataType.SetConditionParametersData
+	userName := c.GetHeader("username")
+
 	err := c.BindJSON(&item)
 	if err != nil {
 		log.Println(err)
@@ -2803,6 +2893,8 @@ func SetResultParametersView(c *gin.Context) {
 		# 设置参数标定功能模型的结果参数
 	*/
 	var item DataType.SetResultParametersData
+	userName := c.GetHeader("username")
+
 	err := c.BindJSON(&item)
 	if err != nil {
 		log.Println(err)
@@ -2819,6 +2911,9 @@ func GetVariableParameterView(c *gin.Context) {
 	/*
 	  # 获取参数标定功能模型的额定工况参数与条件参数节点
 	*/
+
+	userName := c.GetHeader("username")
+
 	recordId := c.Query("id")
 	packageId := c.Query("package_id")
 	parentNode := c.Query("parent")
@@ -2855,6 +2950,8 @@ func GetResultVariableParameterView(c *gin.Context) {
 	/*
 	  # 获取参数标定功能模型的结果参数节点
 	*/
+	userName := c.GetHeader("username")
+
 	recordId := c.Query("id")
 	parentNode := c.Query("parent")
 	var record DataBaseModel.ParameterCalibrationRecord
@@ -2892,6 +2989,8 @@ func ParameterCalibrationFormulaParserView(c *gin.Context) {
 	*/
 	var item DataType.FormulaParserData
 	var res DataType.ResponseData
+	userName := c.GetHeader("username")
+
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
@@ -2917,6 +3016,7 @@ func SetAssociatedParametersView(c *gin.Context) {
 	/*
 	  # 设置参数标定功能模型的拟合计算中的关联参数
 	*/
+	userName := c.GetHeader("username")
 
 	var item DataType.AssociatedParametersData
 	err := c.BindJSON(&item)
@@ -2934,6 +3034,8 @@ func FittingCalculationView(c *gin.Context) {
 	/*
 		# 进行模型参数标定的拟合计算
 	*/
+	userName := c.GetHeader("username")
+
 	var item DataType.FittingCalculationData
 	var res DataType.ResponseData
 	err := c.BindJSON(&item)
@@ -2984,6 +3086,8 @@ func FittingCoefficientSetView(c *gin.Context) {
 	*/
 	var item DataType.FittingCoefficientSetData
 	var res DataType.ResponseData
+	userName := c.GetHeader("username")
+
 	err := c.BindJSON(&item)
 	if err != nil {
 		log.Println(err)
@@ -3007,6 +3111,8 @@ func SetParameterCalibrationSimulationOptionsView(c *gin.Context) {
 	/*
 		# 设置某模型的参数标定的仿真求解设置信息
 	*/
+	userName := c.GetHeader("username")
+
 	var item DataType.SimulationOptionsData
 	err := c.BindJSON(&item)
 	if err != nil {
@@ -3027,9 +3133,11 @@ func GetParameterCalibrationTemplateView(c *gin.Context) {
 	*/
 	var res DataType.ResponseData
 	recordId := c.Query("id")
+	userName := c.GetHeader("username")
+
 	var template []DataBaseModel.ParameterCalibrationTemplate
 	if recordId == "" {
-		dbModel.Where("username = ?", config.USERNAME).Find(&template)
+		dbModel.Where("username = ?", userName).Find(&template)
 	} else {
 		dbModel.Where("id = ?", recordId).First(&template)
 	}
@@ -3103,6 +3211,7 @@ func GetParameterCalibrationResultView(c *gin.Context) {
 	*/
 	var res DataType.ResponseData
 	recordId := c.Query("id")
+	userName := c.GetHeader("username")
 	var record DataBaseModel.ParameterCalibrationRecord
 	dbModel.Where("id = ? AND username = ?", recordId, userName).First(&record)
 	var resultMap map[string]map[string][]float64
@@ -3127,6 +3236,7 @@ func GetParameterCalibrationTemplateResultView(c *gin.Context) {
 	*/
 	var res DataType.ResponseData
 	recordId := c.Query("id")
+	userName := c.GetHeader("username")
 	var record DataBaseModel.ParameterCalibrationTemplate
 	dbModel.Where("id = ? AND username = ?", recordId, userName).First(&record)
 	var resultMap map[string]map[string][]float64

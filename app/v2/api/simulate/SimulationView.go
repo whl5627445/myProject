@@ -3,9 +3,10 @@ package simulate
 import (
 	"context"
 	"fmt"
-	"go.mongodb.org/mongo-driver/bson"
 	"net/http"
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson"
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/DataType"
 	serviceV2 "yssim-go/app/v2/service"
@@ -16,7 +17,6 @@ import (
 
 var DB = config.DB
 var MB = config.MB
-var userName = config.USERNAME
 
 func ModelSimulateView(c *gin.Context) {
 	/*
@@ -31,6 +31,7 @@ func ModelSimulateView(c *gin.Context) {
 	*/
 	var res DataType.ResponseData
 	userSpaceId := c.GetHeader("space_id")
+	userName := c.GetHeader("username")
 	token := c.GetHeader("Authorization")
 	var item DataType.ModelSimulateData
 	err := c.BindJSON(&item)
@@ -82,9 +83,9 @@ func SimulateResultDeleteView(c *gin.Context) {
 	config.DB.Save(&resultRecord)
 	serviceV2.DeleteSimulateTask(resultRecord.TaskId, resultRecord.SimulateModelResultPath)
 	config.DB.Delete(&resultRecord)
-	DB.Delete(&DataBaseModel.YssimSnapshots{}, "simulate_result_id = ?", recordId) //删除相关的快照
+	DB.Delete(&DataBaseModel.YssimSnapshots{}, "simulate_result_id = ?", recordId) // 删除相关的快照
 
-	//删除mongo中的记录
+	// 删除mongo中的记录
 	if resultRecord.TaskId != "" {
 		coll := MB.Database("SimulationTasks").Collection("task_model")
 		filter := bson.D{{"_id", resultRecord.TaskId}}
@@ -158,7 +159,7 @@ func ExperimentDeleteView(c *gin.Context) {
 	var record DataBaseModel.YssimExperimentRecord
 	DB.Where("username =? AND userspace_id =? AND id =?", username, userSpaceId, item.ExperimentId).First(&record)
 	DB.Delete(&record)
-	//删除相关的快照
+	// 删除相关的快照
 	DB.Delete(&DataBaseModel.YssimSnapshots{}, "experiment_id = ?", item.ExperimentId)
 
 	// 删除相关的仿真记录
@@ -169,7 +170,7 @@ func ExperimentDeleteView(c *gin.Context) {
 		config.DB.Save(&resultRecord[i])
 		serviceV2.DeleteSimulateTask(resultRecord[i].TaskId, resultRecord[i].SimulateModelResultPath)
 		config.DB.Delete(&resultRecord[i])
-		//删除mongo中的记录
+		// 删除mongo中的记录
 		if resultRecord[i].TaskId != "" {
 			coll := MB.Database("SimulationTasks").Collection("task_model")
 			filter := bson.D{{"_id", resultRecord[i].TaskId}}

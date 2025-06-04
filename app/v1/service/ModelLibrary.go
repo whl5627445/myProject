@@ -39,7 +39,7 @@ func DefaultLibraryInitialization(packageModel []DataBaseModel.YssimModels) {
 		}
 		delete(packageAll, models.PackageName)
 	}
-	for k, _ := range packageAll {
+	for k := range packageAll {
 		deleteModel(k)
 	}
 	// lPackage := GetLibraryAndVersions()
@@ -224,7 +224,7 @@ func checkLibraryInterdependenceNoLoad(packageName, version string) []string {
 		}
 	}
 	unloadMap = getInterdependence(unloadMap, LoadPackageList)
-	for k, _ := range unloadMap {
+	for k := range unloadMap {
 		unloadPackageNameList = append(unloadPackageNameList, k)
 	}
 	return unloadPackageNameList
@@ -250,14 +250,14 @@ func checkLibraryInterdependenceIsLoad(packageName string) []string {
 		}
 	}
 	unloadMap = getInterdependence(unloadMap, LoadPackageList)
-	for k, _ := range unloadMap {
+	for k := range unloadMap {
 		unloadPackageNameList = append(unloadPackageNameList, k)
 	}
 	return unloadPackageNameList
 }
 
 func getInterdependence(unloadMap map[string]bool, LoadPackageList [][]string) map[string]bool {
-	for un, _ := range unloadMap {
+	for un := range unloadMap {
 		uses := GetPackageUses(un) // 查看需要被卸载的库用到哪些其他库
 		for _, u := range uses {   // 循环被卸载库的依赖项有没有被加载
 			for _, l := range LoadPackageList {
@@ -296,8 +296,8 @@ func LibraryInitialization(LibraryMap map[string]map[string]string, packageModel
 		DefaultLibraryInitialization(packageModel)
 		return
 	}
-	StopOMC()
-	StartOMC()
+	// StopOMC()
+	// StartOMC()
 	for name, information := range LibraryMap {
 		version := information["version"]
 		ok := omc.OMC.LoadFileNoPwd(information["file"])

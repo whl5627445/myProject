@@ -25,7 +25,7 @@ func GetUserSpaceView(c *gin.Context) {
 	/*
 		# 获取用户所有的用户空间条目
 	*/
-	userName := config.USERNAME
+	userName := c.GetHeader("username")
 
 	var res DataType.ResponseData
 	var modelData []map[string]string
@@ -45,7 +45,7 @@ func GetUserSpaceNewView(c *gin.Context) {
 	*/
 
 	var res DataType.ResponseData
-	userName := config.USERNAME
+	userName := c.GetHeader("username")
 	keyWords := c.Query("keywords")
 	collect := c.Query("collect")
 	var recentSpaceList []DataBaseModel.YssimUserSpace
@@ -104,7 +104,7 @@ func CreateUserSpaceView(c *gin.Context) {
 	/*
 		# 创建用户空间
 	*/
-	userName := config.USERNAME
+	userName := c.GetHeader("username")
 	var res DataType.ResponseData
 	var item DataType.CreateUserSpaceModel
 	err := c.BindJSON(&item)
@@ -166,7 +166,7 @@ func EditUserSpaceView(c *gin.Context) {
 	/*
 		# 编辑用户空间
 	*/
-	userName := config.USERNAME
+	userName := c.GetHeader("username")
 	var res DataType.ResponseData
 	var item DataType.EditUserSpaceModel
 	err := c.BindJSON(&item)
@@ -205,7 +205,7 @@ func CollectUserSpaceView(c *gin.Context) {
 	/*
 		# 收藏用户空间
 	*/
-	userName := config.USERNAME
+	userName := c.GetHeader("username")
 	var res DataType.ResponseData
 	var item DataType.CollectUserSpaceData
 	err := c.BindJSON(&item)
@@ -232,7 +232,7 @@ func DeleteUserSpaceView(c *gin.Context) {
 	/*
 		# 删除用户空间
 	*/
-	userName := config.USERNAME
+	userName := c.GetHeader("username")
 	var res DataType.ResponseData
 	var item DataType.DeleteUserSpaceModel
 	err := c.BindJSON(&item)
@@ -256,7 +256,7 @@ func GetUserRecentlyOpenedView(c *gin.Context) {
 	/*
 		#获取用户空间的最近打开
 	*/
-	userName := config.USERNAME
+	userName := c.GetHeader("username")
 	var res DataType.ResponseData
 	var modelData []map[string]string
 	var userSpace []DataBaseModel.YssimUserSpace
@@ -283,7 +283,7 @@ func GetUserSettingsView(c *gin.Context) {
 	*/
 	var res DataType.ResponseData
 	var setting DataBaseModel.YssimUserSettings
-	userName := config.USERNAME
+	userName := c.GetHeader("username")
 	dbUser.Where("username =? ", userName).First(&setting)
 	oneData := map[string]any{
 		"grid_display": setting.GridDisplay,
@@ -297,7 +297,7 @@ func SetUserSettingsView(c *gin.Context) {
 		# 设置用户配置
 	*/
 	var res DataType.ResponseData
-	userName := config.USERNAME
+	userName := c.GetHeader("username")
 	var setting DataType.UserSettingsModel
 	var settingRecord DataBaseModel.YssimUserSettings
 	err := c.BindJSON(&setting)
@@ -343,7 +343,7 @@ func BackgroundUploadView(c *gin.Context) {
 		## path: 文件相对路径
 	*/
 	var res DataType.ResponseData
-	userName := config.USERNAME
+	userName := c.GetHeader("username")
 	varFile, err := c.FormFile("file")
 	if !strings.HasSuffix(varFile.Filename, ".jpg") && !strings.HasSuffix(varFile.Filename, ".jpeg") && !strings.HasSuffix(varFile.Filename, ".png") &&
 		!strings.HasSuffix(varFile.Filename, ".jfif") && !strings.HasSuffix(varFile.Filename, ".pjp") && !strings.HasSuffix(varFile.Filename, ".pjpeg") {
@@ -379,12 +379,13 @@ func BackgroundUploadView(c *gin.Context) {
 
 }
 
-func StartOMCView(c *gin.Context) {
+func StartSMCView(c *gin.Context) {
 	/*
-		# 启动用户的omc实例并连接
+		# 启动用户的SMC实例并连接
 	*/
 	var res DataType.ResponseData
-	result := service.StartOMC()
+	userSpaceId := c.GetHeader("space_id")
+	result, _ := service.StartSMC(userSpaceId)
 	if result {
 		res.Msg = "服务启动成功"
 	} else {
@@ -394,24 +395,25 @@ func StartOMCView(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-func StopOMCView(c *gin.Context) {
+func StopSMCView(c *gin.Context) {
 	/*
-		# 暂停用户的omc实例并连接
+		# 暂停用户的SMC实例并连接
 	*/
 	var res DataType.ResponseData
-	service.StopOMC()
+	userSpaceId := c.GetHeader("space_id")
+	service.StopSMC(userSpaceId)
 	res.Msg = "服务暂停成功"
 	c.JSON(http.StatusOK, res)
 }
 
-func RestartOMCView(c *gin.Context) {
+func RestartSMCView(c *gin.Context) {
 	/*
-		# 重启用户的omc实例并连接
+		# 重启用户的SMC实例并连接
 	*/
 	var res DataType.ResponseData
-
-	service.StopOMC()
-	result := service.StartOMC()
+	userSpaceId := c.GetHeader("space_id")
+	service.StopSMC(userSpaceId)
+	result, _ := service.StartSMC(userSpaceId)
 	if result {
 		res.Msg = "服务重启成功"
 	} else {

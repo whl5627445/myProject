@@ -17,7 +17,6 @@ import (
 )
 
 var dbModel = config.DB
-var userName = config.USERNAME
 
 func GetInstanceDataView(c *gin.Context) {
 	/*
@@ -31,7 +30,7 @@ func GetInstanceDataView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
-
+	userName := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
 	var packageModel DataBaseModel.YssimModels
 	packageName := strings.Split(item.ModelName, ".")[0]
@@ -56,7 +55,7 @@ func AddModelComponentView(c *gin.Context) {
 		## extent: 范围坐标, 例如["-10,-10", "10,10"]
 		## rotation: 旋转角度, 例如"0"，不旋转`
 	*/
-
+	userName := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
 	var res DataType.ResponseData
 	var item DataType.AddComponentData
@@ -91,6 +90,7 @@ func GetAllModelView(c *gin.Context) {
 		# 获取用户空间所有模型信息
 		## space_id: 用户空间id
 	*/
+	userName := c.GetHeader("username")
 	userSpaceId := c.GetHeader("space_id")
 	var res DataType.ResponseData
 

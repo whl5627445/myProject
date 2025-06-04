@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"strings"
+
 	"yssim-go/config"
 	"yssim-go/library/omc"
 
@@ -72,7 +73,8 @@ func MessageNotice(mes any) bool {
 
 	// 推送消息
 	mesJson, _ := sonic.Marshal(mes)
-	userName := config.USERNAME
+	// userName := config.USERNAME
+	userName := "config.USERNAME"
 	reply, err := config.R.LPush(context.Background(), userName+"_"+"notification", mesJson).Result()
 	if err != nil {
 		log.Println("消息发送失败 reply： ", reply)

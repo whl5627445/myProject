@@ -35,7 +35,7 @@ func Register() {
 		success, err := Client.RegisterInstance(vo.RegisterInstanceParam{
 			Ip:          config.ServiceIp,
 			Port:        port,
-			ServiceName: config.USERNAME,
+			ServiceName: "YSLab-workSpace",
 			Weight:      10,
 			Enable:      true,
 			Healthy:     true,

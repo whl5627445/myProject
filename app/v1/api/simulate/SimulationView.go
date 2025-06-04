@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
 	"yssim-go/library/timeConvert"
 
 	"github.com/bytedance/sonic"
@@ -25,7 +26,6 @@ import (
 )
 
 var DB = config.DB
-var userName = config.USERNAME
 
 func GetSimulationOptionsView(c *gin.Context) {
 	/*
@@ -77,6 +77,7 @@ func GetModelStateView(c *gin.Context) {
 	*/
 
 	userSpaceId := c.GetHeader("space_id")
+	userName := c.GetHeader("username")
 	packageId := c.Query("package_id")
 	modelName := c.Query("model_name")
 	var modelRecord DataBaseModel.YssimSimulateRecord
@@ -103,6 +104,7 @@ func ModelSimulateView(c *gin.Context) {
 	*/
 
 	userSpaceId := c.GetHeader("space_id")
+	userName := c.GetHeader("username")
 	var item DataType.ModelSimulateData
 	err := c.BindJSON(&item)
 	if err != nil {
@@ -144,6 +146,7 @@ func SimulateResultGraphicsView(c *gin.Context) {
 	*/
 
 	var item DataType.ModelSimulateResultData
+	userName := c.GetHeader("username")
 	err := c.BindJSON(&item)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, "")
@@ -1369,7 +1372,7 @@ func CalibrationCompileView(c *gin.Context) {
 
 	var res DataType.ResponseData
 	var item DataType.CalibrationCompileData
-
+	userName := c.GetHeader("username")
 	err := c.BindJSON(&item)
 	if err != nil {
 		log.Println(err)
@@ -1429,7 +1432,7 @@ func CalibrationSimulateTaskAddView(c *gin.Context) {
 
 	var res DataType.ResponseData
 	var item DataType.CalibrationSimulateData
-
+	userName := c.GetHeader("username")
 	err := c.BindJSON(&item)
 	if err != nil {
 		log.Println(err)
@@ -1495,7 +1498,7 @@ func CalibrationSimulateTaskStopView(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, "")
 		return
 	}
-
+	userName := c.GetHeader("username")
 	var record DataBaseModel.ParameterCalibrationRecord
 	err = DB.Where("id = ?  AND username = ?", item.ID, userName).First(&record).Error
 	if record.ID == "" {
@@ -1522,6 +1525,7 @@ func GetCalibrationTaskStatusView(c *gin.Context) {
 	*/
 
 	var res DataType.ResponseData
+	userName := c.GetHeader("username")
 	recordId := c.Query("id")
 	var record DataBaseModel.ParameterCalibrationRecord
 	err := DB.Where("id = ?  AND username = ?", recordId, userName).First(&record).Error

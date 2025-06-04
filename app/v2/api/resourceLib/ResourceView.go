@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"unicode/utf8"
+
 	"yssim-go/app/DataBaseModel"
 	"yssim-go/app/DataType"
 	serviceV2 "yssim-go/app/v2/service"
@@ -573,7 +574,7 @@ func UploadResourceFileView(c *gin.Context) {
 		return
 	}
 
-	var resourceLib DataBaseModel.YssimResourceLib = DataBaseModel.YssimResourceLib{
+	var resourceLib = DataBaseModel.YssimResourceLib{
 		ParentId:    fileinfo.ParentId,
 		ID:          uuid.New().String(),
 		UserName:    userName,

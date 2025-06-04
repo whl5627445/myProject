@@ -4,15 +4,14 @@ import (
 	"log"
 
 	"yssim-go/app/DataBaseModel"
-	serviceV1 "yssim-go/app/v1/service"
 	"yssim-go/library/omc"
 )
 
 // RestartOMC 重启OMC服务
-func RestartOMC() {
-	serviceV1.StopOMC()
-	serviceV1.StartOMC()
-}
+// func RestartOMC() {
+// 	serviceV1.StopOMC()
+// 	serviceV1.StartOMC()
+// }
 
 // LibraryInitializationSingle 加载单个模型
 func LibraryInitializationSingle(packageName, packageVersion, filePath string) bool {
@@ -34,7 +33,7 @@ func GetAllLoadableModel(packageInformation map[string]map[string]string, packag
 	data := []map[string]string{}
 
 	if len(packageInformation) == 0 {
-		//packageInformation为空，直接取所有的packageModel信息
+		// packageInformation为空，直接取所有的packageModel信息
 		for _, packageModel := range packageModelAll {
 			m := map[string]string{
 				"id":      packageModel.ID,
@@ -44,7 +43,7 @@ func GetAllLoadableModel(packageInformation map[string]map[string]string, packag
 			data = append(data, m)
 		}
 	} else {
-		//packageInformation不为空，以packageModelAll为基准取二者交集
+		// packageInformation不为空，以packageModelAll为基准取二者交集
 		packageInformationNameMap := map[string]bool{}
 		for packageName := range packageInformation {
 			packageInformationNameMap[packageName] = true
