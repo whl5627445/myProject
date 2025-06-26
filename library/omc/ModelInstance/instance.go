@@ -157,6 +157,10 @@ type TypeConnector struct {
 	Type        string           `json:"type"`
 }
 
+type replaceableObject struct {
+	Annotation annotation `json:"annotation,omitempty"`
+}
+
 // DataPreprocessing 模型实例数据预处理
 func (m *ModelInstance) DataPreprocessing() {
 	if _, ok := m.Annotation.Icon.GraphicsOriginal.([]any); ok {
